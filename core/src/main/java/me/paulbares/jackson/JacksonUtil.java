@@ -4,9 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import me.paulbares.query.Measure;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import scala.jdk.javaapi.CollectionConverters;
+import me.paulbares.query.Table;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -40,27 +38,12 @@ public class JacksonUtil {
     }
   }
 
-  public static String datasetToJSON(Dataset<Row> dataset) {
-    Iterator<String> it = dataset.toJSON().toLocalIterator();
-    StringBuilder sb = new StringBuilder();
-    sb.append('[');
-    while (it.hasNext()) {
-      sb.append(it.next());
-      if (it.hasNext()) {
-        sb.append(',');
-      }
-    }
-    sb.append(']');
-    return sb.toString();
-  }
-
-  public static String datasetToCsv(Dataset<Row> dataset) {
-    Iterator<Row> it = dataset.toLocalIterator();
+  public static String tableToCsv(Table table) {
+    Iterator<List<Object>> it = table.rowIterator();
     List<List<Object>> rows = new ArrayList<>();
     while (it.hasNext()) {
-      Row next = it.next();
-      rows.add(CollectionConverters.asJava(next.toSeq()));
+      rows.add(it.next());
     }
-    return JacksonUtil.serialize(Map.of("columns", dataset.columns(), "rows", rows));
+    return JacksonUtil.serialize(Map.of("columns", table.headers(), "rows", rows));
   }
 }

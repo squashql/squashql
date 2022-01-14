@@ -1,7 +1,5 @@
-package me.paulbares;
+package me.paulbares.query;
 
-import me.paulbares.query.Query;
-import me.paulbares.query.sql.SQLTranslator;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 

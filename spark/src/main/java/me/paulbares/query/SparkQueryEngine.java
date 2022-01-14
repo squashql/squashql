@@ -1,11 +1,6 @@
-package me.paulbares.query.spark;
+package me.paulbares.query;
 
 import me.paulbares.SparkDatastore;
-import me.paulbares.query.ComparisonMethod;
-import me.paulbares.query.Query;
-import me.paulbares.query.QueryEngine;
-import me.paulbares.query.sql.SQLTranslator;
-import me.paulbares.query.ScenarioGroupingQuery;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -33,7 +28,11 @@ public class SparkQueryEngine implements QueryEngine {
   }
 
   @Override
-  public Dataset<Row> execute(Query query) {
+  public Table execute(Query query) {
+    return new DatasetTable(executeSpark(query));
+  }
+
+  public Dataset<Row> executeSpark(Query query) {
     LOGGER.info("Executing " + query);
     String sql = SQLTranslator.translate(query);
     LOGGER.info("Translated query #" + query.id + " to " + sql);
@@ -48,7 +47,7 @@ public class SparkQueryEngine implements QueryEngine {
     Query q = new Query().addWildcardCoordinate("scenario");
     q.measures.addAll(query.measures);
 
-    Dataset<Row> raw = execute(q);
+    Dataset<Row> raw = executeSpark(q);
 
     Map<String, Row> rowByScenario = new HashMap<>();
     Iterator<Row> rowIterator = raw.toLocalIterator();

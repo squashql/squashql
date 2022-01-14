@@ -3,9 +3,10 @@ package me.paulbares.jackson;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import me.paulbares.SparkDatastore;
-import me.paulbares.Field;
 import me.paulbares.query.Query;
-import me.paulbares.query.spark.SparkQueryEngine;
+import me.paulbares.query.SparkQueryEngine;
+import me.paulbares.serialization.SerializationUtils;
+import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -41,7 +42,7 @@ public class TestDataset {
             .addAggregatedMeasure("price", "sum")
             .addAggregatedMeasure("quantity", "sum");
 
-    String serialize = JacksonUtil.datasetToJSON(new SparkQueryEngine(ds).execute(query));
+    String serialize = SerializationUtils.datasetToJSON(new SparkQueryEngine(ds).executeSpark(query));
     System.out.println(serialize);
     StructType[] structTypes = JacksonUtil.mapper.readValue(serialize, StructType[].class);
     Assertions.assertThat(structTypes).containsExactlyInAnyOrder(

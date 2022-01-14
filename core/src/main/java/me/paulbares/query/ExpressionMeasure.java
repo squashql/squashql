@@ -2,7 +2,7 @@ package me.paulbares.query;
 
 import java.util.Objects;
 
-import static me.paulbares.query.sql.SQLTranslator.escape;
+import static me.paulbares.query.SqlUtils.escape;
 
 public class ExpressionMeasure implements Measure {
 

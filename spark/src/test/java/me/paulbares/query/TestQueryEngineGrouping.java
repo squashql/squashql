@@ -1,8 +1,7 @@
-package me.paulbares;
+package me.paulbares.query;
 
-import me.paulbares.query.ComparisonMethod;
-import me.paulbares.query.spark.SparkQueryEngine;
-import me.paulbares.query.ScenarioGroupingQuery;
+import me.paulbares.SparkDatastore;
+import me.paulbares.store.Field;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;

@@ -15,6 +15,16 @@
     <version>0.1-SNAPSHOT</version>
 
     <dependencies>
+        <dependency>
+            <groupId>me.paulbares</groupId>
+            <artifactId>aitm-core</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.10</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-core -->
         <dependency>
             <groupId>org.apache.spark</groupId>

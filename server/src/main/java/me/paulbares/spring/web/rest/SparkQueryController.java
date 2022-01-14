@@ -2,8 +2,10 @@ package me.paulbares.spring.web.rest;
 
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.Query;
-import me.paulbares.query.spark.SparkQueryEngine;
 import me.paulbares.query.ScenarioGroupingQuery;
+import me.paulbares.query.SparkQueryEngine;
+import me.paulbares.query.Table;
+import me.paulbares.serialization.SerializationUtils;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.DataTypes;
@@ -14,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -38,21 +39,22 @@ public class SparkQueryController {
 
   @PostMapping(MAPPING_QUERY)
   public ResponseEntity<String> execute(@RequestBody Query query) {
-    Dataset<Row> rowDataset = this.queryEngine.execute(query);
-    return ResponseEntity.ok(JacksonUtil.datasetToCsv(rowDataset));
+    Table table = this.queryEngine.execute(query);
+    return ResponseEntity.ok(JacksonUtil.tableToCsv(table));
   }
 
 
   @PostMapping(MAPPING_QUERY_GROUPING)
   public ResponseEntity<String> executeGrouping(@RequestBody ScenarioGroupingQuery query) {
     Dataset<Row> rowDataset = this.queryEngine.executeGrouping(query);
-    return ResponseEntity.ok(JacksonUtil.datasetToCsv(rowDataset));
+    return ResponseEntity.ok(SerializationUtils.datasetToCsv(rowDataset));
   }
 
   @GetMapping(MAPPING_METADATA)
   public ResponseEntity<Map<Object, Object>> getMetadata() {
-    List<Map<String, String>> collect = Arrays.stream(this.queryEngine.datastore.getFields())
-            .map(f -> Map.of("name", f.name(), "type", f.dataType().simpleString()))
+    List<Map<String, String>> collect = this.queryEngine.datastore.getFields()
+            .stream()
+            .map(f -> Map.of("name", f.name(), "type", f.type().getSimpleName().toLowerCase()))
             .collect(Collectors.toCollection(() -> new ArrayList<>()));
     collect.add(Map.of("name", "scenario", "type", DataTypes.StringType.simpleString()));
     return ResponseEntity.ok(Map.of(

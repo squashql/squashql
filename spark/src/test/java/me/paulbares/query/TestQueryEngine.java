@@ -1,8 +1,8 @@
-package me.paulbares;
+package me.paulbares.query;
 
+import me.paulbares.SparkDatastore;
 import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.query.Query;
-import me.paulbares.query.spark.SparkQueryEngine;
+import me.paulbares.store.Field;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -52,7 +52,7 @@ public class TestQueryEngine {
             .addWildcardCoordinate("scenario")
             .addAggregatedMeasure("price", "sum")
             .addAggregatedMeasure("quantity", "sum");
-    List<Row> collect = new SparkQueryEngine(ds).execute(query).collectAsList();
+    List<Row> collect = new SparkQueryEngine(ds).executeSpark(query).collectAsList();
     Assertions.assertThat(collect).containsExactlyInAnyOrder(
             RowFactory.create("base", 15.0d, 33),
             RowFactory.create("s1", 17.0d, 33),
@@ -66,7 +66,7 @@ public class TestQueryEngine {
             .addAggregatedMeasure("price", "sum")
             .addAggregatedMeasure("quantity", "sum")
             .withTotals();
-    List<Row> collect = new SparkQueryEngine(ds).execute(query).collectAsList();
+    List<Row> collect = new SparkQueryEngine(ds).executeSpark(query).collectAsList();
     Assertions.assertThat(collect).containsExactly(
             RowFactory.create(null, 15.d + 17.d + 14.5, 33 * 3),
             RowFactory.create("base", 15.0d, 33),
@@ -82,7 +82,7 @@ public class TestQueryEngine {
             .addAggregatedMeasure("price", "sum")
             .addAggregatedMeasure("quantity", "sum")
             .withTotals();
-    Dataset<Row> dataset = new SparkQueryEngine(ds).execute(query);
+    Dataset<Row> dataset = new SparkQueryEngine(ds).executeSpark(query);
     List<Row> collect = dataset.collectAsList();
     Assertions.assertThat(collect).containsExactly(
             RowFactory.create(null, null, 15.d + 17.d + 14.5d, 33 * 3),
@@ -106,7 +106,7 @@ public class TestQueryEngine {
             .addCoordinates("scenario", "s1", "s2")
             .addAggregatedMeasure("price", "sum")
             .addAggregatedMeasure("quantity", "sum");
-    List<Row> collect = new SparkQueryEngine(ds).execute(query).collectAsList();
+    List<Row> collect = new SparkQueryEngine(ds).executeSpark(query).collectAsList();
     Assertions.assertThat(collect).containsExactlyInAnyOrder(
             RowFactory.create("s1", 17.0d, 33),
             RowFactory.create("s2", 14.5d, 33));
@@ -118,7 +118,7 @@ public class TestQueryEngine {
             .addSingleCoordinate("scenario", "s1")
             .addAggregatedMeasure("price", "sum")
             .addAggregatedMeasure("quantity", "sum");
-    Dataset<Row> rowDataset = new SparkQueryEngine(ds).execute(query);
+    Dataset<Row> rowDataset = new SparkQueryEngine(ds).executeSpark(query);
     List<Row> collect = rowDataset.collectAsList();
     Assertions.assertThat(collect).containsExactlyInAnyOrder(
             RowFactory.create("s1", 17.0d, 33));
@@ -130,7 +130,7 @@ public class TestQueryEngine {
   @Test
   void testDiscovery() {
     Query query = new Query().addWildcardCoordinate("scenario");
-    Dataset<Row> rowDataset = new SparkQueryEngine(ds).execute(query);
+    Dataset<Row> rowDataset = new SparkQueryEngine(ds).executeSpark(query);
     List<Row> collect = rowDataset.collectAsList();
     Assertions.assertThat(collect)
             .containsExactlyInAnyOrder(
@@ -146,8 +146,8 @@ public class TestQueryEngine {
             .addWildcardCoordinate("scenario")
             .addAggregatedMeasure("price", "sum")
             .addAggregatedMeasure("quantity", "sum");
-    Dataset<Row> dataset = new SparkQueryEngine(ds).execute(query);
-    String actual = JacksonUtil.datasetToCsv(dataset);
+    Table dataset = new SparkQueryEngine(ds).execute(query);
+    String actual = JacksonUtil.tableToCsv(dataset);
     Map map = JacksonUtil.mapper.readValue(actual, Map.class);
     Assertions.assertThat((List) map.get("columns"))
             .containsExactly("scenario", "sum(price)", "sum(quantity)");

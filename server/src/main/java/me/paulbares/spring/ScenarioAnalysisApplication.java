@@ -3,7 +3,7 @@ package me.paulbares.spring;
 import me.paulbares.DataLoader;
 import me.paulbares.SparkDatastore;
 import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.query.spark.SparkQueryEngine;
+import me.paulbares.query.SparkQueryEngine;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;

@@ -1,11 +1,12 @@
-package me.paulbares.query.sql;
+package me.paulbares.query;
 
 import me.paulbares.SparkDatastore;
-import me.paulbares.query.Query;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static me.paulbares.query.SqlUtils.escape;
 
 public class SQLTranslator {
 
@@ -51,9 +52,5 @@ public class SQLTranslator {
       }
     }
     return statement.toString();
-  }
-
-  public static String escape(String column) {
-    return "`" + column + "`";
   }
 }

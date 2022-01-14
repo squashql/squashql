@@ -1,5 +1,9 @@
 package me.paulbares;
 
+import me.paulbares.store.Field;
+import org.apache.spark.sql.Column;
+import org.apache.spark.sql.functions;
+
 import java.util.List;
 
 import static org.apache.spark.sql.functions.col;
@@ -47,12 +51,15 @@ public class DataLoader {
     var score = new Field("score-visi", Integer.class);
     var minMarche = new Field("min-marche", Double.class);
 
+    Column qCol = col(quantite.name());
+    Column pCol = col(prix.name());
+    Column sCol = col(score.name());
     SparkDatastore datastore = new SparkDatastore(
             List.of(ean, pdv, categorie, type, sensi, quantite, prix, achat, score, minMarche),
-            quantite.col().multiply(prix.col()).as("ca"),
-            quantite.col().multiply(prix.col().minus(achat.col())).as("marge"),
-            prix.col().divide(minMarche.col()).multiply(score.col()).as("numerateur-indice"),
-            col("numerateur-indice").divide(score.col()).as("indice-prix"));
+            qCol.multiply(pCol).as("ca"),
+            qCol.multiply(pCol.minus(functions.col(achat.name()))).as("marge"),
+            pCol.divide(functions.col(minMarche.name())).multiply(sCol).as("numerateur-indice"),
+            col("numerateur-indice").divide(sCol).as("indice-prix"));
 
     datastore.load(SparkDatastore.MAIN_SCENARIO_NAME, dataBase());
     datastore.load("mdd-baisse", dataMDDBaisse());
