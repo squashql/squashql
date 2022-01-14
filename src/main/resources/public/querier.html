@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Basic JSON Editor Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.min.js"></script>
+</head>
+<body>
+<div id='editor_holder'></div>
+<button id='submit'>Submit (console.log)</button>
+
+<script>
+    // Initialize the editor with a JSON schema
+    var editor = new JSONEditor(document.getElementById('editor_holder'), {
+        disable_collapse: true,
+        disable_properties: true,
+        disable_edit_json: true,
+        schema: {
+            type: "object",
+            properties: {
+                scenario: {
+                    type: "array",
+                    uniqueItems: true,
+                    items: {
+                        type: "string",
+                        enum: [
+                            "all",
+                            "base",
+                            "mdd-baisse",
+                            "mdd-baisse-simu-sensi",
+                        ]
+                    }
+                },
+                sensibilite: {
+                    type: "array",
+                    uniqueItems: true,
+                    items: {
+                        type: "string",
+                        enum: [
+                            "all",
+                            "Hyper",
+                            "Basse",
+                        ]
+                    }
+                },
+                typemarque: {
+                    type: "array",
+                    uniqueItems: true,
+                    items: {
+                        type: "string",
+                        enum: [
+                            "all",
+                            "MN",
+                            "MDD",
+                        ]
+                    }
+                },
+
+                quantite: {
+                    type: "array",
+                    format: "select",
+                    items: {
+                        type: "string",
+                        enum: [
+                            "sum",
+                            "avg",
+                            "min",
+                            "max",
+                        ]
+                    }
+                },
+                prix: {
+                    type: "array",
+                    format: "select",
+                    items: {
+                        type: "string",
+                        enum: [
+                            "sum",
+                            "avg",
+                            "min",
+                            "max",
+                        ]
+                    }
+                },
+                indiceprixvisi: {
+                    type: "string",
+                    title: "Indice Prix Visi",
+                    default: "bar",
+                    editable: false
+                }
+            }
+        }
+    });
+
+    // Hook up the submit button to log to the console
+    document.getElementById('submit').addEventListener('click', function () {
+        // Get the value from the editor
+        console.log(editor.getValue());
+    });
+</script>
+</body>
+</html>
