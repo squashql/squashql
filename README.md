@@ -66,7 +66,21 @@ Response:
 }
 ```
 
-Optional parameter `withTotals`. Default value is false. If true, the result includes extra rows that represent the subtotals, which are commonly referred to as super-aggregate rows, along with the grand total row.
+Some additional contexts can be provided to enrich or modify the query results. For the moment, only the context value `totals` 
+is supported:
+
+```json
+...
+"context": {
+  "totals": {
+    "visible": true,
+    "position": "top"
+  } 
+}
+...
+```
+If `totals.visible` is true, the result includes extra rows that represent the subtotals, which are commonly referred to as super-aggregate rows, along with the grand total row.
+`totals.position` to change the totals positions in the results. Default is `top`.
 
 ```json
 {
@@ -84,7 +98,12 @@ Optional parameter `withTotals`. Default value is false. If true, the result inc
       "expression": "100 * sum(`numerateur-indice`) / sum(`score-visi`)"
     }
   ],
-  "withTotals": true
+  "context": {
+    "totals": {
+      "visible": true,
+      "position": "top"
+    }
+  }
 }
 ```
 
