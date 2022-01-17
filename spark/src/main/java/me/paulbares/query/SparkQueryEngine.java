@@ -21,6 +21,9 @@ public class SparkQueryEngine implements QueryEngine {
 
   private static final Logger LOGGER = Logger.getLogger(SparkQueryEngine.class.getName());
 
+  public static final String GRAND_TOTAL = "Grand Total";
+  public static final String TOTAL = "Total";
+
   public final SparkDatastore datastore;
 
   public SparkQueryEngine(SparkDatastore datastore) {
@@ -37,7 +40,49 @@ public class SparkQueryEngine implements QueryEngine {
     String sql = SQLTranslator.translate(query);
     LOGGER.info("Translated query #" + query.id + " to " + sql);
     datastore.get().createOrReplaceTempView(SparkDatastore.BASE_STORE_NAME);
-    return datastore.spark.sql(sql);
+    Dataset<Row> ds = datastore.spark.sql(sql);
+    return postProcessDataset(ds, query);
+  }
+
+  protected Dataset<Row> postProcessDataset(Dataset<Row> dataset, Query query) {
+    if (!query.withTotals) {
+      return dataset;
+    }
+
+    return editTotalsAndSubtotals(dataset, query);
+  }
+
+  protected Dataset<Row> editTotalsAndSubtotals(Dataset<Row> dataset, Query query) {
+    Iterator<Row> rowIterator = dataset.toLocalIterator();
+
+    List<Row> newRows = new ArrayList<>((int) dataset.count());
+    List<String> headers = new ArrayList<>(query.coordinates.keySet());
+    while (rowIterator.hasNext()) {
+      Row row = rowIterator.next();
+      List<Object> objects = new ArrayList<>(CollectionConverters.asJava(row.toSeq()));
+
+      Object[] newHeaders = new String[headers.size()];
+      for (int i = 0; i < headers.size(); i++) {
+        Object current = objects.get(i);
+        if (i == 0 && current == null) {
+          // GT
+          newHeaders[i] = GRAND_TOTAL;
+        } else if (i >= 1 && objects.get(i - 1) != null && current == null) {
+          // Total
+          newHeaders[i] = TOTAL;
+        } else {
+          newHeaders[i] = current; // nothing to change
+        }
+      }
+
+      for (int i = 0; i < newHeaders.length; i++) {
+          objects.set(i, newHeaders[i]);
+      }
+      Row newRow = RowFactory.create(objects.toArray(new Object[0]));
+      newRows.add(newRow);
+    }
+
+    return datastore.spark.createDataFrame(newRows, dataset.schema());
   }
 
   public Dataset<Row> executeGrouping(ScenarioGroupingQuery query) {

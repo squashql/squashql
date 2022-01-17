@@ -28,6 +28,7 @@ public class SQLTranslator {
     });
     query.measures.forEach(m -> aggregates.add(m.sqlExpression()));
 
+
     groupBy.forEach(selects::add); // coord first, then aggregates
     aggregates.forEach(selects::add);
 
@@ -48,7 +49,15 @@ public class SQLTranslator {
       statement.append(groupByStatement);
       if (query.withTotals) {
         statement.append(") order by ");
-        statement.append(groupByStatement);
+        String order = " asc"; // default for now
+        // https://stackoverflow.com/a/7862601
+        // to move totals and subtotals at the top or at the bottom and keep normal order for other rows.
+        String position = (String) query.context.options.getOrDefault(QueryContext.totalsPosition, QueryContext.totalsPositionTop);// default top
+        String orderBy = "case when %s is null then %d else %d end, %s %s";
+        int first = position.equals(QueryContext.totalsPositionTop) ? 0 : 1;
+        int second = first ^ 1;
+        String orderByStatement = groupBy.stream().map(g -> orderBy.formatted(g, first, second, g, order)).collect(Collectors.joining(", "));
+        statement.append(orderByStatement);
       }
     }
     return statement.toString();

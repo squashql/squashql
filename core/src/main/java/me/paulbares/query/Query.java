@@ -12,13 +12,15 @@ public class Query {
 
   public static final AtomicLong ID = new AtomicLong();
 
+  public final long id;
+
   public Map<String, List<String>> coordinates = new LinkedHashMap<>();
 
   public List<Measure> measures = new ArrayList<>();
 
-  public final long id;
-
   public boolean withTotals = false;
+
+  public QueryContext context = new QueryContext();
 
   public Query() {
     this.id = ID.getAndIncrement();
@@ -57,6 +59,11 @@ public class Query {
     return this;
   }
 
+  public Query addContext(String key, Object value) {
+    this.context.options.put(key, value);
+    return this;
+  }
+
   @Override
   public String toString() {
     return "Query{" +
@@ -64,6 +71,7 @@ public class Query {
             ", measures=" + measures +
             ", id=" + id +
             ", withTotals=" + withTotals +
+            ", context=" + context +
             '}';
   }
 

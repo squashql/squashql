@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 import static me.paulbares.SparkDatastore.MAIN_SCENARIO_NAME;
+import static me.paulbares.query.SparkQueryEngine.GRAND_TOTAL;
+import static me.paulbares.query.SparkQueryEngine.TOTAL;
 
 public class TestQueryEngine {
 
@@ -68,7 +70,7 @@ public class TestQueryEngine {
             .withTotals();
     List<Row> collect = new SparkQueryEngine(ds).executeSpark(query).collectAsList();
     Assertions.assertThat(collect).containsExactly(
-            RowFactory.create(null, 15.d + 17.d + 14.5, 33 * 3),
+            RowFactory.create(GRAND_TOTAL, 15.d + 17.d + 14.5, 33 * 3),
             RowFactory.create("base", 15.0d, 33),
             RowFactory.create("s1", 17.0d, 33),
             RowFactory.create("s2", 14.5d, 33));
@@ -79,25 +81,76 @@ public class TestQueryEngine {
     Query query = new Query()
             .addWildcardCoordinate("scenario")
             .addWildcardCoordinate("category")
+            .addWildcardCoordinate("ean")
             .addAggregatedMeasure("price", "sum")
             .addAggregatedMeasure("quantity", "sum")
             .withTotals();
     Dataset<Row> dataset = new SparkQueryEngine(ds).executeSpark(query);
     List<Row> collect = dataset.collectAsList();
     Assertions.assertThat(collect).containsExactly(
-            RowFactory.create(null, null, 15.d + 17.d + 14.5d, 33 * 3),
-            RowFactory.create("base", null, 15.0d, 33),
-            RowFactory.create("base", "cloth", 10.0d, 3),
-            RowFactory.create("base", "drink", 2.0d, 10),
-            RowFactory.create("base", "food", 3.0d, 20),
-            RowFactory.create("s1", null, 17.0d, 33),
-            RowFactory.create("s1", "cloth", 10.0d, 3),
-            RowFactory.create("s1", "drink", 4.0d, 10),
-            RowFactory.create("s1", "food", 3.0d, 20),
-            RowFactory.create("s2", null, 14.5d, 33),
-            RowFactory.create("s2", "cloth", 10.0d, 3),
-            RowFactory.create("s2", "drink", 1.5d, 10),
-            RowFactory.create("s2", "food", 3.0d, 20));
+            RowFactory.create(GRAND_TOTAL, null, null, 15.d + 17.d + 14.5d, 33 * 3),
+            RowFactory.create("base", TOTAL, null,  15.0d, 33),
+            RowFactory.create("base", "cloth", TOTAL, 10.0d, 3),
+            RowFactory.create("base", "cloth", "shirt", 10.0d, 3),
+            RowFactory.create("base", "drink", TOTAL, 2.0d, 10),
+            RowFactory.create("base", "drink", "bottle", 2.0d, 10),
+            RowFactory.create("base", "food", TOTAL, 3.0d, 20),
+            RowFactory.create("base", "food", "cookie", 3.0d, 20),
+
+            RowFactory.create("s1", TOTAL, null,  17.0d, 33),
+            RowFactory.create("s1", "cloth", TOTAL, 10.0d, 3),
+            RowFactory.create("s1", "cloth", "shirt", 10.0d, 3),
+            RowFactory.create("s1", "drink", TOTAL, 4.0d, 10),
+            RowFactory.create("s1", "drink", "bottle", 4.0d, 10),
+            RowFactory.create("s1", "food", TOTAL, 3.0d, 20),
+            RowFactory.create("s1", "food", "cookie", 3.0d, 20),
+
+            RowFactory.create("s2", TOTAL, null,  14.5d, 33),
+            RowFactory.create("s2", "cloth", TOTAL, 10.0d, 3),
+            RowFactory.create("s2", "cloth", "shirt", 10.0d, 3),
+            RowFactory.create("s2", "drink", TOTAL, 1.5d, 10),
+            RowFactory.create("s2", "drink", "bottle", 1.5d, 10),
+            RowFactory.create("s2", "food", TOTAL, 3.0d, 20),
+            RowFactory.create("s2", "food", "cookie", 3.0d, 20));
+  }
+
+  @Test
+  void testQueryWildcardAndCrossjoinWithTotalsPositionBottom() {
+    Query query = new Query()
+            .addWildcardCoordinate("scenario")
+            .addWildcardCoordinate("category")
+            .addWildcardCoordinate("ean")
+            .addAggregatedMeasure("price", "sum")
+            .addAggregatedMeasure("quantity", "sum")
+            .addContext(QueryContext.totalsPosition, QueryContext.totalsPositionBottom)
+            .withTotals();
+    Dataset<Row> dataset = new SparkQueryEngine(ds).executeSpark(query);
+    List<Row> collect = dataset.collectAsList();
+    Assertions.assertThat(collect).containsExactly(
+            RowFactory.create("base", "cloth", "shirt", 10.0d, 3),
+            RowFactory.create("base", "cloth", TOTAL, 10.0d, 3),
+            RowFactory.create("base", "drink", "bottle", 2.0d, 10),
+            RowFactory.create("base", "drink", TOTAL, 2.0d, 10),
+            RowFactory.create("base", "food", "cookie", 3.0d, 20),
+            RowFactory.create("base", "food", TOTAL, 3.0d, 20),
+            RowFactory.create("base", TOTAL, null,  15.0d, 33),
+
+            RowFactory.create("s1", "cloth", "shirt", 10.0d, 3),
+            RowFactory.create("s1", "cloth", TOTAL, 10.0d, 3),
+            RowFactory.create("s1", "drink", "bottle", 4.0d, 10),
+            RowFactory.create("s1", "drink", TOTAL, 4.0d, 10),
+            RowFactory.create("s1", "food", "cookie", 3.0d, 20),
+            RowFactory.create("s1", "food", TOTAL, 3.0d, 20),
+            RowFactory.create("s1", TOTAL, null,  17.0d, 33),
+
+            RowFactory.create("s2", "cloth", "shirt", 10.0d, 3),
+            RowFactory.create("s2", "cloth", TOTAL, 10.0d, 3),
+            RowFactory.create("s2", "drink", "bottle", 1.5d, 10),
+            RowFactory.create("s2", "drink", TOTAL, 1.5d, 10),
+            RowFactory.create("s2", "food", "cookie", 3.0d, 20),
+            RowFactory.create("s2", "food", TOTAL, 3.0d, 20),
+            RowFactory.create("s2", TOTAL, null,  14.5d, 33),
+            RowFactory.create(GRAND_TOTAL, null, null, 15.d + 17.d + 14.5d, 33 * 3));
   }
 
   @Test
