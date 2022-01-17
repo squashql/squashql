@@ -2,7 +2,8 @@ package me.paulbares.query;
 
 public interface QueryEngine {
 
-  Table execute(Query query); // FIXME should return spark obj
+  String GRAND_TOTAL = "Grand Total";
+  String TOTAL = "Total";
 
-
+  Table execute(Query query);
 }

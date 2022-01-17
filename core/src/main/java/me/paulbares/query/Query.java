@@ -1,7 +1,12 @@
 package me.paulbares.query;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import me.paulbares.jackson.ContextValueDeserializer;
+import me.paulbares.query.context.ContextValue;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,9 +23,8 @@ public class Query {
 
   public List<Measure> measures = new ArrayList<>();
 
-  public boolean withTotals = false;
-
-  public QueryContext context = new QueryContext();
+  @JsonDeserialize(contentUsing = ContextValueDeserializer.class)
+  public Map<String, ContextValue> context = new HashMap<>();
 
   public Query() {
     this.id = ID.getAndIncrement();
@@ -54,13 +58,8 @@ public class Query {
     return this;
   }
 
-  public Query withTotals() {
-    this.withTotals = true;
-    return this;
-  }
-
-  public Query addContext(String key, Object value) {
-    this.context.options.put(key, value);
+  public Query addContext(String key, ContextValue value) {
+    this.context.put(key, value);
     return this;
   }
 
@@ -70,7 +69,6 @@ public class Query {
             "coordinates=" + coordinates +
             ", measures=" + measures +
             ", id=" + id +
-            ", withTotals=" + withTotals +
             ", context=" + context +
             '}';
   }
@@ -80,11 +78,12 @@ public class Query {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Query query = (Query) o;
-    return id == query.id && withTotals == query.withTotals && Objects.equals(coordinates, query.coordinates) && Objects.equals(measures, query.measures);
+    return this.id == query.id && Objects.equals(this.coordinates, query.coordinates) && Objects.equals(this.measures,
+            query.measures) && Objects.equals(this.context, query.context);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(coordinates, measures, id, withTotals);
+    return Objects.hash(this.id, this.coordinates, this.measures, this.context);
   }
 }

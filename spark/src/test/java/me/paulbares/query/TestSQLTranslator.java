@@ -1,5 +1,6 @@
 package me.paulbares.query;
 
+import me.paulbares.query.context.Totals;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -74,7 +75,7 @@ public class TestSQLTranslator {
     Query query = new Query()
             .addWildcardCoordinate("scenario")
             .addAggregatedMeasure("price", "sum")
-            .withTotals();
+            .addContext(Totals.KEY, Totals.VISIBLE_TOP);
 
     Assertions.assertThat(SQLTranslator.translate(query))
             .isEqualTo("select `scenario`, sum(`price`) from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
@@ -86,8 +87,7 @@ public class TestSQLTranslator {
     Query query = new Query()
             .addWildcardCoordinate("scenario")
             .addAggregatedMeasure("price", "sum")
-            .addContext(QueryContext.totalsPosition, QueryContext.totalsPositionBottom)
-            .withTotals();
+            .addContext(Totals.KEY, Totals.VISIBLE_BOTTOM);
 
     Assertions.assertThat(SQLTranslator.translate(query))
             .isEqualTo("select `scenario`, sum(`price`) from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +

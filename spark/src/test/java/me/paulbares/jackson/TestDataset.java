@@ -1,15 +1,9 @@
 package me.paulbares.jackson;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import me.paulbares.SparkDatastore;
-import me.paulbares.query.Query;
-import me.paulbares.query.SparkQueryEngine;
-import me.paulbares.serialization.SerializationUtils;
 import me.paulbares.store.Field;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Objects;
@@ -33,23 +27,6 @@ public class TestDataset {
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
-  }
-
-  @Test
-  void testSerialization() throws JsonProcessingException {
-    Query query = new Query()
-            .addWildcardCoordinate("ean")
-            .addAggregatedMeasure("price", "sum")
-            .addAggregatedMeasure("quantity", "sum");
-
-    String serialize = SerializationUtils.datasetToJSON(new SparkQueryEngine(ds).executeSpark(query));
-    System.out.println(serialize);
-    StructType[] structTypes = JacksonUtil.mapper.readValue(serialize, StructType[].class);
-    Assertions.assertThat(structTypes).containsExactlyInAnyOrder(
-            new StructType("shirt", 10d, 3),
-            new StructType("cookie", 3d, 20),
-            new StructType("bottle", 2d, 10)
-    );
   }
 
   private static class StructType {

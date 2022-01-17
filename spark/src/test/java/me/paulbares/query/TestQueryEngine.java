@@ -2,6 +2,7 @@ package me.paulbares.query;
 
 import me.paulbares.SparkDatastore;
 import me.paulbares.jackson.JacksonUtil;
+import me.paulbares.query.context.Totals;
 import me.paulbares.store.Field;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -14,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 import static me.paulbares.SparkDatastore.MAIN_SCENARIO_NAME;
-import static me.paulbares.query.SparkQueryEngine.GRAND_TOTAL;
-import static me.paulbares.query.SparkQueryEngine.TOTAL;
+import static me.paulbares.query.QueryEngine.GRAND_TOTAL;
+import static me.paulbares.query.QueryEngine.TOTAL;
 
 public class TestQueryEngine {
 
@@ -67,7 +68,7 @@ public class TestQueryEngine {
             .addWildcardCoordinate("scenario")
             .addAggregatedMeasure("price", "sum")
             .addAggregatedMeasure("quantity", "sum")
-            .withTotals();
+            .addContext(Totals.KEY, Totals.VISIBLE_TOP);
     List<Row> collect = new SparkQueryEngine(ds).executeSpark(query).collectAsList();
     Assertions.assertThat(collect).containsExactly(
             RowFactory.create(GRAND_TOTAL, 15.d + 17.d + 14.5, 33 * 3),
@@ -84,7 +85,8 @@ public class TestQueryEngine {
             .addWildcardCoordinate("ean")
             .addAggregatedMeasure("price", "sum")
             .addAggregatedMeasure("quantity", "sum")
-            .withTotals();
+            .addContext(Totals.KEY, Totals.VISIBLE_TOP);
+
     Dataset<Row> dataset = new SparkQueryEngine(ds).executeSpark(query);
     List<Row> collect = dataset.collectAsList();
     Assertions.assertThat(collect).containsExactly(
@@ -122,8 +124,8 @@ public class TestQueryEngine {
             .addWildcardCoordinate("ean")
             .addAggregatedMeasure("price", "sum")
             .addAggregatedMeasure("quantity", "sum")
-            .addContext(QueryContext.totalsPosition, QueryContext.totalsPositionBottom)
-            .withTotals();
+            .addContext(Totals.KEY, Totals.VISIBLE_BOTTOM);
+
     Dataset<Row> dataset = new SparkQueryEngine(ds).executeSpark(query);
     List<Row> collect = dataset.collectAsList();
     Assertions.assertThat(collect).containsExactly(

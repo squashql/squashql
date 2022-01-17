@@ -1,6 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.SparkDatastore;
+import me.paulbares.query.context.Totals;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -20,9 +21,6 @@ import java.util.logging.Logger;
 public class SparkQueryEngine implements QueryEngine {
 
   private static final Logger LOGGER = Logger.getLogger(SparkQueryEngine.class.getName());
-
-  public static final String GRAND_TOTAL = "Grand Total";
-  public static final String TOTAL = "Total";
 
   public final SparkDatastore datastore;
 
@@ -45,7 +43,7 @@ public class SparkQueryEngine implements QueryEngine {
   }
 
   protected Dataset<Row> postProcessDataset(Dataset<Row> dataset, Query query) {
-    if (!query.withTotals) {
+    if (!query.context.containsKey(Totals.KEY)) {
       return dataset;
     }
 

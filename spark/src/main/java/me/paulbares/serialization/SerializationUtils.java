@@ -12,21 +12,6 @@ import java.util.Map;
 
 public class SerializationUtils {
 
-  // FIXME might be useless. To check
-  public static String datasetToJSON(Dataset<Row> dataset) {
-    Iterator<String> it = dataset.toJSON().toLocalIterator();
-    StringBuilder sb = new StringBuilder();
-    sb.append('[');
-    while (it.hasNext()) {
-      sb.append(it.next());
-      if (it.hasNext()) {
-        sb.append(',');
-      }
-    }
-    sb.append(']');
-    return sb.toString();
-  }
-
   public static String datasetToCsv(Dataset<Row> dataset) {
     Iterator<Row> it = dataset.toLocalIterator();
     List<List<Object>> rows = new ArrayList<>();

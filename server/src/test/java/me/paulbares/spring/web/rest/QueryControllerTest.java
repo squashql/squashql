@@ -3,7 +3,9 @@ package me.paulbares.spring.web.rest;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.ComparisonMethod;
 import me.paulbares.query.Query;
+import me.paulbares.query.QueryEngine;
 import me.paulbares.query.ScenarioGroupingQuery;
+import me.paulbares.query.context.Totals;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -55,7 +57,7 @@ public class QueryControllerTest {
   public void testQueryWithTotals() throws Exception {
     Query query = new Query()
             .addWildcardCoordinate("scenario")
-            .withTotals()
+            .addContext(Totals.KEY, Totals.VISIBLE_TOP)
             .addAggregatedMeasure("marge", "sum");
     mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
                     .content(JacksonUtil.serialize(query))
@@ -65,7 +67,7 @@ public class QueryControllerTest {
               String contentAsString = result.getResponse().getContentAsString();
               Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
               Assertions.assertThat((List) queryResult.get("rows")).containsExactlyInAnyOrder(
-                      Arrays.asList(null, 280.00000000000006d + 190.00000000000003d + 240.00000000000003d),
+                      Arrays.asList(QueryEngine.GRAND_TOTAL, 280.00000000000006d + 190.00000000000003d + 240.00000000000003d),
                       List.of(MAIN_SCENARIO_NAME, 280.00000000000006d),
                       List.of("mdd-baisse-simu-sensi", 190.00000000000003d),
                       List.of("mdd-baisse", 240.00000000000003d)

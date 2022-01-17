@@ -1,6 +1,8 @@
 package me.paulbares.query;
 
 import me.paulbares.SparkDatastore;
+import me.paulbares.query.context.ContextValue;
+import me.paulbares.query.context.Totals;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,19 +44,22 @@ public class SQLTranslator {
     }
     if (!groupBy.isEmpty()) {
       statement.append(" group by ");
-      if (query.withTotals) {
+
+      ContextValue totals = query.context.get(Totals.KEY);
+      if (totals != null) {
         statement.append("rollup(");
       }
       String groupByStatement = groupBy.stream().collect(Collectors.joining(", "));
       statement.append(groupByStatement);
-      if (query.withTotals) {
+      if (totals != null) {
+        Totals cv = (Totals) totals;
         statement.append(") order by ");
         String order = " asc"; // default for now
         // https://stackoverflow.com/a/7862601
         // to move totals and subtotals at the top or at the bottom and keep normal order for other rows.
-        String position = (String) query.context.options.getOrDefault(QueryContext.totalsPosition, QueryContext.totalsPositionTop);// default top
+        String position = cv.position == null ? Totals.POSITION_TOP : cv.position; // default top
         String orderBy = "case when %s is null then %d else %d end, %s %s";
-        int first = position.equals(QueryContext.totalsPositionTop) ? 0 : 1;
+        int first = position.equals(Totals.POSITION_TOP) ? 0 : 1;
         int second = first ^ 1;
         String orderByStatement = groupBy.stream().map(g -> orderBy.formatted(g, first, second, g, order)).collect(Collectors.joining(", "));
         statement.append(orderByStatement);
