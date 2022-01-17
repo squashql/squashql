@@ -73,7 +73,6 @@ public class QueryControllerTest {
                       List.of("mdd-baisse", 240.00000000000003d)
               );
               Assertions.assertThat((List) queryResult.get("columns")).containsExactly("scenario", "sum(marge)");
-
             });
   }
 
