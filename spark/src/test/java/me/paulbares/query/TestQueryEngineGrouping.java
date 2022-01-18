@@ -13,7 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static me.paulbares.SparkDatastore.MAIN_SCENARIO_NAME;
+import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
 
 public class TestQueryEngineGrouping {
 

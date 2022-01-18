@@ -20,6 +20,7 @@
         <assertj.version>3.16.1</assertj.version>
         <jackson.version>2.12.5</jackson.version>
         <spring-boot.version>2.6.1</spring-boot.version>
+        <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
     </properties>
 
     <modules>

@@ -27,7 +27,7 @@ public class DatasetTable implements Table {
   }
 
   @Override
-  public Iterator<List<Object>> rowIterator() {
+  public Iterator<List<Object>> iterator() {
     Iterator<Row> it = this.dataset.toLocalIterator();
     return new Iterator<>() {
       @Override

@@ -39,7 +39,7 @@ public class JacksonUtil {
   }
 
   public static String tableToCsv(Table table) {
-    Iterator<List<Object>> it = table.rowIterator();
+    Iterator<List<Object>> it = table.iterator();
     List<List<Object>> rows = new ArrayList<>();
     while (it.hasNext()) {
       rows.add(it.next());

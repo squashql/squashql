@@ -30,7 +30,6 @@ public class SparkDatastore implements Datastore {
   }
 
   public static final String BASE_STORE_NAME = "base_store";
-  public static final String MAIN_SCENARIO_NAME = "base";
 
   private final Map<String, Dataset<Row>> m = new HashMap<>();
 

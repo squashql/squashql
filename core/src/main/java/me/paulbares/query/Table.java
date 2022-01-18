@@ -1,13 +1,10 @@
 package me.paulbares.query;
 
-import java.util.Iterator;
 import java.util.List;
 
-public interface Table {
+public interface Table extends Iterable<List<Object>> {
 
   List<String> headers();
-
-  Iterator<List<Object>> rowIterator();
 
   long rowCount();
 }

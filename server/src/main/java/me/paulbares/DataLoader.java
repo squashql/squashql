@@ -1,5 +1,6 @@
 package me.paulbares;
 
+import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.functions;
@@ -61,7 +62,7 @@ public class DataLoader {
             pCol.divide(functions.col(minMarche.name())).multiply(sCol).as("numerateur-indice"),
             col("numerateur-indice").divide(sCol).as("indice-prix"));
 
-    datastore.load(SparkDatastore.MAIN_SCENARIO_NAME, dataBase());
+    datastore.load(Datastore.MAIN_SCENARIO_NAME, dataBase());
     datastore.load("mdd-baisse", dataMDDBaisse());
     datastore.load("mdd-baisse-simu-sensi", dataMDDBaisseSimuSensi());
 

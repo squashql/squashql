@@ -7,7 +7,6 @@ import me.paulbares.query.QueryEngine;
 import me.paulbares.query.ScenarioGroupingQuery;
 import me.paulbares.query.context.Totals;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -21,7 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static me.paulbares.SparkDatastore.MAIN_SCENARIO_NAME;
+import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -73,31 +72,6 @@ public class QueryControllerTest {
                       List.of("mdd-baisse", 240.00000000000003d)
               );
               Assertions.assertThat((List) queryResult.get("columns")).containsExactly("scenario", "sum(marge)");
-            });
-  }
-
-  @Disabled("the controller does not used the toJson anymore")
-  @Test
-  public void testQueryDisabled() throws Exception {
-    Query query = new Query()
-            .addWildcardCoordinate("scenario")
-            .addAggregatedMeasure("marge", "sum")
-            .addExpressionMeasure("indice-prix", "100 * sum(`numerateur-indice`) / sum(`score-visi`)");
-    mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
-                    .content(JacksonUtil.serialize(query))
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(result -> {
-              String contentAsString = result.getResponse().getContentAsString();
-              Object[] objects = JacksonUtil.mapper.readValue(contentAsString, Object[].class);
-              Assertions.assertThat(objects).containsExactlyInAnyOrder(
-                      Map.of("scenario", MAIN_SCENARIO_NAME, "sum(marge)", 280.00000000000006d, "indice-prix",
-                              110.44985250737464),
-                      Map.of("scenario", "mdd-baisse-simu-sensi", "sum(marge)", 190.00000000000003d, "indice-prix",
-                              102.94985250737463d),
-                      Map.of("scenario", "mdd-baisse", "sum(marge)", 240.00000000000003d, "indice-prix",
-                              107.1165191740413d)
-              );
             });
   }
 
