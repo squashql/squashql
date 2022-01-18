@@ -5,11 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import me.paulbares.query.Measure;
 import me.paulbares.query.Table;
+import me.paulbares.store.Field;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class JacksonUtil {
 
@@ -39,11 +39,8 @@ public class JacksonUtil {
   }
 
   public static String tableToCsv(Table table) {
-    Iterator<List<Object>> it = table.iterator();
-    List<List<Object>> rows = new ArrayList<>();
-    while (it.hasNext()) {
-      rows.add(it.next());
-    }
-    return JacksonUtil.serialize(Map.of("columns", table.headers(), "rows", rows));
+    List<String> fields = table.fields().stream().map(Field::name).collect(Collectors.toList());
+    // Jackson can serialize Iterable<?> so there is nothing to do to serialize table!
+    return JacksonUtil.serialize(Map.of("columns", fields, "rows", table));
   }
 }

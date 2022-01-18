@@ -2,12 +2,10 @@ package me.paulbares.spring.web.rest;
 
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.Query;
+import me.paulbares.query.ScenarioGroupingExecutor;
 import me.paulbares.query.ScenarioGroupingQuery;
 import me.paulbares.query.SparkQueryEngine;
 import me.paulbares.query.Table;
-import me.paulbares.serialization.SerializationUtils;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.DataTypes;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,8 +44,8 @@ public class SparkQueryController {
 
   @PostMapping(MAPPING_QUERY_GROUPING)
   public ResponseEntity<String> executeGrouping(@RequestBody ScenarioGroupingQuery query) {
-    Dataset<Row> rowDataset = this.queryEngine.executeGrouping(query);
-    return ResponseEntity.ok(SerializationUtils.datasetToCsv(rowDataset));
+    Table table = new ScenarioGroupingExecutor(this.queryEngine).execute(query);
+    return ResponseEntity.ok(JacksonUtil.tableToCsv(table));
   }
 
   @GetMapping(MAPPING_METADATA)

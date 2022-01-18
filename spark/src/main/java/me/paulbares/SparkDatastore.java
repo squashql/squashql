@@ -101,7 +101,7 @@ public class SparkDatastore implements Datastore {
     return schema;
   }
 
-  private static Class<?> datatypeToClass(DataType type) {
+  public static Class<?> datatypeToClass(DataType type) {
     Class<?> klass;
     if (type.equals(DataTypes.StringType)) {
       klass = String.class;
