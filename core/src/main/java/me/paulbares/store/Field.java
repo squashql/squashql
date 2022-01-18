@@ -1,4 +1,7 @@
 package me.paulbares.store;
 
-public record Field(String name, Class<?> type) {
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import me.paulbares.jackson.FieldTypeSerializer;
+
+public record Field(String name, @JsonSerialize(using = FieldTypeSerializer.class) Class<?> type) {
 }
