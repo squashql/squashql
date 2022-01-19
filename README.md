@@ -269,10 +269,40 @@ Payload
 }
 ```
 
+```json
+{
+  "groups": {
+    "group1" : ["base", "mdd-baisse-simu-sensi"],
+    "group2" : ["base", "mdd-baisse"],
+    "group3" : ["base", "mdd-baisse-simu-sensi", "mdd-baisse"]
+  },
+   "comparisons":[
+      {
+         "method":"absolute_difference",
+         "measure":{
+            "field":"marge",
+            "aggregation_function":"sum"
+         },
+         "show_value":false,
+         "reference_position":"previous"
+      },
+      {
+         "method":"absolute_difference",
+         "measure":{
+           "alias": "indice-prix",
+           "expression": "100 * sum(`numerateur-indice`) / sum(`score-visi`)"
+         },
+         "show_value":false,
+         "reference_position":"previous"
+      }
+   ]
+}
+```
+
 Response
 ```json
 {
-  "columns": ["group","scenario","abs. diff. sum(marge)","abs. diff. indice-prix"],
+  "columns": ["group","scenario","absolute_difference(sum(marge), previous)","absolute_difference(sum(indice-prix), previous)"],
   "rows": [
     ["group1","base",0.0,0.0],
     ["group1","mdd-baisse-simu-sensi",-90.00000000000003,-7.500000000000014],
