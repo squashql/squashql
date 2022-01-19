@@ -6,4 +6,6 @@ package me.paulbares.query;
 public interface Measure {
 
   String sqlExpression();
+
+  String alias();
 }

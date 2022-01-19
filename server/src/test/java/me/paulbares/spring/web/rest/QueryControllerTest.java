@@ -1,9 +1,11 @@
 package me.paulbares.spring.web.rest;
 
 import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.query.ComparisonMethod;
+import me.paulbares.query.AggregatedMeasure;
+import me.paulbares.query.ExpressionMeasure;
 import me.paulbares.query.Query;
 import me.paulbares.query.QueryEngine;
+import me.paulbares.query.ScenarioComparison;
 import me.paulbares.query.ScenarioGroupingQuery;
 import me.paulbares.query.context.Totals;
 import org.assertj.core.api.Assertions;
@@ -20,6 +22,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static me.paulbares.query.ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF;
+import static me.paulbares.query.ScenarioGroupingExecutor.REF_POS_PREVIOUS;
 import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -109,11 +113,12 @@ public class QueryControllerTest {
     groups.put("group2", List.of("base", "mdd-baisse"));
     groups.put("group3", List.of("base", "mdd-baisse-simu-sensi", "mdd-baisse"));
 
+    AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("marge", "sum");
+    ExpressionMeasure expressionMeasure = new ExpressionMeasure("indice-prix", "100 * sum(`numerateur-indice`) / sum(`score-visi`)");
     ScenarioGroupingQuery query = new ScenarioGroupingQuery()
             .groups(groups)
-            .comparisonMethod(ComparisonMethod.ABSOLUTE)
-            .addAggregatedMeasure("marge", "sum")
-            .addExpressionMeasure("indice-prix", "100 * sum(`numerateur-indice`) / sum(`score-visi`)");
+            .addScenarioComparison(new ScenarioComparison(COMPARISON_METHOD_ABS_DIFF, aggregatedMeasure, false, REF_POS_PREVIOUS))
+            .addScenarioComparison(new ScenarioComparison(COMPARISON_METHOD_ABS_DIFF, expressionMeasure, false, REF_POS_PREVIOUS));
 
     mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY_GROUPING)
                     .content(JacksonUtil.serialize(query))
@@ -131,7 +136,8 @@ public class QueryControllerTest {
                       List.of("group3", "mdd-baisse-simu-sensi", -90.00000000000003,-7.500000000000014),
                       List.of("group3", "mdd-baisse", 50.0,4.166666666666671));
               Assertions.assertThat((List) queryResult.get("columns")).containsExactly(
-                      "group", "scenario", "abs. diff. sum(marge)", "abs. diff. indice-prix");
+                      "group", "scenario",
+                      "absolute_difference(sum(marge), previous)", "absolute_difference(indice-prix, previous)");
             });
   }
 }

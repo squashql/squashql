@@ -1,97 +1,121 @@
 package me.paulbares.query;
 
 import me.paulbares.store.Field;
+import org.eclipse.collections.impl.list.mutable.FastList;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 public class ScenarioGroupingExecutor {
 
-  protected final QueryEngine queryEngine;
+  public static final String GROUP_NAME = "group";
+  public static final String COMPARISON_METHOD_ABS_DIFF = "absolute_difference";
+  public static final String COMPARISON_METHOD_REL_DIFF = "relative_difference";
+  public static final String REF_POS_PREVIOUS = "previous";
+  public static final String REF_POS_FIRST = "first";
+
+  public final QueryEngine queryEngine;
 
   public ScenarioGroupingExecutor(QueryEngine queryEngine) {
     this.queryEngine = queryEngine;
   }
 
   public Table execute(ScenarioGroupingQuery query) {
-    ComparisonMethod comparisonMethod = query.comparisonMethod;
-    Map<String, List<String>> groups = query.groups;
+    Query prefetchQuery = new Query().addWildcardCoordinate("scenario");
+    query.comparisons.forEach(c -> prefetchQuery.measures.add(c.measure()));
 
-    Query simpleQuery = new Query().addWildcardCoordinate("scenario");
-    simpleQuery.measures.addAll(query.measures);
-
-    Table table = this.queryEngine.execute(simpleQuery);
-
-    Map<String, List<Object>> rowByScenario = new HashMap<>();
-    // Index row per scenario
-    Iterator<List<Object>> rowIterator = table.iterator();
-    while (rowIterator.hasNext()) {
-      List<Object> row = rowIterator.next();
-      rowByScenario.put((String) row.get(0), row);
+    Table table = this.queryEngine.execute(prefetchQuery);
+    Map<String, List<Object>> valuesByScenario = new HashMap<>();
+    for (List<Object> row : table) {
+      valuesByScenario.put((String) row.get(0), row.subList(1, row.size()));
     }
 
-    List<Field> newFields = new ArrayList<>();
-    newFields.add(new Field("group", String.class));
-    List<Field> rawFields = table.fields();
+    List<Field> tableFields = createTableFields(query, table.fields());
+
+    long count = query.groups.entrySet().stream().flatMap(e -> e.getValue().stream()).count();
+    List<List<Object>> rows = FastList.newList((int) count);
+    query.groups.forEach((group, scenarios) -> {
+      for (String scenario : scenarios) {
+        List<Object> row = FastList.newListWith(group, scenario);
+
+        for (int i = 0; i < query.comparisons.size(); i++) {
+          ScenarioComparison comp = query.comparisons.get(i);
+
+          // Gets the value that current value is being compared to
+          Object referenceValue = getReferenceValue(i, comp.referencePosition(), scenario, scenarios, valuesByScenario);
+          Object currentValue = valuesByScenario.get(scenario).get(i);
+
+          Object newValue = switch (comp.method()) {
+            case COMPARISON_METHOD_ABS_DIFF ->
+                    computeAbsoluteDiff(currentValue, referenceValue, table.fields().get(i + 1).type());
+            case COMPARISON_METHOD_REL_DIFF ->
+                    computeRelativeDiff(currentValue, referenceValue, table.fields().get(i + 1).type());
+            default -> throw new IllegalArgumentException(String.format("Not supported comparison %s", comp.method()));
+          };
+
+          row.add(newValue);
+          if (comp.showValue()) {
+            row.add(currentValue); // the original value
+          }
+        }
+        rows.add(row);
+      }
+    });
+
+    return new ArrayTable(tableFields, rows);
+  }
+
+  private Object getReferenceValue(
+          int measureIndex,
+          String referencePosition,
+          String scenario,
+          List<String> scenarios,
+          Map<String, List<Object>> valuesByScenario) {
+    return switch (referencePosition) {
+      case REF_POS_PREVIOUS -> {
+        int index = scenarios.indexOf(scenario); // will never be negative by design
+        String previousScenario = scenarios.get(Math.max(index - 1, 0));
+        yield valuesByScenario.get(previousScenario).get(measureIndex);
+      }
+      case REF_POS_FIRST -> {
+        String firstScenario = scenarios.get(0);
+        yield valuesByScenario.get(firstScenario).get(measureIndex);
+      }
+      default -> throw new IllegalArgumentException(String.format("Not supported reference position %s", referencePosition));
+    };
+  }
+
+  private List<Field> createTableFields(ScenarioGroupingQuery query, List<Field> rawFields) {
+    List<Field> fields = FastList.newListWith(new Field(GROUP_NAME, String.class));
     for (int i = 0; i < rawFields.size(); i++) {
       Field rawField = rawFields.get(i);
       if (i == 0) {
-        newFields.add(rawField);
+        fields.add(rawField); // first is scenario field
       } else {
-        String newName = comparisonMethod.name().substring(0, 3).toLowerCase() + ". diff. " + rawField.name();
-        newFields.add(new Field(newName, rawField.type()));
+        ScenarioComparison comparison = query.comparisons.get(i - 1);
+        String newName = String.format("%s(%s, %s)",
+                comparison.method(),
+                comparison.measure().alias(),
+                comparison.referencePosition());
+        fields.add(new Field(newName, rawField.type()));
+        if (comparison.showValue()) {
+          fields.add(rawField);
+        }
       }
     }
-
-    List<List<Object>> newRows = new ArrayList<>();
-    List<Object>[] previous = new List[1];
-
-    groups.forEach((group, scenarios) -> {
-      List<Object> base = rowByScenario.get("base");
-      previous[0] = null;
-      scenarios.forEach(scenario -> {
-        List<Object> row = rowByScenario.get(scenario);
-        if (row == null) {
-          return;
-        }
-
-        if (previous[0] == null) {
-          previous[0] = base;
-        }
-
-        List<Object> elements = new ArrayList<>();
-        elements.add(group);
-        elements.add(row.get(0));
-
-        for (int i = 1; i < row.size(); i++) {
-          Class<?> rawField = rawFields.get(i).type();
-          Object newValue = switch (comparisonMethod) {
-            case ABSOLUTE -> computeAbsoluteDiff(row.get(i), previous[0].get(i), rawField);
-            case RELATIVE -> computeRelativeDiff(row.get(i), previous[0].get(i), rawField);
-          };
-          elements.add(newValue);
-        }
-        newRows.add(elements);
-
-        previous[0] = rowByScenario.get(scenario);
-      });
-    });
-
-    return new ArrayTable(newFields, newRows);
+    return fields;
   }
 
-  private Object computeRelativeDiff(Object current, Object previous, Class<?> dataType) {
+  private double computeRelativeDiff(Object current, Object previous, Class<?> dataType) {
     if (dataType.equals(Double.class) || dataType.equals(double.class)) {
       return (((double) current) - ((double) previous)) / ((double) previous);
     } else if (dataType.equals(Float.class) || dataType.equals(float.class)) {
       return (((float) current) - ((float) previous)) / ((float) previous);
     } else if (dataType.equals(Integer.class) || dataType.equals(int.class)) {
-      return (((int) current) - ((int) previous)) / ((int) previous);
+      return (double) (((int) current) - ((int) previous)) / ((long) previous);
     } else if (dataType.equals(Long.class) || dataType.equals(long.class)) {
-      return (((long) current) - ((long) previous)) / ((long) previous);
+      return (double) (((long) current) - ((long) previous)) / ((long) previous);
     } else {
       throw new RuntimeException("Unsupported type " + dataType);
     }

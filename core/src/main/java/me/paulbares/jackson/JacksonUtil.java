@@ -2,6 +2,7 @@ package me.paulbares.jackson;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import me.paulbares.query.Measure;
 import me.paulbares.query.Table;
@@ -17,6 +18,7 @@ public class JacksonUtil {
 
   static {
     mapper = new ObjectMapper();
+    mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
     var simpleModule = new SimpleModule();
     simpleModule.addDeserializer(Measure.class, new MeasureDeserializer());
     mapper.registerModule(simpleModule);

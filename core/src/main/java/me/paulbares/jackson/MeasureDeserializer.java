@@ -15,7 +15,7 @@ public class MeasureDeserializer extends JsonDeserializer<Measure> {
   @Override
   public Measure deserialize(JsonParser p, DeserializationContext deserializationContext) throws IOException {
     JsonNode treeNode = p.getCodec().readTree(p);
-    JsonNode aggregationFunction = treeNode.get("aggregationFunction");
+    JsonNode aggregationFunction = treeNode.get("aggregation_function");
     if (aggregationFunction != null) {
       return new AggregatedMeasure(
               Objects.requireNonNull(treeNode.get("field")).asText(),

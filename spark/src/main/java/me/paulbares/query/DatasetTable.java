@@ -49,4 +49,9 @@ public class DatasetTable implements Table {
       }
     };
   }
+
+  @Override
+  public void show(int numRows) {
+    this.dataset.show(numRows);
+  }
 }

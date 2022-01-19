@@ -26,6 +26,18 @@ public class ArrayTable implements Table {
   }
 
   @Override
+  public void show(int numRows) {
+    int count = 0;
+    for (List<Object> row : this.rows) {
+      if (count++ < numRows) {
+        System.out.println(row);
+      } else {
+        return;
+      }
+    }
+  }
+
+  @Override
   public Iterator<List<Object>> iterator() {
     return this.rows.iterator();
   }

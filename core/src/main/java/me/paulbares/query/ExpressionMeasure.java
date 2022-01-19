@@ -26,6 +26,11 @@ public class ExpressionMeasure implements Measure {
   }
 
   @Override
+  public String alias() {
+    return this.alias;
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;

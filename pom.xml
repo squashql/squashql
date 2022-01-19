@@ -21,6 +21,7 @@
         <jackson.version>2.12.5</jackson.version>
         <spring-boot.version>2.6.1</spring-boot.version>
         <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
+        <eclipse.version>11.0.0</eclipse.version>
     </properties>
 
     <modules>
@@ -87,6 +88,16 @@
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
                 <version>${assertj.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.collections</groupId>
+                <artifactId>eclipse-collections-api</artifactId>
+                <version>${eclipse.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.collections</groupId>
+                <artifactId>eclipse-collections</artifactId>
+                <version>${eclipse.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

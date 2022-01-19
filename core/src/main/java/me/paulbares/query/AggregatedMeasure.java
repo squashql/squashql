@@ -27,26 +27,27 @@ public class AggregatedMeasure implements Measure {
   }
 
   @Override
+  public String alias() {
+    return this.aggregationFunction + "(" + this.field + ")";
+  }
+
+  @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
     AggregatedMeasure that = (AggregatedMeasure) o;
-    return field.equals(that.field) && aggregationFunction.equals(that.aggregationFunction);
+    return Objects.equals(this.field, that.field) && Objects.equals(this.aggregationFunction, that.aggregationFunction);
   }
 
   @Override
   public int hashCode() {
-    return 0;
+    return Objects.hash(this.field, this.aggregationFunction);
   }
 
   @Override
   public String toString() {
     return "AggregatedMeasure{" +
-            "name='" + field + '\'' +
+            "field='" + field + '\'' +
             ", aggregationFunction='" + aggregationFunction + '\'' +
             '}';
   }
