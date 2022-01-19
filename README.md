@@ -37,7 +37,7 @@ Payload:
   "measures": [
     {
       "field": "marge",
-      "aggregationFunction": "sum"
+      "aggregation_function": "sum"
     },
     {
       "alias": "indice-prix",
@@ -91,7 +91,7 @@ If `totals.visible` is true, the result includes extra rows that represent the s
   "measures": [
     {
       "field": "marge",
-      "aggregationFunction": "sum"
+      "aggregation_function": "sum"
     },
     {
       "alias": "indice-prix",
@@ -161,7 +161,7 @@ Response:
 Response:
 ```json
 {
-  "aggregationFunctions":[
+  "aggregation_functions":[
     "sum",
     "min",
     "max",
@@ -259,7 +259,7 @@ Payload
     "measures" : [
         {
             "field": "marge",
-            "aggregationFunction": "sum"
+            "aggregation_function": "sum"
         },
         {
             "alias": "indice-prix",

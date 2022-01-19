@@ -26,7 +26,7 @@ public class SparkQueryController {
   public static final String MAPPING_METADATA = "/spark-metadata";
 
   public static final String METADATA_FIELDS_KEY = "fields";
-  public static final String METADATA_AGG_FUNC_KEY = "aggregationFunctions";
+  public static final String METADATA_AGG_FUNC_KEY = "aggregation_functions";
   public static final List<String> SUPPORTED_AGG_FUNCS = List.of("sum", "min", "max", "avg", "var_samp", "var_pop", "stddev_samp", "stddev_pop", "count");
 
   protected final SparkQueryEngine queryEngine;
