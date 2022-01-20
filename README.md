@@ -248,26 +248,6 @@ ABSOLUTE: `value = (currentValue - previousValue)`
 RELATIVE: `value = (currentValue - previousValue) / previousValue`
 
 Payload
-```json
-{
-    "comparisonMethod": "ABSOLUTE",
-    "groups": {
-        "group1" : ["base", "mdd-baisse-simu-sensi"],
-        "group2" : ["base", "mdd-baisse"],
-        "group3" : ["base", "mdd-baisse-simu-sensi", "mdd-baisse"]
-    },
-    "measures" : [
-        {
-            "field": "marge",
-            "aggregation_function": "sum"
-        },
-        {
-            "alias": "indice-prix",
-            "expression": "100 * sum(`numerateur-indice`) / sum(`score-visi`)"
-        }
-    ]
-}
-```
 
 ```json
 {
