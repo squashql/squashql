@@ -6,6 +6,7 @@ import me.paulbares.query.ScenarioGroupingExecutor;
 import me.paulbares.query.ScenarioGroupingQuery;
 import me.paulbares.query.SparkQueryEngine;
 import me.paulbares.query.Table;
+import me.paulbares.store.Store;
 import org.apache.spark.sql.types.DataTypes;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +27,7 @@ public class SparkQueryController {
   public static final String MAPPING_METADATA = "/spark-metadata";
 
   public static final String METADATA_FIELDS_KEY = "fields";
+  public static final String METADATA_STORES_KEY = "stores";
   public static final String METADATA_AGG_FUNC_KEY = "aggregation_functions";
   public static final List<String> SUPPORTED_AGG_FUNCS = List.of("sum", "min", "max", "avg", "var_samp", "var_pop", "stddev_samp", "stddev_pop", "count");
 
@@ -50,13 +52,17 @@ public class SparkQueryController {
 
   @GetMapping(MAPPING_METADATA)
   public ResponseEntity<Map<Object, Object>> getMetadata() {
-    List<Map<String, String>> collect = this.queryEngine.datastore.getFields()
-            .stream()
-            .map(f -> Map.of("name", f.name(), "type", f.type().getSimpleName().toLowerCase()))
-            .collect(Collectors.toCollection(() -> new ArrayList<>()));
-    collect.add(Map.of("name", "scenario", "type", DataTypes.StringType.simpleString()));
+    List<Map<String, Object>> root = new ArrayList<>();
+    for (Store store : this.queryEngine.datastore.stores()) {
+      List<Map<String, String>> collect = store.getFields()
+              .stream()
+              .map(f -> Map.of("name", f.name(), "type", f.type().getSimpleName().toLowerCase()))
+              .collect(Collectors.toCollection(() -> new ArrayList<>()));
+      collect.add(Map.of("name", "scenario", "type", DataTypes.StringType.simpleString()));
+      root.add(Map.of("name", store.name(), METADATA_FIELDS_KEY, collect));
+    }
     return ResponseEntity.ok(Map.of(
-            METADATA_FIELDS_KEY, collect,
+            METADATA_STORES_KEY, root,
             METADATA_AGG_FUNC_KEY, SUPPORTED_AGG_FUNCS));
   }
 }

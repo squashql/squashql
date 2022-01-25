@@ -21,7 +21,7 @@ public class SparkQueryEngine extends AQueryEngine {
     LOGGER.info("Executing " + query);
     String sql = SQLTranslator.translate(query);
     LOGGER.info("Translated query #" + query.id + " to " + sql);
-    this.datastore.get().createOrReplaceTempView(SparkDatastore.BASE_STORE_NAME);
+    this.datastore.get(query).createOrReplaceTempView(SparkDatastore.BASE_STORE_NAME);
     Dataset<Row> ds = this.datastore.spark.sql(sql);
     return new DatasetTable(ds);
   }

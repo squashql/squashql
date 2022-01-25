@@ -40,19 +40,20 @@ public abstract class ATestScenarioGroupingExecutor {
     QueryEngine queryEngine = createQueryEngine(datastore);
     this.executor = new ScenarioGroupingExecutor(queryEngine);
 
-    datastore.load(MAIN_SCENARIO_NAME, List.of(
+    String storeName = "storeName";
+    datastore.load(MAIN_SCENARIO_NAME, storeName, List.of(
             new Object[]{"bottle", "drink", 2d, 11},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
 
-    datastore.load("s1", List.of(
+    datastore.load("s1", storeName, List.of(
             new Object[]{"bottle", "drink", 4d, 9},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
 
-    datastore.load("s2", List.of(
+    datastore.load("s2", storeName, List.of(
             new Object[]{"bottle", "drink", 1.5d, 12},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}

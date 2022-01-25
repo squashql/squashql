@@ -85,7 +85,10 @@ public class QueryControllerTest {
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               Map objects = JacksonUtil.mapper.readValue(contentAsString, Map.class);
-              Assertions.assertThat((List) objects.get(SparkQueryController.METADATA_FIELDS_KEY)).containsExactlyInAnyOrder(
+              List<Map<String, Object>> storesArray = (List) objects.get(SparkQueryController.METADATA_STORES_KEY);
+              Assertions.assertThat(storesArray).hasSize(1);
+              Assertions.assertThat(storesArray.get(0).get("name")).isEqualTo("products");
+              Assertions.assertThat((List) storesArray.get(0).get(SparkQueryController.METADATA_FIELDS_KEY)).containsExactlyInAnyOrder(
                       Map.of("name", "ean", "type", "string"),
                       Map.of("name", "pdv", "type", "string"),
                       Map.of("name", "categorie", "type", "string"),

@@ -26,7 +26,7 @@ public abstract class ATestQueryEngine {
 
   protected abstract QueryEngine createQueryEngine(Datastore datastore);
 
-  protected abstract Datastore createDatastore(List<Field> fields);
+  protected abstract Datastore createDatastore(String storeName, List<Field> fields);
 
   @BeforeAll
   void setup() {
@@ -35,22 +35,23 @@ public abstract class ATestQueryEngine {
     Field price = new Field("price", double.class);
     Field qty = new Field("quantity", int.class);
 
-    this.datastore = createDatastore(List.of(ean, category, price, qty));
+    String storeName = "storeName";
+    this.datastore = createDatastore(storeName, List.of(ean, category, price, qty));
     this.queryEngine = createQueryEngine(this.datastore);
 
-    this.datastore.load(MAIN_SCENARIO_NAME, List.of(
+    this.datastore.load(MAIN_SCENARIO_NAME, storeName, List.of(
             new Object[]{"bottle", "drink", 2d, 10},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
 
-    this.datastore.load("s1", List.of(
+    this.datastore.load("s1", storeName, List.of(
             new Object[]{"bottle", "drink", 4d, 10},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
 
-    this.datastore.load("s2", List.of(
+    this.datastore.load("s2", storeName, List.of(
             new Object[]{"bottle", "drink", 1.5d, 10},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}

@@ -1,6 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.SparkDatastore;
+import me.paulbares.SparkStore;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 
@@ -15,6 +16,6 @@ public class TestSparkScenarioGroupingExecutor extends ATestScenarioGroupingExec
 
   @Override
   protected Datastore createDatastore(List<Field> fields) {
-    return new SparkDatastore(fields);
+    return new SparkDatastore(new SparkStore("storeName", fields));
   }
 }

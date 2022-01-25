@@ -46,6 +46,7 @@ Payload:
   ]
 }
 ```
+
 Response:
 ```json
 {

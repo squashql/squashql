@@ -1,6 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.SparkDatastore;
+import me.paulbares.SparkStore;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 
@@ -14,7 +15,7 @@ public class TestSparkQueryEngine extends ATestQueryEngine {
   }
 
   @Override
-  protected Datastore createDatastore(List<Field> fields) {
-    return new SparkDatastore(fields);
+  protected Datastore createDatastore(String storeName, List<Field> fields) {
+    return new SparkDatastore(new SparkStore(storeName, fields));
   }
 }

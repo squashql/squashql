@@ -6,7 +6,7 @@ public interface Datastore {
 
   String MAIN_SCENARIO_NAME = "base";
 
-  List<Field> getFields();
+  List<Store> stores();
 
-  void load(String scenario, List<Object[]> tuples);
+  void load(String scenario, String store, List<Object[]> tuples);
 }

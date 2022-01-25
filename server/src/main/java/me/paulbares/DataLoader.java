@@ -55,16 +55,18 @@ public class DataLoader {
     Column qCol = col(quantite.name());
     Column pCol = col(prix.name());
     Column sCol = col(score.name());
-    SparkDatastore datastore = new SparkDatastore(
+    SparkStore products = new SparkStore(
+            "products",
             List.of(ean, pdv, categorie, type, sensi, quantite, prix, achat, score, minMarche),
             qCol.multiply(pCol).as("ca"),
             qCol.multiply(pCol.minus(functions.col(achat.name()))).as("marge"),
             pCol.divide(functions.col(minMarche.name())).multiply(sCol).as("numerateur-indice"),
             col("numerateur-indice").divide(sCol).as("indice-prix"));
+    SparkDatastore datastore = new SparkDatastore(products);
 
-    datastore.load(Datastore.MAIN_SCENARIO_NAME, dataBase());
-    datastore.load("mdd-baisse", dataMDDBaisse());
-    datastore.load("mdd-baisse-simu-sensi", dataMDDBaisseSimuSensi());
+    datastore.load(Datastore.MAIN_SCENARIO_NAME, products.name(), dataBase());
+    datastore.load("mdd-baisse", products.name(), dataMDDBaisse());
+    datastore.load("mdd-baisse-simu-sensi", products.name(), dataMDDBaisseSimuSensi());
 
     return datastore;
   }

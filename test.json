@@ -1,0 +1,25 @@
+{
+  "from": "Orders", // fact_table
+  "joins": [
+    {
+      "type": "inner|left",
+      "to": "OrderDetails",
+      "mapping": "Orders.OrderId = OrderDetails.OrderId"
+    },
+    {
+      "type": "inner|left",
+      "to": "Products",
+      "mapping": "OrderDetails.ProductId = Products.ProductId"
+    }
+  ],
+  "coordinates": {
+    "orderId": null,
+    "categoryName": null
+  },
+  "measures": [
+    {
+      "field": "quantity",
+      "aggregation_function": "sum"
+    }
+  ]
+}
