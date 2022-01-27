@@ -7,6 +7,7 @@ import java.util.List;
 public class TableDto {
 
   public String name;
+
   public List<JoinDto> joins = new ArrayList<>();
 
   /**

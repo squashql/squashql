@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import me.paulbares.jackson.deserializer.MeasureDeserializer;
 import me.paulbares.query.Measure;
 import me.paulbares.query.Table;
 import me.paulbares.store.Field;
@@ -41,7 +42,7 @@ public class JacksonUtil {
   }
 
   public static String tableToCsv(Table table) {
-    List<String> fields = table.fields().stream().map(Field::name).collect(Collectors.toList());
+    List<String> fields = table.headers().stream().map(Field::name).collect(Collectors.toList());
     // Jackson can serialize Iterable<?> so there is nothing to do to serialize table!
     return JacksonUtil.serialize(Map.of("columns", fields, "rows", table));
   }

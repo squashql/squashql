@@ -1,4 +1,4 @@
-package me.paulbares.jackson;
+package me.paulbares.jackson.deserializer;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;

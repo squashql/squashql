@@ -1,7 +1,7 @@
 package me.paulbares.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import me.paulbares.jackson.ContextValueDeserializer;
+import me.paulbares.jackson.deserializer.ContextValueDeserializer;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ExpressionMeasure;
 import me.paulbares.query.Measure;

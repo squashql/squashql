@@ -53,6 +53,6 @@ public abstract class AQueryEngine implements QueryEngine {
       newRows.add(objects);
     }
 
-    return new ArrayTable(dataset.fields(), newRows);
+    return new ArrayTable(dataset.headers(), newRows);
   }
 }

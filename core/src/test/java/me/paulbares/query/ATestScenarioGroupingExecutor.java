@@ -71,7 +71,7 @@ public abstract class ATestScenarioGroupingExecutor {
             .groups(this.groups);
 
     Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.fields().stream().map(Field::name)).containsExactly(
+    Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
             "group", "scenario",
             "absolute_difference(sum(price), first)", "sum(price)",
             "absolute_difference(sum(quantity), first)", "sum(quantity)");
@@ -94,7 +94,7 @@ public abstract class ATestScenarioGroupingExecutor {
             .groups(this.groups);
 
     Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.fields().stream().map(Field::name)).containsExactly(
+    Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
             "group", "scenario",
             "absolute_difference(sum(price), previous)", "sum(price)",
             "absolute_difference(sum(quantity), previous)", "sum(quantity)");
@@ -117,7 +117,7 @@ public abstract class ATestScenarioGroupingExecutor {
             .groups(this.groups);
 
     Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.fields().stream().map(Field::name)).containsExactly(
+    Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
             "group", "scenario",
             "relative_difference(sum(price), first)", "sum(price)",
             "relative_difference(sum(quantity), first)", "sum(quantity)");
@@ -140,7 +140,7 @@ public abstract class ATestScenarioGroupingExecutor {
             .groups(this.groups);
 
     Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.fields().stream().map(Field::name)).containsExactly(
+    Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
             "group", "scenario",
             "relative_difference(sum(price), previous)", "sum(price)",
             "relative_difference(sum(quantity), previous)", "sum(quantity)");
@@ -165,7 +165,7 @@ public abstract class ATestScenarioGroupingExecutor {
             .groups(this.groups);
 
     Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.fields().stream().map(Field::name)).containsExactly(
+    Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
             "group", "scenario",
             "absolute_difference(sum(price), first)",
             "absolute_difference(sum(quantity), first)", "sum(quantity)");

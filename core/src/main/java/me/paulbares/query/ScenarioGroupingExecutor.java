@@ -34,7 +34,7 @@ public class ScenarioGroupingExecutor {
       valuesByScenario.put((String) row.get(0), row.subList(1, row.size()));
     }
 
-    List<Field> tableFields = createTableFields(query, table.fields());
+    List<Field> tableFields = createTableFields(query, table.headers());
 
     long count = query.groups.entrySet().stream().flatMap(e -> e.getValue().stream()).count();
     List<List<Object>> rows = FastList.newList((int) count);
@@ -51,9 +51,9 @@ public class ScenarioGroupingExecutor {
 
           Object newValue = switch (comp.method()) {
             case COMPARISON_METHOD_ABS_DIFF ->
-                    computeAbsoluteDiff(currentValue, referenceValue, table.fields().get(i + 1).type());
+                    computeAbsoluteDiff(currentValue, referenceValue, table.headers().get(i + 1).type());
             case COMPARISON_METHOD_REL_DIFF ->
-                    computeRelativeDiff(currentValue, referenceValue, table.fields().get(i + 1).type());
+                    computeRelativeDiff(currentValue, referenceValue, table.headers().get(i + 1).type());
             default -> throw new IllegalArgumentException(String.format("Not supported comparison %s", comp.method()));
           };
 

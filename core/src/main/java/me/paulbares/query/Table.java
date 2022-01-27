@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface Table extends Iterable<List<Object>> {
 
-  List<Field> fields();
+  List<Field> headers();
 
   /**
    * Returns the number of rows in the table.

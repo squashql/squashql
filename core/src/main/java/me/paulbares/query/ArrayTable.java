@@ -16,7 +16,7 @@ public class ArrayTable implements Table {
   }
 
   @Override
-  public List<Field> fields() {
+  public List<Field> headers() {
     return this.headers;
   }
 

@@ -30,7 +30,7 @@ public class DatasetTable implements Table {
   }
 
   @Override
-  public List<Field> fields() {
+  public List<Field> headers() {
     return this.fields;
   }
 

@@ -1,4 +1,4 @@
-package me.paulbares.jackson;
+package me.paulbares.jackson.serializer;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
