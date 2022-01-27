@@ -1,5 +1,6 @@
 package me.paulbares.query;
 
+import me.paulbares.dto.QueryDto;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.context.Totals;
 import me.paulbares.store.Datastore;
@@ -24,6 +25,8 @@ public abstract class ATestQueryEngine {
 
   protected QueryEngine queryEngine;
 
+  protected String storeName = "storeName";
+
   protected abstract QueryEngine createQueryEngine(Datastore datastore);
 
   protected abstract Datastore createDatastore(String storeName, List<Field> fields);
@@ -35,23 +38,22 @@ public abstract class ATestQueryEngine {
     Field price = new Field("price", double.class);
     Field qty = new Field("quantity", int.class);
 
-    String storeName = "storeName";
-    this.datastore = createDatastore(storeName, List.of(ean, category, price, qty));
+    this.datastore = createDatastore(this.storeName, List.of(ean, category, price, qty));
     this.queryEngine = createQueryEngine(this.datastore);
 
-    this.datastore.load(MAIN_SCENARIO_NAME, storeName, List.of(
+    this.datastore.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", 2d, 10},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
 
-    this.datastore.load("s1", storeName, List.of(
+    this.datastore.load("s1", this.storeName, List.of(
             new Object[]{"bottle", "drink", 4d, 10},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
 
-    this.datastore.load("s2", storeName, List.of(
+    this.datastore.load("s2", this.storeName, List.of(
             new Object[]{"bottle", "drink", 1.5d, 10},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}
@@ -60,7 +62,8 @@ public abstract class ATestQueryEngine {
 
   @Test
   void testQueryWildcard() {
-    Query query = new Query()
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
             .addWildcardCoordinate("scenario")
             .addAggregatedMeasure("price", "sum")
             .addAggregatedMeasure("quantity", "sum");
@@ -73,7 +76,8 @@ public abstract class ATestQueryEngine {
 
   @Test
   void testQueryWildcardWithTotals() {
-    Query query = new Query()
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
             .addWildcardCoordinate("scenario")
             .addAggregatedMeasure("price", "sum")
             .addAggregatedMeasure("quantity", "sum")
@@ -88,7 +92,8 @@ public abstract class ATestQueryEngine {
 
   @Test
   void testQueryWildcardAndCrossjoinWithTotals() {
-    Query query = new Query()
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
             .addWildcardCoordinate("scenario")
             .addWildcardCoordinate("category")
             .addWildcardCoordinate("ean")
@@ -126,7 +131,8 @@ public abstract class ATestQueryEngine {
 
   @Test
   void testQueryWildcardAndCrossjoinWithTotalsPositionBottom() {
-    Query query = new Query()
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
             .addWildcardCoordinate("scenario")
             .addWildcardCoordinate("category")
             .addWildcardCoordinate("ean")
@@ -163,7 +169,8 @@ public abstract class ATestQueryEngine {
 
   @Test
   void testQuerySeveralCoordinates() {
-    Query query = new Query()
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
             .addCoordinates("scenario", "s1", "s2")
             .addAggregatedMeasure("price", "sum")
             .addAggregatedMeasure("quantity", "sum");
@@ -175,7 +182,8 @@ public abstract class ATestQueryEngine {
 
   @Test
   void testQuerySingleCoordinate() {
-    Query query = new Query()
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
             .addSingleCoordinate("scenario", "s1")
             .addAggregatedMeasure("price", "sum")
             .addAggregatedMeasure("quantity", "sum");
@@ -188,7 +196,9 @@ public abstract class ATestQueryEngine {
    */
   @Test
   void testDiscovery() {
-    Query query = new Query().addWildcardCoordinate("scenario");
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
+            .addWildcardCoordinate("scenario");
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
                     List.of(MAIN_SCENARIO_NAME),
@@ -198,7 +208,8 @@ public abstract class ATestQueryEngine {
 
   @Test
   void testJsonConverter() throws Exception {
-    Query query = new Query()
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
             .addWildcardCoordinate("scenario")
             .addAggregatedMeasure("price", "sum")
             .addAggregatedMeasure("quantity", "sum");

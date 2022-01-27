@@ -2,9 +2,7 @@ package me.paulbares;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import me.paulbares.query.Query;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Store;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -24,9 +22,7 @@ public class SparkDatastore implements Datastore {
     root.setLevel(Level.INFO);
   }
 
-  public static final String BASE_STORE_NAME = "base_store";
-
-  private final Map<String, SparkStore> stores = new HashMap<>();
+  public final Map<String, SparkStore> stores = new HashMap<>();
 
   public final SparkSession spark;
 
@@ -35,6 +31,7 @@ public class SparkDatastore implements Datastore {
             .builder()
             .appName("Java Spark SQL Example")
             .config("spark.master", "local")
+            .config("spark.sql.warehouse.dir", "jar:file:/Users/Paul.Bares/.m2/repository/me/paulbares/aitm-core/0.1-SNAPSHOT/aitm-core-0.1-SNAPSHOT-tests.jar")
             .getOrCreate();
 
     for (SparkStore store : stores) {
@@ -44,15 +41,17 @@ public class SparkDatastore implements Datastore {
   }
 
   @Override
-  public List<Store> stores() {
+  public List<SparkStore> stores() {
     return new ArrayList<>(this.stores.values());
   }
 
-  public Dataset<Row> get(Query query) {
-    // FIXME should take into account the joins
-    // For now we assume there is only 1 store
-    assert this.stores.size() == 1;
-    return this.stores.values().iterator().next().get();
+  public Dataset<Row> get(String storeName) {
+    return this.stores.get(storeName).get();
+  }
+
+  @Override
+  public void loadCsv(String scenario, String store, String path, String delimiter, boolean header) {
+    this.stores.get(store).loadCsv(scenario, path, delimiter, header);
   }
 
   @Override

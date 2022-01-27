@@ -1,5 +1,8 @@
 package me.paulbares.query;
 
+import me.paulbares.dto.QueryDto;
+import me.paulbares.dto.ScenarioComparisonDto;
+import me.paulbares.dto.ScenarioGroupingQueryDto;
 import me.paulbares.store.Field;
 import org.eclipse.collections.impl.list.mutable.FastList;
 
@@ -21,8 +24,8 @@ public class ScenarioGroupingExecutor {
     this.queryEngine = queryEngine;
   }
 
-  public Table execute(ScenarioGroupingQuery query) {
-    Query prefetchQuery = new Query().addWildcardCoordinate("scenario");
+  public Table execute(ScenarioGroupingQueryDto query) {
+    QueryDto prefetchQuery = new QueryDto().addWildcardCoordinate("scenario").table(query.table);
     query.comparisons.forEach(c -> prefetchQuery.measures.add(c.measure()));
 
     Table table = this.queryEngine.execute(prefetchQuery);
@@ -40,7 +43,7 @@ public class ScenarioGroupingExecutor {
         List<Object> row = FastList.newListWith(group, scenario);
 
         for (int i = 0; i < query.comparisons.size(); i++) {
-          ScenarioComparison comp = query.comparisons.get(i);
+          ScenarioComparisonDto comp = query.comparisons.get(i);
 
           // Gets the value that current value is being compared to
           Object referenceValue = getReferenceValue(i, comp.referencePosition(), scenario, scenarios, valuesByScenario);
@@ -86,14 +89,14 @@ public class ScenarioGroupingExecutor {
     };
   }
 
-  private List<Field> createTableFields(ScenarioGroupingQuery query, List<Field> rawFields) {
+  private List<Field> createTableFields(ScenarioGroupingQueryDto query, List<Field> rawFields) {
     List<Field> fields = FastList.newListWith(new Field(GROUP_NAME, String.class));
     for (int i = 0; i < rawFields.size(); i++) {
       Field rawField = rawFields.get(i);
       if (i == 0) {
         fields.add(rawField); // first is scenario field
       } else {
-        ScenarioComparison comparison = query.comparisons.get(i - 1);
+        ScenarioComparisonDto comparison = query.comparisons.get(i - 1);
         String newName = String.format("%s(%s, %s)",
                 comparison.method(),
                 comparison.measure().alias(),

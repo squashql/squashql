@@ -1,9 +1,9 @@
 package me.paulbares.spring.web.rest;
 
 import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.query.Query;
+import me.paulbares.dto.QueryDto;
 import me.paulbares.query.ScenarioGroupingExecutor;
-import me.paulbares.query.ScenarioGroupingQuery;
+import me.paulbares.dto.ScenarioGroupingQueryDto;
 import me.paulbares.query.SparkQueryEngine;
 import me.paulbares.query.Table;
 import me.paulbares.store.Store;
@@ -38,14 +38,14 @@ public class SparkQueryController {
   }
 
   @PostMapping(MAPPING_QUERY)
-  public ResponseEntity<String> execute(@RequestBody Query query) {
+  public ResponseEntity<String> execute(@RequestBody QueryDto query) {
     Table table = this.queryEngine.execute(query);
     return ResponseEntity.ok(JacksonUtil.tableToCsv(table));
   }
 
 
   @PostMapping(MAPPING_QUERY_GROUPING)
-  public ResponseEntity<String> executeGrouping(@RequestBody ScenarioGroupingQuery query) {
+  public ResponseEntity<String> executeGrouping(@RequestBody ScenarioGroupingQueryDto query) {
     Table table = new ScenarioGroupingExecutor(this.queryEngine).execute(query);
     return ResponseEntity.ok(JacksonUtil.tableToCsv(table));
   }

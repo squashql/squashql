@@ -1,6 +1,9 @@
 package me.paulbares.query;
 
-import me.paulbares.SparkDatastore;
+import me.paulbares.dto.JoinDto;
+import me.paulbares.dto.JoinMappingDto;
+import me.paulbares.dto.QueryDto;
+import me.paulbares.dto.TableDto;
 import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.Totals;
 
@@ -12,7 +15,7 @@ import static me.paulbares.query.SqlUtils.escape;
 
 public class SQLTranslator {
 
-  public static String translate(Query query) {
+  public static String translate(QueryDto query) {
     List<String> selects = new ArrayList<>();
     List<String> groupBy = new ArrayList<>();
     List<String> conditions = new ArrayList<>();
@@ -38,7 +41,10 @@ public class SQLTranslator {
     statement.append("select ");
     statement.append(selects.stream().collect(Collectors.joining(", ")));
     statement.append(" from ");
-    statement.append(SparkDatastore.BASE_STORE_NAME);
+    statement.append(query.table.name);
+
+    addJoins(statement, query.table);
+
     if (!conditions.isEmpty()) {
       statement.append(" where ").append(conditions.stream().collect(Collectors.joining(" and ")));
     }
@@ -66,5 +72,30 @@ public class SQLTranslator {
       }
     }
     return statement.toString();
+  }
+
+  private static void addJoins(StringBuilder statement, TableDto tableQuery) {
+    for (JoinDto join : tableQuery.joins) {
+      statement
+              .append(" ")
+              .append(join.type)
+              .append(" join ")
+              .append(join.table.name)
+              .append(" on ");
+      for (int i = 0; i < join.mappings.size(); i++) {
+        JoinMappingDto mapping = join.mappings.get(i);
+        statement
+                .append(tableQuery.name).append('.').append(mapping.from)
+                .append(" = ")
+                .append(join.table.name).append('.').append(mapping.to);
+        if (i < join.mappings.size() - 1) {
+          statement.append(" and ");
+        }
+      }
+
+      if (!join.table.joins.isEmpty()) {
+        addJoins(statement, join.table);
+      }
+    }
   }
 }

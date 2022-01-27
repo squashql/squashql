@@ -30,6 +30,9 @@ Payload:
 
 ```json
 {
+  "table": {
+    "name": "products"
+  },
   "coordinates": {
     "scenario": null,
     "type-marque": null
@@ -85,6 +88,9 @@ If `totals.visible` is true, the result includes extra rows that represent the s
 
 ```json
 {
+  "table": {
+    "name": "products"
+  },
   "coordinates": {
     "scenario": null,
     "type-marque": null
@@ -137,6 +143,9 @@ This API can also be used for discovery! For instance to fetch all existing scen
 Payload:
 ```json
 {
+  "table": {
+    "name": "products"
+  },
   "coordinates": {
     "scenario": null
   }
@@ -252,6 +261,9 @@ Payload
 
 ```json
 {
+  "table": {
+    "name": "products"
+  },
   "groups": {
     "group1" : ["base", "mdd-baisse-simu-sensi"],
     "group2" : ["base", "mdd-baisse"],
@@ -295,3 +307,50 @@ Response
   ]
 }
 ```
+
+#### Joins
+
+In the payload, you can specify the table on which the query is executed and if multiple necessary other tables joined 
+to this "main" table. It is the place where you can express "snowflake schema" style at query time. For instance:
+
+```json
+...
+  "table": {
+    "name": "orders",
+    "joins": [
+      {
+        "table": {
+          "name": "orderDetails",
+          "joins": [
+            {
+              "table": {
+                "name": "products"
+              },
+              "type": "inner",
+              "mappings": [
+                {
+                  "from": "productId",
+                  "to": "productId"
+                }
+              ]
+            }
+          ]
+        },
+        "type": "inner",
+        "mappings": [
+          {
+            "from": "orderId",
+            "to": "orderId"
+          }
+        ]
+      }
+    ]
+  }
+...
+```
+
+In this example, `orders` is the base store (fact table). It is linked to `orderDetails` via the orderId field. `orderDetails`
+is itself joined to the `products` table via the productId.
+
+Supported type of joins are: `inner` and `left`.
+Mapping can be done on multiple fields if necessary.

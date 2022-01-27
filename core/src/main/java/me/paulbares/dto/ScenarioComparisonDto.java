@@ -1,21 +1,23 @@
-package me.paulbares.query;
+package me.paulbares.dto;
+
+import me.paulbares.query.Measure;
 
 import java.util.Objects;
 
-public final class ScenarioComparison {
+public final class ScenarioComparisonDto {
 
   public String method;
   public Measure measure;
   public boolean showValue;
   public String referencePosition;
 
-  public ScenarioComparison() {
+  public ScenarioComparisonDto() {
   }
 
-  public ScenarioComparison(String method,
-                            Measure measure,
-                            boolean showValue,
-                            String referencePosition) {
+  public ScenarioComparisonDto(String method,
+                               Measure measure,
+                               boolean showValue,
+                               String referencePosition) {
     this.method = method;
     this.measure = measure;
     this.showValue = showValue;
@@ -42,7 +44,7 @@ public final class ScenarioComparison {
   public boolean equals(Object obj) {
     if (obj == this) return true;
     if (obj == null || obj.getClass() != this.getClass()) return false;
-    var that = (ScenarioComparison) obj;
+    var that = (ScenarioComparisonDto) obj;
     return Objects.equals(this.method, that.method) &&
             Objects.equals(this.measure, that.measure) &&
             this.showValue == that.showValue &&

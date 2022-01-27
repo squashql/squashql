@@ -1,5 +1,6 @@
 package me.paulbares.query;
 
+import me.paulbares.dto.QueryDto;
 import me.paulbares.query.context.Totals;
 
 import java.util.ArrayList;
@@ -8,15 +9,15 @@ import java.util.List;
 
 public abstract class AQueryEngine implements QueryEngine {
 
-  protected abstract Table retrieveAggregates(Query query);
+  protected abstract Table retrieveAggregates(QueryDto query);
 
   @Override
-  public Table execute(Query query) {
+  public Table execute(QueryDto query) {
     Table aggregates = retrieveAggregates(query);
     return postProcessDataset(aggregates, query);
   }
 
-  protected Table postProcessDataset(Table initialTable, Query query) {
+  protected Table postProcessDataset(Table initialTable, QueryDto query) {
     if (!query.context.containsKey(Totals.KEY)) {
       return initialTable;
     }
@@ -24,7 +25,7 @@ public abstract class AQueryEngine implements QueryEngine {
     return editTotalsAndSubtotals(initialTable, query);
   }
 
-  protected Table editTotalsAndSubtotals(Table dataset, Query query) {
+  protected Table editTotalsAndSubtotals(Table dataset, QueryDto query) {
     Iterator<List<Object>> rowIterator = dataset.iterator();
 
     List<List<Object>> newRows = new ArrayList<>((int) dataset.count());

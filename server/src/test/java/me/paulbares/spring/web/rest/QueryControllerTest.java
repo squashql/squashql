@@ -3,10 +3,10 @@ package me.paulbares.spring.web.rest;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ExpressionMeasure;
-import me.paulbares.query.Query;
+import me.paulbares.dto.QueryDto;
 import me.paulbares.query.QueryEngine;
-import me.paulbares.query.ScenarioComparison;
-import me.paulbares.query.ScenarioGroupingQuery;
+import me.paulbares.dto.ScenarioComparisonDto;
+import me.paulbares.dto.ScenarioGroupingQueryDto;
 import me.paulbares.query.context.Totals;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,8 @@ public class QueryControllerTest {
 
   @Test
   public void testQuery() throws Exception {
-    Query query = new Query()
+    QueryDto query = new QueryDto()
+            .table("products")
             .addWildcardCoordinate("scenario")
             .addAggregatedMeasure("marge", "sum")
             .addExpressionMeasure("indice-prix", "100 * sum(`numerateur-indice`) / sum(`score-visi`)");
@@ -58,7 +59,8 @@ public class QueryControllerTest {
 
   @Test
   public void testQueryWithTotals() throws Exception {
-    Query query = new Query()
+    QueryDto query = new QueryDto()
+            .table("products")
             .addWildcardCoordinate("scenario")
             .addContext(Totals.KEY, Totals.VISIBLE_TOP)
             .addAggregatedMeasure("marge", "sum");
@@ -118,10 +120,11 @@ public class QueryControllerTest {
 
     AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("marge", "sum");
     ExpressionMeasure expressionMeasure = new ExpressionMeasure("indice-prix", "100 * sum(`numerateur-indice`) / sum(`score-visi`)");
-    ScenarioGroupingQuery query = new ScenarioGroupingQuery()
+    ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
+            .table("products")
             .groups(groups)
-            .addScenarioComparison(new ScenarioComparison(COMPARISON_METHOD_ABS_DIFF, aggregatedMeasure, false, REF_POS_PREVIOUS))
-            .addScenarioComparison(new ScenarioComparison(COMPARISON_METHOD_ABS_DIFF, expressionMeasure, false, REF_POS_PREVIOUS));
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF, aggregatedMeasure, false, REF_POS_PREVIOUS))
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF, expressionMeasure, false, REF_POS_PREVIOUS));
 
     mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY_GROUPING)
                     .content(JacksonUtil.serialize(query))

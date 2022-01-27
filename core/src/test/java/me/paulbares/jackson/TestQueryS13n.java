@@ -1,7 +1,7 @@
 package me.paulbares.jackson;
 
 import me.paulbares.query.Measure;
-import me.paulbares.query.Query;
+import me.paulbares.dto.QueryDto;
 import me.paulbares.query.context.Totals;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -10,7 +10,7 @@ public class TestQueryS13n {
 
   @Test
   void testRoundTrip() {
-    Query query = new Query()
+    QueryDto query = new QueryDto()
             .addSingleCoordinate("scenario", "s1")
             .addCoordinates("city", "paris", "london")
             .addWildcardCoordinate("ean")
@@ -21,7 +21,7 @@ public class TestQueryS13n {
             .addContext(Totals.KEY, Totals.VISIBLE_BOTTOM);
 
     String serialize = JacksonUtil.serialize(query);
-    Query deserialize = JacksonUtil.deserialize(serialize, Query.class);
+    QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
 
     Assertions.assertThat(deserialize.coordinates).isEqualTo(query.coordinates);
     Assertions.assertThat(deserialize.measures).containsExactlyInAnyOrder(query.measures.toArray(new Measure[0]));

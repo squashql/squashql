@@ -1,7 +1,10 @@
-package me.paulbares.query;
+package me.paulbares.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import me.paulbares.jackson.ContextValueDeserializer;
+import me.paulbares.query.AggregatedMeasure;
+import me.paulbares.query.ExpressionMeasure;
+import me.paulbares.query.Measure;
 import me.paulbares.query.context.ContextValue;
 
 import java.util.ArrayList;
@@ -10,37 +13,35 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicLong;
 
-public class Query {
-
-  public static final AtomicLong ID = new AtomicLong();
-
-  public final long id;
+public class QueryDto {
 
   public Map<String, List<String>> coordinates = new LinkedHashMap<>();
 
   public List<Measure> measures = new ArrayList<>();
 
+  public TableDto table;
+
   @JsonDeserialize(contentUsing = ContextValueDeserializer.class)
   public Map<String, ContextValue> context = new HashMap<>();
 
-  public Query() {
-    this.id = ID.getAndIncrement();
+  /**
+   * For Jackson.
+   */
+  public QueryDto() {
   }
 
-  public Query addWildcardCoordinate(String field) {
+  public QueryDto addWildcardCoordinate(String field) {
     this.coordinates.put(field, null);
     return this;
   }
 
-  public Query addSingleCoordinate(String field, String value) {
+  public QueryDto addSingleCoordinate(String field, String value) {
     this.coordinates.put(field, List.of(value));
     return this;
   }
 
-  public Query addCoordinates(String field, String first, String... others) {
+  public QueryDto addCoordinates(String field, String first, String... others) {
     List<String> values = new ArrayList<>();
     values.add(first);
     values.addAll(Arrays.stream(others).toList());
@@ -48,42 +49,38 @@ public class Query {
     return this;
   }
 
-  public Query addAggregatedMeasure(String field, String agg) {
+  public QueryDto addAggregatedMeasure(String field, String agg) {
     this.measures.add(new AggregatedMeasure(field, agg));
     return this;
   }
 
-  public Query addExpressionMeasure(String alias, String expression) {
+  public QueryDto addExpressionMeasure(String alias, String expression) {
     this.measures.add(new ExpressionMeasure(alias, expression));
     return this;
   }
 
-  public Query addContext(String key, ContextValue value) {
+  public QueryDto addContext(String key, ContextValue value) {
     this.context.put(key, value);
+    return this;
+  }
+
+  public QueryDto table(TableDto table) {
+    this.table = table;
+    return this;
+  }
+
+  public QueryDto table(String tableName) {
+    this.table = new TableDto(tableName);
     return this;
   }
 
   @Override
   public String toString() {
-    return "Query{" +
+    return "QueryDto{" +
             "coordinates=" + coordinates +
             ", measures=" + measures +
-            ", id=" + id +
+            ", table=" + table +
             ", context=" + context +
             '}';
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    Query query = (Query) o;
-    return this.id == query.id && Objects.equals(this.coordinates, query.coordinates) && Objects.equals(this.measures,
-            query.measures) && Objects.equals(this.context, query.context);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.id, this.coordinates, this.measures, this.context);
   }
 }
