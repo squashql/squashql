@@ -23,7 +23,7 @@ public class AggregatedMeasure implements Measure {
 
   @Override
   public String sqlExpression() {
-    return this.aggregationFunction + "(" + escape(this.field) + ")";
+    return this.aggregationFunction + "(" + (this.field.equals("*") ? this.field : escape(this.field)) + ")";
   }
 
   @Override

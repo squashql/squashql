@@ -90,17 +90,18 @@ public abstract class ATestQueryEngineWithJoins {
     QueryDto query = new QueryDto()
             .table(ordersTable)
             .addWildcardCoordinate("CategoryName")
-            .addAggregatedMeasure("Quantity", "sum");
+            .addAggregatedMeasure("Quantity", "sum")
+            .addAggregatedMeasure("*", "count");
 
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
-            List.of("Dairy Products", 2601.0),
-            List.of("Meat/Poultry", 1288.0),
-            List.of("Condiments", 1383.0),
-            List.of("Beverages", 2289.0),
-            List.of("Grains/Cereals", 912.0),
-            List.of("Seafood", 1445.0),
-            List.of("Confections", 2110.0),
-            List.of("Produce", 715.0));
+            List.of("Dairy Products", 2601.0, 100L),
+            List.of("Meat/Poultry", 1288.0, 50L),
+            List.of("Condiments", 1383.0, 49L),
+            List.of("Beverages", 2289.0, 93L),
+            List.of("Grains/Cereals", 912.0, 42L),
+            List.of("Seafood", 1445.0, 67L),
+            List.of("Confections", 2110.0, 84L),
+            List.of("Produce", 715.0, 33L));
   }
 }

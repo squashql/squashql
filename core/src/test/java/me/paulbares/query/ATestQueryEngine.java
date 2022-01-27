@@ -75,6 +75,20 @@ public abstract class ATestQueryEngine {
   }
 
   @Test
+  void testQueryWildcardCount() {
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
+            .addWildcardCoordinate("scenario")
+            .addAggregatedMeasure("*", "count");
+    Table result = this.queryEngine.execute(query);
+    result.show();
+    Assertions.assertThat(result).containsExactlyInAnyOrder(
+            List.of("base", 3l),
+            List.of("s1", 3l),
+            List.of("s2", 3l));
+  }
+
+  @Test
   void testQueryWildcardWithTotals() {
     QueryDto query = new QueryDto()
             .table(this.storeName)

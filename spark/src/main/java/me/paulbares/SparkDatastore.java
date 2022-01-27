@@ -31,7 +31,6 @@ public class SparkDatastore implements Datastore {
             .builder()
             .appName("Java Spark SQL Example")
             .config("spark.master", "local")
-            .config("spark.sql.warehouse.dir", "jar:file:/Users/Paul.Bares/.m2/repository/me/paulbares/aitm-core/0.1-SNAPSHOT/aitm-core-0.1-SNAPSHOT-tests.jar")
             .getOrCreate();
 
     for (SparkStore store : stores) {

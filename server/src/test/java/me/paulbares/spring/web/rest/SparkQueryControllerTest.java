@@ -1,12 +1,12 @@
 package me.paulbares.spring.web.rest;
 
+import me.paulbares.dto.QueryDto;
+import me.paulbares.dto.ScenarioComparisonDto;
+import me.paulbares.dto.ScenarioGroupingQueryDto;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ExpressionMeasure;
-import me.paulbares.dto.QueryDto;
 import me.paulbares.query.QueryEngine;
-import me.paulbares.dto.ScenarioComparisonDto;
-import me.paulbares.dto.ScenarioGroupingQueryDto;
 import me.paulbares.query.context.Totals;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class QueryControllerTest {
+public class SparkQueryControllerTest {
 
   @Autowired
   private MockMvc mvc;
@@ -41,7 +41,7 @@ public class QueryControllerTest {
             .addWildcardCoordinate("scenario")
             .addAggregatedMeasure("marge", "sum")
             .addExpressionMeasure("indice-prix", "100 * sum(`numerateur-indice`) / sum(`score-visi`)");
-    mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
+    this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
                     .content(JacksonUtil.serialize(query))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -64,7 +64,7 @@ public class QueryControllerTest {
             .addWildcardCoordinate("scenario")
             .addContext(Totals.KEY, Totals.VISIBLE_TOP)
             .addAggregatedMeasure("marge", "sum");
-    mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
+    this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
                     .content(JacksonUtil.serialize(query))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -83,7 +83,7 @@ public class QueryControllerTest {
 
   @Test
   void testMetadata() throws Exception {
-    mvc.perform(MockMvcRequestBuilders.get(SparkQueryController.MAPPING_METADATA))
+    this.mvc.perform(MockMvcRequestBuilders.get(SparkQueryController.MAPPING_METADATA))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               Map objects = JacksonUtil.mapper.readValue(contentAsString, Map.class);
@@ -126,7 +126,7 @@ public class QueryControllerTest {
             .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF, aggregatedMeasure, false, REF_POS_PREVIOUS))
             .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF, expressionMeasure, false, REF_POS_PREVIOUS));
 
-    mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY_GROUPING)
+    this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY_GROUPING)
                     .content(JacksonUtil.serialize(query))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
