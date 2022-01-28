@@ -1,13 +1,14 @@
 package me.paulbares.spring.web.rest;
 
-import me.paulbares.query.dto.QueryDto;
-import me.paulbares.query.dto.ScenarioComparisonDto;
-import me.paulbares.query.dto.ScenarioGroupingQueryDto;
+import me.paulbares.client.SimpleTable;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ExpressionMeasure;
 import me.paulbares.query.QueryEngine;
 import me.paulbares.query.context.Totals;
+import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.ScenarioComparisonDto;
+import me.paulbares.query.dto.ScenarioGroupingQueryDto;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,15 +71,19 @@ public class SparkQueryControllerTest {
             .andExpect(status().isOk())
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
-              Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
-              Assertions.assertThat((List) queryResult.get("rows")).containsExactlyInAnyOrder(
-                      Arrays.asList(QueryEngine.GRAND_TOTAL, 280.00000000000006d + 190.00000000000003d + 240.00000000000003d),
-                      List.of(MAIN_SCENARIO_NAME, 280.00000000000006d),
-                      List.of("mdd-baisse-simu-sensi", 190.00000000000003d),
-                      List.of("mdd-baisse", 240.00000000000003d)
-              );
-              Assertions.assertThat((List) queryResult.get("columns")).containsExactly("scenario", "sum(marge)");
+              SimpleTable table = JacksonUtil.mapper.readValue(contentAsString, SimpleTable.class);
+              assertQueryWithTotals(table);
             });
+  }
+
+  static void assertQueryWithTotals(SimpleTable table) {
+    Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
+            Arrays.asList(QueryEngine.GRAND_TOTAL, 280.00000000000006d + 190.00000000000003d + 240.00000000000003d),
+            List.of(MAIN_SCENARIO_NAME, 280.00000000000006d),
+            List.of("mdd-baisse-simu-sensi", 190.00000000000003d),
+            List.of("mdd-baisse", 240.00000000000003d)
+    );
+    Assertions.assertThat(table.columns).containsExactly("scenario", "sum(marge)");
   }
 
   @Test
@@ -87,28 +92,32 @@ public class SparkQueryControllerTest {
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               Map objects = JacksonUtil.mapper.readValue(contentAsString, Map.class);
-              List<Map<String, Object>> storesArray = (List) objects.get(SparkQueryController.METADATA_STORES_KEY);
-              Assertions.assertThat(storesArray).hasSize(1);
-              Assertions.assertThat(storesArray.get(0).get("name")).isEqualTo("products");
-              Assertions.assertThat((List) storesArray.get(0).get(SparkQueryController.METADATA_FIELDS_KEY)).containsExactlyInAnyOrder(
-                      Map.of("name", "ean", "type", "string"),
-                      Map.of("name", "pdv", "type", "string"),
-                      Map.of("name", "categorie", "type", "string"),
-                      Map.of("name", "type-marque", "type", "string"),
-                      Map.of("name", "sensibilite", "type", "string"),
-                      Map.of("name", "quantite", "type", "int"),
-                      Map.of("name", "prix", "type", "double"),
-                      Map.of("name", "achat", "type", "int"),
-                      Map.of("name", "score-visi", "type", "int"),
-                      Map.of("name", "min-marche", "type", "double"),
-                      Map.of("name", "ca", "type", "double"),
-                      Map.of("name", "marge", "type", "double"),
-                      Map.of("name", "numerateur-indice", "type", "double"),
-                      Map.of("name", "indice-prix", "type", "double"),
-                      Map.of("name", "scenario", "type", "string")
-              );
-              Assertions.assertThat((List) objects.get(SparkQueryController.METADATA_AGG_FUNC_KEY)).containsExactlyInAnyOrder(SparkQueryController.SUPPORTED_AGG_FUNCS.toArray(new String[0]));
+              assertMetadataResult(objects);
             });
+  }
+
+  static void assertMetadataResult(Map objects) {
+    List<Map<String, Object>> storesArray = (List) objects.get(SparkQueryController.METADATA_STORES_KEY);
+    Assertions.assertThat(storesArray).hasSize(1);
+    Assertions.assertThat(storesArray.get(0).get("name")).isEqualTo("products");
+    Assertions.assertThat((List) storesArray.get(0).get(SparkQueryController.METADATA_FIELDS_KEY)).containsExactlyInAnyOrder(
+            Map.of("name", "ean", "type", "string"),
+            Map.of("name", "pdv", "type", "string"),
+            Map.of("name", "categorie", "type", "string"),
+            Map.of("name", "type-marque", "type", "string"),
+            Map.of("name", "sensibilite", "type", "string"),
+            Map.of("name", "quantite", "type", "int"),
+            Map.of("name", "prix", "type", "double"),
+            Map.of("name", "achat", "type", "int"),
+            Map.of("name", "score-visi", "type", "int"),
+            Map.of("name", "min-marche", "type", "double"),
+            Map.of("name", "ca", "type", "double"),
+            Map.of("name", "marge", "type", "double"),
+            Map.of("name", "numerateur-indice", "type", "double"),
+            Map.of("name", "indice-prix", "type", "double"),
+            Map.of("name", "scenario", "type", "string")
+    );
+    Assertions.assertThat((List) objects.get(SparkQueryController.METADATA_AGG_FUNC_KEY)).containsExactlyInAnyOrder(SparkQueryController.SUPPORTED_AGG_FUNCS.toArray(new String[0]));
   }
 
   @Test

@@ -26,7 +26,6 @@ public class JacksonUtil {
     var simpleModule = new SimpleModule();
     simpleModule.addDeserializer(Measure.class, new MeasureDeserializer());
     mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-//    simpleModule.addSerializer(ConditionDto.class, new ConditionSerializer());
     simpleModule.addDeserializer(ConditionDto.class, new ConditionDeserializer());
     mapper.registerModule(simpleModule);
   }

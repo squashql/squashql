@@ -20,8 +20,10 @@
         <assertj.version>3.16.1</assertj.version>
         <jackson.version>2.12.5</jackson.version>
         <spring-boot.version>2.6.1</spring-boot.version>
-        <maven-jar-plugin.version>3.2.0</maven-jar-plugin.version>
+        <maven-jar-plugin.version>3.2.2</maven-jar-plugin.version>
+        <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
         <eclipse.version>11.0.0</eclipse.version>
+        <feign.version>11.6</feign.version>
     </properties>
 
     <modules>
