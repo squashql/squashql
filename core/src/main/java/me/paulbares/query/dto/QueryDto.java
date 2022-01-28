@@ -1,6 +1,8 @@
-package me.paulbares.dto;
+package me.paulbares.query.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.jackson.deserializer.ContextValueDeserializer;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ExpressionMeasure;
@@ -13,10 +15,16 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.ALWAYS;
 
 public class QueryDto {
 
+  @JsonInclude(ALWAYS)
   public Map<String, List<String>> coordinates = new LinkedHashMap<>();
+
+  public Map<String, ConditionDto> conditions = new LinkedHashMap<>();
 
   public List<Measure> measures = new ArrayList<>();
 
@@ -31,17 +39,17 @@ public class QueryDto {
   public QueryDto() {
   }
 
-  public QueryDto addWildcardCoordinate(String field) {
+  public QueryDto wildcardCoordinate(String field) {
     this.coordinates.put(field, null);
     return this;
   }
 
-  public QueryDto addSingleCoordinate(String field, String value) {
+  public QueryDto coordinate(String field, String value) {
     this.coordinates.put(field, List.of(value));
     return this;
   }
 
-  public QueryDto addCoordinates(String field, String first, String... others) {
+  public QueryDto coordinates(String field, String first, String... others) {
     List<String> values = new ArrayList<>();
     values.add(first);
     values.addAll(Arrays.stream(others).toList());
@@ -49,17 +57,17 @@ public class QueryDto {
     return this;
   }
 
-  public QueryDto addAggregatedMeasure(String field, String agg) {
+  public QueryDto aggregatedMeasure(String field, String agg) {
     this.measures.add(new AggregatedMeasure(field, agg));
     return this;
   }
 
-  public QueryDto addExpressionMeasure(String alias, String expression) {
+  public QueryDto expressionMeasure(String alias, String expression) {
     this.measures.add(new ExpressionMeasure(alias, expression));
     return this;
   }
 
-  public QueryDto addContext(String key, ContextValue value) {
+  public QueryDto context(String key, ContextValue value) {
     this.context.put(key, value);
     return this;
   }
@@ -74,13 +82,36 @@ public class QueryDto {
     return this;
   }
 
+  public QueryDto condition(String field, ConditionDto conditionDto) {
+    this.conditions.put(field, conditionDto);
+    return this;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    QueryDto queryDto = (QueryDto) o;
+    return Objects.equals(this.coordinates, queryDto.coordinates) && Objects.equals(this.conditions, queryDto.conditions) && Objects.equals(this.measures, queryDto.measures) && Objects.equals(this.table, queryDto.table) && Objects.equals(this.context, queryDto.context);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.coordinates, this.conditions, this.measures, this.table, this.context);
+  }
+
   @Override
   public String toString() {
     return "QueryDto{" +
             "coordinates=" + coordinates +
+            ", conditions=" + conditions +
             ", measures=" + measures +
             ", table=" + table +
             ", context=" + context +
             '}';
+  }
+
+  public String json() {
+    return JacksonUtil.serialize(this);
   }
 }

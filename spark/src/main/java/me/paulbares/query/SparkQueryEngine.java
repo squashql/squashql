@@ -1,9 +1,9 @@
 package me.paulbares.query;
 
 import me.paulbares.SparkDatastore;
-import me.paulbares.dto.JoinDto;
-import me.paulbares.dto.QueryDto;
-import me.paulbares.dto.TableDto;
+import me.paulbares.query.dto.JoinDto;
+import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.TableDto;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 

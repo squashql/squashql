@@ -1,7 +1,7 @@
 package me.paulbares.query;
 
-import me.paulbares.dto.ScenarioComparisonDto;
-import me.paulbares.dto.ScenarioGroupingQueryDto;
+import me.paulbares.query.dto.ScenarioComparisonDto;
+import me.paulbares.query.dto.ScenarioGroupingQueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;

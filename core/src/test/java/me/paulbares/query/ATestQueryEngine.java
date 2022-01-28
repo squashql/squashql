@@ -1,6 +1,6 @@
 package me.paulbares.query;
 
-import me.paulbares.dto.QueryDto;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.context.Totals;
 import me.paulbares.store.Datastore;
@@ -64,9 +64,9 @@ public abstract class ATestQueryEngine {
   void testQueryWildcard() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .addWildcardCoordinate("scenario")
-            .addAggregatedMeasure("price", "sum")
-            .addAggregatedMeasure("quantity", "sum");
+            .wildcardCoordinate("scenario")
+            .aggregatedMeasure("price", "sum")
+            .aggregatedMeasure("quantity", "sum");
     Table result = this.queryEngine.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("base", 15.0d, 33l),
@@ -78,8 +78,8 @@ public abstract class ATestQueryEngine {
   void testQueryWildcardCount() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .addWildcardCoordinate("scenario")
-            .addAggregatedMeasure("*", "count");
+            .wildcardCoordinate("scenario")
+            .aggregatedMeasure("*", "count");
     Table result = this.queryEngine.execute(query);
     result.show();
     Assertions.assertThat(result).containsExactlyInAnyOrder(
@@ -92,10 +92,10 @@ public abstract class ATestQueryEngine {
   void testQueryWildcardWithTotals() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .addWildcardCoordinate("scenario")
-            .addAggregatedMeasure("price", "sum")
-            .addAggregatedMeasure("quantity", "sum")
-            .addContext(Totals.KEY, Totals.VISIBLE_TOP);
+            .wildcardCoordinate("scenario")
+            .aggregatedMeasure("price", "sum")
+            .aggregatedMeasure("quantity", "sum")
+            .context(Totals.KEY, Totals.VISIBLE_TOP);
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactly(
             List.of(GRAND_TOTAL, 15.d + 17.d + 14.5, 33 * 3l),
@@ -108,12 +108,12 @@ public abstract class ATestQueryEngine {
   void testQueryWildcardAndCrossjoinWithTotals() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .addWildcardCoordinate("scenario")
-            .addWildcardCoordinate("category")
-            .addWildcardCoordinate("ean")
-            .addAggregatedMeasure("price", "sum")
-            .addAggregatedMeasure("quantity", "sum")
-            .addContext(Totals.KEY, Totals.VISIBLE_TOP);
+            .wildcardCoordinate("scenario")
+            .wildcardCoordinate("category")
+            .wildcardCoordinate("ean")
+            .aggregatedMeasure("price", "sum")
+            .aggregatedMeasure("quantity", "sum")
+            .context(Totals.KEY, Totals.VISIBLE_TOP);
 
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactly(
@@ -147,12 +147,12 @@ public abstract class ATestQueryEngine {
   void testQueryWildcardAndCrossjoinWithTotalsPositionBottom() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .addWildcardCoordinate("scenario")
-            .addWildcardCoordinate("category")
-            .addWildcardCoordinate("ean")
-            .addAggregatedMeasure("price", "sum")
-            .addAggregatedMeasure("quantity", "sum")
-            .addContext(Totals.KEY, Totals.VISIBLE_BOTTOM);
+            .wildcardCoordinate("scenario")
+            .wildcardCoordinate("category")
+            .wildcardCoordinate("ean")
+            .aggregatedMeasure("price", "sum")
+            .aggregatedMeasure("quantity", "sum")
+            .context(Totals.KEY, Totals.VISIBLE_BOTTOM);
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactly(
             Arrays.asList("base", "cloth", "shirt", 10.0d, 3l),
@@ -185,9 +185,9 @@ public abstract class ATestQueryEngine {
   void testQuerySeveralCoordinates() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .addCoordinates("scenario", "s1", "s2")
-            .addAggregatedMeasure("price", "sum")
-            .addAggregatedMeasure("quantity", "sum");
+            .coordinates("scenario", "s1", "s2")
+            .aggregatedMeasure("price", "sum")
+            .aggregatedMeasure("quantity", "sum");
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
             List.of("s1", 17.0d, 33l),
@@ -198,9 +198,9 @@ public abstract class ATestQueryEngine {
   void testQuerySingleCoordinate() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .addSingleCoordinate("scenario", "s1")
-            .addAggregatedMeasure("price", "sum")
-            .addAggregatedMeasure("quantity", "sum");
+            .coordinate("scenario", "s1")
+            .aggregatedMeasure("price", "sum")
+            .aggregatedMeasure("quantity", "sum");
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("s1", 17.0d, 33l));
   }
@@ -212,7 +212,7 @@ public abstract class ATestQueryEngine {
   void testDiscovery() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .addWildcardCoordinate("scenario");
+            .wildcardCoordinate("scenario");
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
                     List.of(MAIN_SCENARIO_NAME),
@@ -224,9 +224,9 @@ public abstract class ATestQueryEngine {
   void testJsonConverter() throws Exception {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .addWildcardCoordinate("scenario")
-            .addAggregatedMeasure("price", "sum")
-            .addAggregatedMeasure("quantity", "sum");
+            .wildcardCoordinate("scenario")
+            .aggregatedMeasure("price", "sum")
+            .aggregatedMeasure("quantity", "sum");
     Table table = this.queryEngine.execute(query);
     String actual = JacksonUtil.tableToCsv(table);
     Map map = JacksonUtil.mapper.readValue(actual, Map.class);

@@ -1,30 +1,78 @@
 package me.paulbares.jackson;
 
-import me.paulbares.query.Measure;
-import me.paulbares.dto.QueryDto;
 import me.paulbares.query.context.Totals;
+import me.paulbares.query.dto.ConditionDto;
+import me.paulbares.query.dto.QueryDto;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import static me.paulbares.query.QueryBuilder.and;
+import static me.paulbares.query.QueryBuilder.eq;
+import static me.paulbares.query.QueryBuilder.ge;
+import static me.paulbares.query.QueryBuilder.gt;
+import static me.paulbares.query.QueryBuilder.in;
+import static me.paulbares.query.QueryBuilder.le;
+import static me.paulbares.query.QueryBuilder.lt;
+import static me.paulbares.query.QueryBuilder.neq;
+import static me.paulbares.query.QueryBuilder.or;
+import static me.paulbares.query.QueryBuilder.query;
+import static me.paulbares.query.QueryBuilder.table;
 
 public class TestQueryS13n {
 
   @Test
   void testRoundTrip() {
     QueryDto query = new QueryDto()
-            .addSingleCoordinate("scenario", "s1")
-            .addCoordinates("city", "paris", "london")
-            .addWildcardCoordinate("ean")
-            .addAggregatedMeasure("price", "sum")
-            .addAggregatedMeasure("quantity", "sum")
-            .addExpressionMeasure("alias1", "firstMyExpression")
-            .addExpressionMeasure("alias2", "secondMyExpression")
-            .addContext(Totals.KEY, Totals.VISIBLE_BOTTOM);
+            .table("myTable")
+            .coordinate("scenario", "s1")
+            .coordinates("city", "paris", "london")
+            .wildcardCoordinate("ean")
+            .aggregatedMeasure("price", "sum")
+            .aggregatedMeasure("quantity", "sum")
+            .expressionMeasure("alias1", "firstMyExpression")
+            .expressionMeasure("alias2", "secondMyExpression")
+            .context(Totals.KEY, Totals.VISIBLE_BOTTOM);
 
-    String serialize = JacksonUtil.serialize(query);
+    String serialize = query.json();
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(query);
+  }
 
-    Assertions.assertThat(deserialize.coordinates).isEqualTo(query.coordinates);
-    Assertions.assertThat(deserialize.measures).containsExactlyInAnyOrder(query.measures.toArray(new Measure[0]));
+  @Test
+  void testRoundTripWithJoinsAndConditions() {
+    QueryDto query = query();
+
+    // Table
+    var orders = table("orders");
+    var orderDetails = table("orderDetails");
+
+    // Join
+    orders.innerJoin(orderDetails, "orderDetailsId", "orderDetailsId");
+
+    query.table(orders);
+
+    // Coordinates
+    query.wildcardCoordinate("productName");
+    query.coordinates("categoryName", "first", "second");
+
+    // Measures
+    query.aggregatedMeasure("price", "sum");
+    query.expressionMeasure("alias", "expression");
+
+    // Conditions
+    ConditionDto december = and(gt("1/12/1996"), lt("31/12/1996"));
+    ConditionDto october = and(ge("1/10/1996"), le("31/10/1996"));
+    query.condition("orderDate", or(december, october));
+    query.condition("city", in("paris", "london"));
+    query.condition("country", eq("france"));
+    query.condition("shipper", neq("aramex"));
+
+    String serialize = query.json();
+    QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
+    Assertions.assertThat(deserialize.table).isEqualTo(query.table);
+    Assertions.assertThat(deserialize.conditions).isEqualTo(query.conditions);
     Assertions.assertThat(deserialize.context).isEqualTo(query.context);
+    Assertions.assertThat(deserialize.coordinates).isEqualTo(query.coordinates);
+    Assertions.assertThat(deserialize.measures).isEqualTo(query.measures);
   }
 }

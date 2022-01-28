@@ -1,6 +1,6 @@
 package me.paulbares.query;
 
-import me.paulbares.dto.QueryDto;
+import me.paulbares.query.dto.QueryDto;
 
 public interface QueryEngine {
 

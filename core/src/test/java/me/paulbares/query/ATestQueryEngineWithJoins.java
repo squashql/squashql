@@ -1,8 +1,8 @@
 package me.paulbares.query;
 
-import me.paulbares.dto.JoinMappingDto;
-import me.paulbares.dto.QueryDto;
-import me.paulbares.dto.TableDto;
+import me.paulbares.query.dto.JoinMappingDto;
+import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Store;
 import org.assertj.core.api.Assertions;
@@ -89,9 +89,9 @@ public abstract class ATestQueryEngineWithJoins {
 
     QueryDto query = new QueryDto()
             .table(ordersTable)
-            .addWildcardCoordinate("CategoryName")
-            .addAggregatedMeasure("Quantity", "sum")
-            .addAggregatedMeasure("*", "count");
+            .wildcardCoordinate("CategoryName")
+            .aggregatedMeasure("Quantity", "sum")
+            .aggregatedMeasure("*", "count");
 
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
@@ -104,4 +104,28 @@ public abstract class ATestQueryEngineWithJoins {
             List.of("Confections", 2110.0, 84L),
             List.of("Produce", 715.0, 33L));
   }
+
+  // Conditions
+
+  // 1. where (orderDate > 1/12/1996 AND orderDate < 31/12/1996) OR (orderDate > 1/10/1996 AND orderDate < 31/10/1996)
+  // 2. where category in (Condiments, Dairy) <=> category eq Condiments OR category eq Dairy
+  // 3. where category not in (Condiments, Dairy) <=> category neq Condiments AND category neq Dairy
+  // 4. where category eq "Dairy"
+  // 5. where category neq "Dairy"
+  // 6. where cond1 and cond2 and cond3
+  // 6. where cond1 or cond2 or cond3
+
+  // https://stackoverflow.com/questions/20737045/representing-logic-as-data-in-json
+  /* If you must implement this using standard JSON, I'd recommend something akin to
+   *Lisp's "S-expressions". A condition could be either a plain object, or an array whose
+   *first entry is the logical operation that joins them.
+   * ["AND",
+    {"var1" : "value1"},
+    ["OR",
+        { "var2" : "value2" },
+        { "var3" : "value3" }
+    ]
+]
+* var1 == value1 AND (var2 == value2 OR var3 == value3)
+   */
 }

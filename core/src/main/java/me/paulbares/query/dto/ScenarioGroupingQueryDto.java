@@ -1,4 +1,4 @@
-package me.paulbares.dto;
+package me.paulbares.query.dto;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

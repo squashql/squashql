@@ -1,9 +1,9 @@
 package me.paulbares.spring.web.rest;
 
 import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.dto.QueryDto;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.ScenarioGroupingExecutor;
-import me.paulbares.dto.ScenarioGroupingQueryDto;
+import me.paulbares.query.dto.ScenarioGroupingQueryDto;
 import me.paulbares.query.SparkQueryEngine;
 import me.paulbares.query.Table;
 import me.paulbares.store.Store;

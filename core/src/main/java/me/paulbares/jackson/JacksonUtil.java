@@ -1,12 +1,15 @@
 package me.paulbares.jackson;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import me.paulbares.jackson.deserializer.ConditionDeserializer;
 import me.paulbares.jackson.deserializer.MeasureDeserializer;
 import me.paulbares.query.Measure;
 import me.paulbares.query.Table;
+import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.store.Field;
 
 import java.util.List;
@@ -22,6 +25,9 @@ public class JacksonUtil {
     mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
     var simpleModule = new SimpleModule();
     simpleModule.addDeserializer(Measure.class, new MeasureDeserializer());
+    mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+//    simpleModule.addSerializer(ConditionDto.class, new ConditionSerializer());
+    simpleModule.addDeserializer(ConditionDto.class, new ConditionDeserializer());
     mapper.registerModule(simpleModule);
   }
 

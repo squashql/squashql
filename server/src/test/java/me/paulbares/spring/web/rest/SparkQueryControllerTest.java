@@ -1,8 +1,8 @@
 package me.paulbares.spring.web.rest;
 
-import me.paulbares.dto.QueryDto;
-import me.paulbares.dto.ScenarioComparisonDto;
-import me.paulbares.dto.ScenarioGroupingQueryDto;
+import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.ScenarioComparisonDto;
+import me.paulbares.query.dto.ScenarioGroupingQueryDto;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ExpressionMeasure;
@@ -38,9 +38,9 @@ public class SparkQueryControllerTest {
   public void testQuery() throws Exception {
     QueryDto query = new QueryDto()
             .table("products")
-            .addWildcardCoordinate("scenario")
-            .addAggregatedMeasure("marge", "sum")
-            .addExpressionMeasure("indice-prix", "100 * sum(`numerateur-indice`) / sum(`score-visi`)");
+            .wildcardCoordinate("scenario")
+            .aggregatedMeasure("marge", "sum")
+            .expressionMeasure("indice-prix", "100 * sum(`numerateur-indice`) / sum(`score-visi`)");
     this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
                     .content(JacksonUtil.serialize(query))
                     .contentType(MediaType.APPLICATION_JSON))
@@ -61,9 +61,9 @@ public class SparkQueryControllerTest {
   public void testQueryWithTotals() throws Exception {
     QueryDto query = new QueryDto()
             .table("products")
-            .addWildcardCoordinate("scenario")
-            .addContext(Totals.KEY, Totals.VISIBLE_TOP)
-            .addAggregatedMeasure("marge", "sum");
+            .wildcardCoordinate("scenario")
+            .context(Totals.KEY, Totals.VISIBLE_TOP)
+            .aggregatedMeasure("marge", "sum");
     this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
                     .content(JacksonUtil.serialize(query))
                     .contentType(MediaType.APPLICATION_JSON))

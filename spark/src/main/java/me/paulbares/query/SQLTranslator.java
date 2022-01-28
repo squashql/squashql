@@ -1,9 +1,9 @@
 package me.paulbares.query;
 
-import me.paulbares.dto.JoinDto;
-import me.paulbares.dto.JoinMappingDto;
-import me.paulbares.dto.QueryDto;
-import me.paulbares.dto.TableDto;
+import me.paulbares.query.dto.JoinDto;
+import me.paulbares.query.dto.JoinMappingDto;
+import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.TableDto;
 import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.Totals;
 

@@ -1,9 +1,9 @@
 package me.paulbares.query;
 
-import me.paulbares.dto.JoinDto;
-import me.paulbares.dto.JoinMappingDto;
-import me.paulbares.dto.QueryDto;
-import me.paulbares.dto.TableDto;
+import me.paulbares.query.dto.JoinDto;
+import me.paulbares.query.dto.JoinMappingDto;
+import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.TableDto;
 import me.paulbares.query.context.Totals;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -17,9 +17,9 @@ public class TestSQLTranslator {
   @Test
   void testGrandTotal() {
     QueryDto query = new QueryDto()
-            .addAggregatedMeasure("pnl", "sum")
-            .addAggregatedMeasure("delta", "sum")
-            .addAggregatedMeasure("pnl", "avg")
+            .aggregatedMeasure("pnl", "sum")
+            .aggregatedMeasure("delta", "sum")
+            .aggregatedMeasure("pnl", "avg")
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query))
@@ -29,11 +29,11 @@ public class TestSQLTranslator {
   @Test
   void testGroupBy() {
     QueryDto query = new QueryDto()
-            .addWildcardCoordinate("scenario")
-            .addWildcardCoordinate("type")
-            .addAggregatedMeasure("pnl", "sum")
-            .addAggregatedMeasure("delta", "sum")
-            .addAggregatedMeasure("pnl", "avg")
+            .wildcardCoordinate("scenario")
+            .wildcardCoordinate("type")
+            .aggregatedMeasure("pnl", "sum")
+            .aggregatedMeasure("delta", "sum")
+            .aggregatedMeasure("pnl", "avg")
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query))
@@ -44,11 +44,11 @@ public class TestSQLTranslator {
   @Test
   void testSingleConditionSingleField() {
     QueryDto query = new QueryDto()
-            .addSingleCoordinate("scenario", "Base")
-            .addWildcardCoordinate("type")
-            .addAggregatedMeasure("pnl", "sum")
-            .addAggregatedMeasure("delta", "sum")
-            .addAggregatedMeasure("pnl", "avg")
+            .coordinate("scenario", "Base")
+            .wildcardCoordinate("type")
+            .aggregatedMeasure("pnl", "sum")
+            .aggregatedMeasure("delta", "sum")
+            .aggregatedMeasure("pnl", "avg")
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query))
@@ -59,11 +59,11 @@ public class TestSQLTranslator {
   @Test
   void testConditionsSeveralField() {
     QueryDto query = new QueryDto()
-            .addSingleCoordinate("scenario", "Base")
-            .addCoordinates("type", "A", "B")
-            .addAggregatedMeasure("pnl", "sum")
-            .addAggregatedMeasure("delta", "sum")
-            .addAggregatedMeasure("pnl", "avg")
+            .coordinate("scenario", "Base")
+            .coordinates("type", "A", "B")
+            .aggregatedMeasure("pnl", "sum")
+            .aggregatedMeasure("delta", "sum")
+            .aggregatedMeasure("pnl", "avg")
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query))
@@ -74,8 +74,8 @@ public class TestSQLTranslator {
   void testDifferentMeasures() {
     QueryDto query = new QueryDto()
             .table(BASE_STORE_NAME)
-            .addAggregatedMeasure("pnl", "sum")
-            .addExpressionMeasure("indice", "100 * sum(`delta`) / sum(`pnl`)");
+            .aggregatedMeasure("pnl", "sum")
+            .expressionMeasure("indice", "100 * sum(`delta`) / sum(`pnl`)");
 
     Assertions.assertThat(SQLTranslator.translate(query))
           .isEqualTo("select sum(`pnl`), 100 * sum(`delta`) / sum(`pnl`) as `indice` from " + BASE_STORE_NAME);
@@ -84,9 +84,9 @@ public class TestSQLTranslator {
   @Test
   void testWithTotalsTop() {
     QueryDto query = new QueryDto()
-            .addWildcardCoordinate("scenario")
-            .addAggregatedMeasure("price", "sum")
-            .addContext(Totals.KEY, Totals.VISIBLE_TOP)
+            .wildcardCoordinate("scenario")
+            .aggregatedMeasure("price", "sum")
+            .context(Totals.KEY, Totals.VISIBLE_TOP)
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query))
@@ -97,9 +97,9 @@ public class TestSQLTranslator {
   @Test
   void testWithTotalsBottom() {
     QueryDto query = new QueryDto()
-            .addWildcardCoordinate("scenario")
-            .addAggregatedMeasure("price", "sum")
-            .addContext(Totals.KEY, Totals.VISIBLE_BOTTOM)
+            .wildcardCoordinate("scenario")
+            .aggregatedMeasure("price", "sum")
+            .context(Totals.KEY, Totals.VISIBLE_BOTTOM)
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query))
@@ -129,7 +129,7 @@ public class TestSQLTranslator {
 
     QueryDto query = new QueryDto()
             .table(baseStore)
-            .addAggregatedMeasure("pnl", "avg");
+            .aggregatedMeasure("pnl", "avg");
 
     Assertions.assertThat(SQLTranslator.translate(query))
             .isEqualTo("select avg(`pnl`) from " + BASE_STORE_NAME

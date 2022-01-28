@@ -1,8 +1,8 @@
 package me.paulbares.query;
 
-import me.paulbares.dto.QueryDto;
-import me.paulbares.dto.ScenarioComparisonDto;
-import me.paulbares.dto.ScenarioGroupingQueryDto;
+import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.ScenarioComparisonDto;
+import me.paulbares.query.dto.ScenarioGroupingQueryDto;
 import me.paulbares.store.Field;
 import org.eclipse.collections.impl.list.mutable.FastList;
 
@@ -25,7 +25,7 @@ public class ScenarioGroupingExecutor {
   }
 
   public Table execute(ScenarioGroupingQueryDto query) {
-    QueryDto prefetchQuery = new QueryDto().addWildcardCoordinate("scenario").table(query.table);
+    QueryDto prefetchQuery = new QueryDto().wildcardCoordinate("scenario").table(query.table);
     query.comparisons.forEach(c -> prefetchQuery.measures.add(c.measure()));
 
     Table table = this.queryEngine.execute(prefetchQuery);
