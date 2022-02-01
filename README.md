@@ -3,7 +3,7 @@
 In order to build the server, you will need:
 - [Java JDK](https://www.oracle.com/java/) >= 17
 - Latest stable [Apache Maven](http://maven.apache.org/)
-- 
+
 ## Heroku CLI
 
 ```
@@ -365,3 +365,36 @@ is itself joined to the `products` table via the productId.
 
 Supported type of joins are: `inner` and `left`.
 Mapping can be done on multiple fields if necessary.
+
+## JShell
+
+To interactively interact with the server and execute queries, one can use jshell. To do that, compile the project with the jshell profile `mvn clean install -Pjshell` and launch jshell by running the executable and adding the required jar to the class-path. For instance:
+
+```
+/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/jshell --class-path ~/.m2/repository/me/paulbares/aitm-server/0.1-SNAPSHOT/aitm-server-0.1-SNAPSHOT.jar
+```
+
+And then (can be saved in a file):
+```jshell
+import me.paulbares.client.*
+import static me.paulbares.query.QueryBuilder.*
+
+var querier = new HttpClientQuerier("http://localhost:8080")
+
+querier.metadata()
+
+var query = query()
+var products = table("products")
+
+query.table(products)
+
+query.wildcardCoordinate("scenario").aggregatedMeasure("marge", "sum")
+
+querier.run(query)
+
+query.wildcardCoordinate("type-marque")
+
+query.context("totals", TOP)
+
+query.condition("type-marque", eq("MDD"))
+```
