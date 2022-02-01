@@ -37,6 +37,6 @@ public class ArrayTable implements Table {
 
   @Override
   public String toString() {
-    return TableUtils.toString(this.headers, this.rows, f -> ((Field) f).name(), s -> String.valueOf(s));
+    return TableUtils.toString(this.headers, this.rows, f -> ((Field) f).name(), String::valueOf);
   }
 }

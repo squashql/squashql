@@ -15,6 +15,6 @@ public class SimpleTable {
 
   @Override
   public String toString() {
-    return TableUtils.toString(this.columns, this.rows, Object::toString, Object::toString);
+    return TableUtils.toString(this.columns, this.rows, String::valueOf, String::valueOf);
   }
 }
