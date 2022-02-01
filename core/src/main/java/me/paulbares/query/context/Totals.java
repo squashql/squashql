@@ -8,10 +8,6 @@ public class Totals implements ContextValue {
   public static final String POSITION_TOP = "top";
   public static final String POSITION_BOTTOM = "bottom";
 
-  public static final Totals VISIBLE_TOP = new Totals(true, POSITION_TOP);
-  public static final Totals VISIBLE_BOTTOM = new Totals(true, POSITION_BOTTOM);
-
-  public boolean visible;
   public String position;
 
   /**
@@ -20,8 +16,7 @@ public class Totals implements ContextValue {
   public Totals() {
   }
 
-  public Totals(boolean visible, String position) {
-    this.visible = visible;
+  public Totals(String position) {
     this.position = position;
   }
 
@@ -35,19 +30,18 @@ public class Totals implements ContextValue {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Totals totals = (Totals) o;
-    return this.visible == totals.visible && Objects.equals(this.position, totals.position);
+    return Objects.equals(this.position, totals.position);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.visible, this.position);
+    return Objects.hash(this.position);
   }
 
   @Override
   public String toString() {
     return "Totals{" +
-            "visible=" + visible +
-            ", position='" + position + '\'' +
+            "position='" + position + '\'' +
             '}';
   }
 }

@@ -1,5 +1,6 @@
 package me.paulbares.jackson;
 
+import me.paulbares.query.QueryBuilder;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.QueryDto;
@@ -32,7 +33,7 @@ public class TestQueryS13n {
             .aggregatedMeasure("quantity", "sum")
             .expressionMeasure("alias1", "firstMyExpression")
             .expressionMeasure("alias2", "secondMyExpression")
-            .context(Totals.KEY, Totals.VISIBLE_BOTTOM);
+            .context(Totals.KEY, QueryBuilder.BOTTOM);
 
     String serialize = query.json();
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);

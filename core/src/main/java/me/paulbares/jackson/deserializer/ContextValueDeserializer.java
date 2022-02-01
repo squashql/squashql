@@ -15,9 +15,7 @@ public class ContextValueDeserializer extends JsonDeserializer<ContextValue> {
   public ContextValue deserialize(JsonParser p, DeserializationContext deserializationContext) throws IOException {
     JsonNode treeNode = p.getCodec().readTree(p);
     if (Totals.KEY.equals(p.currentName())) {
-      return new Totals(
-              Objects.requireNonNull(treeNode.get("visible")).asBoolean(),
-              treeNode.get("position").asText());
+      return new Totals(treeNode.get("position").asText());
     } else {
       throw new IllegalArgumentException("current: " + p.currentName() + "; " + treeNode.toString());
     }

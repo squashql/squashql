@@ -99,7 +99,7 @@ public abstract class ATestQueryEngine {
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("price", "sum")
             .aggregatedMeasure("quantity", "sum")
-            .context(Totals.KEY, Totals.VISIBLE_TOP);
+            .context(Totals.KEY, QueryBuilder.TOP);
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactly(
             List.of(GRAND_TOTAL, 15.d + 17.d + 14.5, 33 * 3l),
@@ -117,7 +117,7 @@ public abstract class ATestQueryEngine {
             .wildcardCoordinate("ean")
             .aggregatedMeasure("price", "sum")
             .aggregatedMeasure("quantity", "sum")
-            .context(Totals.KEY, Totals.VISIBLE_TOP);
+            .context(Totals.KEY, QueryBuilder.TOP);
 
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactly(
@@ -156,7 +156,7 @@ public abstract class ATestQueryEngine {
             .wildcardCoordinate("ean")
             .aggregatedMeasure("price", "sum")
             .aggregatedMeasure("quantity", "sum")
-            .context(Totals.KEY, Totals.VISIBLE_BOTTOM);
+            .context(Totals.KEY, QueryBuilder.BOTTOM);
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactly(
             Arrays.asList("base", "cloth", "shirt", 10.0d, 3l),
@@ -233,7 +233,7 @@ public abstract class ATestQueryEngine {
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("quantity", "sum")
             .condition(SCENARIO_FIELD_NAME, new SingleValueConditionDto(ConditionType.IN, Set.of("s1", "s2")))
-            .context(Totals.KEY, Totals.VISIBLE_TOP);
+            .context(Totals.KEY, QueryBuilder.TOP);
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactly(
             Arrays.asList(GRAND_TOTAL, 33 * 2l),

@@ -2,6 +2,7 @@ package me.paulbares.spring.web.rest;
 
 import me.paulbares.client.HttpClientQuerier;
 import me.paulbares.client.SimpleTable;
+import me.paulbares.query.QueryBuilder;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.QueryDto;
 import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
@@ -40,7 +41,7 @@ public class HttpClientQuerierTest {
     QueryDto query = new QueryDto()
             .table("products")
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
-            .context(Totals.KEY, Totals.VISIBLE_TOP)
+            .context(Totals.KEY, QueryBuilder.TOP)
             .aggregatedMeasure("marge", "sum");
 
     SimpleTable table = querier.run(query);

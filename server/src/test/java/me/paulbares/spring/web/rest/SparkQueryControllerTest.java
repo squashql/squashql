@@ -4,6 +4,7 @@ import me.paulbares.client.SimpleTable;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ExpressionMeasure;
+import me.paulbares.query.QueryBuilder;
 import me.paulbares.query.QueryEngine;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.QueryDto;
@@ -64,7 +65,7 @@ public class SparkQueryControllerTest {
     QueryDto query = new QueryDto()
             .table("products")
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
-            .context(Totals.KEY, Totals.VISIBLE_TOP)
+            .context(Totals.KEY, QueryBuilder.TOP)
             .aggregatedMeasure("marge", "sum");
     this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
                     .content(JacksonUtil.serialize(query))

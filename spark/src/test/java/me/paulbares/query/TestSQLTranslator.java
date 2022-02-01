@@ -103,7 +103,7 @@ public class TestSQLTranslator {
     QueryDto query = new QueryDto()
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("price", "sum")
-            .context(Totals.KEY, Totals.VISIBLE_TOP)
+            .context(Totals.KEY, QueryBuilder.TOP)
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
@@ -116,7 +116,7 @@ public class TestSQLTranslator {
     QueryDto query = new QueryDto()
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("price", "sum")
-            .context(Totals.KEY, Totals.VISIBLE_BOTTOM)
+            .context(Totals.KEY, QueryBuilder.BOTTOM)
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
