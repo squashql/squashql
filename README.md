@@ -1,3 +1,9 @@
+## Prerequisites
+
+In order to build the server, you will need:
+- [Java JDK](https://www.oracle.com/java/) >= 17
+- Latest stable [Apache Maven](http://maven.apache.org/)
+- 
 ## Heroku CLI
 
 ```
