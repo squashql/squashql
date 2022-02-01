@@ -10,7 +10,6 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.StructType;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
+import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
 public class SparkStore implements Store {
 
@@ -27,7 +26,11 @@ public class SparkStore implements Store {
   private final Map<String, Dataset<Row>> dfByScenario = new HashMap<>();
 
   private SparkSession spark;
-  private StructType schema;
+  /**
+   * The schema does not take into account calculated columns and the additional column used to store the scenario
+   * values.
+   */
+  private StructType baseSchema;
 
   public SparkStore(String name, Column... columns) {
     this(name, null, columns);
@@ -36,11 +39,9 @@ public class SparkStore implements Store {
   public SparkStore(String name, List<Field> fields, Column... columns) {
     this.name = name;
     this.columns = columns != null ? Arrays.asList(columns) : Collections.emptyList();
-    this.schema = fields == null ? null : createSchema(fields.toArray(new Field[0]));
-  }
-
-  public void setSparkSession(SparkSession spark) {
-    this.spark = spark;
+    if (fields != null) {
+      this.baseSchema = createSchema(fields.toArray(new Field[0]));
+    }
   }
 
   private static StructType createSchema(Field... fields) {
@@ -51,6 +52,10 @@ public class SparkStore implements Store {
     return schema;
   }
 
+  public void setSparkSession(SparkSession spark) {
+    this.spark = spark;
+  }
+
   @Override
   public String name() {
     return this.name;
@@ -58,9 +63,8 @@ public class SparkStore implements Store {
 
   @Override
   public List<Field> getFields() {
-    Dataset<Row> base = this.dfByScenario.get(MAIN_SCENARIO_NAME);
     return Arrays
-            .stream(base.schema().fields())
+            .stream(get().schema().fields())
             .map(f -> new Field(f.name(), SparkDatastore.datatypeToClass(f.dataType())))
             .collect(Collectors.toList());
   }
@@ -68,16 +72,16 @@ public class SparkStore implements Store {
   @Override
   public void load(String scenario, List<Object[]> tuples) {
     List<Row> rows = tuples.stream().map(RowFactory::create).toList();
-    Dataset<Row> dataFrame = this.spark.createDataFrame(rows, this.schema);// to load pojo
-    Dataset<Row> dataset = addCalculatedColumns(dataFrame);
+    Dataset<Row> dataFrame = this.spark.createDataFrame(rows, this.baseSchema);// to load pojo
+    Dataset<Row> dataset = addAdditionalColumns(scenario, dataFrame);
     save(scenario, dataset);
   }
 
-  protected Dataset<Row> addCalculatedColumns(Dataset<Row> dataFrame) {
+  protected Dataset<Row> addAdditionalColumns(String scenario, Dataset<Row> dataFrame) {
     for (Column column : this.columns) {
       dataFrame = dataFrame.withColumn(column.named().name(), column);
     }
-    return dataFrame;
+    return dataFrame.withColumn(scenarioFieldName(this.name), functions.lit(scenario));
   }
 
   protected void save(String scenario, Dataset<Row> dataset) {
@@ -86,45 +90,40 @@ public class SparkStore implements Store {
     }
   }
 
+  public static String scenarioFieldName(String storeName) {
+    return storeName.toLowerCase() + "." + SCENARIO_FIELD_NAME;
+  }
+
   @Override
   public void loadCsv(String scenario, String path, String delimiter, boolean header) {
     Dataset<Row> dataFrame = this.spark.read()
             .option("delimiter", delimiter)
             .option("header", true)
             .csv(path);
-    Dataset<Row> dataset = addCalculatedColumns(dataFrame);
 
-    if (this.schema != null) {
-      StructType schema = dataset.schema();
-      if (!schema.equals(this.schema)) {
+    if (this.baseSchema != null) {
+      StructType schema = dataFrame.schema();
+      if (!schema.equals(this.baseSchema)) {
         throw new IllegalStateException("Schema for scenario " + scenario + " is not compatible with previous schema." +
-                " Schema from csv: " + schema + ". Previous: " + this.schema);
+                " Schema from csv: " + schema + ". Previous: " + this.baseSchema);
       }
     } else {
-      this.schema = dataFrame.schema();
+      this.baseSchema = dataFrame.schema();
     }
 
+    Dataset<Row> dataset = addAdditionalColumns(scenario, dataFrame);
     save(scenario, dataset);
   }
 
   public Dataset<Row> get() {
-    List<Dataset<Row>> list = new ArrayList<>();
-    Dataset<Row> union = null;
+    Dataset<Row> merge = null;
     for (Map.Entry<String, Dataset<Row>> e : this.dfByScenario.entrySet()) {
-      if (e.getKey().equals(MAIN_SCENARIO_NAME)) {
-        union = e.getValue().withColumn("scenario", functions.lit(e.getKey()));
-        for (Dataset<Row> d : list) {
-          union = union.unionAll(d);
-        }
+      if (merge == null) {
+        merge = e.getValue();
       } else {
-        Dataset<Row> scenario = e.getValue().withColumn("scenario", functions.lit(e.getKey()));
-        if (union == null) {
-          list.add(scenario);
-        } else {
-          union = union.unionAll(scenario);
-        }
+        merge = merge.union(e.getValue());
       }
     }
-    return union;
+    return merge;
   }
 }

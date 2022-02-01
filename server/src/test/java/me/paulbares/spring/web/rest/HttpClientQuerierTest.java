@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 
+import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class HttpClientQuerierTest {
 
@@ -37,7 +39,7 @@ public class HttpClientQuerierTest {
 
     QueryDto query = new QueryDto()
             .table("products")
-            .wildcardCoordinate("scenario")
+            .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .context(Totals.KEY, Totals.VISIBLE_TOP)
             .aggregatedMeasure("marge", "sum");
 

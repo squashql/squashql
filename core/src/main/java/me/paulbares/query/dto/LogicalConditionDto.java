@@ -3,7 +3,7 @@ package me.paulbares.query.dto;
 import java.util.EnumSet;
 import java.util.Objects;
 
-public class LogicalConditionDto implements ConditionDto {
+public final class LogicalConditionDto implements ConditionDto {
 
   private static final EnumSet<ConditionType> supportedTypes = EnumSet.of(ConditionType.AND, ConditionType.OR);
 

@@ -1,6 +1,6 @@
 package me.paulbares.query;
 
-import me.paulbares.SparkDatastore;
+import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -11,16 +11,25 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static me.paulbares.SparkDatastore.datatypeToClass;
+
 public class DatasetTable implements Table {
 
   protected final Dataset<Row> dataset;
+
   protected final List<Field> fields;
 
-  public DatasetTable(Dataset<Row> dataset) {
+  public DatasetTable(Dataset<Row> dataset, String scenarioFieldName) {
     this.dataset = dataset;
     this.fields = Arrays
             .stream(this.dataset.schema().fields())
-            .map(f -> new Field(f.name(), SparkDatastore.datatypeToClass(f.dataType())))
+            .map(f -> {
+              if (f.name().equals(scenarioFieldName)) {
+                return new Field(Datastore.SCENARIO_FIELD_NAME, String.class);
+              } else {
+                return new Field(f.name(), datatypeToClass(f.dataType()));
+              }
+            })
             .collect(Collectors.toList());
   }
 

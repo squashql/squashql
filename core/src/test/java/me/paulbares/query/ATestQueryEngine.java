@@ -1,8 +1,10 @@
 package me.paulbares.query;
 
+import me.paulbares.query.dto.ConditionType;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.context.Totals;
+import me.paulbares.query.dto.SingleValueConditionDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
@@ -13,10 +15,12 @@ import org.junit.jupiter.api.TestInstance;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static me.paulbares.query.QueryEngine.GRAND_TOTAL;
 import static me.paulbares.query.QueryEngine.TOTAL;
 import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
+import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestQueryEngine {
@@ -64,7 +68,7 @@ public abstract class ATestQueryEngine {
   void testQueryWildcard() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .wildcardCoordinate("scenario")
+            .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("price", "sum")
             .aggregatedMeasure("quantity", "sum");
     Table result = this.queryEngine.execute(query);
@@ -78,7 +82,7 @@ public abstract class ATestQueryEngine {
   void testQueryWildcardCount() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .wildcardCoordinate("scenario")
+            .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("*", "count");
     Table result = this.queryEngine.execute(query);
     result.show();
@@ -92,7 +96,7 @@ public abstract class ATestQueryEngine {
   void testQueryWildcardWithTotals() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .wildcardCoordinate("scenario")
+            .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("price", "sum")
             .aggregatedMeasure("quantity", "sum")
             .context(Totals.KEY, Totals.VISIBLE_TOP);
@@ -108,7 +112,7 @@ public abstract class ATestQueryEngine {
   void testQueryWildcardAndCrossjoinWithTotals() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .wildcardCoordinate("scenario")
+            .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .wildcardCoordinate("category")
             .wildcardCoordinate("ean")
             .aggregatedMeasure("price", "sum")
@@ -147,7 +151,7 @@ public abstract class ATestQueryEngine {
   void testQueryWildcardAndCrossjoinWithTotalsPositionBottom() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .wildcardCoordinate("scenario")
+            .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .wildcardCoordinate("category")
             .wildcardCoordinate("ean")
             .aggregatedMeasure("price", "sum")
@@ -185,7 +189,7 @@ public abstract class ATestQueryEngine {
   void testQuerySeveralCoordinates() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .coordinates("scenario", "s1", "s2")
+            .coordinates(SCENARIO_FIELD_NAME, "s1", "s2")
             .aggregatedMeasure("price", "sum")
             .aggregatedMeasure("quantity", "sum");
     Table table = this.queryEngine.execute(query);
@@ -198,11 +202,43 @@ public abstract class ATestQueryEngine {
   void testQuerySingleCoordinate() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .coordinate("scenario", "s1")
+            .coordinate(SCENARIO_FIELD_NAME, "s1")
             .aggregatedMeasure("price", "sum")
             .aggregatedMeasure("quantity", "sum");
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("s1", 17.0d, 33l));
+  }
+
+  @Test
+  void testConditions() {
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
+            .wildcardCoordinate("category")
+            .wildcardCoordinate("ean")
+            .aggregatedMeasure("quantity", "sum")
+            .condition("ean", new SingleValueConditionDto(ConditionType.EQ, "bottle"))
+            .condition("category", new SingleValueConditionDto(ConditionType.IN, Set.of("cloth", "drink")));
+    Table table = this.queryEngine.execute(query);
+    Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("drink", "bottle", 10l));
+
+    query.condition("quantity", QueryBuilder.gt(10));
+    table = this.queryEngine.execute(query);
+    Assertions.assertThat(table).isEmpty();
+  }
+
+  @Test
+  void testConditionsOnScenario() {
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
+            .wildcardCoordinate(SCENARIO_FIELD_NAME)
+            .aggregatedMeasure("quantity", "sum")
+            .condition(SCENARIO_FIELD_NAME, new SingleValueConditionDto(ConditionType.IN, Set.of("s1", "s2")))
+            .context(Totals.KEY, Totals.VISIBLE_TOP);
+    Table table = this.queryEngine.execute(query);
+    Assertions.assertThat(table).containsExactly(
+            Arrays.asList(GRAND_TOTAL, 33 * 2l),
+            Arrays.asList("s1", 33l),
+            Arrays.asList("s2", 33l));
   }
 
   /**
@@ -212,7 +248,7 @@ public abstract class ATestQueryEngine {
   void testDiscovery() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .wildcardCoordinate("scenario");
+            .wildcardCoordinate(SCENARIO_FIELD_NAME);
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
                     List.of(MAIN_SCENARIO_NAME),
@@ -224,13 +260,13 @@ public abstract class ATestQueryEngine {
   void testJsonConverter() throws Exception {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .wildcardCoordinate("scenario")
+            .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("price", "sum")
             .aggregatedMeasure("quantity", "sum");
     Table table = this.queryEngine.execute(query);
     String actual = JacksonUtil.tableToCsv(table);
     Map map = JacksonUtil.mapper.readValue(actual, Map.class);
-    Assertions.assertThat((List) map.get("columns")).containsExactly("scenario", "sum(price)", "sum(quantity)");
+    Assertions.assertThat((List) map.get("columns")).containsExactly(SCENARIO_FIELD_NAME, "sum(price)", "sum(quantity)");
     Assertions.assertThat((List) map.get("rows")).containsExactlyInAnyOrder(
                     List.of("base", 15d, 33),
                     List.of("s1", 17d, 33),

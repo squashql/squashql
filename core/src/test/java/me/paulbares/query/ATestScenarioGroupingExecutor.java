@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
+import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestScenarioGroupingExecutor {
@@ -72,7 +73,7 @@ public abstract class ATestScenarioGroupingExecutor {
 
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
-            "group", "scenario",
+            "group", SCENARIO_FIELD_NAME,
             "absolute_difference(sum(price), first)", "sum(price)",
             "absolute_difference(sum(quantity), first)", "sum(quantity)");
     Assertions.assertThat(dataset).containsExactly(
@@ -95,7 +96,7 @@ public abstract class ATestScenarioGroupingExecutor {
 
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
-            "group", "scenario",
+            "group", SCENARIO_FIELD_NAME,
             "absolute_difference(sum(price), previous)", "sum(price)",
             "absolute_difference(sum(quantity), previous)", "sum(quantity)");
     Assertions.assertThat(dataset).containsExactly(
@@ -118,7 +119,7 @@ public abstract class ATestScenarioGroupingExecutor {
 
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
-            "group", "scenario",
+            "group", SCENARIO_FIELD_NAME,
             "relative_difference(sum(price), first)", "sum(price)",
             "relative_difference(sum(quantity), first)", "sum(quantity)");
     Assertions.assertThat(dataset).containsExactly(
@@ -141,7 +142,7 @@ public abstract class ATestScenarioGroupingExecutor {
 
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
-            "group", "scenario",
+            "group", SCENARIO_FIELD_NAME,
             "relative_difference(sum(price), previous)", "sum(price)",
             "relative_difference(sum(quantity), previous)", "sum(quantity)");
     Assertions.assertThat(dataset).containsExactly(
@@ -166,7 +167,7 @@ public abstract class ATestScenarioGroupingExecutor {
 
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
-            "group", "scenario",
+            "group", SCENARIO_FIELD_NAME,
             "absolute_difference(sum(price), first)",
             "absolute_difference(sum(quantity), first)", "sum(quantity)");
     Assertions.assertThat(dataset).containsExactly(

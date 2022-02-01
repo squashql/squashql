@@ -17,6 +17,7 @@ import static me.paulbares.query.QueryBuilder.neq;
 import static me.paulbares.query.QueryBuilder.or;
 import static me.paulbares.query.QueryBuilder.query;
 import static me.paulbares.query.QueryBuilder.table;
+import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
 public class TestQueryS13n {
 
@@ -24,7 +25,7 @@ public class TestQueryS13n {
   void testRoundTrip() {
     QueryDto query = new QueryDto()
             .table("myTable")
-            .coordinate("scenario", "s1")
+            .coordinate(SCENARIO_FIELD_NAME, "s1")
             .coordinates("city", "paris", "london")
             .wildcardCoordinate("ean")
             .aggregatedMeasure("price", "sum")

@@ -1,11 +1,12 @@
 package me.paulbares.spring.web.rest;
 
+import me.paulbares.SparkStore;
 import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.ScenarioGroupingExecutor;
-import me.paulbares.query.dto.ScenarioGroupingQueryDto;
 import me.paulbares.query.SparkQueryEngine;
 import me.paulbares.query.Table;
+import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.ScenarioGroupingQueryDto;
 import me.paulbares.store.Store;
 import org.apache.spark.sql.types.DataTypes;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
 @RestController
 public class SparkQueryController {
@@ -56,9 +59,10 @@ public class SparkQueryController {
     for (Store store : this.queryEngine.datastore.stores()) {
       List<Map<String, String>> collect = store.getFields()
               .stream()
+              .filter(f -> !f.name().equals(SparkStore.scenarioFieldName(store.name())))
               .map(f -> Map.of("name", f.name(), "type", f.type().getSimpleName().toLowerCase()))
               .collect(Collectors.toCollection(() -> new ArrayList<>()));
-      collect.add(Map.of("name", "scenario", "type", DataTypes.StringType.simpleString()));
+      collect.add(Map.of("name", SCENARIO_FIELD_NAME, "type", DataTypes.StringType.simpleString()));
       root.add(Map.of("name", store.name(), METADATA_FIELDS_KEY, collect));
     }
     return ResponseEntity.ok(Map.of(

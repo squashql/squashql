@@ -45,14 +45,16 @@ public class QueryDto {
   }
 
   public QueryDto coordinate(String field, String value) {
-    this.coordinates.put(field, List.of(value));
+    coordinates(field, value);
     return this;
   }
 
   public QueryDto coordinates(String field, String first, String... others) {
     List<String> values = new ArrayList<>();
     values.add(first);
-    values.addAll(Arrays.stream(others).toList());
+    if (others != null) {
+      values.addAll(Arrays.stream(others).toList());
+    }
     this.coordinates.put(field, values);
     return this;
   }

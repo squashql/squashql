@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
+
 public class ScenarioGroupingExecutor {
 
   public static final String GROUP_NAME = "group";
@@ -25,7 +27,7 @@ public class ScenarioGroupingExecutor {
   }
 
   public Table execute(ScenarioGroupingQueryDto query) {
-    QueryDto prefetchQuery = new QueryDto().wildcardCoordinate("scenario").table(query.table);
+    QueryDto prefetchQuery = new QueryDto().wildcardCoordinate(SCENARIO_FIELD_NAME).table(query.table);
     query.comparisons.forEach(c -> prefetchQuery.measures.add(c.measure()));
 
     Table table = this.queryEngine.execute(prefetchQuery);

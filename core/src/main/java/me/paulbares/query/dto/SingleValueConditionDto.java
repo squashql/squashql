@@ -14,7 +14,7 @@ import static me.paulbares.query.dto.ConditionType.LE;
 import static me.paulbares.query.dto.ConditionType.LT;
 import static me.paulbares.query.dto.ConditionType.NEQ;
 
-public class SingleValueConditionDto implements ConditionDto {
+public final class SingleValueConditionDto implements ConditionDto {
 
   public ConditionType type;
 

@@ -26,6 +26,7 @@ import java.util.Map;
 import static me.paulbares.query.ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF;
 import static me.paulbares.query.ScenarioGroupingExecutor.REF_POS_PREVIOUS;
 import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
+import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -39,7 +40,7 @@ public class SparkQueryControllerTest {
   public void testQuery() throws Exception {
     QueryDto query = new QueryDto()
             .table("products")
-            .wildcardCoordinate("scenario")
+            .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("marge", "sum")
             .expressionMeasure("indice-prix", "100 * sum(`numerateur-indice`) / sum(`score-visi`)");
     this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
@@ -54,7 +55,7 @@ public class SparkQueryControllerTest {
                       List.of("mdd-baisse-simu-sensi", 190.00000000000003d, 102.94985250737463d),
                       List.of("mdd-baisse", 240.00000000000003d, 107.1165191740413d)
               );
-              Assertions.assertThat((List) queryResult.get("columns")).containsExactly("scenario", "sum(marge)", "indice-prix");
+              Assertions.assertThat((List) queryResult.get("columns")).containsExactly(SCENARIO_FIELD_NAME, "sum(marge)", "indice-prix");
             });
   }
 
@@ -62,7 +63,7 @@ public class SparkQueryControllerTest {
   public void testQueryWithTotals() throws Exception {
     QueryDto query = new QueryDto()
             .table("products")
-            .wildcardCoordinate("scenario")
+            .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .context(Totals.KEY, Totals.VISIBLE_TOP)
             .aggregatedMeasure("marge", "sum");
     this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
@@ -83,7 +84,7 @@ public class SparkQueryControllerTest {
             List.of("mdd-baisse-simu-sensi", 190.00000000000003d),
             List.of("mdd-baisse", 240.00000000000003d)
     );
-    Assertions.assertThat(table.columns).containsExactly("scenario", "sum(marge)");
+    Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "sum(marge)");
   }
 
   @Test
@@ -115,7 +116,7 @@ public class SparkQueryControllerTest {
             Map.of("name", "marge", "type", "double"),
             Map.of("name", "numerateur-indice", "type", "double"),
             Map.of("name", "indice-prix", "type", "double"),
-            Map.of("name", "scenario", "type", "string")
+            Map.of("name", SCENARIO_FIELD_NAME, "type", "string")
     );
     Assertions.assertThat((List) objects.get(SparkQueryController.METADATA_AGG_FUNC_KEY)).containsExactlyInAnyOrder(SparkQueryController.SUPPORTED_AGG_FUNCS.toArray(new String[0]));
   }
@@ -151,7 +152,7 @@ public class SparkQueryControllerTest {
                       List.of("group3", "mdd-baisse-simu-sensi", -90.00000000000003,-7.500000000000014),
                       List.of("group3", "mdd-baisse", 50.0,4.166666666666671));
               Assertions.assertThat((List) queryResult.get("columns")).containsExactly(
-                      "group", "scenario",
+                      "group", SCENARIO_FIELD_NAME,
                       "absolute_difference(sum(marge), previous)", "absolute_difference(indice-prix, previous)");
             });
   }

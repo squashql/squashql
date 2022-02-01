@@ -6,7 +6,7 @@ import static me.paulbares.query.dto.ConditionType.OR;
 /**
  * Marker interface to represent a (logical, value) condition.
  */
-public interface ConditionDto {
+public sealed interface ConditionDto permits LogicalConditionDto, SingleValueConditionDto {
 
   ConditionType type();
 

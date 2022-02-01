@@ -27,11 +27,16 @@ public class ArrayTable implements Table {
 
   @Override
   public void show(int numRows) {
-    System.out.println(TableUtils.toString(this.headers, this.rows, f -> ((Field) f).name(), Object::toString));
+    System.out.println(this);
   }
 
   @Override
   public Iterator<List<Object>> iterator() {
     return this.rows.iterator();
+  }
+
+  @Override
+  public String toString() {
+    return TableUtils.toString(this.headers, this.rows, f -> ((Field) f).name(), s -> String.valueOf(s));
   }
 }
