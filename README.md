@@ -375,7 +375,7 @@ To interactively interact with the server and execute queries, one can use jshel
 ```
 
 And then (can be saved in a file):
-```jshell
+```jshelllanguage
 import me.paulbares.client.*
 import static me.paulbares.query.QueryBuilder.*
 
@@ -397,4 +397,36 @@ query.wildcardCoordinate("type-marque")
 query.context("totals", TOP)
 
 query.condition("type-marque", eq("MDD"))
+```
+
+For Grouping queries:
+
+```jshelllanguage
+import me.paulbares.client.*
+import static me.paulbares.query.QueryBuilder.*
+
+var querier = new HttpClientQuerier("http://localhost:8080")
+
+querier.metadata()
+
+var query = scenarioComparisonQuery()
+var products = table("products")
+
+query.table(products)
+
+query.defineNewGroup("group1", "base", "mdd-baisse")
+query.defineNewGroup("group2", "base", "mdd-baisse-simu-sensi")
+query.defineNewGroup("group3", "base", "mdd-baisse", "mdd-baisse-simu-sensi")
+
+var comp = comparison("absolute_difference", aggregatedMeasure("marge", "sum"), false, "first")
+
+query.addScenarioComparison(comp)
+
+querier.run(query)
+
+query.json()
+
+comp.showValue = true
+
+querier.run(query)
 ```
