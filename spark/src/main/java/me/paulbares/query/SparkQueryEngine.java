@@ -48,11 +48,11 @@ public class SparkQueryEngine extends AQueryEngine {
 
   @Override
   protected Table retrieveAggregates(QueryDto query) {
-    LOGGER.info("Executing " + query);
+    LOGGER.fine("Executing " + query);
     addScenarioConditionIfNecessary(query);
     replaceScenarioFieldName(query);
     String sql = SQLTranslator.translate(query, this.fieldSupplier);
-    LOGGER.info("Translated query #" + query + " to " + sql);
+    LOGGER.fine("Translated query #" + query + " to " + sql);
     createOrReplaceTempView(query.table);
     Dataset<Row> ds = this.datastore.spark.sql(sql);
     return new DatasetTable(ds, scenarioFieldName(query));

@@ -8,6 +8,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.storage.StorageLevel;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
@@ -56,6 +57,10 @@ public class SparkDatastore implements Datastore {
   @Override
   public void load(String scenario, String store, List<Object[]> tuples) {
     this.stores.get(store).load(scenario, tuples);
+  }
+
+  public void persist(StorageLevel storageLevel) {
+    this.stores.forEach((name, store) -> store.persist(storageLevel));
   }
 
   public static Class<?> datatypeToClass(DataType type) {

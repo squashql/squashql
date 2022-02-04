@@ -1,0 +1,519 @@
+OrderID,CustomerID,EmployeeID,OrderDate,OrderDetailID,Quantity,ProductName,Unit,Price,CategoryName,SupplierName,City,Country,ShipperName
+10248,90,5,04/07/1996,1,12,Queso Cabrales,1 kg pkg.,21,Dairy Products,Cooperativa de Quesos 'Las Cabras',Oviedo,Spain,Federal Shipping
+10248,90,5,04/07/1996,2,10,Singaporean Hokkien Fried Mee,32 - 1 kg pkgs.,14,Grains/Cereals,Leka Trading,Singapore,Singapore,Federal Shipping
+10248,90,5,04/07/1996,3,5,Mozzarella di Giovanni,24 - 200 g pkgs.,34.8,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Federal Shipping
+10249,81,6,05/07/1996,4,9,Tofu,40 - 100 g pkgs.,24.25,Produce,Mayumi's,Osaka,Japan,Speedy Express
+10249,81,6,05/07/1996,5,40,Manjimup Dried Apples,50 - 300 g pkgs.,53,Produce,"G'day, Mate",Sydney,Australia,Speedy Express
+10250,34,4,08/07/1996,6,10,Jack's New England Clam Chowder,12 - 12 oz cans,9.65,Seafood,New England Seafood Cannery,Boston,USA,United Package
+10250,34,4,08/07/1996,7,35,Manjimup Dried Apples,50 - 300 g pkgs.,53,Produce,"G'day, Mate",Sydney,Australia,United Package
+10250,34,4,08/07/1996,8,15,Louisiana Fiery Hot Pepper Sauce,32 - 8 oz bottles,22.05,Condiments,New Orleans Cajun Delights,New Orleans,USA,United Package
+10251,84,3,08/07/1996,9,6,Gustaf's Knäckebröd,24 - 500 g pkgs.,21,Grains/Cereals,PB Knäckebröd AB,Göteborg,Sweden,Speedy Express
+10251,84,3,08/07/1996,10,15,Ravioli Angelo,24 - 250 g pkgs.,19.5,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,Speedy Express
+10251,84,3,08/07/1996,11,20,Louisiana Fiery Hot Pepper Sauce,32 - 8 oz bottles,21.05,Condiments,New Orleans Cajun Delights,New Orleans,USA,Speedy Express
+10252,76,4,09/07/1996,12,40,Sir Rodney's Marmalade,30 gift boxes,82,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,United Package
+10252,76,4,09/07/1996,13,25,Geitost,500 g,2.5,Dairy Products,Norske Meierier,Sandvika,Norway,United Package
+10252,76,4,09/07/1996,14,40,Camembert Pierrot,15 - 300 g rounds,34,Dairy Products,Gai pâturage,Annecy,France,United Package
+10253,34,3,10/07/1996,15,20,Gorgonzola Telino,12 - 100 g pkgs,12.5,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,United Package
+10253,34,3,10/07/1996,16,42,Chartreuse verte,750 cc per bottle,19,Beverages,Aux joyeux ecclésiastiques,Paris,France,United Package
+10253,34,3,10/07/1996,17,40,Maxilaku,24 - 50 g pkgs.,20,Confections,Karkki Oy,Lappeenranta,Finland,United Package
+10254,14,5,11/07/1996,18,15,Guaraná Fantástica,12 - 355 ml cans,4.5,Beverages,Refrescos Americanas LTDA,São Paulo,Brazil,United Package
+10254,14,5,11/07/1996,19,21,Pâté chinois,24 boxes x 2 pies,24,Meat/Poultry,Ma Maison,Montréal,Canada,United Package
+10254,14,5,11/07/1996,20,21,Longlife Tofu,5 kg pkg.,11,Produce,Tokyo Traders,Tokyo,Japan,United Package
+10255,68,9,12/07/1996,21,20,Chang,24 - 12 oz bottles,19,Beverages,Exotic Liquid,Londona,UK,Federal Shipping
+10255,68,9,12/07/1996,22,35,Pavlova,32 - 500 g boxes,17.45,Confections,"Pavlova, Ltd.",Melbourne,Australia,Federal Shipping
+10255,68,9,12/07/1996,23,25,Inlagd Sill,24 - 250 g jars,19,Seafood,Svensk Sjöföda AB,Stockholm,Sweden,Federal Shipping
+10255,68,9,12/07/1996,24,30,Raclette Courdavault,5 kg pkg.,56,Dairy Products,Gai pâturage,Annecy,France,Federal Shipping
+10256,88,3,15/07/1996,25,15,Perth Pasties,48 pieces,32.8,Meat/Poultry,"G'day, Mate",Sydney,Australia,United Package
+10256,88,3,15/07/1996,26,12,Original Frankfurter grüne Soße,12 boxes,13,Condiments,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,United Package
+10257,35,4,16/07/1996,27,25,Schoggi Schokolade,100 - 100 g pieces,43.9,Confections,Heli Süßwaren GmbH & Co. KG,Berlin,Germany,Federal Shipping
+10257,35,4,16/07/1996,28,6,Chartreuse verte,750 cc per bottle,19,Beverages,Aux joyeux ecclésiastiques,Paris,France,Federal Shipping
+10257,35,4,16/07/1996,29,15,Original Frankfurter grüne Soße,12 boxes,13,Condiments,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10258,20,1,17/07/1996,30,50,Chang,24 - 12 oz bottles,19,Beverages,Exotic Liquid,Londona,UK,Speedy Express
+10258,20,1,17/07/1996,31,65,Chef Anton's Gumbo Mix,36 boxes,21.35,Condiments,New Orleans Cajun Delights,New Orleans,USA,Speedy Express
+10258,20,1,17/07/1996,32,6,Mascarpone Fabioli,24 - 200 g pkgs.,33,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Speedy Express
+10259,13,4,18/07/1996,33,10,Sir Rodney's Scones,24 pkgs. x 4 pieces,10,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Federal Shipping
+10259,13,4,18/07/1996,34,1,Gravad lax,12 - 500 g pkgs.,26,Seafood,Svensk Sjöföda AB,Stockholm,Sweden,Federal Shipping
+10260,55,4,19/07/1996,35,16,Jack's New England Clam Chowder,12 - 12 oz cans,9.65,Seafood,New England Seafood Cannery,Boston,USA,Speedy Express
+10260,55,4,19/07/1996,36,50,Ravioli Angelo,24 - 250 g pkgs.,20.5,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,Speedy Express
+10260,55,4,19/07/1996,37,15,Tarte au sucre,48 pies,49.3,Confections,Forêts d'érables,Ste-Hyacinthe,Canada,Speedy Express
+10260,55,4,19/07/1996,38,21,Outback Lager,24 - 355 ml bottles,15,Beverages,"Pavlova, Ltd.",Melbourne,Australia,Speedy Express
+10261,61,4,19/07/1996,39,20,Sir Rodney's Scones,24 pkgs. x 4 pieces,10,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,United Package
+10261,61,4,19/07/1996,40,20,Steeleye Stout,24 - 12 oz bottles,19,Beverages,Bigfoot Breweries,Bend,USA,United Package
+10262,65,8,22/07/1996,41,12,Chef Anton's Gumbo Mix,36 boxes,21.35,Condiments,New Orleans Cajun Delights,New Orleans,USA,Federal Shipping
+10262,65,8,22/07/1996,42,15,Uncle Bob's Organic Dried Pears,12 - 1 lb pkgs.,30,Produce,Grandma Kelly's Homestead,Ann Arbor,USA,Federal Shipping
+10262,65,8,22/07/1996,43,2,Gnocchi di nonna Alice,24 - 250 g pkgs.,38,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,Federal Shipping
+10263,20,9,23/07/1996,44,60,Pavlova,32 - 500 g boxes,18.45,Confections,"Pavlova, Ltd.",Melbourne,Australia,Federal Shipping
+10263,20,9,23/07/1996,45,28,Guaraná Fantástica,12 - 355 ml cans,4.5,Beverages,Refrescos Americanas LTDA,São Paulo,Brazil,Federal Shipping
+10263,20,9,23/07/1996,46,60,Nord-Ost Matjeshering,10 - 200 g glasses,25.89,Seafood,Nord-Ost-Fisch Handelsgesellschaft mbH,Cuxhaven,Germany,Federal Shipping
+10263,20,9,23/07/1996,47,36,Longlife Tofu,5 kg pkg.,10,Produce,Tokyo Traders,Tokyo,Japan,Federal Shipping
+10264,24,6,24/07/1996,48,35,Chang,24 - 12 oz bottles,20,Beverages,Exotic Liquid,Londona,UK,Federal Shipping
+10264,24,6,24/07/1996,49,25,Jack's New England Clam Chowder,12 - 12 oz cans,9.65,Seafood,New England Seafood Cannery,Boston,USA,Federal Shipping
+10265,7,2,25/07/1996,50,30,Alice Mutton,20 - 1 kg tins,39,Meat/Poultry,"Pavlova, Ltd.",Melbourne,Australia,Speedy Express
+10265,7,2,25/07/1996,51,20,Outback Lager,24 - 355 ml bottles,15,Beverages,"Pavlova, Ltd.",Melbourne,Australia,Speedy Express
+10266,87,3,26/07/1996,52,12,Queso Manchego La Pastora,10 - 500 g pkgs.,39,Dairy Products,Cooperativa de Quesos 'Las Cabras',Oviedo,Spain,Federal Shipping
+10267,25,4,29/07/1996,53,50,Boston Crab Meat,24 - 4 oz tins,18.4,Seafood,New England Seafood Cannery,Boston,USA,Speedy Express
+10267,25,4,29/07/1996,54,70,Raclette Courdavault,5 kg pkg.,55,Dairy Products,Gai pâturage,Annecy,France,Speedy Express
+10267,25,4,29/07/1996,55,15,Lakkalikööri,500 ml,18,Beverages,Karkki Oy,Lappeenranta,Finland,Speedy Express
+10268,33,8,30/07/1996,56,10,Thüringer Rostbratwurst,50 bags x 30 sausgs.,124.79,Meat/Poultry,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10268,33,8,30/07/1996,57,4,Mozzarella di Giovanni,24 - 200 g pkgs.,34.8,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Federal Shipping
+10269,89,5,31/07/1996,58,60,Geitost,500 g,2.5,Dairy Products,Norske Meierier,Sandvika,Norway,Speedy Express
+10269,89,5,31/07/1996,59,20,Mozzarella di Giovanni,24 - 200 g pkgs.,34.8,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Speedy Express
+10270,87,1,01/08/1996,60,30,Inlagd Sill,24 - 250 g jars,20,Seafood,Svensk Sjöföda AB,Stockholm,Sweden,Speedy Express
+10270,87,1,01/08/1996,61,25,Ipoh Coffee,16 - 500 g tins,46,Beverages,Leka Trading,Singapore,Singapore,Speedy Express
+10271,75,6,01/08/1996,62,24,Geitost,500 g,2.5,Dairy Products,Norske Meierier,Sandvika,Norway,United Package
+10272,65,6,02/08/1996,63,6,Sir Rodney's Marmalade,30 gift boxes,81,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,United Package
+10272,65,6,02/08/1996,64,40,Gorgonzola Telino,12 - 100 g pkgs,13.5,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,United Package
+10272,65,6,02/08/1996,65,24,Mozzarella di Giovanni,24 - 200 g pkgs.,34.8,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,United Package
+10273,63,3,05/08/1996,66,24,Ikura,12 - 200 ml jars,31,Seafood,Tokyo Traders,Tokyo,Japan,Federal Shipping
+10273,63,3,05/08/1996,67,15,Gorgonzola Telino,12 - 100 g pkgs,12.5,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Federal Shipping
+10273,63,3,05/08/1996,68,20,Geitost,500 g,3.5,Dairy Products,Norske Meierier,Sandvika,Norway,Federal Shipping
+10273,63,3,05/08/1996,69,60,Boston Crab Meat,24 - 4 oz tins,18.4,Seafood,New England Seafood Cannery,Boston,USA,Federal Shipping
+10273,63,3,05/08/1996,70,33,Lakkalikööri,500 ml,18,Beverages,Karkki Oy,Lappeenranta,Finland,Federal Shipping
+10274,85,6,06/08/1996,71,20,Fløtemysost,10 - 500 g pkgs.,21.5,Dairy Products,Norske Meierier,Sandvika,Norway,Speedy Express
+10274,85,6,06/08/1996,72,7,Mozzarella di Giovanni,24 - 200 g pkgs.,35.8,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Speedy Express
+10275,49,1,07/08/1996,73,12,Guaraná Fantástica,12 - 355 ml cans,4.5,Beverages,Refrescos Americanas LTDA,São Paulo,Brazil,Speedy Express
+10275,49,1,07/08/1996,74,6,Raclette Courdavault,5 kg pkg.,55,Dairy Products,Gai pâturage,Annecy,France,Speedy Express
+10276,80,8,08/08/1996,75,15,Ikura,12 - 200 ml jars,31,Seafood,Tokyo Traders,Tokyo,Japan,Federal Shipping
+10276,80,8,08/08/1996,76,10,Konbu,2 kg box,7,Seafood,Mayumi's,Osaka,Japan,Federal Shipping
+10277,52,2,09/08/1996,77,20,Rössle Sauerkraut,25 - 825 g cans,45.6,Produce,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10277,52,2,09/08/1996,78,12,Tarte au sucre,48 pies,49.3,Confections,Forêts d'érables,Ste-Hyacinthe,Canada,Federal Shipping
+10278,5,8,12/08/1996,79,16,Gula Malacca,20 - 2 kg bags,19.45,Condiments,Leka Trading,Singapore,Singapore,United Package
+10278,5,8,12/08/1996,80,15,Raclette Courdavault,5 kg pkg.,56,Dairy Products,Gai pâturage,Annecy,France,United Package
+10278,5,8,12/08/1996,81,8,Vegie-spread,15 - 625 g jars,43.9,Condiments,"Pavlova, Ltd.",Melbourne,Australia,United Package
+10278,5,8,12/08/1996,82,25,Röd Kaviar,24 - 150 g jars,15,Seafood,Svensk Sjöföda AB,Stockholm,Sweden,United Package
+10279,44,8,13/08/1996,83,15,Alice Mutton,20 - 1 kg tins,39,Meat/Poultry,"Pavlova, Ltd.",Melbourne,Australia,United Package
+10280,5,2,14/08/1996,84,12,Guaraná Fantástica,12 - 355 ml cans,5.5,Beverages,Refrescos Americanas LTDA,São Paulo,Brazil,Speedy Express
+10280,5,2,14/08/1996,85,20,Pâté chinois,24 boxes x 2 pies,24,Meat/Poultry,Ma Maison,Montréal,Canada,Speedy Express
+10280,5,2,14/08/1996,86,30,Rhönbräu Klosterbier,24 - 0.5 l bottles,7.75,Beverages,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Speedy Express
+10281,69,4,14/08/1996,87,1,Teatime Chocolate Biscuits,10 boxes x 12 pieces,9.2,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Speedy Express
+10281,69,4,14/08/1996,88,6,Guaraná Fantástica,12 - 355 ml cans,5.5,Beverages,Refrescos Americanas LTDA,São Paulo,Brazil,Speedy Express
+10281,69,4,14/08/1996,89,4,Steeleye Stout,24 - 12 oz bottles,18,Beverages,Bigfoot Breweries,Bend,USA,Speedy Express
+10282,69,4,15/08/1996,90,6,Nord-Ost Matjeshering,10 - 200 g glasses,25.89,Seafood,Nord-Ost-Fisch Handelsgesellschaft mbH,Cuxhaven,Germany,Speedy Express
+10282,69,4,15/08/1996,91,2,Ravioli Angelo,24 - 250 g pkgs.,19.5,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,Speedy Express
+10283,46,3,16/08/1996,92,20,Genen Shouyu,24 - 250 ml bottles,16.5,Condiments,Mayumi's,Osaka,Japan,Federal Shipping
+10283,46,3,16/08/1996,93,18,Teatime Chocolate Biscuits,10 boxes x 12 pieces,9.2,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Federal Shipping
+10283,46,3,16/08/1996,94,35,Camembert Pierrot,15 - 300 g rounds,34,Dairy Products,Gai pâturage,Annecy,France,Federal Shipping
+10283,46,3,16/08/1996,95,3,Mozzarella di Giovanni,24 - 200 g pkgs.,34.8,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Federal Shipping
+10284,44,4,19/08/1996,96,15,Schoggi Schokolade,100 - 100 g pieces,44.9,Confections,Heli Süßwaren GmbH & Co. KG,Berlin,Germany,Speedy Express
+10284,44,4,19/08/1996,97,21,Gula Malacca,20 - 2 kg bags,19.45,Condiments,Leka Trading,Singapore,Singapore,Speedy Express
+10284,44,4,19/08/1996,98,20,Camembert Pierrot,15 - 300 g rounds,34,Dairy Products,Gai pâturage,Annecy,France,Speedy Express
+10284,44,4,19/08/1996,99,5,Laughing Lumberjack Lager,24 - 12 oz bottles,14,Beverages,Bigfoot Breweries,Bend,USA,Speedy Express
+10285,63,1,20/08/1996,100,45,Chais,10 boxes x 20 bags,19,Beverages,Exotic Liquid,Londona,UK,United Package
+10285,63,1,20/08/1996,101,40,Boston Crab Meat,24 - 4 oz tins,18.4,Seafood,New England Seafood Cannery,Boston,USA,United Package
+10285,63,1,20/08/1996,102,36,Perth Pasties,48 pieces,32.8,Meat/Poultry,"G'day, Mate",Sydney,Australia,United Package
+10286,63,8,21/08/1996,103,100,Steeleye Stout,24 - 12 oz bottles,18,Beverages,Bigfoot Breweries,Bend,USA,Federal Shipping
+10286,63,8,21/08/1996,104,40,Tarte au sucre,48 pies,50.3,Confections,Forêts d'érables,Ste-Hyacinthe,Canada,Federal Shipping
+10287,67,8,22/08/1996,105,40,Pavlova,32 - 500 g boxes,17.45,Confections,"Pavlova, Ltd.",Melbourne,Australia,Federal Shipping
+10287,67,8,22/08/1996,106,20,Sasquatch Ale,24 - 12 oz bottles,14,Beverages,Bigfoot Breweries,Bend,USA,Federal Shipping
+10287,67,8,22/08/1996,107,15,Spegesild,4 - 450 g glasses,12,Seafood,Lyngbysild,Lyngby,Denmark,Federal Shipping
+10288,66,4,23/08/1996,108,10,Tourtière,16 pies,8.45,Meat/Poultry,Ma Maison,Montréal,Canada,Speedy Express
+10288,66,4,23/08/1996,109,3,Scottish Longbreads,10 boxes x 8 pieces,12.5,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Speedy Express
+10289,11,7,26/08/1996,110,30,Aniseed Syrup,12 - 550 ml bottles,10,Condiments,Exotic Liquid,Londona,UK,Federal Shipping
+10289,11,7,26/08/1996,111,9,Wimmers gute Semmelknödel,20 bags x 4 pieces,33.25,Grains/Cereals,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10290,15,8,27/08/1996,112,20,Chef Anton's Gumbo Mix,36 boxes,22.35,Condiments,New Orleans Cajun Delights,New Orleans,USA,Speedy Express
+10290,15,8,27/08/1996,113,15,Thüringer Rostbratwurst,50 bags x 30 sausgs.,123.79,Meat/Poultry,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Speedy Express
+10290,15,8,27/08/1996,114,15,Maxilaku,24 - 50 g pkgs.,20,Confections,Karkki Oy,Lappeenranta,Finland,Speedy Express
+10290,15,8,27/08/1996,115,10,Original Frankfurter grüne Soße,12 boxes,13,Condiments,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Speedy Express
+10291,61,6,27/08/1996,116,20,Konbu,2 kg box,7,Seafood,Mayumi's,Osaka,Japan,United Package
+10291,61,6,27/08/1996,117,24,Gula Malacca,20 - 2 kg bags,19.45,Condiments,Leka Trading,Singapore,Singapore,United Package
+10291,61,6,27/08/1996,118,2,Manjimup Dried Apples,50 - 300 g pkgs.,53,Produce,"G'day, Mate",Sydney,Australia,United Package
+10292,81,1,28/08/1996,119,20,Sir Rodney's Marmalade,30 gift boxes,81,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,United Package
+10293,80,1,29/08/1996,120,12,Carnarvon Tigers,16 kg pkg.,63.5,Seafood,"Pavlova, Ltd.",Melbourne,Australia,Federal Shipping
+10293,80,1,29/08/1996,121,10,Guaraná Fantástica,12 - 355 ml cans,4.5,Beverages,Refrescos Americanas LTDA,São Paulo,Brazil,Federal Shipping
+10293,80,1,29/08/1996,122,5,Vegie-spread,15 - 625 g jars,43.9,Condiments,"Pavlova, Ltd.",Melbourne,Australia,Federal Shipping
+10293,80,1,29/08/1996,123,6,Rhönbräu Klosterbier,24 - 0.5 l bottles,7.75,Beverages,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10294,65,4,30/08/1996,124,18,Chais,10 boxes x 20 bags,19,Beverages,Exotic Liquid,Londona,UK,United Package
+10294,65,4,30/08/1996,125,15,Alice Mutton,20 - 1 kg tins,39,Meat/Poultry,"Pavlova, Ltd.",Melbourne,Australia,United Package
+10294,65,4,30/08/1996,126,15,Ipoh Coffee,16 - 500 g tins,46,Beverages,Leka Trading,Singapore,Singapore,United Package
+10294,65,4,30/08/1996,127,21,Camembert Pierrot,15 - 300 g rounds,34,Dairy Products,Gai pâturage,Annecy,France,United Package
+10294,65,4,30/08/1996,128,6,Rhönbräu Klosterbier,24 - 0.5 l bottles,8.75,Beverages,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,United Package
+10295,85,2,02/09/1996,129,4,Gnocchi di nonna Alice,24 - 250 g pkgs.,38,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,United Package
+10296,46,6,03/09/1996,130,12,Queso Cabrales,1 kg pkg.,21,Dairy Products,Cooperativa de Quesos 'Las Cabras',Oviedo,Spain,Speedy Express
+10296,46,6,03/09/1996,131,30,Pavlova,32 - 500 g boxes,17.45,Confections,"Pavlova, Ltd.",Melbourne,Australia,Speedy Express
+10296,46,6,03/09/1996,132,15,Gudbrandsdalsost,10 kg pkg.,37,Dairy Products,Norske Meierier,Sandvika,Norway,Speedy Express
+10297,7,5,04/09/1996,133,60,Chartreuse verte,750 cc per bottle,18,Beverages,Aux joyeux ecclésiastiques,Paris,France,United Package
+10297,7,5,04/09/1996,134,20,Mozzarella di Giovanni,24 - 200 g pkgs.,34.8,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,United Package
+10298,37,6,05/09/1996,135,40,Chang,24 - 12 oz bottles,19,Beverages,Exotic Liquid,Londona,UK,United Package
+10298,37,6,05/09/1996,136,40,Inlagd Sill,24 - 250 g jars,20,Seafood,Svensk Sjöföda AB,Stockholm,Sweden,United Package
+10298,37,6,05/09/1996,137,30,Raclette Courdavault,5 kg pkg.,55,Dairy Products,Gai pâturage,Annecy,France,United Package
+10298,37,6,05/09/1996,138,15,Tarte au sucre,48 pies,49.3,Confections,Forêts d'érables,Ste-Hyacinthe,Canada,United Package
+10299,67,4,06/09/1996,139,15,Teatime Chocolate Biscuits,10 boxes x 12 pieces,9.2,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,United Package
+10299,67,4,06/09/1996,140,20,Outback Lager,24 - 355 ml bottles,16,Beverages,"Pavlova, Ltd.",Melbourne,Australia,United Package
+10300,49,2,09/09/1996,141,30,Louisiana Hot Spiced Okra,24 - 8 oz jars,17,Condiments,New Orleans Cajun Delights,New Orleans,USA,United Package
+10300,49,2,09/09/1996,142,20,Scottish Longbreads,10 boxes x 8 pieces,12.5,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,United Package
+10301,86,8,09/09/1996,143,10,Boston Crab Meat,24 - 4 oz tins,18.4,Seafood,New England Seafood Cannery,Boston,USA,United Package
+10301,86,8,09/09/1996,144,20,Gnocchi di nonna Alice,24 - 250 g pkgs.,39,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,United Package
+10302,76,4,10/09/1996,145,40,Alice Mutton,20 - 1 kg tins,39,Meat/Poultry,"Pavlova, Ltd.",Melbourne,Australia,United Package
+10302,76,4,10/09/1996,146,28,Rössle Sauerkraut,25 - 825 g cans,45.6,Produce,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,United Package
+10302,76,4,10/09/1996,147,12,Ipoh Coffee,16 - 500 g tins,46,Beverages,Leka Trading,Singapore,Singapore,United Package
+10303,30,7,11/09/1996,148,40,Boston Crab Meat,24 - 4 oz tins,19.4,Seafood,New England Seafood Cannery,Boston,USA,United Package
+10303,30,7,11/09/1996,149,30,Louisiana Fiery Hot Pepper Sauce,32 - 8 oz bottles,21.05,Condiments,New Orleans Cajun Delights,New Orleans,USA,United Package
+10303,30,7,11/09/1996,150,15,Scottish Longbreads,10 boxes x 8 pieces,12.5,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,United Package
+10304,80,1,12/09/1996,151,30,Maxilaku,24 - 50 g pkgs.,20,Confections,Karkki Oy,Lappeenranta,Finland,United Package
+10304,80,1,12/09/1996,152,10,Raclette Courdavault,5 kg pkg.,56,Dairy Products,Gai pâturage,Annecy,France,United Package
+10304,80,1,12/09/1996,153,2,Fløtemysost,10 - 500 g pkgs.,21.5,Dairy Products,Norske Meierier,Sandvika,Norway,United Package
+10305,55,8,13/09/1996,154,25,Carnarvon Tigers,16 kg pkg.,62.5,Seafood,"Pavlova, Ltd.",Melbourne,Australia,Federal Shipping
+10305,55,8,13/09/1996,155,25,Thüringer Rostbratwurst,50 bags x 30 sausgs.,123.79,Meat/Poultry,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10305,55,8,13/09/1996,156,30,Chartreuse verte,750 cc per bottle,19,Beverages,Aux joyeux ecclésiastiques,Paris,France,Federal Shipping
+10306,69,1,16/09/1996,157,10,Nord-Ost Matjeshering,10 - 200 g glasses,25.89,Seafood,Nord-Ost-Fisch Handelsgesellschaft mbH,Cuxhaven,Germany,Federal Shipping
+10306,69,1,16/09/1996,158,10,Perth Pasties,48 pieces,32.8,Meat/Poultry,"G'day, Mate",Sydney,Australia,Federal Shipping
+10306,69,1,16/09/1996,159,5,Tourtière,16 pies,7.45,Meat/Poultry,Ma Maison,Montréal,Canada,Federal Shipping
+10307,48,2,17/09/1996,160,10,Tarte au sucre,48 pies,50.3,Confections,Forêts d'érables,Ste-Hyacinthe,Canada,United Package
+10307,48,2,17/09/1996,161,3,Scottish Longbreads,10 boxes x 8 pieces,12.5,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,United Package
+10308,2,7,18/09/1996,162,1,Gudbrandsdalsost,10 kg pkg.,36,Dairy Products,Norske Meierier,Sandvika,Norway,Federal Shipping
+10308,2,7,18/09/1996,163,5,Outback Lager,24 - 355 ml bottles,15,Beverages,"Pavlova, Ltd.",Melbourne,Australia,Federal Shipping
+10309,37,3,19/09/1996,164,20,Chef Anton's Cajun Seasoning,48 - 6 oz jars,23,Condiments,New Orleans Cajun Delights,New Orleans,USA,Speedy Express
+10309,37,3,19/09/1996,165,30,Grandma's Boysenberry Spread,12 - 8 oz jars,25,Condiments,Grandma Kelly's Homestead,Ann Arbor,USA,Speedy Express
+10309,37,3,19/09/1996,166,2,Singaporean Hokkien Fried Mee,32 - 1 kg pkgs.,14,Grains/Cereals,Leka Trading,Singapore,Singapore,Speedy Express
+10309,37,3,19/09/1996,167,20,Ipoh Coffee,16 - 500 g tins,46,Beverages,Leka Trading,Singapore,Singapore,Speedy Express
+10309,37,3,19/09/1996,168,3,Fløtemysost,10 - 500 g pkgs.,22.5,Dairy Products,Norske Meierier,Sandvika,Norway,Speedy Express
+10310,77,8,20/09/1996,169,10,Pavlova,32 - 500 g boxes,17.45,Confections,"Pavlova, Ltd.",Melbourne,Australia,United Package
+10310,77,8,20/09/1996,170,5,Tarte au sucre,48 pies,49.3,Confections,Forêts d'érables,Ste-Hyacinthe,Canada,United Package
+10311,18,1,20/09/1996,171,6,Singaporean Hokkien Fried Mee,32 - 1 kg pkgs.,14,Grains/Cereals,Leka Trading,Singapore,Singapore,Federal Shipping
+10311,18,1,20/09/1996,172,7,Gudbrandsdalsost,10 kg pkg.,37,Dairy Products,Norske Meierier,Sandvika,Norway,Federal Shipping
+10312,86,2,23/09/1996,173,4,Rössle Sauerkraut,25 - 825 g cans,45.6,Produce,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,United Package
+10312,86,2,23/09/1996,174,24,Ipoh Coffee,16 - 500 g tins,46,Beverages,Leka Trading,Singapore,Singapore,United Package
+10312,86,2,23/09/1996,175,20,Perth Pasties,48 pieces,32.8,Meat/Poultry,"G'day, Mate",Sydney,Australia,United Package
+10312,86,2,23/09/1996,176,10,Rhönbräu Klosterbier,24 - 0.5 l bottles,8.75,Beverages,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,United Package
+10313,63,2,24/09/1996,177,12,Inlagd Sill,24 - 250 g jars,19,Seafood,Svensk Sjöföda AB,Stockholm,Sweden,United Package
+10314,65,1,25/09/1996,178,40,Mascarpone Fabioli,24 - 200 g pkgs.,32,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,United Package
+10314,65,1,25/09/1996,179,30,Escargots de Bourgogne,24 pieces,13.25,Seafood,Escargots Nouveaux,Montceau,France,United Package
+10314,65,1,25/09/1996,180,25,Tarte au sucre,48 pies,50.3,Confections,Forêts d'érables,Ste-Hyacinthe,Canada,United Package
+10315,38,4,26/09/1996,181,14,Sasquatch Ale,24 - 12 oz bottles,14,Beverages,Bigfoot Breweries,Bend,USA,United Package
+10315,38,4,26/09/1996,182,30,Outback Lager,24 - 355 ml bottles,15,Beverages,"Pavlova, Ltd.",Melbourne,Australia,United Package
+10316,65,1,27/09/1996,183,10,Jack's New England Clam Chowder,12 - 12 oz cans,9.65,Seafood,New England Seafood Cannery,Boston,USA,Federal Shipping
+10316,65,1,27/09/1996,184,70,Tarte au sucre,48 pies,50.3,Confections,Forêts d'érables,Ste-Hyacinthe,Canada,Federal Shipping
+10317,48,6,30/09/1996,185,20,Chais,10 boxes x 20 bags,18,Beverages,Exotic Liquid,Londona,UK,Speedy Express
+10318,38,8,01/10/1996,186,20,Jack's New England Clam Chowder,12 - 12 oz cans,9.65,Seafood,New England Seafood Cannery,Boston,USA,United Package
+10318,38,8,01/10/1996,187,6,Lakkalikööri,500 ml,18,Beverages,Karkki Oy,Lappeenranta,Finland,United Package
+10319,80,7,02/10/1996,188,8,Alice Mutton,20 - 1 kg tins,40,Meat/Poultry,"Pavlova, Ltd.",Melbourne,Australia,Federal Shipping
+10319,80,7,02/10/1996,189,14,Rössle Sauerkraut,25 - 825 g cans,45.6,Produce,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10319,80,7,02/10/1996,190,30,Lakkalikööri,500 ml,18,Beverages,Karkki Oy,Lappeenranta,Finland,Federal Shipping
+10320,87,5,03/10/1996,191,30,Fløtemysost,10 - 500 g pkgs.,21.5,Dairy Products,Norske Meierier,Sandvika,Norway,Federal Shipping
+10321,38,3,03/10/1996,192,10,Steeleye Stout,24 - 12 oz bottles,19,Beverages,Bigfoot Breweries,Bend,USA,United Package
+10322,58,7,04/10/1996,193,20,Filo Mix,16 - 2 kg boxes,7,Grains/Cereals,"G'day, Mate",Sydney,Australia,Federal Shipping
+10323,39,4,07/10/1996,194,5,Genen Shouyu,24 - 250 ml bottles,15.5,Condiments,Mayumi's,Osaka,Japan,Speedy Express
+10323,39,4,07/10/1996,195,4,NuNuCa Nuß-Nougat-Creme,20 - 450 g glasses,14,Confections,Heli Süßwaren GmbH & Co. KG,Berlin,Germany,Speedy Express
+10323,39,4,07/10/1996,196,4,Chartreuse verte,750 cc per bottle,19,Beverages,Aux joyeux ecclésiastiques,Paris,France,Speedy Express
+10324,71,9,08/10/1996,197,21,Pavlova,32 - 500 g boxes,17.45,Confections,"Pavlova, Ltd.",Melbourne,Australia,Speedy Express
+10324,71,9,08/10/1996,198,70,Steeleye Stout,24 - 12 oz bottles,18,Beverages,Bigfoot Breweries,Bend,USA,Speedy Express
+10324,71,9,08/10/1996,199,30,Spegesild,4 - 450 g glasses,12,Seafood,Lyngbysild,Lyngby,Denmark,Speedy Express
+10324,71,9,08/10/1996,200,40,Raclette Courdavault,5 kg pkg.,56,Dairy Products,Gai pâturage,Annecy,France,Speedy Express
+10324,71,9,08/10/1996,201,80,Vegie-spread,15 - 625 g jars,43.9,Condiments,"Pavlova, Ltd.",Melbourne,Australia,Speedy Express
+10325,39,1,09/10/1996,202,6,Grandma's Boysenberry Spread,12 - 8 oz jars,25,Condiments,Grandma Kelly's Homestead,Ann Arbor,USA,Federal Shipping
+10325,39,1,09/10/1996,203,12,Konbu,2 kg box,6,Seafood,Mayumi's,Osaka,Japan,Federal Shipping
+10325,39,1,09/10/1996,204,9,Tofu,40 - 100 g pkgs.,24.25,Produce,Mayumi's,Osaka,Japan,Federal Shipping
+10325,39,1,09/10/1996,205,4,Gorgonzola Telino,12 - 100 g pkgs,12.5,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Federal Shipping
+10325,39,1,09/10/1996,206,40,Mozzarella di Giovanni,24 - 200 g pkgs.,34.8,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Federal Shipping
+10326,8,4,10/10/1996,207,24,Chef Anton's Cajun Seasoning,48 - 6 oz jars,22,Condiments,New Orleans Cajun Delights,New Orleans,USA,United Package
+10326,8,4,10/10/1996,208,16,Ravioli Angelo,24 - 250 g pkgs.,20.5,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,United Package
+10326,8,4,10/10/1996,209,50,Rhönbräu Klosterbier,24 - 0.5 l bottles,7.75,Beverages,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,United Package
+10327,24,2,11/10/1996,210,25,Chang,24 - 12 oz bottles,19,Beverages,Exotic Liquid,Londona,UK,Speedy Express
+10327,24,2,11/10/1996,211,50,Queso Cabrales,1 kg pkg.,21,Dairy Products,Cooperativa de Quesos 'Las Cabras',Oviedo,Spain,Speedy Express
+10327,24,2,11/10/1996,212,35,Nord-Ost Matjeshering,10 - 200 g glasses,26.89,Seafood,Nord-Ost-Fisch Handelsgesellschaft mbH,Cuxhaven,Germany,Speedy Express
+10327,24,2,11/10/1996,213,30,Escargots de Bourgogne,24 pieces,13.25,Seafood,Escargots Nouveaux,Montceau,France,Speedy Express
+10328,28,4,14/10/1996,214,9,Raclette Courdavault,5 kg pkg.,55,Dairy Products,Gai pâturage,Annecy,France,Federal Shipping
+10328,28,4,14/10/1996,215,40,Louisiana Fiery Hot Pepper Sauce,32 - 8 oz bottles,21.05,Condiments,New Orleans Cajun Delights,New Orleans,USA,Federal Shipping
+10328,28,4,14/10/1996,216,10,Scottish Longbreads,10 boxes x 8 pieces,13.5,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Federal Shipping
+10329,75,4,15/10/1996,217,10,Teatime Chocolate Biscuits,10 boxes x 12 pieces,9.2,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,United Package
+10329,75,4,15/10/1996,218,8,Nord-Ost Matjeshering,10 - 200 g glasses,25.89,Seafood,Nord-Ost-Fisch Handelsgesellschaft mbH,Cuxhaven,Germany,United Package
+10329,75,4,15/10/1996,219,20,Côte de Blaye,12 - 75 cl bottles,263.5,Beverages,Aux joyeux ecclésiastiques,Paris,France,United Package
+10329,75,4,15/10/1996,220,12,Gnocchi di nonna Alice,24 - 250 g pkgs.,39,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,United Package
+10330,46,3,16/10/1996,221,50,Gumbär Gummibärchen,100 - 250 g bags,31.23,Confections,Heli Süßwaren GmbH & Co. KG,Berlin,Germany,Speedy Express
+10330,46,3,16/10/1996,222,25,Mozzarella di Giovanni,24 - 200 g pkgs.,34.8,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Speedy Express
+10331,9,9,16/10/1996,223,15,Tourtière,16 pies,7.45,Meat/Poultry,Ma Maison,Montréal,Canada,Speedy Express
+10332,51,3,17/10/1996,224,40,Carnarvon Tigers,16 kg pkg.,63.5,Seafood,"Pavlova, Ltd.",Melbourne,Australia,United Package
+10332,51,3,17/10/1996,225,10,Singaporean Hokkien Fried Mee,32 - 1 kg pkgs.,14,Grains/Cereals,Leka Trading,Singapore,Singapore,United Package
+10332,51,3,17/10/1996,226,16,Zaanse koeken,10 - 4 oz boxes,9.5,Confections,Zaanse Snoepfabriek,Zaandam,Netherlands,United Package
+10333,87,5,18/10/1996,227,10,Tofu,40 - 100 g pkgs.,23.25,Produce,Mayumi's,Osaka,Japan,Federal Shipping
+10333,87,5,18/10/1996,228,10,Sir Rodney's Scones,24 pkgs. x 4 pieces,11,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Federal Shipping
+10333,87,5,18/10/1996,229,40,Fløtemysost,10 - 500 g pkgs.,21.5,Dairy Products,Norske Meierier,Sandvika,Norway,Federal Shipping
+10334,84,8,21/10/1996,230,8,Filo Mix,16 - 2 kg boxes,7,Grains/Cereals,"G'day, Mate",Sydney,Australia,United Package
+10334,84,8,21/10/1996,231,10,Scottish Longbreads,10 boxes x 8 pieces,12.5,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,United Package
+10335,37,7,22/10/1996,232,7,Chang,24 - 12 oz bottles,20,Beverages,Exotic Liquid,Londona,UK,United Package
+10335,37,7,22/10/1996,233,25,Gorgonzola Telino,12 - 100 g pkgs,12.5,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,United Package
+10335,37,7,22/10/1996,234,6,Mascarpone Fabioli,24 - 200 g pkgs.,32,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,United Package
+10335,37,7,22/10/1996,235,48,Manjimup Dried Apples,50 - 300 g pkgs.,53,Produce,"G'day, Mate",Sydney,Australia,United Package
+10336,60,7,23/10/1996,236,18,Chef Anton's Cajun Seasoning,48 - 6 oz jars,23,Condiments,New Orleans Cajun Delights,New Orleans,USA,United Package
+10337,25,4,24/10/1996,237,40,Tunnbröd,12 - 250 g pkgs.,9,Grains/Cereals,PB Knäckebröd AB,Göteborg,Sweden,Federal Shipping
+10337,25,4,24/10/1996,238,24,Gumbär Gummibärchen,100 - 250 g bags,31.23,Confections,Heli Süßwaren GmbH & Co. KG,Berlin,Germany,Federal Shipping
+10337,25,4,24/10/1996,239,20,Inlagd Sill,24 - 250 g jars,19,Seafood,Svensk Sjöföda AB,Stockholm,Sweden,Federal Shipping
+10337,25,4,24/10/1996,240,28,Gravad lax,12 - 500 g pkgs.,27,Seafood,Svensk Sjöföda AB,Stockholm,Sweden,Federal Shipping
+10337,25,4,24/10/1996,241,25,Mozzarella di Giovanni,24 - 200 g pkgs.,34.8,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Federal Shipping
+10338,55,4,25/10/1996,242,20,Alice Mutton,20 - 1 kg tins,39,Meat/Poultry,"Pavlova, Ltd.",Melbourne,Australia,Federal Shipping
+10338,55,4,25/10/1996,243,15,Nord-Ost Matjeshering,10 - 200 g glasses,25.89,Seafood,Nord-Ost-Fisch Handelsgesellschaft mbH,Cuxhaven,Germany,Federal Shipping
+10339,51,2,28/10/1996,244,10,Chef Anton's Cajun Seasoning,48 - 6 oz jars,23,Condiments,New Orleans Cajun Delights,New Orleans,USA,United Package
+10339,51,2,28/10/1996,245,70,Alice Mutton,20 - 1 kg tins,39,Meat/Poultry,"Pavlova, Ltd.",Melbourne,Australia,United Package
+10339,51,2,28/10/1996,246,28,Tarte au sucre,48 pies,49.3,Confections,Forêts d'érables,Ste-Hyacinthe,Canada,United Package
+10340,9,1,29/10/1996,247,20,Carnarvon Tigers,16 kg pkg.,62.5,Seafood,"Pavlova, Ltd.",Melbourne,Australia,Federal Shipping
+10340,9,1,29/10/1996,248,12,Jack's New England Clam Chowder,12 - 12 oz cans,10.65,Seafood,New England Seafood Cannery,Boston,USA,Federal Shipping
+10340,9,1,29/10/1996,249,40,Ipoh Coffee,16 - 500 g tins,46,Beverages,Leka Trading,Singapore,Singapore,Federal Shipping
+10341,73,7,29/10/1996,250,8,Geitost,500 g,2.5,Dairy Products,Norske Meierier,Sandvika,Norway,Federal Shipping
+10341,73,7,29/10/1996,251,9,Raclette Courdavault,5 kg pkg.,55,Dairy Products,Gai pâturage,Annecy,France,Federal Shipping
+10342,25,4,30/10/1996,252,24,Chang,24 - 12 oz bottles,20,Beverages,Exotic Liquid,Londona,UK,United Package
+10342,25,4,30/10/1996,253,56,Gorgonzola Telino,12 - 100 g pkgs,12.5,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,United Package
+10342,25,4,30/10/1996,254,40,Inlagd Sill,24 - 250 g jars,19,Seafood,Svensk Sjöföda AB,Stockholm,Sweden,United Package
+10342,25,4,30/10/1996,255,40,Pâté chinois,24 boxes x 2 pies,24,Meat/Poultry,Ma Maison,Montréal,Canada,United Package
+10343,44,4,31/10/1996,256,50,Wimmers gute Semmelknödel,20 bags x 4 pieces,34.25,Grains/Cereals,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Speedy Express
+10343,44,4,31/10/1996,257,4,Scottish Longbreads,10 boxes x 8 pieces,12.5,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Speedy Express
+10343,44,4,31/10/1996,258,15,Lakkalikööri,500 ml,18,Beverages,Karkki Oy,Lappeenranta,Finland,Speedy Express
+10344,89,4,01/11/1996,259,35,Chef Anton's Cajun Seasoning,48 - 6 oz jars,22,Condiments,New Orleans Cajun Delights,New Orleans,USA,United Package
+10344,89,4,01/11/1996,260,70,Northwoods Cranberry Sauce,12 - 12 oz jars,41,Condiments,Grandma Kelly's Homestead,Ann Arbor,USA,United Package
+10345,63,2,04/11/1996,261,70,Northwoods Cranberry Sauce,12 - 12 oz jars,40,Condiments,Grandma Kelly's Homestead,Ann Arbor,USA,United Package
+10345,63,2,04/11/1996,262,80,Teatime Chocolate Biscuits,10 boxes x 12 pieces,9.2,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,United Package
+10345,63,2,04/11/1996,263,9,Singaporean Hokkien Fried Mee,32 - 1 kg pkgs.,14,Grains/Cereals,Leka Trading,Singapore,Singapore,United Package
+10346,65,3,05/11/1996,264,36,Alice Mutton,20 - 1 kg tins,40,Meat/Poultry,"Pavlova, Ltd.",Melbourne,Australia,Federal Shipping
+10346,65,3,05/11/1996,265,20,Gnocchi di nonna Alice,24 - 250 g pkgs.,38,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,Federal Shipping
+10347,21,4,06/11/1996,266,10,NuNuCa Nuß-Nougat-Creme,20 - 450 g glasses,14,Confections,Heli Süßwaren GmbH & Co. KG,Berlin,Germany,Federal Shipping
+10347,21,4,06/11/1996,267,50,Chartreuse verte,750 cc per bottle,18,Beverages,Aux joyeux ecclésiastiques,Paris,France,Federal Shipping
+10347,21,4,06/11/1996,268,4,Boston Crab Meat,24 - 4 oz tins,19.4,Seafood,New England Seafood Cannery,Boston,USA,Federal Shipping
+10347,21,4,06/11/1996,269,6,Rhönbräu Klosterbier,24 - 0.5 l bottles,7.75,Beverages,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10348,86,4,07/11/1996,270,15,Chais,10 boxes x 20 bags,18,Beverages,Exotic Liquid,Londona,UK,United Package
+10348,86,4,07/11/1996,271,25,Tunnbröd,12 - 250 g pkgs.,9,Grains/Cereals,PB Knäckebröd AB,Göteborg,Sweden,United Package
+10349,75,7,08/11/1996,272,24,Tourtière,16 pies,8.45,Meat/Poultry,Ma Maison,Montréal,Canada,Speedy Express
+10350,41,6,11/11/1996,273,15,Valkoinen suklaa,12 - 100 g bars,16.25,Confections,Karkki Oy,Lappeenranta,Finland,United Package
+10350,41,6,11/11/1996,274,18,Gudbrandsdalsost,10 kg pkg.,36,Dairy Products,Norske Meierier,Sandvika,Norway,United Package
+10351,20,1,11/11/1996,275,20,Côte de Blaye,12 - 75 cl bottles,263.5,Beverages,Aux joyeux ecclésiastiques,Paris,France,Speedy Express
+10351,20,1,11/11/1996,276,13,Jack's New England Clam Chowder,12 - 12 oz cans,10.65,Seafood,New England Seafood Cannery,Boston,USA,Speedy Express
+10351,20,1,11/11/1996,277,77,Gula Malacca,20 - 2 kg bags,19.45,Condiments,Leka Trading,Singapore,Singapore,Speedy Express
+10351,20,1,11/11/1996,278,10,Louisiana Fiery Hot Pepper Sauce,32 - 8 oz bottles,21.05,Condiments,New Orleans Cajun Delights,New Orleans,USA,Speedy Express
+10352,28,3,12/11/1996,279,10,Guaraná Fantástica,12 - 355 ml cans,4.5,Beverages,Refrescos Americanas LTDA,São Paulo,Brazil,Federal Shipping
+10352,28,3,12/11/1996,280,20,Tourtière,16 pies,8.45,Meat/Poultry,Ma Maison,Montréal,Canada,Federal Shipping
+10353,59,7,13/11/1996,281,12,Queso Cabrales,1 kg pkg.,21,Dairy Products,Cooperativa de Quesos 'Las Cabras',Oviedo,Spain,Federal Shipping
+10353,59,7,13/11/1996,282,50,Côte de Blaye,12 - 75 cl bottles,263.5,Beverages,Aux joyeux ecclésiastiques,Paris,France,Federal Shipping
+10354,58,8,14/11/1996,283,12,Chais,10 boxes x 20 bags,18,Beverages,Exotic Liquid,Londona,UK,Federal Shipping
+10354,58,8,14/11/1996,284,4,Thüringer Rostbratwurst,50 bags x 30 sausgs.,124.79,Meat/Poultry,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10355,4,6,15/11/1996,285,25,Guaraná Fantástica,12 - 355 ml cans,4.5,Beverages,Refrescos Americanas LTDA,São Paulo,Brazil,Speedy Express
+10355,4,6,15/11/1996,286,25,Ravioli Angelo,24 - 250 g pkgs.,19.5,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,Speedy Express
+10356,86,6,18/11/1996,287,30,Gorgonzola Telino,12 - 100 g pkgs,12.5,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,United Package
+10356,86,6,18/11/1996,288,12,Pâté chinois,24 boxes x 2 pies,25,Meat/Poultry,Ma Maison,Montréal,Canada,United Package
+10356,86,6,18/11/1996,289,20,Gudbrandsdalsost,10 kg pkg.,36,Dairy Products,Norske Meierier,Sandvika,Norway,United Package
+10357,46,1,19/11/1996,290,30,Ikura,12 - 200 ml jars,31,Seafood,Tokyo Traders,Tokyo,Japan,Federal Shipping
+10357,46,1,19/11/1996,291,16,Gumbär Gummibärchen,100 - 250 g bags,31.23,Confections,Heli Süßwaren GmbH & Co. KG,Berlin,Germany,Federal Shipping
+10357,46,1,19/11/1996,292,8,Camembert Pierrot,15 - 300 g rounds,35,Dairy Products,Gai pâturage,Annecy,France,Federal Shipping
+10358,41,5,20/11/1996,293,10,Guaraná Fantástica,12 - 355 ml cans,4.5,Beverages,Refrescos Americanas LTDA,São Paulo,Brazil,Speedy Express
+10358,41,5,20/11/1996,294,10,Sasquatch Ale,24 - 12 oz bottles,14,Beverages,Bigfoot Breweries,Bend,USA,Speedy Express
+10358,41,5,20/11/1996,295,20,Inlagd Sill,24 - 250 g jars,19,Seafood,Svensk Sjöföda AB,Stockholm,Sweden,Speedy Express
+10359,72,5,21/11/1996,296,56,Pavlova,32 - 500 g boxes,18.45,Confections,"Pavlova, Ltd.",Melbourne,Australia,Federal Shipping
+10359,72,5,21/11/1996,297,70,Gorgonzola Telino,12 - 100 g pkgs,12.5,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Federal Shipping
+10359,72,5,21/11/1996,298,80,Camembert Pierrot,15 - 300 g rounds,34,Dairy Products,Gai pâturage,Annecy,France,Federal Shipping
+10360,7,4,22/11/1996,299,30,Rössle Sauerkraut,25 - 825 g cans,45.6,Produce,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10360,7,4,22/11/1996,300,35,Thüringer Rostbratwurst,50 bags x 30 sausgs.,124.79,Meat/Poultry,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10360,7,4,22/11/1996,301,10,Côte de Blaye,12 - 75 cl bottles,263.5,Beverages,Aux joyeux ecclésiastiques,Paris,France,Federal Shipping
+10360,7,4,22/11/1996,302,35,Maxilaku,24 - 50 g pkgs.,20,Confections,Karkki Oy,Lappeenranta,Finland,Federal Shipping
+10360,7,4,22/11/1996,303,28,Tourtière,16 pies,7.45,Meat/Poultry,Ma Maison,Montréal,Canada,Federal Shipping
+10361,63,1,22/11/1996,304,54,Chartreuse verte,750 cc per bottle,19,Beverages,Aux joyeux ecclésiastiques,Paris,France,United Package
+10361,63,1,22/11/1996,305,55,Camembert Pierrot,15 - 300 g rounds,34,Dairy Products,Gai pâturage,Annecy,France,United Package
+10362,9,3,25/11/1996,306,50,NuNuCa Nuß-Nougat-Creme,20 - 450 g glasses,14,Confections,Heli Süßwaren GmbH & Co. KG,Berlin,Germany,Speedy Express
+10362,9,3,25/11/1996,307,20,Manjimup Dried Apples,50 - 300 g pkgs.,53,Produce,"G'day, Mate",Sydney,Australia,Speedy Express
+10362,9,3,25/11/1996,308,24,Tourtière,16 pies,8.45,Meat/Poultry,Ma Maison,Montréal,Canada,Speedy Express
+10363,17,4,26/11/1996,309,20,Gorgonzola Telino,12 - 100 g pkgs,12.5,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Federal Shipping
+10363,17,4,26/11/1996,310,12,Rhönbräu Klosterbier,24 - 0.5 l bottles,7.75,Beverages,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10363,17,4,26/11/1996,311,12,Lakkalikööri,500 ml,18,Beverages,Karkki Oy,Lappeenranta,Finland,Federal Shipping
+10364,19,1,26/11/1996,312,30,Gudbrandsdalsost,10 kg pkg.,37,Dairy Products,Norske Meierier,Sandvika,Norway,Speedy Express
+10364,19,1,26/11/1996,313,5,Fløtemysost,10 - 500 g pkgs.,21.5,Dairy Products,Norske Meierier,Sandvika,Norway,Speedy Express
+10365,3,3,27/11/1996,314,24,Queso Cabrales,1 kg pkg.,21,Dairy Products,Cooperativa de Quesos 'Las Cabras',Oviedo,Spain,United Package
+10366,29,8,28/11/1996,315,5,Louisiana Fiery Hot Pepper Sauce,32 - 8 oz bottles,21.05,Condiments,New Orleans Cajun Delights,New Orleans,USA,United Package
+10366,29,8,28/11/1996,316,5,Original Frankfurter grüne Soße,12 boxes,14,Condiments,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,United Package
+10367,83,7,28/11/1996,317,36,Sasquatch Ale,24 - 12 oz bottles,14,Beverages,Bigfoot Breweries,Bend,USA,Federal Shipping
+10367,83,7,28/11/1996,318,18,Tourtière,16 pies,7.45,Meat/Poultry,Ma Maison,Montréal,Canada,Federal Shipping
+10367,83,7,28/11/1996,319,15,Louisiana Fiery Hot Pepper Sauce,32 - 8 oz bottles,21.05,Condiments,New Orleans Cajun Delights,New Orleans,USA,Federal Shipping
+10367,83,7,28/11/1996,320,7,Original Frankfurter grüne Soße,12 boxes,14,Condiments,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10368,20,2,29/11/1996,321,5,Sir Rodney's Scones,24 pkgs. x 4 pieces,10,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,United Package
+10368,20,2,29/11/1996,322,13,Rössle Sauerkraut,25 - 825 g cans,45.6,Produce,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,United Package
+10368,20,2,29/11/1996,323,25,Ravioli Angelo,24 - 250 g pkgs.,19.5,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,United Package
+10368,20,2,29/11/1996,324,35,Wimmers gute Semmelknödel,20 bags x 4 pieces,34.25,Grains/Cereals,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,United Package
+10369,75,8,02/12/1996,325,20,Thüringer Rostbratwurst,50 bags x 30 sausgs.,123.79,Meat/Poultry,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,United Package
+10369,75,8,02/12/1996,326,18,Gnocchi di nonna Alice,24 - 250 g pkgs.,38,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,United Package
+10370,14,6,03/12/1996,327,15,Chais,10 boxes x 20 bags,18,Beverages,Exotic Liquid,Londona,UK,United Package
+10370,14,6,03/12/1996,328,30,Wimmers gute Semmelknödel,20 bags x 4 pieces,34.25,Grains/Cereals,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,United Package
+10370,14,6,03/12/1996,329,20,Longlife Tofu,5 kg pkg.,10,Produce,Tokyo Traders,Tokyo,Japan,United Package
+10371,41,1,03/12/1996,330,6,Inlagd Sill,24 - 250 g jars,19,Seafood,Svensk Sjöföda AB,Stockholm,Sweden,Speedy Express
+10372,62,5,04/12/1996,331,12,Sir Rodney's Marmalade,30 gift boxes,81,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,United Package
+10372,62,5,04/12/1996,332,40,Côte de Blaye,12 - 75 cl bottles,264.5,Beverages,Aux joyeux ecclésiastiques,Paris,France,United Package
+10372,62,5,04/12/1996,333,70,Camembert Pierrot,15 - 300 g rounds,34,Dairy Products,Gai pâturage,Annecy,France,United Package
+10372,62,5,04/12/1996,334,42,Mozzarella di Giovanni,24 - 200 g pkgs.,34.8,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,United Package
+10373,37,4,05/12/1996,335,80,Escargots de Bourgogne,24 pieces,13.25,Seafood,Escargots Nouveaux,Montceau,France,Federal Shipping
+10373,37,4,05/12/1996,336,50,Fløtemysost,10 - 500 g pkgs.,22.5,Dairy Products,Norske Meierier,Sandvika,Norway,Federal Shipping
+10374,91,1,05/12/1996,337,30,Gorgonzola Telino,12 - 100 g pkgs,12.5,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Federal Shipping
+10374,91,1,05/12/1996,338,15,Escargots de Bourgogne,24 pieces,13.25,Seafood,Escargots Nouveaux,Montceau,France,Federal Shipping
+10375,36,3,06/12/1996,339,15,Tofu,40 - 100 g pkgs.,23.25,Produce,Mayumi's,Osaka,Japan,United Package
+10375,36,3,06/12/1996,340,10,Tourtière,16 pies,8.45,Meat/Poultry,Ma Maison,Montréal,Canada,United Package
+10376,51,1,09/12/1996,341,42,Gorgonzola Telino,12 - 100 g pkgs,12.5,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,United Package
+10377,72,1,09/12/1996,342,20,Rössle Sauerkraut,25 - 825 g cans,45.6,Produce,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10377,72,1,09/12/1996,343,20,Chartreuse verte,750 cc per bottle,18,Beverages,Aux joyeux ecclésiastiques,Paris,France,Federal Shipping
+10378,24,5,10/12/1996,344,6,Fløtemysost,10 - 500 g pkgs.,22.5,Dairy Products,Norske Meierier,Sandvika,Norway,Federal Shipping
+10379,61,2,11/12/1996,345,8,Jack's New England Clam Chowder,12 - 12 oz cans,9.65,Seafood,New England Seafood Cannery,Boston,USA,Speedy Express
+10379,61,2,11/12/1996,346,16,Vegie-spread,15 - 625 g jars,43.9,Condiments,"Pavlova, Ltd.",Melbourne,Australia,Speedy Express
+10379,61,2,11/12/1996,347,20,Louisiana Fiery Hot Pepper Sauce,32 - 8 oz bottles,21.05,Condiments,New Orleans Cajun Delights,New Orleans,USA,Speedy Express
+10380,37,8,12/12/1996,348,18,Nord-Ost Matjeshering,10 - 200 g glasses,26.89,Seafood,Nord-Ost-Fisch Handelsgesellschaft mbH,Cuxhaven,Germany,Federal Shipping
+10380,37,8,12/12/1996,349,20,Perth Pasties,48 pieces,32.8,Meat/Poultry,"G'day, Mate",Sydney,Australia,Federal Shipping
+10380,37,8,12/12/1996,350,6,Camembert Pierrot,15 - 300 g rounds,34,Dairy Products,Gai pâturage,Annecy,France,Federal Shipping
+10380,37,8,12/12/1996,351,30,Outback Lager,24 - 355 ml bottles,15,Beverages,"Pavlova, Ltd.",Melbourne,Australia,Federal Shipping
+10381,46,3,12/12/1996,352,14,Longlife Tofu,5 kg pkg.,11,Produce,Tokyo Traders,Tokyo,Japan,Federal Shipping
+10382,20,4,13/12/1996,353,32,Chef Anton's Gumbo Mix,36 boxes,21.35,Condiments,New Orleans Cajun Delights,New Orleans,USA,Speedy Express
+10382,20,4,13/12/1996,354,9,Carnarvon Tigers,16 kg pkg.,62.5,Seafood,"Pavlova, Ltd.",Melbourne,Australia,Speedy Express
+10382,20,4,13/12/1996,355,14,Thüringer Rostbratwurst,50 bags x 30 sausgs.,123.79,Meat/Poultry,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Speedy Express
+10382,20,4,13/12/1996,356,60,Geitost,500 g,3.5,Dairy Products,Norske Meierier,Sandvika,Norway,Speedy Express
+10382,20,4,13/12/1996,357,50,Longlife Tofu,5 kg pkg.,10,Produce,Tokyo Traders,Tokyo,Japan,Speedy Express
+10383,4,8,16/12/1996,358,20,Konbu,2 kg box,6,Seafood,Mayumi's,Osaka,Japan,Federal Shipping
+10383,4,8,16/12/1996,359,15,Valkoinen suklaa,12 - 100 g bars,16.25,Confections,Karkki Oy,Lappeenranta,Finland,Federal Shipping
+10383,4,8,16/12/1996,360,20,Gnocchi di nonna Alice,24 - 250 g pkgs.,39,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,Federal Shipping
+10384,5,3,16/12/1996,361,28,Sir Rodney's Marmalade,30 gift boxes,81,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Federal Shipping
+10384,5,3,16/12/1996,362,15,Camembert Pierrot,15 - 300 g rounds,34,Dairy Products,Gai pâturage,Annecy,France,Federal Shipping
+10385,75,1,17/12/1996,363,10,Uncle Bob's Organic Dried Pears,12 - 1 lb pkgs.,30,Produce,Grandma Kelly's Homestead,Ann Arbor,USA,United Package
+10385,75,1,17/12/1996,364,20,Camembert Pierrot,15 - 300 g rounds,35,Dairy Products,Gai pâturage,Annecy,France,United Package
+10385,75,1,17/12/1996,365,8,Scottish Longbreads,10 boxes x 8 pieces,12.5,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,United Package
+10386,21,9,18/12/1996,366,15,Guaraná Fantástica,12 - 355 ml cans,4.5,Beverages,Refrescos Americanas LTDA,São Paulo,Brazil,Federal Shipping
+10386,21,9,18/12/1996,367,10,Sasquatch Ale,24 - 12 oz bottles,14,Beverages,Bigfoot Breweries,Bend,USA,Federal Shipping
+10387,70,1,18/12/1996,368,15,Guaraná Fantástica,12 - 355 ml cans,5.5,Beverages,Refrescos Americanas LTDA,São Paulo,Brazil,United Package
+10387,70,1,18/12/1996,369,6,Rössle Sauerkraut,25 - 825 g cans,45.6,Produce,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,United Package
+10387,70,1,18/12/1996,370,12,Raclette Courdavault,5 kg pkg.,55,Dairy Products,Gai pâturage,Annecy,France,United Package
+10387,70,1,18/12/1996,371,15,Fløtemysost,10 - 500 g pkgs.,21.5,Dairy Products,Norske Meierier,Sandvika,Norway,United Package
+10388,72,2,19/12/1996,372,15,Røgede sild,1k pkg.,10.5,Seafood,Lyngbysild,Lyngby,Denmark,Speedy Express
+10388,72,2,19/12/1996,373,20,Filo Mix,16 - 2 kg boxes,7,Grains/Cereals,"G'day, Mate",Sydney,Australia,Speedy Express
+10388,72,2,19/12/1996,374,40,Perth Pasties,48 pieces,32.8,Meat/Poultry,"G'day, Mate",Sydney,Australia,Speedy Express
+10389,10,4,20/12/1996,375,16,Ikura,12 - 200 ml jars,31,Seafood,Tokyo Traders,Tokyo,Japan,United Package
+10389,10,4,20/12/1996,376,15,Pâté chinois,24 boxes x 2 pies,25,Meat/Poultry,Ma Maison,Montréal,Canada,United Package
+10389,10,4,20/12/1996,377,20,Tarte au sucre,48 pies,49.3,Confections,Forêts d'érables,Ste-Hyacinthe,Canada,United Package
+10389,10,4,20/12/1996,378,30,Outback Lager,24 - 355 ml bottles,15,Beverages,"Pavlova, Ltd.",Melbourne,Australia,United Package
+10390,20,6,23/12/1996,379,60,Gorgonzola Telino,12 - 100 g pkgs,12.5,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Speedy Express
+10390,20,6,23/12/1996,380,40,Steeleye Stout,24 - 12 oz bottles,19,Beverages,Bigfoot Breweries,Bend,USA,Speedy Express
+10390,20,6,23/12/1996,381,45,Spegesild,4 - 450 g glasses,12,Seafood,Lyngbysild,Lyngby,Denmark,Speedy Express
+10390,20,6,23/12/1996,382,24,Mozzarella di Giovanni,24 - 200 g pkgs.,34.8,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Speedy Express
+10391,17,3,23/12/1996,383,18,Konbu,2 kg box,6,Seafood,Mayumi's,Osaka,Japan,Federal Shipping
+10392,59,2,24/12/1996,384,50,Gudbrandsdalsost,10 kg pkg.,37,Dairy Products,Norske Meierier,Sandvika,Norway,Federal Shipping
+10393,71,1,25/12/1996,385,25,Chang,24 - 12 oz bottles,19,Beverages,Exotic Liquid,Londona,UK,Federal Shipping
+10393,71,1,25/12/1996,386,42,Tofu,40 - 100 g pkgs.,23.25,Produce,Mayumi's,Osaka,Japan,Federal Shipping
+10393,71,1,25/12/1996,387,7,NuNuCa Nuß-Nougat-Creme,20 - 450 g glasses,14,Confections,Heli Süßwaren GmbH & Co. KG,Berlin,Germany,Federal Shipping
+10393,71,1,25/12/1996,388,70,Gumbär Gummibärchen,100 - 250 g bags,32.23,Confections,Heli Süßwaren GmbH & Co. KG,Berlin,Germany,Federal Shipping
+10393,71,1,25/12/1996,389,32,Gorgonzola Telino,12 - 100 g pkgs,12.5,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Federal Shipping
+10394,36,1,25/12/1996,390,10,Konbu,2 kg box,6,Seafood,Mayumi's,Osaka,Japan,Federal Shipping
+10394,36,1,25/12/1996,391,10,Tarte au sucre,48 pies,49.3,Confections,Forêts d'érables,Ste-Hyacinthe,Canada,Federal Shipping
+10395,35,6,26/12/1996,392,28,Spegesild,4 - 450 g glasses,13,Seafood,Lyngbysild,Lyngby,Denmark,Speedy Express
+10395,35,6,26/12/1996,393,70,Perth Pasties,48 pieces,32.8,Meat/Poultry,"G'day, Mate",Sydney,Australia,Speedy Express
+10395,35,6,26/12/1996,394,8,Gudbrandsdalsost,10 kg pkg.,36,Dairy Products,Norske Meierier,Sandvika,Norway,Speedy Express
+10396,25,1,27/12/1996,395,40,Tunnbröd,12 - 250 g pkgs.,9,Grains/Cereals,PB Knäckebröd AB,Göteborg,Sweden,Federal Shipping
+10396,25,1,27/12/1996,396,60,Fløtemysost,10 - 500 g pkgs.,22.5,Dairy Products,Norske Meierier,Sandvika,Norway,Federal Shipping
+10396,25,1,27/12/1996,397,21,Mozzarella di Giovanni,24 - 200 g pkgs.,34.8,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Federal Shipping
+10397,60,5,27/12/1996,398,10,Sir Rodney's Scones,24 pkgs. x 4 pieces,10,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Speedy Express
+10397,60,5,27/12/1996,399,18,Manjimup Dried Apples,50 - 300 g pkgs.,53,Produce,"G'day, Mate",Sydney,Australia,Speedy Express
+10398,71,2,30/12/1996,400,30,Steeleye Stout,24 - 12 oz bottles,19,Beverages,Bigfoot Breweries,Bend,USA,Federal Shipping
+10398,71,2,30/12/1996,401,120,Pâté chinois,24 boxes x 2 pies,24,Meat/Poultry,Ma Maison,Montréal,Canada,Federal Shipping
+10399,83,8,31/12/1996,402,60,Scottish Longbreads,10 boxes x 8 pieces,12.5,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Federal Shipping
+10399,83,8,31/12/1996,403,30,Fløtemysost,10 - 500 g pkgs.,21.5,Dairy Products,Norske Meierier,Sandvika,Norway,Federal Shipping
+10399,83,8,31/12/1996,404,35,Lakkalikööri,500 ml,19,Beverages,Karkki Oy,Lappeenranta,Finland,Federal Shipping
+10399,83,8,31/12/1996,405,14,Original Frankfurter grüne Soße,12 boxes,13,Condiments,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10400,19,1,01/01/1997,406,21,Thüringer Rostbratwurst,50 bags x 30 sausgs.,123.79,Meat/Poultry,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10400,19,1,01/01/1997,407,35,Steeleye Stout,24 - 12 oz bottles,18,Beverages,Bigfoot Breweries,Bend,USA,Federal Shipping
+10400,19,1,01/01/1997,408,30,Maxilaku,24 - 50 g pkgs.,21,Confections,Karkki Oy,Lappeenranta,Finland,Federal Shipping
+10401,65,1,01/01/1997,409,18,Nord-Ost Matjeshering,10 - 200 g glasses,25.89,Seafood,Nord-Ost-Fisch Handelsgesellschaft mbH,Cuxhaven,Germany,Speedy Express
+10401,65,1,01/01/1997,410,70,Gnocchi di nonna Alice,24 - 250 g pkgs.,38,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,Speedy Express
+10401,65,1,01/01/1997,411,20,Louisiana Fiery Hot Pepper Sauce,32 - 8 oz bottles,21.05,Condiments,New Orleans Cajun Delights,New Orleans,USA,Speedy Express
+10401,65,1,01/01/1997,412,60,Fløtemysost,10 - 500 g pkgs.,22.5,Dairy Products,Norske Meierier,Sandvika,Norway,Speedy Express
+10402,20,8,02/01/1997,413,60,Tunnbröd,12 - 250 g pkgs.,9,Grains/Cereals,PB Knäckebröd AB,Göteborg,Sweden,United Package
+10402,20,8,02/01/1997,414,65,Vegie-spread,15 - 625 g jars,43.9,Condiments,"Pavlova, Ltd.",Melbourne,Australia,United Package
+10403,20,4,03/01/1997,415,21,Pavlova,32 - 500 g boxes,17.45,Confections,"Pavlova, Ltd.",Melbourne,Australia,Federal Shipping
+10403,20,4,03/01/1997,416,70,Chocolade,10 pkgs.,13.75,Confections,Zaanse Snoepfabriek,Zaandam,Netherlands,Federal Shipping
+10404,49,2,03/01/1997,417,30,Gumbär Gummibärchen,100 - 250 g bags,31.23,Confections,Heli Süßwaren GmbH & Co. KG,Berlin,Germany,Speedy Express
+10404,49,2,03/01/1997,418,40,Singaporean Hokkien Fried Mee,32 - 1 kg pkgs.,14,Grains/Cereals,Leka Trading,Singapore,Singapore,Speedy Express
+10404,49,2,03/01/1997,419,30,Maxilaku,24 - 50 g pkgs.,20,Confections,Karkki Oy,Lappeenranta,Finland,Speedy Express
+10405,47,1,06/01/1997,420,50,Aniseed Syrup,12 - 550 ml bottles,11,Condiments,Exotic Liquid,Londona,UK,Speedy Express
+10406,62,7,07/01/1997,421,10,Chais,10 boxes x 20 bags,18,Beverages,Exotic Liquid,Londona,UK,Speedy Express
+10406,62,7,07/01/1997,422,30,Sir Rodney's Scones,24 pkgs. x 4 pieces,10,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Speedy Express
+10406,62,7,07/01/1997,423,42,Rössle Sauerkraut,25 - 825 g cans,45.6,Produce,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Speedy Express
+10406,62,7,07/01/1997,424,5,Inlagd Sill,24 - 250 g jars,20,Seafood,Svensk Sjöföda AB,Stockholm,Sweden,Speedy Express
+10406,62,7,07/01/1997,425,2,Boston Crab Meat,24 - 4 oz tins,18.4,Seafood,New England Seafood Cannery,Boston,USA,Speedy Express
+10407,56,2,07/01/1997,426,30,Queso Cabrales,1 kg pkg.,21,Dairy Products,Cooperativa de Quesos 'Las Cabras',Oviedo,Spain,United Package
+10407,56,2,07/01/1997,427,15,Gudbrandsdalsost,10 kg pkg.,36,Dairy Products,Norske Meierier,Sandvika,Norway,United Package
+10407,56,2,07/01/1997,428,15,Fløtemysost,10 - 500 g pkgs.,22.5,Dairy Products,Norske Meierier,Sandvika,Norway,United Package
+10408,23,8,08/01/1997,429,10,Gravad lax,12 - 500 g pkgs.,26,Seafood,Svensk Sjöföda AB,Stockholm,Sweden,Speedy Express
+10408,23,8,08/01/1997,430,6,Tourtière,16 pies,7.45,Meat/Poultry,Ma Maison,Montréal,Canada,Speedy Express
+10408,23,8,08/01/1997,431,35,Tarte au sucre,48 pies,49.3,Confections,Forêts d'érables,Ste-Hyacinthe,Canada,Speedy Express
+10409,54,3,09/01/1997,432,12,Tofu,40 - 100 g pkgs.,24.25,Produce,Mayumi's,Osaka,Japan,Speedy Express
+10409,54,3,09/01/1997,433,12,Sir Rodney's Scones,24 pkgs. x 4 pieces,10,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Speedy Express
+10410,10,3,10/01/1997,434,49,Geitost,500 g,2.5,Dairy Products,Norske Meierier,Sandvika,Norway,Federal Shipping
+10410,10,3,10/01/1997,435,16,Raclette Courdavault,5 kg pkg.,55,Dairy Products,Gai pâturage,Annecy,France,Federal Shipping
+10411,10,9,10/01/1997,436,25,Jack's New England Clam Chowder,12 - 12 oz cans,10.65,Seafood,New England Seafood Cannery,Boston,USA,Federal Shipping
+10411,10,9,10/01/1997,437,40,Gula Malacca,20 - 2 kg bags,19.45,Condiments,Leka Trading,Singapore,Singapore,Federal Shipping
+10411,10,9,10/01/1997,438,9,Raclette Courdavault,5 kg pkg.,55,Dairy Products,Gai pâturage,Annecy,France,Federal Shipping
+10412,87,8,13/01/1997,439,20,Tofu,40 - 100 g pkgs.,23.25,Produce,Mayumi's,Osaka,Japan,United Package
+10413,41,3,14/01/1997,440,24,Chais,10 boxes x 20 bags,19,Beverages,Exotic Liquid,Londona,UK,United Package
+10413,41,3,14/01/1997,441,40,Tarte au sucre,48 pies,49.3,Confections,Forêts d'érables,Ste-Hyacinthe,Canada,United Package
+10413,41,3,14/01/1997,442,14,Lakkalikööri,500 ml,18,Beverages,Karkki Oy,Lappeenranta,Finland,United Package
+10414,21,2,14/01/1997,443,18,Teatime Chocolate Biscuits,10 boxes x 12 pieces,9.2,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Federal Shipping
+10414,21,2,14/01/1997,444,50,Geitost,500 g,3.5,Dairy Products,Norske Meierier,Sandvika,Norway,Federal Shipping
+10415,36,3,15/01/1997,445,2,Alice Mutton,20 - 1 kg tins,39,Meat/Poultry,"Pavlova, Ltd.",Melbourne,Australia,Speedy Express
+10415,36,3,15/01/1997,446,20,Geitost,500 g,2.5,Dairy Products,Norske Meierier,Sandvika,Norway,Speedy Express
+10416,87,8,16/01/1997,447,20,Teatime Chocolate Biscuits,10 boxes x 12 pieces,9.2,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Federal Shipping
+10416,87,8,16/01/1997,448,10,Perth Pasties,48 pieces,33.8,Meat/Poultry,"G'day, Mate",Sydney,Australia,Federal Shipping
+10416,87,8,16/01/1997,449,20,Ravioli Angelo,24 - 250 g pkgs.,19.5,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,Federal Shipping
+10417,73,4,16/01/1997,450,50,Côte de Blaye,12 - 75 cl bottles,263.5,Beverages,Aux joyeux ecclésiastiques,Paris,France,Federal Shipping
+10417,73,4,16/01/1997,451,2,Spegesild,4 - 450 g glasses,12,Seafood,Lyngbysild,Lyngby,Denmark,Federal Shipping
+10417,73,4,16/01/1997,452,36,Scottish Longbreads,10 boxes x 8 pieces,13.5,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Federal Shipping
+10417,73,4,16/01/1997,453,35,Original Frankfurter grüne Soße,12 boxes,13,Condiments,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10418,63,4,17/01/1997,454,60,Chang,24 - 12 oz bottles,19,Beverages,Exotic Liquid,Londona,UK,Speedy Express
+10418,63,4,17/01/1997,455,55,Zaanse koeken,10 - 4 oz boxes,9.5,Confections,Zaanse Snoepfabriek,Zaandam,Netherlands,Speedy Express
+10418,63,4,17/01/1997,456,16,Sirop d'érable,24 - 500 ml bottles,29.5,Condiments,Forêts d'érables,Ste-Hyacinthe,Canada,Speedy Express
+10418,63,4,17/01/1997,457,15,Longlife Tofu,5 kg pkg.,10,Produce,Tokyo Traders,Tokyo,Japan,Speedy Express
+10419,68,4,20/01/1997,458,60,Camembert Pierrot,15 - 300 g rounds,34,Dairy Products,Gai pâturage,Annecy,France,United Package
+10419,68,4,20/01/1997,459,20,Gudbrandsdalsost,10 kg pkg.,36,Dairy Products,Norske Meierier,Sandvika,Norway,United Package
+10420,88,3,21/01/1997,460,20,Mishi Kobe Niku,18 - 500 g pkgs.,98,Meat/Poultry,Tokyo Traders,Tokyo,Japan,Speedy Express
+10420,88,3,21/01/1997,461,2,Konbu,2 kg box,6,Seafood,Mayumi's,Osaka,Japan,Speedy Express
+10420,88,3,21/01/1997,462,8,Outback Lager,24 - 355 ml bottles,15,Beverages,"Pavlova, Ltd.",Melbourne,Australia,Speedy Express
+10420,88,3,21/01/1997,463,20,Röd Kaviar,24 - 150 g jars,15,Seafood,Svensk Sjöföda AB,Stockholm,Sweden,Speedy Express
+10421,61,8,21/01/1997,464,4,Teatime Chocolate Biscuits,10 boxes x 12 pieces,10.2,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Speedy Express
+10421,61,8,21/01/1997,465,30,Gumbär Gummibärchen,100 - 250 g bags,31.23,Confections,Heli Süßwaren GmbH & Co. KG,Berlin,Germany,Speedy Express
+10421,61,8,21/01/1997,466,15,Perth Pasties,48 pieces,32.8,Meat/Poultry,"G'day, Mate",Sydney,Australia,Speedy Express
+10421,61,8,21/01/1997,467,10,Original Frankfurter grüne Soße,12 boxes,13,Condiments,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Speedy Express
+10422,27,2,22/01/1997,468,2,Gumbär Gummibärchen,100 - 250 g bags,32.23,Confections,Heli Süßwaren GmbH & Co. KG,Berlin,Germany,Speedy Express
+10423,31,6,23/01/1997,469,14,Gorgonzola Telino,12 - 100 g pkgs,12.5,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,Federal Shipping
+10423,31,6,23/01/1997,470,20,Raclette Courdavault,5 kg pkg.,55,Dairy Products,Gai pâturage,Annecy,France,Federal Shipping
+10424,51,7,23/01/1997,471,60,Steeleye Stout,24 - 12 oz bottles,18,Beverages,Bigfoot Breweries,Bend,USA,United Package
+10424,51,7,23/01/1997,472,49,Côte de Blaye,12 - 75 cl bottles,264.5,Beverages,Aux joyeux ecclésiastiques,Paris,France,United Package
+10424,51,7,23/01/1997,473,30,Scottish Longbreads,10 boxes x 8 pieces,12.5,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,United Package
+10425,41,6,24/01/1997,474,10,Pâté chinois,24 boxes x 2 pies,24,Meat/Poultry,Ma Maison,Montréal,Canada,United Package
+10425,41,6,24/01/1997,475,20,Lakkalikööri,500 ml,18,Beverages,Karkki Oy,Lappeenranta,Finland,United Package
+10426,29,4,27/01/1997,476,5,Gnocchi di nonna Alice,24 - 250 g pkgs.,39,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,Speedy Express
+10426,29,4,27/01/1997,477,7,Wimmers gute Semmelknödel,20 bags x 4 pieces,33.25,Grains/Cereals,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Speedy Express
+10427,59,4,27/01/1997,478,35,Tofu,40 - 100 g pkgs.,23.25,Produce,Mayumi's,Osaka,Japan,United Package
+10428,66,7,28/01/1997,479,20,Spegesild,4 - 450 g glasses,12,Seafood,Lyngbysild,Lyngby,Denmark,Speedy Express
+10429,37,3,29/01/1997,480,40,Valkoinen suklaa,12 - 100 g bars,17.25,Confections,Karkki Oy,Lappeenranta,Finland,United Package
+10429,37,3,29/01/1997,481,35,Vegie-spread,15 - 625 g jars,43.9,Condiments,"Pavlova, Ltd.",Melbourne,Australia,United Package
+10430,20,4,30/01/1997,482,45,Alice Mutton,20 - 1 kg tins,39,Meat/Poultry,"Pavlova, Ltd.",Melbourne,Australia,Speedy Express
+10430,20,4,30/01/1997,483,50,Sir Rodney's Scones,24 pkgs. x 4 pieces,10,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,Speedy Express
+10430,20,4,30/01/1997,484,30,Gnocchi di nonna Alice,24 - 250 g pkgs.,39,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,Speedy Express
+10430,20,4,30/01/1997,485,70,Raclette Courdavault,5 kg pkg.,55,Dairy Products,Gai pâturage,Annecy,France,Speedy Express
+10431,10,4,30/01/1997,486,50,Alice Mutton,20 - 1 kg tins,39,Meat/Poultry,"Pavlova, Ltd.",Melbourne,Australia,United Package
+10431,10,4,30/01/1997,487,50,Boston Crab Meat,24 - 4 oz tins,18.4,Seafood,New England Seafood Cannery,Boston,USA,United Package
+10431,10,4,30/01/1997,488,30,Zaanse koeken,10 - 4 oz boxes,10.5,Confections,Zaanse Snoepfabriek,Zaandam,Netherlands,United Package
+10432,75,3,31/01/1997,489,10,Gumbär Gummibärchen,100 - 250 g bags,31.23,Confections,Heli Süßwaren GmbH & Co. KG,Berlin,Germany,United Package
+10432,75,3,31/01/1997,490,40,Tourtière,16 pies,7.45,Meat/Poultry,Ma Maison,Montréal,Canada,United Package
+10433,60,3,03/02/1997,491,28,Gnocchi di nonna Alice,24 - 250 g pkgs.,38,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,Federal Shipping
+10434,24,3,03/02/1997,492,6,Queso Cabrales,1 kg pkg.,22,Dairy Products,Cooperativa de Quesos 'Las Cabras',Oviedo,Spain,United Package
+10434,24,3,03/02/1997,493,18,Lakkalikööri,500 ml,18,Beverages,Karkki Oy,Lappeenranta,Finland,United Package
+10435,16,8,04/02/1997,494,10,Chang,24 - 12 oz bottles,19,Beverages,Exotic Liquid,Londona,UK,United Package
+10435,16,8,04/02/1997,495,12,Gustaf's Knäckebröd,24 - 500 g pkgs.,21,Grains/Cereals,PB Knäckebröd AB,Göteborg,Sweden,United Package
+10435,16,8,04/02/1997,496,10,Mozzarella di Giovanni,24 - 200 g pkgs.,35.8,Dairy Products,Formaggi Fortini s.r.l.,Ravenna,Italy,United Package
+10436,7,3,05/02/1997,497,5,Spegesild,4 - 450 g glasses,12,Seafood,Lyngbysild,Lyngby,Denmark,United Package
+10436,7,3,05/02/1997,498,40,Gnocchi di nonna Alice,24 - 250 g pkgs.,38,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,United Package
+10436,7,3,05/02/1997,499,30,Wimmers gute Semmelknödel,20 bags x 4 pieces,33.25,Grains/Cereals,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,United Package
+10436,7,3,05/02/1997,500,24,Rhönbräu Klosterbier,24 - 0.5 l bottles,8.75,Beverages,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,United Package
+10437,87,8,05/02/1997,501,15,Perth Pasties,48 pieces,32.8,Meat/Poultry,"G'day, Mate",Sydney,Australia,Speedy Express
+10438,79,3,06/02/1997,502,15,Teatime Chocolate Biscuits,10 boxes x 12 pieces,9.2,Confections,"Specialty Biscuits, Ltd.",Manchester,UK,United Package
+10438,79,3,06/02/1997,503,20,Sasquatch Ale,24 - 12 oz bottles,14,Beverages,Bigfoot Breweries,Bend,USA,United Package
+10438,79,3,06/02/1997,504,15,Ravioli Angelo,24 - 250 g pkgs.,20.5,Grains/Cereals,Pasta Buttini s.r.l.,Salerno,Italy,United Package
+10439,51,6,07/02/1997,505,15,Queso Manchego La Pastora,10 - 500 g pkgs.,38,Dairy Products,Cooperativa de Quesos 'Las Cabras',Oviedo,Spain,Federal Shipping
+10439,51,6,07/02/1997,506,16,Pavlova,32 - 500 g boxes,17.45,Confections,"Pavlova, Ltd.",Melbourne,Australia,Federal Shipping
+10439,51,6,07/02/1997,507,6,Wimmers gute Semmelknödel,20 bags x 4 pieces,33.25,Grains/Cereals,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Federal Shipping
+10439,51,6,07/02/1997,508,30,Longlife Tofu,5 kg pkg.,11,Produce,Tokyo Traders,Tokyo,Japan,Federal Shipping
+10440,71,4,10/02/1997,509,45,Chang,24 - 12 oz bottles,19,Beverages,Exotic Liquid,Londona,UK,United Package
+10440,71,4,10/02/1997,510,49,Pavlova,32 - 500 g boxes,17.45,Confections,"Pavlova, Ltd.",Melbourne,Australia,United Package
+10440,71,4,10/02/1997,511,24,Thüringer Rostbratwurst,50 bags x 30 sausgs.,123.79,Meat/Poultry,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,United Package
+10440,71,4,10/02/1997,512,90,Sirop d'érable,24 - 500 ml bottles,29.5,Condiments,Forêts d'érables,Ste-Hyacinthe,Canada,United Package
+10441,55,3,10/02/1997,513,50,Schoggi Schokolade,100 - 100 g pieces,43.9,Confections,Heli Süßwaren GmbH & Co. KG,Berlin,Germany,United Package
+10442,20,3,11/02/1997,514,30,Queso Cabrales,1 kg pkg.,21,Dairy Products,Cooperativa de Quesos 'Las Cabras',Oviedo,Spain,United Package
+10442,20,3,11/02/1997,515,80,Tourtière,16 pies,7.45,Meat/Poultry,Ma Maison,Montréal,Canada,United Package
+10442,20,3,11/02/1997,516,60,Louisiana Hot Spiced Okra,24 - 8 oz jars,18,Condiments,New Orleans Cajun Delights,New Orleans,USA,United Package
+10443,66,8,12/02/1997,517,6,Queso Cabrales,1 kg pkg.,21,Dairy Products,Cooperativa de Quesos 'Las Cabras',Oviedo,Spain,Speedy Express
+10443,66,8,12/02/1997,518,12,Rössle Sauerkraut,25 - 825 g cans,45.6,Produce,Plutzer Lebensmittelgroßmärkte AG,Frankfurt,Germany,Speedy Express

@@ -3,12 +3,14 @@ package me.paulbares;
 import me.paulbares.store.Field;
 import me.paulbares.store.Store;
 import org.apache.spark.sql.Column;
+import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.StructType;
+import org.apache.spark.storage.StorageLevel;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,16 +23,16 @@ import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
 public class SparkStore implements Store {
 
-  private final String name;
-  private final List<Column> columns;
-  private final Map<String, Dataset<Row>> dfByScenario = new HashMap<>();
+  protected final String name;
+  protected final List<Column> columns;
+  protected final Map<String, Dataset<Row>> dfByScenario = new HashMap<>();
 
-  private SparkSession spark;
+  protected SparkSession spark;
   /**
    * The schema does not take into account calculated columns and the additional column used to store the scenario
    * values.
    */
-  private StructType baseSchema;
+  protected StructType baseSchema;
 
   public SparkStore(String name, Column... columns) {
     this(name, null, columns);
@@ -44,6 +46,10 @@ public class SparkStore implements Store {
     }
   }
 
+  public StructType getBaseSchema() {
+    return this.baseSchema;
+  }
+
   private static StructType createSchema(Field... fields) {
     StructType schema = new StructType();
     for (Field field : fields) {
@@ -54,6 +60,10 @@ public class SparkStore implements Store {
 
   public void setSparkSession(SparkSession spark) {
     this.spark = spark;
+  }
+
+  public void persist(StorageLevel storageLevel) {
+    this.dfByScenario.replaceAll((k, v) -> v.persist(storageLevel));
   }
 
   @Override
@@ -85,8 +95,9 @@ public class SparkStore implements Store {
   }
 
   protected void save(String scenario, Dataset<Row> dataset) {
-    if (this.dfByScenario.putIfAbsent(scenario, dataset) != null) {
-      throw new RuntimeException("Already existing dataset for scenario " + scenario);
+    Dataset<Row> previous = this.dfByScenario.putIfAbsent(scenario, dataset);
+    if (previous != null) {
+      this.dfByScenario.put(scenario, previous.union(dataset));
     }
   }
 
@@ -96,18 +107,16 @@ public class SparkStore implements Store {
 
   @Override
   public void loadCsv(String scenario, String path, String delimiter, boolean header) {
-    Dataset<Row> dataFrame = this.spark.read()
+    DataFrameReader reader = this.spark.read()
             .option("delimiter", delimiter)
-            .option("header", true)
-            .csv(path);
-
+            .option("header", true);
     if (this.baseSchema != null) {
-      StructType schema = dataFrame.schema();
-      if (!schema.equals(this.baseSchema)) {
-        throw new IllegalStateException("Schema for scenario " + scenario + " is not compatible with previous schema." +
-                " Schema from csv: " + schema + ". Previous: " + this.baseSchema);
-      }
-    } else {
+      reader = reader.schema(this.baseSchema);
+    }
+
+    Dataset<Row> dataFrame = reader.csv(path);
+
+    if (this.baseSchema == null) {
       this.baseSchema = dataFrame.schema();
     }
 
