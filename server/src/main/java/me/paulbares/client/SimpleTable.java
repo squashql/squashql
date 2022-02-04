@@ -10,7 +10,7 @@ public class SimpleTable {
   public List<List<Object>> rows;
 
   public void show() {
-    toString();
+    System.out.println(this);
   }
 
   @Override
