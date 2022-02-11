@@ -52,7 +52,7 @@ public class SparkQueryEngine extends AQueryEngine {
     addScenarioConditionIfNecessary(query);
     replaceScenarioFieldName(query);
     String sql = SQLTranslator.translate(query, this.fieldSupplier);
-    LOGGER.fine("Translated query #" + query + " to " + sql);
+    LOGGER.info("Translated query #" + query + " to " + sql);
     createOrReplaceTempView(query.table);
     Dataset<Row> ds = this.datastore.spark.sql(sql);
     return new DatasetTable(ds, scenarioFieldName(query));
