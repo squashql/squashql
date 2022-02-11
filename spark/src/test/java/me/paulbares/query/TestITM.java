@@ -4,6 +4,7 @@ import me.paulbares.SparkDatastore;
 import me.paulbares.SparkStore;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -11,12 +12,17 @@ import org.junit.jupiter.api.TestInstance;
 import java.util.ArrayList;
 import java.util.List;
 
+import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
 import static org.apache.spark.sql.functions.col;
 
+/**
+ * This test verifies the use case described here https://docs.google.com/spreadsheets/d/1ueOrfiEcyJAqzYFPSEJKqoFUN6Nl1i7Tbd40JLHuwgU/edit#gid=0
+ * is supported
+ */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class TestITM {
 
-    protected Datastore datastore;
+    protected SparkDatastore datastore;
 
     protected QueryEngine queryEngine;
 
@@ -40,7 +46,7 @@ public class TestITM {
 
         this.datastore = new SparkDatastore(stores.toArray(new SparkStore[0]));
 
-        this.datastore.load(Datastore.MAIN_SCENARIO_NAME,
+        this.datastore.load(MAIN_SCENARIO_NAME,
                 "our_prices", List.of(
                         new Object[]{"Nutella 250g", "ITM Balma", 10d, 1000},
                         new Object[]{"ITMella 250g", "ITM Balma", 10d, 1000}
@@ -66,7 +72,7 @@ public class TestITM {
                         new Object[]{"ITMella 250g", "ITM Balma", 9d, 1000}
                 ));
 
-        this.datastore.load(Datastore.MAIN_SCENARIO_NAME,
+        this.datastore.load(MAIN_SCENARIO_NAME,
                 "their_prices", List.of(
                         new Object[]{"Nutella 250g", "ITM Balma", "Leclerc Rouffiac", "Leclerc", "Nutella 250g", 9d},
                         new Object[]{"Nutella 250g", "Auchan Toulouse", "Leclerc Rouffiac", "Auchan", "Nutella 250g", 11d},
@@ -88,14 +94,31 @@ public class TestITM {
         query
                 .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
                 .wildcardCoordinate("ean")
-                .aggregatedMeasure("price", "sum")
                 .aggregatedMeasure("capdv", "sum")
                 .expressionMeasure("capdv_concurrents", "sum(competitor_price * quantity)")
                 .expressionMeasure("indice_prix", "sum(capdv) / sum(competitor_price * quantity)")
         ;
 
-        System.out.println(query.json());
+        this.datastore.get("our_prices").show();
+        this.datastore.get("their_prices").show();
+
+
         Table table = this.queryEngine.execute(query);
         table.show();
+        Assertions.assertThat(table).containsExactlyInAnyOrder(
+                List.of("MN & MDD up", "Nutella 250g", 33000d, 31000d, 1.064516129032258d),
+                List.of("MN & MDD up", "ITMella 250g", 22000d, 20000d, 1.1d),
+
+                List.of("MN up", "Nutella 250g", 33000d, 31000d, 1.064516129032258d),
+                List.of("MN up", "ITMella 250g", 20000d, 20000d, 1.0d),
+
+                List.of("MDD up", "ITMella 250g", 22000d, 20000d, 1.1d),
+                List.of("MDD up", "Nutella 250g", 30000d, 31000d, 0.967741935483871d),
+
+                List.of("MN & MDD down", "Nutella 250g", 27000d, 31000d, 0.8709677419354839d),
+                List.of("MN & MDD down", "ITMella 250g", 18000d, 20000d, 0.9d),
+
+                List.of(MAIN_SCENARIO_NAME, "ITMella 250g", 20000d, 20000d, 1d),
+                List.of(MAIN_SCENARIO_NAME, "Nutella 250g", 30000d, 31000d, 0.967741935483871d));
     }
 }
