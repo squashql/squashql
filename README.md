@@ -24,7 +24,7 @@ heroku logs --tail -a sa-mvp
 - To get the metadata of the store (to know the fields that can be queried and the list of supported aggregation functions): send a GET request to https://sa-mvp.herokuapp.com/spark-metadata. See response example below
 
 To work with the new dataset (the one with 4 scenarios and two tables), append `?dataset=itm` to urls. For instance:
-`https://sa-mvp.herokuapp.com/spark-metadata?dataset=itm`. For 'scenario grouping queries' (url `https://sa-mvp.herokuapp.com/spark-query-scenario-grouping?dataset=itm`): 
+`https://sa-mvp.herokuapp.com/spark-metadata?dataset=itm`. For _scenario grouping queries_ (url `https://sa-mvp.herokuapp.com/spark-query-scenario-grouping?dataset=itm`), here's a query example:
 
 ```json
 {"groups":{"group1":["base","MDD up","MN up"],"group2":["base","MN & MDD down"],"group3":["base","MN up","MDD up","MN & MDD down"]},"comparisons":[{"method":"absolute_difference","measure":{"alias":"indice_prix","expression":"sum(capdv) / sum(competitor_price * quantity)"},"show_value":true,"reference_position":"first"}],"table":{"name":"our_prices","joins":[{"table":{"name":"their_prices"},"type":"inner","mappings":[{"from":"ean","to":"competitor_ean"}]}]}}
