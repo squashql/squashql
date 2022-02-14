@@ -30,6 +30,8 @@ To work with the new dataset (the one with 4 scenarios and two tables), append `
 {"groups":{"group1":["base","MDD up","MN up"],"group2":["base","MN & MDD down"],"group3":["base","MN up","MDD up","MN & MDD down"]},"comparisons":[{"method":"absolute_difference","measure":{"alias":"indice_prix","expression":"sum(capdv) / sum(competitor_price * quantity)"},"show_value":true,"reference_position":"first"}],"table":{"name":"our_prices","joins":[{"table":{"name":"their_prices"},"type":"inner","mappings":[{"from":"ean","to":"competitor_ean"}]}]}}
 ```
 
+Try some requests with Postman: https://www.postman.com/pba9472/workspace/aitm/collection/10808486-6f1b6549-272c-4780-9149-fe8316ac268d
+
 ### Specification
 
 **Coordinates** are key/value pairs. 
