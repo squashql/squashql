@@ -1,73 +1,75 @@
 package me.paulbares;
 
-import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
-import org.apache.spark.sql.Column;
-import org.apache.spark.sql.functions;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
 import static org.apache.spark.sql.functions.col;
 
 /**
  * --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
+ * <p>
+ * The first dataset used.
  */
 public class DataLoader {
 
-  static List<String> headers() {
-    return List.of("ean", "pdv", "categorie", "type marque", "sensibilite", "quantite", "prix", "achat", "score",
-            "min marche");
-  }
-
-  static List<Object[]> dataBase() {
-    return List.of(
-            new Object[]{"Nutella 500g", "Toulouse Centre", "Pate Noisette", "MN", "Hyper", 100, 5.9d, 5, 100, 5.65d},
-            new Object[]{"ChocoNoisette 500g", "Toulouse Centre", "Pate Noisette", "MDD", "Hyper", 100, 4.9d, 3, 50, 4d}
-    );
-  }
-
-  static List<Object[]> dataMDDBaisse() {
-    return List.of(
-            new Object[]{"Nutella 500g", "Toulouse Centre", "Pate Noisette", "MN", "Hyper", 100, 5.9d, 5, 100, 5.65d},
-            new Object[]{"ChocoNoisette 500g", "Toulouse Centre", "Pate Noisette", "MDD", "Hyper", 100, 4.5d, 3, 50, 4d}
-    );
-  }
-
-  static List<Object[]> dataMDDBaisseSimuSensi() {
-    return List.of(
-            new Object[]{"Nutella 500g", "Toulouse Centre", "Pate Noisette", "MN", "Hyper", 100, 5.9d, 5, 100, 5.65d},
-            new Object[]{"ChocoNoisette 500g", "Toulouse Centre", "Pate Noisette", "MDD", "Basse", 100, 4d, 3, 50, 4d}
-    );
-  }
-
   public static SparkDatastore createTestDatastoreWithData() {
-    var ean = new Field("ean", String.class);
-    var pdv = new Field("pdv", String.class);
-    var categorie = new Field("categorie", String.class);
-    var type = new Field("type-marque", String.class);
-    var sensi = new Field("sensibilite", String.class);
-    var quantite = new Field("quantite", Integer.class);
-    var prix = new Field("prix", Double.class);
-    var achat = new Field("achat", Integer.class);
-    var score = new Field("score-visi", Integer.class);
-    var minMarche = new Field("min-marche", Double.class);
+    Field ean = new Field("ean", String.class);
+    Field pdv = new Field("pdv", String.class);
+    Field price = new Field("price", double.class);
+    Field qty = new Field("quantity", int.class);
 
-    Column qCol = col(quantite.name());
-    Column pCol = col(prix.name());
-    Column sCol = col(score.name());
-    SparkStore products = new SparkStore(
-            "products",
-            List.of(ean, pdv, categorie, type, sensi, quantite, prix, achat, score, minMarche),
-            qCol.multiply(pCol).as("ca"),
-            qCol.multiply(pCol.minus(functions.col(achat.name()))).as("marge"),
-            pCol.divide(functions.col(minMarche.name())).multiply(sCol).as("numerateur-indice"),
-            col("numerateur-indice").divide(sCol).as("indice-prix"));
-    SparkDatastore datastore = new SparkDatastore(products);
+    Field compEan = new Field("competitor_ean", String.class);
+    Field compPdv = new Field("competitor_pdv", String.class);
+    Field compConcurrentPdv = new Field("competitor_concurrent_pdv", String.class);
+    Field compBrand = new Field("competitor_brand", String.class);
+    Field compConcurrentEan = new Field("competitor_concurrent_ean", String.class);
+    Field compPrice = new Field("competitor_price", double.class);
 
-    datastore.load(Datastore.MAIN_SCENARIO_NAME, products.name(), dataBase());
-    datastore.load("mdd-baisse", products.name(), dataMDDBaisse());
-    datastore.load("mdd-baisse-simu-sensi", products.name(), dataMDDBaisseSimuSensi());
+    List<SparkStore> stores = new ArrayList<>();
+    stores.add(new SparkStore("our_prices", List.of(ean, pdv, price, qty), col("price").multiply(col("quantity")).as(
+            "capdv")));
+    stores.add(new SparkStore("their_prices", List.of(compEan, compPdv, compConcurrentPdv, compBrand,
+            compConcurrentEan, compPrice)));
 
+    SparkDatastore datastore = new SparkDatastore(stores.toArray(new SparkStore[0]));
+
+    datastore.load(MAIN_SCENARIO_NAME,
+            "our_prices", List.of(
+                    new Object[]{"Nutella 250g", "ITM Balma", 10d, 1000},
+                    new Object[]{"ITMella 250g", "ITM Balma", 10d, 1000}
+            ));
+    datastore.load("MN up",
+            "our_prices", List.of(
+                    new Object[]{"Nutella 250g", "ITM Balma", 11d, 1000},
+                    new Object[]{"ITMella 250g", "ITM Balma", 10d, 1000}
+            ));
+    datastore.load("MDD up",
+            "our_prices", List.of(
+                    new Object[]{"Nutella 250g", "ITM Balma", 10d, 1000},
+                    new Object[]{"ITMella 250g", "ITM Balma", 11d, 1000}
+            ));
+    datastore.load("MN & MDD up",
+            "our_prices", List.of(
+                    new Object[]{"Nutella 250g", "ITM Balma", 11d, 1000},
+                    new Object[]{"ITMella 250g", "ITM Balma", 11d, 1000}
+            ));
+    datastore.load("MN & MDD down",
+            "our_prices", List.of(
+                    new Object[]{"Nutella 250g", "ITM Balma", 9d, 1000},
+                    new Object[]{"ITMella 250g", "ITM Balma", 9d, 1000}
+            ));
+
+    datastore.load(MAIN_SCENARIO_NAME,
+            "their_prices", List.of(
+                    new Object[]{"Nutella 250g", "ITM Balma", "Leclerc Rouffiac", "Leclerc", "Nutella 250g", 9d},
+                    new Object[]{"Nutella 250g", "Auchan Toulouse", "Leclerc Rouffiac", "Auchan", "Nutella 250g", 11d},
+                    new Object[]{"Nutella 250g", "ITM Balma", "Auchan Ponts Jumeaux", "Auchan", "Nutella 250g", 11d},
+                    new Object[]{"ITMella 250g", "ITM Balma", "Leclerc Rouffiac", "Leclerc", "LeclercElla", 9d},
+                    new Object[]{"ITMella 250g", "ITM Balma", "Auchan Toulouse", "Auchan", "AuchanElla", 11d}
+            ));
     return datastore;
   }
 }
