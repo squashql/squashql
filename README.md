@@ -1,5 +1,3 @@
-
-
 ## Prerequisites
 
 In order to build the server, you will need:
