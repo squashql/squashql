@@ -65,7 +65,7 @@ public class DataLoader {
     datastore.load(MAIN_SCENARIO_NAME,
             "their_prices", List.of(
                     new Object[]{"Nutella 250g", "ITM Balma", "Leclerc Rouffiac", "Leclerc", "Nutella 250g", 9d},
-                    new Object[]{"Nutella 250g", "Auchan Toulouse", "Leclerc Rouffiac", "Auchan", "Nutella 250g", 11d},
+                    new Object[]{"Nutella 250g", "ITM Balma", "Leclerc Rouffiac", "Auchan", "Nutella 250g", 11d},
                     new Object[]{"Nutella 250g", "ITM Balma", "Auchan Ponts Jumeaux", "Auchan", "Nutella 250g", 11d},
                     new Object[]{"ITMella 250g", "ITM Balma", "Leclerc Rouffiac", "Leclerc", "LeclercElla", 9d},
                     new Object[]{"ITMella 250g", "ITM Balma", "Auchan Toulouse", "Auchan", "AuchanElla", 11d}
