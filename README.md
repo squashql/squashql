@@ -444,5 +444,5 @@ querier.run(query)
 
 ## REMOTE SPARK CLUSTER
 
-By default, an embedded spark cluster is used but you can configure the `Datastore` to use a remote cluster. To do that,
+By default, an embedded spark cluster is used, but you can configure the `Datastore` to use a remote cluster. To do that,
 simply pass your own `SparkSession` when creating `SparkDatastore` object. See `TestQueryRemote` as an example.
