@@ -4,7 +4,7 @@ import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import scala.jdk.javaapi.CollectionConverters;
+import scala.collection.JavaConverters;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -54,7 +54,7 @@ public class DatasetTable implements Table {
 
       @Override
       public List<Object> next() {
-        return CollectionConverters.asJava(it.next().toSeq());
+        return JavaConverters.seqAsJavaList(it.next().toSeq());
       }
     };
   }

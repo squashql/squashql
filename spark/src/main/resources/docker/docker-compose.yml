@@ -13,7 +13,7 @@ services:
       - "9000:9000"
       - "7077:7077"
   spark-worker:
-    image: docker.io/bitnami/spark:3
+    image: docker.io/bitnami/spark:latest
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark:7077
