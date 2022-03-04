@@ -24,6 +24,7 @@
         <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
         <eclipse.version>11.0.0</eclipse.version>
         <feign.version>11.6</feign.version>
+        <guava.version>31.1-jre</guava.version>
     </properties>
 
     <modules>
@@ -100,6 +101,11 @@
                 <groupId>org.eclipse.collections</groupId>
                 <artifactId>eclipse-collections</artifactId>
                 <version>${eclipse.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

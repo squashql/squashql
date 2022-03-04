@@ -31,8 +31,9 @@ public class JoinDto {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     JoinDto joinDto = (JoinDto) o;
-    return Objects.equals(this.table, joinDto.table) && Objects.equals(this.type, joinDto.type) && Objects.equals(this.mappings,
-            joinDto.mappings);
+    return Objects.equals(this.table, joinDto.table)
+            && Objects.equals(this.type, joinDto.type)
+            && Objects.equals(this.mappings, joinDto.mappings);
   }
 
   @Override
