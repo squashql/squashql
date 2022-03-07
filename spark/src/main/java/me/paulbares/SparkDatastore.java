@@ -40,6 +40,14 @@ public class SparkDatastore implements Datastore {
     }
   }
 
+  public SparkDatastore(SparkSession sparkSession, SparkStore... stores) {
+    this.spark = sparkSession;
+    for (SparkStore store : stores) {
+      store.setSparkSession(this.spark);
+      this.stores.put(store.name(), store);
+    }
+  }
+
   @Override
   public List<SparkStore> stores() {
     return new ArrayList<>(this.stores.values());
