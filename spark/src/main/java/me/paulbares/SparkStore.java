@@ -19,8 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
-
 public class SparkStore implements Store {
 
   protected final String name;
@@ -91,7 +89,7 @@ public class SparkStore implements Store {
     for (Column column : this.columns) {
       dataFrame = dataFrame.withColumn(column.named().name(), column);
     }
-    return dataFrame.withColumn(scenarioFieldName(this.name), functions.lit(scenario));
+    return dataFrame.withColumn(scenarioFieldName(), functions.lit(scenario));
   }
 
   protected void save(String scenario, Dataset<Row> dataset) {
@@ -99,10 +97,6 @@ public class SparkStore implements Store {
     if (previous != null) {
       this.dfByScenario.put(scenario, previous.union(dataset));
     }
-  }
-
-  public static String scenarioFieldName(String storeName) {
-    return storeName.toLowerCase() + "." + SCENARIO_FIELD_NAME;
   }
 
   @Override

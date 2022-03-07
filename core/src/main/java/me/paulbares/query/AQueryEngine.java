@@ -1,13 +1,35 @@
 package me.paulbares.query;
 
-import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.context.Totals;
+import me.paulbares.query.dto.QueryDto;
+import me.paulbares.store.Datastore;
+import me.paulbares.store.Field;
+import me.paulbares.store.Store;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 
 public abstract class AQueryEngine implements QueryEngine {
+
+  public final Datastore datastore;
+
+  public final Function<String, Field> fieldSupplier;
+
+  protected AQueryEngine(Datastore datastore) {
+    this.datastore = datastore;
+    this.fieldSupplier = fieldName -> {
+      for (Store store : this.datastore.stores()) {
+        for (Field field : store.getFields()) {
+          if (field.name().equals(fieldName)) {
+            return field;
+          }
+        }
+      }
+      throw new IllegalArgumentException("Cannot find field with name " + fieldName);
+    };
+  }
 
   protected abstract Table retrieveAggregates(QueryDto query);
 

@@ -1,7 +1,6 @@
 package me.paulbares.query;
 
 import me.paulbares.SparkDatastore;
-import me.paulbares.SparkStore;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.ConditionType;
 import me.paulbares.query.dto.JoinDto;
@@ -9,8 +8,6 @@ import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.SingleValueConditionDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Field;
-import me.paulbares.store.Store;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
@@ -18,7 +15,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.logging.Logger;
 
 import static me.paulbares.query.QueryBuilder.eq;
@@ -28,22 +24,11 @@ public class SparkQueryEngine extends AQueryEngine {
 
   private static final Logger LOGGER = Logger.getLogger(SparkQueryEngine.class.getName());
 
-  public final SparkDatastore datastore;
-
-  public final Function<String, Field> fieldSupplier;
+  public final SparkDatastore sparkDatastore;
 
   public SparkQueryEngine(SparkDatastore datastore) {
-    this.datastore = datastore;
-    this.fieldSupplier = fieldName -> {
-      for (Store store : this.datastore.stores.values()) {
-        for (Field field : store.getFields()) {
-          if (field.name().equals(fieldName)) {
-            return field;
-          }
-        }
-      }
-      throw new IllegalArgumentException("Cannot find field with name " + fieldName);
-    };
+    super(datastore);
+    this.sparkDatastore = datastore;
   }
 
   @Override
@@ -54,12 +39,12 @@ public class SparkQueryEngine extends AQueryEngine {
     String sql = SQLTranslator.translate(query, this.fieldSupplier);
     LOGGER.fine("Translated query #" + query + " to " + sql);
     createOrReplaceTempView(query.table);
-    Dataset<Row> ds = this.datastore.spark.sql(sql);
-    return new DatasetTable(ds, scenarioFieldName(query));
+    Dataset<Row> ds = this.sparkDatastore.spark.sql(sql);
+    return new DatasetTable(ds, this.sparkDatastore.stores.get(query.table.name).scenarioFieldName());
   }
 
   private void replaceScenarioFieldName(QueryDto query) {
-    String key = scenarioFieldName(query);
+    String key = this.sparkDatastore.stores.get(query.table.name).scenarioFieldName();
     ConditionDto cond = query.conditions.remove(SCENARIO_FIELD_NAME);
     if (cond != null) {
       query.conditions.put(key, cond);
@@ -81,15 +66,11 @@ public class SparkQueryEngine extends AQueryEngine {
   }
 
   protected void createOrReplaceTempView(TableDto table) {
-    this.datastore.get(table.name).createOrReplaceTempView(table.name);
+    this.sparkDatastore.get(table.name).createOrReplaceTempView(table.name);
     for (JoinDto join : table.joins) {
-      this.datastore.get(join.table.name).createOrReplaceTempView(join.table.name);
+      this.sparkDatastore.get(join.table.name).createOrReplaceTempView(join.table.name);
       createOrReplaceTempView(join.table);
     }
-  }
-
-  protected String scenarioFieldName(QueryDto query) {
-    return SparkStore.scenarioFieldName(query.table.name);
   }
 
   protected void addScenarioConditionIfNecessary(QueryDto query) {

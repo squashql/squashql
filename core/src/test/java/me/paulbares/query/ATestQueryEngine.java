@@ -1,9 +1,8 @@
 package me.paulbares.query;
 
+import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.dto.ConditionType;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.SingleValueConditionDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;

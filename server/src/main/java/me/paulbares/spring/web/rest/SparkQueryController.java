@@ -1,6 +1,5 @@
 package me.paulbares.spring.web.rest;
 
-import me.paulbares.SparkStore;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.ScenarioGroupingExecutor;
 import me.paulbares.query.SparkQueryEngine;
@@ -66,7 +65,7 @@ public class SparkQueryController {
     for (Store store : getQueryEngine(dataset).datastore.stores()) {
       List<Map<String, String>> collect = store.getFields()
               .stream()
-              .filter(f -> !f.name().equals(SparkStore.scenarioFieldName(store.name())))
+              .filter(f -> !f.name().equals(store.scenarioFieldName()))
               .map(f -> Map.of("name", f.name(), "type", f.type().getSimpleName().toLowerCase()))
               .collect(Collectors.toCollection(() -> new ArrayList<>()));
       collect.add(Map.of("name", SCENARIO_FIELD_NAME, "type", DataTypes.StringType.simpleString()));
