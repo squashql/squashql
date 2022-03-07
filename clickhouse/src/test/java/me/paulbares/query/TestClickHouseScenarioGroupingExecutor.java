@@ -15,7 +15,7 @@ public class TestClickHouseScenarioGroupingExecutor extends ATestScenarioGroupin
   }
 
   @Override
-  protected Datastore createDatastore(List<Field> fields) {
-    return new ClickHouseDatastore(new ClickHouseStore("storeName", fields));
+  protected Datastore createDatastore(String storeName, List<Field> fields) {
+    return new ClickHouseDatastore(new ClickHouseStore(storeName, fields));
   }
 }
