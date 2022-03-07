@@ -1,5 +1,3 @@
-
-
 ## Prerequisites
 
 In order to build the server, you will need:
@@ -376,6 +374,40 @@ is itself joined to the `products` table via the productId.
 
 Supported type of joins are: `inner` and `left`.
 Mapping can be done on multiple fields if necessary.
+
+#### Conditions
+
+Example of a 2 conditions. The first one on the scenarios (single equal condition), the second one on the category field (category equals to drink AND food) 
+```json
+{
+   "table":{
+      "name":"products"
+   },
+   "coordinates":{
+      ...
+   },
+   "conditions":{
+      "scenario":{
+         "type":"EQ",
+         "value":"base"
+      },
+      "category":{
+         "type":"AND",
+         "one":{
+            "type":"EQ",
+            "value":"drink"
+         },
+         "two":{
+            "type":"EQ",
+            "value":"food"
+         }
+      }
+   },
+   "measures":[
+      ...
+   ]
+}
+```
 
 ## JShell
 

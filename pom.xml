@@ -25,6 +25,7 @@
         <eclipse.version>11.0.0</eclipse.version>
         <feign.version>11.6</feign.version>
         <testcontainers.version>1.16.3</testcontainers.version>
+        <guava.version>31.1-jre</guava.version>
     </properties>
 
     <modules>
@@ -103,6 +104,7 @@
                 <version>${eclipse.version}</version>
             </dependency>
             <dependency>
+<<<<<<< HEAD
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers</artifactId>
                 <version>${testcontainers.version}</version>
@@ -111,6 +113,11 @@
                 <groupId>org.testcontainers</groupId>
                 <artifactId>junit-jupiter</artifactId>
                 <version>${testcontainers.version}</version>
+=======
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+>>>>>>> main
             </dependency>
         </dependencies>
     </dependencyManagement>

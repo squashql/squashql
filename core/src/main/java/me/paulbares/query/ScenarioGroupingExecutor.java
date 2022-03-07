@@ -1,6 +1,5 @@
 package me.paulbares.query;
 
-import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.ScenarioComparisonDto;
 import me.paulbares.query.dto.ScenarioGroupingQueryDto;
 import me.paulbares.store.Field;
@@ -9,8 +8,6 @@ import org.eclipse.collections.impl.list.mutable.FastList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
 public class ScenarioGroupingExecutor {
 
@@ -21,16 +18,15 @@ public class ScenarioGroupingExecutor {
   public static final String REF_POS_FIRST = "first";
 
   public final QueryEngine queryEngine;
+  public final ScenarioGroupingCache queryCache;
 
   public ScenarioGroupingExecutor(QueryEngine queryEngine) {
     this.queryEngine = queryEngine;
+    this.queryCache = new ScenarioGroupingCache(queryEngine);
   }
 
   public Table execute(ScenarioGroupingQueryDto query) {
-    QueryDto prefetchQuery = new QueryDto().wildcardCoordinate(SCENARIO_FIELD_NAME).table(query.table);
-    query.comparisons.forEach(c -> prefetchQuery.measures.add(c.measure()));
-
-    Table table = this.queryEngine.execute(prefetchQuery);
+    Table table = this.queryCache.get(query);
     Map<String, List<Object>> valuesByScenario = new HashMap<>();
     for (List<Object> row : table) {
       valuesByScenario.put((String) row.get(0), row.subList(1, row.size()));
@@ -52,10 +48,10 @@ public class ScenarioGroupingExecutor {
           Object currentValue = valuesByScenario.get(scenario).get(i);
 
           Object newValue = switch (comp.method()) {
-            case COMPARISON_METHOD_ABS_DIFF ->
-                    computeAbsoluteDiff(currentValue, referenceValue, table.headers().get(i + 1).type());
-            case COMPARISON_METHOD_REL_DIFF ->
-                    computeRelativeDiff(currentValue, referenceValue, table.headers().get(i + 1).type());
+            case COMPARISON_METHOD_ABS_DIFF -> computeAbsoluteDiff(currentValue, referenceValue,
+                    table.headers().get(i + 1).type());
+            case COMPARISON_METHOD_REL_DIFF -> computeRelativeDiff(currentValue, referenceValue,
+                    table.headers().get(i + 1).type());
             default -> throw new IllegalArgumentException(String.format("Not supported comparison %s", comp.method()));
           };
 
@@ -87,7 +83,8 @@ public class ScenarioGroupingExecutor {
         String firstScenario = scenarios.get(0);
         yield valuesByScenario.get(firstScenario).get(measureIndex);
       }
-      default -> throw new IllegalArgumentException(String.format("Not supported reference position %s", referencePosition));
+      default -> throw new IllegalArgumentException(String.format("Not supported reference position %s",
+              referencePosition));
     };
   }
 
