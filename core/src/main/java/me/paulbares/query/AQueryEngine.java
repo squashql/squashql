@@ -56,16 +56,19 @@ public abstract class AQueryEngine implements QueryEngine {
       List<Object> objects = new ArrayList<>(rowIterator.next());
 
       Object[] newHeaders = new String[headers.size()];
+      boolean isTotal = false;
       for (int i = 0; i < headers.size(); i++) {
         Object current = objects.get(i);
         if (i == 0 && isTotal(current)) {
           // GT
           newHeaders[i] = GRAND_TOTAL;
+          isTotal = true;
         } else if (i >= 1 && !isTotal(objects.get(i - 1)) && isTotal(current)) {
           // Total
           newHeaders[i] = TOTAL;
+          isTotal = true;
         } else {
-          newHeaders[i] = current; // nothing to change
+          newHeaders[i] = isTotal ? null : current; // if total on row, replace element with null to handle "" and other default values
         }
       }
 

@@ -110,7 +110,7 @@ public class ClickHouseStore implements Store {
   public static Class<?> clickHouseTypeToClass(ClickHouseDataType dataType) {
     return switch (dataType) {
       case Int32 -> int.class;
-      case Int64 -> long.class;
+      case Int64, UInt64 -> long.class;
       case Float32 -> float.class;
       case Float64 -> double.class;
       case String -> String.class;
