@@ -42,7 +42,10 @@ public class ClickHouseQueryEngine extends AQueryEngine {
     ClickHouseFormat preferredFormat = ClickHouseFormat.RowBinaryWithNamesAndTypes;
 
     // connect to localhost, use default port of the preferred protocol
-    ClickHouseNode server = ClickHouseNode.builder().port(preferredProtocol).build();
+    ClickHouseNode server = ClickHouseNode.builder()
+            .host(((ClickHouseDatastore) this.datastore).dataSource.getHost())
+            .port(((ClickHouseDatastore) this.datastore).dataSource.getPort())
+            .build();
 
     String scenarioFieldName = ((ClickHouseDatastore) this.datastore).stores.get(query.table.name).scenarioFieldName();
     try (ClickHouseClient client = ClickHouseClient.newInstance(preferredProtocol);

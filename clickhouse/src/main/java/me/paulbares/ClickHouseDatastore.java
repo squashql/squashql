@@ -15,7 +15,6 @@ import java.util.Properties;
 
 public class ClickHouseDatastore implements Datastore {
 
-  // FIXME make it configurable
   public static final String JDBC_URL = "jdbc:clickhouse://localhost:" + ClickHouseProtocol.HTTP.getDefaultPort();
 
   public final Map<String, ClickHouseStore> stores = new HashMap<>();
@@ -27,10 +26,14 @@ public class ClickHouseDatastore implements Datastore {
   }
 
   public ClickHouseDatastore(String databaseName, ClickHouseStore... stores) {
-    this.dataSource = newDataSource(null);
+    this(JDBC_URL, databaseName, stores);
+  }
+
+  public ClickHouseDatastore(String jdbc, String databaseName, ClickHouseStore... stores) {
+    this.dataSource = newDataSource(jdbc, null);
 
     if (databaseName != null) {
-      try (ClickHouseConnection conn = newDataSource(null).getConnection();
+      try (ClickHouseConnection conn = this.dataSource.getConnection();
            ClickHouseStatement stmt = conn.createStatement()) {
         stmt.execute("CREATE DATABASE IF NOT EXISTS " + databaseName);
       } catch (SQLException e) {
@@ -44,9 +47,9 @@ public class ClickHouseDatastore implements Datastore {
     }
   }
 
-  public static ClickHouseDataSource newDataSource(Properties properties) {
+  public static ClickHouseDataSource newDataSource(String jdbcUrl, Properties properties) {
     try {
-      return new ClickHouseDataSource(JDBC_URL, properties);
+      return new ClickHouseDataSource(jdbcUrl, properties);
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
