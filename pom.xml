@@ -104,7 +104,6 @@
                 <version>${eclipse.version}</version>
             </dependency>
             <dependency>
-<<<<<<< HEAD
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers</artifactId>
                 <version>${testcontainers.version}</version>
@@ -113,11 +112,11 @@
                 <groupId>org.testcontainers</groupId>
                 <artifactId>junit-jupiter</artifactId>
                 <version>${testcontainers.version}</version>
-=======
+            </dependency>
+            <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
->>>>>>> main
             </dependency>
         </dependencies>
     </dependencyManagement>
