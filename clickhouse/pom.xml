@@ -14,6 +14,10 @@
     <artifactId>aitm-clickhouse</artifactId>
     <version>0.1-SNAPSHOT</version>
 
+    <properties>
+        <clickhouse.version>0.3.2-patch5</clickhouse.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>me.paulbares</groupId>
@@ -24,18 +28,18 @@
         <dependency>
             <groupId>com.clickhouse</groupId>
             <artifactId>clickhouse-grpc-client</artifactId>
-            <version>0.3.2-patch5</version>
+            <version>${clickhouse.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.clickhouse</groupId>
-            <artifactId>clickhouse-java</artifactId>
-            <version>0.3.2-patch5</version>
-            <type>pom</type>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.clickhouse</groupId>-->
+<!--            <artifactId>clickhouse-java</artifactId>-->
+<!--            <version>${clickhouse.version}</version>-->
+<!--            <type>pom</type>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.clickhouse</groupId>
             <artifactId>clickhouse-jdbc</artifactId>
-            <version>0.3.2-patch5</version>
+            <version>${clickhouse.version}</version>
         </dependency>
 
         <dependency>
