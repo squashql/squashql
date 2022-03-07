@@ -58,10 +58,10 @@ public abstract class AQueryEngine implements QueryEngine {
       Object[] newHeaders = new String[headers.size()];
       for (int i = 0; i < headers.size(); i++) {
         Object current = objects.get(i);
-        if (i == 0 && current == null) {
+        if (i == 0 && isTotal(current)) {
           // GT
           newHeaders[i] = GRAND_TOTAL;
-        } else if (i >= 1 && objects.get(i - 1) != null && current == null) {
+        } else if (i >= 1 && !isTotal(objects.get(i - 1)) && isTotal(current)) {
           // Total
           newHeaders[i] = TOTAL;
         } else {
@@ -76,5 +76,9 @@ public abstract class AQueryEngine implements QueryEngine {
     }
 
     return new ArrayTable(dataset.headers(), newRows);
+  }
+
+  protected boolean isTotal(Object current) {
+    return current == null || (current instanceof String s && s.isEmpty());
   }
 }

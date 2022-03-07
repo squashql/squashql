@@ -34,9 +34,6 @@ public class ClickHouseQueryEngine extends AQueryEngine {
   protected Table retrieveAggregates(QueryDto query) {
     addScenarioConditionIfNecessary(query);
     replaceScenarioFieldName(query);
-    String tableName = ((ClickHouseDatastore) this.datastore).stores.get(query.table.name).tableName();
-    String scenarioFieldName = ((ClickHouseDatastore) this.datastore).stores.get(query.table.name).scenarioFieldName();
-    query.table.name = tableName;
     String sql = SQLTranslator.translate(query, this.fieldSupplier);
 
     // only HTTP and gRPC are supported at this point
@@ -47,6 +44,7 @@ public class ClickHouseQueryEngine extends AQueryEngine {
     // connect to localhost, use default port of the preferred protocol
     ClickHouseNode server = ClickHouseNode.builder().port(preferredProtocol).build();
 
+    String scenarioFieldName = ((ClickHouseDatastore) this.datastore).stores.get(query.table.name).scenarioFieldName();
     try (ClickHouseClient client = ClickHouseClient.newInstance(preferredProtocol);
          ClickHouseResponse response = client.connect(server)
                  .format(preferredFormat)

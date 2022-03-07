@@ -86,7 +86,6 @@ public abstract class ATestQueryEngine {
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("*", "count");
     Table result = this.queryEngine.execute(query);
-    result.show();
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("base", 3l),
             List.of("s1", 3l),
