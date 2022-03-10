@@ -12,7 +12,6 @@ import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.apache.spark.storage.StorageLevel;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 import org.slf4j.LoggerFactory;
@@ -26,7 +25,7 @@ import java.util.function.Function;
 
 import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
-public class QueryBenchmark {
+public class SparkEmbeddedQueryBenchmark {
 
   static {
     Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
@@ -38,7 +37,7 @@ public class QueryBenchmark {
   private static final String delimiter = ",";
   private static final boolean header = true;
   private static String ordersStore = "ordersStore";
-  private static StorageLevel storageLevel = StorageLevel.MEMORY_AND_DISK();
+//  private static StorageLevel storageLevel = StorageLevel.MEMORY_AND_DISK();
 //  private static StorageLevel storageLevel = StorageLevel.MEMORY_ONLY();
   private static int N = 2;
 
@@ -125,7 +124,7 @@ public class QueryBenchmark {
     List<String> scenarios = List.of(Datastore.MAIN_SCENARIO_NAME, "s50", "s25", "s10", "s05");
     scenarios.forEach(loader::accept);
 
-    datastore.persist(storageLevel);
+//    datastore.persist(storageLevel);
     return Tuples.pair(datastore, new DatastoreInfo(count.get(), scenarios));
   }
 

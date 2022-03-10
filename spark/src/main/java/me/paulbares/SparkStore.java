@@ -48,7 +48,7 @@ public class SparkStore implements Store {
     return this.baseSchema;
   }
 
-  private static StructType createSchema(Field... fields) {
+  public static StructType createSchema(Field... fields) {
     StructType schema = new StructType();
     for (Field field : fields) {
       schema = schema.add(field.name(), SparkDatastore.classToDatatype(field.type()));
