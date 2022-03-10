@@ -97,8 +97,10 @@ public class TestITM {
                     new Object[]{"Nutella 250g", "Leclerc Rouffiac", "Leclerc", "Nutella 250g", 9d},
                     new Object[]{"Nutella 250g", "Auchan Toulouse", "Auchan", "Nutella 250g", 11d},
                     new Object[]{"Nutella 250g", "Auchan Ponts Jumeaux", "Auchan", "Nutella 250g", 11d},
+                    new Object[]{"Nutella 250g", "Auchan Launaguet", "Auchan", "Nutella 250g", 9d},
                     new Object[]{"ITMella 250g", "Leclerc Rouffiac", "Leclerc", "LeclercElla", 9d},
-                    new Object[]{"ITMella 250g", "Auchan Toulouse", "Auchan", "AuchanElla", 11d}
+                    new Object[]{"ITMella 250g", "Auchan Toulouse", "Auchan", "AuchanElla", 11d},
+                    new Object[]{"ITMella 250g", "Auchan Launaguet", "Auchan", "AuchanElla", 9d}
             ));
 
     this.datastore.load(MAIN_SCENARIO_NAME,
@@ -141,21 +143,20 @@ public class TestITM {
             .expressionMeasure("indice_prix", "sum(capdv) / sum(competitor_price * quantity)");
 
     Table table = this.queryEngine.execute(query);
-    table.show();
     Assertions.assertThat(table).containsExactlyInAnyOrder(
-            List.of("MN & MDD up", "Nutella 250g", 33000d, 31000d, 1.064516129032258d),
-            List.of("MN & MDD up", "ITMella 250g", 22000d, 20000d, 1.1d),
+            List.of("MN & MDD up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
+            List.of("MN & MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196),
 
-            List.of("MN up", "Nutella 250g", 33000d, 31000d, 1.064516129032258d),
-            List.of("MN up", "ITMella 250g", 20000d, 20000d, 1.0d),
+            List.of("MN up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
+            List.of("MN up", "ITMella 250g", 100000d, 102000d, 0.9803921568627451d),
 
-            List.of("MDD up", "ITMella 250g", 22000d, 20000d, 1.1d),
-            List.of("MDD up", "Nutella 250g", 30000d, 31000d, 0.967741935483871d),
+            List.of("MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196d),
+            List.of("MDD up", "Nutella 250g", 100000d, 102000d, 0.9803921568627451d),
 
-            List.of("MN & MDD down", "Nutella 250g", 27000d, 31000d, 0.8709677419354839d),
-            List.of("MN & MDD down", "ITMella 250g", 18000d, 20000d, 0.9d),
+            List.of("MN & MDD down", "Nutella 250g", 90000d, 102000d, 0.8823529411764706),
+            List.of("MN & MDD down", "ITMella 250g", 90000d, 102000d, 0.8823529411764706),
 
-            List.of(MAIN_SCENARIO_NAME, "ITMella 250g", 20000d, 20000d, 1d),
-            List.of(MAIN_SCENARIO_NAME, "Nutella 250g", 30000d, 31000d, 0.967741935483871d));
+            List.of(MAIN_SCENARIO_NAME, "ITMella 250g", 100000d, 102000d, 0.9803921568627451d),
+            List.of(MAIN_SCENARIO_NAME, "Nutella 250g", 100000d, 102000d, 0.9803921568627451d));
   }
 }
