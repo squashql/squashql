@@ -1,15 +1,24 @@
 package me.paulbares.query;
 
 import me.paulbares.query.context.Totals;
+import me.paulbares.query.dto.ConditionDto;
+import me.paulbares.query.dto.ConditionType;
 import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.SingleValueConditionDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.store.Store;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
+
+import static me.paulbares.query.QueryBuilder.eq;
+import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
 public abstract class AQueryEngine implements QueryEngine {
 
@@ -35,6 +44,8 @@ public abstract class AQueryEngine implements QueryEngine {
 
   @Override
   public Table execute(QueryDto query) {
+    addScenarioConditionIfNecessary(query);
+    replaceScenarioFieldName(query);
     Table aggregates = retrieveAggregates(query);
     return postProcessDataset(aggregates, query);
   }
@@ -82,6 +93,53 @@ public abstract class AQueryEngine implements QueryEngine {
   }
 
   protected boolean isTotal(Object current) {
+    // See why the second condition in SQLTranslator: case when %s is null or %s = ''...
     return current == null || (current instanceof String s && s.isEmpty());
+  }
+
+  /**
+   * Adds a condition on {@link Datastore#SCENARIO_FIELD_NAME} if not in the query.
+   * Default {@link Datastore#SCENARIO_FIELD_NAME} is {@link Datastore#MAIN_SCENARIO_NAME}.
+   */
+  protected void addScenarioConditionIfNecessary(QueryDto query) {
+    if (!query.coordinates.containsKey(SCENARIO_FIELD_NAME)) {
+      ConditionDto c = query.conditions.get(SCENARIO_FIELD_NAME);
+      if (c == null) {
+        // If no condition, default to base by adding a condition and let Spark handle it :)
+        query.condition(SCENARIO_FIELD_NAME, eq(Datastore.MAIN_SCENARIO_NAME));
+      } else {
+        // Only support single value condition. Otherwise, it does not make sense.
+        if (!(c instanceof SingleValueConditionDto s
+                && (s.type == ConditionType.EQ || (s.type == ConditionType.IN && ((Set<Object>) s.value).size() == 1)))) {
+          String format = String.format("""
+                  Query %s is not correct. Field s% should be in the coordinates or if not in a
+                  single value condition.
+                  """, query, SCENARIO_FIELD_NAME);
+          throw new IllegalArgumentException(format);
+        }
+      }
+    }
+  }
+
+  private void replaceScenarioFieldName(QueryDto query) {
+    String scenarioFieldName = this.datastore.storesByName().get(query.table.name).scenarioFieldName();
+    ConditionDto cond = query.conditions.remove(SCENARIO_FIELD_NAME);
+    if (cond != null) {
+      query.conditions.put(scenarioFieldName, cond);
+    }
+
+    // Order here is important.
+    if (query.coordinates.containsKey(SCENARIO_FIELD_NAME)) {
+      List<String> coord = query.coordinates.get(SCENARIO_FIELD_NAME);
+      Map<String, List<String>> newCoords = new LinkedHashMap<>();
+      for (Map.Entry<String, List<String>> entry : query.coordinates.entrySet()) {
+        if (entry.getKey().equals(SCENARIO_FIELD_NAME)) {
+          newCoords.put(scenarioFieldName, coord);
+        } else {
+          newCoords.put(entry.getKey(), entry.getValue());
+        }
+      }
+      query.coordinates = newCoords;
+    }
   }
 }

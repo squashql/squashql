@@ -53,6 +53,11 @@ public class SparkDatastore implements Datastore {
     return new ArrayList<>(this.stores.values());
   }
 
+  @Override
+  public Map<String, SparkStore> storesByName() {
+    return this.stores;
+  }
+
   public Dataset<Row> get(String storeName) {
     return this.stores.get(storeName).get();
   }

@@ -1,6 +1,5 @@
 package me.paulbares;
 
-import com.clickhouse.client.ClickHouseProtocol;
 import com.clickhouse.jdbc.ClickHouseConnection;
 import com.clickhouse.jdbc.ClickHouseDataSource;
 import com.clickhouse.jdbc.ClickHouseStatement;
@@ -15,19 +14,9 @@ import java.util.Properties;
 
 public class ClickHouseDatastore implements Datastore {
 
-  public static final String JDBC_URL = "jdbc:clickhouse://localhost:" + ClickHouseProtocol.HTTP.getDefaultPort();
-
   public final Map<String, ClickHouseStore> stores = new HashMap<>();
 
   public final ClickHouseDataSource dataSource;
-
-  public ClickHouseDatastore(ClickHouseStore... stores) {
-    this(null, stores);
-  }
-
-  public ClickHouseDatastore(String databaseName, ClickHouseStore... stores) {
-    this(JDBC_URL, databaseName, stores);
-  }
 
   public ClickHouseDatastore(String jdbc, String databaseName, ClickHouseStore... stores) {
     this.dataSource = newDataSource(jdbc, null);
@@ -58,6 +47,11 @@ public class ClickHouseDatastore implements Datastore {
   @Override
   public List<ClickHouseStore> stores() {
     return new ArrayList<>(this.stores.values());
+  }
+
+  @Override
+  public Map<String, ClickHouseStore> storesByName() {
+    return this.stores;
   }
 
   @Override
