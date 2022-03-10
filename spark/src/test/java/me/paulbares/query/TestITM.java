@@ -114,15 +114,6 @@ public class TestITM {
             ));
 
     this.queryEngine = new SparkQueryEngine(this.datastore);
-
-//    for (SparkStore store : stores) {
-//      store.get().show();
-//    }
-//      our_price_store.get()
-//              .join(our_stores_their_stores_store.get(), functions.col("pdv").equalTo(functions.col("our_store")))
-//              .join(their_prices_store.get(), functions.col("their_store").equalTo(functions.col("competitor_concurrent_pdv")))
-//              .show();
-      ;
   }
 
   @Test
