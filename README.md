@@ -4,6 +4,21 @@ In order to build the server, you will need:
 - [Java JDK](https://www.oracle.com/java/) >= 17
 - Latest stable [Apache Maven](http://maven.apache.org/)
 
+## Run locally
+
+- Install prerequisites (see above)
+- Build the project
+```
+mvn clean install -DskipTests
+```
+- Launch the project with the following command. Replace `/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java` 
+by your java path if necessary. 
+```
+/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -jar server/target/aitm-server-0.1-SNAPSHOT.jar
+```
+
+Server address is: `http://localhost:8080`
+
 ## Heroku CLI
 
 ```
