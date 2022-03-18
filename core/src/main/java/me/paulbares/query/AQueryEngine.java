@@ -1,5 +1,9 @@
 package me.paulbares.query;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import me.paulbares.query.context.ContextValue;
+import me.paulbares.query.context.Repository;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.ConditionType;
@@ -9,12 +13,7 @@ import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.store.Store;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 
 import static me.paulbares.query.QueryBuilder.eq;
@@ -46,6 +45,7 @@ public abstract class AQueryEngine implements QueryEngine {
   public Table execute(QueryDto query) {
     addScenarioConditionIfNecessary(query);
     replaceScenarioFieldName(query);
+    resolveMeasures(query);
     Table aggregates = retrieveAggregates(query);
     return postProcessDataset(aggregates, query);
   }
@@ -141,5 +141,29 @@ public abstract class AQueryEngine implements QueryEngine {
       }
       query.coordinates = newCoords;
     }
+  }
+
+  protected void resolveMeasures(QueryDto queryDto) {
+    ContextValue repo = queryDto.context.get(Repository.KEY);
+
+    Supplier<Map<String, ExpressionMeasure>> supplier = Suppliers.memoize(() -> ExpressionResolver.get(((Repository) repo).url));
+
+    List<Measure> newMeasures = new ArrayList<>();
+    for (Measure measure : queryDto.measures) {
+      if (measure instanceof UnresolvedExpressionMeasure) {
+        if (repo == null) {
+          throw new IllegalStateException(Repository.class.getSimpleName() + " context is missing in the query");
+        }
+        String alias = ((UnresolvedExpressionMeasure) measure).alias;
+        ExpressionMeasure expressionMeasure = supplier.get().get(alias);
+        if (expressionMeasure == null) {
+          throw new IllegalArgumentException("Cannot find expression with alias " + alias);
+        }
+        newMeasures.add(expressionMeasure);
+      } else {
+        newMeasures.add(measure);
+      }
+    }
+    queryDto.measures = newMeasures;
   }
 }

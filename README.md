@@ -100,9 +100,9 @@ Response:
 }
 ```
 
-Some additional contexts can be provided to enrich or modify the query results. For the moment, only the context value `totals` 
-is supported:
+Some additional contexts can be provided to enrich or modify the query results. 
 
+##### Context value totals
 ```json
 ...
 "context": {
@@ -167,6 +167,47 @@ Response:
    ]
 }
 ```
+##### Context value repository
+
+To indicate to aitm where metrics can be found.   
+
+```json
+...
+"context": {
+  "repository": {
+    "url": "https://raw.githubusercontent.com/paulbares/aitm-assets/main/metrics.json",
+  } 
+}
+...
+```
+
+In that case, in the query only the alias can be indicated. Aitm will resolve the expressions by using the repository content.
+
+```json
+{
+   "coordinates":{
+      "scenario":null
+   },
+   "measures":[
+      {
+         "alias":"marge"
+      },
+      {
+         "alias":"indice-prix"
+      }
+   ],
+   "table":{
+      "name":"products"
+   },
+   "context":{
+      "repository":{
+         "url":"https://raw.githubusercontent.com/paulbares/aitm-assets/main/metrics.json"
+      }
+   }
+}
+```
+
+##### Discovery
 
 This API can also be used for discovery! For instance to fetch all existing scenario:
 
@@ -279,6 +320,30 @@ Response:
          ]
       }
    ]
+}
+```
+
+The http request accepts a param `repo-url`. For instance: `https://sa-mvp.herokuapp.com/spark-metadata?repo-url=https%3A%2F%2Fraw.githubusercontent.com%2Fpaulbares%2Faitm-assets%2Fmain%2Fmetrics-test.json`.
+The metadata response will be enriched with additional metrics already defined.
+
+```json
+{
+  "aggregation_functions":[...],
+  "metrics":[
+    {
+      "alias":"quantity div by 10",
+      "expression":"sum(`quantity`) / 10"
+    },
+    {
+      "alias":"quantity",
+      "expression":"sum(`quantity`)"
+    },
+    {
+      "alias":"price",
+      "expression":"sum(`price`)"
+    }
+  ],
+  "stores":[...]
 }
 ```
 

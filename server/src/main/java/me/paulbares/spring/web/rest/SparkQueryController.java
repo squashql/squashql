@@ -1,9 +1,7 @@
 package me.paulbares.spring.web.rest;
 
 import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.query.ScenarioGroupingExecutor;
-import me.paulbares.query.SparkQueryEngine;
-import me.paulbares.query.Table;
+import me.paulbares.query.*;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.ScenarioGroupingQueryDto;
 import me.paulbares.store.Store;
@@ -15,9 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
@@ -31,7 +27,8 @@ public class SparkQueryController {
 
   public static final String METADATA_FIELDS_KEY = "fields";
   public static final String METADATA_STORES_KEY = "stores";
-  public static final String METADATA_AGG_FUNC_KEY = "aggregation_functions";
+  public static final String METADATA_AGG_FUNCS_KEY = "aggregation_functions";
+  public static final String METADATA_METRICS_KEY = "metrics";
   public static final List<String> SUPPORTED_AGG_FUNCS = List.of("sum", "min", "max", "avg", "var_samp", "var_pop",
           "stddev_samp", "stddev_pop", "count");
 
@@ -60,7 +57,9 @@ public class SparkQueryController {
   }
 
   @GetMapping(MAPPING_METADATA)
-  public ResponseEntity<Map<Object, Object>> getMetadata(@RequestParam(name = "dataset", required = false) String dataset) {
+  public ResponseEntity<Map<Object, Object>> getMetadata(
+          @RequestParam(name = "dataset", required = false) String dataset,
+          @RequestParam(name = "repo-url", required = false) String repo_url) {
     List<Map<String, Object>> root = new ArrayList<>();
     for (Store store : getQueryEngine(dataset).datastore.stores()) {
       List<Map<String, String>> collect = store.getFields()
@@ -71,11 +70,20 @@ public class SparkQueryController {
       collect.add(Map.of("name", SCENARIO_FIELD_NAME, "type", DataTypes.StringType.simpleString()));
       root.add(Map.of("name", store.name(), METADATA_FIELDS_KEY, collect));
     }
+
     return ResponseEntity.ok(Map.of(
             METADATA_STORES_KEY, root,
-            METADATA_AGG_FUNC_KEY, SUPPORTED_AGG_FUNCS));
+            METADATA_AGG_FUNCS_KEY, SUPPORTED_AGG_FUNCS,
+            METADATA_METRICS_KEY, getExpressions(repo_url)));
   }
 
+  private Collection<ExpressionMeasure> getExpressions(String url) {
+    if (url != null && !url.isEmpty()) {
+      return ExpressionResolver.get(url).values();
+    } else {
+      return Collections.emptyList();
+    }
+  }
 
   private SparkQueryEngine getQueryEngine(String dataset) {
     if (dataset == null || dataset.equals("legacy")) {
