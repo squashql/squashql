@@ -169,8 +169,7 @@ Response:
 ```
 ##### Context value repository
 
-To indicate to aitm where metrics can be found.   
-
+Metrics can be defined once and for all in a static file. To indicate to aitm where such metrics can be found, use the context value `repository`.
 ```json
 ...
 "context": {
