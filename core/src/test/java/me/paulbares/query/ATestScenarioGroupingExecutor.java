@@ -27,7 +27,7 @@ public abstract class ATestScenarioGroupingExecutor {
 
   protected abstract QueryEngine createQueryEngine(Datastore datastore);
 
-  protected abstract Datastore createDatastore(List<Field> fields);
+  protected abstract Datastore createDatastore(String storeName, List<Field> fields);
 
   protected Map<String, List<String>> groups = new LinkedHashMap<>();
 
@@ -44,7 +44,7 @@ public abstract class ATestScenarioGroupingExecutor {
     Field price = new Field("price", double.class);
     Field qty = new Field("quantity", int.class);
 
-    this.datastore = createDatastore(List.of(ean, category, price, qty));
+    this.datastore = createDatastore(this.storeName, List.of(ean, category, price, qty));
     QueryEngine queryEngine = createQueryEngine(this.datastore);
     this.executor = new ScenarioGroupingExecutor(queryEngine);
 

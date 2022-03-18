@@ -1,0 +1,69 @@
+package me.paulbares.query;
+
+import com.clickhouse.client.ClickHouseClient;
+import com.clickhouse.client.ClickHouseFormat;
+import com.clickhouse.client.ClickHouseNode;
+import com.clickhouse.client.ClickHouseProtocol;
+import com.clickhouse.client.ClickHouseResponse;
+import me.paulbares.ClickHouseDatastore;
+import me.paulbares.ClickHouseStore;
+import me.paulbares.query.dto.QueryDto;
+import me.paulbares.store.Datastore;
+import me.paulbares.store.Field;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+public class ClickHouseQueryEngine extends AQueryEngine {
+
+  public ClickHouseQueryEngine(ClickHouseDatastore datastore) {
+    super(datastore);
+  }
+
+  @Override
+  protected Table retrieveAggregates(QueryDto query) {
+    String sql = SQLTranslator.translate(query, this.fieldSupplier);
+
+    // only HTTP and gRPC are supported at this point
+    ClickHouseProtocol preferredProtocol = ClickHouseProtocol.HTTP;
+    // you'll have to parse response manually if use different format
+    ClickHouseFormat preferredFormat = ClickHouseFormat.RowBinaryWithNamesAndTypes;
+
+    // connect to localhost, use default port of the preferred protocol
+    ClickHouseNode server = ClickHouseNode.builder()
+            .host(((ClickHouseDatastore) this.datastore).dataSource.getHost())
+            .port(((ClickHouseDatastore) this.datastore).dataSource.getPort())
+            .build();
+
+    String scenarioFieldName = ((ClickHouseDatastore) this.datastore).stores.get(query.table.name).scenarioFieldName();
+    try (ClickHouseClient client = ClickHouseClient.newInstance(preferredProtocol);
+         ClickHouseResponse response = client.connect(server)
+                 .format(preferredFormat)
+                 .query(sql)
+                 .execute()
+                 .get()) {
+      List<Field> fields = response
+              .getColumns()
+              .stream()
+              .map(c -> {
+                if (c.getColumnName().equals(scenarioFieldName)) {
+                  return new Field(Datastore.SCENARIO_FIELD_NAME, String.class);
+                } else {
+                  return new Field(c.getColumnName(), ClickHouseStore.clickHouseTypeToClass(c.getDataType()));
+                }
+              })
+              .toList();
+      // Read the records here to close the underlying input stream (response)
+      List<List<Object>> rows = new ArrayList<>();
+      response.records().iterator().forEachRemaining(r -> {
+        List<Object> a = new ArrayList<>(r.size());
+        r.forEach(e -> a.add(e.asObject()));
+        rows.add(a);
+      });
+      return new ArrayTable(fields, rows);
+    } catch (ExecutionException | InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+}

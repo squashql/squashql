@@ -1,9 +1,8 @@
 package me.paulbares.query;
 
+import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.dto.ConditionType;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.SingleValueConditionDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
@@ -87,7 +86,6 @@ public abstract class ATestQueryEngine {
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("*", "count");
     Table result = this.queryEngine.execute(query);
-    result.show();
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("base", 3l),
             List.of("s1", 3l),
