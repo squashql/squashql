@@ -180,7 +180,7 @@ Metrics can be defined once and for all in a static file. To indicate to aitm wh
 ...
 ```
 
-In that case, in the query only the alias can be indicated. Aitm will resolve the expressions by using the repository content.
+In that case, in the query only metric aliases can be indicated. Aitm will resolve the expressions by using the repository content at query time.
 
 ```json
 {
@@ -205,6 +205,8 @@ In that case, in the query only the alias can be indicated. Aitm will resolve th
    }
 }
 ```
+
+The expressions of `marge` and `indice-prix` will be fetched automatically.
 
 ##### Discovery
 
