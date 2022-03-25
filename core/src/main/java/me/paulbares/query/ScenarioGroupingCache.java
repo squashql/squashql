@@ -13,11 +13,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
 public class ScenarioGroupingCache {
+
+  private static final Logger logger = Logger.getLogger(ScenarioGroupingCache.class.getName());
 
   public final QueryEngine queryEngine;
 
@@ -47,6 +51,7 @@ public class ScenarioGroupingCache {
       CacheValue cacheValue = this.cache.get(createKey(query));
       return cacheValue.table;
     } catch (ExecutionException e) {
+      logger.log(Level.SEVERE, e, () -> "error while executing a query");
       throw new RuntimeException(e);
     }
   }

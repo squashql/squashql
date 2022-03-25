@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class SparkQueryControllerTest {
 
-  private static final String REPO_URL = "https://raw.githubusercontent.com/paulbares/aitm-assets/main/metrics.json";
+  private static final String REPO_URL = "https://raw.githubusercontent.com/paulbares/aitm-assets/main/metrics-controller-test.json";
 
   @Autowired
   private MockMvc mvc;

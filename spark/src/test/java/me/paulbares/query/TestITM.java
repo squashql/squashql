@@ -42,8 +42,7 @@ public class TestITM {
 
     List<SparkStore> stores = new ArrayList<>();
     SparkStore our_price_store = new SparkStore("our_prices", List.of(ean, pdv, price, qty),
-            col("price").multiply(col("quantity")).as(
-                    "capdv"));
+            col("price").multiply(col("quantity")).as("capdv"));
     stores.add(our_price_store);
     SparkStore their_prices_store = new SparkStore("their_prices", List.of(compEan, compConcurrentPdv, compBrand,
             compConcurrentEan, compPrice));
