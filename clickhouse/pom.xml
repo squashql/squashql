@@ -11,8 +11,12 @@
     </parent>
 
     <groupId>me.paulbares</groupId>
-    <artifactId>aitm-spark</artifactId>
+    <artifactId>aitm-clickhouse</artifactId>
     <version>0.1-SNAPSHOT</version>
+
+    <properties>
+        <clickhouse.version>0.3.2-patch5</clickhouse.version>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -20,22 +24,16 @@
             <artifactId>aitm-core</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
+
         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.2.10</version>
+            <groupId>com.clickhouse</groupId>
+            <artifactId>clickhouse-grpc-client</artifactId>
+            <version>${clickhouse.version}</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-core -->
         <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.12</artifactId>
-            <version>${spark.version}</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-sql -->
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_2.12</artifactId>
-            <version>${spark.version}</version>
+            <groupId>com.clickhouse</groupId>
+            <artifactId>clickhouse-jdbc</artifactId>
+            <version>${clickhouse.version}</version>
         </dependency>
 
         <dependency>
@@ -43,6 +41,12 @@
             <artifactId>aitm-core</artifactId>
             <version>0.1-SNAPSHOT</version>
             <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.paulbares</groupId>
+            <artifactId>aitm-spark</artifactId>
+            <version>0.1-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -7,6 +7,7 @@ import me.paulbares.jackson.deserializer.ContextValueDeserializer;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ExpressionMeasure;
 import me.paulbares.query.Measure;
+import me.paulbares.query.UnresolvedExpressionMeasure;
 import me.paulbares.query.context.ContextValue;
 
 import java.util.ArrayList;
@@ -66,6 +67,11 @@ public class QueryDto {
 
   public QueryDto expressionMeasure(String alias, String expression) {
     this.measures.add(new ExpressionMeasure(alias, expression));
+    return this;
+  }
+
+  public QueryDto unresolvedExpressionMeasure(String alias) {
+    this.measures.add(new UnresolvedExpressionMeasure(alias));
     return this;
   }
 

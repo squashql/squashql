@@ -1,10 +1,23 @@
-
-
 ## Prerequisites
 
 In order to build the server, you will need:
 - [Java JDK](https://www.oracle.com/java/) >= 17
 - Latest stable [Apache Maven](http://maven.apache.org/)
+
+## Run locally
+
+- Install prerequisites (see above)
+- Build the project
+```
+mvn clean install -DskipTests
+```
+- Launch the project with the following command. Replace `/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java` 
+by your java path if necessary. 
+```
+/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -jar server/target/aitm-server-0.1-SNAPSHOT.jar
+```
+
+Server address is: `http://localhost:8080`
 
 ## Heroku CLI
 
@@ -87,9 +100,9 @@ Response:
 }
 ```
 
-Some additional contexts can be provided to enrich or modify the query results. For the moment, only the context value `totals` 
-is supported:
+Some additional contexts can be provided to enrich or modify the query results. 
 
+##### Context value totals
 ```json
 ...
 "context": {
@@ -154,6 +167,48 @@ Response:
    ]
 }
 ```
+##### Context value repository
+
+Metrics can be defined once and for all in a static file. To indicate to aitm where such metrics can be found, use the context value `repository`.
+```json
+...
+"context": {
+  "repository": {
+    "url": "https://raw.githubusercontent.com/paulbares/aitm-assets/main/metrics.json",
+  } 
+}
+...
+```
+
+In that case, in the query only metric aliases can be indicated. Aitm will resolve the expressions by using the repository content at query time.
+
+```json
+{
+   "coordinates":{
+      "scenario":null
+   },
+   "measures":[
+      {
+         "alias":"marge"
+      },
+      {
+         "alias":"indice-prix"
+      }
+   ],
+   "table":{
+      "name":"products"
+   },
+   "context":{
+      "repository":{
+         "url":"https://raw.githubusercontent.com/paulbares/aitm-assets/main/metrics.json"
+      }
+   }
+}
+```
+
+The expressions of `marge` and `indice-prix` will be fetched automatically.
+
+##### Discovery
 
 This API can also be used for discovery! For instance to fetch all existing scenario:
 
@@ -269,6 +324,30 @@ Response:
 }
 ```
 
+The http request accepts a param `repo-url`. For instance: `https://sa-mvp.herokuapp.com/spark-metadata?repo-url=https%3A%2F%2Fraw.githubusercontent.com%2Fpaulbares%2Faitm-assets%2Fmain%2Fmetrics-test.json`.
+The metadata response will be enriched with additional metrics already defined.
+
+```json
+{
+  "aggregation_functions":[...],
+  "metrics":[
+    {
+      "alias":"quantity div by 10",
+      "expression":"sum(`quantity`) / 10"
+    },
+    {
+      "alias":"quantity",
+      "expression":"sum(`quantity`)"
+    },
+    {
+      "alias":"price",
+      "expression":"sum(`price`)"
+    }
+  ],
+  "stores":[...]
+}
+```
+
 #### Scenario Grouping payload example
 
 The use case is explained [in this document.](https://docs.google.com/document/d/1-gPXlpSaoAmkHgZ_lmTmHNqz3CyVehDUzHwRbC9Uw4I/edit?usp=sharing)
@@ -377,6 +456,40 @@ is itself joined to the `products` table via the productId.
 Supported type of joins are: `inner` and `left`.
 Mapping can be done on multiple fields if necessary.
 
+#### Conditions
+
+Example of a 2 conditions. The first one on the scenarios (single equal condition), the second one on the category field (category equals to drink AND food) 
+```json
+{
+   "table":{
+      "name":"products"
+   },
+   "coordinates":{
+      ...
+   },
+   "conditions":{
+      "scenario":{
+         "type":"EQ",
+         "value":"base"
+      },
+      "category":{
+         "type":"AND",
+         "one":{
+            "type":"EQ",
+            "value":"drink"
+         },
+         "two":{
+            "type":"EQ",
+            "value":"food"
+         }
+      }
+   },
+   "measures":[
+      ...
+   ]
+}
+```
+
 ## JShell
 
 To interactively interact with the server and execute queries, one can use jshell. To do that, compile the project with the jshell profile `mvn clean install -Pjshell` and launch jshell by running the executable and adding the required jar to the class-path. For instance:
@@ -441,3 +554,8 @@ comp.showValue = true
 
 querier.run(query)
 ```
+
+## REMOTE SPARK CLUSTER
+
+By default, an embedded spark cluster is used, but you can configure the `Datastore` to use a remote cluster. To do that,
+simply pass your own `SparkSession` when creating `SparkDatastore` object. See `TestQueryRemote` as an example.

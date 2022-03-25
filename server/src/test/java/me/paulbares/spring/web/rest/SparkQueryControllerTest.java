@@ -6,6 +6,7 @@ import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ExpressionMeasure;
 import me.paulbares.query.QueryBuilder;
 import me.paulbares.query.QueryEngine;
+import me.paulbares.query.context.Repository;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.ScenarioComparisonDto;
@@ -34,6 +35,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class SparkQueryControllerTest {
 
+  private static final String REPO_URL = "https://raw.githubusercontent.com/paulbares/aitm-assets/main/metrics.json";
+
   @Autowired
   private MockMvc mvc;
 
@@ -57,6 +60,30 @@ public class SparkQueryControllerTest {
                       List.of("mdd-baisse", 240.00000000000003d, 107.1165191740413d)
               );
               Assertions.assertThat((List) queryResult.get("columns")).containsExactly(SCENARIO_FIELD_NAME, "sum(marge)", "indice-prix");
+            });
+  }
+
+  @Test
+  public void testQueryWithRepo() throws Exception {
+    QueryDto query = new QueryDto()
+            .table("products")
+            .wildcardCoordinate(SCENARIO_FIELD_NAME)
+            .unresolvedExpressionMeasure("marge")
+            .unresolvedExpressionMeasure("indice-prix")
+            .context(Repository.KEY, new Repository(REPO_URL));
+    this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
+                    .content(JacksonUtil.serialize(query))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(result -> {
+              String contentAsString = result.getResponse().getContentAsString();
+              Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
+              Assertions.assertThat((List) queryResult.get("rows")).containsExactlyInAnyOrder(
+                      List.of(MAIN_SCENARIO_NAME, 280.00000000000006d, 110.44985250737464 / 100),
+                      List.of("mdd-baisse-simu-sensi", 190.00000000000003d, 102.94985250737463d / 100),
+                      List.of("mdd-baisse", 240.00000000000003d, 107.1165191740413d / 100)
+              );
+              Assertions.assertThat((List) queryResult.get("columns")).containsExactly(SCENARIO_FIELD_NAME, "marge", "indice-prix");
             });
   }
 
@@ -94,11 +121,23 @@ public class SparkQueryControllerTest {
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               Map objects = JacksonUtil.mapper.readValue(contentAsString, Map.class);
-              assertMetadataResult(objects);
+              assertMetadataResult(objects, false);
             });
   }
 
-  static void assertMetadataResult(Map objects) {
+  @Test
+  void testMetadataWithRepository() throws Exception {
+    this.mvc.perform(MockMvcRequestBuilders.get(SparkQueryController.MAPPING_METADATA)
+                    .param("repo-url", REPO_URL))
+            .andExpect(result -> {
+              String contentAsString = result.getResponse().getContentAsString();
+              Map objects = JacksonUtil.mapper.readValue(contentAsString, Map.class);
+              assertMetadataResult(objects, true);
+            });
+  }
+
+
+  static void assertMetadataResult(Map objects, boolean withRepo) {
     List<Map<String, Object>> storesArray = (List) objects.get(SparkQueryController.METADATA_STORES_KEY);
     Assertions.assertThat(storesArray).hasSize(1);
     Assertions.assertThat(storesArray.get(0).get("name")).isEqualTo("products");
@@ -119,7 +158,13 @@ public class SparkQueryControllerTest {
             Map.of("name", "indice-prix", "type", "double"),
             Map.of("name", SCENARIO_FIELD_NAME, "type", "string")
     );
-    Assertions.assertThat((List) objects.get(SparkQueryController.METADATA_AGG_FUNC_KEY)).containsExactlyInAnyOrder(SparkQueryController.SUPPORTED_AGG_FUNCS.toArray(new String[0]));
+    Assertions.assertThat((List) objects.get(SparkQueryController.METADATA_AGG_FUNCS_KEY)).containsExactlyInAnyOrder(SparkQueryController.SUPPORTED_AGG_FUNCS.toArray(new String[0]));
+    if (withRepo) {
+      Assertions.assertThat((List) objects.get(SparkQueryController.METADATA_METRICS_KEY)).containsExactlyInAnyOrder(
+              Map.of("alias", "indice-prix", "expression", "sum(`numerateur-indice`) / sum(`score-visi`)"),
+              Map.of("alias", "marge", "expression", "sum(`marge`)")
+      );
+    }
   }
 
   @Test
@@ -146,12 +191,12 @@ public class SparkQueryControllerTest {
               Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
               Assertions.assertThat((List) queryResult.get("rows")).containsExactly(
                       List.of("group1", "base", 0d, 0d),
-                      List.of("group1", "mdd-baisse-simu-sensi", -90.00000000000003,-7.500000000000014),
+                      List.of("group1", "mdd-baisse-simu-sensi", -90.00000000000003, -7.500000000000014),
                       List.of("group2", "base", 0d, 0d),
-                      List.of("group2", "mdd-baisse", -40.00000000000003,-3.333333333333343),
+                      List.of("group2", "mdd-baisse", -40.00000000000003, -3.333333333333343),
                       List.of("group3", "base", 0d, 0d),
-                      List.of("group3", "mdd-baisse-simu-sensi", -90.00000000000003,-7.500000000000014),
-                      List.of("group3", "mdd-baisse", 50.0,4.166666666666671));
+                      List.of("group3", "mdd-baisse-simu-sensi", -90.00000000000003, -7.500000000000014),
+                      List.of("group3", "mdd-baisse", 50.0, 4.166666666666671));
               Assertions.assertThat((List) queryResult.get("columns")).containsExactly(
                       "group", SCENARIO_FIELD_NAME,
                       "absolute_difference(sum(marge), previous)", "absolute_difference(indice-prix, previous)");

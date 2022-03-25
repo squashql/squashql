@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ExpressionMeasure;
 import me.paulbares.query.Measure;
+import me.paulbares.query.UnresolvedExpressionMeasure;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -21,10 +22,15 @@ public class MeasureDeserializer extends JsonDeserializer<Measure> {
               Objects.requireNonNull(treeNode.get("field")).asText(),
               aggregationFunction.asText());
     } else {
-      return new ExpressionMeasure(
-              Objects.requireNonNull(treeNode.get("alias")).asText(),
-              Objects.requireNonNull(treeNode.get("expression")).asText()
-      );
+      JsonNode expression = treeNode.get("expression");
+      if (expression != null) {
+        return new ExpressionMeasure(
+                Objects.requireNonNull(treeNode.get("alias")).asText(),
+                Objects.requireNonNull(expression).asText()
+        );
+      } else {
+        return new UnresolvedExpressionMeasure(Objects.requireNonNull(treeNode.get("alias")).asText());
+      }
     }
   }
 }

@@ -108,7 +108,7 @@ public class TestSQLTranslator {
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select `scenario`, sum(`price`) from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
-                    "order by case when `scenario` is null then 0 else 1 end, `scenario`  asc");
+                    "order by case when `scenario` is null or `scenario` = '' then 0 else 1 end, `scenario`  asc");
   }
 
   @Test
@@ -121,7 +121,7 @@ public class TestSQLTranslator {
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select `scenario`, sum(`price`) from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
-                    "order by case when `scenario` is null then 1 else 0 end, `scenario`  asc");
+                    "order by case when `scenario` is null or `scenario` = '' then 1 else 0 end, `scenario`  asc");
   }
 
   @Test

@@ -37,7 +37,7 @@ public class HttpClientQuerierTest {
         String url = "http://127.0.0.1:" + this.port;
 
         var querier = new HttpClientQuerier(url);
-        SparkQueryControllerTest.assertMetadataResult(querier.metadata());
+        SparkQueryControllerTest.assertMetadataResult(querier.metadata(), false);
     }
 
     @Test
