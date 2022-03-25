@@ -3,7 +3,7 @@ Request:
 GET http://localhost:8080/spark-metadata?dataset=itm&repo-url=https%3A%2F%2Fraw.githubusercontent.com%2Fpaulbares%2Faitm-assets%2Fmain%2Fmetrics.json
 
 Response:
-
+```json
 {
     "aggregation_functions": [
         "sum",
@@ -104,12 +104,13 @@ Response:
         }
     ]
 }
-
+```
 
 Request:
 POST http://localhost:8080/spark-query-scenario-grouping?dataset=itm
 
 Payload: 
+```json
 {
     "table": {
         "name": "our_prices",
@@ -173,6 +174,9 @@ Payload:
         }
     }
 }
+```
 
 Response:
+```json
 {"columns":["group","scenario","absolute_difference(indice-prix, previous)","indice-prix"],"rows":[["group1","base",0.0,0.9803921568627451],["group1","MN up",0.04901960784313719,1.0294117647058822],["group2","base",0.0,0.9803921568627451],["group2","MDD up",0.04901960784313719,1.0294117647058822],["group3","base",0.0,0.9803921568627451],["group3","MN & MDD up",0.0980392156862745,1.0784313725490196],["group3","MN & MDD down",-0.196078431372549,0.8823529411764706]]}
+```
