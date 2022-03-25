@@ -4,8 +4,10 @@ import me.paulbares.client.SimpleTable;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ExpressionMeasure;
+import me.paulbares.query.Measure;
 import me.paulbares.query.QueryBuilder;
 import me.paulbares.query.QueryEngine;
+import me.paulbares.query.UnresolvedExpressionMeasure;
 import me.paulbares.query.context.Repository;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.QueryDto;
@@ -197,6 +199,43 @@ public class SparkQueryControllerTest {
                       List.of("group3", "base", 0d, 0d),
                       List.of("group3", "mdd-baisse-simu-sensi", -90.00000000000003, -7.500000000000014),
                       List.of("group3", "mdd-baisse", 50.0, 4.166666666666671));
+              Assertions.assertThat((List) queryResult.get("columns")).containsExactly(
+                      "group", SCENARIO_FIELD_NAME,
+                      "absolute_difference(sum(marge), previous)", "absolute_difference(indice-prix, previous)");
+            });
+  }
+
+  @Test
+  public void testScenarioGroupingQueryWithRepo() throws Exception {
+    Map<String, List<String>> groups = new LinkedHashMap<>();
+    groups.put("group1", List.of("base", "mdd-baisse-simu-sensi"));
+    groups.put("group2", List.of("base", "mdd-baisse"));
+    groups.put("group3", List.of("base", "mdd-baisse-simu-sensi", "mdd-baisse"));
+
+    AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("marge", "sum");
+    Measure unresolvedExpressionMeasure = new UnresolvedExpressionMeasure("indice-prix");
+    ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
+            .table("products")
+            .groups(groups)
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF, aggregatedMeasure, false, REF_POS_PREVIOUS))
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF, unresolvedExpressionMeasure, false, REF_POS_PREVIOUS))
+            .context(Repository.KEY, new Repository(REPO_URL));
+
+    this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY_GROUPING)
+                    .content(JacksonUtil.serialize(query))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(result -> {
+              String contentAsString = result.getResponse().getContentAsString();
+              Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
+              Assertions.assertThat((List) queryResult.get("rows")).containsExactly(
+                      List.of("group1", "base", 0d, 0d),
+                      List.of("group1", "mdd-baisse-simu-sensi", -90.00000000000003, -0.07500000000000018),
+                      List.of("group2", "base", 0d, 0d),
+                      List.of("group2", "mdd-baisse", -40.00000000000003, -0.03333333333333344),
+                      List.of("group3", "base", 0d, 0d),
+                      List.of("group3", "mdd-baisse-simu-sensi", -90.00000000000003, -0.07500000000000018),
+                      List.of("group3", "mdd-baisse", 50.0, 0.04166666666666674));
               Assertions.assertThat((List) queryResult.get("columns")).containsExactly(
                       "group", SCENARIO_FIELD_NAME,
                       "absolute_difference(sum(marge), previous)", "absolute_difference(indice-prix, previous)");

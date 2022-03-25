@@ -3,6 +3,8 @@ package me.paulbares.query;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import me.paulbares.query.context.ContextValue;
+import me.paulbares.query.context.Repository;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.ScenarioGroupingQueryDto;
 import me.paulbares.query.dto.TableDto;
@@ -32,7 +34,8 @@ public class ScenarioGroupingCache {
                       public CacheValue load(CacheKey key) {
                         QueryDto prefetchQuery = new QueryDto()
                                 .wildcardCoordinate(SCENARIO_FIELD_NAME)
-                                .table(key.table);
+                                .table(key.table)
+                                .context(Repository.KEY, key.repository());
                         prefetchQuery.measures.addAll(key.measures);
                         return new CacheValue(queryEngine.execute(prefetchQuery));
                       }
@@ -52,10 +55,11 @@ public class ScenarioGroupingCache {
     return new CacheKey(
             q.table,
             q.groups.values().stream().flatMap(v -> v.stream()).collect(Collectors.toSet()),
-            q.comparisons.stream().map(c -> c.measure).toList());
+            q.comparisons.stream().map(c -> c.measure).toList(),
+            q.context.get(Repository.KEY));
   }
 
-  record CacheKey(TableDto table, Set<String> scenarios, List<Measure> measures) {
+  record CacheKey(TableDto table, Set<String> scenarios, List<Measure> measures, ContextValue repository) {
   }
 
   record CacheValue(Table table) {
