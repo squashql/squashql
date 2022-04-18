@@ -148,6 +148,29 @@ public abstract class ATestScenarioGroupingExecutor {
   }
 
   @Test
+  void testRelativeDifferenceWithFirstWithLabels() {
+    ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
+            .table(this.storeName)
+            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_REL_DIFF,
+                    new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST, "label1"))
+            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_REL_DIFF,
+                    new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST, "label2"))
+            .groups(this.groups);
+
+    Table dataset = this.executor.execute(query);
+    Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
+            "group", SCENARIO_FIELD_NAME, "label1", "sum(price)", "label2", "sum(quantity)");
+    Assertions.assertThat(dataset).containsExactly(
+            List.of("group1", "base", 0d, 15d, 0d, 34l),
+            List.of("group1", "s1", 0.13333333333333333d, 17d, -0.058823529411764705d, 32l),
+            List.of("group2", "base", 0d, 15d, 0d, 34l),
+            List.of("group2", "s2", -0.03333333333333333d, 14.5d, 0.029411764705882353d, 35l),
+            List.of("group3", "base", 0d, 15d, 0d, 34l),
+            List.of("group3", "s1", 0.13333333333333333d, 17d, -0.058823529411764705d, 32l),
+            List.of("group3", "s2", -0.03333333333333333d, 14.5d, 0.029411764705882353d, 35l));
+  }
+
+  @Test
   void testRelativeDifferenceWithPrevious() {
     ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
             .table(this.storeName)

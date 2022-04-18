@@ -96,10 +96,10 @@ public class ScenarioGroupingExecutor {
         fields.add(rawField); // first is scenario field
       } else {
         ScenarioComparisonDto comparison = query.comparisons.get(i - 1);
-        String newName = String.format("%s(%s, %s)",
+        String newName = comparison.label() == null ? String.format("%s(%s, %s)",
                 comparison.method(),
                 comparison.measure().alias(),
-                comparison.referencePosition());
+                comparison.referencePosition()) : comparison.label();
         fields.add(new Field(newName, rawField.type()));
         if (comparison.showValue()) {
           fields.add(rawField);
