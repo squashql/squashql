@@ -4,6 +4,7 @@ import me.paulbares.SparkDatastore;
 import me.paulbares.SparkStore;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import me.paulbares.transaction.SparkTransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -54,36 +55,37 @@ public class TestITM {
     stores.add(our_stores_their_stores_store);
 
     this.datastore = new SparkDatastore(stores.toArray(new SparkStore[0]));
+    SparkTransactionManager tm = new SparkTransactionManager(this.datastore.spark, this.datastore);
 
-    this.datastore.load(MAIN_SCENARIO_NAME,
+    tm.load(MAIN_SCENARIO_NAME,
             "our_prices", List.of(
                     new Object[]{"Nutella 250g", "ITM Balma", 10d, 1000},
                     new Object[]{"ITMella 250g", "ITM Balma", 10d, 1000},
                     new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 10d, 1000},
                     new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 10d, 1000}
             ));
-    this.datastore.load("MN up",
+    tm.load("MN up",
             "our_prices", List.of(
                     new Object[]{"Nutella 250g", "ITM Balma", 11d, 1000},
                     new Object[]{"ITMella 250g", "ITM Balma", 10d, 1000},
                     new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 11d, 1000},
                     new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 10d, 1000}
             ));
-    this.datastore.load("MDD up",
+    tm.load("MDD up",
             "our_prices", List.of(
                     new Object[]{"Nutella 250g", "ITM Balma", 10d, 1000},
                     new Object[]{"ITMella 250g", "ITM Balma", 11d, 1000},
                     new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 10d, 1000},
                     new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 11d, 1000}
             ));
-    this.datastore.load("MN & MDD up",
+    tm.load("MN & MDD up",
             "our_prices", List.of(
                     new Object[]{"Nutella 250g", "ITM Balma", 11d, 1000},
                     new Object[]{"ITMella 250g", "ITM Balma", 11d, 1000},
                     new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 11d, 1000},
                     new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 11d, 1000}
             ));
-    this.datastore.load("MN & MDD down",
+    tm.load("MN & MDD down",
             "our_prices", List.of(
                     new Object[]{"Nutella 250g", "ITM Balma", 9d, 1000},
                     new Object[]{"ITMella 250g", "ITM Balma", 9d, 1000},
@@ -91,7 +93,7 @@ public class TestITM {
                     new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 9d, 1000}
             ));
 
-    this.datastore.load(MAIN_SCENARIO_NAME,
+    tm.load(MAIN_SCENARIO_NAME,
             "their_prices", List.of(
                     new Object[]{"Nutella 250g", "Leclerc Rouffiac", "Leclerc", "Nutella 250g", 9d},
                     new Object[]{"Nutella 250g", "Auchan Toulouse", "Auchan", "Nutella 250g", 11d},
@@ -102,7 +104,7 @@ public class TestITM {
                     new Object[]{"ITMella 250g", "Auchan Launaguet", "Auchan", "AuchanElla", 9d}
             ));
 
-    this.datastore.load(MAIN_SCENARIO_NAME,
+    tm.load(MAIN_SCENARIO_NAME,
             "our_stores_their_stores", List.of(
                     new Object[]{"ITM Balma", "Leclerc Rouffiac"},
                     new Object[]{"ITM Balma", "Auchan Toulouse"},

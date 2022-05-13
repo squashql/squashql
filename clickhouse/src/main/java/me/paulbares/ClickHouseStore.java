@@ -1,25 +1,17 @@
 package me.paulbares;
 
 import com.clickhouse.client.ClickHouseDataType;
-import com.clickhouse.jdbc.ClickHouseConnection;
-import com.clickhouse.jdbc.ClickHouseDataSource;
-import com.clickhouse.jdbc.ClickHouseStatement;
 import me.paulbares.store.Field;
 import me.paulbares.store.Store;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
 
 public class ClickHouseStore implements Store {
 
   protected final String name;
 
   protected final List<Field> fields;
-
-  protected ClickHouseDataSource dataSource;
 
   public ClickHouseStore(String name, List<Field> fields) {
     this.name = name;
@@ -32,28 +24,6 @@ public class ClickHouseStore implements Store {
     return Store.scenarioFieldName(this.name, "_"); // use a different separator because issue with dot '.'
   }
 
-  public void setDatasource(ClickHouseDataSource dataSource) {
-    this.dataSource = dataSource;
-
-    try (ClickHouseConnection conn = this.dataSource.getConnection();
-         ClickHouseStatement stmt = conn.createStatement()) {
-      stmt.execute("drop table if exists " + this.name);
-      StringBuilder sb = new StringBuilder();
-      sb.append("(");
-      for (int i = 0; i < this.fields.size(); i++) {
-        Field field = this.fields.get(i);
-        sb.append(field.name()).append(' ').append(classToClickHouseType(field.type()));
-        if (i < this.fields.size() - 1) {
-          sb.append(", ");
-        }
-      }
-      sb.append(")");
-      stmt.execute("create table " + this.name + sb + "engine=Memory");
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   @Override
   public String name() {
     return this.name;
@@ -62,31 +32,6 @@ public class ClickHouseStore implements Store {
   @Override
   public List<Field> getFields() {
     return this.fields;
-  }
-
-  @Override
-  public void load(String scenario, List<Object[]> tuples) {
-    String join = String.join(",", IntStream.range(0, this.fields.size()).mapToObj(i -> "?").toList());
-    String pattern = "insert into " + this.name + " values(" + join + ")";
-    try (ClickHouseConnection conn = this.dataSource.getConnection();
-         PreparedStatement stmt = conn.prepareStatement(pattern)) {
-
-      for (Object[] tuple : tuples) {
-        for (int i = 0; i < tuple.length; i++) {
-          stmt.setObject(i + 1, tuple[i]);
-        }
-        stmt.setObject(tuple.length + 1, scenario);
-        stmt.addBatch();
-      }
-      stmt.executeBatch();
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  @Override
-  public void loadCsv(String scenario, String path, String delimiter, boolean header) {
-    throw new RuntimeException("not implemented");
   }
 
   public static String classToClickHouseType(Class<?> clazz) {

@@ -1,9 +1,11 @@
 package me.paulbares.query;
 
+import com.clickhouse.jdbc.ClickHouseDataSource;
 import me.paulbares.ClickHouseDatastore;
-import me.paulbares.ClickHouseStore;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import me.paulbares.transaction.ClickHouseTransactionManager;
+import me.paulbares.transaction.TransactionManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.GenericContainer;
@@ -38,6 +40,11 @@ public class TestClickHouseScenarioGroupingExecutor extends ATestScenarioGroupin
 
   @Override
   protected Datastore createDatastore(String storeName, List<Field> fields) {
-    return new ClickHouseDatastore(jdbcUrl.apply(this.container), (String) null, new ClickHouseStore(storeName, fields));
+    return new ClickHouseDatastore(jdbcUrl.apply(this.container), null);
+  }
+
+  @Override
+  protected TransactionManager createTransactionManager() {
+    return new ClickHouseTransactionManager((ClickHouseDataSource) this.datastore);
   }
 }

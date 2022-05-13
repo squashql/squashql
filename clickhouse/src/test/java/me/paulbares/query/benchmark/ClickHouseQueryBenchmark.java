@@ -5,6 +5,7 @@ import ch.qos.logback.classic.Logger;
 import com.clickhouse.client.ClickHouseProtocol;
 import me.paulbares.ClickHouseDatastore;
 import me.paulbares.ClickHouseStore;
+import me.paulbares.transaction.ClickHouseTransactionManager;
 import me.paulbares.SparkStore;
 import me.paulbares.benchmark.BenchmarkRunner;
 import me.paulbares.query.ClickHouseQueryEngine;
@@ -13,6 +14,7 @@ import me.paulbares.query.Table;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import me.paulbares.transaction.TransactionManager;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -80,11 +82,13 @@ public class ClickHouseQueryBenchmark {
             new Field("Country", String.class),
             new Field("ShipperName", String.class));
 
-    ClickHouseStore clickHouseStore = new ClickHouseStore(ordersStore, fields);
+    ClickHouseStore clickHouseStore = new ClickHouseStore(ordersStore, fields); // FIXME
     String jdbc = String.format("jdbc:clickhouse://%s:%d", "localhost", ClickHouseProtocol.HTTP.getDefaultPort());
-    ClickHouseDatastore datastore = new ClickHouseDatastore(jdbc, null, clickHouseStore);
+    ClickHouseDatastore datastore = new ClickHouseDatastore(jdbc, null);
 
-    Function<String, Integer> loader = Dataloader.createScenarioLoader(datastore, fields);
+    ClickHouseTransactionManager tm = new ClickHouseTransactionManager(datastore.getDataSource());
+
+    Function<String, Integer> loader = Dataloader.createScenarioLoader(tm, fields);
     List<String> scenarios = List.of(Datastore.MAIN_SCENARIO_NAME, "s50", "s25", "s10", "s05");
     int count = -1;
     for (String scenario : scenarios) {
@@ -102,7 +106,7 @@ public class ClickHouseQueryBenchmark {
 
   public static class Dataloader {
 
-    public static Function<String, Integer> createScenarioLoader(Datastore datastore, List<Field> fields) {
+    public static Function<String, Integer> createScenarioLoader(TransactionManager tm, List<Field> fields) {
       String path = "spark/src/test/resources/benchmark/data_%s_scenario.csv";
       Function<String, String> pathFunction = scenario -> String.format(path, scenario);
 
@@ -143,7 +147,7 @@ public class ClickHouseQueryBenchmark {
         }
 
         System.out.println("Loading scenario " + scenario + " ...");
-        datastore.load(scenario, ordersStore, tuples);
+        tm.load(scenario, ordersStore, tuples);
         System.out.println("Data for scenario " + scenario + " done");
         return tuples.size();
       };

@@ -10,6 +10,8 @@ import me.paulbares.query.Table;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import me.paulbares.transaction.SparkTransactionManager;
+import me.paulbares.transaction.TransactionManager;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparkSession;
 import org.assertj.core.api.Assertions;
@@ -88,16 +90,17 @@ public class TestQueryRemote {
     Field qty = new Field("quantity", int.class);
 
     String storeName = "storeName";
-    Datastore datastore = createDatastore(storeName, List.of(ean, category, price, qty));
-    SparkQueryEngine queryEngine = new SparkQueryEngine((SparkDatastore) datastore);
+    SparkDatastore datastore = (SparkDatastore) createDatastore(storeName, List.of(ean, category, price, qty));
+    SparkQueryEngine queryEngine = new SparkQueryEngine(datastore);
+    TransactionManager tm = new SparkTransactionManager(datastore.spark, datastore);
 
-    datastore.load(MAIN_SCENARIO_NAME, storeName, List.of(
+    tm.load(MAIN_SCENARIO_NAME, storeName, List.of(
             new Object[]{"bottle", "drink", 2d, 10},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
 
-    datastore.load("s1", storeName, List.of(
+    tm.load("s1", storeName, List.of(
             new Object[]{"bottle", "drink", 4d, 10},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}

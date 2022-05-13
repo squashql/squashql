@@ -10,6 +10,7 @@ import me.paulbares.query.Table;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import me.paulbares.transaction.SparkTransactionManager;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -97,12 +98,13 @@ public class SparkRemoteQueryBenchmark {
             .config(conf)
             .getOrCreate();
 
-    SparkDatastore datastore = new SparkDatastore(spark, sparkStore);
+    SparkDatastore datastore = new SparkDatastore(spark);
+    SparkTransactionManager tm = new SparkTransactionManager(datastore.spark, datastore);
 
     for (Map.Entry<String, List<Object[]>> entry : data.entrySet()) {
       String scenario = entry.getKey();
       System.out.println("Loading scenario " + scenario + " ...");
-      datastore.load(scenario, ordersStore, entry.getValue());
+      tm.load(scenario, ordersStore, entry.getValue());
       System.out.println("Data for scenario " + scenario + " done");
     }
 

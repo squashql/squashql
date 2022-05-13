@@ -10,10 +10,6 @@ public interface Store {
 
   List<Field> getFields();
 
-  void load(String scenario, List<Object[]> tuples);
-
-  void loadCsv(String scenario, String path, String delimiter, boolean header);
-
   default String scenarioFieldName() {
     return scenarioFieldName(name(), ".");
   }

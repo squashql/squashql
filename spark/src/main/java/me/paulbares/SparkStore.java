@@ -3,12 +3,12 @@ package me.paulbares;
 import me.paulbares.store.Field;
 import me.paulbares.store.Store;
 import org.apache.spark.sql.Column;
-import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.functions;
+import org.apache.spark.sql.types.DataType;
+import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.storage.StorageLevel;
 
@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 public class SparkStore implements Store {
 
   protected final String name;
+
   protected final List<Column> columns;
   protected final Map<String, Dataset<Row>> dfByScenario = new HashMap<>();
 
@@ -51,7 +52,7 @@ public class SparkStore implements Store {
   public static StructType createSchema(Field... fields) {
     StructType schema = new StructType();
     for (Field field : fields) {
-      schema = schema.add(field.name(), SparkDatastore.classToDatatype(field.type()));
+      schema = schema.add(field.name(), SparkStore.classToDatatype(field.type()));
     }
     return schema;
   }
@@ -73,17 +74,17 @@ public class SparkStore implements Store {
   public List<Field> getFields() {
     return Arrays
             .stream(get().schema().fields())
-            .map(f -> new Field(f.name(), SparkDatastore.datatypeToClass(f.dataType())))
+            .map(f -> new Field(f.name(), SparkStore.datatypeToClass(f.dataType())))
             .collect(Collectors.toList());
   }
 
-  @Override
-  public void load(String scenario, List<Object[]> tuples) {
-    List<Row> rows = tuples.stream().map(RowFactory::create).toList();
-    Dataset<Row> dataFrame = this.spark.createDataFrame(rows, this.baseSchema);// to load pojo
-    Dataset<Row> dataset = addAdditionalColumns(scenario, dataFrame);
-    save(scenario, dataset);
-  }
+//  @Override
+//  public void load(String scenario, List<Object[]> tuples) {
+//    List<Row> rows = tuples.stream().map(RowFactory::create).toList();
+//    Dataset<Row> dataFrame = this.spark.createDataFrame(rows, this.baseSchema);// to load pojo
+//    Dataset<Row> dataset = addAdditionalColumns(scenario, dataFrame);
+//    save(scenario, dataset);
+//  }
 
   protected Dataset<Row> addAdditionalColumns(String scenario, Dataset<Row> dataFrame) {
     for (Column column : this.columns) {
@@ -99,24 +100,24 @@ public class SparkStore implements Store {
     }
   }
 
-  @Override
-  public void loadCsv(String scenario, String path, String delimiter, boolean header) {
-    DataFrameReader reader = this.spark.read()
-            .option("delimiter", delimiter)
-            .option("header", true);
-    if (this.baseSchema != null) {
-      reader = reader.schema(this.baseSchema);
-    }
-
-    Dataset<Row> dataFrame = reader.csv(path);
-
-    if (this.baseSchema == null) {
-      this.baseSchema = dataFrame.schema();
-    }
-
-    Dataset<Row> dataset = addAdditionalColumns(scenario, dataFrame);
-    save(scenario, dataset);
-  }
+//  @Override
+//  public void loadCsv(String scenario, String path, String delimiter, boolean header) {
+//    DataFrameReader reader = this.spark.read()
+//            .option("delimiter", delimiter)
+//            .option("header", true);
+//    if (this.baseSchema != null) {
+//      reader = reader.schema(this.baseSchema);
+//    }
+//
+//    Dataset<Row> dataFrame = reader.csv(path);
+//
+//    if (this.baseSchema == null) {
+//      this.baseSchema = dataFrame.schema();
+//    }
+//
+//    Dataset<Row> dataset = addAdditionalColumns(scenario, dataFrame);
+//    save(scenario, dataset);
+//  }
 
   public Dataset<Row> get() {
     Dataset<Row> merge = null;
@@ -128,5 +129,41 @@ public class SparkStore implements Store {
       }
     }
     return merge;
+  }
+
+  public static Class<?> datatypeToClass(DataType type) {
+    Class<?> klass;
+    if (type.equals(DataTypes.StringType)) {
+      klass = String.class;
+    } else if (type.equals(DataTypes.DoubleType)) {
+      klass = double.class;
+    } else if (type.equals(DataTypes.FloatType)) {
+      klass = float.class;
+    } else if (type.equals(DataTypes.IntegerType)) {
+      klass = int.class;
+    } else if (type.equals(DataTypes.LongType)) {
+      klass = long.class;
+    } else {
+      throw new IllegalArgumentException("Unsupported field type " + type);
+    }
+    return klass;
+  }
+
+  public static DataType classToDatatype(Class<?> clazz) {
+    DataType type;
+    if (clazz.equals(String.class)) {
+      type = DataTypes.StringType;
+    } else if (clazz.equals(Double.class) || clazz.equals(double.class)) {
+      type = DataTypes.DoubleType;
+    } else if (clazz.equals(Float.class) || clazz.equals(float.class)) {
+      type = DataTypes.FloatType;
+    } else if (clazz.equals(Integer.class) || clazz.equals(int.class)) {
+      type = DataTypes.IntegerType;
+    } else if (clazz.equals(Long.class) || clazz.equals(long.class)) {
+      type = DataTypes.LongType;
+    } else {
+      throw new IllegalArgumentException("Unsupported field type " + clazz);
+    }
+    return type;
   }
 }

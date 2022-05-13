@@ -11,7 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static me.paulbares.SparkDatastore.datatypeToClass;
+import static me.paulbares.SparkStore.datatypeToClass;
 
 public class DatasetTable implements Table {
 

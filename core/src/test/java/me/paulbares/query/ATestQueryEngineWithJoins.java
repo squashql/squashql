@@ -5,6 +5,7 @@ import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Store;
+import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,8 @@ public abstract class ATestQueryEngineWithJoins {
 
   protected Datastore datastore;
 
+  protected TransactionManager tm;
+
   protected QueryEngine queryEngine;
 
   protected String orders = "orders";
@@ -54,6 +57,8 @@ public abstract class ATestQueryEngineWithJoins {
 
   protected abstract Store createStore(String storeName);
 
+  protected abstract TransactionManager createTransactionManager();
+
   @BeforeAll
   void setup() {
     List<Store> stores = new ArrayList<>();
@@ -67,11 +72,11 @@ public abstract class ATestQueryEngineWithJoins {
     this.datastore = createDatastore(stores);
     this.queryEngine = createQueryEngine(this.datastore);
 
-    this.datastore.loadCsv(MAIN_SCENARIO_NAME, this.orders, pathFunction.apply("orders.csv").toString(), delimiter, header);
-    this.datastore.loadCsv(MAIN_SCENARIO_NAME, this.shippers, pathFunction.apply("shippers.csv").toString(), delimiter, header);
-    this.datastore.loadCsv(MAIN_SCENARIO_NAME, this.products, pathFunction.apply("products.csv").toString(), delimiter, header);
-    this.datastore.loadCsv(MAIN_SCENARIO_NAME, this.orderDetails, pathFunction.apply("order_details.csv").toString(), delimiter, header);
-    this.datastore.loadCsv(MAIN_SCENARIO_NAME, this.categories, pathFunction.apply("categories.csv").toString(), delimiter, header);
+    this.tm.loadCsv(MAIN_SCENARIO_NAME, this.orders, pathFunction.apply("orders.csv").toString(), delimiter, header);
+    this.tm.loadCsv(MAIN_SCENARIO_NAME, this.shippers, pathFunction.apply("shippers.csv").toString(), delimiter, header);
+    this.tm.loadCsv(MAIN_SCENARIO_NAME, this.products, pathFunction.apply("products.csv").toString(), delimiter, header);
+    this.tm.loadCsv(MAIN_SCENARIO_NAME, this.orderDetails, pathFunction.apply("order_details.csv").toString(), delimiter, header);
+    this.tm.loadCsv(MAIN_SCENARIO_NAME, this.categories, pathFunction.apply("categories.csv").toString(), delimiter, header);
   }
 
   @Test

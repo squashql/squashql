@@ -36,7 +36,9 @@ public class ClickHouseQueryEngine extends AQueryEngine {
             .port(((ClickHouseDatastore) this.datastore).dataSource.getPort())
             .build();
 
-    String scenarioFieldName = ((ClickHouseDatastore) this.datastore).stores.get(query.table.name).scenarioFieldName();
+    String scenarioFieldName = ((ClickHouseDatastore) this.datastore).storesByName()
+            .get(query.table.name)
+            .scenarioFieldName();
     try (ClickHouseClient client = ClickHouseClient.newInstance(preferredProtocol);
          ClickHouseResponse response = client.connect(server)
                  .format(preferredFormat)

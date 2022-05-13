@@ -7,6 +7,7 @@ import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.SingleValueConditionDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -33,11 +34,14 @@ public abstract class ATestQueryEngine {
 
   protected QueryEngine queryEngine;
 
-  protected String storeName = "storeName";
+  protected TransactionManager tm;
+
+  protected String storeName = "myAwesomeStore";
 
   protected abstract QueryEngine createQueryEngine(Datastore datastore);
 
   protected abstract Datastore createDatastore(String storeName, List<Field> fields);
+  protected abstract TransactionManager createTransactionManager();
 
   @BeforeAll
   void setup() {
@@ -48,24 +52,31 @@ public abstract class ATestQueryEngine {
 
     this.datastore = createDatastore(this.storeName, List.of(ean, category, price, qty));
     this.queryEngine = createQueryEngine(this.datastore);
+    this.tm = createTransactionManager();
 
-    this.datastore.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
+    beforeLoading(List.of(ean, category, price, qty));
+
+    this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", 2d, 10},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
 
-    this.datastore.load("s1", this.storeName, List.of(
+    this.tm.load("s1", this.storeName, List.of(
             new Object[]{"bottle", "drink", 4d, 10},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
 
-    this.datastore.load("s2", this.storeName, List.of(
+    this.tm.load("s2", this.storeName, List.of(
             new Object[]{"bottle", "drink", 1.5d, 10},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
+  }
+
+  protected void beforeLoading(List<Field> fields) {
+
   }
 
   @Test

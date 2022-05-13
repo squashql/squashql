@@ -28,7 +28,7 @@ public abstract class AQueryEngine implements QueryEngine {
   protected AQueryEngine(Datastore datastore) {
     this.datastore = datastore;
     this.fieldSupplier = fieldName -> {
-      for (Store store : this.datastore.stores()) {
+      for (Store store : this.datastore.storesByName().values()) {
         for (Field field : store.getFields()) {
           if (field.name().equals(fieldName)) {
             return field;

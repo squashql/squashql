@@ -10,6 +10,7 @@ import me.paulbares.query.Table;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import me.paulbares.transaction.SparkTransactionManager;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.eclipse.collections.api.tuple.Pair;
@@ -80,6 +81,7 @@ public class SparkEmbeddedQueryBenchmark {
             new Field("Country", String.class),
             new Field("ShipperName", String.class)));
     SparkDatastore datastore = new SparkDatastore(sparkStore);
+    SparkTransactionManager tm = new SparkTransactionManager(datastore.spark, datastore);
 
     String path = "spark/src/test/resources/benchmark/data_%s_scenario.csv";
     Function<String, String> pathFunction = scenario -> String.format(path, scenario);
@@ -117,7 +119,7 @@ public class SparkEmbeddedQueryBenchmark {
 
       count.set(tuples.size());
       System.out.println("Loading scenario " + scenario + " ...");
-      datastore.load(scenario, ordersStore, tuples);
+      tm.load(scenario, ordersStore, tuples);
       System.out.println("Data for scenario " + scenario + " done");
     };
 
