@@ -49,12 +49,13 @@ public abstract class ATestQueryEngine {
     Field category = new Field("category", String.class);
     Field price = new Field("price", double.class);
     Field qty = new Field("quantity", int.class);
+    Field scenario = new Field(SCENARIO_FIELD_NAME, String.class);
 
     this.datastore = createDatastore(this.storeName, List.of(ean, category, price, qty));
     this.queryEngine = createQueryEngine(this.datastore);
     this.tm = createTransactionManager();
 
-    beforeLoading(List.of(ean, category, price, qty));
+    beforeLoading(List.of(ean, category, price, qty, scenario));
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", 2d, 10},
