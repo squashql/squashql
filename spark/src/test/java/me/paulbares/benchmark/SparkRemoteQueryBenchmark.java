@@ -98,7 +98,7 @@ public class SparkRemoteQueryBenchmark {
             .config(conf)
             .getOrCreate();
 
-    SparkDatastore datastore = new SparkDatastore(spark, List.of(sparkStore));
+    SparkDatastore datastore = new SparkDatastore(spark);
     SparkTransactionManager tm = new SparkTransactionManager(datastore.spark, datastore);
 
     for (Map.Entry<String, List<Object[]>> entry : data.entrySet()) {

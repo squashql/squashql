@@ -51,13 +51,14 @@ public class SparkTransactionManager implements TransactionManager {
       String uriSt = this.spark.catalog().getDatabase("default").locationUri();
       URI uri = new URI(uriSt);
       Path path = Paths.get(uri);
-      File dir = Paths.get(path.toString(), table.toLowerCase()).toFile();
+      File dir = Paths.get(path.toString(), table).toFile();
       if (dir.isDirectory() && dir.exists()) {
         FileUtils.deleteDirectory(dir);
       }
     } catch (AnalysisException | URISyntaxException | IOException e) {
       throw new RuntimeException(e);
     }
+    this.spark.conf().set("spark.sql.caseSensitive", "true"); // without it, table names are lowercase.
     this.spark.createDataFrame(Collections.EMPTY_LIST, store.getSchema())
             .persist(StorageLevel.MEMORY_ONLY())
             .write()

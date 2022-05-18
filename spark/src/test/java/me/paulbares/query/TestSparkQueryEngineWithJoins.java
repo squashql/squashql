@@ -22,7 +22,7 @@ public class TestSparkQueryEngineWithJoins extends ATestQueryEngineWithJoins {
 
   @Override
   protected Datastore createDatastore(List<Store> stores) {
-    return new SparkDatastore(stores.stream().map(s -> (SparkStore) s).toList());
+    return new SparkDatastore();
   }
 
   @Override

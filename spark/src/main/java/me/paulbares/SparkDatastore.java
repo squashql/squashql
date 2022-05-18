@@ -2,6 +2,7 @@ package me.paulbares;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import com.google.common.base.Suppliers;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import org.apache.spark.sql.AnalysisException;
@@ -11,7 +12,6 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalog.Column;
 import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.types.DataType;
-import org.apache.spark.storage.StorageLevel;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public class SparkDatastore implements Datastore {
 
@@ -30,37 +31,34 @@ public class SparkDatastore implements Datastore {
     root.setLevel(Level.INFO);
   }
 
-  public final Map<String, SparkStore> stores = new HashMap<>();
+  public final Supplier<Map<String, SparkStore>> stores;
 
   public final SparkSession spark;
 
-  public SparkDatastore(List<SparkStore> stores) {  // FIXME remote stores
+  public SparkDatastore() {
     this(SparkSession
-                    .builder()
-                    .appName("Java Spark SQL Example")
-                    .config("spark.master", "local")
-                    .getOrCreate(),
-            stores);
+            .builder()
+            .appName("Java Spark SQL Example")
+            .config("spark.master", "local")
+            .getOrCreate());
   }
 
-  public SparkDatastore(SparkSession sparkSession, List<SparkStore> stores) { // FIXME remote stores
+  public SparkDatastore(SparkSession sparkSession) {
     this.spark = sparkSession;
-    for (SparkStore store : stores) {
-      this.stores.put(store.name(), store);
-    }
+    this.stores = Suppliers.memoize(() -> {
+      Map<String, SparkStore> r = new HashMap<>();
+      getTableNames(this.spark).forEach(table -> r.put(table, new SparkStore(table, getFields(this.spark, table))));
+      return r;
+    });
   }
 
   @Override
   public Map<String, SparkStore> storesByName() {
-    return this.stores; // FIXME lazy load See ClickHouse
+    return this.stores.get();
   }
 
   public Dataset<Row> get(String storeName) {
     return this.spark.table(storeName);
-  }
-
-  public void persist(StorageLevel storageLevel) {
-//    this.stores.forEach((name, store) -> store.persist(storageLevel));
   }
 
   public static Collection<String> getTableNames(SparkSession spark) {

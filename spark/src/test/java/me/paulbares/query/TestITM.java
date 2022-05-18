@@ -1,7 +1,6 @@
 package me.paulbares.query;
 
 import me.paulbares.SparkDatastore;
-import me.paulbares.SparkStore;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.SparkTransactionManager;
@@ -10,7 +9,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
@@ -41,16 +39,15 @@ public class TestITM {
     Field compConcurrentEan = new Field("competitor_concurrent_ean", String.class);
     Field compPrice = new Field("competitor_price", double.class);
 
-    List<SparkStore> stores = new ArrayList<>();
-    this.datastore = new SparkDatastore(stores);
+    this.datastore = new SparkDatastore();
 
     SparkTransactionManager tm = new SparkTransactionManager(this.datastore.spark, this.datastore);
-    stores.add(tm.createTable("our_prices", List.of(ean, pdv, price, qty), col("price").multiply(col("quantity")).as("capdv")));
-    stores.add(tm.createTable("their_prices", List.of(compEan, compConcurrentPdv, compBrand, compConcurrentEan, compPrice)));
-    stores.add(tm.createTable("our_stores_their_stores", List.of(
+    tm.createTable("our_prices", List.of(ean, pdv, price, qty), col("price").multiply(col("quantity")).as("capdv"));
+    tm.createTable("their_prices", List.of(compEan, compConcurrentPdv, compBrand, compConcurrentEan, compPrice));
+    tm.createTable("our_stores_their_stores", List.of(
             new Field("our_store", String.class),
             new Field("their_store", String.class)
-    )));
+    ));
 
     tm.load(MAIN_SCENARIO_NAME,
             "our_prices", List.of(

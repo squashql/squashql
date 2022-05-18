@@ -27,7 +27,7 @@ public class SparkQueryEngine extends AQueryEngine {
     LOGGER.fine("Translated query #" + query + " to " + sql);
     createOrReplaceTempView(query.table);
     Dataset<Row> ds = this.sparkDatastore.spark.sql(sql);
-    return new DatasetTable(ds, this.sparkDatastore.stores.get(query.table.name).scenarioFieldName());
+    return new DatasetTable(ds, this.sparkDatastore.storesByName().get(query.table.name).scenarioFieldName());
   }
 
   protected void createOrReplaceTempView(TableDto table) {
