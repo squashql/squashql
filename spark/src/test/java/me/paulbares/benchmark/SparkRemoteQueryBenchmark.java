@@ -98,7 +98,7 @@ public class SparkRemoteQueryBenchmark {
             .config(conf)
             .getOrCreate();
 
-    SparkDatastore datastore = new SparkDatastore(spark);
+    SparkDatastore datastore = new SparkDatastore(spark, List.of(sparkStore));
     SparkTransactionManager tm = new SparkTransactionManager(datastore.spark, datastore);
 
     for (Map.Entry<String, List<Object[]>> entry : data.entrySet()) {
@@ -129,7 +129,7 @@ public class SparkRemoteQueryBenchmark {
       Dataset<Row> ds = spark.read()
               .option("delimiter", delimiter)
               .option("header", header)
-              .schema(SparkStore.createSchema(fields.toArray(new Field[0])))
+              .schema(SparkStore.createSchema(fields))
               // use the schema to have tuples correctly formed otherwise
               // all elements are strings
               .csv(pathFunction.apply(scenario));

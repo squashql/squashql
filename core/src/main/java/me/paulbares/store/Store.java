@@ -11,7 +11,7 @@ public interface Store {
   List<Field> getFields();
 
   default String scenarioFieldName() {
-    return scenarioFieldName(name(), ".");
+    return scenarioFieldName(name(), "_");
   }
 
   static String scenarioFieldName(String storeName, String separator) {

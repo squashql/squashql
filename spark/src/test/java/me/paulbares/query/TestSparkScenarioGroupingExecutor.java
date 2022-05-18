@@ -18,7 +18,7 @@ public class TestSparkScenarioGroupingExecutor extends ATestScenarioGroupingExec
 
   @Override
   protected Datastore createDatastore(String storeName, List<Field> fields) {
-    return new SparkDatastore(new SparkStore(storeName, fields));
+    return new SparkDatastore(List.of(new SparkStore(storeName, fields)));
   }
 
   @Override

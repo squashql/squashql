@@ -42,20 +42,15 @@ public class TestITM {
     Field compPrice = new Field("competitor_price", double.class);
 
     List<SparkStore> stores = new ArrayList<>();
-    SparkStore our_price_store = new SparkStore("our_prices", List.of(ean, pdv, price, qty),
-            col("price").multiply(col("quantity")).as("capdv"));
-    stores.add(our_price_store);
-    SparkStore their_prices_store = new SparkStore("their_prices", List.of(compEan, compConcurrentPdv, compBrand,
-            compConcurrentEan, compPrice));
-    stores.add(their_prices_store);
-    SparkStore our_stores_their_stores_store = new SparkStore("our_stores_their_stores", List.of(
+    this.datastore = new SparkDatastore(stores);
+
+    SparkTransactionManager tm = new SparkTransactionManager(this.datastore.spark, this.datastore);
+    stores.add(tm.createTable("our_prices", List.of(ean, pdv, price, qty), col("price").multiply(col("quantity")).as("capdv")));
+    stores.add(tm.createTable("their_prices", List.of(compEan, compConcurrentPdv, compBrand, compConcurrentEan, compPrice)));
+    stores.add(tm.createTable("our_stores_their_stores", List.of(
             new Field("our_store", String.class),
             new Field("their_store", String.class)
-    ));
-    stores.add(our_stores_their_stores_store);
-
-    this.datastore = new SparkDatastore(stores.toArray(new SparkStore[0]));
-    SparkTransactionManager tm = new SparkTransactionManager(this.datastore.spark, this.datastore);
+    )));
 
     tm.load(MAIN_SCENARIO_NAME,
             "our_prices", List.of(

@@ -80,7 +80,7 @@ public class SparkEmbeddedQueryBenchmark {
             new Field("City", String.class),
             new Field("Country", String.class),
             new Field("ShipperName", String.class)));
-    SparkDatastore datastore = new SparkDatastore(sparkStore);
+    SparkDatastore datastore = new SparkDatastore(List.of(sparkStore));
     SparkTransactionManager tm = new SparkTransactionManager(datastore.spark, datastore);
 
     String path = "spark/src/test/resources/benchmark/data_%s_scenario.csv";
@@ -92,7 +92,7 @@ public class SparkEmbeddedQueryBenchmark {
               datastore.spark.read()
                       .option("delimiter", delimiter)
                       .option("header", header)
-                      .schema(sparkStore.getBaseSchema()) // use the schema to have tuples correctly formed otherwise
+                      .schema(sparkStore.getSchema()) // use the schema to have tuples correctly formed otherwise
                       // all elements are strings
                       .csv(pathFunction.apply(scenario));
 

@@ -3,6 +3,7 @@ package me.paulbares.query;
 import me.paulbares.SparkDatastore;
 import me.paulbares.SparkStore;
 import me.paulbares.store.Datastore;
+import me.paulbares.store.Field;
 import me.paulbares.store.Store;
 import me.paulbares.transaction.TransactionManager;
 
@@ -15,13 +16,13 @@ public class TestSparkQueryEngineWithJoins extends ATestQueryEngineWithJoins {
     return new SparkQueryEngine((SparkDatastore) datastore);
   }
 
-  protected Store createStore(String storeName) {
-    return new SparkStore(storeName);
+  protected Store createStore(String storeName, List<Field> fields) {
+    return new SparkStore(storeName, fields);
   }
 
   @Override
   protected Datastore createDatastore(List<Store> stores) {
-    return new SparkDatastore(stores.toArray(new SparkStore[0]));
+    return new SparkDatastore(stores.stream().map(s -> (SparkStore) s).toList());
   }
 
   @Override

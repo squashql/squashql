@@ -4,6 +4,7 @@ import me.paulbares.query.dto.JoinMappingDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Datastore;
+import me.paulbares.store.Field;
 import me.paulbares.store.Store;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
@@ -55,19 +56,20 @@ public abstract class ATestQueryEngineWithJoins {
 
   protected abstract Datastore createDatastore(List<Store> stores);
 
-  protected abstract Store createStore(String storeName);
+  protected abstract Store createStore(String storeName, List<Field> fields);
 
   protected abstract TransactionManager createTransactionManager();
 
   @BeforeAll
   void setup() {
     List<Store> stores = new ArrayList<>();
-
-    stores.add(createStore(this.orders));
-    stores.add(createStore(this.orderDetails));
-    stores.add(createStore(this.products));
-    stores.add(createStore(this.shippers));
-    stores.add(createStore(this.categories));
+//
+//    stores.add(createStore(this.orders));
+//    stores.add(createStore(this.orderDetails));
+//    stores.add(createStore(this.products));
+//    stores.add(createStore(this.shippers));
+//    stores.add(createStore(this.categories));
+    Assertions.fail("todo");
 
     this.datastore = createDatastore(stores);
     this.queryEngine = createQueryEngine(this.datastore);

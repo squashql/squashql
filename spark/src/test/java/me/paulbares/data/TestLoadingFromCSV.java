@@ -1,7 +1,6 @@
 package me.paulbares.data;
 
 import me.paulbares.SparkDatastore;
-import me.paulbares.SparkStore;
 import me.paulbares.store.Datastore;
 import me.paulbares.transaction.SparkTransactionManager;
 import org.apache.spark.sql.Dataset;
@@ -38,7 +37,9 @@ public class TestLoadingFromCSV {
   void test() {
     String customersStore = "customersStore";
     String ordersStore = "ordersStore";
-    SparkDatastore datastore = new SparkDatastore(new SparkStore(customersStore), new SparkStore(ordersStore));
+    Assertions.fail("todo");
+    SparkDatastore datastore = null;// FIXME
+//    SparkDatastore datastore = new SparkDatastore(new SparkStore(customersStore), new SparkStore(ordersStore));
     SparkTransactionManager tm = new SparkTransactionManager(datastore.spark, datastore);
 
     tm.loadCsv(Datastore.MAIN_SCENARIO_NAME, customersStore, pathFunction.apply("customers.csv").toString(), delimiter, header);

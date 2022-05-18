@@ -120,7 +120,7 @@ public class ClickHouseQueryBenchmark {
         Dataset<Row> ds = spark.read()
                 .option("delimiter", delimiter)
                 .option("header", header)
-                .schema(SparkStore.createSchema(fields.toArray(new Field[0])))
+                .schema(SparkStore.createSchema(fields))
                 // use the schema to have tuples correctly formed otherwise
                 // all elements are strings
                 .csv(pathFunction.apply(scenario));

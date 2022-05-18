@@ -127,7 +127,7 @@ public class TestQueryRemote {
             .config(conf)
             .getOrCreate();
 
-    return new SparkDatastore(spark, new SparkStore(storeName, fields));
+    return new SparkDatastore(spark, List.of(new SparkStore(storeName, fields)));
   }
 
   public static class LogMessageWaitStrategy extends AbstractWaitStrategy {
