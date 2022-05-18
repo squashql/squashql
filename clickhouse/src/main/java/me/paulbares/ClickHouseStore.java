@@ -21,7 +21,7 @@ public class ClickHouseStore implements Store {
 
   @Override
   public String scenarioFieldName() {
-    return Store.scenarioFieldName(this.name, "_"); // use a different separator because issue with dot '.'
+    return getScenarioName(this.name); // use a different separator because issue with dot '.'
   }
 
   @Override
@@ -61,5 +61,9 @@ public class ClickHouseStore implements Store {
       case String -> String.class;
       default -> throw new IllegalArgumentException("Unsupported data type " + dataType);
     };
+  }
+
+  public static String getScenarioName(String storeName) {
+    return Store.scenarioFieldName(storeName, "_");
   }
 }

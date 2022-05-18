@@ -61,7 +61,7 @@ public class SparkQueryController {
           @RequestParam(name = "dataset", required = false) String dataset,
           @RequestParam(name = "repo-url", required = false) String repo_url) {
     List<Map<String, Object>> root = new ArrayList<>();
-    for (Store store : getQueryEngine(dataset).datastore.stores()) {
+    for (Store store : getQueryEngine(dataset).datastore.storesByName().values()) {
       List<Map<String, String>> collect = store.getFields()
               .stream()
               .filter(f -> !f.name().equals(store.scenarioFieldName()))

@@ -63,7 +63,7 @@ public class TestClickHouseQueryEngine extends ATestQueryEngine {
   @Override
   protected void beforeLoading(List<Field> fields) {
     ClickHouseTransactionManager tm = (ClickHouseTransactionManager) this.tm;
-    tm.createTable(this.storeName, fields);
+    tm.dropAndCreateInMemoryTable(this.storeName, fields);
   }
 
   @Override

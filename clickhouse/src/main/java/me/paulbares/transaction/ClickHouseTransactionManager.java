@@ -3,6 +3,7 @@ package me.paulbares.transaction;
 import com.clickhouse.jdbc.ClickHouseConnection;
 import com.clickhouse.jdbc.ClickHouseDataSource;
 import com.clickhouse.jdbc.ClickHouseStatement;
+import me.paulbares.ClickHouseDatastore;
 import me.paulbares.ClickHouseStore;
 import me.paulbares.store.Field;
 
@@ -21,16 +22,19 @@ public class ClickHouseTransactionManager implements TransactionManager {
     this.clickHouseDataSource = clickHouseDataSource;
   }
 
-  public ClickHouseStore createTable(String table, List<Field> fields) {
+  public ClickHouseStore dropAndCreateInMemoryTable(String table, List<Field> fields) {
+    ClickHouseStore store = new ClickHouseStore(table, fields);
+
     try (ClickHouseConnection conn = this.clickHouseDataSource.getConnection();
          ClickHouseStatement stmt = conn.createStatement()) {
       stmt.execute("drop table if exists " + table);
       StringBuilder sb = new StringBuilder();
       sb.append("(");
-      for (int i = 0; i < fields.size(); i++) {
-        Field field = fields.get(i);
+      int size = store.getFields().size();
+      for (int i = 0; i < size; i++) {
+        Field field = store.getFields().get(i);
         sb.append(field.name()).append(' ').append(classToClickHouseType(field.type()));
-        if (i < fields.size() - 1) {
+        if (i < size - 1) {
           sb.append(", ");
         }
       }
@@ -39,11 +43,13 @@ public class ClickHouseTransactionManager implements TransactionManager {
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
-    return new ClickHouseStore(table, fields);
+    return store;
   }
 
   @Override
   public void load(String scenario, String store, List<Object[]> tuples) {
+    // Check the table contains a column scenario.
+    ensureScenarioColumnIsPresent(store);
     String join = String.join(",", IntStream.range(0, tuples.get(0).length + 1).mapToObj(i -> "?").toList());
     String pattern = "insert into " + store + " values(" + join + ")";
     try (ClickHouseConnection conn = this.clickHouseDataSource.getConnection();
@@ -59,6 +65,15 @@ public class ClickHouseTransactionManager implements TransactionManager {
       stmt.executeBatch();
     } catch (SQLException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  private void ensureScenarioColumnIsPresent(String store) {
+    List<Field> fields = ClickHouseDatastore.getFields(this.clickHouseDataSource, store);
+    String scenarioName = ClickHouseStore.getScenarioName(store);
+    boolean found = fields.stream().anyMatch(f -> f.name().equals(scenarioName));
+    if (!found) {
+      throw new RuntimeException(String.format("%s field not found", scenarioName));
     }
   }
 

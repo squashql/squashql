@@ -1,6 +1,5 @@
 package me.paulbares.query;
 
-import com.clickhouse.jdbc.ClickHouseDataSource;
 import me.paulbares.ClickHouseDatastore;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
@@ -34,6 +33,12 @@ public class TestClickHouseScenarioGroupingExecutor extends ATestScenarioGroupin
   }
 
   @Override
+  protected void beforeLoading(List<Field> fields) {
+    ClickHouseTransactionManager tm = (ClickHouseTransactionManager) this.tm;
+    tm.dropAndCreateInMemoryTable(this.storeName, fields);
+  }
+
+  @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {
     return new ClickHouseQueryEngine((ClickHouseDatastore) datastore);
   }
@@ -45,6 +50,6 @@ public class TestClickHouseScenarioGroupingExecutor extends ATestScenarioGroupin
 
   @Override
   protected TransactionManager createTransactionManager() {
-    return new ClickHouseTransactionManager((ClickHouseDataSource) this.datastore);
+    return new ClickHouseTransactionManager(((ClickHouseDatastore) this.datastore).getDataSource());
   }
 }

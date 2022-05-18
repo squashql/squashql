@@ -41,7 +41,7 @@ public class ClickHouseDatastore implements Datastore {
 
     this.stores = Suppliers.memoize(() -> {
       Map<String, ClickHouseStore> r = new HashMap<>();
-      getTableNames().forEach(table -> r.put(table, new ClickHouseStore(table, getFields(table))));
+      getTableNames(this.dataSource).forEach(table -> r.put(table, new ClickHouseStore(table, getFields(this.dataSource, table))));
       return r;
     });
   }
@@ -63,9 +63,9 @@ public class ClickHouseDatastore implements Datastore {
     }
   }
 
-  private Collection<String> getTableNames() {
+  public static Collection<String> getTableNames(ClickHouseDataSource dataSource) {
     try {
-      DatabaseMetaData metaData = this.dataSource.getConnection().getMetaData();
+      DatabaseMetaData metaData = dataSource.getConnection().getMetaData();
       ResultSet tables = metaData.getTables(null, "default", null, null);
 
       Set<String> tableNames = new HashSet<>();
@@ -79,9 +79,9 @@ public class ClickHouseDatastore implements Datastore {
     }
   }
 
-  private List<Field> getFields(String table) {
+  public static List<Field> getFields(ClickHouseDataSource dataSource, String table) {
     try {
-      DatabaseMetaData metaData = this.dataSource.getConnection().getMetaData();
+      DatabaseMetaData metaData = dataSource.getConnection().getMetaData();
       ResultSet columns = metaData.getColumns(null, "default", table, null);
 
       List<Field> fields = new ArrayList<>();
