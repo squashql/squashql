@@ -81,7 +81,7 @@ public class SparkEmbeddedQueryBenchmark {
             new Field("Country", String.class),
             new Field("ShipperName", String.class)));
     SparkDatastore datastore = new SparkDatastore();
-    SparkTransactionManager tm = new SparkTransactionManager(datastore.spark, datastore);
+    SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
 
     String path = "spark/src/test/resources/benchmark/data_%s_scenario.csv";
     Function<String, String> pathFunction = scenario -> String.format(path, scenario);

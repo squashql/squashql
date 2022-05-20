@@ -37,10 +37,8 @@ public class TestLoadingFromCSV {
   void test() {
     String customersStore = "customersStore";
     String ordersStore = "ordersStore";
-    Assertions.fail("todo");
-    SparkDatastore datastore = null;// FIXME
-//    SparkDatastore datastore = new SparkDatastore(new SparkStore(customersStore), new SparkStore(ordersStore));
-    SparkTransactionManager tm = new SparkTransactionManager(datastore.spark, datastore);
+    SparkDatastore datastore = new SparkDatastore();
+    SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
 
     tm.loadCsv(Datastore.MAIN_SCENARIO_NAME, customersStore, pathFunction.apply("customers.csv").toString(), delimiter, header);
     tm.loadCsv(Datastore.MAIN_SCENARIO_NAME, ordersStore, pathFunction.apply("orders.csv").toString(), delimiter, header);

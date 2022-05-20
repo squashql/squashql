@@ -4,8 +4,6 @@ import me.paulbares.query.dto.JoinMappingDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Field;
-import me.paulbares.store.Store;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,7 +14,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -54,25 +51,15 @@ public abstract class ATestQueryEngineWithJoins {
 
   protected abstract QueryEngine createQueryEngine(Datastore datastore);
 
-  protected abstract Datastore createDatastore(List<Store> stores);
-
-  protected abstract Store createStore(String storeName, List<Field> fields);
+  protected abstract Datastore createDatastore();
 
   protected abstract TransactionManager createTransactionManager();
 
   @BeforeAll
   void setup() {
-    List<Store> stores = new ArrayList<>();
-//
-//    stores.add(createStore(this.orders));
-//    stores.add(createStore(this.orderDetails));
-//    stores.add(createStore(this.products));
-//    stores.add(createStore(this.shippers));
-//    stores.add(createStore(this.categories));
-    Assertions.fail("todo");
-
-    this.datastore = createDatastore(stores);
+    this.datastore = createDatastore();
     this.queryEngine = createQueryEngine(this.datastore);
+    this.tm = createTransactionManager();
 
     this.tm.loadCsv(MAIN_SCENARIO_NAME, this.orders, pathFunction.apply("orders.csv").toString(), delimiter, header);
     this.tm.loadCsv(MAIN_SCENARIO_NAME, this.shippers, pathFunction.apply("shippers.csv").toString(), delimiter, header);
@@ -89,9 +76,9 @@ public abstract class ATestQueryEngineWithJoins {
     TableDto productsTable = new TableDto(this.products);
     TableDto categoriesTable = new TableDto(this.categories);
 
-    ordersTable.join(orderDetailsTable, "inner", new JoinMappingDto("OrderId", "OrderId"));
-    ordersTable.join(shippersTable, "inner", new JoinMappingDto("ShipperId", "ShipperId"));
-    orderDetailsTable.join(productsTable, "inner", new JoinMappingDto("ProductId", "ProductId"));
+    ordersTable.join(orderDetailsTable, "inner", new JoinMappingDto("OrderID", "OrderID"));
+    ordersTable.join(shippersTable, "inner", new JoinMappingDto("ShipperID", "ShipperID"));
+    orderDetailsTable.join(productsTable, "inner", new JoinMappingDto("ProductID", "ProductID"));
     productsTable.join(categoriesTable, "inner", new JoinMappingDto("CategoryID", "CategoryID"));
 
     QueryDto query = new QueryDto()

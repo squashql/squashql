@@ -3,23 +3,15 @@ package me.paulbares.transaction;
 import me.paulbares.SparkDatastore;
 import me.paulbares.SparkStore;
 import me.paulbares.store.Field;
-import org.apache.commons.io.FileUtils;
 import org.apache.spark.sql.AnalysisException;
-import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
-import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.catalog.Table;
+import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.StructField;
-import org.apache.spark.storage.StorageLevel;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,41 +21,45 @@ public class SparkTransactionManager implements TransactionManager {
 
   protected final SparkSession spark;
 
-  protected final SparkDatastore datastore;
-
-  public SparkTransactionManager(SparkSession spark, SparkDatastore datastore) {
+  public SparkTransactionManager(SparkSession spark) {
     this.spark = spark;
-    this.datastore = datastore;
   }
 
-  public SparkStore createTable(String table, List<Field> fields, Column... columns) {
+  public SparkStore createTemporaryTable(String table, List<Field> fields) {
     Dataset<Row> dataFrame = this.spark.emptyDataFrame();
-    for (Column column : columns) {
-      dataFrame = dataFrame.withColumn(column.named().name(), column);
-    }
     StructField[] sparkFields = dataFrame.schema().fields();
     List<Field> newFields = new ArrayList<>(fields);
     newFields.addAll(Arrays.stream(sparkFields)
             .map(f -> new Field(f.name(), SparkStore.datatypeToClass(f.dataType())))
             .toList());
     SparkStore store = new SparkStore(table, fields);
-    try {
-      String uriSt = this.spark.catalog().getDatabase("default").locationUri();
-      URI uri = new URI(uriSt);
-      Path path = Paths.get(uri);
-      File dir = Paths.get(path.toString(), table).toFile();
-      if (dir.isDirectory() && dir.exists()) {
-        FileUtils.deleteDirectory(dir);
-      }
-    } catch (AnalysisException | URISyntaxException | IOException e) {
-      throw new RuntimeException(e);
-    }
-    this.spark.conf().set("spark.sql.caseSensitive", "true"); // without it, table names are lowercase.
-    this.spark.createDataFrame(Collections.EMPTY_LIST, store.getSchema())
-            .persist(StorageLevel.MEMORY_ONLY())
-            .write()
-            .mode(SaveMode.Append)
-            .saveAsTable(table);
+//    try {
+//      String uriSt = this.spark.catalog().getDatabase("default").locationUri();
+//      URI uri = new URI(uriSt);
+//      Path path = Paths.get(uri);
+//      File dir = Paths.get(path.toString(), table).toFile();
+//      if (dir.isDirectory() && dir.exists()) {
+//        FileUtils.deleteDirectory(dir);
+//      }
+//    } catch (AnalysisException | URISyntaxException | IOException e) {
+//      throw new RuntimeException(e);
+//    }
+//    this.spark.conf().set("spark.sql.caseSensitive", "true"); // without it, table names are lowercase.
+//    this.spark.createDataFrame(Collections.EMPTY_LIST, store.getSchema())
+//            .persist(StorageLevel.MEMORY_ONLY())
+//            .write()
+//            .mode(SaveMode.Append)
+//            .saveAsTable(table);
+
+    this.spark.conf().set("spark.sql.caseSensitive", String.valueOf(true)); // without it, table names are lowercase.
+    this.spark
+            .createDataFrame(Collections.emptyList(), store.getSchema())
+            .createOrReplaceTempView(table);
+//    Collection<String> tableNames = SparkDatastore.getTableNames(spark);
+//    List<Field> my_temp_table = SparkDatastore.getFields(spark, "my_temp_table");
+//    spark.sql("drop table if exists " + table);
+//    spark.sql("create table " + table + " as select * from my_temp_table LOCATION /tmp/zob");
+
     return store;
   }
 
@@ -71,18 +67,26 @@ public class SparkTransactionManager implements TransactionManager {
   public void load(String scenario, String store, List<Object[]> tuples) {
     // Check the table contains a column scenario.
     ensureScenarioColumnIsPresent(store);
-    List<Row> rows = new ArrayList<>();
-    for (Object[] tuple : tuples) {
+
+    List<Row> rows = tuples.stream().map(tuple -> {
       Object[] copy = Arrays.copyOf(tuple, tuple.length + 1);
       copy[copy.length - 1] = scenario;
-      rows.add(RowFactory.create(copy));
-    }
-    Dataset<Row> dataFrame = this.spark.createDataFrame(rows, SparkStore.createSchema(SparkDatastore.getFields(this.spark, store)));// to load pojo
-    try {
-      dataFrame.write().mode(SaveMode.Append).saveAsTable(store);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+      return RowFactory.create(copy);
+    }).toList();
+
+    Dataset<Row> dataFrame = this.spark.createDataFrame(
+            rows,
+            SparkStore.createSchema(SparkDatastore.getFields(this.spark, store)));// to load pojo
+    appendDataset(store, dataFrame);
+  }
+
+  private void appendDataset(String store, Dataset<Row> dataset) {
+    String viewName = "tmp_" + store;
+    this.spark.sql("ALTER VIEW " + store + " RENAME TO " + viewName);
+    Dataset<Row> table = this.spark.table(viewName);
+    Dataset<Row> union = table.union(dataset);
+    union.createOrReplaceTempView(store);
+    this.spark.catalog().dropTempView(viewName);
   }
 
   private void ensureScenarioColumnIsPresent(String store) {
@@ -96,6 +100,24 @@ public class SparkTransactionManager implements TransactionManager {
 
   @Override
   public void loadCsv(String scenario, String store, String path, String delimiter, boolean header) {
-    throw new RuntimeException("TODO");
+    Dataset<Row> dataFrame = this.spark.read()
+            .option("delimiter", delimiter)
+            .option("header", true)
+            .csv(path)
+            .withColumn(SparkStore.getScenarioName(store), functions.lit(scenario));
+
+    Table table = null;
+    try {
+      table = this.spark.catalog().getTable(store);
+    } catch (AnalysisException e) {
+      // Swallow, table not found
+    }
+
+    if (table == null) {
+      this.spark.conf().set("spark.sql.caseSensitive", String.valueOf(true)); // without it, table names are lowercase.
+      dataFrame.createOrReplaceTempView(store);
+    } else {
+      appendDataset(store, dataFrame);
+    }
   }
 }

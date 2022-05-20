@@ -85,13 +85,13 @@ public class TestQueryRemote {
     String storeName = "storeName";
     SparkDatastore datastore = (SparkDatastore) createDatastore();
     SparkQueryEngine queryEngine = new SparkQueryEngine(datastore);
-    SparkTransactionManager tm = new SparkTransactionManager(datastore.spark, datastore);
+    SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
 
     Field ean = new Field("ean", String.class);
     Field category = new Field("category", String.class);
     Field price = new Field("price", double.class);
     Field qty = new Field("quantity", int.class);
-    tm.createTable(storeName, List.of(ean, category, price, qty));
+    tm.createTemporaryTable(storeName, List.of(ean, category, price, qty));
 
     tm.load(MAIN_SCENARIO_NAME, storeName, List.of(
             new Object[]{"bottle", "drink", 2d, 10},

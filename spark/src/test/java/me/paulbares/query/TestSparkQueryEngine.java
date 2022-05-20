@@ -23,12 +23,12 @@ public class TestSparkQueryEngine extends ATestQueryEngine {
   @Override
   protected TransactionManager createTransactionManager() {
     SparkDatastore ds = (SparkDatastore) this.datastore;
-    return new SparkTransactionManager(ds.spark, ds);
+    return new SparkTransactionManager(ds.spark);
   }
 
   @Override
   protected void beforeLoading(List<Field> fields) {
     SparkTransactionManager tm = (SparkTransactionManager) this.tm;
-    tm.createTable(this.storeName, fields);
+    tm.createTemporaryTable(this.storeName, fields);
   }
 }

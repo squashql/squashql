@@ -9,6 +9,7 @@ import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.catalog.Catalog;
 import org.apache.spark.sql.catalog.Column;
 import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.types.DataType;
@@ -77,7 +78,11 @@ public class SparkDatastore implements Datastore {
 
   public static List<Field> getFields(SparkSession spark, String tableName) {
     try {
-      Dataset<Column> columns = spark.catalog().listColumns("default", tableName);
+      Catalog catalog = spark.catalog();
+      Table table = catalog.getTable(tableName);
+      Dataset<Column> columns = table.isTemporary()
+              ? catalog.listColumns(tableName)
+              : catalog.listColumns("default", tableName);
       List<Field> fields = new ArrayList<>();
       Iterator<Column> columnIterator = columns.toLocalIterator();
       while (columnIterator.hasNext()) {
