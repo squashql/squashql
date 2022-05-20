@@ -1,4 +1,4 @@
-name: caco3 ci
+name: aitm ci
 
 on:
   workflow_dispatch:
@@ -74,7 +74,7 @@ jobs:
         run: cd spark && mvn --no-transfer-progress test
         env:
           TESTCONTAINERS_REUSE_ENABLE: true
-          
+
   server:
     needs: [ compile, clickhouse, spark ]
     runs-on: ubuntu-latest
