@@ -1,6 +1,7 @@
 package me.paulbares;
 
 import com.clickhouse.client.ClickHouseDataType;
+import com.clickhouse.client.config.ClickHouseDefaults;
 import com.clickhouse.jdbc.ClickHouseConnection;
 import com.clickhouse.jdbc.ClickHouseDataSource;
 import com.clickhouse.jdbc.ClickHouseStatement;
@@ -68,7 +69,7 @@ public class ClickHouseDatastore implements Datastore {
   public static Collection<String> getTableNames(ClickHouseDataSource dataSource) {
     try {
       DatabaseMetaData metaData = dataSource.getConnection().getMetaData();
-      ResultSet tables = metaData.getTables(null, "default", null, null);
+      ResultSet tables = metaData.getTables(null, (String) ClickHouseDefaults.DATABASE.getDefaultValue(), null, null);
 
       Set<String> tableNames = new HashSet<>();
       while (tables.next()) {
@@ -84,7 +85,7 @@ public class ClickHouseDatastore implements Datastore {
   public static List<Field> getFields(ClickHouseDataSource dataSource, String table) {
     try {
       DatabaseMetaData metaData = dataSource.getConnection().getMetaData();
-      ResultSet columns = metaData.getColumns(null, "default", table, null);
+      ResultSet columns = metaData.getColumns(null, (String) ClickHouseDefaults.DATABASE.getDefaultValue(), table, null);
 
       List<Field> fields = new ArrayList<>();
       while (columns.next()) {

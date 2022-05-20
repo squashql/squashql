@@ -1,5 +1,11 @@
 package me.paulbares.transaction;
 
+import com.clickhouse.client.ClickHouseClient;
+import com.clickhouse.client.ClickHouseCompression;
+import com.clickhouse.client.ClickHouseFormat;
+import com.clickhouse.client.ClickHouseNode;
+import com.clickhouse.client.ClickHouseProtocol;
+import com.clickhouse.client.ClickHouseResponseSummary;
 import com.clickhouse.jdbc.ClickHouseConnection;
 import com.clickhouse.jdbc.ClickHouseDataSource;
 import com.clickhouse.jdbc.ClickHouseStatement;
@@ -8,9 +14,12 @@ import me.paulbares.ClickHouseUtil;
 import me.paulbares.store.Field;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
+import java.io.FileNotFoundException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.IntStream;
 
 import static me.paulbares.ClickHouseUtil.classToClickHouseType;
@@ -82,7 +91,21 @@ public class ClickHouseTransactionManager implements TransactionManager {
 
   @Override
   public void loadCsv(String scenario, String store, String path, String delimiter, boolean header) {
-    // TODO see ClickHouseClient.load(...)
-    throw new RuntimeException("not yet implemented");
+    ClickHouseNode clickHouseNode = ClickHouseNode.of(this.clickHouseDataSource.getHost(),
+            ClickHouseProtocol.HTTP,
+            this.clickHouseDataSource.getPort(),
+            null);
+
+    try {
+      CompletableFuture<ClickHouseResponseSummary> load = ClickHouseClient.load(
+              clickHouseNode,
+              store,
+              header ? ClickHouseFormat.CSVWithNames : ClickHouseFormat.CSV,
+              ClickHouseCompression.LZ4,
+              path);
+      load.get();
+    } catch (FileNotFoundException | InterruptedException | ExecutionException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
