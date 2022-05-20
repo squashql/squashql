@@ -8,5 +8,5 @@ public interface Datastore {
 
   String SCENARIO_FIELD_NAME = "scenario";
 
-  Map<String, ? extends Store> storesByName();
+  Map<String, Store> storesByName();
 }

@@ -1,32 +1,16 @@
 package me.paulbares;
 
+import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
-import me.paulbares.store.Store;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 
 import java.util.List;
 
-public class SparkStore implements Store {
+public final class SparkUtil {
 
-  protected final String name;
-
-  protected final List<Field> fields;
-
-  public SparkStore(String name, List<Field> fields) {
-    this.name = name;
-    this.fields = fields;
-  }
-
-  @Override
-  public String name() {
-    return this.name;
-  }
-
-  @Override
-  public List<Field> getFields() {
-    return this.fields;
+  private SparkUtil() {
   }
 
   public static Class<?> datatypeToClass(DataType type) {
@@ -68,12 +52,12 @@ public class SparkStore implements Store {
   public static StructType createSchema(List<Field> fields) {
     StructType schema = new StructType();
     for (Field field : fields) {
-      schema = schema.add(field.name(), SparkStore.classToDatatype(field.type()));
+      schema = schema.add(field.name(), classToDatatype(field.type()));
     }
     return schema;
   }
 
   public static String getScenarioName(String storeName) {
-    return Store.scenarioFieldName(storeName, "_");
+    return storeName + "_" + Datastore.SCENARIO_FIELD_NAME;
   }
 }

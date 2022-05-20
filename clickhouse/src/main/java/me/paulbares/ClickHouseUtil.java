@@ -1,37 +1,11 @@
 package me.paulbares;
 
 import com.clickhouse.client.ClickHouseDataType;
-import me.paulbares.store.Field;
-import me.paulbares.store.Store;
+import me.paulbares.store.Datastore;
 
-import java.util.ArrayList;
-import java.util.List;
+public final class ClickHouseUtil {
 
-public class ClickHouseStore implements Store {
-
-  protected final String name;
-
-  protected final List<Field> fields;
-
-  public ClickHouseStore(String name, List<Field> fields) {
-    this.name = name;
-    this.fields = new ArrayList<>(fields);
-    this.fields.add(new Field(scenarioFieldName(), String.class));
-  }
-
-  @Override
-  public String scenarioFieldName() {
-    return getScenarioName(this.name); // use a different separator because issue with dot '.'
-  }
-
-  @Override
-  public String name() {
-    return this.name;
-  }
-
-  @Override
-  public List<Field> getFields() {
-    return this.fields;
+  private ClickHouseUtil() {
   }
 
   public static String classToClickHouseType(Class<?> clazz) {
@@ -64,6 +38,6 @@ public class ClickHouseStore implements Store {
   }
 
   public static String getScenarioName(String storeName) {
-    return Store.scenarioFieldName(storeName, "_");
+    return storeName + "_" + Datastore.SCENARIO_FIELD_NAME;
   }
 }

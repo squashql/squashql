@@ -4,9 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.clickhouse.client.ClickHouseProtocol;
 import me.paulbares.ClickHouseDatastore;
-import me.paulbares.ClickHouseStore;
-import me.paulbares.transaction.ClickHouseTransactionManager;
-import me.paulbares.SparkStore;
+import me.paulbares.SparkUtil;
 import me.paulbares.benchmark.BenchmarkRunner;
 import me.paulbares.query.ClickHouseQueryEngine;
 import me.paulbares.query.DatasetTable;
@@ -14,6 +12,7 @@ import me.paulbares.query.Table;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import me.paulbares.transaction.ClickHouseTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -82,7 +81,6 @@ public class ClickHouseQueryBenchmark {
             new Field("Country", String.class),
             new Field("ShipperName", String.class));
 
-    ClickHouseStore clickHouseStore = new ClickHouseStore(ordersStore, fields); // FIXME
     String jdbc = String.format("jdbc:clickhouse://%s:%d", "localhost", ClickHouseProtocol.HTTP.getDefaultPort());
     ClickHouseDatastore datastore = new ClickHouseDatastore(jdbc, null);
 
@@ -120,7 +118,7 @@ public class ClickHouseQueryBenchmark {
         Dataset<Row> ds = spark.read()
                 .option("delimiter", delimiter)
                 .option("header", header)
-                .schema(SparkStore.createSchema(fields))
+                .schema(SparkUtil.createSchema(fields))
                 // use the schema to have tuples correctly formed otherwise
                 // all elements are strings
                 .csv(pathFunction.apply(scenario));

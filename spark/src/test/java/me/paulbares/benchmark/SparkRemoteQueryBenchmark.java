@@ -3,7 +3,7 @@ package me.paulbares.benchmark;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import me.paulbares.SparkDatastore;
-import me.paulbares.SparkStore;
+import me.paulbares.SparkUtil;
 import me.paulbares.query.DatasetTable;
 import me.paulbares.query.SparkQueryEngine;
 import me.paulbares.query.Table;
@@ -128,7 +128,7 @@ public class SparkRemoteQueryBenchmark {
       Dataset<Row> ds = spark.read()
               .option("delimiter", delimiter)
               .option("header", header)
-              .schema(SparkStore.createSchema(fields))
+              .schema(SparkUtil.createSchema(fields))
               // use the schema to have tuples correctly formed otherwise
               // all elements are strings
               .csv(pathFunction.apply(scenario));

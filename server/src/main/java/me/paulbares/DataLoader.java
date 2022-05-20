@@ -1,6 +1,7 @@
 package me.paulbares;
 
 import me.paulbares.store.Field;
+import me.paulbares.store.Store;
 import me.paulbares.transaction.SparkTransactionManager;
 
 import java.util.List;
@@ -27,10 +28,10 @@ public class DataLoader {
     Field compConcurrentEan = new Field("competitor_concurrent_ean", String.class);
     Field compPrice = new Field("competitor_price", double.class);
 
-    SparkStore our_price_store = new SparkStore("our_prices", List.of(ean, pdv, price, qty, capdv));
-    SparkStore their_prices_store = new SparkStore("their_prices", List.of(compEan, compConcurrentPdv, compBrand,
+    Store our_price_store = new Store("our_prices", List.of(ean, pdv, price, qty, capdv));
+    Store their_prices_store = new Store("their_prices", List.of(compEan, compConcurrentPdv, compBrand,
             compConcurrentEan, compPrice));
-    SparkStore our_stores_their_stores_store = new SparkStore("our_stores_their_stores", List.of(
+    Store our_stores_their_stores_store = new Store("our_stores_their_stores", List.of(
             new Field("our_store", String.class),
             new Field("their_store", String.class)
     ));
@@ -38,9 +39,9 @@ public class DataLoader {
     SparkDatastore datastore = new SparkDatastore();
     SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
 
-    tm.createTemporaryTable(our_price_store.name, our_price_store.fields);
-    tm.createTemporaryTable(their_prices_store.name, their_prices_store.fields);
-    tm.createTemporaryTable(our_stores_their_stores_store.name, our_stores_their_stores_store.fields);
+    tm.createTemporaryTable(our_price_store.name(), our_price_store.fields());
+    tm.createTemporaryTable(their_prices_store.name(), their_prices_store.fields());
+    tm.createTemporaryTable(our_stores_their_stores_store.name(), our_stores_their_stores_store.fields());
 
     tm.load(MAIN_SCENARIO_NAME,
             "our_prices", List.of(

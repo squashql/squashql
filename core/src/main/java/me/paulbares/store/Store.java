@@ -2,19 +2,9 @@ package me.paulbares.store;
 
 import java.util.List;
 
-import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
+public record Store(String name, List<Field> fields) {
 
-public interface Store {
-
-  String name();
-
-  List<Field> getFields();
-
-  default String scenarioFieldName() {
-    return scenarioFieldName(name(), "_");
-  }
-
-  static String scenarioFieldName(String storeName, String separator) {
-    return storeName.toLowerCase() + separator + SCENARIO_FIELD_NAME;
+  public String scenarioFieldName() {
+    return this.name + "_" + Datastore.SCENARIO_FIELD_NAME;
   }
 }

@@ -6,7 +6,7 @@ import com.clickhouse.client.ClickHouseNode;
 import com.clickhouse.client.ClickHouseProtocol;
 import com.clickhouse.client.ClickHouseResponse;
 import me.paulbares.ClickHouseDatastore;
-import me.paulbares.ClickHouseStore;
+import me.paulbares.ClickHouseUtil;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
@@ -52,7 +52,7 @@ public class ClickHouseQueryEngine extends AQueryEngine {
                 if (c.getColumnName().equals(scenarioFieldName)) {
                   return new Field(Datastore.SCENARIO_FIELD_NAME, String.class);
                 } else {
-                  return new Field(c.getColumnName(), ClickHouseStore.clickHouseTypeToClass(c.getDataType()));
+                  return new Field(c.getColumnName(), ClickHouseUtil.clickHouseTypeToClass(c.getDataType()));
                 }
               })
               .toList();

@@ -3,13 +3,14 @@ package me.paulbares.benchmark;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import me.paulbares.SparkDatastore;
-import me.paulbares.SparkStore;
+import me.paulbares.SparkUtil;
 import me.paulbares.query.DatasetTable;
 import me.paulbares.query.SparkQueryEngine;
 import me.paulbares.query.Table;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import me.paulbares.store.Store;
 import me.paulbares.transaction.SparkTransactionManager;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -65,7 +66,7 @@ public class SparkEmbeddedQueryBenchmark {
   }
 
   static Pair<SparkDatastore, DatastoreInfo> createAndLoadStore() {
-    SparkStore sparkStore = new SparkStore(ordersStore, List.of(
+    Store sparkStore = new Store(ordersStore, List.of(
             new Field("OrderId", long.class),
             new Field("CustomerID", long.class),
             new Field("EmployeeID", long.class),
@@ -92,7 +93,7 @@ public class SparkEmbeddedQueryBenchmark {
               datastore.spark.read()
                       .option("delimiter", delimiter)
                       .option("header", header)
-                      .schema(SparkStore.createSchema(sparkStore.getFields())) // use the schema to have tuples correctly formed otherwise
+                      .schema(SparkUtil.createSchema(sparkStore.fields())) // use the schema to have tuples correctly formed otherwise
                       // all elements are strings
                       .csv(pathFunction.apply(scenario));
 

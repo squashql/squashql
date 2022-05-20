@@ -64,7 +64,7 @@ public class SparkQueryController {
   public ResponseEntity<Map<Object, Object>> getMetadata(@RequestParam(name = "repo-url", required = false) String repo_url) {
     List<Map<String, Object>> root = new ArrayList<>();
     for (Store store : this.itmQueryEngine.datastore.storesByName().values()) {
-      List<Map<String, String>> collect = store.getFields()
+      List<Map<String, String>> collect = store.fields()
               .stream()
               .filter(f -> !f.name().equals(store.scenarioFieldName()))
               .map(f -> Map.of("name", f.name(), "type", f.type().getSimpleName().toLowerCase()))

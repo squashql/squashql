@@ -5,6 +5,7 @@ import ch.qos.logback.classic.Logger;
 import com.google.common.base.Suppliers;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import me.paulbares.store.Store;
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -32,7 +33,7 @@ public class SparkDatastore implements Datastore {
     root.setLevel(Level.INFO);
   }
 
-  public final Supplier<Map<String, SparkStore>> stores;
+  public final Supplier<Map<String, Store>> stores;
 
   public final SparkSession spark;
 
@@ -47,14 +48,14 @@ public class SparkDatastore implements Datastore {
   public SparkDatastore(SparkSession sparkSession) {
     this.spark = sparkSession;
     this.stores = Suppliers.memoize(() -> {
-      Map<String, SparkStore> r = new HashMap<>();
-      getTableNames(this.spark).forEach(table -> r.put(table, new SparkStore(table, getFields(this.spark, table))));
+      Map<String, Store> r = new HashMap<>();
+      getTableNames(this.spark).forEach(table -> r.put(table, new Store(table, getFields(this.spark, table))));
       return r;
     });
   }
 
   @Override
-  public Map<String, SparkStore> storesByName() {
+  public Map<String, Store> storesByName() {
     return this.stores.get();
   }
 
@@ -87,7 +88,7 @@ public class SparkDatastore implements Datastore {
       Iterator<Column> columnIterator = columns.toLocalIterator();
       while (columnIterator.hasNext()) {
         Column column = columnIterator.next();
-        fields.add(new Field(column.name(), SparkStore.datatypeToClass(DataType.fromDDL(column.dataType()))));
+        fields.add(new Field(column.name(), SparkUtil.datatypeToClass(DataType.fromDDL(column.dataType()))));
       }
       return fields;
     } catch (AnalysisException e) {

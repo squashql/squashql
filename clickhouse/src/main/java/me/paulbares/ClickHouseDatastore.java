@@ -7,6 +7,7 @@ import com.clickhouse.jdbc.ClickHouseStatement;
 import com.google.common.base.Suppliers;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import me.paulbares.store.Store;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -23,7 +24,7 @@ import java.util.function.Supplier;
 
 public class ClickHouseDatastore implements Datastore {
 
-  public final Supplier<Map<String, ClickHouseStore>> stores;
+  public final Supplier<Map<String, Store>> stores;
 
   public final ClickHouseDataSource dataSource;
 
@@ -40,8 +41,9 @@ public class ClickHouseDatastore implements Datastore {
     }
 
     this.stores = Suppliers.memoize(() -> {
-      Map<String, ClickHouseStore> r = new HashMap<>();
-      getTableNames(this.dataSource).forEach(table -> r.put(table, new ClickHouseStore(table, getFields(this.dataSource, table))));
+      Map<String, Store> r = new HashMap<>();
+      getTableNames(this.dataSource).forEach(table -> r.put(table, new Store(table,
+              getFields(this.dataSource, table))));
       return r;
     });
   }
@@ -51,7 +53,7 @@ public class ClickHouseDatastore implements Datastore {
   }
 
   @Override
-  public Map<String, ClickHouseStore> storesByName() {
+  public Map<String, Store> storesByName() {
     return this.stores.get();
   }
 
@@ -89,7 +91,7 @@ public class ClickHouseDatastore implements Datastore {
         String columnName = (String) columns.getObject("COLUMN_NAME");
         String typeName = (String) columns.getObject("TYPE_NAME");
         ClickHouseDataType dataType = ClickHouseDataType.of(typeName);
-        fields.add(new Field(columnName, ClickHouseStore.clickHouseTypeToClass(dataType)));
+        fields.add(new Field(columnName, ClickHouseUtil.clickHouseTypeToClass(dataType)));
       }
 
       return fields;
