@@ -1,0 +1,96 @@
+name: caco3 ci
+
+on:
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Launch manually'
+  schedule:
+    - cron: '0 */4 * * *'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      # https://help.github.com/en/actions/language-and-framework-guides/building-and-testing-java-with-maven#caching-dependencies
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Build with Maven
+        run: mvn clean install --no-transfer-progress -DskipTests
+
+  clickhouse:
+    needs: [ compile ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      # https://help.github.com/en/actions/language-and-framework-guides/building-and-testing-java-with-maven#caching-dependencies
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Run clickhouse tests
+        run: cd clickhouse && mvn --no-transfer-progress test
+        env:
+          TESTCONTAINERS_REUSE_ENABLE: true
+
+  spark:
+    needs: [ compile ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      # https://help.github.com/en/actions/language-and-framework-guides/building-and-testing-java-with-maven#caching-dependencies
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Run spark tests
+        run: cd spark && mvn --no-transfer-progress test
+        env:
+          TESTCONTAINERS_REUSE_ENABLE: true
+          
+  server:
+    needs: [ compile, clickhouse, spark ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      # https://help.github.com/en/actions/language-and-framework-guides/building-and-testing-java-with-maven#caching-dependencies
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Run server tests
+        run: cd server && mvn --no-transfer-progress test
