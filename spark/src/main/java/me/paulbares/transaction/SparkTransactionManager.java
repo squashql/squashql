@@ -10,9 +10,9 @@ import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.functions;
-import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
+import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -25,14 +25,14 @@ public class SparkTransactionManager implements TransactionManager {
     this.spark = spark;
   }
 
-  public SparkStore createTemporaryTable(String table, List<Field> fields) {
-    Dataset<Row> dataFrame = this.spark.emptyDataFrame();
-    StructField[] sparkFields = dataFrame.schema().fields();
-    List<Field> newFields = new ArrayList<>(fields);
-    newFields.addAll(Arrays.stream(sparkFields)
-            .map(f -> new Field(f.name(), SparkStore.datatypeToClass(f.dataType())))
-            .toList());
-    SparkStore store = new SparkStore(table, fields);
+  public void createTemporaryTable(String table, List<Field> fields) {
+//    Dataset<Row> dataFrame = this.spark.emptyDataFrame();
+//    StructField[] sparkFields = dataFrame.schema().fields();
+//    List<Field> newFields = new ArrayList<>(fields);
+//    newFields.addAll(Arrays.stream(sparkFields)
+//            .map(f -> new Field(f.name(), SparkStore.datatypeToClass(f.dataType())))
+//            .toList());
+//    SparkStore store = new SparkStore(table, fields);
 //    try {
 //      String uriSt = this.spark.catalog().getDatabase("default").locationUri();
 //      URI uri = new URI(uriSt);
@@ -51,16 +51,18 @@ public class SparkTransactionManager implements TransactionManager {
 //            .mode(SaveMode.Append)
 //            .saveAsTable(table);
 
+    StructType schema = SparkStore.createSchema(ImmutableListFactoryImpl.INSTANCE
+            .ofAll(fields)
+            .newWith(new Field(SparkStore.getScenarioName(table), String.class))
+            .castToList());
     this.spark.conf().set("spark.sql.caseSensitive", String.valueOf(true)); // without it, table names are lowercase.
     this.spark
-            .createDataFrame(Collections.emptyList(), store.getSchema())
+            .createDataFrame(Collections.emptyList(), schema)
             .createOrReplaceTempView(table);
 //    Collection<String> tableNames = SparkDatastore.getTableNames(spark);
 //    List<Field> my_temp_table = SparkDatastore.getFields(spark, "my_temp_table");
 //    spark.sql("drop table if exists " + table);
 //    spark.sql("create table " + table + " as select * from my_temp_table LOCATION /tmp/zob");
-
-    return store;
   }
 
   @Override

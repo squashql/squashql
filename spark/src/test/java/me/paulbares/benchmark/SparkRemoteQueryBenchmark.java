@@ -88,7 +88,6 @@ public class SparkRemoteQueryBenchmark {
       data.put(scenario, tuples);
     }
 
-    SparkStore sparkStore = new SparkStore(ordersStore, fields);
     String url = String.format("spark://%s:%d", "localhost", 7077);
     SparkConf conf = new SparkConf()
             .setMaster(url)

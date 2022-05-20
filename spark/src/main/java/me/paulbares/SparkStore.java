@@ -5,7 +5,6 @@ import me.paulbares.store.Store;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
-import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
 import java.util.List;
 
@@ -15,19 +14,9 @@ public class SparkStore implements Store {
 
   protected final List<Field> fields;
 
-  protected final StructType schema;
-
   public SparkStore(String name, List<Field> fields) {
     this.name = name;
-    this.fields = ImmutableListFactoryImpl.INSTANCE
-            .ofAll(fields)
-            .newWith(new Field(scenarioFieldName(), String.class))
-            .castToList();
-    this.schema = createSchema(this.fields);
-  }
-
-  public StructType getSchema() {
-    return this.schema;
+    this.fields = fields;
   }
 
   @Override

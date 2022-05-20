@@ -13,6 +13,7 @@ import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.ScenarioComparisonDto;
 import me.paulbares.query.dto.ScenarioGroupingQueryDto;
+import me.paulbares.store.Datastore;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static me.paulbares.query.ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF;
 import static me.paulbares.query.ScenarioGroupingExecutor.REF_POS_PREVIOUS;
@@ -37,18 +39,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class SparkQueryControllerTest {
 
-  private static final String REPO_URL = "https://raw.githubusercontent.com/paulbares/aitm-assets/main/metrics-controller-test.json";
+  private static final String REPO_URL = "https://raw.githubusercontent" +
+          ".com/paulbares/aitm-assets/main/metrics-controller-test.json";
 
   @Autowired
   private MockMvc mvc;
 
   @Test
   public void testQuery() throws Exception {
-    QueryDto query = new QueryDto()
-            .table("products")
-            .wildcardCoordinate(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("marge", "sum")
-            .expressionMeasure("indice-prix", "100 * sum(`numerateur-indice`) / sum(`score-visi`)");
+    var our = QueryBuilder.table("our_prices");
+    var their = QueryBuilder.table("their_prices");
+    var our_to_their = QueryBuilder.table("our_stores_their_stores");
+    our.innerJoin(our_to_their, "pdv", "our_store");
+    our_to_their.innerJoin(their, "their_store", "competitor_concurrent_pdv");
+
+    var query = QueryBuilder
+            .query()
+            .table(our)
+            .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
+            .wildcardCoordinate("ean")
+            .aggregatedMeasure("capdv", "sum")
+            .expressionMeasure("capdv_concurrents", "sum(competitor_price * quantity)")
+            .expressionMeasure("indice_prix", "sum(capdv) / sum(competitor_price * quantity)");
+
     this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
                     .content(JacksonUtil.serialize(query))
                     .contentType(MediaType.APPLICATION_JSON))
@@ -57,22 +70,44 @@ public class SparkQueryControllerTest {
               String contentAsString = result.getResponse().getContentAsString();
               Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
               Assertions.assertThat((List) queryResult.get("rows")).containsExactlyInAnyOrder(
-                      List.of(MAIN_SCENARIO_NAME, 280.00000000000006d, 110.44985250737464),
-                      List.of("mdd-baisse-simu-sensi", 190.00000000000003d, 102.94985250737463d),
-                      List.of("mdd-baisse", 240.00000000000003d, 107.1165191740413d)
-              );
-              Assertions.assertThat((List) queryResult.get("columns")).containsExactly(SCENARIO_FIELD_NAME, "sum(marge)", "indice-prix");
+                      List.of("MN & MDD up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
+                      List.of("MN & MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196),
+
+                      List.of("MN up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
+                      List.of("MN up", "ITMella 250g", 100000d, 102000d, 0.9803921568627451d),
+
+                      List.of("MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196d),
+                      List.of("MDD up", "Nutella 250g", 100000d, 102000d, 0.9803921568627451d),
+
+                      List.of("MN & MDD down", "Nutella 250g", 90000d, 102000d, 0.8823529411764706),
+                      List.of("MN & MDD down", "ITMella 250g", 90000d, 102000d, 0.8823529411764706),
+
+                      List.of(MAIN_SCENARIO_NAME, "ITMella 250g", 100000d, 102000d, 0.9803921568627451d),
+                      List.of(MAIN_SCENARIO_NAME, "Nutella 250g", 100000d, 102000d, 0.9803921568627451d));
+
+              Assertions.assertThat((List) queryResult.get("columns")).containsExactly(
+                      SCENARIO_FIELD_NAME, "ean", "sum(capdv)", "capdv_concurrents", "indice_prix");
             });
   }
 
   @Test
   public void testQueryWithRepo() throws Exception {
-    QueryDto query = new QueryDto()
-            .table("products")
-            .wildcardCoordinate(SCENARIO_FIELD_NAME)
-            .unresolvedExpressionMeasure("marge")
-            .unresolvedExpressionMeasure("indice-prix")
+    var our = QueryBuilder.table("our_prices");
+    var their = QueryBuilder.table("their_prices");
+    var our_to_their = QueryBuilder.table("our_stores_their_stores");
+    our.innerJoin(our_to_their, "pdv", "our_store");
+    our_to_their.innerJoin(their, "their_store", "competitor_concurrent_pdv");
+
+    var query = QueryBuilder
+            .query()
+            .table(our)
+            .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
+            .wildcardCoordinate("ean")
+            .aggregatedMeasure("capdv", "sum")
+            .unresolvedExpressionMeasure("capdv_concurrents")
+            .unresolvedExpressionMeasure("indice_prix")
             .context(Repository.KEY, new Repository(REPO_URL));
+
     this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
                     .content(JacksonUtil.serialize(query))
                     .contentType(MediaType.APPLICATION_JSON))
@@ -81,21 +116,33 @@ public class SparkQueryControllerTest {
               String contentAsString = result.getResponse().getContentAsString();
               Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
               Assertions.assertThat((List) queryResult.get("rows")).containsExactlyInAnyOrder(
-                      List.of(MAIN_SCENARIO_NAME, 280.00000000000006d, 110.44985250737464 / 100),
-                      List.of("mdd-baisse-simu-sensi", 190.00000000000003d, 102.94985250737463d / 100),
-                      List.of("mdd-baisse", 240.00000000000003d, 107.1165191740413d / 100)
-              );
-              Assertions.assertThat((List) queryResult.get("columns")).containsExactly(SCENARIO_FIELD_NAME, "marge", "indice-prix");
+                      List.of("MN & MDD up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
+                      List.of("MN & MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196),
+
+                      List.of("MN up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
+                      List.of("MN up", "ITMella 250g", 100000d, 102000d, 0.9803921568627451d),
+
+                      List.of("MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196d),
+                      List.of("MDD up", "Nutella 250g", 100000d, 102000d, 0.9803921568627451d),
+
+                      List.of("MN & MDD down", "Nutella 250g", 90000d, 102000d, 0.8823529411764706),
+                      List.of("MN & MDD down", "ITMella 250g", 90000d, 102000d, 0.8823529411764706),
+
+                      List.of(MAIN_SCENARIO_NAME, "ITMella 250g", 100000d, 102000d, 0.9803921568627451d),
+                      List.of(MAIN_SCENARIO_NAME, "Nutella 250g", 100000d, 102000d, 0.9803921568627451d));
+
+              Assertions.assertThat((List) queryResult.get("columns")).containsExactly(
+                      SCENARIO_FIELD_NAME, "ean", "sum(capdv)", "capdv_concurrents", "indice_prix");
             });
   }
 
   @Test
   public void testQueryWithTotals() throws Exception {
     QueryDto query = new QueryDto()
-            .table("products")
+            .table("our_prices")
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .context(Totals.KEY, QueryBuilder.TOP)
-            .aggregatedMeasure("marge", "sum");
+            .aggregatedMeasure("quantity", "sum");
     this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
                     .content(JacksonUtil.serialize(query))
                     .contentType(MediaType.APPLICATION_JSON))
@@ -107,15 +154,18 @@ public class SparkQueryControllerTest {
             });
   }
 
-  static void assertQueryWithTotals(SimpleTable table) {
+  public static void assertQueryWithTotals(SimpleTable table) {
     Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
-            Arrays.asList(QueryEngine.GRAND_TOTAL, 280.00000000000006d + 190.00000000000003d + 240.00000000000003d),
-            List.of(MAIN_SCENARIO_NAME, 280.00000000000006d),
-            List.of("mdd-baisse-simu-sensi", 190.00000000000003d),
-            List.of("mdd-baisse", 240.00000000000003d)
+            Arrays.asList(QueryEngine.GRAND_TOTAL, 5 * 4000),
+            List.of("MDD up", 4000),
+            List.of("MN & MDD down", 4000),
+            List.of("MN & MDD up", 4000),
+            List.of("MN up", 4000),
+            List.of(MAIN_SCENARIO_NAME, 4000)
     );
-    Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "sum(marge)");
+    Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "sum(quantity)");
   }
+
 
   @Test
   void testMetadata() throws Exception {
@@ -141,25 +191,35 @@ public class SparkQueryControllerTest {
 
   static void assertMetadataResult(Map objects, boolean withRepo) {
     List<Map<String, Object>> storesArray = (List) objects.get(SparkQueryController.METADATA_STORES_KEY);
-    Assertions.assertThat(storesArray).hasSize(1);
-    Assertions.assertThat(storesArray.get(0).get("name")).isEqualTo("products");
-    Assertions.assertThat((List) storesArray.get(0).get(SparkQueryController.METADATA_FIELDS_KEY)).containsExactlyInAnyOrder(
+    Assertions.assertThat(storesArray).hasSize(3);
+
+    Function<String, List<Map<Object, Object>>> f =
+            storeName -> (List<Map<Object, Object>>) storesArray.stream().filter(s -> s.get("name").equals(storeName)).findFirst().get().get(SparkQueryController.METADATA_FIELDS_KEY);
+
+    Assertions.assertThat(f.apply("our_prices")).containsExactlyInAnyOrder(
             Map.of("name", "ean", "type", "string"),
             Map.of("name", "pdv", "type", "string"),
-            Map.of("name", "categorie", "type", "string"),
-            Map.of("name", "type-marque", "type", "string"),
-            Map.of("name", "sensibilite", "type", "string"),
-            Map.of("name", "quantite", "type", "int"),
-            Map.of("name", "prix", "type", "double"),
-            Map.of("name", "achat", "type", "int"),
-            Map.of("name", "score-visi", "type", "int"),
-            Map.of("name", "min-marche", "type", "double"),
-            Map.of("name", "ca", "type", "double"),
-            Map.of("name", "marge", "type", "double"),
-            Map.of("name", "numerateur-indice", "type", "double"),
-            Map.of("name", "indice-prix", "type", "double"),
+            Map.of("name", "price", "type", "double"),
+            Map.of("name", "quantity", "type", "int"),
+            Map.of("name", "capdv", "type", "double"),
             Map.of("name", SCENARIO_FIELD_NAME, "type", "string")
     );
+
+    Assertions.assertThat(f.apply("their_prices")).containsExactlyInAnyOrder(
+            Map.of("name", "competitor_ean", "type", "string"),
+            Map.of("name", "competitor_concurrent_pdv", "type", "string"),
+            Map.of("name", "competitor_brand", "type", "string"),
+            Map.of("name", "competitor_concurrent_ean", "type", "string"),
+            Map.of("name", "competitor_price", "type", "double"),
+            Map.of("name", SCENARIO_FIELD_NAME, "type", "string")
+    );
+
+    Assertions.assertThat(f.apply("our_stores_their_stores")).containsExactlyInAnyOrder(
+            Map.of("name", "our_store", "type", "string"),
+            Map.of("name", "their_store", "type", "string"),
+            Map.of("name", SCENARIO_FIELD_NAME, "type", "string")
+    );
+
     Assertions.assertThat((List) objects.get(SparkQueryController.METADATA_AGG_FUNCS_KEY)).containsExactlyInAnyOrder(SparkQueryController.SUPPORTED_AGG_FUNCS.toArray(new String[0]));
     if (withRepo) {
       Assertions.assertThat((List) objects.get(SparkQueryController.METADATA_METRICS_KEY)).containsExactlyInAnyOrder(
@@ -177,12 +237,15 @@ public class SparkQueryControllerTest {
     groups.put("group3", List.of("base", "mdd-baisse-simu-sensi", "mdd-baisse"));
 
     AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("marge", "sum");
-    ExpressionMeasure expressionMeasure = new ExpressionMeasure("indice-prix", "100 * sum(`numerateur-indice`) / sum(`score-visi`)");
+    ExpressionMeasure expressionMeasure = new ExpressionMeasure("indice-prix", "100 * sum(`numerateur-indice`) / sum" +
+            "(`score-visi`)");
     ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
             .table("products")
             .groups(groups)
-            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF, aggregatedMeasure, false, REF_POS_PREVIOUS))
-            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF, expressionMeasure, false, REF_POS_PREVIOUS));
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF, aggregatedMeasure, false,
+                    REF_POS_PREVIOUS))
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF, expressionMeasure, false,
+                    REF_POS_PREVIOUS));
 
     this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY_GROUPING)
                     .content(JacksonUtil.serialize(query))
@@ -217,8 +280,10 @@ public class SparkQueryControllerTest {
     ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
             .table("products")
             .groups(groups)
-            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF, aggregatedMeasure, false, REF_POS_PREVIOUS))
-            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF, unresolvedExpressionMeasure, false, REF_POS_PREVIOUS))
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF, aggregatedMeasure, false,
+                    REF_POS_PREVIOUS))
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF, unresolvedExpressionMeasure,
+                    false, REF_POS_PREVIOUS))
             .context(Repository.KEY, new Repository(REPO_URL));
 
     this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY_GROUPING)

@@ -92,7 +92,7 @@ public class SparkEmbeddedQueryBenchmark {
               datastore.spark.read()
                       .option("delimiter", delimiter)
                       .option("header", header)
-                      .schema(sparkStore.getSchema()) // use the schema to have tuples correctly formed otherwise
+                      .schema(SparkStore.createSchema(sparkStore.getFields())) // use the schema to have tuples correctly formed otherwise
                       // all elements are strings
                       .csv(pathFunction.apply(scenario));
 

@@ -47,10 +47,10 @@ public class HttpClientQuerierTest {
         var querier = new HttpClientQuerier(url);
 
         QueryDto query = new QueryDto()
-                .table("products")
+                .table("our_prices")
                 .wildcardCoordinate(SCENARIO_FIELD_NAME)
                 .context(Totals.KEY, QueryBuilder.TOP)
-                .aggregatedMeasure("marge", "sum");
+                .aggregatedMeasure("quantity", "sum");
 
         SimpleTable table = querier.run(query);
         SparkQueryControllerTest.assertQueryWithTotals(table);

@@ -44,38 +44,38 @@ public class DataLoader {
 
     tm.load(MAIN_SCENARIO_NAME,
             "our_prices", List.of(
-                    new Object[]{"Nutella 250g", "ITM Balma", 10d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Balma", 10d, 1000},
-                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 10d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 10d, 1000}
+                    new Object[]{"Nutella 250g", "ITM Balma", 10d, 1000, 10_000d},
+                    new Object[]{"ITMella 250g", "ITM Balma", 10d, 1000, 10_000d},
+                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 10d, 1000, 10_000d},
+                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 10d, 1000, 10_000d}
             ));
     tm.load("MN up",
             "our_prices", List.of(
-                    new Object[]{"Nutella 250g", "ITM Balma", 11d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Balma", 10d, 1000},
-                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 11d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 10d, 1000}
+                    new Object[]{"Nutella 250g", "ITM Balma", 11d, 1000, 11_000d},
+                    new Object[]{"ITMella 250g", "ITM Balma", 10d, 1000, 10_000d},
+                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 11d, 1000, 11_000d},
+                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 10d, 1000, 10_000d}
             ));
     tm.load("MDD up",
             "our_prices", List.of(
-                    new Object[]{"Nutella 250g", "ITM Balma", 10d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Balma", 11d, 1000},
-                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 10d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 11d, 1000}
+                    new Object[]{"Nutella 250g", "ITM Balma", 10d, 1000, 10_000d},
+                    new Object[]{"ITMella 250g", "ITM Balma", 11d, 1000, 11_000d},
+                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 10d, 1000, 10_000d},
+                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 11d, 1000, 11_000d}
             ));
     tm.load("MN & MDD up",
             "our_prices", List.of(
-                    new Object[]{"Nutella 250g", "ITM Balma", 11d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Balma", 11d, 1000},
-                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 11d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 11d, 1000}
+                    new Object[]{"Nutella 250g", "ITM Balma", 11d, 1000, 11_000d},
+                    new Object[]{"ITMella 250g", "ITM Balma", 11d, 1000, 11_000d},
+                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 11d, 1000, 11_000d},
+                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 11d, 1000, 11_000d}
             ));
     tm.load("MN & MDD down",
             "our_prices", List.of(
-                    new Object[]{"Nutella 250g", "ITM Balma", 9d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Balma", 9d, 1000},
-                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 9d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 9d, 1000}
+                    new Object[]{"Nutella 250g", "ITM Balma", 9d, 1000, 9_000d},
+                    new Object[]{"ITMella 250g", "ITM Balma", 9d, 1000, 9_000d},
+                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 9d, 1000, 9_000d},
+                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 9d, 1000, 9_000d}
             ));
 
     tm.load(MAIN_SCENARIO_NAME,

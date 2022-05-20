@@ -43,6 +43,11 @@ public abstract class AQueryEngine implements QueryEngine {
 
   @Override
   public Table execute(QueryDto query) {
+    Store store = datastore.storesByName().get(query.table.name);
+    if (store == null) {
+      throw new IllegalArgumentException(String.format("Cannot find table with name %s. Available tables: %s",
+              query.table.name, datastore.storesByName().values().stream().map(Store::name).toList()));
+    }
     addScenarioConditionIfNecessary(query);
     replaceScenarioFieldName(query);
     resolveMeasures(query);
