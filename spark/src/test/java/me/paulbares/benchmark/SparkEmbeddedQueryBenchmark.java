@@ -3,13 +3,15 @@ package me.paulbares.benchmark;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import me.paulbares.SparkDatastore;
-import me.paulbares.SparkStore;
+import me.paulbares.SparkUtil;
 import me.paulbares.query.DatasetTable;
 import me.paulbares.query.SparkQueryEngine;
 import me.paulbares.query.Table;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import me.paulbares.store.Store;
+import me.paulbares.transaction.SparkTransactionManager;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.eclipse.collections.api.tuple.Pair;
@@ -64,7 +66,7 @@ public class SparkEmbeddedQueryBenchmark {
   }
 
   static Pair<SparkDatastore, DatastoreInfo> createAndLoadStore() {
-    SparkStore sparkStore = new SparkStore(ordersStore, List.of(
+    Store sparkStore = new Store(ordersStore, List.of(
             new Field("OrderId", long.class),
             new Field("CustomerID", long.class),
             new Field("EmployeeID", long.class),
@@ -79,7 +81,8 @@ public class SparkEmbeddedQueryBenchmark {
             new Field("City", String.class),
             new Field("Country", String.class),
             new Field("ShipperName", String.class)));
-    SparkDatastore datastore = new SparkDatastore(sparkStore);
+    SparkDatastore datastore = new SparkDatastore();
+    SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
 
     String path = "spark/src/test/resources/benchmark/data_%s_scenario.csv";
     Function<String, String> pathFunction = scenario -> String.format(path, scenario);
@@ -90,8 +93,8 @@ public class SparkEmbeddedQueryBenchmark {
               datastore.spark.read()
                       .option("delimiter", delimiter)
                       .option("header", header)
-                      .schema(sparkStore.getBaseSchema()) // use the schema to have tuples correctly formed otherwise
-                      // all elements are strings
+                      // Use the schema to have tuples correctly formed otherwise all elements are strings
+                      .schema(SparkUtil.createSchema(sparkStore.fields()))
                       .csv(pathFunction.apply(scenario));
 
       int keyIndex = 4; // index of OrderDetailID
@@ -117,7 +120,7 @@ public class SparkEmbeddedQueryBenchmark {
 
       count.set(tuples.size());
       System.out.println("Loading scenario " + scenario + " ...");
-      datastore.load(scenario, ordersStore, tuples);
+      tm.load(scenario, ordersStore, tuples);
       System.out.println("Data for scenario " + scenario + " done");
     };
 

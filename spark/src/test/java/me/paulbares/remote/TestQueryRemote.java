@@ -4,12 +4,12 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.github.dockerjava.api.command.LogContainerCmd;
 import me.paulbares.SparkDatastore;
-import me.paulbares.SparkStore;
 import me.paulbares.query.SparkQueryEngine;
 import me.paulbares.query.Table;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import me.paulbares.transaction.SparkTransactionManager;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparkSession;
 import org.assertj.core.api.Assertions;
@@ -82,22 +82,24 @@ public class TestQueryRemote {
 
   @Test
   void testQuery() {
+    String storeName = "storeName";
+    SparkDatastore datastore = (SparkDatastore) createDatastore();
+    SparkQueryEngine queryEngine = new SparkQueryEngine(datastore);
+    SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
+
     Field ean = new Field("ean", String.class);
     Field category = new Field("category", String.class);
     Field price = new Field("price", double.class);
     Field qty = new Field("quantity", int.class);
+    tm.createTemporaryTable(storeName, List.of(ean, category, price, qty));
 
-    String storeName = "storeName";
-    Datastore datastore = createDatastore(storeName, List.of(ean, category, price, qty));
-    SparkQueryEngine queryEngine = new SparkQueryEngine((SparkDatastore) datastore);
-
-    datastore.load(MAIN_SCENARIO_NAME, storeName, List.of(
+    tm.load(MAIN_SCENARIO_NAME, storeName, List.of(
             new Object[]{"bottle", "drink", 2d, 10},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
 
-    datastore.load("s1", storeName, List.of(
+    tm.load("s1", storeName, List.of(
             new Object[]{"bottle", "drink", 4d, 10},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}
@@ -114,7 +116,7 @@ public class TestQueryRemote {
             List.of("s1", 17.0d, 33l));
   }
 
-  protected Datastore createDatastore(String storeName, List<Field> fields) {
+  protected Datastore createDatastore() {
     String url = String.format("spark://%s:%d", this.sparkMaster.getHost(), this.sparkMaster.getFirstMappedPort());
     SparkConf conf = new SparkConf()
             .setMaster(url)
@@ -124,7 +126,7 @@ public class TestQueryRemote {
             .config(conf)
             .getOrCreate();
 
-    return new SparkDatastore(spark, new SparkStore(storeName, fields));
+    return new SparkDatastore(spark);
   }
 
   public static class LogMessageWaitStrategy extends AbstractWaitStrategy {

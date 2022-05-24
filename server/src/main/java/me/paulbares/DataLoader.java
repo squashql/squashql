@@ -1,12 +1,12 @@
 package me.paulbares;
 
 import me.paulbares.store.Field;
+import me.paulbares.store.Store;
+import me.paulbares.transaction.SparkTransactionManager;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
-import static org.apache.spark.sql.functions.col;
 
 /**
  * --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
@@ -20,6 +20,7 @@ public class DataLoader {
     Field pdv = new Field("pdv", String.class);
     Field price = new Field("price", double.class);
     Field qty = new Field("quantity", int.class);
+    Field capdv = new Field("capdv", double.class);
 
     Field compEan = new Field("competitor_ean", String.class);
     Field compConcurrentPdv = new Field("competitor_concurrent_pdv", String.class);
@@ -27,58 +28,58 @@ public class DataLoader {
     Field compConcurrentEan = new Field("competitor_concurrent_ean", String.class);
     Field compPrice = new Field("competitor_price", double.class);
 
-    List<SparkStore> stores = new ArrayList<>();
-    SparkStore our_price_store = new SparkStore("our_prices", List.of(ean, pdv, price, qty),
-            col("price").multiply(col("quantity")).as("capdv"));
-    stores.add(our_price_store);
-    SparkStore their_prices_store = new SparkStore("their_prices", List.of(compEan, compConcurrentPdv, compBrand,
+    Store our_price_store = new Store("our_prices", List.of(ean, pdv, price, qty, capdv));
+    Store their_prices_store = new Store("their_prices", List.of(compEan, compConcurrentPdv, compBrand,
             compConcurrentEan, compPrice));
-    stores.add(their_prices_store);
-    SparkStore our_stores_their_stores_store = new SparkStore("our_stores_their_stores", List.of(
+    Store our_stores_their_stores_store = new Store("our_stores_their_stores", List.of(
             new Field("our_store", String.class),
             new Field("their_store", String.class)
     ));
-    stores.add(our_stores_their_stores_store);
 
-    SparkDatastore datastore = new SparkDatastore(stores.toArray(new SparkStore[0]));
+    SparkDatastore datastore = new SparkDatastore();
+    SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
 
-    datastore.load(MAIN_SCENARIO_NAME,
+    tm.createTemporaryTable(our_price_store.name(), our_price_store.fields());
+    tm.createTemporaryTable(their_prices_store.name(), their_prices_store.fields());
+    tm.createTemporaryTable(our_stores_their_stores_store.name(), our_stores_their_stores_store.fields());
+
+    tm.load(MAIN_SCENARIO_NAME,
             "our_prices", List.of(
-                    new Object[]{"Nutella 250g", "ITM Balma", 10d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Balma", 10d, 1000},
-                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 10d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 10d, 1000}
+                    new Object[]{"Nutella 250g", "ITM Balma", 10d, 1000, 10_000d},
+                    new Object[]{"ITMella 250g", "ITM Balma", 10d, 1000, 10_000d},
+                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 10d, 1000, 10_000d},
+                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 10d, 1000, 10_000d}
             ));
-    datastore.load("MN up",
+    tm.load("MN up",
             "our_prices", List.of(
-                    new Object[]{"Nutella 250g", "ITM Balma", 11d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Balma", 10d, 1000},
-                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 11d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 10d, 1000}
+                    new Object[]{"Nutella 250g", "ITM Balma", 11d, 1000, 11_000d},
+                    new Object[]{"ITMella 250g", "ITM Balma", 10d, 1000, 10_000d},
+                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 11d, 1000, 11_000d},
+                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 10d, 1000, 10_000d}
             ));
-    datastore.load("MDD up",
+    tm.load("MDD up",
             "our_prices", List.of(
-                    new Object[]{"Nutella 250g", "ITM Balma", 10d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Balma", 11d, 1000},
-                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 10d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 11d, 1000}
+                    new Object[]{"Nutella 250g", "ITM Balma", 10d, 1000, 10_000d},
+                    new Object[]{"ITMella 250g", "ITM Balma", 11d, 1000, 11_000d},
+                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 10d, 1000, 10_000d},
+                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 11d, 1000, 11_000d}
             ));
-    datastore.load("MN & MDD up",
+    tm.load("MN & MDD up",
             "our_prices", List.of(
-                    new Object[]{"Nutella 250g", "ITM Balma", 11d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Balma", 11d, 1000},
-                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 11d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 11d, 1000}
+                    new Object[]{"Nutella 250g", "ITM Balma", 11d, 1000, 11_000d},
+                    new Object[]{"ITMella 250g", "ITM Balma", 11d, 1000, 11_000d},
+                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 11d, 1000, 11_000d},
+                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 11d, 1000, 11_000d}
             ));
-    datastore.load("MN & MDD down",
+    tm.load("MN & MDD down",
             "our_prices", List.of(
-                    new Object[]{"Nutella 250g", "ITM Balma", 9d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Balma", 9d, 1000},
-                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 9d, 1000},
-                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 9d, 1000}
+                    new Object[]{"Nutella 250g", "ITM Balma", 9d, 1000, 9_000d},
+                    new Object[]{"ITMella 250g", "ITM Balma", 9d, 1000, 9_000d},
+                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 9d, 1000, 9_000d},
+                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 9d, 1000, 9_000d}
             ));
 
-    datastore.load(MAIN_SCENARIO_NAME,
+    tm.load(MAIN_SCENARIO_NAME,
             "their_prices", List.of(
                     new Object[]{"Nutella 250g", "Leclerc Rouffiac", "Leclerc", "Nutella 250g", 9d},
                     new Object[]{"Nutella 250g", "Auchan Toulouse", "Auchan", "Nutella 250g", 11d},
@@ -89,7 +90,7 @@ public class DataLoader {
                     new Object[]{"ITMella 250g", "Auchan Launaguet", "Auchan", "AuchanElla", 9d}
             ));
 
-    datastore.load(MAIN_SCENARIO_NAME,
+    tm.load(MAIN_SCENARIO_NAME,
             "our_stores_their_stores", List.of(
                     new Object[]{"ITM Balma", "Leclerc Rouffiac"},
                     new Object[]{"ITM Balma", "Auchan Toulouse"},

@@ -3,13 +3,14 @@ package me.paulbares.benchmark;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import me.paulbares.SparkDatastore;
-import me.paulbares.SparkStore;
+import me.paulbares.SparkUtil;
 import me.paulbares.query.DatasetTable;
 import me.paulbares.query.SparkQueryEngine;
 import me.paulbares.query.Table;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import me.paulbares.transaction.SparkTransactionManager;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -87,7 +88,6 @@ public class SparkRemoteQueryBenchmark {
       data.put(scenario, tuples);
     }
 
-    SparkStore sparkStore = new SparkStore(ordersStore, fields);
     String url = String.format("spark://%s:%d", "localhost", 7077);
     SparkConf conf = new SparkConf()
             .setMaster(url)
@@ -97,12 +97,13 @@ public class SparkRemoteQueryBenchmark {
             .config(conf)
             .getOrCreate();
 
-    SparkDatastore datastore = new SparkDatastore(spark, sparkStore);
+    SparkDatastore datastore = new SparkDatastore(spark);
+    SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
 
     for (Map.Entry<String, List<Object[]>> entry : data.entrySet()) {
       String scenario = entry.getKey();
       System.out.println("Loading scenario " + scenario + " ...");
-      datastore.load(scenario, ordersStore, entry.getValue());
+      tm.load(scenario, ordersStore, entry.getValue());
       System.out.println("Data for scenario " + scenario + " done");
     }
 
@@ -127,9 +128,8 @@ public class SparkRemoteQueryBenchmark {
       Dataset<Row> ds = spark.read()
               .option("delimiter", delimiter)
               .option("header", header)
-              .schema(SparkStore.createSchema(fields.toArray(new Field[0])))
-              // use the schema to have tuples correctly formed otherwise
-              // all elements are strings
+              // Use the schema to have tuples correctly formed otherwise all elements are strings
+              .schema(SparkUtil.createSchema(fields))
               .csv(pathFunction.apply(scenario));
 
       int keyIndex = 4; // index of OrderDetailID

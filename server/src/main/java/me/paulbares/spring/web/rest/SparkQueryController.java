@@ -29,40 +29,42 @@ public class SparkQueryController {
   public static final String METADATA_STORES_KEY = "stores";
   public static final String METADATA_AGG_FUNCS_KEY = "aggregation_functions";
   public static final String METADATA_METRICS_KEY = "metrics";
-  public static final List<String> SUPPORTED_AGG_FUNCS = List.of("sum", "min", "max", "avg", "var_samp", "var_pop",
-          "stddev_samp", "stddev_pop", "count");
+  // FIXME the list should be defined elsewhere
+  public static final List<String> SUPPORTED_AGG_FUNCS = List.of(
+          "sum",
+          "min",
+          "max",
+          "avg",
+          "var_samp",
+          "var_pop",
+          "stddev_samp",
+          "stddev_pop",
+          "count");
 
-  protected final SparkQueryEngine legacyQueryEngine;
   protected final SparkQueryEngine itmQueryEngine;
 
-  public SparkQueryController(SparkQueryEngine legacyQueryEngine,
-                              SparkQueryEngine itmQueryEngine) {
-    this.legacyQueryEngine = legacyQueryEngine;
+  public SparkQueryController(SparkQueryEngine itmQueryEngine) {
     this.itmQueryEngine = itmQueryEngine;
   }
 
   @PostMapping(MAPPING_QUERY)
-  public ResponseEntity<String> execute(@RequestBody QueryDto query,
-                                        @RequestParam(name = "dataset", required = false) String dataset) {
-    Table table = getQueryEngine(dataset).execute(query);
+  public ResponseEntity<String> execute(@RequestBody QueryDto query) {
+    Table table = this.itmQueryEngine.execute(query);
     return ResponseEntity.ok(JacksonUtil.tableToCsv(table));
   }
 
 
   @PostMapping(MAPPING_QUERY_GROUPING)
-  public ResponseEntity<String> executeGrouping(@RequestBody ScenarioGroupingQueryDto query,
-                                                @RequestParam(name = "dataset", required = false) String dataset) {
-    Table table = new ScenarioGroupingExecutor(getQueryEngine(dataset)).execute(query);
+  public ResponseEntity<String> executeGrouping(@RequestBody ScenarioGroupingQueryDto query) {
+    Table table = new ScenarioGroupingExecutor(this.itmQueryEngine).execute(query);
     return ResponseEntity.ok(JacksonUtil.tableToCsv(table));
   }
 
   @GetMapping(MAPPING_METADATA)
-  public ResponseEntity<Map<Object, Object>> getMetadata(
-          @RequestParam(name = "dataset", required = false) String dataset,
-          @RequestParam(name = "repo-url", required = false) String repo_url) {
+  public ResponseEntity<Map<Object, Object>> getMetadata(@RequestParam(name = "repo-url", required = false) String repo_url) {
     List<Map<String, Object>> root = new ArrayList<>();
-    for (Store store : getQueryEngine(dataset).datastore.stores()) {
-      List<Map<String, String>> collect = store.getFields()
+    for (Store store : this.itmQueryEngine.datastore.storesByName().values()) {
+      List<Map<String, String>> collect = store.fields()
               .stream()
               .filter(f -> !f.name().equals(store.scenarioFieldName()))
               .map(f -> Map.of("name", f.name(), "type", f.type().getSimpleName().toLowerCase()))
@@ -82,16 +84,6 @@ public class SparkQueryController {
       return ExpressionResolver.get(url).values();
     } else {
       return Collections.emptyList();
-    }
-  }
-
-  private SparkQueryEngine getQueryEngine(String dataset) {
-    if (dataset == null || dataset.equals("legacy")) {
-      return this.legacyQueryEngine;
-    } else if (dataset.equals("itm")) {
-      return this.itmQueryEngine;
-    } else {
-      throw new IllegalArgumentException("Incorrect value for dataset param: " + dataset);
     }
   }
 }

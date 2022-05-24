@@ -1,7 +1,6 @@
 package me.paulbares.spring;
 
 import me.paulbares.DataLoader;
-import me.paulbares.LegacyDataLoader;
 import me.paulbares.SparkDatastore;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.SparkQueryEngine;
@@ -17,12 +16,6 @@ public class ScenarioAnalysisApplication {
 
   public static void main(String[] args) {
     SpringApplication.run(ScenarioAnalysisApplication.class, args);
-  }
-
-  @Bean
-  public SparkQueryEngine legacyQueryEngine() {
-    SparkDatastore ds = LegacyDataLoader.createTestDatastoreWithData();
-    return new SparkQueryEngine(ds);
   }
 
   @Bean

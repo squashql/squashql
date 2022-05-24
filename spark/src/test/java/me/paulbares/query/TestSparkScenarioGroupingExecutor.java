@@ -1,9 +1,10 @@
 package me.paulbares.query;
 
 import me.paulbares.SparkDatastore;
-import me.paulbares.SparkStore;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import me.paulbares.transaction.SparkTransactionManager;
+import me.paulbares.transaction.TransactionManager;
 
 import java.util.List;
 
@@ -15,7 +16,18 @@ public class TestSparkScenarioGroupingExecutor extends ATestScenarioGroupingExec
   }
 
   @Override
-  protected Datastore createDatastore(String storeName, List<Field> fields) {
-    return new SparkDatastore(new SparkStore(storeName, fields));
+  protected Datastore createDatastore() {
+    return new SparkDatastore();
+  }
+
+  @Override
+  protected TransactionManager createTransactionManager() {
+    SparkDatastore ds = (SparkDatastore) this.datastore;
+    return new SparkTransactionManager(ds.spark);
+  }
+
+  @Override
+  protected void beforeLoading(List<Field> fields) {
+    ((SparkTransactionManager) tm).createTemporaryTable(storeName, fields);
   }
 }

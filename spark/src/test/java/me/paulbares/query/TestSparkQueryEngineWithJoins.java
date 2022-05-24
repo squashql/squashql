@@ -1,11 +1,9 @@
 package me.paulbares.query;
 
 import me.paulbares.SparkDatastore;
-import me.paulbares.SparkStore;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Store;
-
-import java.util.List;
+import me.paulbares.transaction.SparkTransactionManager;
+import me.paulbares.transaction.TransactionManager;
 
 public class TestSparkQueryEngineWithJoins extends ATestQueryEngineWithJoins {
 
@@ -14,12 +12,13 @@ public class TestSparkQueryEngineWithJoins extends ATestQueryEngineWithJoins {
     return new SparkQueryEngine((SparkDatastore) datastore);
   }
 
-  protected Store createStore(String storeName) {
-    return new SparkStore(storeName);
+  @Override
+  protected Datastore createDatastore() {
+    return new SparkDatastore();
   }
 
   @Override
-  protected Datastore createDatastore(List<Store> stores) {
-    return new SparkDatastore(stores.toArray(new SparkStore[0]));
+  protected TransactionManager createTransactionManager() {
+    return new SparkTransactionManager(((SparkDatastore) this.datastore).spark);
   }
 }
