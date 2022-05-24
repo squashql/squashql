@@ -41,12 +41,13 @@ public class ClickHouseDatastore implements Datastore {
       }
     }
 
-    this.stores = Suppliers.memoize(() -> {
-      Map<String, Store> r = new HashMap<>();
-      getTableNames(this.dataSource).forEach(table -> r.put(table, new Store(table,
-              getFields(this.dataSource, table))));
-      return r;
-    });
+    this.stores = Suppliers.memoize(
+            () -> getTableNames(this.dataSource)
+                    .stream()
+                    .collect(() -> new HashMap<>(),
+                            (map, table) -> map.put(table, new Store(table, getFields(this.dataSource, table))),
+                            (x, y) -> {
+                            }));
   }
 
   public ClickHouseDataSource getDataSource() {

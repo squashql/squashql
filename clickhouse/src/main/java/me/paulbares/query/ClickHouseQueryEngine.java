@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class ClickHouseQueryEngine extends AQueryEngine {
+public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
 
   public ClickHouseQueryEngine(ClickHouseDatastore datastore) {
     super(datastore);
@@ -25,23 +25,18 @@ public class ClickHouseQueryEngine extends AQueryEngine {
   protected Table retrieveAggregates(QueryDto query) {
     String sql = SQLTranslator.translate(query, this.fieldSupplier);
 
-    // only HTTP and gRPC are supported at this point
-    ClickHouseProtocol preferredProtocol = ClickHouseProtocol.HTTP;
-    // you'll have to parse response manually if use different format
-    ClickHouseFormat preferredFormat = ClickHouseFormat.RowBinaryWithNamesAndTypes;
-
     // connect to localhost, use default port of the preferred protocol
     ClickHouseNode server = ClickHouseNode.builder()
-            .host(((ClickHouseDatastore) this.datastore).dataSource.getHost())
-            .port(((ClickHouseDatastore) this.datastore).dataSource.getPort())
+            .host(this.datastore.dataSource.getHost())
+            .port(this.datastore.dataSource.getPort())
             .build();
 
     String scenarioFieldName = this.datastore.storesByName()
             .get(query.table.name)
             .scenarioFieldName();
-    try (ClickHouseClient client = ClickHouseClient.newInstance(preferredProtocol);
+    try (ClickHouseClient client = ClickHouseClient.newInstance(ClickHouseProtocol.HTTP);
          ClickHouseResponse response = client.connect(server)
-                 .format(preferredFormat)
+                 .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
                  .query(sql)
                  .execute()
                  .get()) {

@@ -19,13 +19,13 @@ import java.util.function.Function;
 import static me.paulbares.query.QueryBuilder.eq;
 import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
-public abstract class AQueryEngine implements QueryEngine {
+public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T> {
 
-  public final Datastore datastore;
+  public final T datastore;
 
   public final Function<String, Field> fieldSupplier;
 
-  protected AQueryEngine(Datastore datastore) {
+  protected AQueryEngine(T datastore) {
     this.datastore = datastore;
     this.fieldSupplier = fieldName -> {
       for (Store store : this.datastore.storesByName().values()) {
@@ -39,14 +39,19 @@ public abstract class AQueryEngine implements QueryEngine {
     };
   }
 
+  @Override
+  public T datastore() {
+    return this.datastore;
+  }
+
   protected abstract Table retrieveAggregates(QueryDto query);
 
   @Override
   public Table execute(QueryDto query) {
-    Store store = datastore.storesByName().get(query.table.name);
+    Store store = this.datastore.storesByName().get(query.table.name);
     if (store == null) {
       throw new IllegalArgumentException(String.format("Cannot find table with name %s. Available tables: %s",
-              query.table.name, datastore.storesByName().values().stream().map(Store::name).toList()));
+              query.table.name, this.datastore.storesByName().values().stream().map(Store::name).toList()));
     }
     addScenarioConditionIfNecessary(query);
     replaceScenarioFieldName(query);
