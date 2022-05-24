@@ -30,8 +30,7 @@ public abstract class ATestScenarioGroupingExecutor {
 
   protected abstract QueryEngine createQueryEngine(Datastore datastore);
 
-  //TODO fields could be removed from param??.
-  protected abstract Datastore createDatastore(String storeName, List<Field> fields);
+  protected abstract Datastore createDatastore();
 
   protected abstract TransactionManager createTransactionManager();
 
@@ -51,7 +50,7 @@ public abstract class ATestScenarioGroupingExecutor {
     Field qty = new Field("quantity", int.class);
 
     List<Field> fields = List.of(ean, category, price, qty);
-    this.datastore = createDatastore(this.storeName, fields);
+    this.datastore = createDatastore();
     QueryEngine queryEngine = createQueryEngine(this.datastore);
     this.executor = new ScenarioGroupingExecutor(queryEngine);
     this.tm = createTransactionManager();

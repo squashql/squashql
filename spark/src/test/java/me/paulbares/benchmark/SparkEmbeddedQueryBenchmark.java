@@ -93,8 +93,8 @@ public class SparkEmbeddedQueryBenchmark {
               datastore.spark.read()
                       .option("delimiter", delimiter)
                       .option("header", header)
-                      .schema(SparkUtil.createSchema(sparkStore.fields())) // use the schema to have tuples correctly formed otherwise
-                      // all elements are strings
+                      // Use the schema to have tuples correctly formed otherwise all elements are strings
+                      .schema(SparkUtil.createSchema(sparkStore.fields()))
                       .csv(pathFunction.apply(scenario));
 
       int keyIndex = 4; // index of OrderDetailID

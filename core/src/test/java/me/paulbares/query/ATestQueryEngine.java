@@ -40,8 +40,7 @@ public abstract class ATestQueryEngine {
 
   protected abstract QueryEngine createQueryEngine(Datastore datastore);
 
-  //TODO fields could be removed from param??.
-  protected abstract Datastore createDatastore(String storeName, List<Field> fields);
+  protected abstract Datastore createDatastore();
   protected abstract TransactionManager createTransactionManager();
 
   @BeforeAll
@@ -52,7 +51,7 @@ public abstract class ATestQueryEngine {
     Field qty = new Field("quantity", int.class);
 
     List<Field> fields = List.of(ean, category, price, qty);
-    this.datastore = createDatastore(this.storeName, fields);
+    this.datastore = createDatastore();
     this.queryEngine = createQueryEngine(this.datastore);
     this.tm = createTransactionManager();
 

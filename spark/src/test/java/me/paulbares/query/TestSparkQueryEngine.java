@@ -16,7 +16,7 @@ public class TestSparkQueryEngine extends ATestQueryEngine {
   }
 
   @Override
-  protected Datastore createDatastore(String storeName, List<Field> fields) {
+  protected Datastore createDatastore() {
     return new SparkDatastore();
   }
 

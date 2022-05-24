@@ -128,9 +128,8 @@ public class SparkRemoteQueryBenchmark {
       Dataset<Row> ds = spark.read()
               .option("delimiter", delimiter)
               .option("header", header)
+              // Use the schema to have tuples correctly formed otherwise all elements are strings
               .schema(SparkUtil.createSchema(fields))
-              // use the schema to have tuples correctly formed otherwise
-              // all elements are strings
               .csv(pathFunction.apply(scenario));
 
       int keyIndex = 4; // index of OrderDetailID
