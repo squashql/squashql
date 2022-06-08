@@ -1,18 +1,20 @@
 package me.paulbares.query;
 
-import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.Period;
+import me.paulbares.query.dto.PeriodBucketingQueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
-import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestPeriodBucketing {
@@ -21,6 +23,8 @@ public abstract class ATestPeriodBucketing {
 
   protected QueryEngine queryEngine;
 
+  protected PeriodBucketingExecutor executor;
+
   protected TransactionManager tm;
 
   protected String storeName = "myAwesomeStore";
@@ -28,6 +32,7 @@ public abstract class ATestPeriodBucketing {
   protected abstract QueryEngine createQueryEngine(Datastore datastore);
 
   protected abstract Datastore createDatastore();
+
   protected abstract TransactionManager createTransactionManager();
 
   @BeforeAll
@@ -42,6 +47,7 @@ public abstract class ATestPeriodBucketing {
 
     this.datastore = createDatastore();
     this.queryEngine = createQueryEngine(this.datastore);
+    this.executor = new PeriodBucketingExecutor(this.queryEngine);
     this.tm = createTransactionManager();
 
     beforeLoading(List.of(ean, category, sales, qty, year, month, date));
@@ -81,18 +87,34 @@ public abstract class ATestPeriodBucketing {
 
   @Test
   void test() {
-    QueryDto query = new QueryDto()
+    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    ComparisonMeasure m = new ComparisonMeasure(
+            "myMeasure",
+            ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF,
+            sales,
+            Map.of(
+                    ComparisonMeasure.PeriodUnit.QUARTER, "q",
+                    ComparisonMeasure.PeriodUnit.YEAR, "y-1"
+            ));
+
+    var query = new PeriodBucketingQueryDto()
             .table(this.storeName)
-            .wildcardCoordinate(SCENARIO_FIELD_NAME)
-            .wildcardCoordinate("date_sales")
-            .aggregatedMeasure("sales", "sum")
-            .aggregatedMeasure("quantity", "sum");
-    Table result = this.queryEngine.execute(query);
-    result.show();
-//    Assertions.assertThat(result).containsExactlyInAnyOrder(
-//            List.of("base", 15.0d, 33l),
-//            List.of("s1", 17.0d, 33l),
-//            List.of("s2", 14.5d, 33l));
+            .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
+            .period(new Period.QuarterFromMonthYear("month_sales", "year_sales"))
+            .withMeasure(m)
+            .withMeasure(sales);
+
+    // TODO do a test with both agg measure and comp. measure. test with multiples measures
+
+    PeriodBucketingExecutor.Holder result = this.executor.executeBucketing(query);
+    Assertions.assertThat(result.table()).containsExactlyInAnyOrder(
+            List.of("base", 2022, 1, 100d),
+            List.of("base", 2022, 2, 80d),
+            List.of("base", 2022, 3, 85d),
+            List.of("base", 2022, 4, 35d));
+
+    Table finalResult = this.executor.executeComparison(result, query);
+
   }
 
 }

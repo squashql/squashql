@@ -103,8 +103,8 @@ public class TestQueryS13n {
             ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF,
             new AggregatedMeasure("sales", "sum"),
             Map.of(
-                    ComparisonMeasure.SS.QUARTER, "q",
-                    ComparisonMeasure.SS.YEAR, "y-1"
+                    ComparisonMeasure.PeriodUnit.QUARTER, "q",
+                    ComparisonMeasure.PeriodUnit.YEAR, "y-1"
             ));
 
     List<Period> periods = List.of(

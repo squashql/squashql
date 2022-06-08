@@ -15,9 +15,9 @@ public class ComparisonMeasure implements Measure {
 
   public AggregatedMeasure measure;
 
-  public Map<SS, String> referencePosition; // TODO support first and last
+  public Map<PeriodUnit, String> referencePosition; // TODO support first and last
 
-  public enum SS {
+  public enum PeriodUnit {
     MONTH,
     QUARTER,
     SEMESTER,
@@ -34,7 +34,7 @@ public class ComparisonMeasure implements Measure {
   public ComparisonMeasure(String alias,
                            String method,
                            AggregatedMeasure measure,
-                           Map<SS, String> referencePosition) {
+                           Map<PeriodUnit, String> referencePosition) {
     this.alias = alias;
     this.method = method;
     this.measure = measure;
