@@ -16,61 +16,61 @@ import static me.paulbares.query.dto.ConditionType.NEQ;
 
 public final class SingleValueConditionDto implements ConditionDto {
 
-  public ConditionType type;
+    public ConditionType type;
 
-  public Object value;
+    public Object value;
 
-  private static final EnumSet<ConditionType> supportedTypes = EnumSet.of(IN, LT, LE, GT, GE, EQ, NEQ);
+    private static final EnumSet<ConditionType> supportedTypes = EnumSet.of(IN, LT, LE, GT, GE, EQ, NEQ);
 
-  /**
-   * For Jackson.
-   */
-  public SingleValueConditionDto() {
-  }
-
-  public SingleValueConditionDto(ConditionType type, Object value) {
-    this.type = type;
-    if (this.type == IN) {
-      Set<Object> set = new HashSet<>();
-      if (value.getClass().isArray()) {
-        Object[] array = (Object[]) value;
-        for (Object e : array) {
-          set.add(e);
-        }
-      } else if (value instanceof Collection<?> collection) {
-        set.addAll(collection);
-      } else {
-        throw new IllegalArgumentException("Unexpected value type for in condition " + value);
-      }
-      this.value = set;
-    } else {
-      this.value = value;
+    /**
+     * For Jackson.
+     */
+    public SingleValueConditionDto() {
     }
-  }
 
-  @Override
-  public ConditionType type() {
-    return this.type;
-  }
+    public SingleValueConditionDto(ConditionType type, Object value) {
+        this.type = type;
+        if (this.type == IN) {
+            Set<Object> set = new HashSet<>();
+            if (value.getClass().isArray()) {
+                Object[] array = (Object[]) value;
+                for (Object e : array) {
+                    set.add(e);
+                }
+            } else if (value instanceof Collection<?> collection) {
+                set.addAll(collection);
+            } else {
+                throw new IllegalArgumentException("Unexpected value type for in condition " + value);
+            }
+            this.value = set;
+        } else {
+            this.value = value;
+        }
+    }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    SingleValueConditionDto that = (SingleValueConditionDto) o;
-    return Objects.equals(this.type, that.type) && Objects.equals(this.value, that.value);
-  }
+    @Override
+    public ConditionType type() {
+        return this.type;
+    }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.type, this.value);
-  }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SingleValueConditionDto that = (SingleValueConditionDto) o;
+        return Objects.equals(this.type, that.type) && Objects.equals(this.value, that.value);
+    }
 
-  @Override
-  public String toString() {
-    return "SingleValueConditionDto{" +
-            "type='" + this.type + '\'' +
-            ", value=" + this.value +
-            '}';
-  }
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.type, this.value);
+    }
+
+    @Override
+    public String toString() {
+        return "SingleValueConditionDto{" +
+                "type='" + this.type + '\'' +
+                ", value=" + this.value +
+                '}';
+    }
 }

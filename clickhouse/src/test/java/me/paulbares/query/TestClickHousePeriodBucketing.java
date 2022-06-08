@@ -22,7 +22,7 @@ import java.util.function.Function;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
 
-public class TestClickHouseQueryEngine extends ATestQueryEngine {
+public class TestClickHousePeriodBucketing extends ATestPeriodBucketing {
 
   protected static final boolean printAll = true;
 

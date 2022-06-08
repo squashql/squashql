@@ -22,104 +22,104 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.ALWAYS;
 
 public class QueryDto {
 
-  @JsonInclude(ALWAYS)
-  public Map<String, List<String>> coordinates = new LinkedHashMap<>();
+    @JsonInclude(ALWAYS)
+    public Map<String, List<String>> coordinates = new LinkedHashMap<>();
 
-  public Map<String, ConditionDto> conditions = new LinkedHashMap<>();
+    public Map<String, ConditionDto> conditions = new LinkedHashMap<>();
 
-  public List<Measure> measures = new ArrayList<>();
+    public List<Measure> measures = new ArrayList<>();
 
-  public TableDto table;
+    public TableDto table;
 
-  @JsonDeserialize(contentUsing = ContextValueDeserializer.class)
-  public Map<String, ContextValue> context = new HashMap<>();
+    @JsonDeserialize(contentUsing = ContextValueDeserializer.class)
+    public Map<String, ContextValue> context = new HashMap<>();
 
-  /**
-   * For Jackson.
-   */
-  public QueryDto() {
-  }
-
-  public QueryDto wildcardCoordinate(String field) {
-    this.coordinates.put(field, null);
-    return this;
-  }
-
-  public QueryDto coordinate(String field, String value) {
-    coordinates(field, value);
-    return this;
-  }
-
-  public QueryDto coordinates(String field, String first, String... others) {
-    List<String> values = new ArrayList<>();
-    values.add(first);
-    if (others != null) {
-      values.addAll(Arrays.stream(others).toList());
+    /**
+     * For Jackson.
+     */
+    public QueryDto() {
     }
-    this.coordinates.put(field, values);
-    return this;
-  }
 
-  public QueryDto aggregatedMeasure(String field, String agg) {
-    this.measures.add(new AggregatedMeasure(field, agg));
-    return this;
-  }
+    public QueryDto wildcardCoordinate(String field) {
+        this.coordinates.put(field, null);
+        return this;
+    }
 
-  public QueryDto expressionMeasure(String alias, String expression) {
-    this.measures.add(new ExpressionMeasure(alias, expression));
-    return this;
-  }
+    public QueryDto coordinate(String field, String value) {
+        coordinates(field, value);
+        return this;
+    }
 
-  public QueryDto unresolvedExpressionMeasure(String alias) {
-    this.measures.add(new UnresolvedExpressionMeasure(alias));
-    return this;
-  }
+    public QueryDto coordinates(String field, String first, String... others) {
+        List<String> values = new ArrayList<>();
+        values.add(first);
+        if (others != null) {
+            values.addAll(Arrays.stream(others).toList());
+        }
+        this.coordinates.put(field, values);
+        return this;
+    }
 
-  public QueryDto context(String key, ContextValue value) {
-    this.context.put(key, value);
-    return this;
-  }
+    public QueryDto aggregatedMeasure(String field, String agg) {
+        this.measures.add(new AggregatedMeasure(field, agg));
+        return this;
+    }
 
-  public QueryDto table(TableDto table) {
-    this.table = table;
-    return this;
-  }
+    public QueryDto expressionMeasure(String alias, String expression) {
+        this.measures.add(new ExpressionMeasure(alias, expression));
+        return this;
+    }
 
-  public QueryDto table(String tableName) {
-    this.table = new TableDto(tableName);
-    return this;
-  }
+    public QueryDto unresolvedExpressionMeasure(String alias) {
+        this.measures.add(new UnresolvedExpressionMeasure(alias));
+        return this;
+    }
 
-  public QueryDto condition(String field, ConditionDto conditionDto) {
-    this.conditions.put(field, conditionDto);
-    return this;
-  }
+    public QueryDto context(String key, ContextValue value) {
+        this.context.put(key, value);
+        return this;
+    }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    QueryDto queryDto = (QueryDto) o;
-    return Objects.equals(this.coordinates, queryDto.coordinates) && Objects.equals(this.conditions, queryDto.conditions) && Objects.equals(this.measures, queryDto.measures) && Objects.equals(this.table, queryDto.table) && Objects.equals(this.context, queryDto.context);
-  }
+    public QueryDto table(TableDto table) {
+        this.table = table;
+        return this;
+    }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.coordinates, this.conditions, this.measures, this.table, this.context);
-  }
+    public QueryDto table(String tableName) {
+        this.table = new TableDto(tableName);
+        return this;
+    }
 
-  @Override
-  public String toString() {
-    return "QueryDto{" +
-            "coordinates=" + coordinates +
-            ", conditions=" + conditions +
-            ", measures=" + measures +
-            ", table=" + table +
-            ", context=" + context +
-            '}';
-  }
+    public QueryDto condition(String field, ConditionDto conditionDto) {
+        this.conditions.put(field, conditionDto);
+        return this;
+    }
 
-  public String json() {
-    return JacksonUtil.serialize(this);
-  }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        QueryDto queryDto = (QueryDto) o;
+        return Objects.equals(this.coordinates, queryDto.coordinates) && Objects.equals(this.conditions, queryDto.conditions) && Objects.equals(this.measures, queryDto.measures) && Objects.equals(this.table, queryDto.table) && Objects.equals(this.context, queryDto.context);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.coordinates, this.conditions, this.measures, this.table, this.context);
+    }
+
+    @Override
+    public String toString() {
+        return "QueryDto{" +
+                "coordinates=" + coordinates +
+                ", conditions=" + conditions +
+                ", measures=" + measures +
+                ", table=" + table +
+                ", context=" + context +
+                '}';
+    }
+
+    public String json() {
+        return JacksonUtil.serialize(this);
+    }
 }
