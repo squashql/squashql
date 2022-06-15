@@ -32,7 +32,7 @@ public class ObjectArrayDictionary {
    * @return
    */
   public int map(Object[] value) {
-    assert value.length == this.pointLength;
+    assert value.length == this.pointLength : Arrays.toString(value) + " was expected to be of size " + this.pointLength;
     int size = this.underlyingDic.size();
     return this.underlyingDic.getIfAbsentPut(value, size);
   }

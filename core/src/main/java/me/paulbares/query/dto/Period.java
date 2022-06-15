@@ -18,7 +18,7 @@ public interface Period {
   @JsonIgnore
   String getJsonKey();
 
-  record Quarter(String quarter) implements Period {
+  record Quarter(String quarter, String year) implements Period {
     public static final String JSON_KEY = "quarter";
 
     @Override

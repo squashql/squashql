@@ -93,7 +93,16 @@ public abstract class ATestPeriodBucketing {
   }
 
   @Test
-  void testBucketing() {
+  void testBucketingQuarterFromMonthYear() {
+    testBucketingQuarter(new Period.QuarterFromMonthYear("month_sales", "year_sales"), "year_sales", "quarter");
+  }
+
+  @Test
+  void testBucketingQuarterFromDate() {
+    testBucketingQuarter(new Period.QuarterFromDate("date_sales"), "year", "quarter");
+  }
+
+  void testBucketingQuarter(Period period, String expectedHeaderYear, String expectedHeadQuarter) {
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
     ComparisonMeasure m = new ComparisonMeasure(
             "myMeasure",
@@ -106,7 +115,7 @@ public abstract class ATestPeriodBucketing {
     var query = new PeriodBucketingQueryDto()
             .table(this.storeName)
             .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
-            .period(new Period.QuarterFromMonthYear("month_sales", "year_sales"))
+            .period(period)
             .withMeasure(m)
             .withMeasure(sales);
 
@@ -122,11 +131,26 @@ public abstract class ATestPeriodBucketing {
             List.of("base", 2023, 4, 35d));
     Assertions
             .assertThat(result.table().headers().stream().map(Field::name))
-            .containsExactlyInAnyOrder(Datastore.SCENARIO_FIELD_NAME, "year_sales", "quarter", "sum(sales)");
+            .containsExactlyInAnyOrder(Datastore.SCENARIO_FIELD_NAME, expectedHeaderYear, expectedHeadQuarter, "sum(sales)");
   }
 
   @Test
-  void testCompareCurrentQuarterWithCurrentQuarterPreviousYear() {
+  void testCompareCurrentQuarterWithCurrentQuarterPreviousYearWithQuarterFromMonthYear() {
+    testCompareCurrentQuarterWithCurrentQuarterPreviousYear(
+            new Period.QuarterFromMonthYear("month_sales", "year_sales"),
+            "year_sales",
+            "quarter");
+  }
+
+  @Test
+  void testCompareCurrentQuarterWithCurrentQuarterPreviousYearWithQuarterFromDate() {
+    testCompareCurrentQuarterWithCurrentQuarterPreviousYear(
+            new Period.QuarterFromDate("date_sales"),
+            "year",
+            "quarter");
+  }
+
+  void testCompareCurrentQuarterWithCurrentQuarterPreviousYear(Period period, String expectedHeaderYear, String expectedHeadQuarter) {
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
     ComparisonMeasure m = new ComparisonMeasure(
             "myMeasure",
@@ -140,7 +164,7 @@ public abstract class ATestPeriodBucketing {
     var query = new PeriodBucketingQueryDto()
             .table(this.storeName)
             .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
-            .period(new Period.QuarterFromMonthYear("month_sales", "year_sales"))
+            .period(period)
             .withMeasure(m)
             .withMeasure(sales);
 
@@ -156,11 +180,26 @@ public abstract class ATestPeriodBucketing {
             Arrays.asList("base", 2023, 4, 0d, 35d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
-            .containsExactlyInAnyOrder(Datastore.SCENARIO_FIELD_NAME, "year_sales", "quarter", "myMeasure", "sum(sales)");
+            .containsExactlyInAnyOrder(Datastore.SCENARIO_FIELD_NAME, expectedHeaderYear, expectedHeadQuarter, "myMeasure", "sum(sales)");
   }
 
   @Test
-  void testCompareCurrentQuarterWithPreviousQuarter() {
+  void testCompareCurrentQuarterWithPreviousQuarterWithQuarterFromMonthYear() {
+    testCompareCurrentQuarterWithPreviousQuarter(
+            new Period.QuarterFromMonthYear("month_sales", "year_sales"),
+            "year_sales",
+            "quarter");
+  }
+
+  @Test
+  void testCompareCurrentQuarterWithPreviousQuarterWithQuarterFromMonthDate() {
+    testCompareCurrentQuarterWithPreviousQuarter(
+            new Period.QuarterFromDate("date_sales"),
+            "year",
+            "quarter");
+  }
+
+  void testCompareCurrentQuarterWithPreviousQuarter(Period period, String expectedHeaderYear, String expectedHeadQuarter) {
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
     ComparisonMeasure m = new ComparisonMeasure(
             "myMeasure",
@@ -174,7 +213,7 @@ public abstract class ATestPeriodBucketing {
     var query = new PeriodBucketingQueryDto()
             .table(this.storeName)
             .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
-            .period(new Period.QuarterFromMonthYear("month_sales", "year_sales"))
+            .period(period)
             .withMeasure(m)
             .withMeasure(sales);
 
@@ -190,6 +229,6 @@ public abstract class ATestPeriodBucketing {
             Arrays.asList("base", 2023, 4, -50d, 35d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
-            .containsExactlyInAnyOrder(Datastore.SCENARIO_FIELD_NAME, "year_sales", "quarter", "myMeasure", "sum(sales)");
+            .containsExactlyInAnyOrder(Datastore.SCENARIO_FIELD_NAME, expectedHeaderYear, expectedHeadQuarter, "myMeasure", "sum(sales)");
   }
 }

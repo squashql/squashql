@@ -109,7 +109,7 @@ public class TestQueryS13n {
 
     List<Period> periods = List.of(
             new Period.QuarterFromMonthYear("mois", "annee"),
-            new Period.Quarter("trimestre"),
+            new Period.Quarter("trimestre", "annee"),
             new Period.QuarterFromDate("myLocalDate"),
             new Period.Semester("semestre"),
             new Period.SemesterFromDate("myLocalDate")

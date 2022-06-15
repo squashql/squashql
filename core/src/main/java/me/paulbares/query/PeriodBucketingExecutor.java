@@ -12,7 +12,9 @@ import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.time.temporal.ChronoField;
 import java.time.temporal.IsoFields;
+import java.time.temporal.TemporalAccessor;
 import java.util.*;
 
 public class PeriodBucketingExecutor {
@@ -176,6 +178,8 @@ public class PeriodBucketingExecutor {
   private List<String> getColumnsForPrefetching(Period period) {
     if (period instanceof Period.QuarterFromMonthYear q) {
       return List.of(q.year(), q.month());
+    } else if (period instanceof Period.QuarterFromDate q) {
+      return List.of(q.date());
     } else {
       throw new RuntimeException(period + " not supported yet");
     }
@@ -187,6 +191,8 @@ public class PeriodBucketingExecutor {
   private List<Field> getNewColumns(Period period) {
     if (period instanceof Period.QuarterFromMonthYear q) {
       return List.of(new Field(q.year(), String.class), new Field("quarter", String.class));
+    } else if (period instanceof Period.QuarterFromDate) {
+      return List.of(new Field("year", String.class), new Field("quarter", String.class));
     } else {
       throw new RuntimeException(period + " not supported yet");
     }
@@ -194,6 +200,8 @@ public class PeriodBucketingExecutor {
 
   private ComparisonMeasure.PeriodUnit[] getPeriodUnits(Period period) {
     if (period instanceof Period.QuarterFromMonthYear) {
+      return new ComparisonMeasure.PeriodUnit[]{ComparisonMeasure.PeriodUnit.YEAR, ComparisonMeasure.PeriodUnit.QUARTER};
+    } else if (period instanceof Period.QuarterFromDate) {
       return new ComparisonMeasure.PeriodUnit[]{ComparisonMeasure.PeriodUnit.YEAR, ComparisonMeasure.PeriodUnit.QUARTER};
     } else {
       throw new RuntimeException(period + " not supported yet");
@@ -206,7 +214,7 @@ public class PeriodBucketingExecutor {
           Object[] position,
           ComparisonMeasure.PeriodUnit[] periodUnits,
           Map<ComparisonMeasure.PeriodUnit, String> referencePosition) {
-    if (period instanceof Period.QuarterFromMonthYear) {
+    if (period instanceof Period.QuarterFromMonthYear || period instanceof Period.QuarterFromDate) {
       Object[] result = Arrays.copyOf(position, position.length); // FIXME we can avoid the copy here
       Object[] transformations = new Object[position.length];
 
@@ -253,6 +261,10 @@ public class PeriodBucketingExecutor {
       assert args.size() == 2;
       // args must be of size 2 and contain [year, month]. 1 <= month <= 2
       return new Object[]{args.get(0), (int) IsoFields.QUARTER_OF_YEAR.getFrom(Month.of((Integer) args.get(1)))};
+    } else if (period instanceof Period.QuarterFromDate) {
+      assert args.size() == 1;
+      TemporalAccessor date = (TemporalAccessor) args.get(0);
+      return new Object[]{date.get(ChronoField.YEAR), (int) IsoFields.QUARTER_OF_YEAR.getFrom(date)};
     } else {
       throw new RuntimeException(period + " not supported yet");
     }
