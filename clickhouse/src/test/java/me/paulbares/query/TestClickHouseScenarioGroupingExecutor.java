@@ -12,8 +12,8 @@ import org.testcontainers.junit.jupiter.Container;
 
 import java.util.List;
 
-import static me.paulbares.query.TestClickHouseQueryEngine.createClickHouseContainer;
-import static me.paulbares.query.TestClickHouseQueryEngine.jdbcUrl;
+import static me.paulbares.query.TestUtils.createClickHouseContainer;
+import static me.paulbares.query.TestUtils.jdbcUrl;
 
 public class TestClickHouseScenarioGroupingExecutor extends ATestScenarioGroupingExecutor {
 

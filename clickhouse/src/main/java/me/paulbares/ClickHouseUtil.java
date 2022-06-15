@@ -3,6 +3,8 @@ package me.paulbares;
 import com.clickhouse.client.ClickHouseDataType;
 import me.paulbares.store.Datastore;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 
 public final class ClickHouseUtil {
@@ -44,5 +46,22 @@ public final class ClickHouseUtil {
 
   public static String getScenarioName(String storeName) {
     return storeName + "_" + Datastore.SCENARIO_FIELD_NAME;
+  }
+
+  public static void show(ResultSet set) {
+    StringBuilder sb = new StringBuilder();
+    try {
+      int columnCount = set.getMetaData().getColumnCount();
+
+      while (set.next()) {
+        for (int i = 0; i < columnCount; i++) {
+          sb.append(set.getObject(i + 1)).append(",");
+        }
+        sb.append(System.lineSeparator());
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+    System.out.println(sb.toString());
   }
 }
