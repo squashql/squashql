@@ -12,13 +12,13 @@ public class TestPeriodBucketingExecutor {
   @Test
   void testQuarterFromMonthYear() {
     Period period = new Period.QuarterFromMonthYear("", "");
-
-    BiFunction<Object[], String[], Object[]> f = (point, refPos) -> PeriodBucketingExecutor
-            .computeNewPositionFromReferencePosition(period,
-                    point,
-                    new ComparisonMeasure.PeriodUnit[]{ComparisonMeasure.PeriodUnit.YEAR, ComparisonMeasure.PeriodUnit.QUARTER},
-                    Map.of(ComparisonMeasure.PeriodUnit.YEAR, refPos[0], ComparisonMeasure.PeriodUnit.QUARTER, refPos[1]));
-
+    BiFunction<Object[], String[], Object[]> f = (point, refPos) -> {
+      new PeriodBucketingExecutor.ShiftProcedure(
+              period,
+              Map.of(ComparisonMeasure.PeriodUnit.YEAR, refPos[0], ComparisonMeasure.PeriodUnit.QUARTER, refPos[1]),
+              2).execute(point);
+      return point;
+    };
 
     Assertions.assertThat(f.apply(new Object[]{2022, 1}, new String[]{"y", "q-1"})).containsExactly(2021, 4);
     Assertions.assertThat(f.apply(new Object[]{2022, 2}, new String[]{"y", "q-1"})).containsExactly(2022, 1);

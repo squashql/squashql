@@ -84,32 +84,34 @@ public class PeriodBucketingExecutor {
                        SumAggregator aggregator) {
   }
 
-  public Table executeComparison(Holder bucketingResult, PeriodBucketingQueryDto periodBucketingQueryDto) {
+  public Table executeComparison(Holder bucketingResult, PeriodBucketingQueryDto query) {
     List<List<Object>> newRows = new ArrayList<>();
     ObjectArrayDictionary dictionary = bucketingResult.dictionary;
     SumAggregator aggregator = bucketingResult.aggregator;
-    int rowSize = bucketingResult.originalColumns.size() + bucketingResult.newColumns.size() + periodBucketingQueryDto.measures.size();
-    Period period = periodBucketingQueryDto.period;
-    ComparisonMeasure.PeriodUnit[] periodUnits = getPeriodUnits(period);
-
+    ShiftProcedure[] procedures = new ShiftProcedure[query.measures.size()];
+    for (int i = 0; i < procedures.length; i++) {
+      if (query.measures.get(i) instanceof ComparisonMeasure c) {
+        procedures[i] = new ShiftProcedure(query.period, c.referencePosition, bucketingResult.newColumns.size());
+      }
+    }
+    int rowSize = bucketingResult.originalColumns.size() + bucketingResult.newColumns.size() + query.measures.size();
+    Object[] buffer = new Object[bucketingResult.newColumns.size()];
+    Object[] referencePositionBuffer = new Object[dictionary.getPointLength()];
     dictionary.forEach((points, row) -> {
       List<Object> r = new ArrayList<>(rowSize);
       r.addAll(Arrays.asList(points));
-      for (int i = 0; i < periodBucketingQueryDto.measures.size(); i++) {
-        Measure measure = periodBucketingQueryDto.measures.get(i);
+      for (int i = 0; i < query.measures.size(); i++) {
+        Measure measure = query.measures.get(i);
         if (measure instanceof ComparisonMeasure c) {
-          AggregatedMeasure agg = c.measure;
+          System.arraycopy(points, bucketingResult.originalColumns.size(), buffer, 0, buffer.length);
+          procedures[i].execute(buffer);
 
-          Object[] point = new Object[bucketingResult.newColumns.size()]; // FIXME we can create a buffer here
-          System.arraycopy(points, bucketingResult.originalColumns.size(), point, 0, point.length);
-          Object[] shiftPoint = computeNewPositionFromReferencePosition(period, point, periodUnits, c.referencePosition);
+          System.arraycopy(points, 0, referencePositionBuffer, 0, bucketingResult.originalColumns.size());
+          System.arraycopy(buffer, 0, referencePositionBuffer, bucketingResult.originalColumns.size(), buffer.length);
 
-          Object[] referencePosition = new Object[points.length];
-          System.arraycopy(points, 0, referencePosition, 0, bucketingResult.originalColumns.size());
-          System.arraycopy(shiftPoint, 0, referencePosition, bucketingResult.originalColumns.size(), shiftPoint.length);
-
-          int position = dictionary.getPosition(referencePosition);
+          int position = dictionary.getPosition(referencePositionBuffer);
           if (position != -1) {
+            AggregatedMeasure agg = c.measure;
             Object currentValue = aggregator.getAggregate(agg, row);
             Object referenceValue = aggregator.getAggregate(agg, position);
             Object diff = Comparisons.compare(c.method, currentValue, referenceValue, aggregator.getField(agg).type());
@@ -126,7 +128,7 @@ public class PeriodBucketingExecutor {
     });
 
     List<Field> measureFields = new ArrayList<>();
-    for (Measure measure : periodBucketingQueryDto.measures) {
+    for (Measure measure : query.measures) {
       if (measure instanceof AggregatedMeasure a) {
         measureFields.add(aggregator.getField(a));
       } else if (measure instanceof ComparisonMeasure c) {
@@ -206,70 +208,76 @@ public class PeriodBucketingExecutor {
     }
   }
 
-  private ComparisonMeasure.PeriodUnit[] getPeriodUnits(Period period) {
-    if (period instanceof Period.QuarterFromMonthYear) {
-      return new ComparisonMeasure.PeriodUnit[]{ComparisonMeasure.PeriodUnit.YEAR, ComparisonMeasure.PeriodUnit.QUARTER};
-    } else if (period instanceof Period.QuarterFromDate) {
-      return new ComparisonMeasure.PeriodUnit[]{ComparisonMeasure.PeriodUnit.YEAR, ComparisonMeasure.PeriodUnit.QUARTER};
-    } else if (period instanceof Period.YearFromDate || period instanceof Period.Year) {
-      return new ComparisonMeasure.PeriodUnit[]{ComparisonMeasure.PeriodUnit.YEAR};
-    } else {
-      throw new RuntimeException(period + " not supported yet");
-    }
-  }
+  static class ShiftProcedure {
 
-  // FIXME API is confusing
-  public static Object[] computeNewPositionFromReferencePosition(
-          Period period,
-          Object[] position,
-          ComparisonMeasure.PeriodUnit[] periodUnits,
-          Map<ComparisonMeasure.PeriodUnit, String> referencePosition) {
-    // Compute the transformations
-    Object[] transformations = new Object[position.length];
-    for (int i = 0; i < periodUnits.length; i++) {
-      ComparisonMeasure.PeriodUnit unit = periodUnits[i];
-      String transformation = referencePosition.get(unit);
-      if (transformation.contains("-")) {
-        String[] split = transformation.split("-");
-        int shift = Integer.parseInt(split[1].trim());
-        transformations[i] = -shift;
-      } else if (transformation.contains("+")) {
-        String[] split = transformation.split("\\+");
-        int shift = Integer.parseInt(split[1].trim());
-        transformations[i] = shift;
+    final Object[] transformations;
+    final Period period;
+    final Map<ComparisonMeasure.PeriodUnit, String> referencePosition;
+
+    ShiftProcedure(Period period, Map<ComparisonMeasure.PeriodUnit, String> referencePosition, int pointLength) {
+      this.period = period;
+      this.referencePosition = referencePosition;
+      this.transformations = new Object[pointLength];
+      ComparisonMeasure.PeriodUnit[] periodUnits = getPeriodUnits(period);
+      for (int i = 0; i < periodUnits.length; i++) {
+        ComparisonMeasure.PeriodUnit unit = periodUnits[i];
+        String transformation = referencePosition.get(unit);
+        if (transformation.contains("-")) {
+          String[] split = transformation.split("-");
+          int shift = Integer.parseInt(split[1].trim());
+          transformations[i] = -shift;
+        } else if (transformation.contains("+")) {
+          String[] split = transformation.split("\\+");
+          int shift = Integer.parseInt(split[1].trim());
+          transformations[i] = shift;
+        }
+        // else nothing
       }
-      // else nothing
     }
 
-    if (period instanceof Period.QuarterFromMonthYear || period instanceof Period.QuarterFromDate) {
-      // YEAR, QUARTER
-      int year = (int) position[0];
-      if (referencePosition.containsKey(ComparisonMeasure.PeriodUnit.YEAR)) {
-        if (transformations[0] != null) {
-          position[0] = year + (int) transformations[0];
+    public void execute(Object[] position) {
+      if (period instanceof Period.QuarterFromMonthYear || period instanceof Period.QuarterFromDate) {
+        // YEAR, QUARTER
+        int year = (int) position[0];
+        if (referencePosition.containsKey(ComparisonMeasure.PeriodUnit.YEAR)) {
+          if (transformations[0] != null) {
+            position[0] = year + (int) transformations[0];
+          }
         }
-      }
-      if (referencePosition.containsKey(ComparisonMeasure.PeriodUnit.QUARTER)) {
-        int quarter = (int) position[1];
-        if (transformations[1] != null) {
-          LocalDate d = LocalDate.of((Integer) position[0], quarter * 3, 1);
-          LocalDate newd = d.plusMonths(((int) transformations[1]) * 3);
-          position[1] = (int) IsoFields.QUARTER_OF_YEAR.getFrom(newd);
-          position[0] = newd.getYear(); // year might have changed
+        if (referencePosition.containsKey(ComparisonMeasure.PeriodUnit.QUARTER)) {
+          int quarter = (int) position[1];
+          if (transformations[1] != null) {
+            LocalDate d = LocalDate.of((Integer) position[0], quarter * 3, 1);
+            LocalDate newd = d.plusMonths(((int) transformations[1]) * 3);
+            position[1] = (int) IsoFields.QUARTER_OF_YEAR.getFrom(newd);
+            position[0] = newd.getYear(); // year might have changed
+          }
         }
-      }
-    } else if (period instanceof Period.YearFromDate || period instanceof Period.Year) {
-      // YEAR
-      int year = (int) position[0];
-      if (referencePosition.containsKey(ComparisonMeasure.PeriodUnit.YEAR)) {
-        if (transformations[0] != null) {
-          position[0] = year + (int) transformations[0];
+      } else if (period instanceof Period.YearFromDate || period instanceof Period.Year) {
+        // YEAR
+        int year = (int) position[0];
+        if (referencePosition.containsKey(ComparisonMeasure.PeriodUnit.YEAR)) {
+          if (transformations[0] != null) {
+            position[0] = year + (int) transformations[0];
+          }
         }
+      } else {
+        throw new RuntimeException(period + " not supported yet");
       }
-    } else {
-      throw new RuntimeException(period + " not supported yet");
     }
-    return position;
+
+    private static ComparisonMeasure.PeriodUnit[] getPeriodUnits(Period period) {
+      if (period instanceof Period.QuarterFromMonthYear) {
+        return new ComparisonMeasure.PeriodUnit[]{ComparisonMeasure.PeriodUnit.YEAR, ComparisonMeasure.PeriodUnit.QUARTER};
+      } else if (period instanceof Period.QuarterFromDate) {
+        return new ComparisonMeasure.PeriodUnit[]{ComparisonMeasure.PeriodUnit.YEAR, ComparisonMeasure.PeriodUnit.QUARTER};
+      } else if (period instanceof Period.YearFromDate || period instanceof Period.Year) {
+        return new ComparisonMeasure.PeriodUnit[]{ComparisonMeasure.PeriodUnit.YEAR};
+      } else {
+        throw new RuntimeException(period + " not supported yet");
+      }
+    }
+
   }
 
   private Object[] getBucketValues(Period period, List<Object> args) {
