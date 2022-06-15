@@ -62,4 +62,22 @@ public interface Period {
       return JSON_KEY;
     }
   }
+
+  record YearFromDate(String date) implements Period {
+    public static final String JSON_KEY = "year_from_date";
+
+    @Override
+    public String getJsonKey() {
+      return JSON_KEY;
+    }
+  }
+
+  record Year(String year) implements Period {
+    public static final String JSON_KEY = "year";
+
+    @Override
+    public String getJsonKey() {
+      return JSON_KEY;
+    }
+  }
 }

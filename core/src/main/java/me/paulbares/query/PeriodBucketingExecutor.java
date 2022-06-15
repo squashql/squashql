@@ -180,6 +180,10 @@ public class PeriodBucketingExecutor {
       return List.of(q.year(), q.month());
     } else if (period instanceof Period.QuarterFromDate q) {
       return List.of(q.date());
+    } else if (period instanceof Period.YearFromDate y) {
+      return List.of(y.date());
+    } else if (period instanceof Period.Year y) {
+      return List.of(y.year());
     } else {
       throw new RuntimeException(period + " not supported yet");
     }
@@ -193,6 +197,10 @@ public class PeriodBucketingExecutor {
       return List.of(new Field(q.year(), String.class), new Field("quarter", String.class));
     } else if (period instanceof Period.QuarterFromDate) {
       return List.of(new Field("year", String.class), new Field("quarter", String.class));
+    } else if (period instanceof Period.YearFromDate) {
+      return List.of(new Field("year", String.class));
+    } else if (period instanceof Period.Year y) {
+      return List.of(new Field(y.year(), String.class));
     } else {
       throw new RuntimeException(period + " not supported yet");
     }
@@ -203,6 +211,8 @@ public class PeriodBucketingExecutor {
       return new ComparisonMeasure.PeriodUnit[]{ComparisonMeasure.PeriodUnit.YEAR, ComparisonMeasure.PeriodUnit.QUARTER};
     } else if (period instanceof Period.QuarterFromDate) {
       return new ComparisonMeasure.PeriodUnit[]{ComparisonMeasure.PeriodUnit.YEAR, ComparisonMeasure.PeriodUnit.QUARTER};
+    } else if (period instanceof Period.YearFromDate || period instanceof Period.Year) {
+      return new ComparisonMeasure.PeriodUnit[]{ComparisonMeasure.PeriodUnit.YEAR};
     } else {
       throw new RuntimeException(period + " not supported yet");
     }
@@ -214,24 +224,24 @@ public class PeriodBucketingExecutor {
           Object[] position,
           ComparisonMeasure.PeriodUnit[] periodUnits,
           Map<ComparisonMeasure.PeriodUnit, String> referencePosition) {
-    if (period instanceof Period.QuarterFromMonthYear || period instanceof Period.QuarterFromDate) {
-      Object[] transformations = new Object[position.length];
-
-      for (int i = 0; i < periodUnits.length; i++) {
-        ComparisonMeasure.PeriodUnit unit = periodUnits[i];
-        String transformation = referencePosition.get(unit);
-        if (transformation.contains("-")) {
-          String[] split = transformation.split("-");
-          int shift = Integer.parseInt(split[1].trim());
-          transformations[i] = -shift;
-        } else if (transformation.contains("+")) {
-          String[] split = transformation.split("\\+");
-          int shift = Integer.parseInt(split[1].trim());
-          transformations[i] = shift;
-        }
-        // else nothing
+    // Compute the transformations
+    Object[] transformations = new Object[position.length];
+    for (int i = 0; i < periodUnits.length; i++) {
+      ComparisonMeasure.PeriodUnit unit = periodUnits[i];
+      String transformation = referencePosition.get(unit);
+      if (transformation.contains("-")) {
+        String[] split = transformation.split("-");
+        int shift = Integer.parseInt(split[1].trim());
+        transformations[i] = -shift;
+      } else if (transformation.contains("+")) {
+        String[] split = transformation.split("\\+");
+        int shift = Integer.parseInt(split[1].trim());
+        transformations[i] = shift;
       }
+      // else nothing
+    }
 
+    if (period instanceof Period.QuarterFromMonthYear || period instanceof Period.QuarterFromDate) {
       // YEAR, QUARTER
       int year = (int) position[0];
       if (referencePosition.containsKey(ComparisonMeasure.PeriodUnit.YEAR)) {
@@ -239,7 +249,7 @@ public class PeriodBucketingExecutor {
           position[0] = year + (int) transformations[0];
         }
       }
-      if (referencePosition.containsKey(ComparisonMeasure.PeriodUnit.YEAR)) {
+      if (referencePosition.containsKey(ComparisonMeasure.PeriodUnit.QUARTER)) {
         int quarter = (int) position[1];
         if (transformations[1] != null) {
           LocalDate d = LocalDate.of((Integer) position[0], quarter * 3, 1);
@@ -248,11 +258,18 @@ public class PeriodBucketingExecutor {
           position[0] = newd.getYear(); // year might have changed
         }
       }
-
-      return position;
+    } else if (period instanceof Period.YearFromDate || period instanceof Period.Year) {
+      // YEAR
+      int year = (int) position[0];
+      if (referencePosition.containsKey(ComparisonMeasure.PeriodUnit.YEAR)) {
+        if (transformations[0] != null) {
+          position[0] = year + (int) transformations[0];
+        }
+      }
     } else {
       throw new RuntimeException(period + " not supported yet");
     }
+    return position;
   }
 
   private Object[] getBucketValues(Period period, List<Object> args) {
@@ -264,6 +281,13 @@ public class PeriodBucketingExecutor {
       assert args.size() == 1;
       TemporalAccessor date = (TemporalAccessor) args.get(0);
       return new Object[]{date.get(ChronoField.YEAR), (int) IsoFields.QUARTER_OF_YEAR.getFrom(date)};
+    } else if (period instanceof Period.YearFromDate) {
+      assert args.size() == 1;
+      TemporalAccessor date = (TemporalAccessor) args.get(0);
+      return new Object[]{date.get(ChronoField.YEAR)};
+    } else if (period instanceof Period.Year) {
+      assert args.size() == 1;
+      return new Object[]{args.get(0)};
     } else {
       throw new RuntimeException(period + " not supported yet");
     }

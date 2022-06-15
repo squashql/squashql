@@ -231,4 +231,38 @@ public abstract class ATestPeriodBucketing {
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(Datastore.SCENARIO_FIELD_NAME, expectedHeaderYear, expectedHeadQuarter, "myMeasure", "sum(sales)");
   }
+
+  @Test
+  void testCompareCurrentYearWithPreviousYearWithYearFromDate() {
+    testCompareCurrentYearWithPreviousYearWithYearFromDate(new Period.YearFromDate("date_sales"), "year");
+  }
+
+  @Test
+  void testCompareCurrentYearWithPreviousYearWithYear() {
+    testCompareCurrentYearWithPreviousYearWithYearFromDate(new Period.Year("year_sales"), "year_sales");
+  }
+
+  void testCompareCurrentYearWithPreviousYearWithYearFromDate(Period period, String expectedHeaderYear) {
+    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    ComparisonMeasure m = new ComparisonMeasure(
+            "myMeasure",
+            Comparisons.COMPARISON_METHOD_ABS_DIFF,
+            sales,
+            Map.of(ComparisonMeasure.PeriodUnit.YEAR, "y-1"));
+
+    var query = new PeriodBucketingQueryDto()
+            .table(this.storeName)
+            .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
+            .period(period)
+            .withMeasure(m)
+            .withMeasure(sales);
+
+    Table finalTable = this.executor.execute(query);
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            Arrays.asList("base", 2022, null, 300d),
+            Arrays.asList("base", 2023, 0d, 300d));
+    Assertions
+            .assertThat(finalTable.headers().stream().map(Field::name))
+            .containsExactlyInAnyOrder(Datastore.SCENARIO_FIELD_NAME, expectedHeaderYear, "myMeasure", "sum(sales)");
+  }
 }
