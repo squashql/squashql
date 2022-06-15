@@ -43,7 +43,7 @@ public class ObjectArrayDictionary {
    * @param key the key to find
    * @return position of the key in the dictionary, or -1 if the key is not in the dictionary.
    */
-  public int getPosition(int[] key) {
+  public int getPosition(Object[] key) {
     return this.underlyingDic.getIfAbsent(key, FREE);
   }
 

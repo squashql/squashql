@@ -3,7 +3,7 @@ package me.paulbares.jackson;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ComparisonMeasure;
 import me.paulbares.query.QueryBuilder;
-import me.paulbares.query.ScenarioGroupingExecutor;
+import me.paulbares.query.comp.Comparisons;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.*;
 import org.assertj.core.api.Assertions;
@@ -100,7 +100,7 @@ public class TestQueryS13n {
   void testRoundTripPeriodBucketingComparisonQuery() {
     ComparisonMeasure m = new ComparisonMeasure(
             "myMeasure",
-            ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF,
+            Comparisons.COMPARISON_METHOD_ABS_DIFF,
             new AggregatedMeasure("sales", "sum"),
             Map.of(
                     ComparisonMeasure.PeriodUnit.QUARTER, "q",

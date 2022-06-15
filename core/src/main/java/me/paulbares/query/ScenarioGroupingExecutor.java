@@ -1,5 +1,6 @@
 package me.paulbares.query;
 
+import me.paulbares.query.comp.Comparisons;
 import me.paulbares.query.dto.ScenarioComparisonDto;
 import me.paulbares.query.dto.ScenarioGroupingQueryDto;
 import me.paulbares.store.Field;
@@ -12,8 +13,6 @@ import java.util.Map;
 public class ScenarioGroupingExecutor {
 
   public static final String GROUP_NAME = "group";
-  public static final String COMPARISON_METHOD_ABS_DIFF = "absolute_difference";
-  public static final String COMPARISON_METHOD_REL_DIFF = "relative_difference";
   public static final String REF_POS_PREVIOUS = "previous";
   public static final String REF_POS_FIRST = "first";
 
@@ -47,15 +46,7 @@ public class ScenarioGroupingExecutor {
           Object referenceValue = getReferenceValue(i, comp.referencePosition(), scenario, scenarios, valuesByScenario);
           Object currentValue = valuesByScenario.get(scenario).get(i);
 
-          Object newValue = switch (comp.method()) {
-            case COMPARISON_METHOD_ABS_DIFF -> computeAbsoluteDiff(currentValue, referenceValue,
-                    table.headers().get(i + 1).type());
-            case COMPARISON_METHOD_REL_DIFF -> computeRelativeDiff(currentValue, referenceValue,
-                    table.headers().get(i + 1).type());
-            default -> throw new IllegalArgumentException(String.format("Not supported comparison %s", comp.method()));
-          };
-
-          row.add(newValue);
+          row.add(Comparisons.compare(comp.method(), currentValue, referenceValue, table.headers().get(i + 1).type()));
           if (comp.showValue()) {
             row.add(currentValue); // the original value
           }
@@ -107,33 +98,5 @@ public class ScenarioGroupingExecutor {
       }
     }
     return fields;
-  }
-
-  private double computeRelativeDiff(Object current, Object previous, Class<?> dataType) {
-    if (dataType.equals(Double.class) || dataType.equals(double.class)) {
-      return (((double) current) - ((double) previous)) / ((double) previous);
-    } else if (dataType.equals(Float.class) || dataType.equals(float.class)) {
-      return (((float) current) - ((float) previous)) / ((float) previous);
-    } else if (dataType.equals(Integer.class) || dataType.equals(int.class)) {
-      return (double) (((int) current) - ((int) previous)) / ((long) previous);
-    } else if (dataType.equals(Long.class) || dataType.equals(long.class)) {
-      return (double) (((long) current) - ((long) previous)) / ((long) previous);
-    } else {
-      throw new RuntimeException("Unsupported type " + dataType);
-    }
-  }
-
-  private Object computeAbsoluteDiff(Object current, Object previous, Class<?> dataType) {
-    if (dataType.equals(Double.class) || dataType.equals(double.class)) {
-      return ((double) current) - ((double) previous);
-    } else if (dataType.equals(Float.class) || dataType.equals(float.class)) {
-      return ((float) current) - ((float) previous);
-    } else if (dataType.equals(Integer.class) || dataType.equals(int.class)) {
-      return ((int) current) - ((int) previous);
-    } else if (dataType.equals(Long.class) || dataType.equals(long.class)) {
-      return ((long) current) - ((long) previous);
-    } else {
-      throw new RuntimeException("Unsupported type " + dataType);
-    }
   }
 }

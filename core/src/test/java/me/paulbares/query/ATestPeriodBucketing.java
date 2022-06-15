@@ -1,5 +1,6 @@
 package me.paulbares.query;
 
+import me.paulbares.query.comp.Comparisons;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.PeriodBucketingQueryDto;
 import me.paulbares.store.Datastore;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -53,6 +55,7 @@ public abstract class ATestPeriodBucketing {
     beforeLoading(List.of(ean, category, sales, qty, year, month, date));
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
+            // 2022
             new Object[]{"bottle", "drink", 20d, 10, 2022, 1, LocalDate.of(2022, 1, 1)},
             new Object[]{"bottle", "drink", 10d, 5, 2022, 4, LocalDate.of(2022, 4, 1)},
             new Object[]{"bottle", "drink", 20d, 10, 2022, 8, LocalDate.of(2022, 8, 1)},
@@ -66,31 +69,68 @@ public abstract class ATestPeriodBucketing {
             new Object[]{"shirt", "cloth", 20d, 2, 2022, 3, LocalDate.of(2022, 3, 1)},
             new Object[]{"shirt", "cloth", 40d, 4, 2022, 6, LocalDate.of(2022, 6, 1)},
             new Object[]{"shirt", "cloth", 50d, 5, 2022, 7, LocalDate.of(2022, 7, 1)},
-            new Object[]{"shirt", "cloth", 10d, 1, 2022, 10, LocalDate.of(2022, 10, 1)}
-    ));
+            new Object[]{"shirt", "cloth", 10d, 1, 2022, 10, LocalDate.of(2022, 10, 1)},
 
-//    this.tm.load("s1", this.storeName, List.of(
-//            new Object[]{"bottle", "drink", 4d, 10},
-//            new Object[]{"cookie", "food", 3d, 20},
-//            new Object[]{"shirt", "cloth", 10d, 3}
-//    ));
-//
-//    this.tm.load("s2", this.storeName, List.of(
-//            new Object[]{"bottle", "drink", 1.5d, 10},
-//            new Object[]{"cookie", "food", 3d, 20},
-//            new Object[]{"shirt", "cloth", 10d, 3}
-//    ));
+            // 2023 (same data but 2023)
+            new Object[]{"bottle", "drink", 20d, 10, 2023, 1, LocalDate.of(2023, 1, 1)},
+            new Object[]{"bottle", "drink", 10d, 5, 2023, 4, LocalDate.of(2023, 4, 1)},
+            new Object[]{"bottle", "drink", 20d, 10, 2023, 8, LocalDate.of(2023, 8, 1)},
+            new Object[]{"bottle", "drink", 10d, 5, 2023, 12, LocalDate.of(2023, 12, 1)},
+
+            new Object[]{"cookie", "food", 60d, 20, 2023, 2, LocalDate.of(2023, 2, 1)},
+            new Object[]{"cookie", "food", 30d, 10, 2023, 5, LocalDate.of(2023, 5, 1)},
+            new Object[]{"cookie", "food", 15d, 5, 2023, 9, LocalDate.of(2023, 9, 1)},
+            new Object[]{"cookie", "food", 15d, 5, 2023, 11, LocalDate.of(2023, 11, 1)},
+
+            new Object[]{"shirt", "cloth", 20d, 2, 2023, 3, LocalDate.of(2023, 3, 1)},
+            new Object[]{"shirt", "cloth", 40d, 4, 2023, 6, LocalDate.of(2023, 6, 1)},
+            new Object[]{"shirt", "cloth", 50d, 5, 2023, 7, LocalDate.of(2023, 7, 1)},
+            new Object[]{"shirt", "cloth", 10d, 1, 2023, 10, LocalDate.of(2023, 10, 1)}
+    ));
   }
 
   protected void beforeLoading(List<Field> fields) {
   }
 
   @Test
-  void test() {
+  void testBucketing() {
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
     ComparisonMeasure m = new ComparisonMeasure(
             "myMeasure",
-            ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF,
+            Comparisons.COMPARISON_METHOD_ABS_DIFF,
+            sales,
+            Map.of(
+                    ComparisonMeasure.PeriodUnit.QUARTER, "q",
+                    ComparisonMeasure.PeriodUnit.YEAR, "y-1"
+            ));
+    var query = new PeriodBucketingQueryDto()
+            .table(this.storeName)
+            .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
+            .period(new Period.QuarterFromMonthYear("month_sales", "year_sales"))
+            .withMeasure(m)
+            .withMeasure(sales);
+
+    PeriodBucketingExecutor.Holder result = this.executor.executeBucketing(query);
+    Assertions.assertThat(result.table()).containsExactlyInAnyOrder(
+            List.of("base", 2022, 1, 100d),
+            List.of("base", 2022, 2, 80d),
+            List.of("base", 2022, 3, 85d),
+            List.of("base", 2022, 4, 35d),
+            List.of("base", 2023, 1, 100d),
+            List.of("base", 2023, 2, 80d),
+            List.of("base", 2023, 3, 85d),
+            List.of("base", 2023, 4, 35d));
+    Assertions
+            .assertThat(result.table().headers().stream().map(Field::name))
+            .containsExactlyInAnyOrder(Datastore.SCENARIO_FIELD_NAME, "year_sales", "quarter", "sum(sales)");
+  }
+
+  @Test
+  void testCompareCurrentQuarterWithCurrentQuarterPreviousYear() {
+    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    ComparisonMeasure m = new ComparisonMeasure(
+            "myMeasure",
+            Comparisons.COMPARISON_METHOD_ABS_DIFF,
             sales,
             Map.of(
                     ComparisonMeasure.PeriodUnit.QUARTER, "q",
@@ -104,17 +144,52 @@ public abstract class ATestPeriodBucketing {
             .withMeasure(m)
             .withMeasure(sales);
 
-    // TODO do a test with both agg measure and comp. measure. test with multiples measures
-
-    PeriodBucketingExecutor.Holder result = this.executor.executeBucketing(query);
-    Assertions.assertThat(result.table()).containsExactlyInAnyOrder(
-            List.of("base", 2022, 1, 100d),
-            List.of("base", 2022, 2, 80d),
-            List.of("base", 2022, 3, 85d),
-            List.of("base", 2022, 4, 35d));
-
-    Table finalResult = this.executor.executeComparison(result, query);
-
+    Table finalTable = this.executor.execute(query);
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            Arrays.asList("base", 2022, 1, null, 100d),
+            Arrays.asList("base", 2022, 2, null, 80d),
+            Arrays.asList("base", 2022, 3, null, 85d),
+            Arrays.asList("base", 2022, 4, null, 35d),
+            Arrays.asList("base", 2023, 1, 0d, 100d),
+            Arrays.asList("base", 2023, 2, 0d, 80d),
+            Arrays.asList("base", 2023, 3, 0d, 85d),
+            Arrays.asList("base", 2023, 4, 0d, 35d));
+    Assertions
+            .assertThat(finalTable.headers().stream().map(Field::name))
+            .containsExactlyInAnyOrder(Datastore.SCENARIO_FIELD_NAME, "year_sales", "quarter", "myMeasure", "sum(sales)");
   }
 
+  @Test
+  void testCompareCurrentQuarterWithPreviousQuarter() {
+    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    ComparisonMeasure m = new ComparisonMeasure(
+            "myMeasure",
+            Comparisons.COMPARISON_METHOD_ABS_DIFF,
+            sales,
+            Map.of(
+                    ComparisonMeasure.PeriodUnit.QUARTER, "q-1",
+                    ComparisonMeasure.PeriodUnit.YEAR, "y"
+            ));
+
+    var query = new PeriodBucketingQueryDto()
+            .table(this.storeName)
+            .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
+            .period(new Period.QuarterFromMonthYear("month_sales", "year_sales"))
+            .withMeasure(m)
+            .withMeasure(sales);
+
+    Table finalTable = this.executor.execute(query);
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            Arrays.asList("base", 2022, 1, null, 100d),
+            Arrays.asList("base", 2022, 2, -20d, 80d),
+            Arrays.asList("base", 2022, 3, 5d, 85d),
+            Arrays.asList("base", 2022, 4, -50d, 35d),
+            Arrays.asList("base", 2023, 1, 65d, 100d),
+            Arrays.asList("base", 2023, 2, -20d, 80d),
+            Arrays.asList("base", 2023, 3, 5d, 85d),
+            Arrays.asList("base", 2023, 4, -50d, 35d));
+    Assertions
+            .assertThat(finalTable.headers().stream().map(Field::name))
+            .containsExactlyInAnyOrder(Datastore.SCENARIO_FIELD_NAME, "year_sales", "quarter", "myMeasure", "sum(sales)");
+  }
 }

@@ -30,8 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import static me.paulbares.query.ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF;
 import static me.paulbares.query.ScenarioGroupingExecutor.REF_POS_PREVIOUS;
+import static me.paulbares.query.comp.Comparisons.COMPARISON_METHOD_ABS_DIFF;
 import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
 import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;

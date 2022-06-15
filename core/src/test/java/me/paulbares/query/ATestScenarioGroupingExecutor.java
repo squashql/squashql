@@ -16,6 +16,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static me.paulbares.query.comp.Comparisons.COMPARISON_METHOD_ABS_DIFF;
+import static me.paulbares.query.comp.Comparisons.COMPARISON_METHOD_REL_DIFF;
 import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
 import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
@@ -88,9 +90,9 @@ public abstract class ATestScenarioGroupingExecutor {
   void testAbsoluteDifferenceWithFirst() {
     ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
             .table(this.storeName)
-            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF,
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF,
                     new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
-            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF,
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF,
                     new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
             .groups(this.groups);
 
@@ -113,9 +115,9 @@ public abstract class ATestScenarioGroupingExecutor {
   void testAbsoluteDifferenceWithPrevious() {
     ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
             .table(this.storeName)
-            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF,
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF,
                     new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_PREVIOUS))
-            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF,
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF,
                     new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_PREVIOUS))
             .groups(this.groups);
 
@@ -138,9 +140,9 @@ public abstract class ATestScenarioGroupingExecutor {
   void testRelativeDifferenceWithFirst() {
     ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
             .table(this.storeName)
-            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_REL_DIFF,
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_REL_DIFF,
                     new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
-            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_REL_DIFF,
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_REL_DIFF,
                     new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
             .groups(this.groups);
 
@@ -163,9 +165,9 @@ public abstract class ATestScenarioGroupingExecutor {
   void testRelativeDifferenceWithFirstWithLabels() {
     ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
             .table(this.storeName)
-            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_REL_DIFF,
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_REL_DIFF,
                     new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST, "label1"))
-            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_REL_DIFF,
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_REL_DIFF,
                     new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST, "label2"))
             .groups(this.groups);
 
@@ -186,9 +188,9 @@ public abstract class ATestScenarioGroupingExecutor {
   void testRelativeDifferenceWithPrevious() {
     ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
             .table(this.storeName)
-            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_REL_DIFF,
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_REL_DIFF,
                     new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_PREVIOUS))
-            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_REL_DIFF,
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_REL_DIFF,
                     new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_PREVIOUS))
             .groups(this.groups);
 
@@ -211,9 +213,9 @@ public abstract class ATestScenarioGroupingExecutor {
   void testShowValueOff() {
     ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
             .table(this.storeName)
-            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF,
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF,
                     new AggregatedMeasure("price", "sum"), false, ScenarioGroupingExecutor.REF_POS_FIRST))
-            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF,
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF,
                     new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
             .groups(this.groups);
 
@@ -243,9 +245,9 @@ public abstract class ATestScenarioGroupingExecutor {
 
     ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
             .table(this.storeName)
-            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF,
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF,
                     new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
-            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF,
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF,
                     new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
             .groups(groups);
 
@@ -261,7 +263,7 @@ public abstract class ATestScenarioGroupingExecutor {
     // Change the query. Remove a measure
     query = new ScenarioGroupingQueryDto()
             .table(this.storeName)
-            .addScenarioComparison(new ScenarioComparisonDto(ScenarioGroupingExecutor.COMPARISON_METHOD_ABS_DIFF,
+            .addScenarioComparison(new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF,
                     new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
             .groups(groups);
     executor.execute(query);
