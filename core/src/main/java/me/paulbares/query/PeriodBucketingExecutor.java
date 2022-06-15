@@ -215,7 +215,6 @@ public class PeriodBucketingExecutor {
           ComparisonMeasure.PeriodUnit[] periodUnits,
           Map<ComparisonMeasure.PeriodUnit, String> referencePosition) {
     if (period instanceof Period.QuarterFromMonthYear || period instanceof Period.QuarterFromDate) {
-      Object[] result = Arrays.copyOf(position, position.length); // FIXME we can avoid the copy here
       Object[] transformations = new Object[position.length];
 
       for (int i = 0; i < periodUnits.length; i++) {
@@ -237,20 +236,20 @@ public class PeriodBucketingExecutor {
       int year = (int) position[0];
       if (referencePosition.containsKey(ComparisonMeasure.PeriodUnit.YEAR)) {
         if (transformations[0] != null) {
-          result[0] = year + (int) transformations[0];
+          position[0] = year + (int) transformations[0];
         }
       }
       if (referencePosition.containsKey(ComparisonMeasure.PeriodUnit.YEAR)) {
         int quarter = (int) position[1];
         if (transformations[1] != null) {
-          LocalDate d = LocalDate.of((Integer) result[0], quarter * 3, 1);
+          LocalDate d = LocalDate.of((Integer) position[0], quarter * 3, 1);
           LocalDate newd = d.plusMonths(((int) transformations[1]) * 3);
-          result[1] = (int) IsoFields.QUARTER_OF_YEAR.getFrom(newd);
-          result[0] = newd.getYear(); // year might have changed
+          position[1] = (int) IsoFields.QUARTER_OF_YEAR.getFrom(newd);
+          position[0] = newd.getYear(); // year might have changed
         }
       }
 
-      return result;
+      return position;
     } else {
       throw new RuntimeException(period + " not supported yet");
     }
