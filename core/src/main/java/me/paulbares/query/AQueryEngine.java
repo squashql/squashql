@@ -94,7 +94,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
       newRows.add(objects);
     }
 
-    return new ArrayTable(dataset.headers(), newRows);
+    return new ArrayTable(dataset.headers(), dataset.measures(), dataset.measureIndices(), newRows);
   }
 
   protected boolean isTotal(Object current) {

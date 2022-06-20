@@ -19,7 +19,14 @@ public class DatasetTable implements Table {
 
   protected final List<Field> fields;
 
-  public DatasetTable(Dataset<Row> dataset, String scenarioFieldName) {
+  protected final List<? extends Measure> measures;
+
+  protected final int[] measureIndices;
+
+  public DatasetTable(Dataset<Row> dataset,
+                      List<? extends Measure> measures,
+                      int[] measureIndices,
+                      String scenarioFieldName) {
     this.dataset = dataset;
     this.fields = Arrays
             .stream(this.dataset.schema().fields())
@@ -31,6 +38,18 @@ public class DatasetTable implements Table {
               }
             })
             .collect(Collectors.toList());
+    this.measures = measures;
+    this.measureIndices = measureIndices;
+  }
+
+  @Override
+  public List<? extends Measure> measures() {
+    return this.measures;
+  }
+
+  @Override
+  public int[] measureIndices() {
+    return this.measureIndices;
   }
 
   @Override

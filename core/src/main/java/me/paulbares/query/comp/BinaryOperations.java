@@ -2,6 +2,7 @@ package me.paulbares.query.comp;
 
 public class BinaryOperations {
 
+  public static final String DIVIDE = "divide";
   public static final String ABS_DIFF = "absolute_difference";
   public static final String REL_DIFF = "relative_difference";
 
@@ -9,6 +10,7 @@ public class BinaryOperations {
     return switch (method) {
       case ABS_DIFF -> computeAbsoluteDiff(currentValue, referenceValue, dataType);
       case REL_DIFF -> computeRelativeDiff(currentValue, referenceValue, dataType);
+      case DIVIDE -> divide(currentValue, referenceValue, dataType);
       default -> throw new IllegalArgumentException(String.format("Not supported comparison %s", method));
     };
   }
@@ -30,6 +32,20 @@ public class BinaryOperations {
       return (double) (((int) current) - ((int) previous)) / ((long) previous);
     } else if (dataType.equals(Long.class) || dataType.equals(long.class)) {
       return (double) (((long) current) - ((long) previous)) / ((long) previous);
+    } else {
+      throw new RuntimeException("Unsupported type " + dataType);
+    }
+  }
+
+  private static double divide(Object current, Object previous, Class<?> dataType) {
+    if (dataType.equals(Double.class) || dataType.equals(double.class)) {
+      return ((double) current) / ((double) previous);
+    } else if (dataType.equals(Float.class) || dataType.equals(float.class)) {
+      return ((float) current) / ((float) previous);
+    } else if (dataType.equals(Integer.class) || dataType.equals(int.class)) {
+      return (double) ((int) current) / ((long) previous);
+    } else if (dataType.equals(Long.class) || dataType.equals(long.class)) {
+      return (double) ((long) current) / ((long) previous);
     } else {
       throw new RuntimeException("Unsupported type " + dataType);
     }

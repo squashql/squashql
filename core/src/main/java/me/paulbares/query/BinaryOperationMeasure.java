@@ -1,5 +1,6 @@
 package me.paulbares.query;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -13,9 +14,9 @@ public class BinaryOperationMeasure implements Measure {
 
   public String method;
 
-  public AggregatedMeasure measure; // FIXME support any
+  public Measure measure; // FIXME support any
 
-  public Map<PeriodUnit, String> referencePosition; // TODO support first and last
+  public Map<String, String> referencePosition; // TODO support first and last
 
   public enum PeriodUnit {
     MONTH,
@@ -33,13 +34,28 @@ public class BinaryOperationMeasure implements Measure {
 
   public BinaryOperationMeasure(String alias,
                                 String method,
-                                AggregatedMeasure measure,
-                                Map<PeriodUnit, String> referencePosition) {
+                                Measure measure,
+                                Map<String, String> referencePosition) {
     this.alias = alias;
     this.method = method;
     this.measure = measure;
     this.referencePosition = referencePosition;
     this.type = KEY;
+  }
+
+//  public BinaryOperationMeasure(String alias,
+//                                String method,
+//                                Measure measure,
+//                                Map<String, String> referencePosition) {
+//    this(alias, method, measure, transform(referencePosition));
+//  }
+
+  private static Map<PeriodUnit, String> transform(Map<String, String> referencePosition) {
+    Map<PeriodUnit, String> m = new HashMap<>();
+    referencePosition.entrySet().forEach(e -> {
+      m.put(PeriodUnit.valueOf(e.getKey()), e.getValue());
+    });
+    return m;
   }
 
   @Override

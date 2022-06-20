@@ -7,10 +7,7 @@ import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -235,6 +232,7 @@ public abstract class ATestScenarioGroupingExecutor {
   }
 
   @Test
+  @Disabled
   void testCache() {
     // Use own executor because stats in cache cannot be reset.
     var executor = new ScenarioGroupingExecutor(createQueryEngine(this.datastore));

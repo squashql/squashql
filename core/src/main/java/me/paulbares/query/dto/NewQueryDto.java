@@ -12,11 +12,14 @@ import java.util.Map;
 
 public class NewQueryDto {
 
+  public static final String BUCKET = "bucket";
+  public static final String PERIOD = "period";
+
   public TableDto table;
 
   public List<String> columns = new ArrayList<>();
 
-  public List<ColumnSet> columnSets = new ArrayList<>();
+  public Map<String, ColumnSet> columnSets = new HashMap<>();
 
   public List<Measure> measures = new ArrayList<>();
 
@@ -34,8 +37,8 @@ public class NewQueryDto {
     return this;
   }
 
-  public NewQueryDto withColumnSet(ColumnSet columnSet) {
-    this.columnSets.add(columnSet);
+  public NewQueryDto withColumnSet(String type, ColumnSet columnSet) {
+    this.columnSets.put(type, columnSet);
     return this;
   }
 

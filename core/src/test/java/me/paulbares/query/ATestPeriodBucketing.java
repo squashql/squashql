@@ -109,8 +109,8 @@ public abstract class ATestPeriodBucketing {
             BinaryOperations.ABS_DIFF,
             sales,
             Map.of(
-                    BinaryOperationMeasure.PeriodUnit.QUARTER, "q",
-                    BinaryOperationMeasure.PeriodUnit.YEAR, "y-1"
+                    BinaryOperationMeasure.PeriodUnit.QUARTER.name(), "q",
+                    BinaryOperationMeasure.PeriodUnit.YEAR.name(), "y-1"
             ));
     var query = new PeriodBucketingQueryDto()
             .table(this.storeName)
@@ -119,7 +119,7 @@ public abstract class ATestPeriodBucketing {
             .withMeasure(m)
             .withMeasure(sales);
 
-    PeriodBucketingExecutor.Holder result = this.executor.executeBucketing(query);
+    Bucketer.Holder result = this.executor.executeBucketing(query);
     Assertions.assertThat(result.table()).containsExactlyInAnyOrder(
             List.of("base", 2022, 1, 100d),
             List.of("base", 2022, 2, 80d),
@@ -157,8 +157,8 @@ public abstract class ATestPeriodBucketing {
             BinaryOperations.ABS_DIFF,
             sales,
             Map.of(
-                    BinaryOperationMeasure.PeriodUnit.QUARTER, "q",
-                    BinaryOperationMeasure.PeriodUnit.YEAR, "y-1"
+                    BinaryOperationMeasure.PeriodUnit.QUARTER.name(), "q",
+                    BinaryOperationMeasure.PeriodUnit.YEAR.name(), "y-1"
             ));
 
     var query = new PeriodBucketingQueryDto()
@@ -206,8 +206,8 @@ public abstract class ATestPeriodBucketing {
             BinaryOperations.ABS_DIFF,
             sales,
             Map.of(
-                    BinaryOperationMeasure.PeriodUnit.QUARTER, "q-1",
-                    BinaryOperationMeasure.PeriodUnit.YEAR, "y"
+                    BinaryOperationMeasure.PeriodUnit.QUARTER.name(), "q-1",
+                    BinaryOperationMeasure.PeriodUnit.YEAR.name(), "y"
             ));
 
     var query = new PeriodBucketingQueryDto()
@@ -248,7 +248,7 @@ public abstract class ATestPeriodBucketing {
             "myMeasure",
             BinaryOperations.ABS_DIFF,
             sales,
-            Map.of(BinaryOperationMeasure.PeriodUnit.YEAR, "y-1"));
+            Map.of(BinaryOperationMeasure.PeriodUnit.YEAR.name(), "y-1"));
 
     var query = new PeriodBucketingQueryDto()
             .table(this.storeName)

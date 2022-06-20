@@ -6,6 +6,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
 import java.util.logging.Logger;
+import java.util.stream.IntStream;
 
 public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
 
@@ -21,6 +22,9 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
     String sql = SQLTranslator.translate(query, this.fieldSupplier);
     LOGGER.fine("Translated query #" + query + " to " + sql);
     Dataset<Row> ds = this.datastore.spark.sql(sql);
-    return new DatasetTable(ds, this.datastore.storesByName().get(query.table.name).scenarioFieldName());
+    return new DatasetTable(ds,
+            query.measures,
+            IntStream.range(query.coordinates.size(), query.coordinates.size() + query.measures.size()).toArray(),
+            this.datastore.storesByName().get(query.table.name).scenarioFieldName());
   }
 }

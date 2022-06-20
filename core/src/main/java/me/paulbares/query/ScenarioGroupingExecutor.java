@@ -1,14 +1,16 @@
 package me.paulbares.query;
 
-import me.paulbares.query.comp.BinaryOperations;
+import me.paulbares.query.context.Repository;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.ScenarioComparisonDto;
 import me.paulbares.query.dto.ScenarioGroupingQueryDto;
 import me.paulbares.store.Field;
 import org.eclipse.collections.impl.list.mutable.FastList;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
 public class ScenarioGroupingExecutor {
 
@@ -25,37 +27,45 @@ public class ScenarioGroupingExecutor {
   }
 
   public Table execute(ScenarioGroupingQueryDto query) {
-    Table table = this.queryCache.get(query);
-    Map<String, List<Object>> valuesByScenario = new HashMap<>();
-    for (List<Object> row : table) {
-      valuesByScenario.put((String) row.get(0), row.subList(1, row.size()));
-    }
+//    Table table = this.queryCache.get(query); deactivated
+    QueryDto prefetchQuery = new QueryDto()
+            .wildcardCoordinate(SCENARIO_FIELD_NAME)
+            .table(query.table)
+            .context(Repository.KEY, query.context.get(Repository.KEY));
+    prefetchQuery.measures.addAll(query.comparisons.stream().map(c -> c.measure).toList());
+    Table table = this.queryEngine.execute(prefetchQuery);
 
-    List<Field> tableFields = createTableFields(query, table.headers());
-
-    long count = query.groups.entrySet().stream().flatMap(e -> e.getValue().stream()).count();
-    List<List<Object>> rows = FastList.newList((int) count);
-    query.groups.forEach((group, scenarios) -> {
-      for (String scenario : scenarios) {
-        List<Object> row = FastList.newListWith(group, scenario);
-
-        for (int i = 0; i < query.comparisons.size(); i++) {
-          ScenarioComparisonDto comp = query.comparisons.get(i);
-
-          // Gets the value that current value is being compared to
-          Object referenceValue = getReferenceValue(i, comp.referencePosition(), scenario, scenarios, valuesByScenario);
-          Object currentValue = valuesByScenario.get(scenario).get(i);
-
-          row.add(BinaryOperations.compare(comp.method(), currentValue, referenceValue, table.headers().get(i + 1).type()));
-          if (comp.showValue()) {
-            row.add(currentValue); // the original value
-          }
-        }
-        rows.add(row);
-      }
-    });
-
-    return new ArrayTable(tableFields, rows);
+//    Map<String, List<Object>> valuesByScenario = new HashMap<>();
+//    for (List<Object> row : table) {
+//      valuesByScenario.put((String) row.get(0), row.subList(1, row.size()));
+//    }
+//
+//    List<Field> tableFields = createTableFields(query, table.headers());
+//
+//    long count = query.groups.entrySet().stream().flatMap(e -> e.getValue().stream()).count();
+//    List<List<Object>> rows = FastList.newList((int) count);
+//    query.groups.forEach((group, scenarios) -> {
+//      for (String scenario : scenarios) {
+//        List<Object> row = FastList.newListWith(group, scenario);
+//
+//        for (int i = 0; i < query.comparisons.size(); i++) {
+//          ScenarioComparisonDto comp = query.comparisons.get(i);
+//
+//          // Gets the value that current value is being compared to
+//          Object referenceValue = getReferenceValue(i, comp.referencePosition(), scenario, scenarios, valuesByScenario);
+//          Object currentValue = valuesByScenario.get(scenario).get(i);
+//
+//          row.add(BinaryOperations.compare(comp.method(), currentValue, referenceValue, table.headers().get(i + 1).type()));
+//          if (comp.showValue()) {
+//            row.add(currentValue); // the original value
+//          }
+//        }
+//        rows.add(row);
+//      }
+//    });
+//
+//    return new ArrayTable(tableFields, null, null, rows);
+    return null;
   }
 
   private Object getReferenceValue(

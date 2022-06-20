@@ -9,10 +9,27 @@ public class ArrayTable implements Table {
 
   protected final List<Field> headers;
   protected final List<List<Object>> rows;
+  protected final List<? extends Measure> measures;
+  protected final int[] measureIndices;
 
-  public ArrayTable(List<Field> headers, List<List<Object>> rows) {
+  public ArrayTable(List<Field> headers,
+                    List<? extends Measure> measures,
+                    int[] measureIndices,
+                    List<List<Object>> rows) {
     this.headers = headers;
+    this.measures = measures;
+    this.measureIndices = measureIndices;
     this.rows = rows;
+  }
+
+  @Override
+  public List<? extends Measure> measures() {
+    return this.measures;
+  }
+
+  @Override
+  public int[] measureIndices() {
+    return this.measureIndices;
   }
 
   @Override

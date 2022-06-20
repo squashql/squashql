@@ -6,6 +6,7 @@ import me.paulbares.query.context.Repository;
 import me.paulbares.query.dictionary.ObjectArrayDictionary;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.PeriodBucketingQueryDto;
+import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
@@ -18,6 +19,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 public class PeriodBucketingExecutor {
 
@@ -28,76 +30,45 @@ public class PeriodBucketingExecutor {
   }
 
   public Table execute(PeriodBucketingQueryDto query) {
-    Holder holder = executeBucketing(query);
+    Bucketer.Holder holder = executeBucketing(query);
     return executeComparison(holder, query);
   }
 
-  public Holder executeBucketing(PeriodBucketingQueryDto query) {
+  public Bucketer.Holder executeBucketing(PeriodBucketingQueryDto query) {
     QueryDto prefetchQuery = buildPrefetchQuery(query);
     Table result = this.queryEngine.execute(prefetchQuery);
 
-    List<Field> newColumns = getNewColumns(query.period);
-    ObjectArrayDictionary dictionary = new ObjectArrayDictionary(query.coordinates.keySet().size() + newColumns.size());
+    int[] indexColsToLeave = IntStream.range(0, query.coordinates.keySet().size()).toArray();
+    int[] indexColAggregates = IntStream.range(prefetchQuery.coordinates.keySet().size(), result.headers().size()).toArray();
+    int[] indexColsToBucket = IntStream.range(query.coordinates.keySet().size(), prefetchQuery.coordinates.keySet().size()).toArray();
     List<AggregatedMeasure> aggregatedMeasures = prefetchQuery.measures.stream().map(AggregatedMeasure.class::cast).toList();
-    List<Field> aggregatedFields = result.headers().subList(result.headers().size() - aggregatedMeasures.size(), result.headers().size());
-    SumAggregator aggregator = new SumAggregator(aggregatedMeasures, aggregatedFields);
-    for (List<Object> row : result) {
-      List<Object> originalColumnValues = row.subList(0, query.coordinates.keySet().size());
-      List<Object> toBucketColumnValues = row.subList(query.coordinates.keySet().size(), row.size() - aggregatedMeasures.size());
-      List<Object> aggregateValues = row.subList(row.size() - aggregatedMeasures.size(), row.size()); // align with aggregatedMeasures
-      Object[] bucketValues = getBucketValues(query.period, toBucketColumnValues);
-      Object[] key = new Object[originalColumnValues.size() + bucketValues.length];
-      for (int i = 0; i < key.length; i++) {
-        if (i < originalColumnValues.size()) {
-          key[i] = originalColumnValues.get(i);
-        } else {
-          key[i] = bucketValues[i - originalColumnValues.size()];
-        }
-      }
-      aggregator.aggregate(dictionary.map(key), aggregateValues);
-    }
 
-    // Once the aggregation is done, build the table
-    List<List<Object>> rows = new ArrayList<>();
-    dictionary.forEach((points, row) -> {
-      List<Object> r = new ArrayList<>();
-      r.addAll(Arrays.asList(points));
-      r.addAll(aggregator.getAggregates(row));
-      rows.add(r);
-    });
-
-    List<Field> originalColumns = result.headers().subList(0, query.coordinates.keySet().size());
-    Table arrayTable = new ArrayTable(ImmutableListFactoryImpl.INSTANCE
-            .withAll(originalColumns)
-            .newWithAll(newColumns)
-            .newWithAll(aggregatedFields)
-            .castToList(),
-            rows);
-
-    return new Holder(arrayTable, originalColumns, newColumns, aggregatedFields, aggregatedMeasures, dictionary, aggregator);
+    return new Bucketer(this.queryEngine)
+            .executeBucketing(result,
+                    indexColsToLeave,
+                    indexColAggregates,
+                    indexColsToBucket,
+                    aggregatedMeasures,
+                    PeriodColumnSetDto.getNewColumns(query.period),
+                    toBucketColumnValues -> Collections.singletonList(getBucketValues(query.period, toBucketColumnValues)));
   }
 
-  public record Holder(Table table,
-                       List<Field> originalColumns,
-                       List<Field> newColumns,
-                       List<Field> aggregatedFields,
-                       List<AggregatedMeasure> aggregatedMeasures,
-                       ObjectArrayDictionary dictionary,
-                       SumAggregator aggregator) {
-  }
-
-  public Table executeComparison(Holder bucketingResult, PeriodBucketingQueryDto query) {
+  public Table executeComparison(Bucketer.Holder bucketingResult, PeriodBucketingQueryDto query) {
     List<List<Object>> newRows = new ArrayList<>();
-    ObjectArrayDictionary dictionary = bucketingResult.dictionary;
-    SumAggregator aggregator = bucketingResult.aggregator;
+    ObjectArrayDictionary dictionary = bucketingResult.dictionary();
+    SumAggregator aggregator = bucketingResult.aggregator();
     ShiftProcedure[] procedures = new ShiftProcedure[query.measures.size()];
     for (int i = 0; i < procedures.length; i++) {
       if (query.measures.get(i) instanceof BinaryOperationMeasure c) {
-        procedures[i] = new ShiftProcedure(query.period, c.referencePosition, bucketingResult.newColumns.size());
+        Map<BinaryOperationMeasure.PeriodUnit, String> m = new HashMap<>();
+        for (Map.Entry<String, String> entry : c.referencePosition.entrySet()) {
+          m.put(BinaryOperationMeasure.PeriodUnit.valueOf(entry.getKey()), entry.getValue());
+        }
+        procedures[i] = new ShiftProcedure(query.period, m, bucketingResult.newColumns().size());
       }
     }
-    int rowSize = bucketingResult.originalColumns.size() + bucketingResult.newColumns.size() + query.measures.size();
-    Object[] buffer = new Object[bucketingResult.newColumns.size()];
+    int rowSize = bucketingResult.originalColumns().size() + bucketingResult.newColumns().size() + query.measures.size();
+    Object[] buffer = new Object[bucketingResult.newColumns().size()];
     Object[] referencePositionBuffer = new Object[dictionary.getPointLength()];
     dictionary.forEach((points, row) -> {
       List<Object> r = new ArrayList<>(rowSize);
@@ -105,15 +76,15 @@ public class PeriodBucketingExecutor {
       for (int i = 0; i < query.measures.size(); i++) {
         Measure measure = query.measures.get(i);
         if (measure instanceof BinaryOperationMeasure c) {
-          System.arraycopy(points, bucketingResult.originalColumns.size(), buffer, 0, buffer.length);
+          System.arraycopy(points, bucketingResult.originalColumns().size(), buffer, 0, buffer.length);
           procedures[i].execute(buffer);
 
-          System.arraycopy(points, 0, referencePositionBuffer, 0, bucketingResult.originalColumns.size());
-          System.arraycopy(buffer, 0, referencePositionBuffer, bucketingResult.originalColumns.size(), buffer.length);
+          System.arraycopy(points, 0, referencePositionBuffer, 0, bucketingResult.originalColumns().size());
+          System.arraycopy(buffer, 0, referencePositionBuffer, bucketingResult.originalColumns().size(), buffer.length);
 
           int position = dictionary.getPosition(referencePositionBuffer);
           if (position != -1) {
-            AggregatedMeasure agg = c.measure;
+            AggregatedMeasure agg = (AggregatedMeasure) c.measure;
             Object currentValue = aggregator.getAggregate(agg, row);
             Object referenceValue = aggregator.getAggregate(agg, position);
             Object diff = BinaryOperations.compare(c.method, currentValue, referenceValue, aggregator.getField(agg).type());
@@ -137,17 +108,20 @@ public class PeriodBucketingExecutor {
         String newName = c.alias == null
                 ? String.format("%s(%s, %s)", c.method, c.measure.alias(), c.referencePosition)
                 : c.alias;
-        measureFields.add(new Field(newName, BinaryOperations.getOutputType(c.method, aggregator.getField(c.measure).type())));
+        measureFields.add(new Field(newName, BinaryOperations.getOutputType(c.method, aggregator.getField((AggregatedMeasure) c.measure).type())));
       } else {
         throw new IllegalArgumentException(measure.getClass() + " type is not supported");
       }
     }
 
+    int columnSize = bucketingResult.originalColumns().size() + bucketingResult.newColumns().size();
     return new ArrayTable(ImmutableListFactoryImpl.INSTANCE
-            .withAll(bucketingResult.originalColumns)
-            .newWithAll(bucketingResult.newColumns)
+            .withAll(bucketingResult.originalColumns())
+            .newWithAll(bucketingResult.newColumns())
             .newWithAll(measureFields)
             .castToList(),
+            query.measures,
+            IntStream.range(columnSize, columnSize + measureFields.size()).toArray(),
             newRows);
   }
 
@@ -158,14 +132,14 @@ public class PeriodBucketingExecutor {
 
     query.coordinates.keySet().forEach(prefetchQuery::wildcardCoordinate);
     // Be sure to go down to the correct level of aggregation to be able to bucket
-    getColumnsForPrefetching(query.period).forEach(prefetchQuery::wildcardCoordinate);
+    PeriodColumnSetDto.getColumnsForPrefetching(query.period).forEach(prefetchQuery::wildcardCoordinate);
 
     Set<AggregatedMeasure> set = new HashSet<>(); // use a set not to aggregate same measure multiple times
     for (Measure measure : query.measures) {
       if (measure instanceof AggregatedMeasure a) {
         set.add(a);
       } else if (measure instanceof BinaryOperationMeasure c) {
-        set.add(c.measure);
+        set.add((AggregatedMeasure) c.measure);
       } else {
         throw new IllegalArgumentException(measure.getClass() + " type is not supported");
       }
@@ -173,41 +147,6 @@ public class PeriodBucketingExecutor {
     set.forEach(a -> prefetchQuery.aggregatedMeasure(a.field, a.aggregationFunction));
 
     return prefetchQuery;
-  }
-
-  /**
-   * Gets the column names to use for prefetching. It will determine which grouping of aggregates are needed to further
-   * perform the bucketing.
-   */
-  private List<String> getColumnsForPrefetching(Period period) {
-    if (period instanceof Period.QuarterFromMonthYear q) {
-      return List.of(q.year(), q.month());
-    } else if (period instanceof Period.QuarterFromDate q) {
-      return List.of(q.date());
-    } else if (period instanceof Period.YearFromDate y) {
-      return List.of(y.date());
-    } else if (period instanceof Period.Year y) {
-      return List.of(y.year());
-    } else {
-      throw new RuntimeException(period + " not supported yet");
-    }
-  }
-
-  /**
-   * Gets the list of new fields that will appear in the final result table once the bucketing is done.
-   */
-  private List<Field> getNewColumns(Period period) {
-    if (period instanceof Period.QuarterFromMonthYear q) {
-      return List.of(new Field(q.year(), String.class), new Field("quarter", String.class));
-    } else if (period instanceof Period.QuarterFromDate) {
-      return List.of(new Field("year", String.class), new Field("quarter", String.class));
-    } else if (period instanceof Period.YearFromDate) {
-      return List.of(new Field("year", String.class));
-    } else if (period instanceof Period.Year y) {
-      return List.of(new Field(y.year(), String.class));
-    } else {
-      throw new RuntimeException(period + " not supported yet");
-    }
   }
 
   static class ShiftProcedure {
@@ -222,7 +161,7 @@ public class PeriodBucketingExecutor {
       this.transformations = new Object[pointLength];
       BinaryOperationMeasure.PeriodUnit[] periodUnits = getPeriodUnits(period);
       for (int i = 0; i < periodUnits.length; i++) {
-        transformations[i] = parse(referencePosition.get(periodUnits[i]));
+        this.transformations[i] = parse(referencePosition.get(periodUnits[i]));
       }
     }
 
@@ -242,33 +181,33 @@ public class PeriodBucketingExecutor {
     }
 
     public void execute(Object[] position) {
-      if (period instanceof Period.QuarterFromMonthYear || period instanceof Period.QuarterFromDate) {
+      if (this.period instanceof Period.QuarterFromMonthYear || this.period instanceof Period.QuarterFromDate) {
         // YEAR, QUARTER
         int year = (int) position[0];
-        if (referencePosition.containsKey(BinaryOperationMeasure.PeriodUnit.YEAR)) {
-          if (transformations[0] != null) {
-            position[0] = year + (int) transformations[0];
+        if (this.referencePosition.containsKey(BinaryOperationMeasure.PeriodUnit.YEAR)) {
+          if (this.transformations[0] != null) {
+            position[0] = year + (int) this.transformations[0];
           }
         }
-        if (referencePosition.containsKey(BinaryOperationMeasure.PeriodUnit.QUARTER)) {
+        if (this.referencePosition.containsKey(BinaryOperationMeasure.PeriodUnit.QUARTER)) {
           int quarter = (int) position[1];
-          if (transformations[1] != null) {
+          if (this.transformations[1] != null) {
             LocalDate d = LocalDate.of((Integer) position[0], quarter * 3, 1);
-            LocalDate newd = d.plusMonths(((int) transformations[1]) * 3);
+            LocalDate newd = d.plusMonths(((int) this.transformations[1]) * 3);
             position[1] = (int) IsoFields.QUARTER_OF_YEAR.getFrom(newd);
             position[0] = newd.getYear(); // year might have changed
           }
         }
-      } else if (period instanceof Period.YearFromDate || period instanceof Period.Year) {
+      } else if (this.period instanceof Period.YearFromDate || this.period instanceof Period.Year) {
         // YEAR
         int year = (int) position[0];
-        if (referencePosition.containsKey(BinaryOperationMeasure.PeriodUnit.YEAR)) {
-          if (transformations[0] != null) {
-            position[0] = year + (int) transformations[0];
+        if (this.referencePosition.containsKey(BinaryOperationMeasure.PeriodUnit.YEAR)) {
+          if (this.transformations[0] != null) {
+            position[0] = year + (int) this.transformations[0];
           }
         }
       } else {
-        throw new RuntimeException(period + " not supported yet");
+        throw new RuntimeException(this.period + " not supported yet");
       }
     }
 

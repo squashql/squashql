@@ -14,6 +14,7 @@ import me.paulbares.store.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.IntStream;
 
 public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
 
@@ -58,7 +59,10 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
         r.forEach(e -> a.add(e.asObject()));
         rows.add(a);
       });
-      return new ArrayTable(fields, rows);
+      return new ArrayTable(fields,
+              query.measures,
+              IntStream.range(query.coordinates.size(), query.coordinates.size() + query.measures.size()).toArray(),
+              rows);
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);
     }

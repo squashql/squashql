@@ -9,13 +9,17 @@ public interface Table extends Iterable<List<Object>> {
 
   List<Field> headers();
 
-  default List<Object> aggregates(int columnIndex) {
-    List<Object> aggregates = new ArrayList<>();
+  default List<Object> getColumn(int columnIndex) {
+    List<Object> elements = new ArrayList<>();
     for (List<Object> objects : this) {
-      aggregates.add(objects.get(columnIndex));
+      elements.add(objects.get(columnIndex));
     }
-    return aggregates;
+    return elements;
   }
+
+  List<? extends Measure> measures();
+
+  int[] measureIndices();
 
   /**
    * Returns the number of rows in the table.

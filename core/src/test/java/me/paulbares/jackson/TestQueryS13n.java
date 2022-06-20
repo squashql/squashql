@@ -103,8 +103,8 @@ public class TestQueryS13n {
             BinaryOperations.ABS_DIFF,
             new AggregatedMeasure("sales", "sum"),
             Map.of(
-                    BinaryOperationMeasure.PeriodUnit.QUARTER, "q",
-                    BinaryOperationMeasure.PeriodUnit.YEAR, "y-1"
+                    BinaryOperationMeasure.PeriodUnit.QUARTER.name(), "q",
+                    BinaryOperationMeasure.PeriodUnit.YEAR.name(), "y-1"
             ));
 
     List<Period> periods = List.of(
