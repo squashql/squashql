@@ -215,6 +215,40 @@ public abstract class ATestNewQueryExecutor {
   }
 
   @Test
+  void testSimpleBucketingAndPeriod() {
+    Period.QuarterFromMonthYear period = new Period.QuarterFromMonthYear("month_sales", "year_sales");
+    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
+    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
+    String groupOfScenario = "Group of scenario";
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
+            .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
+            .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
+
+    var query = new NewQueryDto()
+            .table(this.storeName)
+            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
+            .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withMetric(sales);
+
+    Table table = this.executor.execute(query);
+    Assertions.assertThat(table.count()).isEqualTo(16 * 2);
+    // we do not assert each row because there are too many. Limit to base scenario.
+    Assertions.assertThat(table).contains(
+            List.of(2022, 1, "group2", MAIN_SCENARIO_NAME, 80d),
+            List.of(2022, 1, "group2", "down", 60d),
+            List.of(2022, 1, "group1", MAIN_SCENARIO_NAME, 80d),
+            List.of(2022, 1, "group1", "up", 100d),
+
+            List.of(2022, 2, "group2", MAIN_SCENARIO_NAME, 40d),
+            List.of(2022, 2, "group2", "down", 20d),
+            List.of(2022, 2, "group1", MAIN_SCENARIO_NAME, 40d),
+            List.of(2022, 2, "group1", "up", 60d));
+    Assertions
+            .assertThat(table.headers().stream().map(Field::name))
+            .containsExactlyInAnyOrder("year_sales", "quarter", groupOfScenario, SCENARIO_FIELD_NAME, "sum(sales)");
+  }
+
+  @Test
   void test() {
     String groupOfScenario = "Group of scenario";
     BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
