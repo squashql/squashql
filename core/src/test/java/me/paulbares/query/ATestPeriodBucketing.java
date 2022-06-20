@@ -1,6 +1,6 @@
 package me.paulbares.query;
 
-import me.paulbares.query.comp.Comparisons;
+import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.PeriodBucketingQueryDto;
 import me.paulbares.store.Datastore;
@@ -104,13 +104,13 @@ public abstract class ATestPeriodBucketing {
 
   void testBucketingQuarter(Period period, String expectedHeaderYear, String expectedHeadQuarter) {
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
-    ComparisonMeasure m = new ComparisonMeasure(
+    BinaryOperationMeasure m = new BinaryOperationMeasure(
             "myMeasure",
-            Comparisons.COMPARISON_METHOD_ABS_DIFF,
+            BinaryOperations.ABS_DIFF,
             sales,
             Map.of(
-                    ComparisonMeasure.PeriodUnit.QUARTER, "q",
-                    ComparisonMeasure.PeriodUnit.YEAR, "y-1"
+                    BinaryOperationMeasure.PeriodUnit.QUARTER, "q",
+                    BinaryOperationMeasure.PeriodUnit.YEAR, "y-1"
             ));
     var query = new PeriodBucketingQueryDto()
             .table(this.storeName)
@@ -152,13 +152,13 @@ public abstract class ATestPeriodBucketing {
 
   void testCompareCurrentQuarterWithCurrentQuarterPreviousYear(Period period, String expectedHeaderYear, String expectedHeadQuarter) {
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
-    ComparisonMeasure m = new ComparisonMeasure(
+    BinaryOperationMeasure m = new BinaryOperationMeasure(
             "myMeasure",
-            Comparisons.COMPARISON_METHOD_ABS_DIFF,
+            BinaryOperations.ABS_DIFF,
             sales,
             Map.of(
-                    ComparisonMeasure.PeriodUnit.QUARTER, "q",
-                    ComparisonMeasure.PeriodUnit.YEAR, "y-1"
+                    BinaryOperationMeasure.PeriodUnit.QUARTER, "q",
+                    BinaryOperationMeasure.PeriodUnit.YEAR, "y-1"
             ));
 
     var query = new PeriodBucketingQueryDto()
@@ -201,13 +201,13 @@ public abstract class ATestPeriodBucketing {
 
   void testCompareCurrentQuarterWithPreviousQuarter(Period period, String expectedHeaderYear, String expectedHeadQuarter) {
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
-    ComparisonMeasure m = new ComparisonMeasure(
+    BinaryOperationMeasure m = new BinaryOperationMeasure(
             "myMeasure",
-            Comparisons.COMPARISON_METHOD_ABS_DIFF,
+            BinaryOperations.ABS_DIFF,
             sales,
             Map.of(
-                    ComparisonMeasure.PeriodUnit.QUARTER, "q-1",
-                    ComparisonMeasure.PeriodUnit.YEAR, "y"
+                    BinaryOperationMeasure.PeriodUnit.QUARTER, "q-1",
+                    BinaryOperationMeasure.PeriodUnit.YEAR, "y"
             ));
 
     var query = new PeriodBucketingQueryDto()
@@ -244,11 +244,11 @@ public abstract class ATestPeriodBucketing {
 
   void testCompareCurrentYearWithPreviousYearWithYearFromDate(Period period, String expectedHeaderYear) {
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
-    ComparisonMeasure m = new ComparisonMeasure(
+    BinaryOperationMeasure m = new BinaryOperationMeasure(
             "myMeasure",
-            Comparisons.COMPARISON_METHOD_ABS_DIFF,
+            BinaryOperations.ABS_DIFF,
             sales,
-            Map.of(ComparisonMeasure.PeriodUnit.YEAR, "y-1"));
+            Map.of(BinaryOperationMeasure.PeriodUnit.YEAR, "y-1"));
 
     var query = new PeriodBucketingQueryDto()
             .table(this.storeName)

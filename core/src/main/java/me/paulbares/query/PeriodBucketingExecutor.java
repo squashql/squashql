@@ -1,7 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.agg.SumAggregator;
-import me.paulbares.query.comp.Comparisons;
+import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.Repository;
 import me.paulbares.query.dictionary.ObjectArrayDictionary;
 import me.paulbares.query.dto.Period;
@@ -92,7 +92,7 @@ public class PeriodBucketingExecutor {
     SumAggregator aggregator = bucketingResult.aggregator;
     ShiftProcedure[] procedures = new ShiftProcedure[query.measures.size()];
     for (int i = 0; i < procedures.length; i++) {
-      if (query.measures.get(i) instanceof ComparisonMeasure c) {
+      if (query.measures.get(i) instanceof BinaryOperationMeasure c) {
         procedures[i] = new ShiftProcedure(query.period, c.referencePosition, bucketingResult.newColumns.size());
       }
     }
@@ -104,7 +104,7 @@ public class PeriodBucketingExecutor {
       r.addAll(Arrays.asList(points));
       for (int i = 0; i < query.measures.size(); i++) {
         Measure measure = query.measures.get(i);
-        if (measure instanceof ComparisonMeasure c) {
+        if (measure instanceof BinaryOperationMeasure c) {
           System.arraycopy(points, bucketingResult.originalColumns.size(), buffer, 0, buffer.length);
           procedures[i].execute(buffer);
 
@@ -116,7 +116,7 @@ public class PeriodBucketingExecutor {
             AggregatedMeasure agg = c.measure;
             Object currentValue = aggregator.getAggregate(agg, row);
             Object referenceValue = aggregator.getAggregate(agg, position);
-            Object diff = Comparisons.compare(c.method, currentValue, referenceValue, aggregator.getField(agg).type());
+            Object diff = BinaryOperations.compare(c.method, currentValue, referenceValue, aggregator.getField(agg).type());
             r.add(diff);
           } else {
             r.add(null); // nothing to compare with
@@ -133,11 +133,11 @@ public class PeriodBucketingExecutor {
     for (Measure measure : query.measures) {
       if (measure instanceof AggregatedMeasure a) {
         measureFields.add(aggregator.getField(a));
-      } else if (measure instanceof ComparisonMeasure c) {
+      } else if (measure instanceof BinaryOperationMeasure c) {
         String newName = c.alias == null
                 ? String.format("%s(%s, %s)", c.method, c.measure.alias(), c.referencePosition)
                 : c.alias;
-        measureFields.add(new Field(newName, Comparisons.getOutputType(c.method, aggregator.getField(c.measure).type())));
+        measureFields.add(new Field(newName, BinaryOperations.getOutputType(c.method, aggregator.getField(c.measure).type())));
       } else {
         throw new IllegalArgumentException(measure.getClass() + " type is not supported");
       }
@@ -164,7 +164,7 @@ public class PeriodBucketingExecutor {
     for (Measure measure : query.measures) {
       if (measure instanceof AggregatedMeasure a) {
         set.add(a);
-      } else if (measure instanceof ComparisonMeasure c) {
+      } else if (measure instanceof BinaryOperationMeasure c) {
         set.add(c.measure);
       } else {
         throw new IllegalArgumentException(measure.getClass() + " type is not supported");
@@ -214,13 +214,13 @@ public class PeriodBucketingExecutor {
 
     final Object[] transformations;
     final Period period;
-    final Map<ComparisonMeasure.PeriodUnit, String> referencePosition;
+    final Map<BinaryOperationMeasure.PeriodUnit, String> referencePosition;
 
-    ShiftProcedure(Period period, Map<ComparisonMeasure.PeriodUnit, String> referencePosition, int pointLength) {
+    ShiftProcedure(Period period, Map<BinaryOperationMeasure.PeriodUnit, String> referencePosition, int pointLength) {
       this.period = period;
       this.referencePosition = referencePosition;
       this.transformations = new Object[pointLength];
-      ComparisonMeasure.PeriodUnit[] periodUnits = getPeriodUnits(period);
+      BinaryOperationMeasure.PeriodUnit[] periodUnits = getPeriodUnits(period);
       for (int i = 0; i < periodUnits.length; i++) {
         transformations[i] = parse(referencePosition.get(periodUnits[i]));
       }
@@ -245,12 +245,12 @@ public class PeriodBucketingExecutor {
       if (period instanceof Period.QuarterFromMonthYear || period instanceof Period.QuarterFromDate) {
         // YEAR, QUARTER
         int year = (int) position[0];
-        if (referencePosition.containsKey(ComparisonMeasure.PeriodUnit.YEAR)) {
+        if (referencePosition.containsKey(BinaryOperationMeasure.PeriodUnit.YEAR)) {
           if (transformations[0] != null) {
             position[0] = year + (int) transformations[0];
           }
         }
-        if (referencePosition.containsKey(ComparisonMeasure.PeriodUnit.QUARTER)) {
+        if (referencePosition.containsKey(BinaryOperationMeasure.PeriodUnit.QUARTER)) {
           int quarter = (int) position[1];
           if (transformations[1] != null) {
             LocalDate d = LocalDate.of((Integer) position[0], quarter * 3, 1);
@@ -262,7 +262,7 @@ public class PeriodBucketingExecutor {
       } else if (period instanceof Period.YearFromDate || period instanceof Period.Year) {
         // YEAR
         int year = (int) position[0];
-        if (referencePosition.containsKey(ComparisonMeasure.PeriodUnit.YEAR)) {
+        if (referencePosition.containsKey(BinaryOperationMeasure.PeriodUnit.YEAR)) {
           if (transformations[0] != null) {
             position[0] = year + (int) transformations[0];
           }
@@ -272,13 +272,13 @@ public class PeriodBucketingExecutor {
       }
     }
 
-    private static ComparisonMeasure.PeriodUnit[] getPeriodUnits(Period period) {
+    private static BinaryOperationMeasure.PeriodUnit[] getPeriodUnits(Period period) {
       if (period instanceof Period.QuarterFromMonthYear) {
-        return new ComparisonMeasure.PeriodUnit[]{ComparisonMeasure.PeriodUnit.YEAR, ComparisonMeasure.PeriodUnit.QUARTER};
+        return new BinaryOperationMeasure.PeriodUnit[]{BinaryOperationMeasure.PeriodUnit.YEAR, BinaryOperationMeasure.PeriodUnit.QUARTER};
       } else if (period instanceof Period.QuarterFromDate) {
-        return new ComparisonMeasure.PeriodUnit[]{ComparisonMeasure.PeriodUnit.YEAR, ComparisonMeasure.PeriodUnit.QUARTER};
+        return new BinaryOperationMeasure.PeriodUnit[]{BinaryOperationMeasure.PeriodUnit.YEAR, BinaryOperationMeasure.PeriodUnit.QUARTER};
       } else if (period instanceof Period.YearFromDate || period instanceof Period.Year) {
-        return new ComparisonMeasure.PeriodUnit[]{ComparisonMeasure.PeriodUnit.YEAR};
+        return new BinaryOperationMeasure.PeriodUnit[]{BinaryOperationMeasure.PeriodUnit.YEAR};
       } else {
         throw new RuntimeException(period + " not supported yet");
       }

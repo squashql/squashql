@@ -15,7 +15,7 @@ public class TestPeriodBucketingExecutor {
     BiFunction<Object[], String[], Object[]> f = (point, refPos) -> {
       new PeriodBucketingExecutor.ShiftProcedure(
               period,
-              Map.of(ComparisonMeasure.PeriodUnit.YEAR, refPos[0], ComparisonMeasure.PeriodUnit.QUARTER, refPos[1]),
+              Map.of(BinaryOperationMeasure.PeriodUnit.YEAR, refPos[0], BinaryOperationMeasure.PeriodUnit.QUARTER, refPos[1]),
               2).execute(point);
       return point;
     };

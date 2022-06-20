@@ -1,9 +1,9 @@
 package me.paulbares.jackson;
 
 import me.paulbares.query.AggregatedMeasure;
-import me.paulbares.query.ComparisonMeasure;
+import me.paulbares.query.BinaryOperationMeasure;
 import me.paulbares.query.QueryBuilder;
-import me.paulbares.query.comp.Comparisons;
+import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.*;
 import org.assertj.core.api.Assertions;
@@ -98,13 +98,13 @@ public class TestQueryS13n {
 
   @Test
   void testRoundTripPeriodBucketingComparisonQuery() {
-    ComparisonMeasure m = new ComparisonMeasure(
+    BinaryOperationMeasure m = new BinaryOperationMeasure(
             "myMeasure",
-            Comparisons.COMPARISON_METHOD_ABS_DIFF,
+            BinaryOperations.ABS_DIFF,
             new AggregatedMeasure("sales", "sum"),
             Map.of(
-                    ComparisonMeasure.PeriodUnit.QUARTER, "q",
-                    ComparisonMeasure.PeriodUnit.YEAR, "y-1"
+                    BinaryOperationMeasure.PeriodUnit.QUARTER, "q",
+                    BinaryOperationMeasure.PeriodUnit.YEAR, "y-1"
             ));
 
     List<Period> periods = List.of(

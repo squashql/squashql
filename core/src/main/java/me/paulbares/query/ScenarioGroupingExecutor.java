@@ -1,6 +1,6 @@
 package me.paulbares.query;
 
-import me.paulbares.query.comp.Comparisons;
+import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.dto.ScenarioComparisonDto;
 import me.paulbares.query.dto.ScenarioGroupingQueryDto;
 import me.paulbares.store.Field;
@@ -46,7 +46,7 @@ public class ScenarioGroupingExecutor {
           Object referenceValue = getReferenceValue(i, comp.referencePosition(), scenario, scenarios, valuesByScenario);
           Object currentValue = valuesByScenario.get(scenario).get(i);
 
-          row.add(Comparisons.compare(comp.method(), currentValue, referenceValue, table.headers().get(i + 1).type()));
+          row.add(BinaryOperations.compare(comp.method(), currentValue, referenceValue, table.headers().get(i + 1).type()));
           if (comp.showValue()) {
             row.add(currentValue); // the original value
           }

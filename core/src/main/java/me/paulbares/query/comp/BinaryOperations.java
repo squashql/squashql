@@ -1,22 +1,22 @@
 package me.paulbares.query.comp;
 
-public class Comparisons {
+public class BinaryOperations {
 
-  public static final String COMPARISON_METHOD_ABS_DIFF = "absolute_difference";
-  public static final String COMPARISON_METHOD_REL_DIFF = "relative_difference";
+  public static final String ABS_DIFF = "absolute_difference";
+  public static final String REL_DIFF = "relative_difference";
 
   public static Object compare(String method, Object currentValue, Object referenceValue, Class<?> dataType) {
     return switch (method) {
-      case COMPARISON_METHOD_ABS_DIFF -> computeAbsoluteDiff(currentValue, referenceValue, dataType);
-      case COMPARISON_METHOD_REL_DIFF -> computeRelativeDiff(currentValue, referenceValue, dataType);
+      case ABS_DIFF -> computeAbsoluteDiff(currentValue, referenceValue, dataType);
+      case REL_DIFF -> computeRelativeDiff(currentValue, referenceValue, dataType);
       default -> throw new IllegalArgumentException(String.format("Not supported comparison %s", method));
     };
   }
 
   public static Class<?> getOutputType(String method, Class<?> dataType) {
     return switch (method) {
-      case COMPARISON_METHOD_ABS_DIFF -> dataType;
-      case COMPARISON_METHOD_REL_DIFF -> double.class;
+      case ABS_DIFF -> dataType;
+      case REL_DIFF -> double.class;
       default -> throw new IllegalArgumentException(String.format("Not supported comparison %s", method));
     };
   }
