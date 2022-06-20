@@ -229,6 +229,7 @@ public abstract class ATestQueryEngine {
             .wildcardCoordinate("category")
             .wildcardCoordinate("ean")
             .aggregatedMeasure("quantity", "sum")
+            .condition(SCENARIO_FIELD_NAME, new SingleValueConditionDto(ConditionType.EQ, MAIN_SCENARIO_NAME))
             .condition("ean", new SingleValueConditionDto(ConditionType.EQ, "bottle"))
             .condition("category", new SingleValueConditionDto(ConditionType.IN, Set.of("cloth", "drink")));
     Table table = this.queryEngine.execute(query);

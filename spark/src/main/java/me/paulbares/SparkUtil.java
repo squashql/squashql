@@ -58,6 +58,7 @@ public final class SparkUtil {
   }
 
   public static String getScenarioName(String storeName) {
-    return storeName + "_" + Datastore.SCENARIO_FIELD_NAME;
+    return Datastore.SCENARIO_FIELD_NAME;
+//    return storeName + "_" + Datastore.SCENARIO_FIELD_NAME;
   }
 }

@@ -188,14 +188,12 @@ public class SparkQueryControllerTest {
             Map.of("name", "competitor_concurrent_pdv", "type", "string"),
             Map.of("name", "competitor_brand", "type", "string"),
             Map.of("name", "competitor_concurrent_ean", "type", "string"),
-            Map.of("name", "competitor_price", "type", "double"),
-            Map.of("name", SCENARIO_FIELD_NAME, "type", "string")
+            Map.of("name", "competitor_price", "type", "double")
     );
 
     Assertions.assertThat(f.apply("our_stores_their_stores")).containsExactlyInAnyOrder(
             Map.of("name", "our_store", "type", "string"),
-            Map.of("name", "their_store", "type", "string"),
-            Map.of("name", SCENARIO_FIELD_NAME, "type", "string")
+            Map.of("name", "their_store", "type", "string")
     );
 
     Assertions.assertThat((List) objects.get(SparkQueryController.METADATA_AGG_FUNCS_KEY)).containsExactlyInAnyOrder(SparkQueryController.SUPPORTED_AGG_FUNCS.toArray(new String[0]));

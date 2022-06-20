@@ -5,7 +5,6 @@ import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.ClickHouseTransactionManager;
 import me.paulbares.transaction.TransactionManager;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -25,11 +24,6 @@ public class TestClickHouseScenarioGroupingExecutor extends ATestScenarioGroupin
   void setup() {
     this.container.start();
     super.setup();
-  }
-
-  @AfterAll
-  void tearDown() {
-    this.container.stop();
   }
 
   @Override

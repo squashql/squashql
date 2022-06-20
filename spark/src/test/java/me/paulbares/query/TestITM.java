@@ -43,11 +43,11 @@ public class TestITM {
 
     SparkTransactionManager tm = new SparkTransactionManager(this.datastore.spark);
     tm.createTemporaryTable("our_prices", List.of(ean, pdv, price, qty, capdv));
-    tm.createTemporaryTable("their_prices", List.of(compEan, compConcurrentPdv, compBrand, compConcurrentEan, compPrice));
+    tm.createTemporaryTable("their_prices", List.of(compEan, compConcurrentPdv, compBrand, compConcurrentEan, compPrice), null);
     tm.createTemporaryTable("our_stores_their_stores", List.of(
             new Field("our_store", String.class),
             new Field("their_store", String.class)
-    ));
+    ), null);
 
     tm.load(MAIN_SCENARIO_NAME,
             "our_prices", List.of(
