@@ -130,6 +130,5 @@ public class TestQueryS13n {
       Assertions.assertThat(deserialize.coordinates).isEqualTo(query.coordinates);
       Assertions.assertThat(deserialize.measures).isEqualTo(query.measures);
     }
-
   }
 }
