@@ -3,6 +3,10 @@ package me.paulbares;
 import com.clickhouse.client.ClickHouseDataType;
 import me.paulbares.store.Datastore;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+
 public final class ClickHouseUtil {
 
   private ClickHouseUtil() {
@@ -20,6 +24,8 @@ public final class ClickHouseUtil {
       type = ClickHouseDataType.Int32.name();
     } else if (clazz.equals(Long.class) || clazz.equals(long.class)) {
       type = ClickHouseDataType.Int64.name();
+    } else if (clazz.equals(LocalDate.class)) {
+      type = ClickHouseDataType.Date.name();
     } else {
       throw new IllegalArgumentException("Unsupported field type " + clazz);
     }
@@ -33,11 +39,29 @@ public final class ClickHouseUtil {
       case Float32 -> float.class;
       case Float64 -> double.class;
       case String -> String.class;
+      case Date -> LocalDate.class;
       default -> throw new IllegalArgumentException("Unsupported data type " + dataType);
     };
   }
 
   public static String getScenarioName(String storeName) {
     return storeName + "_" + Datastore.SCENARIO_FIELD_NAME;
+  }
+
+  public static void show(ResultSet set) {
+    StringBuilder sb = new StringBuilder();
+    try {
+      int columnCount = set.getMetaData().getColumnCount();
+
+      while (set.next()) {
+        for (int i = 0; i < columnCount; i++) {
+          sb.append(set.getObject(i + 1)).append(",");
+        }
+        sb.append(System.lineSeparator());
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+    System.out.println(sb.toString());
   }
 }

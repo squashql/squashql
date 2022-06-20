@@ -15,7 +15,7 @@ import java.util.List;
 import static me.paulbares.query.TestUtils.createClickHouseContainer;
 import static me.paulbares.query.TestUtils.jdbcUrl;
 
-public class TestClickHouseScenarioGroupingExecutor extends ATestScenarioGroupingExecutor {
+public class TestClickHousePeriodBucketing extends ATestPeriodBucketing {
 
   @Container
   public GenericContainer container = createClickHouseContainer();
@@ -29,7 +29,7 @@ public class TestClickHouseScenarioGroupingExecutor extends ATestScenarioGroupin
 
   @AfterAll
   void tearDown() {
-    this.container.stop();
+    // we do not stop the container to be able to reuse it between tests.
   }
 
   @Override
@@ -50,6 +50,6 @@ public class TestClickHouseScenarioGroupingExecutor extends ATestScenarioGroupin
 
   @Override
   protected TransactionManager createTransactionManager() {
-    return new ClickHouseTransactionManager(((ClickHouseDatastore) this.datastore).getDataSource());
+    return new ClickHouseTransactionManager(((ClickHouseDatastore) this.datastore).dataSource);
   }
 }

@@ -1,6 +1,5 @@
 package me.paulbares.query;
 
-import com.clickhouse.client.ClickHouseProtocol;
 import me.paulbares.ClickHouseDatastore;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
@@ -9,44 +8,17 @@ import me.paulbares.transaction.TransactionManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.output.OutputFrame;
-import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.utility.DockerImageName;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.Duration;
 import java.util.List;
-import java.util.function.Function;
 
-import static java.time.temporal.ChronoUnit.SECONDS;
+import static me.paulbares.query.TestUtils.createClickHouseContainer;
+import static me.paulbares.query.TestUtils.jdbcUrl;
 
 public class TestClickHouseQueryEngine extends ATestQueryEngine {
 
-  protected static final boolean printAll = true;
-
-  protected static final Function<GenericContainer, String> jdbcUrl = c -> String.format("jdbc:clickhouse://%s:%d",
-          c.getHost(),
-          c.getMappedPort(ClickHouseProtocol.HTTP.getDefaultPort()));
-
   @Container
   public GenericContainer container = createClickHouseContainer();
-
-  protected static GenericContainer createClickHouseContainer() {
-    return new GenericContainer(DockerImageName.parse("yandex/clickhouse-server:latest"))
-            .withExposedPorts(ClickHouseProtocol.HTTP.getDefaultPort(), ClickHouseProtocol.GRPC.getDefaultPort())
-            .waitingFor(Wait.forHttp("/ping")
-                    .forPort(ClickHouseProtocol.HTTP.getDefaultPort())
-                    .forStatusCode(200)
-                    .withStartupTimeout(Duration.of(60, SECONDS)))
-            .withLogConsumer(of -> {
-              String s = ((OutputFrame) of).getUtf8String();
-              if (printAll) {
-                System.out.print("ClickHouseContainer Container >>>" + s);
-              }
-            });
-  }
 
   @BeforeAll
   @Override
@@ -57,7 +29,7 @@ public class TestClickHouseQueryEngine extends ATestQueryEngine {
 
   @AfterAll
   void tearDown() {
-    this.container.stop();
+    // we do not stop the container to be able to reuse it between tests.
   }
 
   @Override
@@ -79,22 +51,5 @@ public class TestClickHouseQueryEngine extends ATestQueryEngine {
   @Override
   protected TransactionManager createTransactionManager() {
     return new ClickHouseTransactionManager(((ClickHouseDatastore) this.datastore).dataSource);
-  }
-
-  public static String show(ResultSet set) {
-    StringBuilder sb = new StringBuilder();
-    try {
-      int columnCount = set.getMetaData().getColumnCount();
-
-      while (set.next()) {
-        for (int i = 0; i < columnCount; i++) {
-          sb.append(set.getObject(i + 1)).append(",");
-        }
-        sb.append(System.lineSeparator());
-      }
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-    return sb.toString();
   }
 }

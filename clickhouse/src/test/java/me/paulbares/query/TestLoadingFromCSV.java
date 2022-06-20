@@ -17,7 +17,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Function;
 
-import static me.paulbares.query.TestClickHouseQueryEngine.createClickHouseContainer;
+import static me.paulbares.query.TestUtils.createClickHouseContainer;
+import static me.paulbares.query.TestUtils.jdbcUrl;
 import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
 import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
@@ -45,7 +46,7 @@ public class TestLoadingFromCSV {
 
   @Test
   void test() {
-    ClickHouseDatastore datastore = new ClickHouseDatastore(TestClickHouseQueryEngine.jdbcUrl.apply(container), null);
+    ClickHouseDatastore datastore = new ClickHouseDatastore(jdbcUrl.apply(container), null);
     ClickHouseTransactionManager tm = new ClickHouseTransactionManager(datastore.getDataSource());
 
     String storeName = "myAwesomeStore";
