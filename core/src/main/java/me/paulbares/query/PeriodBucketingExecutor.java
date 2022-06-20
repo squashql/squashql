@@ -16,6 +16,8 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.IsoFields;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PeriodBucketingExecutor {
 
@@ -220,18 +222,22 @@ public class PeriodBucketingExecutor {
       this.transformations = new Object[pointLength];
       ComparisonMeasure.PeriodUnit[] periodUnits = getPeriodUnits(period);
       for (int i = 0; i < periodUnits.length; i++) {
-        ComparisonMeasure.PeriodUnit unit = periodUnits[i];
-        String transformation = referencePosition.get(unit);
-        if (transformation.contains("-")) {
-          String[] split = transformation.split("-");
-          int shift = Integer.parseInt(split[1].trim());
-          transformations[i] = -shift;
-        } else if (transformation.contains("+")) {
-          String[] split = transformation.split("\\+");
-          int shift = Integer.parseInt(split[1].trim());
-          transformations[i] = shift;
-        }
-        // else nothing
+        transformations[i] = parse(referencePosition.get(periodUnits[i]));
+      }
+    }
+
+    private Object parse(String transformation) {
+      Pattern shiftPattern = Pattern.compile("[a-zA-Z]+([-+])(\\d)");
+      Pattern constantPattern = Pattern.compile("[a-zA-Z]+");
+      Matcher m;
+      if ((m = shiftPattern.matcher(transformation)).matches()) {
+        String signum = m.group(1);
+        String shift = m.group(2);
+        return (signum.equals("-") ? -1 : 1) * Integer.valueOf(shift);
+      } else if (constantPattern.matcher(transformation).matches()) {
+        return null; // nothing to do
+      } else {
+        throw new RuntimeException("Unsupported transformation: " + transformation);
       }
     }
 
