@@ -315,4 +315,22 @@ public abstract class ATestQueryEngine {
     Assertions.assertThatThrownBy(() -> this.queryEngine.execute(query))
             .hasMessageContaining("Cannot find expression with alias " + notexistingmeasure);
   }
+
+  /**
+   * https://clickhouse.com/docs/en/sql-reference/aggregate-functions/combinators/#-if
+   */
+  @Test
+  void testSumIf() {
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
+            .wildcardCoordinate(SCENARIO_FIELD_NAME)
+            .expressionMeasure(
+                    "quantity if food or drink",
+                    "sumIf(quantity, category = 'food' OR category = 'drink')");
+    Table result = this.queryEngine.execute(query);
+    Assertions.assertThat(result).containsExactlyInAnyOrder(
+            List.of("base", 30l),
+            List.of("s1", 30l),
+            List.of("s2", 30l));
+  }
 }
