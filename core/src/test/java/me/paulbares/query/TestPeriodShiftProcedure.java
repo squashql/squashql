@@ -2,6 +2,8 @@ package me.paulbares.query;
 
 import me.paulbares.query.dto.Period;
 import org.assertj.core.api.Assertions;
+import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
+import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -12,11 +14,14 @@ public class TestPeriodShiftProcedure {
   @Test
   void testQuarterFromMonthYear() {
     Period period = new Period.Quarter("", "");
+    MutableObjectIntMap<BinaryOperationMeasure.PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
+    indexByPeriodUnit.put(BinaryOperationMeasure.PeriodUnit.YEAR, 0);
+    indexByPeriodUnit.put(BinaryOperationMeasure.PeriodUnit.QUARTER, 1);
     BiFunction<Object[], String[], Object[]> f = (point, refPos) -> {
-      new PeriodBucketingExecutor.ShiftProcedure(
+      new PeriodComparisonExecutor.ShiftProcedure(
               period,
               Map.of(BinaryOperationMeasure.PeriodUnit.YEAR, refPos[0], BinaryOperationMeasure.PeriodUnit.QUARTER, refPos[1]),
-              2).execute(point);
+              indexByPeriodUnit).execute(point);
       return point;
     };
 

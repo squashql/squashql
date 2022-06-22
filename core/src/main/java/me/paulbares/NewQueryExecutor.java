@@ -2,10 +2,14 @@ package me.paulbares;
 
 import me.paulbares.query.*;
 import me.paulbares.query.comp.BinaryOperations;
+import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.NewQueryDto;
 import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
+import org.eclipse.collections.api.list.primitive.MutableIntList;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
 
 import java.util.*;
 import java.util.stream.IntStream;
@@ -30,25 +34,21 @@ public class NewQueryExecutor {
       graphByMeasure.put(m, g);
     });
 
-    Map<Measure, List<Object>> aggregateValuesByMeasure = new HashMap<>();
+    List<String> cols = new ArrayList<>();
+    query.columns.forEach(cols::add);
+    query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).forEach(cols::add);
+    QueryDto prefetchQuery = new QueryDto().table(query.table);
+    cols.forEach(prefetchQuery::wildcardCoordinate);
+    Set<Measure> measuresToPrefetch = new HashSet<>();
+    query.measures.forEach(m -> measuresToPrefetch.add(getMeasureToPrefetch(m)));
+    measuresToPrefetch.forEach(prefetchQuery::withMeasure);
+    Table intermediateResult = this.queryEngine.execute(prefetchQuery);
 
-    Table t = null;
+    Map<Measure, List<Object>> aggregateValuesByMeasure = new HashMap<>();
     if (query.columnSets.containsKey(NewQueryDto.PERIOD)) {
       PeriodColumnSetDto columnSet = (PeriodColumnSetDto) query.columnSets.get(NewQueryDto.PERIOD);
 
-      {
-        List<String> cols = new ArrayList<>();
-        query.columns.forEach(cols::add);
-        columnSet.getColumnsForPrefetching().forEach(cols::add);
-        QueryDto prefetchQuery = new QueryDto().table(query.table);
-        cols.forEach(prefetchQuery::wildcardCoordinate);
-        Set<Measure> measures = new HashSet<>();
-        query.measures.forEach(m -> measures.add(getMeasureToPrefetch(m)));
-        measures.forEach(prefetchQuery::withMeasure);
-        t = this.queryEngine.execute(prefetchQuery);
-      }
-
-      Table finalT = t;
+      Table finalT = intermediateResult;
       graphByMeasure.forEach((m, graph) -> {
         Measure last = graph.pollLast();
         aggregateValuesByMeasure.computeIfAbsent(last, finalT::getAggregateValues);
@@ -68,74 +68,71 @@ public class NewQueryExecutor {
           });
         }
       });
-
-      // Once complete, construct the final result
-
-      List<Field> fields = new ArrayList<>();
-      List<List<Object>> values = new ArrayList<>();
-      int n = 0;
-      for (String finalColumn : finalColumns) {
-        fields.add(finalT.getField(finalColumn));
-        values.add(Objects.requireNonNull(finalT.getColumnValues(finalColumn)));
-        n++;
-      }
-
-      List<Measure> measures = new ArrayList<>(query.measures);
-      for (Measure measure : query.measures) {
-        fields.add(finalT.getField(measure));
-        values.add(Objects.requireNonNull(finalT.getAggregateValues(measure)));
-      }
-
-      ColumnarTable columnarTable = new ColumnarTable(fields,
-              measures,
-              IntStream.range(n, fields.size()).toArray(),
-              IntStream.range(0, n).toArray(),
-              values);
-      return columnarTable;
     }
 
     if (query.columnSets.containsKey(NewQueryDto.BUCKET)) {
       // Now bucket...
-//      BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(NewQueryDto.BUCKET);
-//      Map<String, List<String>> bucketsByValue = new HashMap<>();
-//      for (Pair<String, List<String>> value : columnSet.values) {
-//        for (String v : value.getTwo()) {
-//          bucketsByValue
-//                  .computeIfAbsent(v, k -> new ArrayList<>())
-//                  .add(value.getOne());
-//        }
-//      }
+      BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(NewQueryDto.BUCKET);
+      Map<String, List<String>> bucketsByValue = new HashMap<>();
+      for (Pair<String, List<String>> value : columnSet.values) {
+        for (String v : value.getTwo()) {
+          bucketsByValue
+                  .computeIfAbsent(v, k -> new ArrayList<>())
+                  .add(value.getOne());
+        }
+      }
 
-//      List<String> r = t.headers().stream().map(Field::name).toList();
-//      int[] indexColsToBucket = new int[1];
-//      int[] indexColAggregates = t.measureIndices();
-//      MutableIntList indexColsToLeaveList = new IntArrayList();
-//      for (int i = 0; i < r.size(); i++) {
-//        if (columnSet.getColumnsForPrefetching().contains(r.get(i))) {
-//          indexColsToBucket[0] = i;
-//        } else if (Arrays.binarySearch(indexColAggregates, i) < 0) {
-//          indexColsToLeaveList.add(i);
-//        }
-//      }
-//      int[] indexColsToLeave = indexColsToLeaveList.toArray();
-//
-//      Bucketer.Holder holder = new Bucketer(this.queryEngine)
-//              .executeBucketing(t,
-//                      indexColsToLeave,
-//                      indexColAggregates,
-//                      indexColsToBucket,
-//                      t.measures().stream().map(AggregatedMeasure.class::cast).toList(),
-//                      columnSet.getNewColumns(),
-//                      toBucketColumnValues -> {
-//                        String value = (String) toBucketColumnValues.get(0);
-//                        List<String> buckets = bucketsByValue.get(value);
-//                        return buckets.stream().map(b -> new Object[]{b, value}).toList();
-//                      });
-//      t = holder.table();
-      System.out.println();
+      List<String> r = intermediateResult.headers().stream().map(Field::name).toList();
+      int[] indexColsToBucket = new int[1];
+      int[] indexColAggregates = intermediateResult.measureIndices();
+      MutableIntList indexColsToLeaveList = new IntArrayList();
+      for (int i = 0; i < r.size(); i++) {
+        if (columnSet.getColumnsForPrefetching().contains(r.get(i))) {
+          indexColsToBucket[0] = i;
+        } else if (Arrays.binarySearch(indexColAggregates, i) < 0) {
+          indexColsToLeaveList.add(i);
+        }
+      }
+      int[] indexColsToLeave = indexColsToLeaveList.toArray();
+
+      Bucketer.Holder holder = new Bucketer(this.queryEngine)
+              .executeBucketing(intermediateResult,
+                      indexColsToLeave,
+                      indexColAggregates,
+                      indexColsToBucket,
+                      intermediateResult.measures().stream().map(AggregatedMeasure.class::cast).toList(),
+                      columnSet.getNewColumns(),
+                      toBucketColumnValues -> {
+                        String value = (String) toBucketColumnValues.get(0);
+                        List<String> buckets = bucketsByValue.get(value);
+                        return buckets.stream().map(b -> new Object[]{b, value}).toList();
+                      });
+      intermediateResult = holder.table();
+      return intermediateResult;
     }
 
-    return t;
+    // Once complete, construct the final result with columns in correct order.
+    List<Field> fields = new ArrayList<>();
+    List<List<Object>> values = new ArrayList<>();
+    int n = 0;
+    for (String finalColumn : finalColumns) {
+      fields.add(intermediateResult.getField(finalColumn));
+      values.add(Objects.requireNonNull(intermediateResult.getColumnValues(finalColumn)));
+      n++;
+    }
+
+    List<Measure> measures = new ArrayList<>(query.measures);
+    for (Measure measure : query.measures) {
+      fields.add(intermediateResult.getField(measure));
+      values.add(Objects.requireNonNull(intermediateResult.getAggregateValues(measure)));
+    }
+
+    ColumnarTable columnarTable = new ColumnarTable(fields,
+            measures,
+            IntStream.range(n, fields.size()).toArray(),
+            IntStream.range(0, n).toArray(),
+            values);
+    return columnarTable;
   }
 
   private Measure getMeasureToPrefetch(Measure measure) {

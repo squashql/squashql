@@ -1,8 +1,10 @@
 package me.paulbares.query;
 
+import me.paulbares.NewQueryExecutor;
 import me.paulbares.query.comp.BinaryOperations;
+import me.paulbares.query.dto.NewQueryDto;
 import me.paulbares.query.dto.Period;
-import me.paulbares.query.dto.PeriodBucketingQueryDto;
+import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
+import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestPeriodComparison {
@@ -25,7 +28,7 @@ public abstract class ATestPeriodComparison {
 
   protected QueryEngine queryEngine;
 
-  protected PeriodBucketingExecutor executor;
+  protected NewQueryExecutor executor;
 
   protected TransactionManager tm;
 
@@ -50,7 +53,7 @@ public abstract class ATestPeriodComparison {
 
     this.datastore = createDatastore();
     this.queryEngine = createQueryEngine(this.datastore);
-    this.executor = new PeriodBucketingExecutor(this.queryEngine);
+    this.executor = new NewQueryExecutor(this.queryEngine);
     this.tm = createTransactionManager();
 
     beforeLoading(List.of(ean, category, sales, qty, year, quarter, month, date));
@@ -105,27 +108,27 @@ public abstract class ATestPeriodComparison {
                     BinaryOperationMeasure.PeriodUnit.QUARTER.name(), "q",
                     BinaryOperationMeasure.PeriodUnit.YEAR.name(), "y-1"
             ));
+    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
 
-    var query = new PeriodBucketingQueryDto()
+    var query = new NewQueryDto()
             .table(this.storeName)
-            .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
-            .period(period)
-            .withMeasure(m)
-            .withMeasure(sales);
+            .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withMetric(m)
+            .withMetric(sales);
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList("base", 2022, 1, null, 100d),
-            Arrays.asList("base", 2022, 2, null, 80d),
-            Arrays.asList("base", 2022, 3, null, 85d),
-            Arrays.asList("base", 2022, 4, null, 35d),
-            Arrays.asList("base", 2023, 1, 0d, 100d),
-            Arrays.asList("base", 2023, 2, 0d, 80d),
-            Arrays.asList("base", 2023, 3, 0d, 85d),
-            Arrays.asList("base", 2023, 4, 0d, 35d));
+            Arrays.asList(2022, 1, null, 100d),
+            Arrays.asList(2022, 2, null, 80d),
+            Arrays.asList(2022, 3, null, 85d),
+            Arrays.asList(2022, 4, null, 35d),
+            Arrays.asList(2023, 1, 0d, 100d),
+            Arrays.asList(2023, 2, 0d, 80d),
+            Arrays.asList(2023, 3, 0d, 85d),
+            Arrays.asList(2023, 4, 0d, 35d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
-            .containsExactlyInAnyOrder(Datastore.SCENARIO_FIELD_NAME, period.year(), period.quarter(), "myMeasure", "sum(sales)");
+            .containsExactlyInAnyOrder(period.year(), period.quarter(), "myMeasure", "sum(sales)");
   }
 
   @Test
@@ -140,24 +143,25 @@ public abstract class ATestPeriodComparison {
                     BinaryOperationMeasure.PeriodUnit.QUARTER.name(), "q-1",
                     BinaryOperationMeasure.PeriodUnit.YEAR.name(), "y"
             ));
+    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
 
-    var query = new PeriodBucketingQueryDto()
+    var query = new NewQueryDto()
             .table(this.storeName)
-            .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
-            .period(period)
-            .withMeasure(m)
-            .withMeasure(sales);
+            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withMetric(m)
+            .withMetric(sales);
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList("base", 2022, 1, null, 100d),
-            Arrays.asList("base", 2022, 2, -20d, 80d),
-            Arrays.asList("base", 2022, 3, 5d, 85d),
-            Arrays.asList("base", 2022, 4, -50d, 35d),
-            Arrays.asList("base", 2023, 1, 65d, 100d),
-            Arrays.asList("base", 2023, 2, -20d, 80d),
-            Arrays.asList("base", 2023, 3, 5d, 85d),
-            Arrays.asList("base", 2023, 4, -50d, 35d));
+            Arrays.asList(2022, 1, "base", null, 100d),
+            Arrays.asList(2022, 2, "base", -20d, 80d),
+            Arrays.asList(2022, 3, "base", 5d, 85d),
+            Arrays.asList(2022, 4, "base", -50d, 35d),
+            Arrays.asList(2023, 1, "base", 65d, 100d),
+            Arrays.asList(2023, 2, "base", -20d, 80d),
+            Arrays.asList(2023, 3, "base", 5d, 85d),
+            Arrays.asList(2023, 4, "base", -50d, 35d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(Datastore.SCENARIO_FIELD_NAME, period.year(), period.quarter(), "myMeasure", "sum(sales)");
@@ -172,18 +176,19 @@ public abstract class ATestPeriodComparison {
             BinaryOperations.ABS_DIFF,
             sales,
             Map.of(BinaryOperationMeasure.PeriodUnit.YEAR.name(), "y-1"));
+    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
 
-    var query = new PeriodBucketingQueryDto()
+    var query = new NewQueryDto()
             .table(this.storeName)
-            .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
-            .period(period)
-            .withMeasure(m)
-            .withMeasure(sales);
+            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withMetric(m)
+            .withMetric(sales);
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList("base", 2022, null, 300d),
-            Arrays.asList("base", 2023, 0d, 300d));
+            Arrays.asList(2022, "base", null, 300d),
+            Arrays.asList(2023, "base", 0d, 300d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(Datastore.SCENARIO_FIELD_NAME, period.year(), "myMeasure", "sum(sales)");
