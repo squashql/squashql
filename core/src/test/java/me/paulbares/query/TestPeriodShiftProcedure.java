@@ -7,11 +7,11 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-public class TestPeriodBucketingExecutor {
+public class TestPeriodShiftProcedure {
 
   @Test
   void testQuarterFromMonthYear() {
-    Period period = new Period.QuarterFromMonthYear("", "");
+    Period period = new Period.Quarter("", "");
     BiFunction<Object[], String[], Object[]> f = (point, refPos) -> {
       new PeriodBucketingExecutor.ShiftProcedure(
               period,

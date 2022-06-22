@@ -77,15 +77,26 @@ public class BinaryOperationMeasure implements Measure {
       return false;
     }
     BinaryOperationMeasure that = (BinaryOperationMeasure) o;
-    return type.equals(that.type)
-            && Objects.equals(alias, that.alias)
-            && method.equals(that.method)
-            && measure.equals(that.measure)
-            && referencePosition.equals(that.referencePosition);
+    return this.type.equals(that.type)
+            && Objects.equals(this.alias, that.alias)
+            && this.method.equals(that.method)
+            && this.measure.equals(that.measure)
+            && this.referencePosition.equals(that.referencePosition);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(type, alias, method, measure, referencePosition);
+    return Objects.hash(this.type, this.alias, this.method, this.measure, this.referencePosition);
+  }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + "{" +
+            "type='" + this.type + '\'' +
+            ", alias='" + this.alias + '\'' +
+            ", method='" + this.method + '\'' +
+            ", measure=" + this.measure +
+            ", referencePosition=" + this.referencePosition +
+            '}';
   }
 }

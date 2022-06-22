@@ -138,7 +138,7 @@ public class SparkRemoteQueryBenchmark {
       int size = (int) ds.count();
       List<Object[]> tuples = new ArrayList<>(size * N);
       List<Object[]> basicTuples = new ArrayList<>(N);
-      DatasetTable table = new DatasetTable(ds, null, null, "whatever");
+      DatasetTable table = new DatasetTable(ds, null, null, null, "whatever");
       for (int i = 0; i < N; i++) {
         if (i == 0) {
           table.forEach(a -> basicTuples.add(a.toArray(new Object[0]))); // iterate only once because it is costly

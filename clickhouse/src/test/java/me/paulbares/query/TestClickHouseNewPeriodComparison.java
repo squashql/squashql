@@ -15,7 +15,7 @@ import java.util.List;
 import static me.paulbares.query.TestUtils.createClickHouseContainer;
 import static me.paulbares.query.TestUtils.jdbcUrl;
 
-public class TestClickHousePeriodBucketing extends ATestPeriodBucketing {
+public class TestClickHouseNewPeriodComparison extends ANewTestPeriodComparison {
 
   @Container
   public GenericContainer container = createClickHouseContainer();

@@ -1,5 +1,6 @@
 package me.paulbares.query;
 
+import me.paulbares.query.dictionary.ObjectArrayDictionary;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import org.apache.spark.sql.Dataset;
@@ -19,13 +20,15 @@ public class DatasetTable implements Table {
 
   protected final List<Field> fields;
 
-  protected final List<? extends Measure> measures;
+  protected final List<Measure> measures;
 
   protected final int[] measureIndices;
+  protected final int[] columnIndices;
 
   public DatasetTable(Dataset<Row> dataset,
-                      List<? extends Measure> measures,
+                      List<Measure> measures,
                       int[] measureIndices,
+                      int[] columnIndices,
                       String scenarioFieldName) {
     this.dataset = dataset;
     this.fields = Arrays
@@ -40,16 +43,32 @@ public class DatasetTable implements Table {
             .collect(Collectors.toList());
     this.measures = measures;
     this.measureIndices = measureIndices;
+    this.columnIndices = columnIndices;
   }
 
   @Override
-  public List<? extends Measure> measures() {
+  public void addAggregates(Field field, Measure measure, List<Object> values) {
+    throw new RuntimeException("not implemented");
+  }
+
+  @Override
+  public ObjectArrayDictionary pointDictionary() {
+    return null;
+  }
+
+  @Override
+  public List<Measure> measures() {
     return this.measures;
   }
 
   @Override
   public int[] measureIndices() {
     return this.measureIndices;
+  }
+
+  @Override
+  public int[] columnIndices() {
+    return this.columnIndices;
   }
 
   @Override

@@ -1,5 +1,6 @@
 package me.paulbares.query;
 
+import me.paulbares.query.dictionary.ObjectArrayDictionary;
 import me.paulbares.store.Field;
 
 import java.util.ArrayList;
@@ -7,7 +8,11 @@ import java.util.List;
 
 public interface Table extends Iterable<List<Object>> {
 
+  ObjectArrayDictionary pointDictionary();
+
   List<Field> headers();
+
+  void addAggregates(Field field, Measure measure, List<Object> values);
 
   default List<Object> getColumn(int columnIndex) {
     List<Object> elements = new ArrayList<>();
@@ -17,9 +22,50 @@ public interface Table extends Iterable<List<Object>> {
     return elements;
   }
 
-  List<? extends Measure> measures();
+  default List<Object> getColumnValues(String column) {
+    return getColumn(columnIndex(column));
+  }
+
+  default List<Object> getAggregateValues(Measure measure) {
+    int index = measures().indexOf(measure);
+    if (index < 0) {
+      throw new IllegalArgumentException("no aggregate values for " + measure);
+    }
+    return getColumn(measureIndices()[index]);
+  }
+
+  default Field getField(Measure measure) {
+    int index = measures().indexOf(measure);
+    if (index < 0) {
+      throw new IllegalArgumentException("no aggregate values for " + measure);
+    }
+    return headers().get(measureIndices()[index]);
+  }
+
+  default Field getField(String column) {
+    return headers().get(columnIndices()[columnIndex(column)]);
+  }
+
+  List<Measure> measures();
 
   int[] measureIndices();
+
+  int[] columnIndices();
+
+  default int columnIndex(String column) {
+    int index = -1, i = 0;
+    for (Field header : headers()) {
+      if (header.name().equals(column)) {
+        index = i;
+        break;
+      }
+      i++;
+    }
+    if (index < 0) {
+      throw new IllegalArgumentException("no column named " + column);
+    }
+    return index;
+  }
 
   /**
    * Returns the number of rows in the table.

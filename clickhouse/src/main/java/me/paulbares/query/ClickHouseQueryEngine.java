@@ -1,10 +1,6 @@
 package me.paulbares.query;
 
-import com.clickhouse.client.ClickHouseClient;
-import com.clickhouse.client.ClickHouseFormat;
-import com.clickhouse.client.ClickHouseNode;
-import com.clickhouse.client.ClickHouseProtocol;
-import com.clickhouse.client.ClickHouseResponse;
+import com.clickhouse.client.*;
 import me.paulbares.ClickHouseDatastore;
 import me.paulbares.ClickHouseUtil;
 import me.paulbares.query.dto.QueryDto;
@@ -53,16 +49,21 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
               })
               .toList();
       // Read the records here to close the underlying input stream (response)
-      List<List<Object>> rows = new ArrayList<>();
+      List<List<Object>> values = new ArrayList<>();
+      for (int i = 0; i < fields.size(); i++) {
+        values.add(new ArrayList<>());
+      }
       response.records().iterator().forEachRemaining(r -> {
-        List<Object> a = new ArrayList<>(r.size());
-        r.forEach(e -> a.add(e.asObject()));
-        rows.add(a);
+        for (int i = 0; i < r.size(); i++) {
+          values.get(i).add(r.getValue(i).asObject());
+        }
       });
-      return new ArrayTable(fields,
+      return new ColumnarTable(
+              fields,
               query.measures,
               IntStream.range(query.coordinates.size(), query.coordinates.size() + query.measures.size()).toArray(),
-              rows);
+              IntStream.range(0, query.coordinates.size()).toArray(),
+              values);
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);
     }

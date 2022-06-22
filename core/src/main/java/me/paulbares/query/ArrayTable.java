@@ -5,36 +5,27 @@ import me.paulbares.store.Field;
 import java.util.Iterator;
 import java.util.List;
 
-public class ArrayTable implements Table {
+public class ArrayTable extends ATable {
 
-  protected final List<Field> headers;
   protected final List<List<Object>> rows;
-  protected final List<? extends Measure> measures;
-  protected final int[] measureIndices;
 
   public ArrayTable(List<Field> headers,
-                    List<? extends Measure> measures,
+                    List<Measure> measures,
                     int[] measureIndices,
+                    int[] columnsIndices,
                     List<List<Object>> rows) {
-    this.headers = headers;
-    this.measures = measures;
-    this.measureIndices = measureIndices;
+    super(headers, measures, measureIndices, columnsIndices);
     this.rows = rows;
   }
 
   @Override
-  public List<? extends Measure> measures() {
-    return this.measures;
-  }
-
-  @Override
-  public int[] measureIndices() {
-    return this.measureIndices;
-  }
-
-  @Override
-  public List<Field> headers() {
-    return this.headers;
+  public void addAggregates(Field field, Measure measure, List<Object> values) {
+//    this.headers.add(field);
+//    this.measures.add(measure);
+//    this.measureIndices = Arrays.copyOf(this.measureIndices, this.measureIndices.length + 1);
+//    this.measureIndices[this.measureIndices.length - 1] = this.measures.size();
+//    this.values.add(values);
+    throw new RuntimeException("not right path");
   }
 
   @Override
@@ -43,17 +34,7 @@ public class ArrayTable implements Table {
   }
 
   @Override
-  public void show(int numRows) {
-    System.out.println(this);
-  }
-
-  @Override
   public Iterator<List<Object>> iterator() {
     return this.rows.iterator();
-  }
-
-  @Override
-  public String toString() {
-    return TableUtils.toString(this.headers, this.rows, f -> ((Field) f).name(), String::valueOf);
   }
 }

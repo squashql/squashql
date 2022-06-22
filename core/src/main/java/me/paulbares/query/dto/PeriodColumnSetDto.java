@@ -1,9 +1,14 @@
 package me.paulbares.query.dto;
 
+import me.paulbares.query.BinaryOperationMeasure.PeriodUnit;
 import me.paulbares.query.ColumnSet;
 import me.paulbares.store.Field;
 
 import java.util.List;
+import java.util.Map;
+
+import static me.paulbares.query.BinaryOperationMeasure.PeriodUnit.QUARTER;
+import static me.paulbares.query.BinaryOperationMeasure.PeriodUnit.YEAR;
 
 public class PeriodColumnSetDto implements ColumnSet {
 
@@ -29,16 +34,22 @@ public class PeriodColumnSetDto implements ColumnSet {
   }
 
   public static List<String> getColumnsForPrefetching(Period period) {
-    if (period instanceof Period.QuarterFromMonthYear q) {
-      return List.of(q.year(), q.month());
-    } else if (period instanceof Period.QuarterFromDate q) {
-      return List.of(q.date());
-    } else if (period instanceof Period.YearFromDate y) {
-      return List.of(y.date());
+    if (period instanceof Period.Quarter q) {
+      return List.of(q.year(), q.quarter());
     } else if (period instanceof Period.Year y) {
       return List.of(y.year());
     } else {
       throw new RuntimeException(period + " not supported yet");
+    }
+  }
+
+  public Map<PeriodUnit, String> mapping() {
+    if (this.period instanceof Period.Quarter q) {
+      return Map.of(QUARTER, q.quarter(), YEAR, q.year());
+    } else if (this.period instanceof Period.Year y) {
+      return Map.of(YEAR, y.year());
+    } else {
+      throw new RuntimeException(this.period + " not supported yet");
     }
   }
 
@@ -51,12 +62,8 @@ public class PeriodColumnSetDto implements ColumnSet {
   }
 
   public static List<Field> getNewColumns(Period period) {
-    if (period instanceof Period.QuarterFromMonthYear q) {
-      return List.of(new Field(q.year(), String.class), new Field("quarter", String.class));
-    } else if (period instanceof Period.QuarterFromDate) {
-      return List.of(new Field("year", String.class), new Field("quarter", String.class));
-    } else if (period instanceof Period.YearFromDate) {
-      return List.of(new Field("year", String.class));
+    if (period instanceof Period.Quarter q) {
+      return List.of(new Field(q.year(), int.class), new Field(q.quarter(), int.class));
     } else if (period instanceof Period.Year y) {
       return List.of(new Field(y.year(), String.class));
     } else {

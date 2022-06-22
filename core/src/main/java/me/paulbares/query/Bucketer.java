@@ -64,8 +64,9 @@ public class Bucketer {
             .newWithAll(newColumns)
             .newWithAll(aggregatedFields)
             .castToList(),
-            aggregatedMeasures,
+            null,
             IntStream.range(columnSize, columnSize + aggregatedFields.size()).toArray(),
+            IntStream.range(0, columnSize).toArray(),
             rows);
 
     return new Holder(arrayTable, originalColumns, newColumns, aggregatedFields, aggregatedMeasures, dictionary, aggregator);

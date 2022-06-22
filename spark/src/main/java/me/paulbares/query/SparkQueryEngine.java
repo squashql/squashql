@@ -25,6 +25,7 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
     return new DatasetTable(ds,
             query.measures,
             IntStream.range(query.coordinates.size(), query.coordinates.size() + query.measures.size()).toArray(),
+            IntStream.range(0, query.coordinates.size()).toArray(),
             this.datastore.storesByName().get(query.table.name).scenarioFieldName());
   }
 }

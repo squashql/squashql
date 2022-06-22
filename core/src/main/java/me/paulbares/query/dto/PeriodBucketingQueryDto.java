@@ -20,11 +20,10 @@ public class PeriodBucketingQueryDto {
 
   @JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT, use = JsonTypeInfo.Id.NAME)
   @JsonSubTypes({
+          @JsonSubTypes.Type(value = Period.Month.class, name = Period.Quarter.JSON_KEY),
           @JsonSubTypes.Type(value = Period.Quarter.class, name = Period.Quarter.JSON_KEY),
-          @JsonSubTypes.Type(value = Period.QuarterFromDate.class, name = Period.QuarterFromDate.JSON_KEY),
-          @JsonSubTypes.Type(value = Period.QuarterFromMonthYear.class, name = Period.QuarterFromMonthYear.JSON_KEY),
           @JsonSubTypes.Type(value = Period.Semester.class, name = Period.Semester.JSON_KEY),
-          @JsonSubTypes.Type(value = Period.SemesterFromDate.class, name = Period.SemesterFromDate.JSON_KEY)
+          @JsonSubTypes.Type(value = Period.Year.class, name = Period.Year.JSON_KEY),
   })
   public Period period;
 

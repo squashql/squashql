@@ -12,10 +12,7 @@ import me.paulbares.store.Field;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
 import java.time.LocalDate;
-import java.time.Month;
-import java.time.temporal.ChronoField;
 import java.time.temporal.IsoFields;
-import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,6 +47,7 @@ public class PeriodBucketingExecutor {
                     indexColsToBucket,
                     aggregatedMeasures,
                     PeriodColumnSetDto.getNewColumns(query.period),
+                    // FIXME dummy operation now because toBucketColumnValues return itself.
                     toBucketColumnValues -> Collections.singletonList(getBucketValues(query.period, toBucketColumnValues)));
   }
 
@@ -122,6 +120,7 @@ public class PeriodBucketingExecutor {
             .castToList(),
             query.measures,
             IntStream.range(columnSize, columnSize + measureFields.size()).toArray(),
+            IntStream.range(0, columnSize).toArray(),
             newRows);
   }
 
@@ -181,7 +180,7 @@ public class PeriodBucketingExecutor {
     }
 
     public void execute(Object[] position) {
-      if (this.period instanceof Period.QuarterFromMonthYear || this.period instanceof Period.QuarterFromDate) {
+      if (this.period instanceof Period.Quarter) {
         // YEAR, QUARTER
         int year = (int) position[0];
         if (this.referencePosition.containsKey(BinaryOperationMeasure.PeriodUnit.YEAR)) {
@@ -193,12 +192,12 @@ public class PeriodBucketingExecutor {
           int quarter = (int) position[1];
           if (this.transformations[1] != null) {
             LocalDate d = LocalDate.of((Integer) position[0], quarter * 3, 1);
-            LocalDate newd = d.plusMonths(((int) this.transformations[1]) * 3);
-            position[1] = (int) IsoFields.QUARTER_OF_YEAR.getFrom(newd);
-            position[0] = newd.getYear(); // year might have changed
+            LocalDate newDate = d.plusMonths(((int) this.transformations[1]) * 3);
+            position[1] = (int) IsoFields.QUARTER_OF_YEAR.getFrom(newDate);
+            position[0] = newDate.getYear(); // year might have changed
           }
         }
-      } else if (this.period instanceof Period.YearFromDate || this.period instanceof Period.Year) {
+      } else if (this.period instanceof Period.Year) {
         // YEAR
         int year = (int) position[0];
         if (this.referencePosition.containsKey(BinaryOperationMeasure.PeriodUnit.YEAR)) {
@@ -212,11 +211,9 @@ public class PeriodBucketingExecutor {
     }
 
     private static BinaryOperationMeasure.PeriodUnit[] getPeriodUnits(Period period) {
-      if (period instanceof Period.QuarterFromMonthYear) {
+      if (period instanceof Period.Quarter) {
         return new BinaryOperationMeasure.PeriodUnit[]{BinaryOperationMeasure.PeriodUnit.YEAR, BinaryOperationMeasure.PeriodUnit.QUARTER};
-      } else if (period instanceof Period.QuarterFromDate) {
-        return new BinaryOperationMeasure.PeriodUnit[]{BinaryOperationMeasure.PeriodUnit.YEAR, BinaryOperationMeasure.PeriodUnit.QUARTER};
-      } else if (period instanceof Period.YearFromDate || period instanceof Period.Year) {
+      } else if (period instanceof Period.Year) {
         return new BinaryOperationMeasure.PeriodUnit[]{BinaryOperationMeasure.PeriodUnit.YEAR};
       } else {
         throw new RuntimeException(period + " not supported yet");
@@ -226,18 +223,10 @@ public class PeriodBucketingExecutor {
   }
 
   private Object[] getBucketValues(Period period, List<Object> args) {
-    if (period instanceof Period.QuarterFromMonthYear) {
+    if (period instanceof Period.Quarter) {
       assert args.size() == 2;
       // args must be of size 2 and contain [year, month]. 1 <= month <= 2
-      return new Object[]{args.get(0), (int) IsoFields.QUARTER_OF_YEAR.getFrom(Month.of((Integer) args.get(1)))};
-    } else if (period instanceof Period.QuarterFromDate) {
-      assert args.size() == 1;
-      TemporalAccessor date = (TemporalAccessor) args.get(0);
-      return new Object[]{date.get(ChronoField.YEAR), (int) IsoFields.QUARTER_OF_YEAR.getFrom(date)};
-    } else if (period instanceof Period.YearFromDate) {
-      assert args.size() == 1;
-      TemporalAccessor date = (TemporalAccessor) args.get(0);
-      return new Object[]{date.get(ChronoField.YEAR)};
+      return new Object[]{args.get(0), args.get(1)};
     } else if (period instanceof Period.Year) {
       assert args.size() == 1;
       return new Object[]{args.get(0)};

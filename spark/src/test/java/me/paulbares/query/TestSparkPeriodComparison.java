@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Disabled;
 import java.util.List;
 
 @Disabled
-public class TestSparkPeriodBucketing extends ATestPeriodBucketing {
+public class TestSparkPeriodComparison extends ATestPeriodComparison {
 
   @Override
   protected void beforeLoading(List<Field> fields) {
