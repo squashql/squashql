@@ -2,6 +2,7 @@ package me.paulbares.query;
 
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.context.Repository;
+import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.ConditionType;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.SingleValueConditionDto;
@@ -41,6 +42,7 @@ public abstract class ATestQueryEngine {
   protected abstract QueryEngine createQueryEngine(Datastore datastore);
 
   protected abstract Datastore createDatastore();
+
   protected abstract TransactionManager createTransactionManager();
 
   @BeforeAll
@@ -135,7 +137,7 @@ public abstract class ATestQueryEngine {
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactly(
             Arrays.asList(GRAND_TOTAL, null, null, 15.d + 17.d + 14.5d, 33 * 3l),
-            Arrays.asList("base", TOTAL, null,  15.0d, 33l),
+            Arrays.asList("base", TOTAL, null, 15.0d, 33l),
             Arrays.asList("base", "cloth", TOTAL, 10.0d, 3l),
             Arrays.asList("base", "cloth", "shirt", 10.0d, 3l),
             Arrays.asList("base", "drink", TOTAL, 2.0d, 10l),
@@ -143,7 +145,7 @@ public abstract class ATestQueryEngine {
             Arrays.asList("base", "food", TOTAL, 3.0d, 20l),
             Arrays.asList("base", "food", "cookie", 3.0d, 20l),
 
-            Arrays.asList("s1", TOTAL, null,  17.0d, 33l),
+            Arrays.asList("s1", TOTAL, null, 17.0d, 33l),
             Arrays.asList("s1", "cloth", TOTAL, 10.0d, 3l),
             Arrays.asList("s1", "cloth", "shirt", 10.0d, 3l),
             Arrays.asList("s1", "drink", TOTAL, 4.0d, 10l),
@@ -151,7 +153,7 @@ public abstract class ATestQueryEngine {
             Arrays.asList("s1", "food", TOTAL, 3.0d, 20l),
             Arrays.asList("s1", "food", "cookie", 3.0d, 20l),
 
-            Arrays.asList("s2", TOTAL, null,  14.5d, 33l),
+            Arrays.asList("s2", TOTAL, null, 14.5d, 33l),
             Arrays.asList("s2", "cloth", TOTAL, 10.0d, 3l),
             Arrays.asList("s2", "cloth", "shirt", 10.0d, 3l),
             Arrays.asList("s2", "drink", TOTAL, 1.5d, 10l),
@@ -178,7 +180,7 @@ public abstract class ATestQueryEngine {
             Arrays.asList("base", "drink", TOTAL, 2.0d, 10l),
             Arrays.asList("base", "food", "cookie", 3.0d, 20l),
             Arrays.asList("base", "food", TOTAL, 3.0d, 20l),
-            Arrays.asList("base", TOTAL, null,  15.0d, 33l),
+            Arrays.asList("base", TOTAL, null, 15.0d, 33l),
 
             Arrays.asList("s1", "cloth", "shirt", 10.0d, 3l),
             Arrays.asList("s1", "cloth", TOTAL, 10.0d, 3l),
@@ -186,7 +188,7 @@ public abstract class ATestQueryEngine {
             Arrays.asList("s1", "drink", TOTAL, 4.0d, 10l),
             Arrays.asList("s1", "food", "cookie", 3.0d, 20l),
             Arrays.asList("s1", "food", TOTAL, 3.0d, 20l),
-            Arrays.asList("s1", TOTAL, null,  17.0d, 33l),
+            Arrays.asList("s1", TOTAL, null, 17.0d, 33l),
 
             Arrays.asList("s2", "cloth", "shirt", 10.0d, 3l),
             Arrays.asList("s2", "cloth", TOTAL, 10.0d, 3l),
@@ -194,7 +196,7 @@ public abstract class ATestQueryEngine {
             Arrays.asList("s2", "drink", TOTAL, 1.5d, 10l),
             Arrays.asList("s2", "food", "cookie", 3.0d, 20l),
             Arrays.asList("s2", "food", TOTAL, 3.0d, 20l),
-            Arrays.asList("s2", TOTAL, null,  14.5d, 33l),
+            Arrays.asList("s2", TOTAL, null, 14.5d, 33l),
             Arrays.asList(GRAND_TOTAL, null, null, 15.d + 17.d + 14.5d, 33 * 3l));
   }
 
@@ -264,9 +266,9 @@ public abstract class ATestQueryEngine {
             .wildcardCoordinate(SCENARIO_FIELD_NAME);
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
-                    List.of(MAIN_SCENARIO_NAME),
-                    List.of("s1"),
-                    List.of("s2"));
+            List.of(MAIN_SCENARIO_NAME),
+            List.of("s1"),
+            List.of("s2"));
   }
 
   @Test
@@ -281,9 +283,9 @@ public abstract class ATestQueryEngine {
     Map map = JacksonUtil.mapper.readValue(actual, Map.class);
     Assertions.assertThat((List) map.get("columns")).containsExactly(SCENARIO_FIELD_NAME, "sum(price)", "sum(quantity)");
     Assertions.assertThat((List) map.get("rows")).containsExactlyInAnyOrder(
-                    List.of("base", 15d, 33),
-                    List.of("s1", 17d, 33),
-                    List.of("s2", 14.5d, 33));
+            List.of("base", 15d, 33),
+            List.of("s1", 17d, 33),
+            List.of("s2", 14.5d, 33));
   }
 
   @Test
@@ -319,21 +321,28 @@ public abstract class ATestQueryEngine {
   /**
    * https://clickhouse.com/docs/en/sql-reference/aggregate-functions/combinators/#-if. Such function does not exist in
    * Spark.
-   *
+   * <p>
    * {@code sumIf(quantity, category = 'food' OR category = 'drink')}
    */
   @Test
   void testSumIf() {
+    ConditionDto or = QueryBuilder.eq("food").or(QueryBuilder.eq("drink"));
+
     QueryDto query = new QueryDto()
             .table(this.storeName)
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .expressionMeasure(
                     "quantity if food or drink",
-                    "sum(case when category = 'food' OR category = 'drink' then quantity end)");
+                    "sum(case when category = 'food' OR category = 'drink' then quantity end)")
+            .aggregatedMeasure("quantity", "sum", "category", or);
     Table result = this.queryEngine.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
-            List.of("base", 30l),
-            List.of("s1", 30l),
-            List.of("s2", 30l));
+            List.of("base", 30l, 30l),
+            List.of("s1", 30l, 30l),
+            List.of("s2", 30l, 30l));
+
+    // FIXME alias of agg measure is not used yet but it should
+    //    Assertions.assertThat(result.headers().stream().map(Field::name)).containsExactlyInAnyOrder(
+    //            SCENARIO_FIELD_NAME, "quantity if food or drink");
   }
 }

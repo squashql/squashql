@@ -65,6 +65,11 @@ public class QueryDto {
         return this;
     }
 
+  public QueryDto aggregatedMeasure(String field, String agg, String conditionField, ConditionDto conditionDto) {
+    this.measures.add(new AggregatedMeasure(field, agg, conditionField, conditionDto));
+    return this;
+  }
+
     public QueryDto expressionMeasure(String alias, String expression) {
         this.measures.add(new ExpressionMeasure(alias, expression));
         return this;
