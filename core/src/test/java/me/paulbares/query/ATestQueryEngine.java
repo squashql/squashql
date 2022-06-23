@@ -317,7 +317,10 @@ public abstract class ATestQueryEngine {
   }
 
   /**
-   * https://clickhouse.com/docs/en/sql-reference/aggregate-functions/combinators/#-if
+   * https://clickhouse.com/docs/en/sql-reference/aggregate-functions/combinators/#-if. Such function does not exist in
+   * Spark.
+   *
+   * {@code sumIf(quantity, category = 'food' OR category = 'drink')}
    */
   @Test
   void testSumIf() {
@@ -326,7 +329,7 @@ public abstract class ATestQueryEngine {
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .expressionMeasure(
                     "quantity if food or drink",
-                    "sumIf(quantity, category = 'food' OR category = 'drink')");
+                    "sum(case when category = 'food' OR category = 'drink' then quantity end)");
     Table result = this.queryEngine.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("base", 30l),
