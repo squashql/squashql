@@ -107,7 +107,10 @@ public class NewQueryExecutor {
                         List<String> buckets = bucketsByValue.get(value);
                         return buckets.stream().map(b -> new Object[]{b, value}).toList();
                       });
-      intermediateResult = holder.table();
+//      intermediateResult = holder.table();
+      // FIXME use the NewBucketer
+
+      new NewBucketer(null).executeBucketing(intermediateResult, columnSet);
       return intermediateResult;
     }
 
