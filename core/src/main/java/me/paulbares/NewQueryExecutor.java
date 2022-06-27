@@ -7,9 +7,6 @@ import me.paulbares.query.dto.NewQueryDto;
 import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
-import org.eclipse.collections.api.list.primitive.MutableIntList;
-import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
 
 import java.util.*;
 import java.util.stream.IntStream;
@@ -73,45 +70,45 @@ public class NewQueryExecutor {
     if (query.columnSets.containsKey(NewQueryDto.BUCKET)) {
       // Now bucket...
       BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(NewQueryDto.BUCKET);
-      Map<String, List<String>> bucketsByValue = new HashMap<>();
-      for (Pair<String, List<String>> value : columnSet.values) {
-        for (String v : value.getTwo()) {
-          bucketsByValue
-                  .computeIfAbsent(v, k -> new ArrayList<>())
-                  .add(value.getOne());
-        }
-      }
-
-      List<String> r = intermediateResult.headers().stream().map(Field::name).toList();
-      int[] indexColsToBucket = new int[1];
-      int[] indexColAggregates = intermediateResult.measureIndices();
-      MutableIntList indexColsToLeaveList = new IntArrayList();
-      for (int i = 0; i < r.size(); i++) {
-        if (columnSet.getColumnsForPrefetching().contains(r.get(i))) {
-          indexColsToBucket[0] = i;
-        } else if (Arrays.binarySearch(indexColAggregates, i) < 0) {
-          indexColsToLeaveList.add(i);
-        }
-      }
-      int[] indexColsToLeave = indexColsToLeaveList.toArray();
-
-      Bucketer.Holder holder = new Bucketer(this.queryEngine)
-              .executeBucketing(intermediateResult,
-                      indexColsToLeave,
-                      indexColAggregates,
-                      indexColsToBucket,
-                      intermediateResult.measures().stream().map(AggregatedMeasure.class::cast).toList(),
-                      columnSet.getNewColumns(),
-                      toBucketColumnValues -> {
-                        String value = (String) toBucketColumnValues.get(0);
-                        List<String> buckets = bucketsByValue.get(value);
-                        return buckets.stream().map(b -> new Object[]{b, value}).toList();
-                      });
+//      Map<String, List<String>> bucketsByValue = new HashMap<>();
+//      for (Pair<String, List<String>> value : columnSet.values) {
+//        for (String v : value.getTwo()) {
+//          bucketsByValue
+//                  .computeIfAbsent(v, k -> new ArrayList<>())
+//                  .add(value.getOne());
+//        }
+//      }
+//
+//      List<String> r = intermediateResult.headers().stream().map(Field::name).toList();
+//      int[] indexColsToBucket = new int[1];
+//      int[] indexColAggregates = intermediateResult.measureIndices();
+//      MutableIntList indexColsToLeaveList = new IntArrayList();
+//      for (int i = 0; i < r.size(); i++) {
+//        if (columnSet.getColumnsForPrefetching().contains(r.get(i))) {
+//          indexColsToBucket[0] = i;
+//        } else if (Arrays.binarySearch(indexColAggregates, i) < 0) {
+//          indexColsToLeaveList.add(i);
+//        }
+//      }
+//      int[] indexColsToLeave = indexColsToLeaveList.toArray();
+//
+//      Bucketer.Holder holder = new Bucketer(this.queryEngine)
+//              .executeBucketing(intermediateResult,
+//                      indexColsToLeave,
+//                      indexColAggregates,
+//                      indexColsToBucket,
+//                      intermediateResult.measures().stream().map(AggregatedMeasure.class::cast).toList(),
+//                      columnSet.getNewColumns(),
+//                      toBucketColumnValues -> {
+//                        String value = (String) toBucketColumnValues.get(0);
+//                        List<String> buckets = bucketsByValue.get(value);
+//                        return buckets.stream().map(b -> new Object[]{b, value}).toList();
+//                      });
 //      intermediateResult = holder.table();
       // FIXME use the NewBucketer
 
-      new NewBucketer(null).executeBucketing(intermediateResult, columnSet);
-      return intermediateResult;
+      return new NewBucketer(null).executeBucketing(intermediateResult, columnSet);
+//      return intermediateResult;
     }
 
     // Once complete, construct the final result with columns in correct order.

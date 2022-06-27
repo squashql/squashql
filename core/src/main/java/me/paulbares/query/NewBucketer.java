@@ -4,8 +4,10 @@ import me.paulbares.query.agg.SumAggregator;
 import me.paulbares.query.dictionary.ObjectArrayDictionary;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.store.Field;
+import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 
 import java.util.ArrayList;
@@ -45,51 +47,50 @@ public class NewBucketer {
     }
     MutableIntSet indexColsInPrefetch = new IntHashSet();
     List<Field> newColumns = bucketColumnSetDto.getNewColumns();
+    List<Field> finalHeaders = new ArrayList<>(intermediateResult.headers());
+    MutableIntList columnIndices = new IntArrayList(intermediateResult.columnIndices());
     for (int j = 0; j < newColumns.size(); j++) {
-      if (!bucketColumnSetDto.getColumnsForPrefetching().contains(newColumns.get(j).name())) {
+      Field field = newColumns.get(j);
+      if (!bucketColumnSetDto.getColumnsForPrefetching().contains(field.name())) {
         indexColsInPrefetch.add(j);
+      }
+
+      if (!intermediateResult.headers().contains(field)) {
+        finalHeaders.add(field); // append to the end
+        columnIndices.add(finalHeaders.size() - 1);
       }
     }
 
-    List<List<Object>> newRows = new ArrayList<>();
+    List<List<Object>> newColumnValues = new ArrayList<>();
+    for (int j = 0; j < finalHeaders.size(); j++) {
+      newColumnValues.add(new ArrayList<>());
+    }
+
+    int originalHeadersSize = intermediateResult.headers().size();
     for (List<Object> row : intermediateResult) {
       List<Object> toBucketColumnValues = get(indexColsToBucket, row);
       List<Object[]> bucketValuesList = bucketer.apply(toBucketColumnValues);
+
       for (Object[] bucketValues : bucketValuesList) {
-        List<Object> newRow = new ArrayList<>(row);
+        // Pure copy for everything before
+        for (int j = 0; j < originalHeadersSize; j++) {
+          newColumnValues.get(j).add(row.get(j));
+        }
         for (int j = 0; j < bucketValues.length; j++) {
           if (indexColsInPrefetch.contains(j)) {
-            newRow.add(bucketValues[j]);
+            newColumnValues.get(j + originalHeadersSize).add(bucketValues[j]);
           }
         }
-        newRows.add(newRow);
       }
     }
 
-    System.out.println();
-
-    // Once the aggregation is done, build the table
-//    List<List<Object>> rows = new ArrayList<>();
-//    dictionary.forEach((points, row) -> {
-//      List<Object> r = new ArrayList<>();
-//      r.addAll(Arrays.asList(points));
-//      r.addAll(aggregator.getAggregates(row));
-//      rows.add(r);
-//    });
-
-//    List<Field> originalColumns = get(indexColsToLeave, intermediateResults.headers());
-//    int columnSize = originalColumns.size() + newColumns.size();
-//    Table arrayTable = new ArrayTable(ImmutableListFactoryImpl.INSTANCE
-//            .withAll(originalColumns)
-//            .newWithAll(newColumns)
-//            .newWithAll(aggregatedFields)
-//            .castToList(),
-//            null,
-//            IntStream.range(columnSize, columnSize + aggregatedFields.size()).toArray(),
-//            IntStream.range(0, columnSize).toArray(),
-//            rows);
-
-    return null;
+    // FIXME should we reorder the columns here?
+    return new ColumnarTable(
+            finalHeaders,
+            intermediateResult.measures(),
+            intermediateResult.measureIndices(),
+            columnIndices.toArray(),
+            newColumnValues);
   }
 
   public static <T> List<T> get(int[] indices, List<T> list) {
