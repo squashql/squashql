@@ -1,7 +1,5 @@
 package me.paulbares.query;
 
-import me.paulbares.query.agg.SumAggregator;
-import me.paulbares.query.dictionary.ObjectArrayDictionary;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.store.Field;
 import org.eclipse.collections.api.list.primitive.MutableIntList;
@@ -26,33 +24,21 @@ public class NewBucketer {
 
   public Table executeBucketing(Table intermediateResult,
                                 BucketColumnSetDto bucketColumnSetDto) {
-    Map<String, List<String>> bucketsByValue = new HashMap<>();
-    for (Pair<String, List<String>> value : bucketColumnSetDto.values) {
-      for (String v : value.getTwo()) {
-        bucketsByValue
-                .computeIfAbsent(v, k -> new ArrayList<>())
-                .add(value.getOne());
-      }
-    }
-    Function<List<Object>, List<Object[]>> bucketer = toBucketColumnValues -> {
-      String value = (String) toBucketColumnValues.get(0);
-      List<String> buckets = bucketsByValue.get(value);
-      return buckets.stream().map(b -> new Object[]{b, value}).toList();
-    };
+    Function<List<Object>, List<Object[]>> bucketer = createBucketer(bucketColumnSetDto);
 
-    int[] indexColsToBucket = new int[bucketColumnSetDto.getColumnsForPrefetching().size()];
-    int i = 0;
-    for (String col : bucketColumnSetDto.getColumnsForPrefetching()) {
-      indexColsToBucket[i++] = intermediateResult.columnIndex(col);
+    int[] indexColumnsToRead = new int[bucketColumnSetDto.getColumnsForPrefetching().size()];
+    for (int i = 0; i < bucketColumnSetDto.getColumnsForPrefetching().size(); i++) {
+      indexColumnsToRead[i] = intermediateResult.columnIndex(bucketColumnSetDto.getColumnsForPrefetching().get(i));
     }
+
     MutableIntSet indexColsInPrefetch = new IntHashSet();
     List<Field> newColumns = bucketColumnSetDto.getNewColumns();
     List<Field> finalHeaders = new ArrayList<>(intermediateResult.headers());
     MutableIntList columnIndices = new IntArrayList(intermediateResult.columnIndices());
-    for (int j = 0; j < newColumns.size(); j++) {
-      Field field = newColumns.get(j);
+    for (int i = 0; i < newColumns.size(); i++) {
+      Field field = newColumns.get(i);
       if (!bucketColumnSetDto.getColumnsForPrefetching().contains(field.name())) {
-        indexColsInPrefetch.add(j);
+        indexColsInPrefetch.add(i);
       }
 
       if (!intermediateResult.headers().contains(field)) {
@@ -67,18 +53,18 @@ public class NewBucketer {
     }
 
     int originalHeadersSize = intermediateResult.headers().size();
+    List<Object> buffer = new ArrayList<>(indexColumnsToRead.length);
     for (List<Object> row : intermediateResult) {
-      List<Object> toBucketColumnValues = get(indexColsToBucket, row);
-      List<Object[]> bucketValuesList = bucketer.apply(toBucketColumnValues);
-
+      transferValues(indexColumnsToRead, buffer, row);
+      List<Object[]> bucketValuesList = bucketer.apply(buffer);
       for (Object[] bucketValues : bucketValuesList) {
         // Pure copy for everything before
-        for (int j = 0; j < originalHeadersSize; j++) {
-          newColumnValues.get(j).add(row.get(j));
+        for (int i = 0; i < originalHeadersSize; i++) {
+          newColumnValues.get(i).add(row.get(i));
         }
-        for (int j = 0; j < bucketValues.length; j++) {
-          if (indexColsInPrefetch.contains(j)) {
-            newColumnValues.get(j + originalHeadersSize).add(bucketValues[j]);
+        for (int i = 0; i < bucketValues.length; i++) {
+          if (indexColsInPrefetch.contains(i)) {
+            newColumnValues.get(i + originalHeadersSize).add(bucketValues[i]);
           }
         }
       }
@@ -93,20 +79,26 @@ public class NewBucketer {
             newColumnValues);
   }
 
-  public static <T> List<T> get(int[] indices, List<T> list) {
-    List<T> subList = new ArrayList<>();
-    for (int index : indices) {
-      subList.add(list.get(index));
+  private Function<List<Object>, List<Object[]>> createBucketer(BucketColumnSetDto bucketColumnSetDto) {
+    Map<String, List<String>> bucketsByValue = new HashMap<>();
+    for (Pair<String, List<String>> value : bucketColumnSetDto.values) {
+      for (String v : value.getTwo()) {
+        bucketsByValue
+                .computeIfAbsent(v, k -> new ArrayList<>())
+                .add(value.getOne());
+      }
     }
-    return subList;
+    Function<List<Object>, List<Object[]>> bucketer = toBucketColumnValues -> {
+      String value = (String) toBucketColumnValues.get(0);
+      List<String> buckets = bucketsByValue.get(value);
+      return buckets.stream().map(b -> new Object[]{b, value}).toList();
+    };
+    return bucketer;
   }
 
-  public record Holder(Table table,
-                       List<Field> originalColumns,
-                       List<Field> newColumns,
-                       List<Field> aggregatedFields,
-                       List<AggregatedMeasure> aggregatedMeasures,
-                       ObjectArrayDictionary dictionary,
-                       SumAggregator aggregator) {
+  public static <T> void transferValues(int[] indices, List<Object> buffer, List<T> list) {
+    for (int index : indices) {
+      buffer.add(list.get(index));
+    }
   }
 }
