@@ -14,12 +14,14 @@ import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.ScenarioComparisonDto;
 import me.paulbares.query.dto.ScenarioGroupingQueryDto;
 import me.paulbares.query.dto.TableDto;
+import me.paulbares.spring.config.DatasetTestConfig;
 import me.paulbares.store.Datastore;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -36,7 +38,8 @@ import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
 import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(properties = "spring.main.allow-bean-definition-overriding=true")
+@Import(DatasetTestConfig.class)
 @AutoConfigureMockMvc
 public class SparkQueryControllerTest {
 
