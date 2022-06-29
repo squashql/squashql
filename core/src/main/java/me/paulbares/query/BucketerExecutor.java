@@ -64,7 +64,6 @@ public class BucketerExecutor {
       }
     }
 
-    // FIXME should we reorder the columns here?
     return new ColumnarTable(
             finalHeaders,
             intermediateResult.measures(),

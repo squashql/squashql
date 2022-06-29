@@ -194,13 +194,13 @@ public abstract class ATestNewQueryExecutor {
   }
 
   @Test
-  void test() {
+  void testBucketComparison() {
     String groupOfScenario = "Group of scenario";
     BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"))
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "down", "up"));
-    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(new Period.Quarter("quarter_sales", "year_sales"));
+//    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(new Period.Quarter("quarter_sales", "year_sales"));
 
     AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
     BinaryOperationMeasure salesGroupComp = new BinaryOperationMeasure(
@@ -212,33 +212,41 @@ public abstract class ATestNewQueryExecutor {
                     groupOfScenario, "g"
             ));
 
-    BinaryOperationMeasure salesYearComp = new BinaryOperationMeasure(
-            "salesYearComp",
-            BinaryOperations.DIVIDE,
-            sales,
-            Map.of(
-                    BinaryOperationMeasure.PeriodUnit.QUARTER.name(), "q",
-                    BinaryOperationMeasure.PeriodUnit.YEAR.name(), "y-1"
-            ));
-
-    BinaryOperationMeasure myMeasureGroupComp = new BinaryOperationMeasure(
-            "myMeasureGroupComp",
-            BinaryOperations.ABS_DIFF,
-            salesYearComp,
-            Map.of(
-                    SCENARIO_FIELD_NAME, "s-1",
-                    groupOfScenario, "g"
-            ));
+//    BinaryOperationMeasure salesYearComp = new BinaryOperationMeasure(
+//            "salesYearComp",
+//            BinaryOperations.DIVIDE,
+//            sales,
+//            Map.of(
+//                    BinaryOperationMeasure.PeriodUnit.QUARTER.name(), "q",
+//                    BinaryOperationMeasure.PeriodUnit.YEAR.name(), "y-1"
+//            ));
+//
+//    BinaryOperationMeasure myMeasureGroupComp = new BinaryOperationMeasure(
+//            "myMeasureGroupComp",
+//            BinaryOperations.ABS_DIFF,
+//            salesYearComp,
+//            Map.of(
+//                    SCENARIO_FIELD_NAME, "s-1",
+//                    groupOfScenario, "g"
+//            ));
 
     var query = new NewQueryDto()
             .table(this.storeName)
             .withColumnSet(NewQueryDto.BUCKET, bucketCS)
-            .withColumnSet(NewQueryDto.PERIOD, periodCS)
 //            .withMetric(myMeasureGroupComp)
-//            .withMetric(salesGroupComp)
-            .withMetric(sales);
+            .withMetric(salesGroupComp)
+            .withMetric(sales)
+            ;
 
     Table execute = this.executor.execute(query);
-    System.out.println(execute);
+    double base = 240d, up = 320d, down = 160d;
+    Assertions.assertThat(execute).containsExactlyInAnyOrder(
+            List.of("group1", MAIN_SCENARIO_NAME, 0d, base),
+            List.of("group1", "up", up - base, up),
+            List.of("group2", MAIN_SCENARIO_NAME, 0d, base),
+            List.of("group2", "down", down - base, down),
+            List.of("group3", MAIN_SCENARIO_NAME, 0d, base),
+            List.of("group3", "down", down - base, down),
+            List.of("group3", "up", up - down, up));
   }
 }

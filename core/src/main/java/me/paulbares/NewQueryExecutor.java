@@ -70,6 +70,27 @@ public class NewQueryExecutor {
       // Now bucket...
       BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(NewQueryDto.BUCKET);
       intermediateResult[0] = BucketerExecutor.bucket(intermediateResult[0], columnSet);
+
+      // TODO execute bucket comparison.
+      graphByMeasure.forEach((m, graph) -> {
+        Measure last = graph.pollLast();
+        aggregateValuesByMeasure.computeIfAbsent(last, intermediateResult[0]::getAggregateValues);
+        while ((last = graph.pollLast()) != null) {
+          aggregateValuesByMeasure.computeIfAbsent(last, measure -> {
+            if (measure instanceof BinaryOperationMeasure bom) {
+              List<Object> agg = BucketComparisonExecutor.compare(bom, columnSet, intermediateResult[0]);
+              String newName = bom.alias == null
+                      ? String.format("%s(%s, %s)", bom.method, bom.measure.alias(), bom.referencePosition)
+                      : bom.alias;
+              Field field = new Field(newName, BinaryOperations.getOutputType(bom.method, intermediateResult[0].getField(bom.measure).type()));
+              intermediateResult[0].addAggregates(field, bom, agg);
+              return agg;
+            } else {
+              throw new IllegalStateException("unexpected measure type " + measure.getClass());
+            }
+          });
+        }
+      });
     }
 
     // Once complete, construct the final result with columns in correct order.

@@ -73,7 +73,10 @@ public class PeriodComparisonExecutor {
       PeriodUnit[] periodUnits = getPeriodUnits(period);
       this.transformationByPeriodUnit = new HashMap<>();
       for (int i = 0; i < periodUnits.length; i++) {
-        this.transformationByPeriodUnit.put(periodUnits[i], parse(referencePosition.get(periodUnits[i])));
+        Object parse = parse(referencePosition.get(periodUnits[i]));
+        if (parse != null) {
+          this.transformationByPeriodUnit.put(periodUnits[i], parse);
+        }
       }
     }
 
@@ -136,6 +139,5 @@ public class PeriodComparisonExecutor {
         throw new RuntimeException(period + " not supported yet");
       }
     }
-
   }
 }
