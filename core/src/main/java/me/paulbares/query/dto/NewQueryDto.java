@@ -5,10 +5,7 @@ import me.paulbares.jackson.deserializer.ContextValueDeserializer;
 import me.paulbares.query.*;
 import me.paulbares.query.context.ContextValue;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class NewQueryDto {
 
@@ -19,7 +16,7 @@ public class NewQueryDto {
 
   public List<String> columns = new ArrayList<>();
 
-  public Map<String, ColumnSet> columnSets = new HashMap<>();
+  public Map<String, ColumnSet> columnSets = new LinkedHashMap<>();
 
   public List<Measure> measures = new ArrayList<>();
 

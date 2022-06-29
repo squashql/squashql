@@ -43,7 +43,7 @@ public interface Table extends Iterable<List<Object>> {
   }
 
   default Field getField(String column) {
-    return headers().get(columnIndices()[columnIndex(column)]);
+    return headers().get(columnIndex(column));
   }
 
   List<Measure> measures();

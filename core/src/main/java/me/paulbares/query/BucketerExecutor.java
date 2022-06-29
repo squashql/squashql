@@ -14,17 +14,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-public class NewBucketer {
+public class BucketerExecutor {
 
-  public final QueryEngine queryEngine;
-
-  public NewBucketer(QueryEngine queryEngine) {
-    this.queryEngine = queryEngine;
-  }
-
-  public Table executeBucketing(Table intermediateResult,
-                                BucketColumnSetDto bucketColumnSetDto) {
-    Function<List<Object>, List<Object[]>> bucketer = createBucketer(bucketColumnSetDto);
+  public static Table bucket(Table intermediateResult,
+                             BucketColumnSetDto bucketColumnSetDto) {
+    Function<Object[], List<Object[]>> bucketer = createBucketer(bucketColumnSetDto);
 
     int[] indexColumnsToRead = new int[bucketColumnSetDto.getColumnsForPrefetching().size()];
     for (int i = 0; i < bucketColumnSetDto.getColumnsForPrefetching().size(); i++) {
@@ -53,7 +47,7 @@ public class NewBucketer {
     }
 
     int originalHeadersSize = intermediateResult.headers().size();
-    List<Object> buffer = new ArrayList<>(indexColumnsToRead.length);
+    Object[] buffer = new Object[indexColumnsToRead.length];
     for (List<Object> row : intermediateResult) {
       transferValues(indexColumnsToRead, buffer, row);
       List<Object[]> bucketValuesList = bucketer.apply(buffer);
@@ -79,7 +73,7 @@ public class NewBucketer {
             newColumnValues);
   }
 
-  private Function<List<Object>, List<Object[]>> createBucketer(BucketColumnSetDto bucketColumnSetDto) {
+  private static Function<Object[], List<Object[]>> createBucketer(BucketColumnSetDto bucketColumnSetDto) {
     Map<String, List<String>> bucketsByValue = new HashMap<>();
     for (Pair<String, List<String>> value : bucketColumnSetDto.values) {
       for (String v : value.getTwo()) {
@@ -88,17 +82,16 @@ public class NewBucketer {
                 .add(value.getOne());
       }
     }
-    Function<List<Object>, List<Object[]>> bucketer = toBucketColumnValues -> {
-      String value = (String) toBucketColumnValues.get(0);
-      List<String> buckets = bucketsByValue.get(value);
-      return buckets.stream().map(b -> new Object[]{b, value}).toList();
+    Function<Object[], List<Object[]>> bucketer = toBucketColumnValues -> {
+      List<String> buckets = bucketsByValue.get(toBucketColumnValues[0]);
+      return buckets.stream().map(b -> new Object[]{b, toBucketColumnValues[0]}).toList();
     };
     return bucketer;
   }
 
-  public static <T> void transferValues(int[] indices, List<Object> buffer, List<T> list) {
-    for (int index : indices) {
-      buffer.add(list.get(index));
+  public static <T> void transferValues(int[] indices, Object[] buffer, List<T> list) {
+    for (int i = 0; i < indices.length; i++) {
+      buffer[i] = list.get(indices[i]);
     }
   }
 }

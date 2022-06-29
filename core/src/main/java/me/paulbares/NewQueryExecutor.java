@@ -39,25 +39,24 @@ public class NewQueryExecutor {
     Set<Measure> measuresToPrefetch = new HashSet<>();
     query.measures.forEach(m -> measuresToPrefetch.add(getMeasureToPrefetch(m)));
     measuresToPrefetch.forEach(prefetchQuery::withMeasure);
-    Table intermediateResult = this.queryEngine.execute(prefetchQuery);
+    Table[] intermediateResult = new Table[]{this.queryEngine.execute(prefetchQuery)};
 
     Map<Measure, List<Object>> aggregateValuesByMeasure = new HashMap<>();
     if (query.columnSets.containsKey(NewQueryDto.PERIOD)) {
       PeriodColumnSetDto columnSet = (PeriodColumnSetDto) query.columnSets.get(NewQueryDto.PERIOD);
 
-      Table finalT = intermediateResult;
       graphByMeasure.forEach((m, graph) -> {
         Measure last = graph.pollLast();
-        aggregateValuesByMeasure.computeIfAbsent(last, finalT::getAggregateValues);
+        aggregateValuesByMeasure.computeIfAbsent(last, intermediateResult[0]::getAggregateValues);
         while ((last = graph.pollLast()) != null) {
           aggregateValuesByMeasure.computeIfAbsent(last, measure -> {
             if (measure instanceof BinaryOperationMeasure bom) {
-              List<Object> agg = PeriodComparisonExecutor.executeComparison(bom, columnSet, finalT);
+              List<Object> agg = PeriodComparisonExecutor.compare(bom, columnSet, intermediateResult[0]);
               String newName = bom.alias == null
                       ? String.format("%s(%s, %s)", bom.method, bom.measure.alias(), bom.referencePosition)
                       : bom.alias;
-              Field field = new Field(newName, BinaryOperations.getOutputType(bom.method, finalT.getField(bom.measure).type()));
-              finalT.addAggregates(field, bom, agg);
+              Field field = new Field(newName, BinaryOperations.getOutputType(bom.method, intermediateResult[0].getField(bom.measure).type()));
+              intermediateResult[0].addAggregates(field, bom, agg);
               return agg;
             } else {
               throw new IllegalStateException("unexpected measure type " + measure.getClass());
@@ -70,67 +69,27 @@ public class NewQueryExecutor {
     if (query.columnSets.containsKey(NewQueryDto.BUCKET)) {
       // Now bucket...
       BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(NewQueryDto.BUCKET);
-//      Map<String, List<String>> bucketsByValue = new HashMap<>();
-//      for (Pair<String, List<String>> value : columnSet.values) {
-//        for (String v : value.getTwo()) {
-//          bucketsByValue
-//                  .computeIfAbsent(v, k -> new ArrayList<>())
-//                  .add(value.getOne());
-//        }
-//      }
-//
-//      List<String> r = intermediateResult.headers().stream().map(Field::name).toList();
-//      int[] indexColsToBucket = new int[1];
-//      int[] indexColAggregates = intermediateResult.measureIndices();
-//      MutableIntList indexColsToLeaveList = new IntArrayList();
-//      for (int i = 0; i < r.size(); i++) {
-//        if (columnSet.getColumnsForPrefetching().contains(r.get(i))) {
-//          indexColsToBucket[0] = i;
-//        } else if (Arrays.binarySearch(indexColAggregates, i) < 0) {
-//          indexColsToLeaveList.add(i);
-//        }
-//      }
-//      int[] indexColsToLeave = indexColsToLeaveList.toArray();
-//
-//      Bucketer.Holder holder = new Bucketer(this.queryEngine)
-//              .executeBucketing(intermediateResult,
-//                      indexColsToLeave,
-//                      indexColAggregates,
-//                      indexColsToBucket,
-//                      intermediateResult.measures().stream().map(AggregatedMeasure.class::cast).toList(),
-//                      columnSet.getNewColumns(),
-//                      toBucketColumnValues -> {
-//                        String value = (String) toBucketColumnValues.get(0);
-//                        List<String> buckets = bucketsByValue.get(value);
-//                        return buckets.stream().map(b -> new Object[]{b, value}).toList();
-//                      });
-//      intermediateResult = holder.table();
-      // FIXME use the NewBucketer
-
-      return new NewBucketer(null).executeBucketing(intermediateResult, columnSet);
-//      return intermediateResult;
+      intermediateResult[0] = BucketerExecutor.bucket(intermediateResult[0], columnSet);
     }
 
     // Once complete, construct the final result with columns in correct order.
     List<Field> fields = new ArrayList<>();
     List<List<Object>> values = new ArrayList<>();
-    int n = 0;
     for (String finalColumn : finalColumns) {
-      fields.add(intermediateResult.getField(finalColumn));
-      values.add(Objects.requireNonNull(intermediateResult.getColumnValues(finalColumn)));
-      n++;
+      fields.add(intermediateResult[0].getField(finalColumn));
+      values.add(Objects.requireNonNull(intermediateResult[0].getColumnValues(finalColumn)));
     }
 
     List<Measure> measures = new ArrayList<>(query.measures);
     for (Measure measure : query.measures) {
-      fields.add(intermediateResult.getField(measure));
-      values.add(Objects.requireNonNull(intermediateResult.getAggregateValues(measure)));
+      fields.add(intermediateResult[0].getField(measure));
+      values.add(Objects.requireNonNull(intermediateResult[0].getAggregateValues(measure)));
     }
 
     ColumnarTable columnarTable = new ColumnarTable(fields,
             measures,
-            IntStream.range(n, fields.size()).toArray(),
-            IntStream.range(0, n).toArray(),
+            IntStream.range(finalColumns.size(), fields.size()).toArray(),
+            IntStream.range(0, finalColumns.size()).toArray(),
             values);
     return columnarTable;
   }

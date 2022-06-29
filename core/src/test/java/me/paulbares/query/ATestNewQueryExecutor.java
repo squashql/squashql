@@ -141,21 +141,21 @@ public abstract class ATestNewQueryExecutor {
 
     execute = this.executor.execute(query);
     Assertions.assertThat(execute).containsExactlyInAnyOrder(
-            List.of("food", "group3", MAIN_SCENARIO_NAME, 180d),
-            List.of("food", "group3", "up", 220d),
-            List.of("food", "group3", "down", 140d),
-            List.of("food", "group2", "down", 140d),
-            List.of("food", "group2", MAIN_SCENARIO_NAME, 180d),
-            List.of("food", "group1", "up", 220d),
-            List.of("food", "group1", MAIN_SCENARIO_NAME, 180d),
+            List.of("group3", MAIN_SCENARIO_NAME, "food", 180d),
+            List.of("group3", "up", "food", 220d),
+            List.of("group3", "down", "food", 140d),
+            List.of("group2", "down", "food", 140d),
+            List.of("group2", MAIN_SCENARIO_NAME, "food", 180d),
+            List.of("group1", "up", "food", 220d),
+            List.of("group1", MAIN_SCENARIO_NAME, "food", 180d),
 
-            List.of("drink", "group3", MAIN_SCENARIO_NAME, 60d),
-            List.of("drink", "group3", "up", 100d),
-            List.of("drink", "group3", "down", 20d),
-            List.of("drink", "group2", "down", 20d),
-            List.of("drink", "group2", MAIN_SCENARIO_NAME, 60d),
-            List.of("drink", "group1", "up", 100d),
-            List.of("drink", "group1", MAIN_SCENARIO_NAME, 60d));
+            List.of("group3", MAIN_SCENARIO_NAME, "drink", 60d),
+            List.of("group3", "up", "drink", 100d),
+            List.of("group3", "down", "drink", 20d),
+            List.of("group2", "down", "drink", 20d),
+            List.of("group2", MAIN_SCENARIO_NAME, "drink", 60d),
+            List.of("group1", "up", "drink", 100d),
+            List.of("group1", MAIN_SCENARIO_NAME, "drink", 60d));
   }
 
   @Test
@@ -179,15 +179,15 @@ public abstract class ATestNewQueryExecutor {
     Assertions.assertThat(table.count()).isEqualTo(8);
     // we do not assert each row because there are too many. Limit to base scenario.
     Assertions.assertThat(table).contains(
-            List.of(2022, "group2", MAIN_SCENARIO_NAME, base),
-            List.of(2022, "group2", "down", down),
-            List.of(2022, "group1", MAIN_SCENARIO_NAME, base),
-            List.of(2022, "group1", "up", up),
+            List.of("group2", MAIN_SCENARIO_NAME, 2022, base),
+            List.of("group2", "down", 2022, down),
+            List.of("group1", MAIN_SCENARIO_NAME, 2022, base),
+            List.of("group1", "up", 2022, up),
 
-            List.of(2023, "group2", MAIN_SCENARIO_NAME, base),
-            List.of(2023, "group2", "down", down),
-            List.of(2023, "group1", MAIN_SCENARIO_NAME, base),
-            List.of(2023, "group1", "up", up));
+            List.of("group2", MAIN_SCENARIO_NAME, 2023, base),
+            List.of("group2", "down", 2023, down),
+            List.of("group1", MAIN_SCENARIO_NAME, 2023, base),
+            List.of("group1", "up", 2023, up));
     Assertions
             .assertThat(table.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder("year_sales", groupOfScenario, SCENARIO_FIELD_NAME, "sum(sales)");

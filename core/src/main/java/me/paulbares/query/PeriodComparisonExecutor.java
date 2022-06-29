@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 
 public class PeriodComparisonExecutor {
 
-  public static List<Object> executeComparison(
+  public static List<Object> compare(
           BinaryOperationMeasure bom,
           PeriodColumnSetDto columnSet,
           Table intermediateResult) {
