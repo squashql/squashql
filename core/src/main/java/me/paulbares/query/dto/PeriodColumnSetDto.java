@@ -43,11 +43,11 @@ public class PeriodColumnSetDto implements ColumnSet {
     }
   }
 
-  public Map<PeriodUnit, String> mapping() {
+  public Map<String, PeriodUnit> mapping() {
     if (this.period instanceof Period.Quarter q) {
-      return Map.of(QUARTER, q.quarter(), YEAR, q.year());
+      return Map.of(q.quarter(), QUARTER, q.year(), YEAR);
     } else if (this.period instanceof Period.Year y) {
-      return Map.of(YEAR, y.year());
+      return Map.of(y.year(), YEAR);
     } else {
       throw new RuntimeException(this.period + " not supported yet");
     }

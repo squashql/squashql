@@ -21,7 +21,7 @@ public class TestPeriodShiftProcedure {
       new PeriodComparisonExecutor.ShiftProcedure(
               period,
               Map.of(BinaryOperationMeasure.PeriodUnit.YEAR, refPos[0], BinaryOperationMeasure.PeriodUnit.QUARTER, refPos[1]),
-              indexByPeriodUnit).execute(point);
+              indexByPeriodUnit).test(point);
       return point;
     };
 

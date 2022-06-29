@@ -1,7 +1,6 @@
 package me.paulbares.query;
 
 import me.paulbares.query.BinaryOperationMeasure.PeriodUnit;
-import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.PeriodColumnSetDto;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
@@ -10,54 +9,32 @@ import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 
 import java.time.LocalDate;
 import java.time.temporal.IsoFields;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.function.Predicate;
 
-public class PeriodComparisonExecutor {
+public class PeriodComparisonExecutor extends AComparisonExecutor {
 
-  public static List<Object> compare(
-          BinaryOperationMeasure bom,
-          PeriodColumnSetDto columnSet,
-          Table intermediateResult) {
-    Map<PeriodUnit, String> referencePosition = new HashMap<>();
-    Map<PeriodUnit, String> mapping = columnSet.mapping();
-    MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
-    for (Map.Entry<String, String> entry : bom.referencePosition.entrySet()) { // quarter, year
-      PeriodUnit pu = PeriodUnit.valueOf(entry.getKey());
-      referencePosition.put(pu, entry.getValue());
-      indexByPeriodUnit.put(pu, intermediateResult.columnIndex(mapping.get(pu)));
-    }
-    ShiftProcedure procedure = new ShiftProcedure(columnSet.period, referencePosition, indexByPeriodUnit);
-    Object[] buffer = new Object[intermediateResult.columnIndices().length];
-    List<Object> result = new ArrayList<>((int) intermediateResult.count());
-    int[] rowIndex = new int[1];
-    List<Object> aggregateValues = intermediateResult.getAggregateValues(bom.measure);
-    intermediateResult.forEach(row -> {
-      int i = 0;
-      for (int columnIndex : intermediateResult.columnIndices()) {
-        buffer[i++] = row.get(columnIndex);
-      }
-      procedure.execute(buffer);
-      int position = intermediateResult.pointDictionary().getPosition(buffer);
-      if (position != -1) {
-        Object currentValue = aggregateValues.get(rowIndex[0]);
-        Object referenceValue = aggregateValues.get(position);
-        Object diff = BinaryOperations.compare(bom.method, currentValue, referenceValue, intermediateResult.getField(bom.measure).type());
-        result.add(diff);
-      } else {
-        result.add(null); // nothing to compare with
-      }
-      rowIndex[0]++;
-    });
+  final PeriodColumnSetDto cSet;
 
-    return result;
+  public PeriodComparisonExecutor(PeriodColumnSetDto cSet) {
+    this.cSet = cSet;
   }
 
-  static class ShiftProcedure {
+  @Override
+  protected Predicate<Object[]> createShiftProcedure(BinaryOperationMeasure bom, ObjectIntMap<String> indexByColumn) {
+    Map<PeriodUnit, String> referencePosition = new HashMap<>();
+    Map<String, PeriodUnit> mapping = this.cSet.mapping();
+    MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
+    for (Map.Entry<String, String> entry : bom.referencePosition.entrySet()) {
+      PeriodUnit pu = mapping.get(entry.getKey());
+      referencePosition.put(pu, entry.getValue());
+      indexByPeriodUnit.put(pu, indexByColumn.get(entry.getKey()));
+    }
+    return new ShiftProcedure(this.cSet.period, referencePosition, indexByPeriodUnit);
+  }
+
+  static class ShiftProcedure implements Predicate<Object[]> {
 
     final Period period;
     final Map<PeriodUnit, String> referencePosition;
@@ -80,22 +57,8 @@ public class PeriodComparisonExecutor {
       }
     }
 
-    private Object parse(String transformation) {
-      Pattern shiftPattern = Pattern.compile("[a-zA-Z]+([-+])(\\d)");
-      Pattern constantPattern = Pattern.compile("[a-zA-Z]+");
-      Matcher m;
-      if ((m = shiftPattern.matcher(transformation)).matches()) {
-        String signum = m.group(1);
-        String shift = m.group(2);
-        return (signum.equals("-") ? -1 : 1) * Integer.valueOf(shift);
-      } else if (constantPattern.matcher(transformation).matches()) {
-        return null; // nothing to do
-      } else {
-        throw new RuntimeException("Unsupported transformation: " + transformation);
-      }
-    }
-
-    public void execute(Object[] row) {
+    @Override
+    public boolean test(Object[] row) {
       int yearIndex = this.indexByPeriodUnit.get(PeriodUnit.YEAR);
       int quarterIndex = this.indexByPeriodUnit.get(PeriodUnit.QUARTER);
       Object yearTransformation = this.transformationByPeriodUnit.get(PeriodUnit.YEAR);
@@ -128,6 +91,7 @@ public class PeriodComparisonExecutor {
       } else {
         throw new RuntimeException(this.period + " not supported yet");
       }
+      return true;
     }
 
     private static PeriodUnit[] getPeriodUnits(Period period) {

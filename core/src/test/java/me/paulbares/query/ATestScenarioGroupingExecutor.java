@@ -1,27 +1,29 @@
 package me.paulbares.query;
 
-import com.google.common.cache.CacheStats;
-import me.paulbares.query.dto.ScenarioComparisonDto;
-import me.paulbares.query.dto.ScenarioGroupingQueryDto;
+import me.paulbares.NewQueryExecutor;
+import me.paulbares.query.comp.BinaryOperations;
+import me.paulbares.query.dto.BucketColumnSetDto;
+import me.paulbares.query.dto.NewQueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static me.paulbares.query.comp.BinaryOperations.ABS_DIFF;
-import static me.paulbares.query.comp.BinaryOperations.REL_DIFF;
 import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
 import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestScenarioGroupingExecutor {
 
-  protected ScenarioGroupingExecutor executor;
+  protected NewQueryExecutor executor;
   protected Datastore datastore;
   protected TransactionManager tm;
 
@@ -41,6 +43,12 @@ public abstract class ATestScenarioGroupingExecutor {
     this.groups.put("group3", List.of("base", "s1", "s2"));
   }
 
+  protected String groupOfScenario = "Group of scenario";
+  protected BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
+          .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
+          .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
+          .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
+
   @BeforeAll
   void setup() {
     Field ean = new Field("ean", String.class);
@@ -51,7 +59,7 @@ public abstract class ATestScenarioGroupingExecutor {
     List<Field> fields = List.of(ean, category, price, qty);
     this.datastore = createDatastore();
     QueryEngine queryEngine = createQueryEngine(this.datastore);
-    this.executor = new ScenarioGroupingExecutor(queryEngine);
+    this.executor = new NewQueryExecutor(queryEngine);
     this.tm = createTransactionManager();
 
     beforeLoading(fields);
@@ -80,25 +88,44 @@ public abstract class ATestScenarioGroupingExecutor {
 
   @BeforeEach
   void beforeEach() {
-    this.executor.queryCache.cache.invalidateAll();
+//    this.executor.queryCache.cache.invalidateAll();
   }
 
   @Test
   void testAbsoluteDifferenceWithFirst() {
-    ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
+    AggregatedMeasure price = new AggregatedMeasure("price", "sum");
+    BinaryOperationMeasure priceComp = new BinaryOperationMeasure(
+            "priceDiff",
+            BinaryOperations.ABS_DIFF,
+            price,
+            Map.of(
+                    SCENARIO_FIELD_NAME, "first",
+                    groupOfScenario, "g"
+            ));
+    AggregatedMeasure quantity = new AggregatedMeasure("quantity", "sum");
+    BinaryOperationMeasure quantityComp = new BinaryOperationMeasure(
+            "quantityDiff",
+            BinaryOperations.ABS_DIFF,
+            quantity,
+            Map.of(
+                    SCENARIO_FIELD_NAME, "first",
+                    groupOfScenario, "g"
+            ));
+
+    var query = new NewQueryDto()
             .table(this.storeName)
-            .addScenarioComparison(new ScenarioComparisonDto(ABS_DIFF,
-                    new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
-            .addScenarioComparison(new ScenarioComparisonDto(ABS_DIFF,
-                    new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
-            .groups(this.groups);
+            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
+            .withMetric(priceComp)
+            .withMetric(price)
+            .withMetric(quantityComp)
+            .withMetric(quantity);
 
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
-            "group", SCENARIO_FIELD_NAME,
-            "absolute_difference(sum(price), first)", "sum(price)",
-            "absolute_difference(sum(quantity), first)", "sum(quantity)");
-    Assertions.assertThat(dataset).containsExactly(
+            groupOfScenario, SCENARIO_FIELD_NAME,
+            "priceDiff", "sum(price)",
+            "quantityDiff", "sum(quantity)");
+    Assertions.assertThat(dataset).containsExactlyInAnyOrder(
             List.of("group1", "base", 0d, 15d, 0l, 34l),
             List.of("group1", "s1", 2d, 17d, -2l, 32l),
             List.of("group2", "base", 0d, 15d, 0l, 34l),
@@ -110,20 +137,39 @@ public abstract class ATestScenarioGroupingExecutor {
 
   @Test
   void testAbsoluteDifferenceWithPrevious() {
-    ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
+    AggregatedMeasure price = new AggregatedMeasure("price", "sum");
+    BinaryOperationMeasure priceComp = new BinaryOperationMeasure(
+            "priceDiff",
+            BinaryOperations.ABS_DIFF,
+            price,
+            Map.of(
+                    SCENARIO_FIELD_NAME, "s-1",
+                    groupOfScenario, "g"
+            ));
+    AggregatedMeasure quantity = new AggregatedMeasure("quantity", "sum");
+    BinaryOperationMeasure quantityComp = new BinaryOperationMeasure(
+            "quantityDiff",
+            BinaryOperations.ABS_DIFF,
+            quantity,
+            Map.of(
+                    SCENARIO_FIELD_NAME, "s-1",
+                    groupOfScenario, "g"
+            ));
+
+    var query = new NewQueryDto()
             .table(this.storeName)
-            .addScenarioComparison(new ScenarioComparisonDto(ABS_DIFF,
-                    new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_PREVIOUS))
-            .addScenarioComparison(new ScenarioComparisonDto(ABS_DIFF,
-                    new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_PREVIOUS))
-            .groups(this.groups);
+            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
+            .withMetric(priceComp)
+            .withMetric(price)
+            .withMetric(quantityComp)
+            .withMetric(quantity);
 
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
-            "group", SCENARIO_FIELD_NAME,
-            "absolute_difference(sum(price), previous)", "sum(price)",
-            "absolute_difference(sum(quantity), previous)", "sum(quantity)");
-    Assertions.assertThat(dataset).containsExactly(
+            this.groupOfScenario, SCENARIO_FIELD_NAME,
+            "priceDiff", "sum(price)",
+            "quantityDiff", "sum(quantity)");
+    Assertions.assertThat(dataset).containsExactlyInAnyOrder(
             List.of("group1", "base", 0d, 15d, 0l, 34l),
             List.of("group1", "s1", 2d, 17d, -2l, 32l),
             List.of("group2", "base", 0d, 15d, 0l, 34l),
@@ -135,20 +181,39 @@ public abstract class ATestScenarioGroupingExecutor {
 
   @Test
   void testRelativeDifferenceWithFirst() {
-    ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
+    AggregatedMeasure price = new AggregatedMeasure("price", "sum");
+    BinaryOperationMeasure priceComp = new BinaryOperationMeasure(
+            "priceDiff",
+            BinaryOperations.REL_DIFF,
+            price,
+            Map.of(
+                    SCENARIO_FIELD_NAME, "first",
+                    groupOfScenario, "g"
+            ));
+    AggregatedMeasure quantity = new AggregatedMeasure("quantity", "sum");
+    BinaryOperationMeasure quantityComp = new BinaryOperationMeasure(
+            "quantityDiff",
+            BinaryOperations.REL_DIFF,
+            quantity,
+            Map.of(
+                    SCENARIO_FIELD_NAME, "first",
+                    groupOfScenario, "g"
+            ));
+
+    var query = new NewQueryDto()
             .table(this.storeName)
-            .addScenarioComparison(new ScenarioComparisonDto(REL_DIFF,
-                    new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
-            .addScenarioComparison(new ScenarioComparisonDto(REL_DIFF,
-                    new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
-            .groups(this.groups);
+            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
+            .withMetric(priceComp)
+            .withMetric(price)
+            .withMetric(quantityComp)
+            .withMetric(quantity);
 
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
-            "group", SCENARIO_FIELD_NAME,
-            "relative_difference(sum(price), first)", "sum(price)",
-            "relative_difference(sum(quantity), first)", "sum(quantity)");
-    Assertions.assertThat(dataset).containsExactly(
+            this.groupOfScenario, SCENARIO_FIELD_NAME,
+            "priceDiff", "sum(price)",
+            "quantityDiff", "sum(quantity)");
+    Assertions.assertThat(dataset).containsExactlyInAnyOrder(
             List.of("group1", "base", 0d, 15d, 0d, 34l),
             List.of("group1", "s1", 0.13333333333333333d, 17d, -0.058823529411764705d, 32l),
             List.of("group2", "base", 0d, 15d, 0d, 34l),
@@ -158,152 +223,79 @@ public abstract class ATestScenarioGroupingExecutor {
             List.of("group3", "s2", -0.03333333333333333d, 14.5d, 0.029411764705882353d, 35l));
   }
 
-  @Test
-  void testRelativeDifferenceWithFirstWithLabels() {
-    ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
-            .table(this.storeName)
-            .addScenarioComparison(new ScenarioComparisonDto(REL_DIFF,
-                    new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST, "label1"))
-            .addScenarioComparison(new ScenarioComparisonDto(REL_DIFF,
-                    new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST, "label2"))
-            .groups(this.groups);
-
-    Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
-            "group", SCENARIO_FIELD_NAME, "label1", "sum(price)", "label2", "sum(quantity)");
-    Assertions.assertThat(dataset).containsExactly(
-            List.of("group1", "base", 0d, 15d, 0d, 34l),
-            List.of("group1", "s1", 0.13333333333333333d, 17d, -0.058823529411764705d, 32l),
-            List.of("group2", "base", 0d, 15d, 0d, 34l),
-            List.of("group2", "s2", -0.03333333333333333d, 14.5d, 0.029411764705882353d, 35l),
-            List.of("group3", "base", 0d, 15d, 0d, 34l),
-            List.of("group3", "s1", 0.13333333333333333d, 17d, -0.058823529411764705d, 32l),
-            List.of("group3", "s2", -0.03333333333333333d, 14.5d, 0.029411764705882353d, 35l));
-  }
-
-  @Test
-  void testRelativeDifferenceWithPrevious() {
-    ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
-            .table(this.storeName)
-            .addScenarioComparison(new ScenarioComparisonDto(REL_DIFF,
-                    new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_PREVIOUS))
-            .addScenarioComparison(new ScenarioComparisonDto(REL_DIFF,
-                    new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_PREVIOUS))
-            .groups(this.groups);
-
-    Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
-            "group", SCENARIO_FIELD_NAME,
-            "relative_difference(sum(price), previous)", "sum(price)",
-            "relative_difference(sum(quantity), previous)", "sum(quantity)");
-    Assertions.assertThat(dataset).containsExactly(
-            List.of("group1", "base", 0d, 15d, 0d, 34l),
-            List.of("group1", "s1", 0.13333333333333333d, 17d, -0.058823529411764705d, 32l),
-            List.of("group2", "base", 0d, 15d, 0d, 34l),
-            List.of("group2", "s2", -0.03333333333333333d, 14.5d, 0.029411764705882353d, 35l),
-            List.of("group3", "base", 0d, 15d, 0d, 34l),
-            List.of("group3", "s1", 0.13333333333333333d, 17d, -0.058823529411764705d, 32l),
-            List.of("group3", "s2", -0.14705882352941177d, 14.5d, 0.09375d, 35l));
-  }
-
-  @Test
-  void testShowValueOff() {
-    ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
-            .table(this.storeName)
-            .addScenarioComparison(new ScenarioComparisonDto(ABS_DIFF,
-                    new AggregatedMeasure("price", "sum"), false, ScenarioGroupingExecutor.REF_POS_FIRST))
-            .addScenarioComparison(new ScenarioComparisonDto(ABS_DIFF,
-                    new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
-            .groups(this.groups);
-
-    Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
-            "group", SCENARIO_FIELD_NAME,
-            "absolute_difference(sum(price), first)",
-            "absolute_difference(sum(quantity), first)", "sum(quantity)");
-    Assertions.assertThat(dataset).containsExactly(
-            List.of("group1", "base", 0d, 0l, 34l),
-            List.of("group1", "s1", 2d, -2l, 32l),
-            List.of("group2", "base", 0d, 0l, 34l),
-            List.of("group2", "s2", -0.5d, 1l, 35l),
-            List.of("group3", "base", 0d, 0l, 34l),
-            List.of("group3", "s1", 2d, -2l, 32l),
-            List.of("group3", "s2", -0.5d, 1l, 35l));
-  }
-
-  @Test
-  @Disabled
-  void testCache() {
-    // Use own executor because stats in cache cannot be reset.
-    var executor = new ScenarioGroupingExecutor(createQueryEngine(this.datastore));
-
-    Map<String, List<String>> groups = new LinkedHashMap<>();
-    groups.put("group1", List.of("base", "s1"));
-    groups.put("group2", List.of("base"));
-
-    ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
-            .table(this.storeName)
-            .addScenarioComparison(new ScenarioComparisonDto(ABS_DIFF,
-                    new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
-            .addScenarioComparison(new ScenarioComparisonDto(ABS_DIFF,
-                    new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
-            .groups(groups);
-
-    // Should put the result in cache the first time.
-    int n = 10;
-    for (int i = 0; i < n; i++) {
-      executor.execute(query);
-    }
-
-    int missCount = 2;
-    int loadSuccessCount = 2;
-    int evictionCount = 0;
-    // Change the query. Remove a measure
-    query = new ScenarioGroupingQueryDto()
-            .table(this.storeName)
-            .addScenarioComparison(new ScenarioComparisonDto(ABS_DIFF,
-                    new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
-            .groups(groups);
-    executor.execute(query);
-    assertCacheStats(executor.queryCache, n - 1, missCount, loadSuccessCount, evictionCount);
-
-    // Change bucketing but set of groups is the same
-    {
-      Map<String, List<String>> newGroups = new LinkedHashMap<>();
-      newGroups.put("newGroup", List.of("base", "s1"));
-      query.groups(newGroups);
-      executor.execute(query); // the result should come from the cache because sets of scenarios is the same
-      assertCacheStats(executor.queryCache, n, missCount, loadSuccessCount, evictionCount);
-    }
-
-    // Scenario removal
-    {
-      Map<String, List<String>> newGroups = new LinkedHashMap<>();
-      newGroups.put("newGroup", List.of("base")); // s1 is no more here. Should not hit the cache
-      query.groups(newGroups);
-      executor.execute(query); // the result should come from the cache because sets of scenarios is the same
-      assertCacheStats(executor.queryCache, n, ++missCount, ++loadSuccessCount, evictionCount);
-    }
-
-    // Scenario addition
-    {
-      Map<String, List<String>> newGroups = new LinkedHashMap<>();
-      newGroups.put("newGroup", List.of("base", "s1", "s2")); // s2 is added. should not hit the cache
-      query.groups(newGroups);
-      executor.execute(query); // the result should come from the cache because sets of scenarios is the same
-      assertCacheStats(executor.queryCache, n, ++missCount, ++loadSuccessCount, evictionCount);
-    }
-  }
-
-  protected void assertCacheStats(ScenarioGroupingCache cache,
-                                  int hitCount,
-                                  int missCount,
-                                  int loadSuccessCount,
-                                  int evictionCount) {
-    CacheStats stats = cache.cache.stats();
-    Assertions.assertThat(stats.hitCount()).isEqualTo(hitCount);
-    Assertions.assertThat(stats.missCount()).isEqualTo(missCount);
-    Assertions.assertThat(stats.loadSuccessCount()).isEqualTo(loadSuccessCount);
-    Assertions.assertThat(stats.evictionCount()).isEqualTo(evictionCount);
-  }
+//  @Test
+//  @Disabled
+//  void testCache() {
+//    // Use own executor because stats in cache cannot be reset.
+//    var executor = new ScenarioGroupingExecutor(createQueryEngine(this.datastore));
+//
+//    Map<String, List<String>> groups = new LinkedHashMap<>();
+//    groups.put("group1", List.of("base", "s1"));
+//    groups.put("group2", List.of("base"));
+//
+//    ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
+//            .table(this.storeName)
+//            .addScenarioComparison(new ScenarioComparisonDto(ABS_DIFF,
+//                    new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
+//            .addScenarioComparison(new ScenarioComparisonDto(ABS_DIFF,
+//                    new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
+//            .groups(groups);
+//
+//    // Should put the result in cache the first time.
+//    int n = 10;
+//    for (int i = 0; i < n; i++) {
+//      executor.execute(query);
+//    }
+//
+//    int missCount = 2;
+//    int loadSuccessCount = 2;
+//    int evictionCount = 0;
+//    // Change the query. Remove a measure
+//    query = new ScenarioGroupingQueryDto()
+//            .table(this.storeName)
+//            .addScenarioComparison(new ScenarioComparisonDto(ABS_DIFF,
+//                    new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
+//            .groups(groups);
+//    executor.execute(query);
+//    assertCacheStats(executor.queryCache, n - 1, missCount, loadSuccessCount, evictionCount);
+//
+//    // Change bucketing but set of groups is the same
+//    {
+//      Map<String, List<String>> newGroups = new LinkedHashMap<>();
+//      newGroups.put("newGroup", List.of("base", "s1"));
+//      query.groups(newGroups);
+//      executor.execute(query); // the result should come from the cache because sets of scenarios is the same
+//      assertCacheStats(executor.queryCache, n, missCount, loadSuccessCount, evictionCount);
+//    }
+//
+//    // Scenario removal
+//    {
+//      Map<String, List<String>> newGroups = new LinkedHashMap<>();
+//      newGroups.put("newGroup", List.of("base")); // s1 is no more here. Should not hit the cache
+//      query.groups(newGroups);
+//      executor.execute(query); // the result should come from the cache because sets of scenarios is the same
+//      assertCacheStats(executor.queryCache, n, ++missCount, ++loadSuccessCount, evictionCount);
+//    }
+//
+//    // Scenario addition
+//    {
+//      Map<String, List<String>> newGroups = new LinkedHashMap<>();
+//      newGroups.put("newGroup", List.of("base", "s1", "s2")); // s2 is added. should not hit the cache
+//      query.groups(newGroups);
+//      executor.execute(query); // the result should come from the cache because sets of scenarios is the same
+//      assertCacheStats(executor.queryCache, n, ++missCount, ++loadSuccessCount, evictionCount);
+//    }
+//  }
+//
+//  protected void assertCacheStats(ScenarioGroupingCache cache,
+//                                  int hitCount,
+//                                  int missCount,
+//                                  int loadSuccessCount,
+//                                  int evictionCount) {
+//    CacheStats stats = cache.cache.stats();
+//    Assertions.assertThat(stats.hitCount()).isEqualTo(hitCount);
+//    Assertions.assertThat(stats.missCount()).isEqualTo(missCount);
+//    Assertions.assertThat(stats.loadSuccessCount()).isEqualTo(loadSuccessCount);
+//    Assertions.assertThat(stats.evictionCount()).isEqualTo(evictionCount);
+//  }
 }

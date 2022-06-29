@@ -44,6 +44,7 @@ public class NewQueryExecutor {
     Map<Measure, List<Object>> aggregateValuesByMeasure = new HashMap<>();
     if (query.columnSets.containsKey(NewQueryDto.PERIOD)) {
       PeriodColumnSetDto columnSet = (PeriodColumnSetDto) query.columnSets.get(NewQueryDto.PERIOD);
+      PeriodComparisonExecutor periodComparisonExecutor = new PeriodComparisonExecutor(columnSet);
 
       graphByMeasure.forEach((m, graph) -> {
         Measure last = graph.pollLast();
@@ -51,7 +52,7 @@ public class NewQueryExecutor {
         while ((last = graph.pollLast()) != null) {
           aggregateValuesByMeasure.computeIfAbsent(last, measure -> {
             if (measure instanceof BinaryOperationMeasure bom) {
-              List<Object> agg = PeriodComparisonExecutor.compare(bom, columnSet, intermediateResult[0]);
+              List<Object> agg = periodComparisonExecutor.compare(bom, intermediateResult[0]);
               String newName = bom.alias == null
                       ? String.format("%s(%s, %s)", bom.method, bom.measure.alias(), bom.referencePosition)
                       : bom.alias;
@@ -71,6 +72,8 @@ public class NewQueryExecutor {
       BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(NewQueryDto.BUCKET);
       intermediateResult[0] = BucketerExecutor.bucket(intermediateResult[0], columnSet);
 
+      BucketComparisonExecutor bucketComparisonExecutor = new BucketComparisonExecutor(columnSet);
+
       // TODO execute bucket comparison.
       graphByMeasure.forEach((m, graph) -> {
         Measure last = graph.pollLast();
@@ -78,7 +81,7 @@ public class NewQueryExecutor {
         while ((last = graph.pollLast()) != null) {
           aggregateValuesByMeasure.computeIfAbsent(last, measure -> {
             if (measure instanceof BinaryOperationMeasure bom) {
-              List<Object> agg = BucketComparisonExecutor.compare(bom, columnSet, intermediateResult[0]);
+              List<Object> agg = bucketComparisonExecutor.compare(bom, intermediateResult[0]);
               String newName = bom.alias == null
                       ? String.format("%s(%s, %s)", bom.method, bom.measure.alias(), bom.referencePosition)
                       : bom.alias;

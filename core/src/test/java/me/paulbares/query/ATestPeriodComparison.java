@@ -105,8 +105,8 @@ public abstract class ATestPeriodComparison {
             BinaryOperations.ABS_DIFF,
             sales,
             Map.of(
-                    BinaryOperationMeasure.PeriodUnit.QUARTER.name(), "q",
-                    BinaryOperationMeasure.PeriodUnit.YEAR.name(), "y-1"
+                    "quarter_sales", "q",
+                    "year_sales", "y-1"
             ));
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
 
@@ -140,8 +140,8 @@ public abstract class ATestPeriodComparison {
             BinaryOperations.ABS_DIFF,
             sales,
             Map.of(
-                    BinaryOperationMeasure.PeriodUnit.QUARTER.name(), "q-1",
-                    BinaryOperationMeasure.PeriodUnit.YEAR.name(), "y"
+                    "quarter_sales", "q-1",
+                    "year_sales", "y"
             ));
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
 
@@ -175,7 +175,7 @@ public abstract class ATestPeriodComparison {
             "myMeasure",
             BinaryOperations.ABS_DIFF,
             sales,
-            Map.of(BinaryOperationMeasure.PeriodUnit.YEAR.name(), "y-1"));
+            Map.of("year_sales", "y-1"));
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
 
     var query = new NewQueryDto()

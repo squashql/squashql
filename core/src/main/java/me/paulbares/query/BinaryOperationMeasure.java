@@ -1,6 +1,5 @@
 package me.paulbares.query;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -41,21 +40,6 @@ public class BinaryOperationMeasure implements Measure {
     this.measure = measure;
     this.referencePosition = referencePosition;
     this.type = KEY;
-  }
-
-//  public BinaryOperationMeasure(String alias,
-//                                String method,
-//                                Measure measure,
-//                                Map<String, String> referencePosition) {
-//    this(alias, method, measure, transform(referencePosition));
-//  }
-
-  private static Map<PeriodUnit, String> transform(Map<String, String> referencePosition) {
-    Map<PeriodUnit, String> m = new HashMap<>();
-    referencePosition.entrySet().forEach(e -> {
-      m.put(PeriodUnit.valueOf(e.getKey()), e.getValue());
-    });
-    return m;
   }
 
   @Override
