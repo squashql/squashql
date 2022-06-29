@@ -18,6 +18,8 @@ public abstract class AComparisonExecutor {
 
   protected abstract Predicate<Object[]> createShiftProcedure(BinaryOperationMeasure bom, ObjectIntMap<String> indexByColumn);
 
+  public abstract ColumnSet getColumnSet();
+
   public List<Object> compare(
           BinaryOperationMeasure bom,
           Table intermediateResult) {

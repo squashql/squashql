@@ -20,6 +20,11 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
   }
 
   @Override
+  public ColumnSet getColumnSet() {
+    return this.cSet;
+  }
+
+  @Override
   protected Predicate<Object[]> createShiftProcedure(BinaryOperationMeasure bom, ObjectIntMap<String> indexByColumn) {
     return new ShiftProcedure(this.cSet, bom.referencePosition, indexByColumn);
   }

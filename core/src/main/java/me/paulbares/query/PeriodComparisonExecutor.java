@@ -22,6 +22,11 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
   }
 
   @Override
+  public ColumnSet getColumnSet() {
+    return this.cSet;
+  }
+
+  @Override
   protected Predicate<Object[]> createShiftProcedure(BinaryOperationMeasure bom, ObjectIntMap<String> indexByColumn) {
     Map<PeriodUnit, String> referencePosition = new HashMap<>();
     Map<String, PeriodUnit> mapping = this.cSet.mapping();

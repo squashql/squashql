@@ -10,6 +10,7 @@ import me.paulbares.store.Field;
 
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class NewQueryExecutor {
@@ -81,6 +82,35 @@ public class NewQueryExecutor {
     return columnarTable;
   }
 
+  private void visitGraph(ColumnSet columnSet, Map<Measure, LinkedList<Measure>> graph) {
+    Iterator<Map.Entry<Measure, LinkedList<Measure>>> iterator = graph.entrySet().iterator();
+    while (iterator.hasNext()) {
+      Map.Entry<Measure, LinkedList<Measure>> next = iterator.next();
+      Measure measure = next.getKey();
+      if (!isComparisonFor(measure, columnSet)) {
+        iterator.remove();
+      } else {
+        Iterator<Measure> measureIterator = next.getValue().iterator();
+        while (measureIterator.hasNext()) {
+          if (!isComparisonFor(measureIterator.next(), columnSet)) {
+            measureIterator.remove();
+          }
+        }
+      }
+    }
+  }
+
+  private boolean isComparisonFor(Measure measure, ColumnSet cs) {
+    if (measure instanceof BinaryOperationMeasure bom) {
+      Set<String> intersection = new HashSet<>(bom.referencePosition.keySet());
+      intersection.retainAll(cs.getNewColumns().stream().map(Field::name).collect(Collectors.toSet()));
+      if (intersection.isEmpty()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   private Measure getMeasureToPrefetch(Measure measure) {
     if (measure instanceof BinaryOperationMeasure bom) {
       return getMeasureToPrefetch(bom.measure);
@@ -97,6 +127,7 @@ public class NewQueryExecutor {
   }
 
   private void executeComparator(Map<Measure, LinkedList<Measure>> measureGraph, Table intermediateResult, AComparisonExecutor executor) {
+    visitGraph(executor.getColumnSet(), measureGraph);
     Map<Measure, List<Object>> aggregateValuesByMeasure = new HashMap<>();
     measureGraph.forEach((m, graph) -> {
       Measure last = graph.pollLast();

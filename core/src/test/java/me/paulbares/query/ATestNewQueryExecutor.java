@@ -3,7 +3,10 @@ package me.paulbares.query;
 import me.paulbares.NewQueryExecutor;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.comp.BinaryOperations;
-import me.paulbares.query.dto.*;
+import me.paulbares.query.dto.BucketColumnSetDto;
+import me.paulbares.query.dto.NewQueryDto;
+import me.paulbares.query.dto.Period;
+import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
@@ -12,6 +15,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -204,7 +208,7 @@ public abstract class ATestNewQueryExecutor {
 
     BinaryOperationMeasure salesYearComp = new BinaryOperationMeasure(
             "salesYearComp",
-            BinaryOperations.DIVIDE,
+            BinaryOperations.ABS_DIFF,
             sales,
             Map.of("year_sales", "y-1"));
 
@@ -220,73 +224,105 @@ public abstract class ATestNewQueryExecutor {
     Assertions.assertThat(table.count()).isEqualTo(8);
     // we do not assert each row because there are too many. Limit to base scenario.
     Assertions.assertThat(table).contains(
-            List.of("group2", MAIN_SCENARIO_NAME, 2022, base),
-            List.of("group2", "down", 2022, down),
-            List.of("group1", MAIN_SCENARIO_NAME, 2022, base),
-            List.of("group1", "up", 2022, up),
+            Arrays.asList("group2", MAIN_SCENARIO_NAME, 2022, null, base),
+            Arrays.asList("group2", "down", 2022, null, down),
+            Arrays.asList("group1", MAIN_SCENARIO_NAME, 2022, null, base),
+            Arrays.asList("group1", "up", 2022, null, up),
 
-            List.of("group2", MAIN_SCENARIO_NAME, 2023, base),
-            List.of("group2", "down", 2023, down),
-            List.of("group1", MAIN_SCENARIO_NAME, 2023, base),
-            List.of("group1", "up", 2023, up));
+            List.of("group2", MAIN_SCENARIO_NAME, 2023, 0d, base),
+            List.of("group2", "down", 2023, 0d, down),
+            List.of("group1", MAIN_SCENARIO_NAME, 2023, 0d, base),
+            List.of("group1", "up", 2023, 0d, up));
     Assertions
             .assertThat(table.headers().stream().map(Field::name))
-            .containsExactlyInAnyOrder("year_sales", groupOfScenario, SCENARIO_FIELD_NAME, "sum(sales)");
+            .containsExactlyInAnyOrder(groupOfScenario, SCENARIO_FIELD_NAME, "year_sales", "salesYearComp", "sum(sales)");
   }
 
   @Test
-  void testBucketComparison() {
+  void testBucketAndPeriodColumnSetsComparisonBucket() {
+    Period.Year period = new Period.Year("year_sales");
+    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
+    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
     String groupOfScenario = "Group of scenario";
     BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
-            .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"))
-            .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "down", "up"));
-//    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(new Period.Quarter("quarter_sales", "year_sales"));
+            .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
+
+    BinaryOperationMeasure salesYearComp = new BinaryOperationMeasure(
+            "salesYearComp",
+            BinaryOperations.ABS_DIFF,
+            sales,
+            Map.of(SCENARIO_FIELD_NAME, "s-1", groupOfScenario, "g"));
+
+    var query = new NewQueryDto()
+            .table(this.storeName)
+            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
+            .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withMetric(salesYearComp)
+            .withMetric(sales);
+
+    double base = 120d, up = 160d, down = 80d;
+    Table table = this.executor.execute(query);
+    Assertions.assertThat(table.count()).isEqualTo(8);
+    // we do not assert each row because there are too many. Limit to base scenario.
+    Assertions.assertThat(table).contains(
+            List.of("group2", MAIN_SCENARIO_NAME, 2022, 0d, base),
+            List.of("group2", "down", 2022, down - base, down),
+            List.of("group1", MAIN_SCENARIO_NAME, 2022, 0d, base),
+            List.of("group1", "up", 2022, up - base, up),
+
+            List.of("group2", MAIN_SCENARIO_NAME, 2023, 0d, base),
+            List.of("group2", "down", 2023, down - base, down),
+            List.of("group1", MAIN_SCENARIO_NAME, 2023, 0d, base),
+            List.of("group1", "up", 2023, up - base, up));
+    Assertions
+            .assertThat(table.headers().stream().map(Field::name))
+            .containsExactlyInAnyOrder(groupOfScenario, SCENARIO_FIELD_NAME, "year_sales", "salesYearComp", "sum(sales)");
+  }
+
+  @Test
+  void testBucketAndPeriodColumnSetsComparisonsPeriodAndBucket() {
+    String groupOfScenario = "Group of scenario";
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
+            .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
+            .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
 
     AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
     BinaryOperationMeasure salesGroupComp = new BinaryOperationMeasure(
             "salesGroupComp",
             BinaryOperations.ABS_DIFF,
             sales,
-            Map.of(
-                    SCENARIO_FIELD_NAME, "s-1",
-                    groupOfScenario, "g"
-            ));
+            Map.of(SCENARIO_FIELD_NAME, "s-1", groupOfScenario, "g"));
 
-//    BinaryOperationMeasure salesYearComp = new BinaryOperationMeasure(
-//            "salesYearComp",
-//            BinaryOperations.DIVIDE,
-//            sales,
-//            Map.of(
-//                    BinaryOperationMeasure.PeriodUnit.QUARTER.name(), "q",
-//                    BinaryOperationMeasure.PeriodUnit.YEAR.name(), "y-1"
-//            ));
-//
-//    BinaryOperationMeasure myMeasureGroupComp = new BinaryOperationMeasure(
-//            "myMeasureGroupComp",
-//            BinaryOperations.ABS_DIFF,
-//            salesYearComp,
-//            Map.of(
-//                    SCENARIO_FIELD_NAME, "s-1",
-//                    groupOfScenario, "g"
-//            ));
+    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(new Period.Year("year_sales"));
+    BinaryOperationMeasure salesYearComp = new BinaryOperationMeasure(
+            "salesYearComp",
+            BinaryOperations.ABS_DIFF,
+            sales,
+            Map.of("year_sales", "y-1"));
 
     var query = new NewQueryDto()
             .table(this.storeName)
             .withColumnSet(NewQueryDto.BUCKET, bucketCS)
-//            .withMetric(myMeasureGroupComp)
+            .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withMetric(salesYearComp)
             .withMetric(salesGroupComp)
             .withMetric(sales);
 
-    Table execute = this.executor.execute(query);
-    double base = 240d, up = 320d, down = 160d;
-    Assertions.assertThat(execute).containsExactlyInAnyOrder(
-            List.of("group1", MAIN_SCENARIO_NAME, 0d, base),
-            List.of("group1", "up", up - base, up),
-            List.of("group2", MAIN_SCENARIO_NAME, 0d, base),
-            List.of("group2", "down", down - base, down),
-            List.of("group3", MAIN_SCENARIO_NAME, 0d, base),
-            List.of("group3", "down", down - base, down),
-            List.of("group3", "up", up - down, up));
+    Table table = this.executor.execute(query);
+    double base = 120d, up = 160d, down = 80d;
+    Assertions.assertThat(table).contains(
+            Arrays.asList("group2", MAIN_SCENARIO_NAME, 2022, null, 0d, base),
+            Arrays.asList("group2", "down", 2022, null, down - base, down),
+            Arrays.asList("group1", MAIN_SCENARIO_NAME, 2022, null, 0d, base),
+            Arrays.asList("group1", "up", 2022, null, up - base, up),
+
+            List.of("group2", MAIN_SCENARIO_NAME, 2023, 0d, 0d, base),
+            List.of("group2", "down", 2023, 0d, down - base, down),
+            List.of("group1", MAIN_SCENARIO_NAME, 2023, 0d, 0d, base),
+            List.of("group1", "up", 2023, 0d, up - base, up));
+    Assertions
+            .assertThat(table.headers().stream().map(Field::name))
+            .containsExactlyInAnyOrder(groupOfScenario, SCENARIO_FIELD_NAME, "year_sales", "salesYearComp", "salesGroupComp", "sum(sales)");
   }
 }
