@@ -58,6 +58,7 @@ public abstract class AComparisonExecutor {
     if (transformation.equals(REF_POS_FIRST)) {
       return REF_POS_FIRST;
     }
+
     Pattern shiftPattern = Pattern.compile("[a-zA-Z]+([-+])(\\d)");
     Pattern constantPattern = Pattern.compile("[a-zA-Z]+");
     Matcher m;

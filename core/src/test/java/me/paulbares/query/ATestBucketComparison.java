@@ -21,7 +21,7 @@ import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
 import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestScenarioGroupingExecutor {
+public abstract class ATestBucketComparison {
 
   protected NewQueryExecutor executor;
   protected Datastore datastore;
@@ -44,7 +44,7 @@ public abstract class ATestScenarioGroupingExecutor {
   }
 
   protected String groupOfScenario = "Group of scenario";
-  protected BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
+  protected BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, SCENARIO_FIELD_NAME)
           .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
           .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
           .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
@@ -88,6 +88,7 @@ public abstract class ATestScenarioGroupingExecutor {
 
   @BeforeEach
   void beforeEach() {
+    /// FIXME restore the cache in the future
 //    this.executor.queryCache.cache.invalidateAll();
   }
 
@@ -100,7 +101,7 @@ public abstract class ATestScenarioGroupingExecutor {
             price,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
-                    groupOfScenario, "g"
+                    this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("quantity", "sum");
     BinaryOperationMeasure quantityComp = new BinaryOperationMeasure(
@@ -109,12 +110,12 @@ public abstract class ATestScenarioGroupingExecutor {
             quantity,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
-                    groupOfScenario, "g"
+                    this.groupOfScenario, "g"
             ));
 
     var query = new NewQueryDto()
             .table(this.storeName)
-            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
+            .withColumnSet(NewQueryDto.BUCKET, this.bucketCS)
             .withMetric(priceComp)
             .withMetric(price)
             .withMetric(quantityComp)
@@ -122,7 +123,7 @@ public abstract class ATestScenarioGroupingExecutor {
 
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
-            groupOfScenario, SCENARIO_FIELD_NAME,
+            this.groupOfScenario, SCENARIO_FIELD_NAME,
             "priceDiff", "sum(price)",
             "quantityDiff", "sum(quantity)");
     Assertions.assertThat(dataset).containsExactlyInAnyOrder(
@@ -144,7 +145,7 @@ public abstract class ATestScenarioGroupingExecutor {
             price,
             Map.of(
                     SCENARIO_FIELD_NAME, "s-1",
-                    groupOfScenario, "g"
+                    this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("quantity", "sum");
     BinaryOperationMeasure quantityComp = new BinaryOperationMeasure(
@@ -153,12 +154,12 @@ public abstract class ATestScenarioGroupingExecutor {
             quantity,
             Map.of(
                     SCENARIO_FIELD_NAME, "s-1",
-                    groupOfScenario, "g"
+                    this.groupOfScenario, "g"
             ));
 
     var query = new NewQueryDto()
             .table(this.storeName)
-            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
+            .withColumnSet(NewQueryDto.BUCKET, this.bucketCS)
             .withMetric(priceComp)
             .withMetric(price)
             .withMetric(quantityComp)
@@ -188,7 +189,7 @@ public abstract class ATestScenarioGroupingExecutor {
             price,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
-                    groupOfScenario, "g"
+                    this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("quantity", "sum");
     BinaryOperationMeasure quantityComp = new BinaryOperationMeasure(
@@ -197,12 +198,12 @@ public abstract class ATestScenarioGroupingExecutor {
             quantity,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
-                    groupOfScenario, "g"
+                    this.groupOfScenario, "g"
             ));
 
     var query = new NewQueryDto()
             .table(this.storeName)
-            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
+            .withColumnSet(NewQueryDto.BUCKET, this.bucketCS)
             .withMetric(priceComp)
             .withMetric(price)
             .withMetric(quantityComp)

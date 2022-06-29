@@ -8,7 +8,7 @@ import me.paulbares.transaction.TransactionManager;
 
 import java.util.List;
 
-public class TestSparkScenarioGroupingExecutor extends ATestScenarioGroupingExecutor {
+public class TestSparkBucketComparison extends ATestBucketComparison {
 
   @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {

@@ -105,9 +105,8 @@ public abstract class ATestNewQueryExecutor {
   protected void beforeLoading(List<Field> fields) {
   }
 
-  // TODO test in separated class with comparison api like scenariogrouping executor
   @Test
-  void testBucketColumnSet() {
+  void testBucketColumnSetNoComparison() {
     String groupOfScenario = "Group of scenario";
     BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
@@ -159,7 +158,7 @@ public abstract class ATestNewQueryExecutor {
   }
 
   @Test
-  void testBucketAndPeriodColumnSets() {
+  void testBucketAndPeriodColumnSetsNoComparison() {
     Period.Year period = new Period.Year("year_sales");
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
     AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
@@ -172,6 +171,48 @@ public abstract class ATestNewQueryExecutor {
             .table(this.storeName)
             .withColumnSet(NewQueryDto.BUCKET, bucketCS)
             .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withMetric(sales);
+
+    double base = 120d, up = 160d, down = 80d;
+    Table table = this.executor.execute(query);
+    Assertions.assertThat(table.count()).isEqualTo(8);
+    // we do not assert each row because there are too many. Limit to base scenario.
+    Assertions.assertThat(table).contains(
+            List.of("group2", MAIN_SCENARIO_NAME, 2022, base),
+            List.of("group2", "down", 2022, down),
+            List.of("group1", MAIN_SCENARIO_NAME, 2022, base),
+            List.of("group1", "up", 2022, up),
+
+            List.of("group2", MAIN_SCENARIO_NAME, 2023, base),
+            List.of("group2", "down", 2023, down),
+            List.of("group1", MAIN_SCENARIO_NAME, 2023, base),
+            List.of("group1", "up", 2023, up));
+    Assertions
+            .assertThat(table.headers().stream().map(Field::name))
+            .containsExactlyInAnyOrder("year_sales", groupOfScenario, SCENARIO_FIELD_NAME, "sum(sales)");
+  }
+
+  @Test
+  void testBucketAndPeriodColumnSetsComparisonPeriod() {
+    Period.Year period = new Period.Year("year_sales");
+    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
+    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
+    String groupOfScenario = "Group of scenario";
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
+            .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
+            .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
+
+    BinaryOperationMeasure salesYearComp = new BinaryOperationMeasure(
+            "salesYearComp",
+            BinaryOperations.DIVIDE,
+            sales,
+            Map.of("year_sales", "y-1"));
+
+    var query = new NewQueryDto()
+            .table(this.storeName)
+            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
+            .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withMetric(salesYearComp)
             .withMetric(sales);
 
     double base = 120d, up = 160d, down = 80d;
@@ -235,8 +276,7 @@ public abstract class ATestNewQueryExecutor {
             .withColumnSet(NewQueryDto.BUCKET, bucketCS)
 //            .withMetric(myMeasureGroupComp)
             .withMetric(salesGroupComp)
-            .withMetric(sales)
-            ;
+            .withMetric(sales);
 
     Table execute = this.executor.execute(query);
     double base = 240d, up = 320d, down = 160d;

@@ -5,8 +5,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import me.paulbares.jackson.deserializer.ColumnSetDeserializer;
+import me.paulbares.jackson.deserializer.ColumnSetSerializer;
 import me.paulbares.jackson.deserializer.ConditionDeserializer;
 import me.paulbares.jackson.deserializer.MeasureDeserializer;
+import me.paulbares.query.ColumnSet;
 import me.paulbares.query.Measure;
 import me.paulbares.query.Table;
 import me.paulbares.query.dto.ConditionDto;
@@ -27,6 +30,8 @@ public class JacksonUtil {
     simpleModule.addDeserializer(Measure.class, new MeasureDeserializer());
     mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
     simpleModule.addDeserializer(ConditionDto.class, new ConditionDeserializer());
+    simpleModule.addDeserializer(ColumnSet.class, new ColumnSetDeserializer());
+    simpleModule.addSerializer(ColumnSet.class, new ColumnSetSerializer());
     mapper.registerModule(simpleModule);
   }
 

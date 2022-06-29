@@ -18,7 +18,7 @@ public class BinaryOperations {
   public static Class<?> getOutputType(String method, Class<?> dataType) {
     return switch (method) {
       case ABS_DIFF -> dataType;
-      case REL_DIFF -> double.class;
+      case REL_DIFF, DIVIDE -> double.class;
       default -> throw new IllegalArgumentException(String.format("Not supported comparison %s", method));
     };
   }

@@ -13,7 +13,7 @@ public class BinaryOperationMeasure implements Measure {
 
   public String method;
 
-  public Measure measure; // FIXME support any
+  public Measure measure;
 
   public Map<String, String> referencePosition; // TODO support first and last
 

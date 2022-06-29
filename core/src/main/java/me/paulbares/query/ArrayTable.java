@@ -20,11 +20,6 @@ public class ArrayTable extends ATable {
 
   @Override
   public void addAggregates(Field field, Measure measure, List<Object> values) {
-//    this.headers.add(field);
-//    this.measures.add(measure);
-//    this.measureIndices = Arrays.copyOf(this.measureIndices, this.measureIndices.length + 1);
-//    this.measureIndices[this.measureIndices.length - 1] = this.measures.size();
-//    this.values.add(values);
     throw new RuntimeException("not right path");
   }
 

@@ -14,7 +14,7 @@ import java.util.List;
 import static me.paulbares.query.TestUtils.createClickHouseContainer;
 import static me.paulbares.query.TestUtils.jdbcUrl;
 
-public class TestClickHouseScenarioGroupingExecutor extends ATestScenarioGroupingExecutor {
+public class TestClickHouseBucketComparison extends ATestBucketComparison {
 
   @Container
   public GenericContainer container = createClickHouseContainer();

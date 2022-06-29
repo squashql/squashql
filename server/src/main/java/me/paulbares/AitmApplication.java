@@ -1,6 +1,5 @@
-package me.paulbares.spring;
+package me.paulbares;
 
-import me.paulbares.SaaSUseCaseDataLoader;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.SparkQueryEngine;
 import org.springframework.boot.SpringApplication;
@@ -11,10 +10,10 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @SpringBootApplication
-public class ScenarioAnalysisApplication {
+public class AitmApplication {
 
   public static void main(String[] args) {
-    SpringApplication.run(ScenarioAnalysisApplication.class, args);
+    SpringApplication.run(AitmApplication.class, args);
   }
 
   @Bean

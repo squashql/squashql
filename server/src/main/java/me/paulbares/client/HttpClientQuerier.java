@@ -6,8 +6,7 @@ import feign.RequestLine;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.query.dto.QueryDto;
-import me.paulbares.query.dto.ScenarioGroupingQueryDto;
+import me.paulbares.query.dto.NewQueryDto;
 import me.paulbares.spring.web.rest.SparkQueryController;
 import okhttp3.OkHttpClient;
 
@@ -28,12 +27,7 @@ public class HttpClientQuerier {
     this.url = url;
   }
 
-  public SimpleTable run(QueryDto query) {
-    QueryApi target = builder.target(QueryApi.class, this.url);
-    return target.run(query);
-  }
-
-  public SimpleTable run(ScenarioGroupingQueryDto query) {
+  public SimpleTable run(NewQueryDto query) {
     QueryApi target = builder.target(QueryApi.class, this.url);
     return target.run(query);
   }
@@ -44,13 +38,9 @@ public class HttpClientQuerier {
   }
 
   interface QueryApi {
-    @RequestLine("POST " + SparkQueryController.MAPPING_QUERY_GROUPING)
-    @Headers("Content-Type: application/json")
-    SimpleTable run(ScenarioGroupingQueryDto query);
-
     @RequestLine("POST " + SparkQueryController.MAPPING_QUERY)
     @Headers("Content-Type: application/json")
-    SimpleTable run(QueryDto query);
+    SimpleTable run(NewQueryDto query);
 
     @RequestLine("GET " + SparkQueryController.MAPPING_METADATA)
     Map<Object, Object> metadata();

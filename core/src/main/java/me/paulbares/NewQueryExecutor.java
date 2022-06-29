@@ -9,6 +9,7 @@ import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 public class NewQueryExecutor {
@@ -24,12 +25,15 @@ public class NewQueryExecutor {
     query.columnSets.values().forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
     query.columns.forEach(finalColumns::add);
 
-    Map<Measure, LinkedList<Measure>> graphByMeasure = new HashMap<>();
-    query.measures.forEach(m -> {
-      LinkedList<Measure> g = new LinkedList<>();
-      buildDependencyGraph(g, m);
-      graphByMeasure.put(m, g);
-    });
+    Supplier<Map<Measure, LinkedList<Measure>>> graphByMeasureSupplier = () -> {
+      Map<Measure, LinkedList<Measure>> graphByMeasure = new HashMap<>();
+      query.measures.forEach(m -> {
+        LinkedList<Measure> g = new LinkedList<>();
+        buildDependencyGraph(g, m);
+        graphByMeasure.put(m, g);
+      });
+      return graphByMeasure;
+    };
 
     List<String> cols = new ArrayList<>();
     query.columns.forEach(cols::add);
@@ -41,59 +45,18 @@ public class NewQueryExecutor {
     measuresToPrefetch.forEach(prefetchQuery::withMeasure);
     Table[] intermediateResult = new Table[]{this.queryEngine.execute(prefetchQuery)};
 
-    Map<Measure, List<Object>> aggregateValuesByMeasure = new HashMap<>();
     if (query.columnSets.containsKey(NewQueryDto.PERIOD)) {
       PeriodColumnSetDto columnSet = (PeriodColumnSetDto) query.columnSets.get(NewQueryDto.PERIOD);
       PeriodComparisonExecutor periodComparisonExecutor = new PeriodComparisonExecutor(columnSet);
-
-      graphByMeasure.forEach((m, graph) -> {
-        Measure last = graph.pollLast();
-        aggregateValuesByMeasure.computeIfAbsent(last, intermediateResult[0]::getAggregateValues);
-        while ((last = graph.pollLast()) != null) {
-          aggregateValuesByMeasure.computeIfAbsent(last, measure -> {
-            if (measure instanceof BinaryOperationMeasure bom) {
-              List<Object> agg = periodComparisonExecutor.compare(bom, intermediateResult[0]);
-              String newName = bom.alias == null
-                      ? String.format("%s(%s, %s)", bom.method, bom.measure.alias(), bom.referencePosition)
-                      : bom.alias;
-              Field field = new Field(newName, BinaryOperations.getOutputType(bom.method, intermediateResult[0].getField(bom.measure).type()));
-              intermediateResult[0].addAggregates(field, bom, agg);
-              return agg;
-            } else {
-              throw new IllegalStateException("unexpected measure type " + measure.getClass());
-            }
-          });
-        }
-      });
+      executeComparator(graphByMeasureSupplier.get(), intermediateResult[0], periodComparisonExecutor);
     }
 
     if (query.columnSets.containsKey(NewQueryDto.BUCKET)) {
       // Now bucket...
       BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(NewQueryDto.BUCKET);
       intermediateResult[0] = BucketerExecutor.bucket(intermediateResult[0], columnSet);
-
       BucketComparisonExecutor bucketComparisonExecutor = new BucketComparisonExecutor(columnSet);
-
-      // TODO execute bucket comparison.
-      graphByMeasure.forEach((m, graph) -> {
-        Measure last = graph.pollLast();
-        aggregateValuesByMeasure.computeIfAbsent(last, intermediateResult[0]::getAggregateValues);
-        while ((last = graph.pollLast()) != null) {
-          aggregateValuesByMeasure.computeIfAbsent(last, measure -> {
-            if (measure instanceof BinaryOperationMeasure bom) {
-              List<Object> agg = bucketComparisonExecutor.compare(bom, intermediateResult[0]);
-              String newName = bom.alias == null
-                      ? String.format("%s(%s, %s)", bom.method, bom.measure.alias(), bom.referencePosition)
-                      : bom.alias;
-              Field field = new Field(newName, BinaryOperations.getOutputType(bom.method, intermediateResult[0].getField(bom.measure).type()));
-              intermediateResult[0].addAggregates(field, bom, agg);
-              return agg;
-            } else {
-              throw new IllegalStateException("unexpected measure type " + measure.getClass());
-            }
-          });
-        }
-      });
+      executeComparator(graphByMeasureSupplier.get(), intermediateResult[0], bucketComparisonExecutor);
     }
 
     // Once complete, construct the final result with columns in correct order.
@@ -131,5 +94,29 @@ public class NewQueryExecutor {
     if (measure instanceof BinaryOperationMeasure bom) {
       buildDependencyGraph(graph, bom.measure);
     }
+  }
+
+  private void executeComparator(Map<Measure, LinkedList<Measure>> measureGraph, Table intermediateResult, AComparisonExecutor executor) {
+    Map<Measure, List<Object>> aggregateValuesByMeasure = new HashMap<>();
+    measureGraph.forEach((m, graph) -> {
+      Measure last = graph.pollLast();
+      aggregateValuesByMeasure.computeIfAbsent(last, intermediateResult::getAggregateValues);
+      while ((last = graph.pollLast()) != null) {
+        aggregateValuesByMeasure.computeIfAbsent(last, measure -> {
+          if (measure instanceof BinaryOperationMeasure bom) {
+            // FIXME check where the comparison happen.
+            List<Object> agg = executor.compare(bom, intermediateResult);
+            String newName = bom.alias == null
+                    ? String.format("%s(%s, %s)", bom.method, bom.measure.alias(), bom.referencePosition)
+                    : bom.alias;
+            Field field = new Field(newName, BinaryOperations.getOutputType(bom.method, intermediateResult.getField(bom.measure).type()));
+            intermediateResult.addAggregates(field, bom, agg);
+            return agg;
+          } else {
+            throw new IllegalStateException("unexpected measure type " + measure.getClass());
+          }
+        });
+      }
+    });
   }
 }

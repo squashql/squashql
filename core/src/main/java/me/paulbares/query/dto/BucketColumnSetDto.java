@@ -7,6 +7,7 @@ import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class BucketColumnSetDto implements ColumnSet {
 
@@ -40,5 +41,18 @@ public class BucketColumnSetDto implements ColumnSet {
   @Override
   public List<Field> getNewColumns() {
     return List.of(new Field(this.name, String.class), new Field(this.field, String.class));
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    BucketColumnSetDto that = (BucketColumnSetDto) o;
+    return Objects.equals(this.name, that.name) && Objects.equals(this.field, that.field) && Objects.equals(this.values, that.values);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.name, this.field, this.values);
   }
 }

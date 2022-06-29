@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import static me.paulbares.query.QueryBuilder.*;
+import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
 import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
 public class TestQueryS13n {
@@ -74,59 +75,55 @@ public class TestQueryS13n {
   }
 
   @Test
-  void testRoundTripScenarioComparisonQuery() {
-    var query = scenarioComparisonQuery()
+  void testRoundTripBucketComparisonQuery() {
+    String groupOfScenario = "Group of scenario";
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
+            .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
+            .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
+            .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
+
+    AggregatedMeasure price = new AggregatedMeasure("price", "sum");
+    BinaryOperationMeasure priceComp = new BinaryOperationMeasure(
+            "priceDiff",
+            BinaryOperations.ABS_DIFF,
+            price,
+            Map.of(
+                    SCENARIO_FIELD_NAME, "first",
+                    groupOfScenario, "g"
+            ));
+
+    var query = new NewQueryDto()
             .table("products")
-            .defineNewGroup("group1", "base", "s1")
-            .defineNewGroup("group2", "base", "s1", "s2")
-            .defineNewGroup("group3", "base", "s2");
-
-    ScenarioComparisonDto comparison = comparison(
-            "absolute_difference",
-            new AggregatedMeasure("price", "sum"),
-            true,
-            "first");
-
-    query.addScenarioComparison(comparison);
+            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
+            .withMetric(priceComp)
+            .withMetric(price);
 
     String serialize = query.json();
-    ScenarioGroupingQueryDto deserialize = JacksonUtil.deserialize(serialize, ScenarioGroupingQueryDto.class);
-    Assertions.assertThat(deserialize.table).isEqualTo(query.table);
-    Assertions.assertThat(deserialize.comparisons).isEqualTo(query.comparisons);
-    Assertions.assertThat(deserialize.groups).isEqualTo(query.groups);
+    NewQueryDto deserialize = JacksonUtil.deserialize(serialize, NewQueryDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(query);
   }
 
   @Test
   void testRoundTripPeriodBucketingComparisonQuery() {
+    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
     BinaryOperationMeasure m = new BinaryOperationMeasure(
             "myMeasure",
             BinaryOperations.ABS_DIFF,
-            new AggregatedMeasure("sales", "sum"),
-            Map.of(
-                    BinaryOperationMeasure.PeriodUnit.QUARTER.name(), "q",
-                    BinaryOperationMeasure.PeriodUnit.YEAR.name(), "y-1"
-            ));
+            sales,
+            Map.of("year_sales", "y-1"));
 
-    List<Period> periods = List.of(
-            new Period.Quarter("trimestre", "annee"),
-            new Period.Year("annee"),
-            new Period.Semester("semestre", "annee")
-    );
+    Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
+    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
 
-    for (Period period : periods) {
-      var query = new PeriodBucketingQueryDto()
-              .table("products")
-              .wildcardCoordinate("scenario")
-              .period(period)
-              .withMeasure(m);
+    var query = new NewQueryDto()
+            .table("products")
+            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withMetric(m)
+            .withMetric(sales);
 
-      String serialize = query.json();
-      PeriodBucketingQueryDto deserialize = JacksonUtil.deserialize(serialize, PeriodBucketingQueryDto.class);
-      Assertions.assertThat(serialize).contains(period.getJsonKey());
-      Assertions.assertThat(deserialize.table).isEqualTo(query.table);
-      Assertions.assertThat(deserialize.period).isEqualTo(query.period);
-      Assertions.assertThat(deserialize.coordinates).isEqualTo(query.coordinates);
-      Assertions.assertThat(deserialize.measures).isEqualTo(query.measures);
-    }
+    String serialize = query.json();
+    NewQueryDto deserialize = JacksonUtil.deserialize(serialize, NewQueryDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(query);
   }
 }

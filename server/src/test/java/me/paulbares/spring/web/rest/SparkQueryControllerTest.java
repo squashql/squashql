@@ -2,21 +2,17 @@ package me.paulbares.spring.web.rest;
 
 import me.paulbares.client.SimpleTable;
 import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.query.AggregatedMeasure;
-import me.paulbares.query.ExpressionMeasure;
-import me.paulbares.query.Measure;
-import me.paulbares.query.QueryBuilder;
-import me.paulbares.query.QueryEngine;
-import me.paulbares.query.UnresolvedExpressionMeasure;
+import me.paulbares.query.*;
+import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.Repository;
 import me.paulbares.query.context.Totals;
-import me.paulbares.query.dto.QueryDto;
-import me.paulbares.query.dto.ScenarioComparisonDto;
-import me.paulbares.query.dto.ScenarioGroupingQueryDto;
+import me.paulbares.query.dto.BucketColumnSetDto;
+import me.paulbares.query.dto.NewQueryDto;
 import me.paulbares.query.dto.TableDto;
+import me.paulbares.spring.ApplicationForTest;
 import me.paulbares.spring.config.DatasetTestConfig;
-import me.paulbares.store.Datastore;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -27,18 +23,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import static me.paulbares.query.ScenarioGroupingExecutor.REF_POS_PREVIOUS;
-import static me.paulbares.query.comp.BinaryOperations.ABS_DIFF;
 import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
 import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = "spring.main.allow-bean-definition-overriding=true")
+@SpringBootTest(classes = ApplicationForTest.class, properties = "spring.main.allow-bean-definition-overriding=true")
 @Import(DatasetTestConfig.class)
 @AutoConfigureMockMvc
 public class SparkQueryControllerTest {
@@ -64,6 +57,7 @@ public class SparkQueryControllerTest {
   }
 
   @Test
+  @Disabled // not supported for now
   void testQueryWithRepo() throws Exception {
     testQuery(true);
   }
@@ -71,11 +65,10 @@ public class SparkQueryControllerTest {
   void testQuery(boolean withRepo) throws Exception {
     var our = createTableDto();
 
-    var query = QueryBuilder
-            .query()
+    var query = new NewQueryDto()
             .table(our)
-            .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
-            .wildcardCoordinate("ean")
+            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumn("ean")
             .aggregatedMeasure("capdv", "sum");
 
     if (withRepo) {
@@ -118,10 +111,11 @@ public class SparkQueryControllerTest {
   }
 
   @Test
+  @Disabled // total not supported for now
   void testQueryWithTotals() throws Exception {
-    QueryDto query = new QueryDto()
+    NewQueryDto query = new NewQueryDto()
             .table("our_prices")
-            .wildcardCoordinate(SCENARIO_FIELD_NAME)
+            .withColumn(SCENARIO_FIELD_NAME)
             .context(Totals.KEY, QueryBuilder.TOP)
             .aggregatedMeasure("quantity", "sum");
     this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
@@ -131,22 +125,24 @@ public class SparkQueryControllerTest {
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               SimpleTable table = JacksonUtil.mapper.readValue(contentAsString, SimpleTable.class);
-              assertQueryWithTotals(table);
+              assertQuery(table, true);
             });
   }
 
-  static void assertQueryWithTotals(SimpleTable table) {
-    Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
-            Arrays.asList(QueryEngine.GRAND_TOTAL, 5 * 4000),
-            List.of("MDD up", 4000),
+  static void assertQuery(SimpleTable table, boolean withTotals) {
+    List[] lists = {List.of("MDD up", 4000),
             List.of("MN & MDD down", 4000),
             List.of("MN & MDD up", 4000),
             List.of("MN up", 4000),
-            List.of(MAIN_SCENARIO_NAME, 4000)
-    );
+            List.of(MAIN_SCENARIO_NAME, 4000)};
+    if (withTotals) {
+      Arrays.copyOf(lists, lists.length + 1);
+      lists[lists.length - 1] = Arrays.asList(QueryEngine.GRAND_TOTAL, 5 * 4000);
+      Assertions.assertThat(table.rows).containsExactlyInAnyOrder(lists);
+    }
+    Assertions.assertThat(table.rows).containsExactlyInAnyOrder(lists);
     Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "sum(quantity)");
   }
-
 
   @Test
   void testMetadata() throws Exception {
@@ -214,36 +210,54 @@ public class SparkQueryControllerTest {
   }
 
   @Test
+  @Disabled // repo not supported for the moment
   void testScenarioGroupingQueryWithRepo() throws Exception {
     testScenarioGroupingQuery(true);
   }
 
   private void testScenarioGroupingQuery(boolean withRepo) throws Exception {
-    Map<String, List<String>> groups = new LinkedHashMap<>();
-    groups.put("group1", List.of(MAIN_SCENARIO_NAME, "MN up"));
-    groups.put("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"));
-    groups.put("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", SCENARIO_FIELD_NAME)
+            .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
+            .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
+            .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
 
-    ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
-            .table(createTableDto())
-            .groups(groups);
     AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("capdv", "sum");
     Measure indicePrix;
     if (withRepo) {
       indicePrix = new UnresolvedExpressionMeasure("indice_prix");
-      query.context(Repository.KEY, new Repository(REPO_URL));
     } else {
       indicePrix = new ExpressionMeasure(
               "indice_prix",
               "sum(capdv) / sum(competitor_price * quantity)");
     }
-    query
-            .addScenarioComparison(
-                    new ScenarioComparisonDto(ABS_DIFF, aggregatedMeasure, false, REF_POS_PREVIOUS))
-            .addScenarioComparison(
-                    new ScenarioComparisonDto(ABS_DIFF, indicePrix, false, REF_POS_PREVIOUS));
+    BinaryOperationMeasure aggregatedMeasureDiff = new BinaryOperationMeasure(
+            "aggregatedMeasureDiff",
+            BinaryOperations.ABS_DIFF,
+            aggregatedMeasure,
+            Map.of(
+                    SCENARIO_FIELD_NAME, "s-1",
+                    "group", "g"
+            ));
+    BinaryOperationMeasure indicePrixDiff = new BinaryOperationMeasure(
+            "indicePrixDiff",
+            BinaryOperations.ABS_DIFF,
+            indicePrix,
+            Map.of(
+                    SCENARIO_FIELD_NAME, "s-1",
+                    "group", "g"
+            ));
 
-    this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY_GROUPING)
+    var query = new NewQueryDto()
+            .table(createTableDto())
+            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
+            .withMetric(aggregatedMeasureDiff)
+            .withMetric(indicePrixDiff);
+
+    if (withRepo) {
+      query.context(Repository.KEY, new Repository(REPO_URL));
+    }
+
+    this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
                     .content(JacksonUtil.serialize(query))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -253,7 +267,7 @@ public class SparkQueryControllerTest {
               double baseValue = 0.9803921568627451d;
               double mnValue = 1.0294117647058822d;
               double mnmddValue = 1.0784313725490196d;
-              Assertions.assertThat((List) queryResult.get("rows")).containsExactly(
+              Assertions.assertThat((List) queryResult.get("rows")).containsExactlyInAnyOrder(
                       List.of("group1", MAIN_SCENARIO_NAME, 0d, 0d),
                       List.of("group1", "MN up", 10_000d, mnValue - baseValue),
                       List.of("group2", MAIN_SCENARIO_NAME, 0d, 0d),
@@ -264,8 +278,8 @@ public class SparkQueryControllerTest {
               Assertions.assertThat((List) queryResult.get("columns"))
                       .containsExactly("group",
                               SCENARIO_FIELD_NAME,
-                              "absolute_difference(sum(capdv), previous)",
-                              "absolute_difference(indice_prix, previous)");
+                              "aggregatedMeasureDiff",
+                              "indicePrixDiff");
             });
   }
 }

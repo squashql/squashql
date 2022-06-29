@@ -8,10 +8,7 @@ import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 public class BucketerExecutor {
@@ -83,7 +80,7 @@ public class BucketerExecutor {
     }
     Function<Object[], List<Object[]>> bucketer = toBucketColumnValues -> {
       List<String> buckets = bucketsByValue.get(toBucketColumnValues[0]);
-      return buckets.stream().map(b -> new Object[]{b, toBucketColumnValues[0]}).toList();
+      return buckets == null ? Collections.emptyList() : buckets.stream().map(b -> new Object[]{b, toBucketColumnValues[0]}).toList();
     };
     return bucketer;
   }

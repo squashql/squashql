@@ -1,6 +1,7 @@
 package me.paulbares.query.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.jackson.deserializer.ContextValueDeserializer;
 import me.paulbares.query.*;
 import me.paulbares.query.context.ContextValue;
@@ -16,6 +17,12 @@ public class NewQueryDto {
 
   public List<String> columns = new ArrayList<>();
 
+//  @JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT, use = JsonTypeInfo.Id.NAME)
+//  @JsonSubTypes({
+//          @JsonSubTypes.Type(value = BucketColumnSetDto.class, name = BUCKET),
+//          @JsonSubTypes.Type(value = PeriodColumnSetDto.class, name = PERIOD),
+//  })
+//  @JsonUnwrapped
   public Map<String, ColumnSet> columnSets = new LinkedHashMap<>();
 
   public List<Measure> measures = new ArrayList<>();
@@ -65,12 +72,29 @@ public class NewQueryDto {
   }
 
   public NewQueryDto table(TableDto table) {
-    table(table.name);
+    this.table = table;
     return this;
   }
 
   public NewQueryDto table(String tableName) {
-    this.table = new TableDto(tableName);
+    table(new TableDto(tableName));
     return this;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    NewQueryDto that = (NewQueryDto) o;
+    return Objects.equals(this.table, that.table) && Objects.equals(this.columns, that.columns) && Objects.equals(this.columnSets, that.columnSets) && Objects.equals(this.measures, that.measures) && Objects.equals(this.context, that.context);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.table, this.columns, this.columnSets, this.measures, this.context);
+  }
+
+  public String json() {
+    return JacksonUtil.serialize(this);
   }
 }

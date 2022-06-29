@@ -16,6 +16,7 @@ public class GlobalErrorHandler {
     StringWriter stringWriter = new StringWriter();
     PrintWriter printWriter = new PrintWriter(stringWriter);
     exception.printStackTrace(printWriter);
+    exception.printStackTrace();
     return ResponseEntity.internalServerError().body(stringWriter.toString());
   }
 }

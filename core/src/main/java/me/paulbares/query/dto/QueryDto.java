@@ -115,7 +115,8 @@ public class QueryDto {
 
   @Override
   public String toString() {
-    return "QueryDto{" +
+    return getClass().getSimpleName() +
+            "{" +
             "coordinates=" + coordinates +
             ", conditions=" + conditions +
             ", measures=" + measures +
