@@ -55,6 +55,10 @@ public abstract class AComparisonExecutor {
   }
 
   public static Object parse(String transformation) {
+    if (transformation == null) {
+      return null;
+    }
+
     if (transformation.equals(REF_POS_FIRST)) {
       return REF_POS_FIRST;
     }

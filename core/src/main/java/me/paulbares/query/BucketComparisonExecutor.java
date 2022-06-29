@@ -45,7 +45,7 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
     @Override
     public boolean test(Object[] row) {
       Object bucketTransformation = this.transformationByColumn.get(0).getTwo();
-      int bucketIndex = this.indexByColumn.get(this.transformationByColumn.get(0).getOne());
+      int bucketIndex = this.indexByColumn.getIfAbsent(this.transformationByColumn.get(0).getOne(), -1);
       if (bucketTransformation != null) {
         String bucket = (String) row[bucketIndex];
         row[bucketIndex] = null; // apply transformation
@@ -53,7 +53,7 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
 
       Object fieldTransformation = this.transformationByColumn.get(1).getTwo();
       if (fieldTransformation != null) {
-        int fieldIndex = this.indexByColumn.get(this.transformationByColumn.get(1).getOne());
+        int fieldIndex = this.indexByColumn.getIfAbsent(this.transformationByColumn.get(1).getOne(), -1);
         String b = (String) row[bucketIndex];
         List<String> values = this.valuesByBucket.get(b);
         if (fieldTransformation instanceof Integer) {
