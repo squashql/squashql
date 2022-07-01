@@ -1,6 +1,6 @@
 package me.paulbares.spring.web.rest;
 
-import me.paulbares.NewQueryExecutor;
+import me.paulbares.query.NewQueryExecutor;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.ExpressionMeasure;
 import me.paulbares.query.ExpressionResolver;

@@ -1,6 +1,5 @@
 package me.paulbares.query;
 
-import me.paulbares.NewQueryExecutor;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.dto.BucketColumnSetDto;

@@ -1,6 +1,5 @@
-package me.paulbares;
+package me.paulbares.query;
 
-import me.paulbares.query.*;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.NewQueryDto;
