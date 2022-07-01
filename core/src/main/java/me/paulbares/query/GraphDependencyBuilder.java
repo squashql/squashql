@@ -32,6 +32,7 @@ public class GraphDependencyBuilder<N> {
 
   private void addToGraph(MutableGraph<NodeWithId<N>> graph, Function<N, NodeWithId<N>> transformer, N node) {
     Set<N> dependencies = this.dependencySupplier.apply(node);
+    graph.addNode(transformer.apply(node));
     for (N dependency : dependencies) {
       graph.addNode(transformer.apply(dependency));
       graph.putEdge(transformer.apply(node), transformer.apply(dependency));

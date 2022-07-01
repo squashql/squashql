@@ -54,16 +54,9 @@ public class TestExecutionPlan {
 
     Graph<GraphDependencyBuilder.NodeWithId<Node>> graph = builder.build(List.of(a1, b1));
     List<Node> nodes = new ArrayList<>();
-    ExecutionPlan<Node> plan = new ExecutionPlan<>(graph) {
-      @Override
-      protected void executeNode(Node node) {
-        super.executeNode(node);
-        nodes.add(node);
-      }
-    };
+    ExecutionPlan<Node, Void> plan = new ExecutionPlan<>(graph, (n, c) -> nodes.add(n));
 
-    plan.execute();
-    System.out.println(nodes);
+    plan.execute(null);
 
     Assertions.assertThat(plan.getLeaves()).containsExactlyInAnyOrder(e3, f3, g3);
     Assertions.assertThat(plan.getRoots()).containsExactlyInAnyOrder(a1, b1);
