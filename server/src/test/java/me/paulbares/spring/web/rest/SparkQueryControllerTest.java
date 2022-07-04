@@ -176,7 +176,7 @@ public class SparkQueryControllerTest {
 
     Assertions.assertThat((List) objects.get(SparkQueryController.METADATA_AGG_FUNCS_KEY)).containsExactlyInAnyOrder(SparkQueryController.SUPPORTED_AGG_FUNCS.toArray(new String[0]));
     if (withRepo) {
-      Assertions.assertThat((List) objects.get(SparkQueryController.METADATA_METRICS_KEY)).containsExactlyInAnyOrder(
+      Assertions.assertThat((List) objects.get(SparkQueryController.METADATA_MEASURES_KEY)).containsExactlyInAnyOrder(
               Map.of("alias", "indice_prix", "expression", "sum(capdv) / sum(competitor_price * quantity)"),
               Map.of("alias", "capdv_concurrents", "expression", "sum(competitor_price * quantity)")
       );
@@ -228,8 +228,8 @@ public class SparkQueryControllerTest {
     var query = new QueryDto()
             .table(createTableDto())
             .withColumnSet(QueryDto.BUCKET, bucketCS)
-            .withMetric(aggregatedMeasureDiff)
-            .withMetric(indicePrixDiff);
+            .withMeasure(aggregatedMeasureDiff)
+            .withMeasure(indicePrixDiff);
 
     if (withRepo) {
       query.context(Repository.KEY, new Repository(REPO_URL));

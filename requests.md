@@ -16,7 +16,7 @@ Response:
         "stddev_pop",
         "count"
     ],
-    "metrics": [
+    "measures": [
         {
             "alias": "indice-prix",
             "expression": "sum(capdv) / sum(competitor_price * quantity)"

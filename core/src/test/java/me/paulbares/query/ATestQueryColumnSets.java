@@ -121,7 +121,7 @@ public abstract class ATestQueryColumnSets {
     var query = new QueryDto()
             .table(this.storeName)
             .withColumnSet(QueryDto.BUCKET, bucketCS)
-            .withMetric(sales);
+            .withMeasure(sales);
 
     Table execute = this.executor.execute(query);
 
@@ -140,7 +140,7 @@ public abstract class ATestQueryColumnSets {
             .table(this.storeName)
             .withColumn("category")
             .withColumnSet(QueryDto.BUCKET, bucketCS)
-            .withMetric(sales);
+            .withMeasure(sales);
 
     execute = this.executor.execute(query);
     Assertions.assertThat(execute).containsExactlyInAnyOrder(
@@ -175,7 +175,7 @@ public abstract class ATestQueryColumnSets {
             .table(this.storeName)
             .withColumnSet(QueryDto.BUCKET, bucketCS)
             .withColumnSet(QueryDto.PERIOD, periodCS)
-            .withMetric(sales);
+            .withMeasure(sales);
 
     double base = 120d, up = 160d, down = 80d;
     Table table = this.executor.execute(query);
@@ -216,8 +216,8 @@ public abstract class ATestQueryColumnSets {
             .table(this.storeName)
             .withColumnSet(QueryDto.BUCKET, bucketCS)
             .withColumnSet(QueryDto.PERIOD, periodCS)
-            .withMetric(salesYearComp)
-            .withMetric(sales);
+            .withMeasure(salesYearComp)
+            .withMeasure(sales);
 
     double base = 120d, up = 160d, down = 80d;
     Table table = this.executor.execute(query);
@@ -258,8 +258,8 @@ public abstract class ATestQueryColumnSets {
             .table(this.storeName)
             .withColumnSet(QueryDto.BUCKET, bucketCS)
             .withColumnSet(QueryDto.PERIOD, periodCS)
-            .withMetric(salesYearComp)
-            .withMetric(sales);
+            .withMeasure(salesYearComp)
+            .withMeasure(sales);
 
     double base = 120d, up = 160d, down = 80d;
     Table table = this.executor.execute(query);
@@ -305,9 +305,9 @@ public abstract class ATestQueryColumnSets {
             .table(this.storeName)
             .withColumnSet(QueryDto.BUCKET, bucketCS)
             .withColumnSet(QueryDto.PERIOD, periodCS)
-            .withMetric(salesYearComp)
-            .withMetric(salesGroupComp)
-            .withMetric(sales);
+            .withMeasure(salesYearComp)
+            .withMeasure(salesGroupComp)
+            .withMeasure(sales);
 
     Table table = this.executor.execute(query);
     double base = 120d, up = 160d, down = 80d;

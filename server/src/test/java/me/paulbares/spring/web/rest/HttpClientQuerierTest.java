@@ -81,8 +81,8 @@ public class HttpClientQuerierTest {
     var query = new QueryDto()
             .table("our_prices")
             .withColumnSet(QueryDto.BUCKET, bucketCS)
-            .withMetric(capdvDiff)
-            .withMetric(aggregatedMeasure);
+            .withMeasure(capdvDiff)
+            .withMeasure(aggregatedMeasure);
 
     SimpleTable table = querier.run(query);
     double baseValue = 40_000d;

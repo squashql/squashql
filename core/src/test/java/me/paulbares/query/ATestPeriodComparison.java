@@ -113,8 +113,8 @@ public abstract class ATestPeriodComparison {
     var query = new QueryDto()
             .table(this.storeName)
             .withColumnSet(QueryDto.PERIOD, periodCS)
-            .withMetric(m)
-            .withMetric(sales);
+            .withMeasure(m)
+            .withMeasure(sales);
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
@@ -149,8 +149,8 @@ public abstract class ATestPeriodComparison {
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
             .withColumnSet(QueryDto.PERIOD, periodCS)
-            .withMetric(m)
-            .withMetric(sales);
+            .withMeasure(m)
+            .withMeasure(sales);
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
@@ -182,8 +182,8 @@ public abstract class ATestPeriodComparison {
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
             .withColumnSet(QueryDto.PERIOD, periodCS)
-            .withMetric(m)
-            .withMetric(sales);
+            .withMeasure(m)
+            .withMeasure(sales);
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(

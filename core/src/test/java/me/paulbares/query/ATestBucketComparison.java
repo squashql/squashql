@@ -116,10 +116,10 @@ public abstract class ATestBucketComparison {
     var query = new QueryDto()
             .table(this.storeName)
             .withColumnSet(QueryDto.BUCKET, this.bucketCS)
-            .withMetric(priceComp)
-            .withMetric(price)
-            .withMetric(quantityComp)
-            .withMetric(quantity);
+            .withMeasure(priceComp)
+            .withMeasure(price)
+            .withMeasure(quantityComp)
+            .withMeasure(quantity);
 
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
@@ -160,10 +160,10 @@ public abstract class ATestBucketComparison {
     var query = new QueryDto()
             .table(this.storeName)
             .withColumnSet(QueryDto.BUCKET, this.bucketCS)
-            .withMetric(priceComp)
-            .withMetric(price)
-            .withMetric(quantityComp)
-            .withMetric(quantity);
+            .withMeasure(priceComp)
+            .withMeasure(price)
+            .withMeasure(quantityComp)
+            .withMeasure(quantity);
 
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
@@ -204,10 +204,10 @@ public abstract class ATestBucketComparison {
     var query = new QueryDto()
             .table(this.storeName)
             .withColumnSet(QueryDto.BUCKET, this.bucketCS)
-            .withMetric(priceComp)
-            .withMetric(price)
-            .withMetric(quantityComp)
-            .withMetric(quantity);
+            .withMeasure(priceComp)
+            .withMeasure(price)
+            .withMeasure(quantityComp)
+            .withMeasure(quantity);
 
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(

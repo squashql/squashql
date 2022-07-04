@@ -22,7 +22,7 @@ public class SparkQueryController {
   public static final String METADATA_FIELDS_KEY = "fields";
   public static final String METADATA_STORES_KEY = "stores";
   public static final String METADATA_AGG_FUNCS_KEY = "aggregation_functions";
-  public static final String METADATA_METRICS_KEY = "metrics";
+  public static final String METADATA_MEASURES_KEY = "measures";
   // FIXME the list should be defined elsewhere
   public static final List<String> SUPPORTED_AGG_FUNCS = List.of(
           "sum",
@@ -61,7 +61,7 @@ public class SparkQueryController {
     return ResponseEntity.ok(Map.of(
             METADATA_STORES_KEY, root,
             METADATA_AGG_FUNCS_KEY, SUPPORTED_AGG_FUNCS,
-            METADATA_METRICS_KEY, getExpressions(repo_url)));
+            METADATA_MEASURES_KEY, getExpressions(repo_url)));
   }
 
   private Collection<ExpressionMeasure> getExpressions(String url) {

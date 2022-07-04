@@ -29,7 +29,7 @@ public class TestQueryS13n {
             .aggregatedMeasure("quantity", "sum")
             .expressionMeasure("alias1", "firstMyExpression")
             .expressionMeasure("alias2", "secondMyExpression")
-            .withMetric(new BinaryOperationMeasure("plus1", Operator.PLUS, new AggregatedMeasure("price", "sum"), new AggregatedMeasure("price", "sum")))
+            .withMeasure(new BinaryOperationMeasure("plus1", Operator.PLUS, new AggregatedMeasure("price", "sum"), new AggregatedMeasure("price", "sum")))
             .context(Totals.KEY, BOTTOM);
 
     String serialize = query.json();
@@ -92,8 +92,8 @@ public class TestQueryS13n {
     var query = new QueryDto()
             .table("products")
             .withColumnSet(QueryDto.BUCKET, bucketCS)
-            .withMetric(priceComp)
-            .withMetric(price);
+            .withMeasure(priceComp)
+            .withMeasure(price);
 
     String serialize = query.json();
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
@@ -116,8 +116,8 @@ public class TestQueryS13n {
             .table("products")
             .withColumn(SCENARIO_FIELD_NAME)
             .withColumnSet(QueryDto.PERIOD, periodCS)
-            .withMetric(m)
-            .withMetric(sales);
+            .withMeasure(m)
+            .withMeasure(sales);
 
     String serialize = query.json();
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);

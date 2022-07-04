@@ -44,21 +44,21 @@ public class QueryDto {
   }
 
   public QueryDto aggregatedMeasure(String field, String agg) {
-    withMetric(new AggregatedMeasure(field, agg));
+    withMeasure(new AggregatedMeasure(field, agg));
     return this;
   }
 
   public QueryDto expressionMeasure(String alias, String expression) {
-    withMetric(new ExpressionMeasure(alias, expression));
+    withMeasure(new ExpressionMeasure(alias, expression));
     return this;
   }
 
   public QueryDto unresolvedExpressionMeasure(String alias) {
-    withMetric(new UnresolvedExpressionMeasure(alias));
+    withMeasure(new UnresolvedExpressionMeasure(alias));
     return this;
   }
 
-  public QueryDto withMetric(Measure m) {
+  public QueryDto withMeasure(Measure m) {
     this.measures.add(m);
     return this;
   }
