@@ -49,8 +49,8 @@ public abstract class ATestBinaryOperationMeasure {
     beforeLoading(List.of(ean, category, sales, qty));
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
-            new Object[]{"bottle", "drink", 20d, 10},
-            new Object[]{"cookie", "food", 30d, 10}
+            new Object[]{"bottle", "drink", 20d, 10l},
+            new Object[]{"cookie", "food", 30d, 10l}
     ));
   }
 
