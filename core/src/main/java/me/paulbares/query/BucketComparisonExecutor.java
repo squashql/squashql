@@ -25,8 +25,8 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
   }
 
   @Override
-  protected Predicate<Object[]> createShiftProcedure(BinaryOperationMeasure bom, ObjectIntMap<String> indexByColumn) {
-    return new ShiftProcedure(this.cSet, bom.referencePosition, indexByColumn);
+  protected Predicate<Object[]> createShiftProcedure(ComparisonMeasure cm, ObjectIntMap<String> indexByColumn) {
+    return new ShiftProcedure(this.cSet, cm.referencePosition, indexByColumn);
   }
 
   static class ShiftProcedure implements Predicate<Object[]> {

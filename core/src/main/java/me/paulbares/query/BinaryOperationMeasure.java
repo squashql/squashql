@@ -1,9 +1,10 @@
 package me.paulbares.query;
 
-import java.util.Map;
-import java.util.Objects;
-
 public class BinaryOperationMeasure implements Measure {
+
+  public enum Operator {
+    PLUS, MINUS, MULTIPLY, DIVIDE;
+  }
 
   public static String KEY = "binary_operation";
 
@@ -11,18 +12,10 @@ public class BinaryOperationMeasure implements Measure {
 
   public String alias;
 
-  public String method;
+  public Operator operator;
 
-  public Measure measure;
-
-  public Map<String, String> referencePosition; // TODO support first and last
-
-  public enum PeriodUnit {
-    MONTH,
-    QUARTER,
-    SEMESTER,
-    YEAR
-  }
+  public Measure leftOperand;
+  public Measure rightOperand;
 
   /**
    * For jackson.
@@ -32,13 +25,13 @@ public class BinaryOperationMeasure implements Measure {
   }
 
   public BinaryOperationMeasure(String alias,
-                                String method,
-                                Measure measure,
-                                Map<String, String> referencePosition) {
+                                Operator operator,
+                                Measure leftOperand,
+                                Measure rightOperand) {
     this.alias = alias;
-    this.method = method;
-    this.measure = measure;
-    this.referencePosition = referencePosition;
+    this.operator = operator;
+    this.leftOperand = leftOperand;
+    this.rightOperand = rightOperand;
     this.type = KEY;
   }
 
@@ -53,34 +46,14 @@ public class BinaryOperationMeasure implements Measure {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    BinaryOperationMeasure that = (BinaryOperationMeasure) o;
-    return this.type.equals(that.type)
-            && Objects.equals(this.alias, that.alias)
-            && this.method.equals(that.method)
-            && this.measure.equals(that.measure)
-            && this.referencePosition.equals(that.referencePosition);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.type, this.alias, this.method, this.measure, this.referencePosition);
-  }
-
-  @Override
   public String toString() {
-    return getClass().getSimpleName() + "{" +
-            "type='" + this.type + '\'' +
-            ", alias='" + this.alias + '\'' +
-            ", method='" + this.method + '\'' +
-            ", measure=" + this.measure +
-            ", referencePosition=" + this.referencePosition +
+    return getClass().getSimpleName() +
+            "{" +
+            "type='" + type + '\'' +
+            ", alias='" + alias + '\'' +
+            ", operator=" + operator +
+            ", leftOperand=" + leftOperand +
+            ", rightOperand=" + rightOperand +
             '}';
   }
 }

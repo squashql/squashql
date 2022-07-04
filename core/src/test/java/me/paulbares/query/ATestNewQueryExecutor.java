@@ -205,7 +205,7 @@ public abstract class ATestNewQueryExecutor {
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
 
-    BinaryOperationMeasure salesYearComp = new BinaryOperationMeasure(
+    ComparisonMeasure salesYearComp = new ComparisonMeasure(
             "salesYearComp",
             BinaryOperations.ABS_DIFF,
             sales,
@@ -247,7 +247,7 @@ public abstract class ATestNewQueryExecutor {
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
 
-    BinaryOperationMeasure salesYearComp = new BinaryOperationMeasure(
+    ComparisonMeasure salesYearComp = new ComparisonMeasure(
             "salesYearComp",
             BinaryOperations.ABS_DIFF,
             sales,
@@ -287,14 +287,14 @@ public abstract class ATestNewQueryExecutor {
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
 
     AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
-    BinaryOperationMeasure salesGroupComp = new BinaryOperationMeasure(
+    ComparisonMeasure salesGroupComp = new ComparisonMeasure(
             "salesGroupComp",
             BinaryOperations.ABS_DIFF,
             sales,
             Map.of(SCENARIO_FIELD_NAME, "s-1", groupOfScenario, "g"));
 
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(new Period.Year("year_sales"));
-    BinaryOperationMeasure salesYearComp = new BinaryOperationMeasure(
+    ComparisonMeasure salesYearComp = new ComparisonMeasure(
             "salesYearComp",
             BinaryOperations.ABS_DIFF,
             sales,

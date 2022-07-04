@@ -230,7 +230,7 @@ public class SparkQueryControllerTest {
               "indice_prix",
               "sum(capdv) / sum(competitor_price * quantity)");
     }
-    BinaryOperationMeasure aggregatedMeasureDiff = new BinaryOperationMeasure(
+    ComparisonMeasure aggregatedMeasureDiff = new ComparisonMeasure(
             "aggregatedMeasureDiff",
             BinaryOperations.ABS_DIFF,
             aggregatedMeasure,
@@ -238,7 +238,7 @@ public class SparkQueryControllerTest {
                     SCENARIO_FIELD_NAME, "s-1",
                     "group", "g"
             ));
-    BinaryOperationMeasure indicePrixDiff = new BinaryOperationMeasure(
+    ComparisonMeasure indicePrixDiff = new ComparisonMeasure(
             "indicePrixDiff",
             BinaryOperations.ABS_DIFF,
             indicePrix,

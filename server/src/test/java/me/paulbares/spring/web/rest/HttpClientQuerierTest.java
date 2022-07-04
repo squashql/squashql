@@ -3,7 +3,7 @@ package me.paulbares.spring.web.rest;
 import me.paulbares.client.HttpClientQuerier;
 import me.paulbares.client.SimpleTable;
 import me.paulbares.query.AggregatedMeasure;
-import me.paulbares.query.BinaryOperationMeasure;
+import me.paulbares.query.ComparisonMeasure;
 import me.paulbares.query.QueryBuilder;
 import me.paulbares.query.QueryEngine;
 import me.paulbares.query.comp.BinaryOperations;
@@ -75,7 +75,7 @@ public class HttpClientQuerierTest {
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
 
     AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("capdv", "sum");
-    BinaryOperationMeasure capdvDiff = new BinaryOperationMeasure(
+    ComparisonMeasure capdvDiff = new ComparisonMeasure(
             "capdvDiff",
             BinaryOperations.ABS_DIFF,
             aggregatedMeasure,

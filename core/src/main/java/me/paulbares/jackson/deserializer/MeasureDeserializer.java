@@ -22,11 +22,11 @@ public class MeasureDeserializer extends JsonDeserializer<Measure> {
 
     JsonNode type = treeNode.get("type");
     if (type != null) {
-      if (!type.asText().equals(BinaryOperationMeasure.KEY)) {
+      if (!type.asText().equals(ComparisonMeasure.KEY)) {
         throw new IllegalArgumentException(type + " type unknown");
       }
 
-      return p.getCodec().treeToValue(treeNode, BinaryOperationMeasure.class);
+      return p.getCodec().treeToValue(treeNode, ComparisonMeasure.class);
     }
 
     JsonNode expression = treeNode.get("expression");

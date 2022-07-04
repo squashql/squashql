@@ -1,6 +1,6 @@
 package me.paulbares.query;
 
-import me.paulbares.query.BinaryOperationMeasure.PeriodUnit;
+import me.paulbares.query.ComparisonMeasure.PeriodUnit;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.PeriodColumnSetDto;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
@@ -27,11 +27,11 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
   }
 
   @Override
-  protected Predicate<Object[]> createShiftProcedure(BinaryOperationMeasure bom, ObjectIntMap<String> indexByColumn) {
+  protected Predicate<Object[]> createShiftProcedure(ComparisonMeasure cm, ObjectIntMap<String> indexByColumn) {
     Map<PeriodUnit, String> referencePosition = new HashMap<>();
     Map<String, PeriodUnit> mapping = this.cSet.mapping();
     MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
-    for (Map.Entry<String, String> entry : bom.referencePosition.entrySet()) {
+    for (Map.Entry<String, String> entry : cm.referencePosition.entrySet()) {
       PeriodUnit pu = mapping.get(entry.getKey());
       referencePosition.put(pu, entry.getValue());
       indexByPeriodUnit.put(pu, indexByColumn.get(entry.getKey()));

@@ -99,7 +99,7 @@ public abstract class ATestPeriodComparison {
   void testCompareQuarterCurrentWithSamePreviousYear() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
-    BinaryOperationMeasure m = new BinaryOperationMeasure(
+    ComparisonMeasure m = new ComparisonMeasure(
             "myMeasure",
             BinaryOperations.ABS_DIFF,
             sales,
@@ -134,7 +134,7 @@ public abstract class ATestPeriodComparison {
   void testCompareQuarterCurrentWithPrevious() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
-    BinaryOperationMeasure m = new BinaryOperationMeasure(
+    ComparisonMeasure m = new ComparisonMeasure(
             "myMeasure",
             BinaryOperations.ABS_DIFF,
             sales,
@@ -170,7 +170,7 @@ public abstract class ATestPeriodComparison {
   void testCompareYearCurrentWithPrevious() {
     Period.Year period = new Period.Year("year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
-    BinaryOperationMeasure m = new BinaryOperationMeasure(
+    ComparisonMeasure m = new ComparisonMeasure(
             "myMeasure",
             BinaryOperations.ABS_DIFF,
             sales,

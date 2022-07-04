@@ -1,7 +1,7 @@
 package me.paulbares.jackson;
 
 import me.paulbares.query.AggregatedMeasure;
-import me.paulbares.query.BinaryOperationMeasure;
+import me.paulbares.query.ComparisonMeasure;
 import me.paulbares.query.QueryBuilder;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.Totals;
@@ -83,7 +83,7 @@ public class TestQueryS13n {
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
 
     AggregatedMeasure price = new AggregatedMeasure("price", "sum");
-    BinaryOperationMeasure priceComp = new BinaryOperationMeasure(
+    ComparisonMeasure priceComp = new ComparisonMeasure(
             "priceDiff",
             BinaryOperations.ABS_DIFF,
             price,
@@ -106,7 +106,7 @@ public class TestQueryS13n {
   @Test
   void testRoundTripPeriodBucketingComparisonQuery() {
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
-    BinaryOperationMeasure m = new BinaryOperationMeasure(
+    ComparisonMeasure m = new ComparisonMeasure(
             "myMeasure",
             BinaryOperations.ABS_DIFF,
             sales,

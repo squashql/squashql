@@ -94,7 +94,7 @@ public abstract class ATestBucketComparison {
   @Test
   void testAbsoluteDifferenceWithFirst() {
     AggregatedMeasure price = new AggregatedMeasure("price", "sum");
-    BinaryOperationMeasure priceComp = new BinaryOperationMeasure(
+    ComparisonMeasure priceComp = new ComparisonMeasure(
             "priceDiff",
             BinaryOperations.ABS_DIFF,
             price,
@@ -103,7 +103,7 @@ public abstract class ATestBucketComparison {
                     this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("quantity", "sum");
-    BinaryOperationMeasure quantityComp = new BinaryOperationMeasure(
+    ComparisonMeasure quantityComp = new ComparisonMeasure(
             "quantityDiff",
             BinaryOperations.ABS_DIFF,
             quantity,
@@ -138,7 +138,7 @@ public abstract class ATestBucketComparison {
   @Test
   void testAbsoluteDifferenceWithPrevious() {
     AggregatedMeasure price = new AggregatedMeasure("price", "sum");
-    BinaryOperationMeasure priceComp = new BinaryOperationMeasure(
+    ComparisonMeasure priceComp = new ComparisonMeasure(
             "priceDiff",
             BinaryOperations.ABS_DIFF,
             price,
@@ -147,7 +147,7 @@ public abstract class ATestBucketComparison {
                     this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("quantity", "sum");
-    BinaryOperationMeasure quantityComp = new BinaryOperationMeasure(
+    ComparisonMeasure quantityComp = new ComparisonMeasure(
             "quantityDiff",
             BinaryOperations.ABS_DIFF,
             quantity,
@@ -182,7 +182,7 @@ public abstract class ATestBucketComparison {
   @Test
   void testRelativeDifferenceWithFirst() {
     AggregatedMeasure price = new AggregatedMeasure("price", "sum");
-    BinaryOperationMeasure priceComp = new BinaryOperationMeasure(
+    ComparisonMeasure priceComp = new ComparisonMeasure(
             "priceDiff",
             BinaryOperations.REL_DIFF,
             price,
@@ -191,7 +191,7 @@ public abstract class ATestBucketComparison {
                     this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("quantity", "sum");
-    BinaryOperationMeasure quantityComp = new BinaryOperationMeasure(
+    ComparisonMeasure quantityComp = new ComparisonMeasure(
             "quantityDiff",
             BinaryOperations.REL_DIFF,
             quantity,

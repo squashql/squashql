@@ -16,25 +16,25 @@ public abstract class AComparisonExecutor {
 
   public static final String REF_POS_FIRST = "first";
 
-  protected abstract Predicate<Object[]> createShiftProcedure(BinaryOperationMeasure bom, ObjectIntMap<String> indexByColumn);
+  protected abstract Predicate<Object[]> createShiftProcedure(ComparisonMeasure cm, ObjectIntMap<String> indexByColumn);
 
   public abstract ColumnSet getColumnSet();
 
   public List<Object> compare(
-          BinaryOperationMeasure bom,
+          ComparisonMeasure cm,
           Table intermediateResult) {
     MutableObjectIntMap<String> indexByColumn = new ObjectIntHashMap<>();
-    bom.referencePosition.entrySet().forEach(entry -> {
+    cm.referencePosition.entrySet().forEach(entry -> {
       int columnIndex = intermediateResult.columnIndex(entry.getKey());
       int index = Arrays.binarySearch(intermediateResult.columnIndices(), columnIndex);
       indexByColumn.put(entry.getKey(), index);
     });
-    Predicate<Object[]> procedure = createShiftProcedure(bom, indexByColumn);
+    Predicate<Object[]> procedure = createShiftProcedure(cm, indexByColumn);
 
     Object[] buffer = new Object[intermediateResult.columnIndices().length];
     List<Object> result = new ArrayList<>((int) intermediateResult.count());
     int[] rowIndex = new int[1];
-    List<Object> aggregateValues = intermediateResult.getAggregateValues(bom.measure);
+    List<Object> aggregateValues = intermediateResult.getAggregateValues(cm.measure);
     intermediateResult.forEach(row -> {
       int i = 0;
       for (int columnIndex : intermediateResult.columnIndices()) {
@@ -45,7 +45,8 @@ public abstract class AComparisonExecutor {
       if (success && position != -1) {
         Object currentValue = aggregateValues.get(rowIndex[0]);
         Object referenceValue = aggregateValues.get(position);
-        Object diff = BinaryOperations.compare(bom.method, currentValue, referenceValue, intermediateResult.getField(bom.measure).type());
+        Class<?> type = intermediateResult.getField(cm.measure).type();
+        Object diff = BinaryOperations.compare(cm.method, currentValue, referenceValue, type, type);
         result.add(diff);
       } else {
         result.add(null); // nothing to compare with

@@ -1,16 +1,16 @@
 package me.paulbares.query.comp;
 
+import me.paulbares.query.BinaryOperationMeasure;
+
 public class BinaryOperations {
 
-  public static final String DIVIDE = "divide";
   public static final String ABS_DIFF = "absolute_difference";
   public static final String REL_DIFF = "relative_difference";
 
-  public static Object compare(String method, Object currentValue, Object referenceValue, Class<?> dataType) {
+  public static Object compare(String method, Object leftValue, Object rightValue, Class<?> leftDataType, Class<?> rightDataType) {
     return switch (method) {
-      case ABS_DIFF -> computeAbsoluteDiff(currentValue, referenceValue, dataType);
-      case REL_DIFF -> computeRelativeDiff(currentValue, referenceValue, dataType);
-      case DIVIDE -> divide(currentValue, referenceValue, dataType);
+      case ABS_DIFF -> computeAbsoluteDiff(leftValue, rightValue, leftDataType, rightDataType);
+      case REL_DIFF -> computeRelativeDiff(leftValue, rightValue, leftDataType, rightDataType);
       default -> throw new IllegalArgumentException(String.format("Not supported comparison %s", method));
     };
   }
@@ -18,50 +18,77 @@ public class BinaryOperations {
   public static Class<?> getOutputType(String method, Class<?> dataType) {
     return switch (method) {
       case ABS_DIFF -> dataType;
-      case REL_DIFF, DIVIDE -> double.class;
+      case REL_DIFF -> double.class;
       default -> throw new IllegalArgumentException(String.format("Not supported comparison %s", method));
     };
   }
 
-  private static double computeRelativeDiff(Object current, Object previous, Class<?> dataType) {
-    if (dataType.equals(Double.class) || dataType.equals(double.class)) {
-      return (((double) current) - ((double) previous)) / ((double) previous);
-    } else if (dataType.equals(Float.class) || dataType.equals(float.class)) {
-      return (((float) current) - ((float) previous)) / ((float) previous);
-    } else if (dataType.equals(Integer.class) || dataType.equals(int.class)) {
-      return (double) (((int) current) - ((int) previous)) / ((long) previous);
-    } else if (dataType.equals(Long.class) || dataType.equals(long.class)) {
-      return (double) (((long) current) - ((long) previous)) / ((long) previous);
+  public static Class<?> getOutputType(BinaryOperationMeasure.Operator operator, Class<?> leftType, Class<?> rightType) {
+    return switch (operator) {
+      case PLUS, MINUS, MULTIPLY -> {
+        Class<?> result;
+        if (leftType.equals(long.class) || leftType.equals(int.class)) {
+          result = rightType;
+        } else {
+          result = Double.class;
+        }
+        yield result;
+      }
+      case DIVIDE -> Double.class;
+    };
+  }
+
+  private static double computeRelativeDiff(Object left, Object right, Class<?> leftDataType, Class<?> rightDataType) {
+    if (leftDataType.equals(Double.class) || leftDataType.equals(double.class)) {
+      return (((double) left) - ((double) right)) / ((double) right);
+    } else if (leftDataType.equals(Float.class) || leftDataType.equals(float.class)) {
+      return (((float) left) - ((float) right)) / ((float) right);
+    } else if (leftDataType.equals(Integer.class) || leftDataType.equals(int.class)) {
+      return (double) (((int) left) - ((int) right)) / ((long) right);
+    } else if (leftDataType.equals(Long.class) || leftDataType.equals(long.class)) {
+      return (double) (((long) left) - ((long) right)) / ((long) right);
     } else {
-      throw new RuntimeException("Unsupported type " + dataType);
+      throw new RuntimeException("Unsupported type " + leftDataType);
     }
   }
 
-  private static double divide(Object current, Object previous, Class<?> dataType) {
-    if (dataType.equals(Double.class) || dataType.equals(double.class)) {
-      return ((double) current) / ((double) previous);
-    } else if (dataType.equals(Float.class) || dataType.equals(float.class)) {
-      return ((float) current) / ((float) previous);
-    } else if (dataType.equals(Integer.class) || dataType.equals(int.class)) {
-      return (double) ((int) current) / ((long) previous);
-    } else if (dataType.equals(Long.class) || dataType.equals(long.class)) {
-      return (double) ((long) current) / ((long) previous);
+  private static Object computeAbsoluteDiff(Object left, Object right, Class<?> leftDataType, Class<?> rightDataType) {
+    if (leftDataType.equals(Double.class) || leftDataType.equals(double.class)) {
+      return ((double) left) - ((double) right);
+    } else if (leftDataType.equals(Float.class) || leftDataType.equals(float.class)) {
+      return ((float) left) - ((float) right);
+    } else if (leftDataType.equals(Integer.class) || leftDataType.equals(int.class)) {
+      return ((int) left) - ((int) right);
+    } else if (leftDataType.equals(Long.class) || leftDataType.equals(long.class)) {
+      return ((long) left) - ((long) right);
     } else {
-      throw new RuntimeException("Unsupported type " + dataType);
+      throw new RuntimeException("Unsupported type " + leftDataType);
     }
   }
 
-  private static Object computeAbsoluteDiff(Object current, Object previous, Class<?> dataType) {
-    if (dataType.equals(Double.class) || dataType.equals(double.class)) {
-      return ((double) current) - ((double) previous);
-    } else if (dataType.equals(Float.class) || dataType.equals(float.class)) {
-      return ((float) current) - ((float) previous);
-    } else if (dataType.equals(Integer.class) || dataType.equals(int.class)) {
-      return ((int) current) - ((int) previous);
-    } else if (dataType.equals(Long.class) || dataType.equals(long.class)) {
-      return ((long) current) - ((long) previous);
-    } else {
-      throw new RuntimeException("Unsupported type " + dataType);
-    }
+  public static Object apply(BinaryOperationMeasure.Operator operator, Object left, Object right, Class<?> leftDataType, Class<?> rightDataType) {
+    Class<?> outputType = getOutputType(operator, leftDataType, rightDataType);
+    return switch (operator) {
+      case PLUS -> outputType.cast(add((Number) left, (Number) right));
+      case MINUS -> outputType.cast(minus((Number) left, (Number) right));
+      case MULTIPLY -> outputType.cast(multiply((Number) left, (Number) right));
+      case DIVIDE -> outputType.cast(divide((Number) left, (Number) right));
+    };
+  }
+
+  public static <T extends Number> Number add(T a, T b) {
+    return a.doubleValue() + b.doubleValue();
+  }
+
+  public static <T extends Number> Number minus(T a, T b) {
+    return a.doubleValue() - b.doubleValue();
+  }
+
+  public static <T extends Number> Number multiply(T a, T b) {
+    return a.doubleValue() * b.doubleValue();
+  }
+
+  public static <T extends Number> Number divide(T a, T b) {
+    return a.doubleValue() / b.doubleValue();
   }
 }

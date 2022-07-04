@@ -81,8 +81,13 @@ public class NewQueryExecutor {
   }
 
   private static Set<Measure> getMeasureDependencies(Measure measure) {
-    if (measure instanceof BinaryOperationMeasure bom) {
-      return Set.of(bom.measure);
+    if (measure instanceof ComparisonMeasure cm) {
+      return Set.of(cm.measure);
+    } else if (measure instanceof BinaryOperationMeasure bom) {
+      Set<Measure> s = new HashSet<>();
+      s.add(bom.leftOperand);
+      s.add(bom.rightOperand);
+      return s;
     } else {
       return Collections.emptySet();
     }
@@ -94,23 +99,25 @@ public class NewQueryExecutor {
   static class MeasureEvaluator implements BiConsumer<Measure, ExecutionContext> {
     @Override
     public void accept(Measure measure, ExecutionContext executionContext) {
-      if (measure instanceof BinaryOperationMeasure bom) {
-        AComparisonExecutor executor = createComparisonExecutor(executionContext.query.columnSets, bom);
+      if (measure instanceof ComparisonMeasure cm) {
+        AComparisonExecutor executor = createComparisonExecutor(executionContext.query.columnSets, cm);
         if (executor != null) {
-          executeComparator(bom, executionContext.table, executor);
+          executeComparator(cm, executionContext.table, executor);
         }
+      } else if (measure instanceof BinaryOperationMeasure bom) {
+        executeBinaryOperation(bom, executionContext.table);
       } else {
         throw new RuntimeException("nothing to do");
       }
     }
 
-    private AComparisonExecutor createComparisonExecutor(Map<String, ColumnSet> columnSetMap, BinaryOperationMeasure bom) {
+    private AComparisonExecutor createComparisonExecutor(Map<String, ColumnSet> columnSetMap, ComparisonMeasure cm) {
       Map<String, Function<ColumnSet, AComparisonExecutor>> m = Map.of(
               BUCKET, cs -> new BucketComparisonExecutor((BucketColumnSetDto) cs),
               PERIOD, cs -> new PeriodComparisonExecutor((PeriodColumnSetDto) cs));
       for (Map.Entry<String, Function<ColumnSet, AComparisonExecutor>> e : m.entrySet()) {
         ColumnSet cs = columnSetMap.get(e.getKey());
-        if (cs != null && isComparisonFor(bom, cs)) {
+        if (cs != null && isComparisonFor(cm, cs)) {
           return m.get(e.getKey()).apply(cs);
         }
       }
@@ -118,8 +125,8 @@ public class NewQueryExecutor {
     }
 
     private static boolean isComparisonFor(Measure measure, ColumnSet cs) {
-      if (measure instanceof BinaryOperationMeasure bom) {
-        Set<String> intersection = new HashSet<>(bom.referencePosition.keySet());
+      if (measure instanceof ComparisonMeasure cm) {
+        Set<String> intersection = new HashSet<>(cm.referencePosition.keySet());
         intersection.retainAll(cs.getNewColumns().stream().map(Field::name).collect(Collectors.toSet()));
         if (intersection.isEmpty()) {
           return false;
@@ -128,13 +135,31 @@ public class NewQueryExecutor {
       return true;
     }
 
-    private static void executeComparator(BinaryOperationMeasure bom, Table intermediateResult, AComparisonExecutor executor) {
-      List<Object> agg = executor.compare(bom, intermediateResult);
+    private static void executeComparator(ComparisonMeasure cm, Table intermediateResult, AComparisonExecutor executor) {
+      List<Object> agg = executor.compare(cm, intermediateResult);
+      String newName = cm.alias == null
+              ? String.format("%s(%s, %s)", cm.method, cm.measure.alias(), cm.referencePosition)
+              : cm.alias;
+      Field field = new Field(newName, BinaryOperations.getOutputType(cm.method, intermediateResult.getField(cm.measure).type()));
+      intermediateResult.addAggregates(field, cm, agg);
+    }
+
+    private static void executeBinaryOperation(BinaryOperationMeasure bom, Table intermediateResult) {
+      List<Object> lo = intermediateResult.getAggregateValues(bom.leftOperand);
+      List<Object> ro = intermediateResult.getAggregateValues(bom.rightOperand);
+      List<Object> r = new ArrayList<>(lo.size());
+
+      Class<?> lType = intermediateResult.getField(bom.leftOperand).type();
+      Class<?> rType = intermediateResult.getField(bom.rightOperand).type();
+      for (int i = 0; i < lo.size(); i++) {
+        r.add(BinaryOperations.apply(bom.operator, lo.get(i), ro.get(i), lType, rType));
+      }
+
       String newName = bom.alias == null
-              ? String.format("%s(%s, %s)", bom.method, bom.measure.alias(), bom.referencePosition)
+              ? String.format("%s %s %s", bom.leftOperand, bom.operator, bom.rightOperand)
               : bom.alias;
-      Field field = new Field(newName, BinaryOperations.getOutputType(bom.method, intermediateResult.getField(bom.measure).type()));
-      intermediateResult.addAggregates(field, bom, agg);
+      Field field = new Field(newName, BinaryOperations.getOutputType(bom.operator, lType, rType));
+      intermediateResult.addAggregates(field, bom, r);
     }
   }
 }

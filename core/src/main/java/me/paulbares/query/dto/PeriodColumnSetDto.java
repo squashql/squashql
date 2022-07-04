@@ -1,7 +1,7 @@
 package me.paulbares.query.dto;
 
 import com.fasterxml.jackson.annotation.*;
-import me.paulbares.query.BinaryOperationMeasure.PeriodUnit;
+import me.paulbares.query.ComparisonMeasure.PeriodUnit;
 import me.paulbares.query.ColumnSet;
 import me.paulbares.store.Field;
 
@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static me.paulbares.query.BinaryOperationMeasure.PeriodUnit.QUARTER;
-import static me.paulbares.query.BinaryOperationMeasure.PeriodUnit.YEAR;
+import static me.paulbares.query.ComparisonMeasure.PeriodUnit.QUARTER;
+import static me.paulbares.query.ComparisonMeasure.PeriodUnit.YEAR;
 
 public class PeriodColumnSetDto implements ColumnSet {
 
