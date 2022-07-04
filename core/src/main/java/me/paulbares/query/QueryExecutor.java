@@ -145,7 +145,7 @@ public class QueryExecutor {
 
     private static void executeComparator(ComparisonMeasure cm, Table intermediateResult, AComparisonExecutor executor) {
       List<Object> agg = executor.compare(cm, intermediateResult);
-      Field field = new Field(cm.alias(), BinaryOperations.getOutputType(cm.method, intermediateResult.getField(cm.measure).type()));
+      Field field = new Field(cm.alias(), BinaryOperations.getComparisonOutputType(cm.method, intermediateResult.getField(cm.measure).type()));
       intermediateResult.addAggregates(field, cm, agg);
     }
 

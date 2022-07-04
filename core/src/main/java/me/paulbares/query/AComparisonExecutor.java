@@ -8,6 +8,7 @@ import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,6 +36,7 @@ public abstract class AComparisonExecutor {
     List<Object> result = new ArrayList<>((int) intermediateResult.count());
     int[] rowIndex = new int[1];
     List<Object> aggregateValues = intermediateResult.getAggregateValues(cm.measure);
+    BiFunction<Number, Number, Number> comparisonBiFunction = BinaryOperations.createComparisonBiFunction(cm.method, intermediateResult.getField(cm.measure).type());
     intermediateResult.forEach(row -> {
       int i = 0;
       for (int columnIndex : intermediateResult.columnIndices()) {
@@ -45,8 +47,7 @@ public abstract class AComparisonExecutor {
       if (success && position != -1) {
         Object currentValue = aggregateValues.get(rowIndex[0]);
         Object referenceValue = aggregateValues.get(position);
-        Class<?> type = intermediateResult.getField(cm.measure).type();
-        Object diff = BinaryOperations.compare(cm.method, currentValue, referenceValue, type, type);
+        Object diff = comparisonBiFunction.apply((Number) currentValue, (Number) referenceValue);
         result.add(diff);
       } else {
         result.add(null); // nothing to compare with
