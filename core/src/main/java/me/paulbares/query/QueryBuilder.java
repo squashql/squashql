@@ -134,7 +134,7 @@ public class QueryBuilder {
     QueryBuilder.addPeriodColumnSet(query, new Period.Year("Year"));
 
     AggregatedMeasure amount = new AggregatedMeasure("Amount", AggregationFunction.SUM);
-    ExpressionMeasure sales = new ExpressionMeasure("sales", "sum(case when `Income/Expense` = 'Revenue' then Amount end)");
+    AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, "Income/Expense", QueryBuilder.eq("Revenue"));
     query.withMeasure(amount);
     query.withMeasure(sales);
     Measure ebidtaRatio = QueryBuilder.divide("EBITDA %", amount, sales);
@@ -150,7 +150,7 @@ public class QueryBuilder {
     query.withMeasure(kpi);
 
     ComparisonMeasure kpiComp = bucketComparison(
-            "kpi comp. with prev. scenario",
+            "KPI comp. with prev. scenario",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             kpi,
             Map.of("scenario encrypted", "s-1", "group", "g"));
