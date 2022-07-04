@@ -4,9 +4,9 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.github.dockerjava.api.command.LogContainerCmd;
 import me.paulbares.SparkDatastore;
-import me.paulbares.query.SparkQueryEngine;
+import me.paulbares.query.database.SparkQueryEngine;
 import me.paulbares.query.Table;
-import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.SparkTransactionManager;
@@ -34,8 +34,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
-import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
-import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 import static org.testcontainers.containers.output.OutputFrame.OutputType.STDERR;
 import static org.testcontainers.containers.output.OutputFrame.OutputType.STDOUT;
 
@@ -105,7 +105,7 @@ public class TestQueryRemote {
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
 
-    QueryDto query = new QueryDto()
+    DatabaseQuery query = new DatabaseQuery()
             .table(storeName)
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("price", "sum")

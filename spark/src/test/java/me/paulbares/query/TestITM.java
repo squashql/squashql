@@ -1,9 +1,11 @@
 package me.paulbares.query;
 
 import me.paulbares.SparkDatastore;
-import me.paulbares.store.Datastore;
+import me.paulbares.query.database.QueryEngine;
+import me.paulbares.query.database.SparkQueryEngine;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.SparkTransactionManager;
+import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -11,7 +13,7 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.util.List;
 
-import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 /**
  * This test verifies the use case described here https://docs.google
@@ -24,6 +26,7 @@ public class TestITM {
   protected SparkDatastore datastore;
 
   protected QueryEngine queryEngine;
+  protected QueryExecutor queryExecutor;
 
   @BeforeAll
   void setup() {
@@ -43,11 +46,11 @@ public class TestITM {
 
     SparkTransactionManager tm = new SparkTransactionManager(this.datastore.spark);
     tm.createTemporaryTable("our_prices", List.of(ean, pdv, price, qty, capdv));
-    tm.createTemporaryTable("their_prices", List.of(compEan, compConcurrentPdv, compBrand, compConcurrentEan, compPrice));
+    tm.createTemporaryTable("their_prices", List.of(compEan, compConcurrentPdv, compBrand, compConcurrentEan, compPrice), null);
     tm.createTemporaryTable("our_stores_their_stores", List.of(
             new Field("our_store", String.class),
             new Field("their_store", String.class)
-    ));
+    ), null);
 
     tm.load(MAIN_SCENARIO_NAME,
             "our_prices", List.of(
@@ -107,6 +110,7 @@ public class TestITM {
             ));
 
     this.queryEngine = new SparkQueryEngine(this.datastore);
+    this.queryExecutor = new QueryExecutor(this.queryEngine);
   }
 
   @Test
@@ -120,13 +124,13 @@ public class TestITM {
     var query = QueryBuilder
             .query()
             .table(our)
-            .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
-            .wildcardCoordinate("ean")
+            .withColumn(TransactionManager.SCENARIO_FIELD_NAME)
+            .withColumn("ean")
             .aggregatedMeasure("capdv", "sum")
             .expressionMeasure("capdv_concurrents", "sum(competitor_price * quantity)")
             .expressionMeasure("indice_prix", "sum(capdv) / sum(competitor_price * quantity)");
 
-    Table table = this.queryEngine.execute(query);
+    Table table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
             List.of("MN & MDD up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
             List.of("MN & MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196),

@@ -1,6 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.ClickHouseDatastore;
+import me.paulbares.query.database.ClickHouseQueryEngine;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.ClickHouseTransactionManager;
 import org.assertj.core.api.Assertions;
@@ -19,8 +20,8 @@ import java.util.function.Function;
 
 import static me.paulbares.query.TestUtils.createClickHouseContainer;
 import static me.paulbares.query.TestUtils.jdbcUrl;
-import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
-import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 @Testcontainers
 public class TestLoadingFromCSV {
@@ -62,10 +63,11 @@ public class TestLoadingFromCSV {
 
     tm.loadCsv(MAIN_SCENARIO_NAME, storeName, pathFunction.apply("customers.csv").toString(), delimiter, header);
 
-    Table table = new ClickHouseQueryEngine(datastore)
+    ClickHouseQueryEngine engine = new ClickHouseQueryEngine(datastore);
+    Table table = new QueryExecutor(engine)
             .execute(QueryBuilder.query()
                     .table(storeName)
-                    .wildcardCoordinate(SCENARIO_FIELD_NAME)
+                    .withColumn(SCENARIO_FIELD_NAME)
                     .aggregatedMeasure("*", "count"));
     Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("", 91L)); // empty string because no scenario in
     // csv file

@@ -1,6 +1,7 @@
 package me.paulbares.query.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * TODO
@@ -13,10 +14,20 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * SEMESTER_FROM_DATE,
  * YEAR_FROM_DATE
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public interface Period {
 
   @JsonIgnore
   String getJsonKey();
+
+  record Month(String month, String year) implements Period {
+    public static final String JSON_KEY = "month";
+
+    @Override
+    public String getJsonKey() {
+      return JSON_KEY;
+    }
+  }
 
   record Quarter(String quarter, String year) implements Period {
     public static final String JSON_KEY = "quarter";
@@ -27,44 +38,8 @@ public interface Period {
     }
   }
 
-  record QuarterFromDate(String date) implements Period {
-    public static final String JSON_KEY = "quarter_from_date";
-
-    @Override
-    public String getJsonKey() {
-      return JSON_KEY;
-    }
-  }
-
-  record QuarterFromMonthYear(String month, String year) implements Period {
-    public static final String JSON_KEY = "quarter_from_month_year";
-
-    @Override
-    public String getJsonKey() {
-      return JSON_KEY;
-    }
-  }
-
-  record Semester(String semester) implements Period {
+  record Semester(String semester, String year) implements Period {
     public static final String JSON_KEY = "semester";
-
-    @Override
-    public String getJsonKey() {
-      return JSON_KEY;
-    }
-  }
-
-  record SemesterFromDate(String date) implements Period {
-    public static final String JSON_KEY = "semester_from_date";
-
-    @Override
-    public String getJsonKey() {
-      return JSON_KEY;
-    }
-  }
-
-  record YearFromDate(String date) implements Period {
-    public static final String JSON_KEY = "year_from_date";
 
     @Override
     public String getJsonKey() {

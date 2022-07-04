@@ -2,41 +2,35 @@ package me.paulbares.spring.web.rest;
 
 import me.paulbares.client.SimpleTable;
 import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.query.AggregatedMeasure;
-import me.paulbares.query.ExpressionMeasure;
-import me.paulbares.query.Measure;
-import me.paulbares.query.QueryBuilder;
-import me.paulbares.query.QueryEngine;
-import me.paulbares.query.UnresolvedExpressionMeasure;
+import me.paulbares.query.*;
 import me.paulbares.query.context.Repository;
-import me.paulbares.query.context.Totals;
+import me.paulbares.query.database.QueryEngine;
+import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.query.dto.ScenarioComparisonDto;
-import me.paulbares.query.dto.ScenarioGroupingQueryDto;
 import me.paulbares.query.dto.TableDto;
-import me.paulbares.store.Datastore;
+import me.paulbares.spring.ApplicationForTest;
+import me.paulbares.spring.config.DatasetTestConfig;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import static me.paulbares.query.ScenarioGroupingExecutor.REF_POS_PREVIOUS;
-import static me.paulbares.query.comp.Comparisons.COMPARISON_METHOD_ABS_DIFF;
-import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
-import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(classes = ApplicationForTest.class, properties = "spring.main.allow-bean-definition-overriding=true")
+@Import(DatasetTestConfig.class)
 @AutoConfigureMockMvc
 public class SparkQueryControllerTest {
 
@@ -68,11 +62,10 @@ public class SparkQueryControllerTest {
   void testQuery(boolean withRepo) throws Exception {
     var our = createTableDto();
 
-    var query = QueryBuilder
-            .query()
+    var query = new QueryDto()
             .table(our)
-            .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
-            .wildcardCoordinate("ean")
+            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumn("ean")
             .aggregatedMeasure("capdv", "sum");
 
     if (withRepo) {
@@ -114,36 +107,20 @@ public class SparkQueryControllerTest {
             });
   }
 
-  @Test
-  void testQueryWithTotals() throws Exception {
-    QueryDto query = new QueryDto()
-            .table("our_prices")
-            .wildcardCoordinate(SCENARIO_FIELD_NAME)
-            .context(Totals.KEY, QueryBuilder.TOP)
-            .aggregatedMeasure("quantity", "sum");
-    this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
-                    .content(JacksonUtil.serialize(query))
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(result -> {
-              String contentAsString = result.getResponse().getContentAsString();
-              SimpleTable table = JacksonUtil.mapper.readValue(contentAsString, SimpleTable.class);
-              assertQueryWithTotals(table);
-            });
-  }
-
-  static void assertQueryWithTotals(SimpleTable table) {
-    Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
-            Arrays.asList(QueryEngine.GRAND_TOTAL, 5 * 4000),
-            List.of("MDD up", 4000),
+  static void assertQuery(SimpleTable table, boolean withTotals) {
+    List[] lists = {List.of("MDD up", 4000),
             List.of("MN & MDD down", 4000),
             List.of("MN & MDD up", 4000),
             List.of("MN up", 4000),
-            List.of(MAIN_SCENARIO_NAME, 4000)
-    );
+            List.of(MAIN_SCENARIO_NAME, 4000)};
+    if (withTotals) {
+      Arrays.copyOf(lists, lists.length + 1);
+      lists[lists.length - 1] = Arrays.asList(QueryEngine.GRAND_TOTAL, 5 * 4000);
+      Assertions.assertThat(table.rows).containsExactlyInAnyOrder(lists);
+    }
+    Assertions.assertThat(table.rows).containsExactlyInAnyOrder(lists);
     Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "sum(quantity)");
   }
-
 
   @Test
   void testMetadata() throws Exception {
@@ -188,19 +165,17 @@ public class SparkQueryControllerTest {
             Map.of("name", "competitor_concurrent_pdv", "type", "string"),
             Map.of("name", "competitor_brand", "type", "string"),
             Map.of("name", "competitor_concurrent_ean", "type", "string"),
-            Map.of("name", "competitor_price", "type", "double"),
-            Map.of("name", SCENARIO_FIELD_NAME, "type", "string")
+            Map.of("name", "competitor_price", "type", "double")
     );
 
     Assertions.assertThat(f.apply("our_stores_their_stores")).containsExactlyInAnyOrder(
             Map.of("name", "our_store", "type", "string"),
-            Map.of("name", "their_store", "type", "string"),
-            Map.of("name", SCENARIO_FIELD_NAME, "type", "string")
+            Map.of("name", "their_store", "type", "string")
     );
 
     Assertions.assertThat((List) objects.get(SparkQueryController.METADATA_AGG_FUNCS_KEY)).containsExactlyInAnyOrder(SparkQueryController.SUPPORTED_AGG_FUNCS.toArray(new String[0]));
     if (withRepo) {
-      Assertions.assertThat((List) objects.get(SparkQueryController.METADATA_METRICS_KEY)).containsExactlyInAnyOrder(
+      Assertions.assertThat((List) objects.get(SparkQueryController.METADATA_MEASURES_KEY)).containsExactlyInAnyOrder(
               Map.of("alias", "indice_prix", "expression", "sum(capdv) / sum(competitor_price * quantity)"),
               Map.of("alias", "capdv_concurrents", "expression", "sum(competitor_price * quantity)")
       );
@@ -218,31 +193,48 @@ public class SparkQueryControllerTest {
   }
 
   private void testScenarioGroupingQuery(boolean withRepo) throws Exception {
-    Map<String, List<String>> groups = new LinkedHashMap<>();
-    groups.put("group1", List.of(MAIN_SCENARIO_NAME, "MN up"));
-    groups.put("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"));
-    groups.put("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", SCENARIO_FIELD_NAME)
+            .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
+            .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
+            .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
 
-    ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
-            .table(createTableDto())
-            .groups(groups);
     AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("capdv", "sum");
     Measure indicePrix;
     if (withRepo) {
       indicePrix = new UnresolvedExpressionMeasure("indice_prix");
-      query.context(Repository.KEY, new Repository(REPO_URL));
     } else {
       indicePrix = new ExpressionMeasure(
               "indice_prix",
               "sum(capdv) / sum(competitor_price * quantity)");
     }
-    query
-            .addScenarioComparison(
-                    new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF, aggregatedMeasure, false, REF_POS_PREVIOUS))
-            .addScenarioComparison(
-                    new ScenarioComparisonDto(COMPARISON_METHOD_ABS_DIFF, indicePrix, false, REF_POS_PREVIOUS));
+    ComparisonMeasure aggregatedMeasureDiff = QueryBuilder.bucketComparison(
+            "aggregatedMeasureDiff",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            aggregatedMeasure,
+            Map.of(
+                    SCENARIO_FIELD_NAME, "s-1",
+                    "group", "g"
+            ));
+    ComparisonMeasure indicePrixDiff = QueryBuilder.bucketComparison(
+            "indicePrixDiff",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            indicePrix,
+            Map.of(
+                    SCENARIO_FIELD_NAME, "s-1",
+                    "group", "g"
+            ));
 
-    this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY_GROUPING)
+    var query = new QueryDto()
+            .table(createTableDto())
+            .withColumnSet(QueryDto.BUCKET, bucketCS)
+            .withMeasure(aggregatedMeasureDiff)
+            .withMeasure(indicePrixDiff);
+
+    if (withRepo) {
+      query.context(Repository.KEY, new Repository(REPO_URL));
+    }
+
+    this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
                     .content(JacksonUtil.serialize(query))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -252,7 +244,7 @@ public class SparkQueryControllerTest {
               double baseValue = 0.9803921568627451d;
               double mnValue = 1.0294117647058822d;
               double mnmddValue = 1.0784313725490196d;
-              Assertions.assertThat((List) queryResult.get("rows")).containsExactly(
+              Assertions.assertThat((List) queryResult.get("rows")).containsExactlyInAnyOrder(
                       List.of("group1", MAIN_SCENARIO_NAME, 0d, 0d),
                       List.of("group1", "MN up", 10_000d, mnValue - baseValue),
                       List.of("group2", MAIN_SCENARIO_NAME, 0d, 0d),
@@ -263,8 +255,8 @@ public class SparkQueryControllerTest {
               Assertions.assertThat((List) queryResult.get("columns"))
                       .containsExactly("group",
                               SCENARIO_FIELD_NAME,
-                              "absolute_difference(sum(capdv), previous)",
-                              "absolute_difference(indice_prix, previous)");
+                              "aggregatedMeasureDiff",
+                              "indicePrixDiff");
             });
   }
 }

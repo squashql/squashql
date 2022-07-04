@@ -1,15 +1,14 @@
 package me.paulbares.query;
 
+import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.context.Totals;
-import me.paulbares.query.dto.ConditionDto;
-import me.paulbares.query.dto.ConditionType;
-import me.paulbares.query.dto.LogicalConditionDto;
-import me.paulbares.query.dto.QueryDto;
-import me.paulbares.query.dto.ScenarioComparisonDto;
-import me.paulbares.query.dto.ScenarioGroupingQueryDto;
-import me.paulbares.query.dto.SingleValueConditionDto;
-import me.paulbares.query.dto.TableDto;
+import me.paulbares.query.dto.*;
 
+import java.util.List;
+import java.util.Map;
+
+import static me.paulbares.query.BinaryOperator.DIVIDE;
+import static me.paulbares.query.BinaryOperator.PLUS;
 import static me.paulbares.query.context.Totals.POSITION_BOTTOM;
 import static me.paulbares.query.context.Totals.POSITION_TOP;
 import static me.paulbares.query.dto.ConditionType.AND;
@@ -22,17 +21,6 @@ public class QueryBuilder {
 
   public static QueryDto query() {
     return new QueryDto();
-  }
-
-  public static ScenarioGroupingQueryDto scenarioComparisonQuery() {
-    return new ScenarioGroupingQueryDto();
-  }
-
-  public static ScenarioComparisonDto comparison(String method,
-                                                 Measure measure,
-                                                 boolean showValue,
-                                                 String referencePosition) {
-    return new ScenarioComparisonDto(method, measure, showValue, referencePosition);
   }
 
   public static AggregatedMeasure aggregatedMeasure(String field, String aggregationFunction) {
@@ -87,5 +75,87 @@ public class QueryBuilder {
 
   public static ConditionDto ge(Object value) {
     return new SingleValueConditionDto(ConditionType.GE, value);
+  }
+
+  // FIXME new
+
+  public static void addPeriodColumnSet(QueryDto query, Period period) {
+    query.withColumnSet(QueryDto.PERIOD, new PeriodColumnSetDto(period));
+  }
+
+  public static void addBucketColumnSet(QueryDto query, String name, String field, Map<String, List<String>> values) {
+    BucketColumnSetDto columnSet = new BucketColumnSetDto(name, field);
+    columnSet.values = values;
+    query.withColumnSet(QueryDto.BUCKET, columnSet);
+  }
+
+  public static ComparisonMeasure periodComparison(String alias,
+                                                   ComparisonMethod method,
+                                                   Measure measure,
+                                                   Map<String, String> referencePosition) {
+    return new ComparisonMeasure(
+            alias,
+            method,
+            measure,
+            QueryDto.PERIOD,
+            referencePosition);
+  }
+
+  public static ComparisonMeasure bucketComparison(String alias,
+                                                   ComparisonMethod method,
+                                                   Measure measure,
+                                                   Map<String, String> referencePosition) {
+    return new ComparisonMeasure(
+            alias,
+            method,
+            measure,
+            QueryDto.BUCKET,
+            referencePosition);
+  }
+
+  public static Measure divide(String alias, Measure a, Measure b) {
+    return new BinaryOperationMeasure(alias, DIVIDE ,a, b);
+  }
+
+  public static Measure plus(String alias, Measure a, Measure b) {
+    return new BinaryOperationMeasure(alias, PLUS ,a, b);
+  }
+
+  public static void main(String[] args) {
+    QueryDto query = QueryBuilder.query();
+
+    query.table("saas");
+
+    QueryBuilder.addBucketColumnSet(query,
+            "group",
+            "scenario encrypted",
+            Map.of("group1", List.of("A", "B", "C", "D"), "group2", List.of("A", "D")));
+
+    QueryBuilder.addPeriodColumnSet(query, new Period.Year("Year"));
+
+    AggregatedMeasure amount = new AggregatedMeasure("Amount", AggregationFunction.SUM);
+    ExpressionMeasure sales = new ExpressionMeasure("sales", "sum(case when `Income/Expense` = 'Revenue' then Amount end)");
+    query.withMeasure(amount);
+    query.withMeasure(sales);
+    Measure ebidtaRatio = QueryBuilder.divide("EBITDA %", amount, sales);
+    query.withMeasure(ebidtaRatio);
+
+    ComparisonMeasure growth = periodComparison(
+            "Growth",
+            ComparisonMethod.DIVIDE,
+            sales,
+            Map.of("Year", "y-1"));
+    query.withMeasure(growth);
+    Measure kpi = plus("KPI", ebidtaRatio, growth);
+    query.withMeasure(kpi);
+
+    ComparisonMeasure kpiComp = bucketComparison(
+            "kpi comp. with prev. scenario",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            kpi,
+            Map.of("scenario encrypted", "s-1", "group", "g"));
+    query.withMeasure(kpiComp);
+
+    System.out.println(query.json());
   }
 }

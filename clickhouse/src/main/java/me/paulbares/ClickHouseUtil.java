@@ -44,10 +44,6 @@ public final class ClickHouseUtil {
     };
   }
 
-  public static String getScenarioName(String storeName) {
-    return storeName + "_" + Datastore.SCENARIO_FIELD_NAME;
-  }
-
   public static void show(ResultSet set) {
     StringBuilder sb = new StringBuilder();
     try {

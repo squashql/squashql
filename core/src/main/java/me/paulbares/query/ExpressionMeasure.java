@@ -5,7 +5,7 @@ import me.paulbares.store.Field;
 import java.util.Objects;
 import java.util.function.Function;
 
-import static me.paulbares.query.SqlUtils.escape;
+import static me.paulbares.query.database.SqlUtils.escape;
 
 public class ExpressionMeasure implements Measure {
 

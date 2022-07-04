@@ -1,0 +1,66 @@
+package me.paulbares.query;
+
+import me.paulbares.store.Field;
+
+import java.util.Objects;
+import java.util.function.Function;
+
+public class BinaryOperationMeasure implements Measure {
+
+  public String alias;
+  public BinaryOperator operator;
+  public Measure leftOperand;
+  public Measure rightOperand;
+
+  /**
+   * For jackson.
+   */
+  public BinaryOperationMeasure() {
+  }
+
+  public BinaryOperationMeasure(String alias,
+                                BinaryOperator binaryOperator,
+                                Measure leftOperand,
+                                Measure rightOperand) {
+    this.alias = alias == null
+            ? String.format("%s %s %s", leftOperand, binaryOperator, rightOperand)
+            : alias;
+    this.operator = binaryOperator;
+    this.leftOperand = leftOperand;
+    this.rightOperand = rightOperand;
+  }
+
+  @Override
+  public String sqlExpression(Function<String, Field> fieldProvider) {
+    throw new IllegalStateException();
+  }
+
+  @Override
+  public String alias() {
+    return this.alias;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    BinaryOperationMeasure that = (BinaryOperationMeasure) o;
+    return Objects.equals(this.alias, that.alias) && this.operator == that.operator && Objects.equals(this.leftOperand, that.leftOperand) && Objects.equals(this.rightOperand, that.rightOperand);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.alias, this.operator, this.leftOperand, this.rightOperand);
+  }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() +
+            "{" +
+            "alias='" + alias + '\'' +
+            ", operator=" + operator +
+            ", leftOperand=" + leftOperand +
+            ", rightOperand=" + rightOperand +
+            '}';
+  }
+}
