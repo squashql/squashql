@@ -1,6 +1,6 @@
 package me.paulbares.query.comp;
 
-import me.paulbares.query.BinaryOperationMeasure;
+import me.paulbares.query.Operator;
 
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
@@ -54,7 +54,7 @@ public class BinaryOperations {
     }
   }
 
-  public static BiFunction<Number, Number, Number> createBiFunction(BinaryOperationMeasure.Operator operator,
+  public static BiFunction<Number, Number, Number> createBiFunction(Operator operator,
                                                                     Class<?> leftDataType,
                                                                     Class<?> rightDataType) {
     Class<? extends Number> outputDataType = getOutputType(operator, leftDataType, rightDataType);
@@ -69,7 +69,7 @@ public class BinaryOperations {
     };
   }
 
-  public static Class<? extends Number> getOutputType(BinaryOperationMeasure.Operator operator, Class<?> leftDataType, Class<?> rightDataType) {
+  public static Class<? extends Number> getOutputType(Operator operator, Class<?> leftDataType, Class<?> rightDataType) {
     Class<? extends Number> outputDataType = Stream.of(double.class, float.class, long.class, int.class)
             .filter(clazz -> clazz.equals(leftDataType) || clazz.equals(rightDataType))
             .findFirst()

@@ -1,6 +1,5 @@
 package me.paulbares.query;
 
-import me.paulbares.query.ComparisonMeasure.PeriodUnit;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.PeriodColumnSetDto;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;

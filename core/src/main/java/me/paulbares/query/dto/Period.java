@@ -1,6 +1,7 @@
 package me.paulbares.query.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
  * TODO
@@ -13,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * SEMESTER_FROM_DATE,
  * YEAR_FROM_DATE
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public interface Period {
 
   @JsonIgnore

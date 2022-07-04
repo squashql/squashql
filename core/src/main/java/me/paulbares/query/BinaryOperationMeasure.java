@@ -1,14 +1,8 @@
 package me.paulbares.query;
 
+import java.util.Objects;
+
 public class BinaryOperationMeasure implements Measure {
-
-  public enum Operator {
-    PLUS, MINUS, MULTIPLY, DIVIDE;
-  }
-
-  public static String KEY = "binary_operation";
-
-  public String type;
 
   public String alias;
 
@@ -21,7 +15,6 @@ public class BinaryOperationMeasure implements Measure {
    * For jackson.
    */
   public BinaryOperationMeasure() {
-    this.type = KEY;
   }
 
   public BinaryOperationMeasure(String alias,
@@ -32,7 +25,6 @@ public class BinaryOperationMeasure implements Measure {
     this.operator = operator;
     this.leftOperand = leftOperand;
     this.rightOperand = rightOperand;
-    this.type = KEY;
   }
 
   @Override
@@ -46,11 +38,23 @@ public class BinaryOperationMeasure implements Measure {
   }
 
   @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    BinaryOperationMeasure that = (BinaryOperationMeasure) o;
+    return Objects.equals(this.alias, that.alias) && this.operator == that.operator && Objects.equals(this.leftOperand, that.leftOperand) && Objects.equals(this.rightOperand, that.rightOperand);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.alias, this.operator, this.leftOperand, this.rightOperand);
+  }
+
+  @Override
   public String toString() {
     return getClass().getSimpleName() +
             "{" +
-            "type='" + type + '\'' +
-            ", alias='" + alias + '\'' +
+            "alias='" + alias + '\'' +
             ", operator=" + operator +
             ", leftOperand=" + leftOperand +
             ", rightOperand=" + rightOperand +

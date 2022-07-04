@@ -5,10 +5,6 @@ import java.util.Objects;
 
 public class ComparisonMeasure implements Measure {
 
-  public static String KEY = "comparison";
-
-  public String type;
-
   public String alias;
 
   public String method;
@@ -17,18 +13,10 @@ public class ComparisonMeasure implements Measure {
 
   public Map<String, String> referencePosition; // TODO support first and last
 
-  public enum PeriodUnit {
-    MONTH,
-    QUARTER,
-    SEMESTER,
-    YEAR
-  }
-
   /**
    * For jackson.
    */
   public ComparisonMeasure() {
-    this.type = KEY;
   }
 
   public ComparisonMeasure(String alias,
@@ -39,7 +27,6 @@ public class ComparisonMeasure implements Measure {
     this.method = method;
     this.measure = measure;
     this.referencePosition = referencePosition;
-    this.type = KEY;
   }
 
   @Override
@@ -61,8 +48,7 @@ public class ComparisonMeasure implements Measure {
       return false;
     }
     ComparisonMeasure that = (ComparisonMeasure) o;
-    return this.type.equals(that.type)
-            && Objects.equals(this.alias, that.alias)
+    return Objects.equals(this.alias, that.alias)
             && this.method.equals(that.method)
             && this.measure.equals(that.measure)
             && this.referencePosition.equals(that.referencePosition);
@@ -70,14 +56,13 @@ public class ComparisonMeasure implements Measure {
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.type, this.alias, this.method, this.measure, this.referencePosition);
+    return Objects.hash(this.alias, this.method, this.measure, this.referencePosition);
   }
 
   @Override
   public String toString() {
     return getClass().getSimpleName() + "{" +
-            "type='" + this.type + '\'' +
-            ", alias='" + this.alias + '\'' +
+            "alias='" + this.alias + '\'' +
             ", method='" + this.method + '\'' +
             ", measure=" + this.measure +
             ", referencePosition=" + this.referencePosition +

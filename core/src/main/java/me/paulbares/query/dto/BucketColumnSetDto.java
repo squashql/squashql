@@ -2,12 +2,8 @@ package me.paulbares.query.dto;
 
 import me.paulbares.query.ColumnSet;
 import me.paulbares.store.Field;
-import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.impl.tuple.Tuples;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class BucketColumnSetDto implements ColumnSet {
 
@@ -15,7 +11,7 @@ public class BucketColumnSetDto implements ColumnSet {
 
   public String field;
 
-  public List<Pair<String, List<String>>> values = new ArrayList<>();
+  public Map<String, List<String>> values = new LinkedHashMap<>();
 
   /**
    * For Jackson.
@@ -29,7 +25,7 @@ public class BucketColumnSetDto implements ColumnSet {
   }
 
   public BucketColumnSetDto withNewBucket(String bucketName, List<String> bucketValues) {
-    this.values.add(Tuples.pair(bucketName, bucketValues));
+    this.values.put(bucketName, new ArrayList<>(bucketValues));
     return this;
   }
 

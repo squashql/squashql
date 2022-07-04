@@ -37,8 +37,8 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
     final Map<String, List<String>> valuesByBucket = new LinkedHashMap<>();
 
     ShiftProcedure(BucketColumnSetDto cSet, Map<String, String> referencePosition, ObjectIntMap<String> indexByColumn) {
-      for (Pair<String, List<String>> value : cSet.values) {
-        this.valuesByBucket.put(value.getOne(), value.getTwo());
+      for (Map.Entry<String, List<String>> value : cSet.values.entrySet()) {
+        this.valuesByBucket.put(value.getKey(), value.getValue());
       }
       this.indexByColumn = indexByColumn;
       this.transformationByColumn = new ArrayList<>();

@@ -4,7 +4,6 @@ import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.store.Field;
 import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
-import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 
@@ -71,11 +70,11 @@ public class BucketerExecutor {
 
   private static Function<Object[], List<Object[]>> createBucketer(BucketColumnSetDto bucketColumnSetDto) {
     Map<String, List<String>> bucketsByValue = new HashMap<>();
-    for (Pair<String, List<String>> value : bucketColumnSetDto.values) {
-      for (String v : value.getTwo()) {
+    for (Map.Entry<String, List<String>> value : bucketColumnSetDto.values.entrySet()) {
+      for (String v : value.getValue()) {
         bucketsByValue
                 .computeIfAbsent(v, k -> new ArrayList<>())
-                .add(value.getOne());
+                .add(value.getKey());
       }
     }
     Function<Object[], List<Object[]>> bucketer = toBucketColumnValues -> {

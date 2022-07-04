@@ -68,9 +68,9 @@ public abstract class ATestBinaryOperationMeasure {
             .table(this.storeName)
             .withMetric(sales)
             .withMetric(quantity)
-            .withMetric(new BinaryOperationMeasure("plus1", BinaryOperationMeasure.Operator.PLUS, sales, sales))
-            .withMetric(new BinaryOperationMeasure("plus2", BinaryOperationMeasure.Operator.PLUS, sales, quantity))
-            .withMetric(new BinaryOperationMeasure("plus3", BinaryOperationMeasure.Operator.PLUS, quantity, quantity));
+            .withMetric(new BinaryOperationMeasure("plus1", Operator.PLUS, sales, sales))
+            .withMetric(new BinaryOperationMeasure("plus2", Operator.PLUS, sales, quantity))
+            .withMetric(new BinaryOperationMeasure("plus3", Operator.PLUS, quantity, quantity));
 
     Table table = this.executor.execute(query);
     double salesV = 50d;
@@ -93,9 +93,9 @@ public abstract class ATestBinaryOperationMeasure {
             .table(this.storeName)
             .withMetric(sales)
             .withMetric(quantity)
-            .withMetric(new BinaryOperationMeasure("minus1", BinaryOperationMeasure.Operator.MINUS, sales, sales))
-            .withMetric(new BinaryOperationMeasure("minus2", BinaryOperationMeasure.Operator.MINUS, sales, quantity))
-            .withMetric(new BinaryOperationMeasure("minus3", BinaryOperationMeasure.Operator.MINUS, quantity, quantity));
+            .withMetric(new BinaryOperationMeasure("minus1", Operator.MINUS, sales, sales))
+            .withMetric(new BinaryOperationMeasure("minus2", Operator.MINUS, sales, quantity))
+            .withMetric(new BinaryOperationMeasure("minus3", Operator.MINUS, quantity, quantity));
 
     Table table = this.executor.execute(query);
     double salesV = 50d;
@@ -118,9 +118,9 @@ public abstract class ATestBinaryOperationMeasure {
             .table(this.storeName)
             .withMetric(sales)
             .withMetric(quantity)
-            .withMetric(new BinaryOperationMeasure("multiply1", BinaryOperationMeasure.Operator.MULTIPLY, sales, sales))
-            .withMetric(new BinaryOperationMeasure("multiply2", BinaryOperationMeasure.Operator.MULTIPLY, sales, quantity))
-            .withMetric(new BinaryOperationMeasure("multiply3", BinaryOperationMeasure.Operator.MULTIPLY, quantity, quantity));
+            .withMetric(new BinaryOperationMeasure("multiply1", Operator.MULTIPLY, sales, sales))
+            .withMetric(new BinaryOperationMeasure("multiply2", Operator.MULTIPLY, sales, quantity))
+            .withMetric(new BinaryOperationMeasure("multiply3", Operator.MULTIPLY, quantity, quantity));
 
     Table table = this.executor.execute(query);
     double salesV = 50d;
@@ -143,9 +143,9 @@ public abstract class ATestBinaryOperationMeasure {
             .table(this.storeName)
             .withMetric(sales)
             .withMetric(quantity)
-            .withMetric(new BinaryOperationMeasure("divide1", BinaryOperationMeasure.Operator.DIVIDE, sales, sales))
-            .withMetric(new BinaryOperationMeasure("divide2", BinaryOperationMeasure.Operator.DIVIDE, sales, quantity))
-            .withMetric(new BinaryOperationMeasure("divide3", BinaryOperationMeasure.Operator.DIVIDE, quantity, quantity));
+            .withMetric(new BinaryOperationMeasure("divide1", Operator.DIVIDE, sales, sales))
+            .withMetric(new BinaryOperationMeasure("divide2", Operator.DIVIDE, sales, quantity))
+            .withMetric(new BinaryOperationMeasure("divide3", Operator.DIVIDE, quantity, quantity));
 
     Table table = this.executor.execute(query);
     double salesV = 50d;

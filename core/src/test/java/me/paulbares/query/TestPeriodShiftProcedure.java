@@ -14,13 +14,13 @@ public class TestPeriodShiftProcedure {
   @Test
   void testQuarterFromMonthYear() {
     Period period = new Period.Quarter("", "");
-    MutableObjectIntMap<ComparisonMeasure.PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
-    indexByPeriodUnit.put(ComparisonMeasure.PeriodUnit.YEAR, 0);
-    indexByPeriodUnit.put(ComparisonMeasure.PeriodUnit.QUARTER, 1);
+    MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
+    indexByPeriodUnit.put(PeriodUnit.YEAR, 0);
+    indexByPeriodUnit.put(PeriodUnit.QUARTER, 1);
     BiFunction<Object[], String[], Object[]> f = (point, refPos) -> {
       new PeriodComparisonExecutor.ShiftProcedure(
               period,
-              Map.of(ComparisonMeasure.PeriodUnit.YEAR, refPos[0], ComparisonMeasure.PeriodUnit.QUARTER, refPos[1]),
+              Map.of(PeriodUnit.YEAR, refPos[0], PeriodUnit.QUARTER, refPos[1]),
               indexByPeriodUnit).test(point);
       return point;
     };

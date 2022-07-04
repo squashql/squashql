@@ -1,8 +1,9 @@
 package me.paulbares.jackson;
 
 import me.paulbares.query.AggregatedMeasure;
+import me.paulbares.query.BinaryOperationMeasure;
 import me.paulbares.query.ComparisonMeasure;
-import me.paulbares.query.QueryBuilder;
+import me.paulbares.query.Operator;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.*;
@@ -20,19 +21,19 @@ public class TestQueryS13n {
 
   @Test
   void testRoundTrip() {
-    QueryDto query = new QueryDto()
+    NewQueryDto query = new NewQueryDto()
             .table("myTable")
-            .coordinate(SCENARIO_FIELD_NAME, "s1")
-            .coordinates("city", "paris", "london")
-            .wildcardCoordinate("ean")
+            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumn("ean")
             .aggregatedMeasure("price", "sum")
             .aggregatedMeasure("quantity", "sum")
             .expressionMeasure("alias1", "firstMyExpression")
             .expressionMeasure("alias2", "secondMyExpression")
-            .context(Totals.KEY, QueryBuilder.BOTTOM);
+            .withMetric(new BinaryOperationMeasure("plus1", Operator.PLUS, new AggregatedMeasure("price", "sum"), new AggregatedMeasure("price", "sum")))
+            .context(Totals.KEY, BOTTOM);
 
     String serialize = query.json();
-    QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
+    NewQueryDto deserialize = JacksonUtil.deserialize(serialize, NewQueryDto.class);
     Assertions.assertThat(deserialize).isEqualTo(query);
   }
 
@@ -104,7 +105,7 @@ public class TestQueryS13n {
   }
 
   @Test
-  void testRoundTripPeriodBucketingComparisonQuery() {
+  void testRoundTripPeriodComparisonQuery() {
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
     ComparisonMeasure m = new ComparisonMeasure(
             "myMeasure",

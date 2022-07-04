@@ -1,27 +1,18 @@
 package me.paulbares.query.dto;
 
-import com.fasterxml.jackson.annotation.*;
-import me.paulbares.query.ComparisonMeasure.PeriodUnit;
 import me.paulbares.query.ColumnSet;
+import me.paulbares.query.PeriodUnit;
 import me.paulbares.store.Field;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static me.paulbares.query.ComparisonMeasure.PeriodUnit.QUARTER;
-import static me.paulbares.query.ComparisonMeasure.PeriodUnit.YEAR;
+import static me.paulbares.query.PeriodUnit.QUARTER;
+import static me.paulbares.query.PeriodUnit.YEAR;
 
 public class PeriodColumnSetDto implements ColumnSet {
 
-//  @JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT, use = JsonTypeInfo.Id.NAME)
-//  @JsonSubTypes({
-//          @JsonSubTypes.Type(value = Period.Month.class, name = Period.Quarter.JSON_KEY),
-//          @JsonSubTypes.Type(value = Period.Quarter.class, name = Period.Quarter.JSON_KEY),
-//          @JsonSubTypes.Type(value = Period.Semester.class, name = Period.Semester.JSON_KEY),
-//          @JsonSubTypes.Type(value = Period.Year.class, name = Period.Year.JSON_KEY),
-//  })
-//  @JsonProperty
   public Period period;
 
   /**
@@ -39,7 +30,6 @@ public class PeriodColumnSetDto implements ColumnSet {
    * perform the bucketing.
    */
   @Override
-  @JsonIgnore
   public List<String> getColumnsForPrefetching() {
     return getColumnsForPrefetching(this.period);
   }
@@ -68,7 +58,6 @@ public class PeriodColumnSetDto implements ColumnSet {
    * Gets the list of new fields that will appear in the final result table once the bucketing is done.
    */
   @Override
-  @JsonIgnore
   public List<Field> getNewColumns() {
     return getNewColumns(this.period);
   }

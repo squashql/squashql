@@ -46,7 +46,8 @@ public class AggregatedMeasure implements Measure {
 
   @Override
   public String toString() {
-    return "AggregatedMeasure{" +
+    return getClass().getSimpleName() +
+            "{" +
             "field='" + field + '\'' +
             ", aggregationFunction='" + aggregationFunction + '\'' +
             '}';
