@@ -70,9 +70,9 @@ public abstract class ATestBinaryOperationMeasure {
             .table(this.storeName)
             .withMeasure(sales)
             .withMeasure(quantity)
-            .withMeasure(new BinaryOperationMeasure("plus1", Operator.PLUS, sales, sales))
-            .withMeasure(new BinaryOperationMeasure("plus2", Operator.PLUS, sales, quantity))
-            .withMeasure(new BinaryOperationMeasure("plus3", Operator.PLUS, quantity, quantity));
+            .withMeasure(new BinaryOperationMeasure("plus1", BinaryOperator.PLUS, sales, sales))
+            .withMeasure(new BinaryOperationMeasure("plus2", BinaryOperator.PLUS, sales, quantity))
+            .withMeasure(new BinaryOperationMeasure("plus3", BinaryOperator.PLUS, quantity, quantity));
 
     Table table = this.executor.execute(query);
     double salesV = 50d;
@@ -93,9 +93,9 @@ public abstract class ATestBinaryOperationMeasure {
             .context(Repository.KEY, new Repository(ATestQueryEngine.REPO_URL))
             .withMeasure(sales)
             .withMeasure(quantity)
-            .withMeasure(new BinaryOperationMeasure("plus1", Operator.PLUS, sales, sales))
-            .withMeasure(new BinaryOperationMeasure("plus2", Operator.PLUS, sales, quantity))
-            .withMeasure(new BinaryOperationMeasure("plus3", Operator.PLUS, quantity, quantity));
+            .withMeasure(new BinaryOperationMeasure("plus1", BinaryOperator.PLUS, sales, sales))
+            .withMeasure(new BinaryOperationMeasure("plus2", BinaryOperator.PLUS, sales, quantity))
+            .withMeasure(new BinaryOperationMeasure("plus3", BinaryOperator.PLUS, quantity, quantity));
 
     Table table = this.executor.execute(query);
     double salesV = 50d;
@@ -118,9 +118,9 @@ public abstract class ATestBinaryOperationMeasure {
             .table(this.storeName)
             .withMeasure(sales)
             .withMeasure(quantity)
-            .withMeasure(new BinaryOperationMeasure("minus1", Operator.MINUS, sales, sales))
-            .withMeasure(new BinaryOperationMeasure("minus2", Operator.MINUS, sales, quantity))
-            .withMeasure(new BinaryOperationMeasure("minus3", Operator.MINUS, quantity, quantity));
+            .withMeasure(new BinaryOperationMeasure("minus1", BinaryOperator.MINUS, sales, sales))
+            .withMeasure(new BinaryOperationMeasure("minus2", BinaryOperator.MINUS, sales, quantity))
+            .withMeasure(new BinaryOperationMeasure("minus3", BinaryOperator.MINUS, quantity, quantity));
 
     Table table = this.executor.execute(query);
     double salesV = 50d;
@@ -143,9 +143,9 @@ public abstract class ATestBinaryOperationMeasure {
             .table(this.storeName)
             .withMeasure(sales)
             .withMeasure(quantity)
-            .withMeasure(new BinaryOperationMeasure("multiply1", Operator.MULTIPLY, sales, sales))
-            .withMeasure(new BinaryOperationMeasure("multiply2", Operator.MULTIPLY, sales, quantity))
-            .withMeasure(new BinaryOperationMeasure("multiply3", Operator.MULTIPLY, quantity, quantity));
+            .withMeasure(new BinaryOperationMeasure("multiply1", BinaryOperator.MULTIPLY, sales, sales))
+            .withMeasure(new BinaryOperationMeasure("multiply2", BinaryOperator.MULTIPLY, sales, quantity))
+            .withMeasure(new BinaryOperationMeasure("multiply3", BinaryOperator.MULTIPLY, quantity, quantity));
 
     Table table = this.executor.execute(query);
     double salesV = 50d;
@@ -168,9 +168,9 @@ public abstract class ATestBinaryOperationMeasure {
             .table(this.storeName)
             .withMeasure(sales)
             .withMeasure(quantity)
-            .withMeasure(new BinaryOperationMeasure("divide1", Operator.DIVIDE, sales, sales))
-            .withMeasure(new BinaryOperationMeasure("divide2", Operator.DIVIDE, sales, quantity))
-            .withMeasure(new BinaryOperationMeasure("divide3", Operator.DIVIDE, quantity, quantity));
+            .withMeasure(new BinaryOperationMeasure("divide1", BinaryOperator.DIVIDE, sales, sales))
+            .withMeasure(new BinaryOperationMeasure("divide2", BinaryOperator.DIVIDE, sales, quantity))
+            .withMeasure(new BinaryOperationMeasure("divide3", BinaryOperator.DIVIDE, quantity, quantity));
 
     Table table = this.executor.execute(query);
     double salesV = 50d;

@@ -6,18 +6,17 @@ import com.google.common.graph.Graph;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.Repository;
+import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
-import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.PeriodColumnSetDto;
-import me.paulbares.query.database.DatabaseQuery;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static me.paulbares.query.dto.QueryDto.BUCKET;
@@ -108,7 +107,14 @@ public class QueryExecutor {
     @Override
     public void accept(Measure measure, ExecutionContext executionContext) {
       if (measure instanceof ComparisonMeasure cm) {
-        AComparisonExecutor executor = createComparisonExecutor(executionContext.query.columnSets, cm);
+        Map<String, Function<ColumnSet, AComparisonExecutor>> m = Map.of(
+                BUCKET, cs -> new BucketComparisonExecutor((BucketColumnSetDto) cs),
+                PERIOD, cs -> new PeriodComparisonExecutor((PeriodColumnSetDto) cs));
+        ColumnSet t = executionContext.query.columnSets.get(cm.columnSet);
+        if (t == null) {
+          throw new IllegalArgumentException(String.format("columnSet %s is not specified in the query but is used in a comparison measure: %s", cm.columnSet, cm));
+        }
+        AComparisonExecutor executor = m.get(cm.columnSet).apply(t);
         if (executor != null) {
           executeComparator(cm, executionContext.table, executor);
         }
@@ -117,30 +123,6 @@ public class QueryExecutor {
       } else {
         throw new RuntimeException("nothing to do");
       }
-    }
-
-    private AComparisonExecutor createComparisonExecutor(Map<String, ColumnSet> columnSetMap, ComparisonMeasure cm) {
-      Map<String, Function<ColumnSet, AComparisonExecutor>> m = Map.of(
-              BUCKET, cs -> new BucketComparisonExecutor((BucketColumnSetDto) cs),
-              PERIOD, cs -> new PeriodComparisonExecutor((PeriodColumnSetDto) cs));
-      for (Map.Entry<String, Function<ColumnSet, AComparisonExecutor>> e : m.entrySet()) {
-        ColumnSet cs = columnSetMap.get(e.getKey());
-        if (cs != null && isComparisonFor(cm, cs)) {
-          return m.get(e.getKey()).apply(cs);
-        }
-      }
-      return null;
-    }
-
-    private static boolean isComparisonFor(Measure measure, ColumnSet cs) {
-      if (measure instanceof ComparisonMeasure cm) {
-        Set<String> intersection = new HashSet<>(cm.referencePosition.keySet());
-        intersection.retainAll(cs.getNewColumns().stream().map(Field::name).collect(Collectors.toSet()));
-        if (intersection.isEmpty()) {
-          return false;
-        }
-      }
-      return true;
     }
 
     private static void executeComparator(ComparisonMeasure cm, Table intermediateResult, AComparisonExecutor executor) {

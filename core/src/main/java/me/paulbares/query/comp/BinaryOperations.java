@@ -1,38 +1,35 @@
 package me.paulbares.query.comp;
 
-import me.paulbares.query.Operator;
+import me.paulbares.query.BinaryOperator;
+import me.paulbares.query.ComparisonMethod;
 
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 public class BinaryOperations {
 
-  public static final String ABS_DIFF = "absolute_difference";
-  public static final String REL_DIFF = "relative_difference";
-
-  public static BiFunction<Number, Number, Number> createComparisonBiFunction(String method, Class<?> dataType) {
+  public static BiFunction<Number, Number, Number> createComparisonBiFunction(ComparisonMethod method, Class<?> dataType) {
     Class<? extends Number> outputDataType = getComparisonOutputType(method, dataType);
     return switch (method) {
-      case ABS_DIFF ->
+      case ABSOLUTE_DIFFERENCE ->
               outputDataType.equals(long.class) ? (a, b) -> a.longValue() - b.longValue() : (a, b) -> a.doubleValue() - b.doubleValue();
-      case REL_DIFF -> (a, b) -> (a.doubleValue() - b.doubleValue()) / b.doubleValue();
+      case RELATIVE_DIFFERENCE -> (a, b) -> (a.doubleValue() - b.doubleValue()) / b.doubleValue();
       default -> throw new IllegalArgumentException(String.format("Not supported comparison %s", method));
     };
   }
 
-  public static Class<? extends Number> getComparisonOutputType(String method, Class<?> dataType) {
+  public static Class<? extends Number> getComparisonOutputType(ComparisonMethod method, Class<?> dataType) {
     return switch (method) {
-      case ABS_DIFF -> (Class<? extends Number>) dataType;
-      case REL_DIFF -> double.class;
-      default -> throw new IllegalArgumentException(String.format("Not supported comparison %s", method));
+      case ABSOLUTE_DIFFERENCE -> (Class<? extends Number>) dataType;
+      case RELATIVE_DIFFERENCE -> double.class;
     };
   }
 
-  public static BiFunction<Number, Number, Number> createBiFunction(Operator operator,
+  public static BiFunction<Number, Number, Number> createBiFunction(BinaryOperator binaryOperator,
                                                                     Class<?> leftDataType,
                                                                     Class<?> rightDataType) {
-    Class<? extends Number> outputDataType = getOutputType(operator, leftDataType, rightDataType);
-    return switch (operator) {
+    Class<? extends Number> outputDataType = getOutputType(binaryOperator, leftDataType, rightDataType);
+    return switch (binaryOperator) {
       case PLUS ->
               outputDataType.equals(long.class) ? (a, b) -> a.longValue() + b.longValue() : (a, b) -> a.doubleValue() + b.doubleValue();
       case MINUS ->
@@ -43,11 +40,11 @@ public class BinaryOperations {
     };
   }
 
-  public static Class<? extends Number> getOutputType(Operator operator, Class<?> leftDataType, Class<?> rightDataType) {
+  public static Class<? extends Number> getOutputType(BinaryOperator binaryOperator, Class<?> leftDataType, Class<?> rightDataType) {
     Class<? extends Number> outputDataType = Stream.of(double.class, float.class, long.class, int.class)
             .filter(clazz -> clazz.equals(leftDataType) || clazz.equals(rightDataType))
             .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException(String.format("Types %s and %s are incompatible with the operator %s", leftDataType, rightDataType, operator)));
+            .orElseThrow(() -> new IllegalArgumentException(String.format("Types %s and %s are incompatible with the operator %s", leftDataType, rightDataType, binaryOperator)));
     if (outputDataType.equals(float.class)) {
       outputDataType = double.class;
     } else if (outputDataType.equals(int.class)) {

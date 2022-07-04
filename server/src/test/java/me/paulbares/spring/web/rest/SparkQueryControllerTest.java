@@ -3,7 +3,6 @@ package me.paulbares.spring.web.rest;
 import me.paulbares.client.SimpleTable;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.*;
-import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.Repository;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
@@ -208,17 +207,17 @@ public class SparkQueryControllerTest {
               "indice_prix",
               "sum(capdv) / sum(competitor_price * quantity)");
     }
-    ComparisonMeasure aggregatedMeasureDiff = new ComparisonMeasure(
+    ComparisonMeasure aggregatedMeasureDiff = QueryBuilder.bucketComparison(
             "aggregatedMeasureDiff",
-            BinaryOperations.ABS_DIFF,
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
             aggregatedMeasure,
             Map.of(
                     SCENARIO_FIELD_NAME, "s-1",
                     "group", "g"
             ));
-    ComparisonMeasure indicePrixDiff = new ComparisonMeasure(
+    ComparisonMeasure indicePrixDiff = QueryBuilder.bucketComparison(
             "indicePrixDiff",
-            BinaryOperations.ABS_DIFF,
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
             indicePrix,
             Map.of(
                     SCENARIO_FIELD_NAME, "s-1",

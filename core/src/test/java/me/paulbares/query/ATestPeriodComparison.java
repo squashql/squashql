@@ -1,10 +1,9 @@
 package me.paulbares.query;
 
-import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.database.QueryEngine;
-import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.PeriodColumnSetDto;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
@@ -18,6 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static me.paulbares.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -100,9 +100,9 @@ public abstract class ATestPeriodComparison {
   void testCompareQuarterCurrentWithSamePreviousYear() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
-    ComparisonMeasure m = new ComparisonMeasure(
+    ComparisonMeasure m = QueryBuilder.periodComparison(
             "myMeasure",
-            BinaryOperations.ABS_DIFF,
+            ABSOLUTE_DIFFERENCE,
             sales,
             Map.of(
                     "quarter_sales", "q",
@@ -135,9 +135,9 @@ public abstract class ATestPeriodComparison {
   void testCompareQuarterCurrentWithPrevious() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
-    ComparisonMeasure m = new ComparisonMeasure(
+    ComparisonMeasure m = QueryBuilder.periodComparison(
             "myMeasure",
-            BinaryOperations.ABS_DIFF,
+            ABSOLUTE_DIFFERENCE,
             sales,
             Map.of(
                     "quarter_sales", "q-1",
@@ -171,9 +171,9 @@ public abstract class ATestPeriodComparison {
   void testCompareYearCurrentWithPrevious() {
     Period.Year period = new Period.Year("year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
-    ComparisonMeasure m = new ComparisonMeasure(
+    ComparisonMeasure m = QueryBuilder.periodComparison(
             "myMeasure",
-            BinaryOperations.ABS_DIFF,
+            ABSOLUTE_DIFFERENCE,
             sales,
             Map.of("year_sales", "y-1"));
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);

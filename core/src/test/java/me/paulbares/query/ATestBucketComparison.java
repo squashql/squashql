@@ -1,6 +1,5 @@
 package me.paulbares.query;
 
-import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
@@ -17,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static me.paulbares.query.ComparisonMethod.RELATIVE_DIFFERENCE;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -95,18 +95,18 @@ public abstract class ATestBucketComparison {
   @Test
   void testAbsoluteDifferenceWithFirst() {
     AggregatedMeasure price = new AggregatedMeasure("price", "sum");
-    ComparisonMeasure priceComp = new ComparisonMeasure(
+    ComparisonMeasure priceComp = QueryBuilder.bucketComparison(
             "priceDiff",
-            BinaryOperations.ABS_DIFF,
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
                     this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("quantity", "sum");
-    ComparisonMeasure quantityComp = new ComparisonMeasure(
+    ComparisonMeasure quantityComp = QueryBuilder.bucketComparison(
             "quantityDiff",
-            BinaryOperations.ABS_DIFF,
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
@@ -139,18 +139,18 @@ public abstract class ATestBucketComparison {
   @Test
   void testAbsoluteDifferenceWithPrevious() {
     AggregatedMeasure price = new AggregatedMeasure("price", "sum");
-    ComparisonMeasure priceComp = new ComparisonMeasure(
+    ComparisonMeasure priceComp = QueryBuilder.bucketComparison(
             "priceDiff",
-            BinaryOperations.ABS_DIFF,
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
             Map.of(
                     SCENARIO_FIELD_NAME, "s-1",
                     this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("quantity", "sum");
-    ComparisonMeasure quantityComp = new ComparisonMeasure(
+    ComparisonMeasure quantityComp = QueryBuilder.bucketComparison(
             "quantityDiff",
-            BinaryOperations.ABS_DIFF,
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
             Map.of(
                     SCENARIO_FIELD_NAME, "s-1",
@@ -183,18 +183,18 @@ public abstract class ATestBucketComparison {
   @Test
   void testRelativeDifferenceWithFirst() {
     AggregatedMeasure price = new AggregatedMeasure("price", "sum");
-    ComparisonMeasure priceComp = new ComparisonMeasure(
+    ComparisonMeasure priceComp = QueryBuilder.bucketComparison(
             "priceDiff",
-            BinaryOperations.REL_DIFF,
+            RELATIVE_DIFFERENCE,
             price,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
                     this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("quantity", "sum");
-    ComparisonMeasure quantityComp = new ComparisonMeasure(
+    ComparisonMeasure quantityComp = QueryBuilder.bucketComparison(
             "quantityDiff",
-            BinaryOperations.REL_DIFF,
+            RELATIVE_DIFFERENCE,
             quantity,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",

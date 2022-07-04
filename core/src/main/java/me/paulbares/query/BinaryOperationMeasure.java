@@ -5,7 +5,7 @@ import java.util.Objects;
 public class BinaryOperationMeasure implements Measure {
 
   public String alias;
-  public Operator operator;
+  public BinaryOperator operator;
   public Measure leftOperand;
   public Measure rightOperand;
 
@@ -16,13 +16,13 @@ public class BinaryOperationMeasure implements Measure {
   }
 
   public BinaryOperationMeasure(String alias,
-                                Operator operator,
+                                BinaryOperator binaryOperator,
                                 Measure leftOperand,
                                 Measure rightOperand) {
     this.alias = alias == null
-            ? String.format("%s %s %s", leftOperand, operator, rightOperand)
+            ? String.format("%s %s %s", leftOperand, binaryOperator, rightOperand)
             : alias;
-    this.operator = operator;
+    this.operator = binaryOperator;
     this.leftOperand = leftOperand;
     this.rightOperand = rightOperand;
   }

@@ -1,7 +1,11 @@
 package me.paulbares.query;
 
+import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.*;
+
+import java.util.List;
+import java.util.Map;
 
 import static me.paulbares.query.context.Totals.POSITION_BOTTOM;
 import static me.paulbares.query.context.Totals.POSITION_TOP;
@@ -69,5 +73,54 @@ public class QueryBuilder {
 
   public static ConditionDto ge(Object value) {
     return new SingleValueConditionDto(ConditionType.GE, value);
+  }
+
+  // FIXME new
+
+  public static void addPeriodColumnSet(QueryDto query, Period period) {
+    query.withColumnSet(QueryDto.PERIOD, new PeriodColumnSetDto(period));
+  }
+
+  public static void addBucketColumnSet(QueryDto query, String name, String field, Map<String, List<String>> values) {
+    BucketColumnSetDto columnSet = new BucketColumnSetDto(name, field);
+    columnSet.values = values;
+    query.withColumnSet(QueryDto.BUCKET, columnSet);
+  }
+
+  public static ComparisonMeasure periodComparison(String alias,
+                                                   ComparisonMethod method,
+                                                   Measure measure,
+                                                   Map<String, String> referencePosition) {
+    return new ComparisonMeasure(
+            alias,
+            method,
+            measure,
+            QueryDto.PERIOD,
+            referencePosition);
+  }
+
+  public static ComparisonMeasure bucketComparison(String alias,
+                                                   ComparisonMethod method,
+                                                   Measure measure,
+                                                   Map<String, String> referencePosition) {
+    return new ComparisonMeasure(
+            alias,
+            method,
+            measure,
+            QueryDto.BUCKET,
+            referencePosition);
+  }
+
+  public static void main(String[] args) {
+    QueryDto query = QueryBuilder.query();
+    QueryBuilder.addPeriodColumnSet(query, new Period.Quarter("tr", ""));
+
+    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
+    ComparisonMeasure salesYearComp = periodComparison(
+            "salesYearComp",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            sales,
+            Map.of("year_sales", "y-1"));
+    query.withMeasure(salesYearComp);
   }
 }

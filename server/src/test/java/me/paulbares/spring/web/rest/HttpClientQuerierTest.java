@@ -5,7 +5,6 @@ import me.paulbares.client.SimpleTable;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ComparisonMeasure;
 import me.paulbares.query.QueryBuilder;
-import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.spring.config.DatasetTestConfig;
@@ -19,6 +18,7 @@ import org.springframework.context.annotation.Import;
 import java.util.List;
 import java.util.Map;
 
+import static me.paulbares.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -70,9 +70,9 @@ public class HttpClientQuerierTest {
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
 
     AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("capdv", "sum");
-    ComparisonMeasure capdvDiff = new ComparisonMeasure(
+    ComparisonMeasure capdvDiff = QueryBuilder.bucketComparison(
             "capdvDiff",
-            BinaryOperations.ABS_DIFF,
+            ABSOLUTE_DIFFERENCE,
             aggregatedMeasure,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",

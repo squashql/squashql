@@ -1,12 +1,11 @@
 package me.paulbares.query;
 
 import me.paulbares.query.agg.AggregationFunction;
-import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
-import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.PeriodColumnSetDto;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
@@ -206,9 +205,9 @@ public abstract class ATestQueryColumnSets {
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
 
-    ComparisonMeasure salesYearComp = new ComparisonMeasure(
+    ComparisonMeasure salesYearComp = QueryBuilder.periodComparison(
             "salesYearComp",
-            BinaryOperations.ABS_DIFF,
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
             Map.of("year_sales", "y-1"));
 
@@ -248,9 +247,9 @@ public abstract class ATestQueryColumnSets {
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
 
-    ComparisonMeasure salesYearComp = new ComparisonMeasure(
+    ComparisonMeasure salesYearComp = QueryBuilder.bucketComparison(
             "salesYearComp",
-            BinaryOperations.ABS_DIFF,
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
             Map.of(SCENARIO_FIELD_NAME, "s-1", groupOfScenario, "g"));
 
@@ -288,16 +287,16 @@ public abstract class ATestQueryColumnSets {
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
 
     AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
-    ComparisonMeasure salesGroupComp = new ComparisonMeasure(
+    ComparisonMeasure salesGroupComp = QueryBuilder.bucketComparison(
             "salesGroupComp",
-            BinaryOperations.ABS_DIFF,
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
             Map.of(SCENARIO_FIELD_NAME, "s-1", groupOfScenario, "g"));
 
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(new Period.Year("year_sales"));
-    ComparisonMeasure salesYearComp = new ComparisonMeasure(
+    ComparisonMeasure salesYearComp = QueryBuilder.periodComparison(
             "salesYearComp",
-            BinaryOperations.ABS_DIFF,
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
             Map.of("year_sales", "y-1"));
 

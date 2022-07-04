@@ -6,8 +6,9 @@ import java.util.Objects;
 public class ComparisonMeasure implements Measure {
 
   public String alias;
-  public String method;
+  public ComparisonMethod method;
   public Measure measure;
+  public String columnSet;
   public Map<String, String> referencePosition;
 
   /**
@@ -17,13 +18,15 @@ public class ComparisonMeasure implements Measure {
   }
 
   public ComparisonMeasure(String alias,
-                           String method,
+                           ComparisonMethod method,
                            Measure measure,
+                           String columnSet,
                            Map<String, String> referencePosition) {
     this.alias = alias == null
             ? String.format("%s(%s, %s)", method, measure.alias(), referencePosition)
             : alias;
     this.method = method;
+    this.columnSet = columnSet;
     this.measure = measure;
     this.referencePosition = referencePosition;
   }
@@ -50,12 +53,13 @@ public class ComparisonMeasure implements Measure {
     return Objects.equals(this.alias, that.alias)
             && this.method.equals(that.method)
             && this.measure.equals(that.measure)
+            && this.columnSet.equals(that.columnSet)
             && this.referencePosition.equals(that.referencePosition);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.alias, this.method, this.measure, this.referencePosition);
+    return Objects.hash(this.alias, this.method, this.measure, this.columnSet, this.referencePosition);
   }
 
   @Override
@@ -65,6 +69,7 @@ public class ComparisonMeasure implements Measure {
             "alias='" + this.alias + '\'' +
             ", method='" + this.method + '\'' +
             ", measure=" + this.measure +
+            ", columnSet=" + this.columnSet +
             ", referencePosition=" + this.referencePosition +
             '}';
   }

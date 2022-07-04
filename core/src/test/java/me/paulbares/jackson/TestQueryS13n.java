@@ -1,10 +1,6 @@
 package me.paulbares.jackson;
 
-import me.paulbares.query.AggregatedMeasure;
-import me.paulbares.query.BinaryOperationMeasure;
-import me.paulbares.query.ComparisonMeasure;
-import me.paulbares.query.Operator;
-import me.paulbares.query.comp.BinaryOperations;
+import me.paulbares.query.*;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.*;
 import org.assertj.core.api.Assertions;
@@ -13,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
+import static me.paulbares.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static me.paulbares.query.QueryBuilder.*;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
@@ -29,7 +26,7 @@ public class TestQueryS13n {
             .aggregatedMeasure("quantity", "sum")
             .expressionMeasure("alias1", "firstMyExpression")
             .expressionMeasure("alias2", "secondMyExpression")
-            .withMeasure(new BinaryOperationMeasure("plus1", Operator.PLUS, new AggregatedMeasure("price", "sum"), new AggregatedMeasure("price", "sum")))
+            .withMeasure(new BinaryOperationMeasure("plus1", BinaryOperator.PLUS, new AggregatedMeasure("price", "sum"), new AggregatedMeasure("price", "sum")))
             .context(Totals.KEY, BOTTOM);
 
     String serialize = query.json();
@@ -80,9 +77,9 @@ public class TestQueryS13n {
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
 
     AggregatedMeasure price = new AggregatedMeasure("price", "sum");
-    ComparisonMeasure priceComp = new ComparisonMeasure(
+    ComparisonMeasure priceComp = QueryBuilder.bucketComparison(
             "priceDiff",
-            BinaryOperations.ABS_DIFF,
+            ABSOLUTE_DIFFERENCE,
             price,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
@@ -103,9 +100,9 @@ public class TestQueryS13n {
   @Test
   void testRoundTripPeriodComparisonQuery() {
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
-    ComparisonMeasure m = new ComparisonMeasure(
+    ComparisonMeasure m = QueryBuilder.periodComparison(
             "myMeasure",
-            BinaryOperations.ABS_DIFF,
+            ABSOLUTE_DIFFERENCE,
             sales,
             Map.of("year_sales", "y-1"));
 
