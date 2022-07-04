@@ -14,8 +14,9 @@ mvn clean install -DskipTests
 - Launch the project with the following command. Replace `/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java` 
 by your java path if necessary. 
 ```
-/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -jar server/target/aitm-server-0.1-SNAPSHOT.jar
+/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -Ddataset.path=/Users/paul/Downloads/saas.csv -jar server/target/aitm-server-0.1-SNAPSHOT.jar
 ```
+Do not forget to change the path to the file in the above command: `-Ddataset.path=/Users/paul/Downloads/saas.csv`
 
 Server address is: `http://localhost:8080`
 
@@ -160,7 +161,7 @@ Response:
 ```
 ##### Context value repository
 
-Metrics can be defined once and for all in a static file. To indicate to aitm where such metrics can be found, use the context value `repository`.
+Measures can be defined once and for all in a static file. To indicate to aitm where such measures can be found, use the context value `repository`.
 ```json
 ...
 "context": {
@@ -171,7 +172,7 @@ Metrics can be defined once and for all in a static file. To indicate to aitm wh
 ...
 ```
 
-In that case, in the query only metric aliases can be indicated. Aitm will resolve the expressions by using the repository content at query time.
+In that case, in the query only measure aliases can be indicated. Aitm will resolve the expressions by using the repository content at query time.
 
 ```json
 {
@@ -316,12 +317,12 @@ Response:
 ```
 
 The http request accepts a param `repo-url`. For instance: `https://sa-mvp.herokuapp.com/spark-metadata?repo-url=https%3A%2F%2Fraw.githubusercontent.com%2Fpaulbares%2Faitm-assets%2Fmain%2Fmetrics-test.json`.
-The metadata response will be enriched with additional metrics already defined.
+The metadata response will be enriched with additional measures already defined.
 
 ```json
 {
   "aggregation_functions":[...],
-  "metrics":[
+  "measures":[
     {
       "alias":"quantity div by 10",
       "expression":"sum(`quantity`) / 10"

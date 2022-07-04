@@ -1,16 +1,10 @@
 package me.paulbares.transaction;
 
-import com.clickhouse.client.ClickHouseClient;
-import com.clickhouse.client.ClickHouseCompression;
-import com.clickhouse.client.ClickHouseFormat;
-import com.clickhouse.client.ClickHouseNode;
-import com.clickhouse.client.ClickHouseProtocol;
-import com.clickhouse.client.ClickHouseResponseSummary;
+import com.clickhouse.client.*;
 import com.clickhouse.jdbc.ClickHouseConnection;
 import com.clickhouse.jdbc.ClickHouseDataSource;
 import com.clickhouse.jdbc.ClickHouseStatement;
 import me.paulbares.ClickHouseDatastore;
-import me.paulbares.ClickHouseUtil;
 import me.paulbares.store.Field;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
@@ -35,7 +29,7 @@ public class ClickHouseTransactionManager implements TransactionManager {
   public void dropAndCreateInMemoryTable(String table, List<Field> fields) {
     List<Field> list = ImmutableListFactoryImpl.INSTANCE
             .ofAll(fields)
-            .newWith(new Field(ClickHouseUtil.getScenarioName(table), String.class))
+            .newWith(new Field(SCENARIO_FIELD_NAME, String.class))
             .castToList();
 
     try (ClickHouseConnection conn = this.clickHouseDataSource.getConnection();
@@ -82,10 +76,9 @@ public class ClickHouseTransactionManager implements TransactionManager {
 
   private void ensureScenarioColumnIsPresent(String store) {
     List<Field> fields = ClickHouseDatastore.getFields(this.clickHouseDataSource, store);
-    String scenarioName = ClickHouseUtil.getScenarioName(store);
-    boolean found = fields.stream().anyMatch(f -> f.name().equals(scenarioName));
+    boolean found = fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
     if (!found) {
-      throw new RuntimeException(String.format("%s field not found", scenarioName));
+      throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));
     }
   }
 

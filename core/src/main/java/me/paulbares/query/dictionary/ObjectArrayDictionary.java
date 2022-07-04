@@ -27,9 +27,6 @@ public class ObjectArrayDictionary {
 
   /**
    * The length of the array should be the same as {@link #pointLength}. No check is made.
-   *
-   * @param value
-   * @return
    */
   public int map(Object[] value) {
     assert value.length == this.pointLength : Arrays.toString(value) + " was expected to be of size " + this.pointLength;

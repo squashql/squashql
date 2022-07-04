@@ -1,9 +1,9 @@
 package me.paulbares.query;
 
-import me.paulbares.query.context.Totals;
+import me.paulbares.query.database.DatabaseQuery;
+import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.dto.JoinDto;
 import me.paulbares.query.dto.JoinMappingDto;
-import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
@@ -12,12 +12,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.function.Function;
 
-import static me.paulbares.query.QueryBuilder.and;
-import static me.paulbares.query.QueryBuilder.eq;
-import static me.paulbares.query.QueryBuilder.ge;
-import static me.paulbares.query.QueryBuilder.lt;
-import static me.paulbares.query.QueryBuilder.or;
-import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
+import static me.paulbares.query.QueryBuilder.*;
+import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 public class TestSQLTranslator {
 
@@ -32,7 +28,7 @@ public class TestSQLTranslator {
 
   @Test
   void testGrandTotal() {
-    QueryDto query = new QueryDto()
+    DatabaseQuery query = new DatabaseQuery()
             .aggregatedMeasure("pnl", "sum")
             .aggregatedMeasure("delta", "sum")
             .aggregatedMeasure("pnl", "avg")
@@ -44,7 +40,7 @@ public class TestSQLTranslator {
 
   @Test
   void testGroupBy() {
-    QueryDto query = new QueryDto()
+    DatabaseQuery query = new DatabaseQuery()
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .wildcardCoordinate("type")
             .aggregatedMeasure("pnl", "sum")
@@ -59,7 +55,7 @@ public class TestSQLTranslator {
 
   @Test
   void testSingleConditionSingleField() {
-    QueryDto query = new QueryDto()
+    DatabaseQuery query = new DatabaseQuery()
             .coordinate(SCENARIO_FIELD_NAME, "Base")
             .wildcardCoordinate("type")
             .aggregatedMeasure("pnl", "sum")
@@ -75,7 +71,7 @@ public class TestSQLTranslator {
 
   @Test
   void testConditionsSeveralField() {
-    QueryDto query = new QueryDto()
+    DatabaseQuery query = new DatabaseQuery()
             .coordinate(SCENARIO_FIELD_NAME, "Base")
             .coordinates("type", "A", "B")
             .aggregatedMeasure("pnl", "sum")
@@ -89,37 +85,35 @@ public class TestSQLTranslator {
 
   @Test
   void testDifferentMeasures() {
-    QueryDto query = new QueryDto()
+    DatabaseQuery query = new DatabaseQuery()
             .table(BASE_STORE_NAME)
             .aggregatedMeasure("pnl", "sum")
             .expressionMeasure("indice", "100 * sum(`delta`) / sum(`pnl`)");
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-          .isEqualTo("select sum(`pnl`), 100 * sum(`delta`) / sum(`pnl`) as `indice` from " + BASE_STORE_NAME);
+            .isEqualTo("select sum(`pnl`), 100 * sum(`delta`) / sum(`pnl`) as `indice` from " + BASE_STORE_NAME);
   }
 
   @Test
   void testWithTotalsTop() {
-    QueryDto query = new QueryDto()
+    DatabaseQuery query = new DatabaseQuery()
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("price", "sum")
-            .context(Totals.KEY, QueryBuilder.TOP)
             .table(BASE_STORE_NAME);
 
-    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
+    Assertions.assertThat(SQLTranslator.translate(query, QueryBuilder.TOP, fieldProvider))
             .isEqualTo("select `scenario`, sum(`price`) from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
                     "order by case when `scenario` is null or `scenario` = '' then 0 else 1 end, `scenario`  asc");
   }
 
   @Test
   void testWithTotalsBottom() {
-    QueryDto query = new QueryDto()
+    DatabaseQuery query = new DatabaseQuery()
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("price", "sum")
-            .context(Totals.KEY, QueryBuilder.BOTTOM)
             .table(BASE_STORE_NAME);
 
-    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
+    Assertions.assertThat(SQLTranslator.translate(query, QueryBuilder.BOTTOM, fieldProvider))
             .isEqualTo("select `scenario`, sum(`price`) from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
                     "order by case when `scenario` is null or `scenario` = '' then 1 else 0 end, `scenario`  asc");
   }
@@ -144,7 +138,7 @@ public class TestSQLTranslator {
     table1.joins.add(new JoinDto(table4, "inner", mappingTable1ToTable4));
     table2.joins.add(new JoinDto(table3, "inner", mappingTable2ToTable3));
 
-    QueryDto query = new QueryDto()
+    DatabaseQuery query = new DatabaseQuery()
             .table(baseStore)
             .aggregatedMeasure("pnl", "avg");
 
@@ -159,7 +153,7 @@ public class TestSQLTranslator {
 
   @Test
   void testConditions() {
-    QueryDto query = new QueryDto()
+    DatabaseQuery query = new DatabaseQuery()
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .wildcardCoordinate("type")
             .aggregatedMeasure("pnl", "sum")

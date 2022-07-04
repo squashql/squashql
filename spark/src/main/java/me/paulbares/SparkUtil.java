@@ -1,6 +1,5 @@
 package me.paulbares;
 
-import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
@@ -55,9 +54,5 @@ public final class SparkUtil {
       schema = schema.add(field.name(), classToDatatype(field.type()));
     }
     return schema;
-  }
-
-  public static String getScenarioName(String storeName) {
-    return storeName + "_" + Datastore.SCENARIO_FIELD_NAME;
   }
 }

@@ -2,27 +2,28 @@ package me.paulbares.spring.web.rest;
 
 import me.paulbares.client.HttpClientQuerier;
 import me.paulbares.client.SimpleTable;
+import me.paulbares.query.AggregatedMeasure;
+import me.paulbares.query.ComparisonMeasure;
 import me.paulbares.query.QueryBuilder;
-import me.paulbares.query.QueryEngine;
-import me.paulbares.query.context.Totals;
+import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.query.dto.ScenarioComparisonDto;
+import me.paulbares.spring.config.DatasetTestConfig;
 import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
-import static me.paulbares.query.QueryBuilder.aggregatedMeasure;
-import static me.paulbares.query.QueryBuilder.comparison;
-import static me.paulbares.query.QueryBuilder.scenarioComparisonQuery;
-import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
-import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
+import static me.paulbares.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(DatasetTestConfig.class)
 public class HttpClientQuerierTest {
 
   static {
@@ -50,12 +51,11 @@ public class HttpClientQuerierTest {
 
     QueryDto query = new QueryDto()
             .table("our_prices")
-            .wildcardCoordinate(SCENARIO_FIELD_NAME)
-            .context(Totals.KEY, QueryBuilder.TOP)
+            .withColumn(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("quantity", "sum");
 
     SimpleTable table = querier.run(query);
-    SparkQueryControllerTest.assertQueryWithTotals(table);
+    SparkQueryControllerTest.assertQuery(table,false);
   }
 
   @Test
@@ -64,19 +64,25 @@ public class HttpClientQuerierTest {
 
     var querier = new HttpClientQuerier(url);
 
-    var query = scenarioComparisonQuery()
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", SCENARIO_FIELD_NAME)
+            .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
+            .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
+            .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
+
+    AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("capdv", "sum");
+    ComparisonMeasure capdvDiff = QueryBuilder.bucketComparison(
+            "capdvDiff",
+            ABSOLUTE_DIFFERENCE,
+            aggregatedMeasure,
+            Map.of(
+                    SCENARIO_FIELD_NAME, "first",
+                    "group", "g"
+            ));
+    var query = new QueryDto()
             .table("our_prices")
-            .defineNewGroup("group1", MAIN_SCENARIO_NAME, "MN up")
-            .defineNewGroup("group2", MAIN_SCENARIO_NAME, "MN & MDD up")
-            .defineNewGroup("group3", MAIN_SCENARIO_NAME, "MN up", "MN & MDD up");
-
-    ScenarioComparisonDto comparison = comparison(
-            "absolute_difference",
-            aggregatedMeasure("capdv", "sum"),
-            true,
-            "first");
-
-    query.addScenarioComparison(comparison);
+            .withColumnSet(QueryDto.BUCKET, bucketCS)
+            .withMeasure(capdvDiff)
+            .withMeasure(aggregatedMeasure);
 
     SimpleTable table = querier.run(query);
     double baseValue = 40_000d;
@@ -91,7 +97,7 @@ public class HttpClientQuerierTest {
             List.of("group3", "MN up", mnValue - baseValue, mnValue),
             List.of("group3", "MN & MDD up", mnmddValue - baseValue, mnmddValue));
     Assertions.assertThat(table.columns)
-            .containsExactly("group", SCENARIO_FIELD_NAME, "absolute_difference(sum(capdv), first)", "sum(capdv)");
+            .containsExactly("group", SCENARIO_FIELD_NAME, "capdvDiff", "sum(capdv)");
   }
 
   @Test
@@ -99,10 +105,9 @@ public class HttpClientQuerierTest {
     // Note. The CJ will make null appear in rows. We want to make sure null values are correctly handled.
     QueryDto query = new QueryDto()
             .table("our_prices")
-            .wildcardCoordinate(SCENARIO_FIELD_NAME)
-            .wildcardCoordinate("pdv")
-            .condition(SCENARIO_FIELD_NAME, QueryBuilder.eq(MAIN_SCENARIO_NAME))
-            .context(Totals.KEY, QueryBuilder.TOP)
+            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumn("pdv")
+            .withCondition(SCENARIO_FIELD_NAME, QueryBuilder.eq(MAIN_SCENARIO_NAME))
             .aggregatedMeasure("price", "sum");
 
     String url = "http://127.0.0.1:" + this.port;
@@ -111,8 +116,6 @@ public class HttpClientQuerierTest {
 
     SimpleTable table = querier.run(query);
     Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
-            Arrays.asList(QueryEngine.GRAND_TOTAL, null, 40d),
-            List.of(MAIN_SCENARIO_NAME, QueryEngine.TOTAL, 40d),
             List.of(MAIN_SCENARIO_NAME, "ITM Balma", 20d),
             List.of(MAIN_SCENARIO_NAME, "ITM Toulouse and Drive", 20d)
     );

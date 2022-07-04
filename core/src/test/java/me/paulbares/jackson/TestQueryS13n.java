@@ -1,9 +1,6 @@
 package me.paulbares.jackson;
 
-import me.paulbares.query.AggregatedMeasure;
-import me.paulbares.query.ComparisonMeasure;
-import me.paulbares.query.QueryBuilder;
-import me.paulbares.query.comp.Comparisons;
+import me.paulbares.query.*;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.*;
 import org.assertj.core.api.Assertions;
@@ -12,8 +9,10 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
+import static me.paulbares.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static me.paulbares.query.QueryBuilder.*;
-import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 public class TestQueryS13n {
 
@@ -21,14 +20,14 @@ public class TestQueryS13n {
   void testRoundTrip() {
     QueryDto query = new QueryDto()
             .table("myTable")
-            .coordinate(SCENARIO_FIELD_NAME, "s1")
-            .coordinates("city", "paris", "london")
-            .wildcardCoordinate("ean")
+            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumn("ean")
             .aggregatedMeasure("price", "sum")
             .aggregatedMeasure("quantity", "sum")
             .expressionMeasure("alias1", "firstMyExpression")
             .expressionMeasure("alias2", "secondMyExpression")
-            .context(Totals.KEY, QueryBuilder.BOTTOM);
+            .withMeasure(new BinaryOperationMeasure("plus1", BinaryOperator.PLUS, new AggregatedMeasure("price", "sum"), new AggregatedMeasure("price", "sum")))
+            .context(Totals.KEY, BOTTOM);
 
     String serialize = query.json();
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
@@ -49,8 +48,8 @@ public class TestQueryS13n {
     query.table(orders);
 
     // Coordinates
-    query.wildcardCoordinate("productName");
-    query.coordinates("categoryName", "first", "second");
+    query.withColumn("productName");
+    query.withColumn("categoryName");
 
     // Measures
     query.aggregatedMeasure("price", "sum");
@@ -59,76 +58,66 @@ public class TestQueryS13n {
     // Conditions
     ConditionDto december = and(gt("1/12/1996"), lt("31/12/1996"));
     ConditionDto october = and(ge("1/10/1996"), le("31/10/1996"));
-    query.condition("orderDate", or(december, october));
-    query.condition("city", in("paris", "london"));
-    query.condition("country", eq("france"));
-    query.condition("shipper", neq("aramex"));
+    query.withCondition("orderDate", or(december, october));
+    query.withCondition("city", in("paris", "london"));
+    query.withCondition("country", eq("france"));
+    query.withCondition("shipper", neq("aramex"));
 
     String serialize = query.json();
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
-    Assertions.assertThat(deserialize.table).isEqualTo(query.table);
-    Assertions.assertThat(deserialize.conditions).isEqualTo(query.conditions);
-    Assertions.assertThat(deserialize.context).isEqualTo(query.context);
-    Assertions.assertThat(deserialize.coordinates).isEqualTo(query.coordinates);
-    Assertions.assertThat(deserialize.measures).isEqualTo(query.measures);
+    Assertions.assertThat(deserialize).isEqualTo(query);
   }
 
   @Test
-  void testRoundTripScenarioComparisonQuery() {
-    var query = scenarioComparisonQuery()
-            .table("products")
-            .defineNewGroup("group1", "base", "s1")
-            .defineNewGroup("group2", "base", "s1", "s2")
-            .defineNewGroup("group3", "base", "s2");
+  void testRoundTripBucketComparisonQuery() {
+    String groupOfScenario = "Group of scenario";
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
+            .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
+            .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
+            .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
 
-    ScenarioComparisonDto comparison = comparison(
-            "absolute_difference",
-            new AggregatedMeasure("price", "sum"),
-            true,
-            "first");
-
-    query.addScenarioComparison(comparison);
-
-    String serialize = query.json();
-    ScenarioGroupingQueryDto deserialize = JacksonUtil.deserialize(serialize, ScenarioGroupingQueryDto.class);
-    Assertions.assertThat(deserialize.table).isEqualTo(query.table);
-    Assertions.assertThat(deserialize.comparisons).isEqualTo(query.comparisons);
-    Assertions.assertThat(deserialize.groups).isEqualTo(query.groups);
-  }
-
-  @Test
-  void testRoundTripPeriodBucketingComparisonQuery() {
-    ComparisonMeasure m = new ComparisonMeasure(
-            "myMeasure",
-            Comparisons.COMPARISON_METHOD_ABS_DIFF,
-            new AggregatedMeasure("sales", "sum"),
+    AggregatedMeasure price = new AggregatedMeasure("price", "sum");
+    ComparisonMeasure priceComp = QueryBuilder.bucketComparison(
+            "priceDiff",
+            ABSOLUTE_DIFFERENCE,
+            price,
             Map.of(
-                    ComparisonMeasure.PeriodUnit.QUARTER, "q",
-                    ComparisonMeasure.PeriodUnit.YEAR, "y-1"
+                    SCENARIO_FIELD_NAME, "first",
+                    groupOfScenario, "g"
             ));
 
-    List<Period> periods = List.of(
-            new Period.QuarterFromMonthYear("mois", "annee"),
-            new Period.Quarter("trimestre", "annee"),
-            new Period.QuarterFromDate("myLocalDate"),
-            new Period.Semester("semestre"),
-            new Period.SemesterFromDate("myLocalDate")
-    );
+    var query = new QueryDto()
+            .table("products")
+            .withColumnSet(QueryDto.BUCKET, bucketCS)
+            .withMeasure(priceComp)
+            .withMeasure(price);
 
-    for (Period period : periods) {
-      var query = new PeriodBucketingQueryDto()
-              .table("products")
-              .wildcardCoordinate("scenario")
-              .period(period)
-              .withMeasure(m);
+    String serialize = query.json();
+    QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(query);
+  }
 
-      String serialize = query.json();
-      PeriodBucketingQueryDto deserialize = JacksonUtil.deserialize(serialize, PeriodBucketingQueryDto.class);
-      Assertions.assertThat(serialize).contains(period.getJsonKey());
-      Assertions.assertThat(deserialize.table).isEqualTo(query.table);
-      Assertions.assertThat(deserialize.period).isEqualTo(query.period);
-      Assertions.assertThat(deserialize.coordinates).isEqualTo(query.coordinates);
-      Assertions.assertThat(deserialize.measures).isEqualTo(query.measures);
-    }
+  @Test
+  void testRoundTripPeriodComparisonQuery() {
+    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    ComparisonMeasure m = QueryBuilder.periodComparison(
+            "myMeasure",
+            ABSOLUTE_DIFFERENCE,
+            sales,
+            Map.of("year_sales", "y-1"));
+
+    Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
+    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
+
+    var query = new QueryDto()
+            .table("products")
+            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumnSet(QueryDto.PERIOD, periodCS)
+            .withMeasure(m)
+            .withMeasure(sales);
+
+    String serialize = query.json();
+    QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(query);
   }
 }

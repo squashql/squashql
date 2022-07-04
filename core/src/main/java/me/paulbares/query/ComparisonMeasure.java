@@ -5,41 +5,30 @@ import java.util.Objects;
 
 public class ComparisonMeasure implements Measure {
 
-  public static String KEY = "comparison";
-
-  public String type;
-
   public String alias;
-
-  public String method;
-
-  public AggregatedMeasure measure;
-
-  public Map<PeriodUnit, String> referencePosition; // TODO support first and last
-
-  public enum PeriodUnit {
-    MONTH,
-    QUARTER,
-    SEMESTER,
-    YEAR
-  }
+  public ComparisonMethod method;
+  public Measure measure;
+  public String columnSet;
+  public Map<String, String> referencePosition;
 
   /**
    * For jackson.
    */
   public ComparisonMeasure() {
-    this.type = KEY;
   }
 
   public ComparisonMeasure(String alias,
-                           String method,
-                           AggregatedMeasure measure,
-                           Map<PeriodUnit, String> referencePosition) {
-    this.alias = alias;
+                           ComparisonMethod method,
+                           Measure measure,
+                           String columnSet,
+                           Map<String, String> referencePosition) {
+    this.alias = alias == null
+            ? String.format("%s(%s, %s)", method, measure.alias(), referencePosition)
+            : alias;
     this.method = method;
+    this.columnSet = columnSet;
     this.measure = measure;
     this.referencePosition = referencePosition;
-    this.type = KEY;
   }
 
   @Override
@@ -49,7 +38,7 @@ public class ComparisonMeasure implements Measure {
 
   @Override
   public String alias() {
-    return this.alias; // TODO return default name if null
+    return this.alias;
   }
 
   @Override
@@ -61,15 +50,27 @@ public class ComparisonMeasure implements Measure {
       return false;
     }
     ComparisonMeasure that = (ComparisonMeasure) o;
-    return type.equals(that.type)
-            && Objects.equals(alias, that.alias)
-            && method.equals(that.method)
-            && measure.equals(that.measure)
-            && referencePosition.equals(that.referencePosition);
+    return Objects.equals(this.alias, that.alias)
+            && this.method.equals(that.method)
+            && this.measure.equals(that.measure)
+            && this.columnSet.equals(that.columnSet)
+            && this.referencePosition.equals(that.referencePosition);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(type, alias, method, measure, referencePosition);
+    return Objects.hash(this.alias, this.method, this.measure, this.columnSet, this.referencePosition);
+  }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName()
+            + '{' +
+            "alias='" + this.alias + '\'' +
+            ", method='" + this.method + '\'' +
+            ", measure=" + this.measure +
+            ", columnSet=" + this.columnSet +
+            ", referencePosition=" + this.referencePosition +
+            '}';
   }
 }

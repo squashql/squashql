@@ -6,7 +6,7 @@ import me.paulbares.transaction.SparkTransactionManager;
 
 import java.util.List;
 
-import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 /**
  * --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
@@ -40,8 +40,8 @@ public class DataLoader {
     SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
 
     tm.createTemporaryTable(our_price_store.name(), our_price_store.fields());
-    tm.createTemporaryTable(their_prices_store.name(), their_prices_store.fields());
-    tm.createTemporaryTable(our_stores_their_stores_store.name(), our_stores_their_stores_store.fields());
+    tm.createTemporaryTable(their_prices_store.name(), their_prices_store.fields(), null);
+    tm.createTemporaryTable(our_stores_their_stores_store.name(), our_stores_their_stores_store.fields(), null);
 
     tm.load(MAIN_SCENARIO_NAME,
             "our_prices", List.of(
