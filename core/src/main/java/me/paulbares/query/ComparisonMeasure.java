@@ -6,12 +6,9 @@ import java.util.Objects;
 public class ComparisonMeasure implements Measure {
 
   public String alias;
-
   public String method;
-
   public Measure measure;
-
-  public Map<String, String> referencePosition; // TODO support first and last
+  public Map<String, String> referencePosition;
 
   /**
    * For jackson.
@@ -23,7 +20,9 @@ public class ComparisonMeasure implements Measure {
                            String method,
                            Measure measure,
                            Map<String, String> referencePosition) {
-    this.alias = alias;
+    this.alias = alias == null
+            ? String.format("%s(%s, %s)", method, measure.alias(), referencePosition)
+            : alias;
     this.method = method;
     this.measure = measure;
     this.referencePosition = referencePosition;
@@ -36,7 +35,7 @@ public class ComparisonMeasure implements Measure {
 
   @Override
   public String alias() {
-    return this.alias; // TODO return default name if null
+    return this.alias;
   }
 
   @Override
@@ -61,7 +60,8 @@ public class ComparisonMeasure implements Measure {
 
   @Override
   public String toString() {
-    return getClass().getSimpleName() + "{" +
+    return getClass().getSimpleName()
+            + '{' +
             "alias='" + this.alias + '\'' +
             ", method='" + this.method + '\'' +
             ", measure=" + this.measure +

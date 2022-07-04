@@ -145,10 +145,7 @@ public class QueryExecutor {
 
     private static void executeComparator(ComparisonMeasure cm, Table intermediateResult, AComparisonExecutor executor) {
       List<Object> agg = executor.compare(cm, intermediateResult);
-      String newName = cm.alias == null
-              ? String.format("%s(%s, %s)", cm.method, cm.measure.alias(), cm.referencePosition)
-              : cm.alias;
-      Field field = new Field(newName, BinaryOperations.getOutputType(cm.method, intermediateResult.getField(cm.measure).type()));
+      Field field = new Field(cm.alias(), BinaryOperations.getOutputType(cm.method, intermediateResult.getField(cm.measure).type()));
       intermediateResult.addAggregates(field, cm, agg);
     }
 
@@ -163,34 +160,47 @@ public class QueryExecutor {
       for (int i = 0; i < lo.size(); i++) {
         r.add(operation.apply((Number) lo.get(i), (Number) ro.get(i)));
       }
-
-      String newName = bom.alias == null
-              ? String.format("%s %s %s", bom.leftOperand, bom.operator, bom.rightOperand)
-              : bom.alias;
-      Field field = new Field(newName, BinaryOperations.getOutputType(bom.operator, lType, rType));
+      Field field = new Field(bom.alias(), BinaryOperations.getOutputType(bom.operator, lType, rType));
       intermediateResult.addAggregates(field, bom, r);
     }
   }
 
-  protected void resolveMeasures(QueryDto queryDto) {
+  protected static void resolveMeasures(QueryDto queryDto) {
     ContextValue repo = queryDto.context.get(Repository.KEY);
     Supplier<Map<String, ExpressionMeasure>> supplier = Suppliers.memoize(() -> ExpressionResolver.get(((Repository) repo).url));
     List<Measure> newMeasures = new ArrayList<>();
     for (Measure measure : queryDto.measures) {
-      if (measure instanceof UnresolvedExpressionMeasure) {
-        if (repo == null) {
-          throw new IllegalStateException(Repository.class.getSimpleName() + " context is missing in the query");
-        }
-        String alias = ((UnresolvedExpressionMeasure) measure).alias;
-        ExpressionMeasure expressionMeasure = supplier.get().get(alias);
-        if (expressionMeasure == null) {
-          throw new IllegalArgumentException("Cannot find expression with alias " + alias);
-        }
-        newMeasures.add(expressionMeasure);
-      } else {
-        newMeasures.add(measure);
-      }
+      newMeasures.add(resolveExpressionMeasure(repo, supplier, measure));
     }
     queryDto.measures = newMeasures;
+  }
+
+  private static Measure resolveExpressionMeasure(ContextValue repo, Supplier<Map<String, ExpressionMeasure>> supplier, Measure measure) {
+    if (measure instanceof UnresolvedExpressionMeasure) {
+      if (repo == null) {
+        throw new IllegalStateException(Repository.class.getSimpleName() + " context is missing in the query");
+      }
+      String alias = ((UnresolvedExpressionMeasure) measure).alias;
+      ExpressionMeasure expressionMeasure = supplier.get().get(alias);
+      if (expressionMeasure == null) {
+        throw new IllegalArgumentException("Cannot find expression with alias " + alias);
+      }
+      return expressionMeasure;
+    } else {
+      resolveMeasureDependencies(repo, supplier, measure);
+      return measure;
+    }
+  }
+
+  private static void resolveMeasureDependencies(ContextValue repo, Supplier<Map<String, ExpressionMeasure>> supplier, Measure measure) {
+    if (measure instanceof ComparisonMeasure cm) {
+      cm.measure = resolveExpressionMeasure(repo, supplier, cm.measure);
+      resolveMeasureDependencies(repo, supplier, cm.measure);
+    } else if (measure instanceof BinaryOperationMeasure bom) {
+      bom.leftOperand = resolveExpressionMeasure(repo, supplier, bom.leftOperand);
+      bom.rightOperand = resolveExpressionMeasure(repo, supplier, bom.rightOperand);
+      resolveMeasureDependencies(repo, supplier, bom.leftOperand);
+      resolveMeasureDependencies(repo, supplier, bom.rightOperand);
+    }
   }
 }

@@ -5,7 +5,6 @@ import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.*;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.Repository;
-import me.paulbares.query.context.Totals;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
@@ -13,7 +12,6 @@ import me.paulbares.query.dto.TableDto;
 import me.paulbares.spring.ApplicationForTest;
 import me.paulbares.spring.config.DatasetTestConfig;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -58,7 +56,6 @@ public class SparkQueryControllerTest {
   }
 
   @Test
-  @Disabled // not supported for now
   void testQueryWithRepo() throws Exception {
     testQuery(true);
   }
@@ -108,25 +105,6 @@ public class SparkQueryControllerTest {
 
               Assertions.assertThat((List) queryResult.get("columns")).containsExactly(
                       SCENARIO_FIELD_NAME, "ean", "sum(capdv)", "capdv_concurrents", "indice_prix");
-            });
-  }
-
-  @Test
-  @Disabled // total not supported for now
-  void testQueryWithTotals() throws Exception {
-    QueryDto query = new QueryDto()
-            .table("our_prices")
-            .withColumn(SCENARIO_FIELD_NAME)
-            .context(Totals.KEY, QueryBuilder.TOP)
-            .aggregatedMeasure("quantity", "sum");
-    this.mvc.perform(MockMvcRequestBuilders.post(SparkQueryController.MAPPING_QUERY)
-                    .content(JacksonUtil.serialize(query))
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(result -> {
-              String contentAsString = result.getResponse().getContentAsString();
-              SimpleTable table = JacksonUtil.mapper.readValue(contentAsString, SimpleTable.class);
-              assertQuery(table, true);
             });
   }
 
@@ -211,7 +189,6 @@ public class SparkQueryControllerTest {
   }
 
   @Test
-  @Disabled // repo not supported for the moment
   void testScenarioGroupingQueryWithRepo() throws Exception {
     testScenarioGroupingQuery(true);
   }

@@ -5,21 +5,17 @@ import me.paulbares.client.SimpleTable;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ComparisonMeasure;
 import me.paulbares.query.QueryBuilder;
-import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.comp.BinaryOperations;
-import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.spring.config.DatasetTestConfig;
 import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -56,7 +52,6 @@ public class HttpClientQuerierTest {
     QueryDto query = new QueryDto()
             .table("our_prices")
             .withColumn(SCENARIO_FIELD_NAME)
-//            .context(Totals.KEY, QueryBuilder.TOP)
             .aggregatedMeasure("quantity", "sum");
 
     SimpleTable table = querier.run(query);
@@ -106,15 +101,13 @@ public class HttpClientQuerierTest {
   }
 
   @Test
-  @Disabled // condition not yet supported in the new api
   void testRunQueryWithCondition() {
     // Note. The CJ will make null appear in rows. We want to make sure null values are correctly handled.
     QueryDto query = new QueryDto()
             .table("our_prices")
             .withColumn(SCENARIO_FIELD_NAME)
             .withColumn("pdv")
-//            .condition(SCENARIO_FIELD_NAME, QueryBuilder.eq(MAIN_SCENARIO_NAME)) FIXME
-            .context(Totals.KEY, QueryBuilder.TOP)
+            .withCondition(SCENARIO_FIELD_NAME, QueryBuilder.eq(MAIN_SCENARIO_NAME))
             .aggregatedMeasure("price", "sum");
 
     String url = "http://127.0.0.1:" + this.port;
@@ -123,8 +116,6 @@ public class HttpClientQuerierTest {
 
     SimpleTable table = querier.run(query);
     Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
-            Arrays.asList(QueryEngine.GRAND_TOTAL, null, 40d),
-            List.of(MAIN_SCENARIO_NAME, QueryEngine.TOTAL, 40d),
             List.of(MAIN_SCENARIO_NAME, "ITM Balma", 20d),
             List.of(MAIN_SCENARIO_NAME, "ITM Toulouse and Drive", 20d)
     );

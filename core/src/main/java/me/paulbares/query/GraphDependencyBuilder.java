@@ -13,7 +13,6 @@ public class GraphDependencyBuilder<N> {
 
   private final IntSupplier id = new AtomicInteger()::getAndIncrement;
   private final Map<N, Integer> idByNode = new HashMap<>();
-
   private final Function<N, Set<N>> dependencySupplier;
 
   public GraphDependencyBuilder(Function<N, Set<N>> dependencySupplier) {

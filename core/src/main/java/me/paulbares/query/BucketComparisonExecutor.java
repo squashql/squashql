@@ -52,7 +52,7 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
       Object bucketTransformation = this.transformationByColumn.get(0).getTwo();
       int bucketIndex = this.indexByColumn.getIfAbsent(this.transformationByColumn.get(0).getOne(), -1);
       if (bucketTransformation != null) {
-        String bucket = (String) row[bucketIndex];
+        String bucket = (String) row[bucketIndex]; // FIXME
         row[bucketIndex] = null; // apply transformation
       }
 

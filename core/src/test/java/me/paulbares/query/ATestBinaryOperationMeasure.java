@@ -1,6 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.agg.AggregationFunction;
+import me.paulbares.query.context.Repository;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
@@ -80,6 +81,29 @@ public abstract class ATestBinaryOperationMeasure {
     Assertions
             .assertThat(table.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "plus1", "plus2", "plus3");
+  }
+
+  @Test
+  void testPlusWithRepo() {
+    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
+    UnresolvedExpressionMeasure quantity = new UnresolvedExpressionMeasure("quantity");
+
+    var query = new QueryDto()
+            .table(this.storeName)
+            .context(Repository.KEY, new Repository(ATestQueryEngine.REPO_URL))
+            .withMetric(sales)
+            .withMetric(quantity)
+            .withMetric(new BinaryOperationMeasure("plus1", Operator.PLUS, sales, sales))
+            .withMetric(new BinaryOperationMeasure("plus2", Operator.PLUS, sales, quantity))
+            .withMetric(new BinaryOperationMeasure("plus3", Operator.PLUS, quantity, quantity));
+
+    Table table = this.executor.execute(query);
+    double salesV = 50d;
+    long qtyV = 20l;
+    Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV + salesV, salesV + qtyV, qtyV + qtyV));
+    Assertions
+            .assertThat(table.headers().stream().map(Field::name))
+            .containsExactlyInAnyOrder("sum(sales)", "quantity", "plus1", "plus2", "plus3");
   }
 
   /**

@@ -5,9 +5,7 @@ import java.util.Objects;
 public class BinaryOperationMeasure implements Measure {
 
   public String alias;
-
   public Operator operator;
-
   public Measure leftOperand;
   public Measure rightOperand;
 
@@ -21,7 +19,9 @@ public class BinaryOperationMeasure implements Measure {
                                 Operator operator,
                                 Measure leftOperand,
                                 Measure rightOperand) {
-    this.alias = alias;
+    this.alias = alias == null
+            ? String.format("%s %s %s", leftOperand, operator, rightOperand)
+            : alias;
     this.operator = operator;
     this.leftOperand = leftOperand;
     this.rightOperand = rightOperand;
@@ -34,7 +34,7 @@ public class BinaryOperationMeasure implements Measure {
 
   @Override
   public String alias() {
-    return this.alias; // TODO return default name if null
+    return this.alias;
   }
 
   @Override

@@ -23,7 +23,7 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestQueryExecutor {
+public abstract class ATestQueryColumnSets {
 
   protected Datastore datastore;
 
