@@ -5,7 +5,7 @@ import ch.qos.logback.classic.Logger;
 import me.paulbares.SparkDatastore;
 import me.paulbares.SparkUtil;
 import me.paulbares.query.DatasetTable;
-import me.paulbares.query.SparkQueryEngine;
+import me.paulbares.query.database.SparkQueryEngine;
 import me.paulbares.query.Table;
 import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.store.Datastore;

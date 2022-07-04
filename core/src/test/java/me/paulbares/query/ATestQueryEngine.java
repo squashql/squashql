@@ -2,6 +2,7 @@ package me.paulbares.query;
 
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.context.Repository;
+import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;

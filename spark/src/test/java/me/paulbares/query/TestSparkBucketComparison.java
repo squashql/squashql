@@ -1,6 +1,8 @@
 package me.paulbares.query;
 
 import me.paulbares.SparkDatastore;
+import me.paulbares.query.database.QueryEngine;
+import me.paulbares.query.database.SparkQueryEngine;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.SparkTransactionManager;

@@ -6,6 +6,7 @@ import com.google.common.graph.Graph;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.Repository;
+import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.PeriodColumnSetDto;

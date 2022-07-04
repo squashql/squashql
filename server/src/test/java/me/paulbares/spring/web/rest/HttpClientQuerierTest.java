@@ -5,7 +5,7 @@ import me.paulbares.client.SimpleTable;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ComparisonMeasure;
 import me.paulbares.query.QueryBuilder;
-import me.paulbares.query.QueryEngine;
+import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.BucketColumnSetDto;

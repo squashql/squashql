@@ -1,6 +1,6 @@
-package me.paulbares.query;
+package me.paulbares.query.database;
 
-import me.paulbares.query.database.DatabaseQuery;
+import me.paulbares.query.Table;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.store.Store;

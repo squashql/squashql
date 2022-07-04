@@ -6,7 +6,7 @@ import com.clickhouse.client.ClickHouseProtocol;
 import me.paulbares.ClickHouseDatastore;
 import me.paulbares.SparkUtil;
 import me.paulbares.benchmark.BenchmarkRunner;
-import me.paulbares.query.ClickHouseQueryEngine;
+import me.paulbares.query.database.ClickHouseQueryEngine;
 import me.paulbares.query.DatasetTable;
 import me.paulbares.query.Table;
 import me.paulbares.query.database.DatabaseQuery;

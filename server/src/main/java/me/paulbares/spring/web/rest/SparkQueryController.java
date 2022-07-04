@@ -4,7 +4,7 @@ import me.paulbares.query.QueryExecutor;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.ExpressionMeasure;
 import me.paulbares.query.ExpressionResolver;
-import me.paulbares.query.SparkQueryEngine;
+import me.paulbares.query.database.SparkQueryEngine;
 import me.paulbares.query.Table;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Store;

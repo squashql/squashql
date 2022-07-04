@@ -1,10 +1,10 @@
-package me.paulbares.query;
+package me.paulbares.query.database;
 
 import com.clickhouse.client.*;
 import me.paulbares.ClickHouseDatastore;
 import me.paulbares.ClickHouseUtil;
-import me.paulbares.query.database.DatabaseQuery;
-import me.paulbares.query.database.SQLTranslator;
+import me.paulbares.query.ColumnarTable;
+import me.paulbares.query.Table;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 

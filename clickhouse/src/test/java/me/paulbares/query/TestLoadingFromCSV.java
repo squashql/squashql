@@ -1,6 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.ClickHouseDatastore;
+import me.paulbares.query.database.ClickHouseQueryEngine;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.ClickHouseTransactionManager;
 import org.assertj.core.api.Assertions;

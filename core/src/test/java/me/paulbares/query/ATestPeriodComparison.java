@@ -1,6 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.comp.BinaryOperations;
+import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.PeriodColumnSetDto;

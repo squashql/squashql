@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.github.dockerjava.api.command.LogContainerCmd;
 import me.paulbares.SparkDatastore;
-import me.paulbares.query.SparkQueryEngine;
+import me.paulbares.query.database.SparkQueryEngine;
 import me.paulbares.query.Table;
 import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.store.Datastore;

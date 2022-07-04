@@ -1,5 +1,6 @@
 package me.paulbares.query;
 
+import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.JoinMappingDto;
 import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.dto.TableDto;

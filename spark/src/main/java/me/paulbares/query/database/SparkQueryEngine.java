@@ -1,8 +1,8 @@
-package me.paulbares.query;
+package me.paulbares.query.database;
 
 import me.paulbares.SparkDatastore;
-import me.paulbares.query.database.DatabaseQuery;
-import me.paulbares.query.database.SQLTranslator;
+import me.paulbares.query.ColumnarTable;
+import me.paulbares.query.Table;
 import me.paulbares.store.Field;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;

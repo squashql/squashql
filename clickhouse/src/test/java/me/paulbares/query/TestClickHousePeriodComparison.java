@@ -1,6 +1,8 @@
 package me.paulbares.query;
 
 import me.paulbares.ClickHouseDatastore;
+import me.paulbares.query.database.ClickHouseQueryEngine;
+import me.paulbares.query.database.QueryEngine;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.ClickHouseTransactionManager;
