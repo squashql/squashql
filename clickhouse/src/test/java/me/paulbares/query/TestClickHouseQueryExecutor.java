@@ -15,7 +15,7 @@ import java.util.List;
 import static me.paulbares.query.TestUtils.createClickHouseContainer;
 import static me.paulbares.query.TestUtils.jdbcUrl;
 
-public class TestClickHouseNewQueryExecutor extends ATestNewQueryExecutor {
+public class TestClickHouseQueryExecutor extends ATestQueryExecutor {
 
   @Container
   public GenericContainer container = createClickHouseContainer();

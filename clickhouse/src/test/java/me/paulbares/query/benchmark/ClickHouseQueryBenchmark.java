@@ -9,7 +9,7 @@ import me.paulbares.benchmark.BenchmarkRunner;
 import me.paulbares.query.ClickHouseQueryEngine;
 import me.paulbares.query.DatasetTable;
 import me.paulbares.query.Table;
-import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.ClickHouseTransactionManager;
@@ -47,7 +47,7 @@ public class ClickHouseQueryBenchmark {
     ClickHouseQueryEngine queryEngine = new ClickHouseQueryEngine(datastore.getOne());
     List<Table> results = new ArrayList<>();
     BenchmarkRunner.INSTANCE.run(() -> {
-      QueryDto query = new QueryDto().table(ordersStore)
+      DatabaseQuery query = new DatabaseQuery().table(ordersStore)
               .wildcardCoordinate(SCENARIO_FIELD_NAME)
               .coordinates("CategoryName", "Condiments", "Beverages")
               .aggregatedMeasure("Price", "sum")

@@ -3,7 +3,8 @@ package me.paulbares.query;
 import com.clickhouse.client.*;
 import me.paulbares.ClickHouseDatastore;
 import me.paulbares.ClickHouseUtil;
-import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.database.DatabaseQuery;
+import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 
@@ -19,8 +20,8 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
   }
 
   @Override
-  protected Table retrieveAggregates(QueryDto query) {
-    String sql = SQLTranslator.translate(query, this.fieldSupplier);
+  protected Table retrieveAggregates(DatabaseQuery query) {
+    String sql = SQLTranslator.translate(query, null, this.fieldSupplier);
 
     // connect to localhost, use default port of the preferred protocol
     ClickHouseNode server = ClickHouseNode.builder()

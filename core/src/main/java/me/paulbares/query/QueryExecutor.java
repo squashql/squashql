@@ -1,11 +1,15 @@
 package me.paulbares.query;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.graph.Graph;
 import me.paulbares.query.comp.BinaryOperations;
+import me.paulbares.query.context.ContextValue;
+import me.paulbares.query.context.Repository;
 import me.paulbares.query.dto.BucketColumnSetDto;
-import me.paulbares.query.dto.NewQueryDto;
-import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.PeriodColumnSetDto;
+import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.store.Field;
 
 import java.util.*;
@@ -15,18 +19,19 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static me.paulbares.query.dto.NewQueryDto.BUCKET;
-import static me.paulbares.query.dto.NewQueryDto.PERIOD;
+import static me.paulbares.query.dto.QueryDto.BUCKET;
+import static me.paulbares.query.dto.QueryDto.PERIOD;
 
-public class NewQueryExecutor {
+public class QueryExecutor {
 
   public final QueryEngine queryEngine;
 
-  public NewQueryExecutor(QueryEngine queryEngine) {
+  public QueryExecutor(QueryEngine queryEngine) {
     this.queryEngine = queryEngine;
   }
 
-  public Table execute(NewQueryDto query) {
+  public Table execute(QueryDto query) {
+    resolveMeasures(query);
     List<String> finalColumns = new ArrayList<>();
     query.columnSets.values().forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
     query.columns.forEach(finalColumns::add);
@@ -34,7 +39,8 @@ public class NewQueryExecutor {
     List<String> cols = new ArrayList<>();
     query.columns.forEach(cols::add);
     query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).forEach(cols::add);
-    QueryDto prefetchQuery = new QueryDto().table(query.table);
+    DatabaseQuery prefetchQuery = new DatabaseQuery().table(query.table);
+    prefetchQuery.conditions = query.conditions;
     cols.forEach(prefetchQuery::wildcardCoordinate);
 
     // Create plan
@@ -74,7 +80,7 @@ public class NewQueryExecutor {
             values);
   }
 
-  private ExecutionPlan<Measure, ExecutionContext> createExecutionPlan(NewQueryDto query) {
+  private ExecutionPlan<Measure, ExecutionContext> createExecutionPlan(QueryDto query) {
     GraphDependencyBuilder<Measure> builder = new GraphDependencyBuilder<>(m -> getMeasureDependencies(m));
     Graph<GraphDependencyBuilder.NodeWithId<Measure>> graph = builder.build(query.measures);
     ExecutionPlan<Measure, ExecutionContext> plan = new ExecutionPlan<>(graph, new MeasureEvaluator());
@@ -94,7 +100,7 @@ public class NewQueryExecutor {
     }
   }
 
-  record ExecutionContext(Table table, NewQueryDto query) {
+  record ExecutionContext(Table table, QueryDto query) {
   }
 
   static class MeasureEvaluator implements BiConsumer<Measure, ExecutionContext> {
@@ -163,5 +169,27 @@ public class NewQueryExecutor {
       Field field = new Field(newName, BinaryOperations.getOutputType(bom.operator, lType, rType));
       intermediateResult.addAggregates(field, bom, r);
     }
+  }
+
+  protected void resolveMeasures(QueryDto queryDto) {
+    ContextValue repo = queryDto.context.get(Repository.KEY);
+    Supplier<Map<String, ExpressionMeasure>> supplier = Suppliers.memoize(() -> ExpressionResolver.get(((Repository) repo).url));
+    List<Measure> newMeasures = new ArrayList<>();
+    for (Measure measure : queryDto.measures) {
+      if (measure instanceof UnresolvedExpressionMeasure) {
+        if (repo == null) {
+          throw new IllegalStateException(Repository.class.getSimpleName() + " context is missing in the query");
+        }
+        String alias = ((UnresolvedExpressionMeasure) measure).alias;
+        ExpressionMeasure expressionMeasure = supplier.get().get(alias);
+        if (expressionMeasure == null) {
+          throw new IllegalArgumentException("Cannot find expression with alias " + alias);
+        }
+        newMeasures.add(expressionMeasure);
+      } else {
+        newMeasures.add(measure);
+      }
+    }
+    queryDto.measures = newMeasures;
   }
 }

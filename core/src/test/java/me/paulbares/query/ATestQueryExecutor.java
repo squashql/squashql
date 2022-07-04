@@ -3,7 +3,7 @@ package me.paulbares.query;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.dto.BucketColumnSetDto;
-import me.paulbares.query.dto.NewQueryDto;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.store.Datastore;
@@ -22,13 +22,13 @@ import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
 import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestNewQueryExecutor {
+public abstract class ATestQueryExecutor {
 
   protected Datastore datastore;
 
   protected QueryEngine queryEngine;
 
-  protected NewQueryExecutor executor;
+  protected QueryExecutor executor;
 
   protected TransactionManager tm;
 
@@ -51,7 +51,7 @@ public abstract class ATestNewQueryExecutor {
 
     this.datastore = createDatastore();
     this.queryEngine = createQueryEngine(this.datastore);
-    this.executor = new NewQueryExecutor(this.queryEngine);
+    this.executor = new QueryExecutor(this.queryEngine);
     this.tm = createTransactionManager();
 
     beforeLoading(List.of(ean, category, sales, qty, year, quarter));
@@ -117,9 +117,9 @@ public abstract class ATestNewQueryExecutor {
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "down", "up"));
     AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
+            .withColumnSet(QueryDto.BUCKET, bucketCS)
             .withMetric(sales);
 
     Table execute = this.executor.execute(query);
@@ -135,10 +135,10 @@ public abstract class ATestNewQueryExecutor {
             List.of("group3", "down", down));
 
     // Do a CJ with a "regular column"
-    query = new NewQueryDto()
+    query = new QueryDto()
             .table(this.storeName)
             .withColumn("category")
-            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
+            .withColumnSet(QueryDto.BUCKET, bucketCS)
             .withMetric(sales);
 
     execute = this.executor.execute(query);
@@ -170,10 +170,10 @@ public abstract class ATestNewQueryExecutor {
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
-            .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withColumnSet(QueryDto.BUCKET, bucketCS)
+            .withColumnSet(QueryDto.PERIOD, periodCS)
             .withMetric(sales);
 
     double base = 120d, up = 160d, down = 80d;
@@ -211,10 +211,10 @@ public abstract class ATestNewQueryExecutor {
             sales,
             Map.of("year_sales", "y-1"));
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
-            .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withColumnSet(QueryDto.BUCKET, bucketCS)
+            .withColumnSet(QueryDto.PERIOD, periodCS)
             .withMetric(salesYearComp)
             .withMetric(sales);
 
@@ -253,10 +253,10 @@ public abstract class ATestNewQueryExecutor {
             sales,
             Map.of(SCENARIO_FIELD_NAME, "s-1", groupOfScenario, "g"));
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
-            .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withColumnSet(QueryDto.BUCKET, bucketCS)
+            .withColumnSet(QueryDto.PERIOD, periodCS)
             .withMetric(salesYearComp)
             .withMetric(sales);
 
@@ -300,10 +300,10 @@ public abstract class ATestNewQueryExecutor {
             sales,
             Map.of("year_sales", "y-1"));
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
-            .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withColumnSet(QueryDto.BUCKET, bucketCS)
+            .withColumnSet(QueryDto.PERIOD, periodCS)
             .withMetric(salesYearComp)
             .withMetric(salesGroupComp)
             .withMetric(sales);

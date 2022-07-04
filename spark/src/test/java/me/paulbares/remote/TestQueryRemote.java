@@ -6,7 +6,7 @@ import com.github.dockerjava.api.command.LogContainerCmd;
 import me.paulbares.SparkDatastore;
 import me.paulbares.query.SparkQueryEngine;
 import me.paulbares.query.Table;
-import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.SparkTransactionManager;
@@ -105,7 +105,7 @@ public class TestQueryRemote {
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
 
-    QueryDto query = new QueryDto()
+    DatabaseQuery query = new DatabaseQuery()
             .table(storeName)
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("price", "sum")

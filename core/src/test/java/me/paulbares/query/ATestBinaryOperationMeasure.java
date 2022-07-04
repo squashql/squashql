@@ -1,7 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.agg.AggregationFunction;
-import me.paulbares.query.dto.NewQueryDto;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
@@ -21,7 +21,7 @@ public abstract class ATestBinaryOperationMeasure {
 
   protected QueryEngine queryEngine;
 
-  protected NewQueryExecutor executor;
+  protected QueryExecutor executor;
 
   protected TransactionManager tm;
 
@@ -42,7 +42,7 @@ public abstract class ATestBinaryOperationMeasure {
 
     this.datastore = createDatastore();
     this.queryEngine = createQueryEngine(this.datastore);
-    this.executor = new NewQueryExecutor(this.queryEngine);
+    this.executor = new QueryExecutor(this.queryEngine);
     this.tm = createTransactionManager();
 
     beforeLoading(List.of(ean, category, sales, qty));
@@ -64,7 +64,7 @@ public abstract class ATestBinaryOperationMeasure {
     AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
     AggregatedMeasure quantity = new AggregatedMeasure("quantity", AggregationFunction.SUM);
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(this.storeName)
             .withMetric(sales)
             .withMetric(quantity)
@@ -89,7 +89,7 @@ public abstract class ATestBinaryOperationMeasure {
     AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
     AggregatedMeasure quantity = new AggregatedMeasure("quantity", AggregationFunction.SUM);
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(this.storeName)
             .withMetric(sales)
             .withMetric(quantity)
@@ -114,7 +114,7 @@ public abstract class ATestBinaryOperationMeasure {
     AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
     AggregatedMeasure quantity = new AggregatedMeasure("quantity", AggregationFunction.SUM);
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(this.storeName)
             .withMetric(sales)
             .withMetric(quantity)
@@ -139,7 +139,7 @@ public abstract class ATestBinaryOperationMeasure {
     AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
     AggregatedMeasure quantity = new AggregatedMeasure("quantity", AggregationFunction.SUM);
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(this.storeName)
             .withMetric(sales)
             .withMetric(quantity)

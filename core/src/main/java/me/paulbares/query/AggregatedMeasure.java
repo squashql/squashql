@@ -2,7 +2,7 @@ package me.paulbares.query;
 
 import java.util.Objects;
 
-import static me.paulbares.query.SqlUtils.escape;
+import static me.paulbares.query.database.SqlUtils.escape;
 
 public class AggregatedMeasure implements Measure {
 

@@ -21,7 +21,7 @@ public class TestQueryS13n {
 
   @Test
   void testRoundTrip() {
-    NewQueryDto query = new NewQueryDto()
+    QueryDto query = new QueryDto()
             .table("myTable")
             .withColumn(SCENARIO_FIELD_NAME)
             .withColumn("ean")
@@ -33,7 +33,7 @@ public class TestQueryS13n {
             .context(Totals.KEY, BOTTOM);
 
     String serialize = query.json();
-    NewQueryDto deserialize = JacksonUtil.deserialize(serialize, NewQueryDto.class);
+    QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
     Assertions.assertThat(deserialize).isEqualTo(query);
   }
 
@@ -51,8 +51,8 @@ public class TestQueryS13n {
     query.table(orders);
 
     // Coordinates
-    query.wildcardCoordinate("productName");
-    query.coordinates("categoryName", "first", "second");
+    query.withColumn("productName");
+    query.withColumn("categoryName");
 
     // Measures
     query.aggregatedMeasure("price", "sum");
@@ -61,18 +61,14 @@ public class TestQueryS13n {
     // Conditions
     ConditionDto december = and(gt("1/12/1996"), lt("31/12/1996"));
     ConditionDto october = and(ge("1/10/1996"), le("31/10/1996"));
-    query.condition("orderDate", or(december, october));
-    query.condition("city", in("paris", "london"));
-    query.condition("country", eq("france"));
-    query.condition("shipper", neq("aramex"));
+    query.withCondition("orderDate", or(december, october));
+    query.withCondition("city", in("paris", "london"));
+    query.withCondition("country", eq("france"));
+    query.withCondition("shipper", neq("aramex"));
 
     String serialize = query.json();
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
-    Assertions.assertThat(deserialize.table).isEqualTo(query.table);
-    Assertions.assertThat(deserialize.conditions).isEqualTo(query.conditions);
-    Assertions.assertThat(deserialize.context).isEqualTo(query.context);
-    Assertions.assertThat(deserialize.coordinates).isEqualTo(query.coordinates);
-    Assertions.assertThat(deserialize.measures).isEqualTo(query.measures);
+    Assertions.assertThat(deserialize).isEqualTo(query);
   }
 
   @Test
@@ -93,14 +89,14 @@ public class TestQueryS13n {
                     groupOfScenario, "g"
             ));
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table("products")
-            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
+            .withColumnSet(QueryDto.BUCKET, bucketCS)
             .withMetric(priceComp)
             .withMetric(price);
 
     String serialize = query.json();
-    NewQueryDto deserialize = JacksonUtil.deserialize(serialize, NewQueryDto.class);
+    QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
     Assertions.assertThat(deserialize).isEqualTo(query);
   }
 
@@ -116,15 +112,15 @@ public class TestQueryS13n {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table("products")
             .withColumn(SCENARIO_FIELD_NAME)
-            .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withColumnSet(QueryDto.PERIOD, periodCS)
             .withMetric(m)
             .withMetric(sales);
 
     String serialize = query.json();
-    NewQueryDto deserialize = JacksonUtil.deserialize(serialize, NewQueryDto.class);
+    QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
     Assertions.assertThat(deserialize).isEqualTo(query);
   }
 }

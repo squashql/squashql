@@ -24,6 +24,7 @@ public class TestITM {
   protected SparkDatastore datastore;
 
   protected QueryEngine queryEngine;
+  protected QueryExecutor queryExecutor;
 
   @BeforeAll
   void setup() {
@@ -107,6 +108,7 @@ public class TestITM {
             ));
 
     this.queryEngine = new SparkQueryEngine(this.datastore);
+    this.queryExecutor = new QueryExecutor(this.queryEngine);
   }
 
   @Test
@@ -120,13 +122,13 @@ public class TestITM {
     var query = QueryBuilder
             .query()
             .table(our)
-            .wildcardCoordinate(Datastore.SCENARIO_FIELD_NAME)
-            .wildcardCoordinate("ean")
+            .withColumn(Datastore.SCENARIO_FIELD_NAME)
+            .withColumn("ean")
             .aggregatedMeasure("capdv", "sum")
             .expressionMeasure("capdv_concurrents", "sum(competitor_price * quantity)")
             .expressionMeasure("indice_prix", "sum(capdv) / sum(competitor_price * quantity)");
 
-    Table table = this.queryEngine.execute(query);
+    Table table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
             List.of("MN & MDD up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
             List.of("MN & MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196),

@@ -1,7 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.dto.JoinMappingDto;
-import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.transaction.TransactionManager;
@@ -81,7 +81,7 @@ public abstract class ATestQueryEngineWithJoins {
     orderDetailsTable.join(productsTable, "inner", new JoinMappingDto("ProductID", "ProductID"));
     productsTable.join(categoriesTable, "inner", new JoinMappingDto("CategoryID", "CategoryID"));
 
-    QueryDto query = new QueryDto()
+    DatabaseQuery query = new DatabaseQuery()
             .table(ordersTable)
             .wildcardCoordinate("CategoryName")
             .aggregatedMeasure("Quantity", "sum")

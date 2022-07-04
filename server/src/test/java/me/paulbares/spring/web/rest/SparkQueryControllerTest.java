@@ -7,7 +7,7 @@ import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.Repository;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.BucketColumnSetDto;
-import me.paulbares.query.dto.NewQueryDto;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.spring.ApplicationForTest;
 import me.paulbares.spring.config.DatasetTestConfig;
@@ -65,7 +65,7 @@ public class SparkQueryControllerTest {
   void testQuery(boolean withRepo) throws Exception {
     var our = createTableDto();
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(our)
             .withColumn(SCENARIO_FIELD_NAME)
             .withColumn("ean")
@@ -113,7 +113,7 @@ public class SparkQueryControllerTest {
   @Test
   @Disabled // total not supported for now
   void testQueryWithTotals() throws Exception {
-    NewQueryDto query = new NewQueryDto()
+    QueryDto query = new QueryDto()
             .table("our_prices")
             .withColumn(SCENARIO_FIELD_NAME)
             .context(Totals.KEY, QueryBuilder.TOP)
@@ -247,9 +247,9 @@ public class SparkQueryControllerTest {
                     "group", "g"
             ));
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(createTableDto())
-            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
+            .withColumnSet(QueryDto.BUCKET, bucketCS)
             .withMetric(aggregatedMeasureDiff)
             .withMetric(indicePrixDiff);
 

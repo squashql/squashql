@@ -1,4 +1,4 @@
-package me.paulbares.query;
+package me.paulbares.query.database;
 
 public class SqlUtils {
 

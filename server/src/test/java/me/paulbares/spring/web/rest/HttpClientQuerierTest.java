@@ -9,7 +9,7 @@ import me.paulbares.query.QueryEngine;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.BucketColumnSetDto;
-import me.paulbares.query.dto.NewQueryDto;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.spring.config.DatasetTestConfig;
 import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.assertj.core.api.Assertions;
@@ -53,7 +53,7 @@ public class HttpClientQuerierTest {
 
     var querier = new HttpClientQuerier(url);
 
-    NewQueryDto query = new NewQueryDto()
+    QueryDto query = new QueryDto()
             .table("our_prices")
             .withColumn(SCENARIO_FIELD_NAME)
 //            .context(Totals.KEY, QueryBuilder.TOP)
@@ -83,9 +83,9 @@ public class HttpClientQuerierTest {
                     SCENARIO_FIELD_NAME, "first",
                     "group", "g"
             ));
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table("our_prices")
-            .withColumnSet(NewQueryDto.BUCKET, bucketCS)
+            .withColumnSet(QueryDto.BUCKET, bucketCS)
             .withMetric(capdvDiff)
             .withMetric(aggregatedMeasure);
 
@@ -109,7 +109,7 @@ public class HttpClientQuerierTest {
   @Disabled // condition not yet supported in the new api
   void testRunQueryWithCondition() {
     // Note. The CJ will make null appear in rows. We want to make sure null values are correctly handled.
-    NewQueryDto query = new NewQueryDto()
+    QueryDto query = new QueryDto()
             .table("our_prices")
             .withColumn(SCENARIO_FIELD_NAME)
             .withColumn("pdv")

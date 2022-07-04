@@ -1,7 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.comp.BinaryOperations;
-import me.paulbares.query.dto.NewQueryDto;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.store.Datastore;
@@ -27,7 +27,7 @@ public abstract class ATestPeriodComparison {
 
   protected QueryEngine queryEngine;
 
-  protected NewQueryExecutor executor;
+  protected QueryExecutor executor;
 
   protected TransactionManager tm;
 
@@ -52,7 +52,7 @@ public abstract class ATestPeriodComparison {
 
     this.datastore = createDatastore();
     this.queryEngine = createQueryEngine(this.datastore);
-    this.executor = new NewQueryExecutor(this.queryEngine);
+    this.executor = new QueryExecutor(this.queryEngine);
     this.tm = createTransactionManager();
 
     beforeLoading(List.of(ean, category, sales, qty, year, quarter, month, date));
@@ -109,9 +109,9 @@ public abstract class ATestPeriodComparison {
             ));
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withColumnSet(QueryDto.PERIOD, periodCS)
             .withMetric(m)
             .withMetric(sales);
 
@@ -144,10 +144,10 @@ public abstract class ATestPeriodComparison {
             ));
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withColumnSet(QueryDto.PERIOD, periodCS)
             .withMetric(m)
             .withMetric(sales);
 
@@ -177,10 +177,10 @@ public abstract class ATestPeriodComparison {
             Map.of("year_sales", "y-1"));
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .withColumnSet(NewQueryDto.PERIOD, periodCS)
+            .withColumnSet(QueryDto.PERIOD, periodCS)
             .withMetric(m)
             .withMetric(sales);
 

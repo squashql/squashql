@@ -2,7 +2,7 @@ package me.paulbares.query;
 
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.dto.BucketColumnSetDto;
-import me.paulbares.query.dto.NewQueryDto;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
@@ -22,7 +22,7 @@ import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestBucketComparison {
 
-  protected NewQueryExecutor executor;
+  protected QueryExecutor executor;
   protected Datastore datastore;
   protected TransactionManager tm;
 
@@ -58,7 +58,7 @@ public abstract class ATestBucketComparison {
     List<Field> fields = List.of(ean, category, price, qty);
     this.datastore = createDatastore();
     QueryEngine queryEngine = createQueryEngine(this.datastore);
-    this.executor = new NewQueryExecutor(queryEngine);
+    this.executor = new QueryExecutor(queryEngine);
     this.tm = createTransactionManager();
 
     beforeLoading(fields);
@@ -112,9 +112,9 @@ public abstract class ATestBucketComparison {
                     this.groupOfScenario, "g"
             ));
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(NewQueryDto.BUCKET, this.bucketCS)
+            .withColumnSet(QueryDto.BUCKET, this.bucketCS)
             .withMetric(priceComp)
             .withMetric(price)
             .withMetric(quantityComp)
@@ -156,9 +156,9 @@ public abstract class ATestBucketComparison {
                     this.groupOfScenario, "g"
             ));
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(NewQueryDto.BUCKET, this.bucketCS)
+            .withColumnSet(QueryDto.BUCKET, this.bucketCS)
             .withMetric(priceComp)
             .withMetric(price)
             .withMetric(quantityComp)
@@ -200,9 +200,9 @@ public abstract class ATestBucketComparison {
                     this.groupOfScenario, "g"
             ));
 
-    var query = new NewQueryDto()
+    var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(NewQueryDto.BUCKET, this.bucketCS)
+            .withColumnSet(QueryDto.BUCKET, this.bucketCS)
             .withMetric(priceComp)
             .withMetric(price)
             .withMetric(quantityComp)

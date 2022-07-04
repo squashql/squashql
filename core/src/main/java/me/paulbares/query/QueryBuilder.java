@@ -1,12 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.context.Totals;
-import me.paulbares.query.dto.ConditionDto;
-import me.paulbares.query.dto.ConditionType;
-import me.paulbares.query.dto.LogicalConditionDto;
-import me.paulbares.query.dto.QueryDto;
-import me.paulbares.query.dto.SingleValueConditionDto;
-import me.paulbares.query.dto.TableDto;
+import me.paulbares.query.dto.*;
 
 import static me.paulbares.query.context.Totals.POSITION_BOTTOM;
 import static me.paulbares.query.context.Totals.POSITION_TOP;

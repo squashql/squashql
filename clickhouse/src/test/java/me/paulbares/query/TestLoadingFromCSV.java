@@ -62,10 +62,11 @@ public class TestLoadingFromCSV {
 
     tm.loadCsv(MAIN_SCENARIO_NAME, storeName, pathFunction.apply("customers.csv").toString(), delimiter, header);
 
-    Table table = new ClickHouseQueryEngine(datastore)
+    ClickHouseQueryEngine engine = new ClickHouseQueryEngine(datastore);
+    Table table = new QueryExecutor(engine)
             .execute(QueryBuilder.query()
                     .table(storeName)
-                    .wildcardCoordinate(SCENARIO_FIELD_NAME)
+                    .withColumn(SCENARIO_FIELD_NAME)
                     .aggregatedMeasure("*", "count"));
     Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("", 91L)); // empty string because no scenario in
     // csv file

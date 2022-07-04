@@ -1,30 +1,22 @@
-package me.paulbares.query;
+package me.paulbares.query.database;
 
-import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.Totals;
-import me.paulbares.query.dto.ConditionDto;
-import me.paulbares.query.dto.ConditionType;
-import me.paulbares.query.dto.JoinDto;
-import me.paulbares.query.dto.JoinMappingDto;
-import me.paulbares.query.dto.LogicalConditionDto;
-import me.paulbares.query.dto.QueryDto;
-import me.paulbares.query.dto.SingleValueConditionDto;
-import me.paulbares.query.dto.TableDto;
+import me.paulbares.query.dto.*;
 import me.paulbares.store.Field;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static me.paulbares.query.SqlUtils.escape;
+import static me.paulbares.query.database.SqlUtils.escape;
 
 public class SQLTranslator {
 
-  public static String translate(QueryDto query, Function<String, Field> fieldProvider) {
+  public static String translate(DatabaseQuery query, Function<String, Field> fieldProvider) {
+    return translate(query, null, fieldProvider);
+  }
+
+  public static String translate(DatabaseQuery query, Totals totals, Function<String, Field> fieldProvider) {
     List<String> selects = new ArrayList<>();
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
@@ -46,19 +38,17 @@ public class SQLTranslator {
 
     if (!groupBy.isEmpty()) {
       statement.append(" group by ");
-      ContextValue totals = query.context.get(Totals.KEY);
       if (totals != null) {
         statement.append("rollup(");
       }
       statement.append(groupBy.stream().collect(Collectors.joining(", ")));
 
       if (totals != null) {
-        Totals cv = (Totals) totals;
         statement.append(") order by ");
         String order = " asc"; // default for now
         // https://stackoverflow.com/a/7862601
         // to move totals and subtotals at the top or at the bottom and keep normal order for other rows.
-        String position = cv.position == null ? Totals.POSITION_TOP : cv.position; // default top
+        String position = totals.position == null ? Totals.POSITION_TOP : totals.position; // default top
         // Note: with Spark, values of totals are set to null but for Clickhouse, they are set to '' for string type,
         // 0 for integer... this is why there is the following case condition (for clickhouse, only string type is
         // handled
@@ -75,7 +65,7 @@ public class SQLTranslator {
     return statement.toString();
   }
 
-  private static Map<String, ConditionDto> extractConditions(QueryDto query) {
+  private static Map<String, ConditionDto> extractConditions(DatabaseQuery query) {
     Map<String, ConditionDto> conditionByField = new HashMap<>();
     query.coordinates.forEach((field, values) -> {
       if (values != null && values.size() == 1) {
@@ -96,7 +86,7 @@ public class SQLTranslator {
     return conditionByField;
   }
 
-  protected static void addConditions(StringBuilder statement, QueryDto query, Function<String, Field> fieldProvider) {
+  protected static void addConditions(StringBuilder statement, DatabaseQuery query, Function<String, Field> fieldProvider) {
     Map<String, ConditionDto> conditionByField = extractConditions(query);
 
     if (!conditionByField.isEmpty()) {

@@ -1,7 +1,8 @@
 package me.paulbares.query;
 
 import me.paulbares.SparkDatastore;
-import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.database.DatabaseQuery;
+import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.store.Field;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -25,9 +26,9 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
   }
 
   @Override
-  protected Table retrieveAggregates(QueryDto query) {
+  protected Table retrieveAggregates(DatabaseQuery query) {
     LOGGER.fine("Executing " + query);
-    String sql = SQLTranslator.translate(query, this.fieldSupplier);
+    String sql = SQLTranslator.translate(query, null, this.fieldSupplier);
     LOGGER.fine("Translated query #" + query + " to " + sql);
     Dataset<Row> ds = this.datastore.spark.sql(sql);
 

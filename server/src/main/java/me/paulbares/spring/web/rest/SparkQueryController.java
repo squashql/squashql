@@ -1,12 +1,12 @@
 package me.paulbares.spring.web.rest;
 
-import me.paulbares.query.NewQueryExecutor;
+import me.paulbares.query.QueryExecutor;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.ExpressionMeasure;
 import me.paulbares.query.ExpressionResolver;
 import me.paulbares.query.SparkQueryEngine;
 import me.paulbares.query.Table;
-import me.paulbares.query.dto.NewQueryDto;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Store;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -42,8 +42,8 @@ public class SparkQueryController {
   }
 
   @PostMapping(MAPPING_QUERY)
-  public ResponseEntity<String> execute(@RequestBody NewQueryDto query) {
-    Table table = new NewQueryExecutor(this.itmQueryEngine).execute(query);
+  public ResponseEntity<String> execute(@RequestBody QueryDto query) {
+    Table table = new QueryExecutor(this.itmQueryEngine).execute(query);
     return ResponseEntity.ok(JacksonUtil.tableToCsv(table));
   }
 
