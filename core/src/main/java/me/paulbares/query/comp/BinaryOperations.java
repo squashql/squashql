@@ -2,6 +2,9 @@ package me.paulbares.query.comp;
 
 import me.paulbares.query.BinaryOperationMeasure;
 
+import java.util.function.BiFunction;
+import java.util.stream.Stream;
+
 public class BinaryOperations {
 
   public static final String ABS_DIFF = "absolute_difference";
@@ -20,21 +23,6 @@ public class BinaryOperations {
       case ABS_DIFF -> dataType;
       case REL_DIFF -> double.class;
       default -> throw new IllegalArgumentException(String.format("Not supported comparison %s", method));
-    };
-  }
-
-  public static Class<?> getOutputType(BinaryOperationMeasure.Operator operator, Class<?> leftType, Class<?> rightType) {
-    return switch (operator) {
-      case PLUS, MINUS, MULTIPLY -> {
-        Class<?> result;
-        if (leftType.equals(long.class) || leftType.equals(int.class)) {
-          result = rightType;
-        } else {
-          result = Double.class;
-        }
-        yield result;
-      }
-      case DIVIDE -> Double.class;
     };
   }
 
@@ -66,29 +54,31 @@ public class BinaryOperations {
     }
   }
 
-  public static Object apply(BinaryOperationMeasure.Operator operator, Object left, Object right, Class<?> leftDataType, Class<?> rightDataType) {
-    Class<?> outputType = getOutputType(operator, leftDataType, rightDataType);
+  public static BiFunction<Number, Number, Number> createBiFunction(BinaryOperationMeasure.Operator operator,
+                                                                    Class<?> leftDataType,
+                                                                    Class<?> rightDataType) {
+    Class<? extends Number> outputDataType = getOutputType(operator, leftDataType, rightDataType);
     return switch (operator) {
-      case PLUS -> outputType.cast(add((Number) left, (Number) right));
-      case MINUS -> outputType.cast(minus((Number) left, (Number) right));
-      case MULTIPLY -> outputType.cast(multiply((Number) left, (Number) right));
-      case DIVIDE -> outputType.cast(divide((Number) left, (Number) right));
+      case PLUS ->
+              outputDataType.equals(long.class) ? (a, b) -> a.longValue() + b.longValue() : (a, b) -> a.doubleValue() + b.doubleValue();
+      case MINUS ->
+              outputDataType.equals(long.class) ? (a, b) -> a.longValue() - b.longValue() : (a, b) -> a.doubleValue() - b.doubleValue();
+      case MULTIPLY ->
+              outputDataType.equals(long.class) ? (a, b) -> a.longValue() * b.longValue() : (a, b) -> a.doubleValue() * b.doubleValue();
+      case DIVIDE -> (a, b) -> a.doubleValue() / b.doubleValue();
     };
   }
 
-  public static <T extends Number> Number add(T a, T b) {
-    return a.doubleValue() + b.doubleValue();
-  }
-
-  public static <T extends Number> Number minus(T a, T b) {
-    return a.doubleValue() - b.doubleValue();
-  }
-
-  public static <T extends Number> Number multiply(T a, T b) {
-    return a.doubleValue() * b.doubleValue();
-  }
-
-  public static <T extends Number> Number divide(T a, T b) {
-    return a.doubleValue() / b.doubleValue();
+  public static Class<? extends Number> getOutputType(BinaryOperationMeasure.Operator operator, Class<?> leftDataType, Class<?> rightDataType) {
+    Class<? extends Number> outputDataType = Stream.of(double.class, float.class, long.class, int.class)
+            .filter(clazz -> clazz.equals(leftDataType) || clazz.equals(rightDataType))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(String.format("Types %s and %s are incompatible with the operator %s", leftDataType, rightDataType, operator)));
+    if (outputDataType.equals(float.class)) {
+      outputDataType = double.class;
+    } else if (outputDataType.equals(int.class)) {
+      outputDataType = long.class;
+    }
+    return outputDataType;
   }
 }

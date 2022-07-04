@@ -5,6 +5,7 @@ import me.paulbares.query.dto.NewQueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -48,9 +49,6 @@ public abstract class ATestBinaryOperationMeasure {
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", 20d, 10},
-            new Object[]{"bottle", "drink", 10d, 5},
-
-            new Object[]{"cookie", "food", 60d, 20},
             new Object[]{"cookie", "food", 30d, 10}
     ));
   }
@@ -58,6 +56,9 @@ public abstract class ATestBinaryOperationMeasure {
   protected void beforeLoading(List<Field> fields) {
   }
 
+  /**
+   * Try with measure of different types.
+   */
   @Test
   void testPlus() {
     AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
@@ -65,11 +66,93 @@ public abstract class ATestBinaryOperationMeasure {
 
     var query = new NewQueryDto()
             .table(this.storeName)
+            .withMetric(sales)
+            .withMetric(quantity)
             .withMetric(new BinaryOperationMeasure("plus1", BinaryOperationMeasure.Operator.PLUS, sales, sales))
             .withMetric(new BinaryOperationMeasure("plus2", BinaryOperationMeasure.Operator.PLUS, sales, quantity))
             .withMetric(new BinaryOperationMeasure("plus3", BinaryOperationMeasure.Operator.PLUS, quantity, quantity));
 
-    Table execute = this.executor.execute(query);
-    System.out.println(execute);
+    Table table = this.executor.execute(query);
+    double salesV = 50d;
+    long qtyV = 20l;
+    Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV + salesV, salesV + qtyV, qtyV + qtyV));
+    Assertions
+            .assertThat(table.headers().stream().map(Field::name))
+            .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "plus1", "plus2", "plus3");
+  }
+
+  /**
+   * Try with measure of different types.
+   */
+  @Test
+  void testMinus() {
+    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
+    AggregatedMeasure quantity = new AggregatedMeasure("quantity", AggregationFunction.SUM);
+
+    var query = new NewQueryDto()
+            .table(this.storeName)
+            .withMetric(sales)
+            .withMetric(quantity)
+            .withMetric(new BinaryOperationMeasure("minus1", BinaryOperationMeasure.Operator.MINUS, sales, sales))
+            .withMetric(new BinaryOperationMeasure("minus2", BinaryOperationMeasure.Operator.MINUS, sales, quantity))
+            .withMetric(new BinaryOperationMeasure("minus3", BinaryOperationMeasure.Operator.MINUS, quantity, quantity));
+
+    Table table = this.executor.execute(query);
+    double salesV = 50d;
+    long qtyV = 20l;
+    Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV - salesV, salesV - qtyV, qtyV - qtyV));
+    Assertions
+            .assertThat(table.headers().stream().map(Field::name))
+            .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "minus1", "minus2", "minus3");
+  }
+
+  /**
+   * Try with measure of different types.
+   */
+  @Test
+  void testMultiply() {
+    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
+    AggregatedMeasure quantity = new AggregatedMeasure("quantity", AggregationFunction.SUM);
+
+    var query = new NewQueryDto()
+            .table(this.storeName)
+            .withMetric(sales)
+            .withMetric(quantity)
+            .withMetric(new BinaryOperationMeasure("multiply1", BinaryOperationMeasure.Operator.MULTIPLY, sales, sales))
+            .withMetric(new BinaryOperationMeasure("multiply2", BinaryOperationMeasure.Operator.MULTIPLY, sales, quantity))
+            .withMetric(new BinaryOperationMeasure("multiply3", BinaryOperationMeasure.Operator.MULTIPLY, quantity, quantity));
+
+    Table table = this.executor.execute(query);
+    double salesV = 50d;
+    long qtyV = 20l;
+    Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV * salesV, salesV * qtyV, qtyV * qtyV));
+    Assertions
+            .assertThat(table.headers().stream().map(Field::name))
+            .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "multiply1", "multiply2", "multiply3");
+  }
+
+  /**
+   * Try with measure of different types.
+   */
+  @Test
+  void testDivide() {
+    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
+    AggregatedMeasure quantity = new AggregatedMeasure("quantity", AggregationFunction.SUM);
+
+    var query = new NewQueryDto()
+            .table(this.storeName)
+            .withMetric(sales)
+            .withMetric(quantity)
+            .withMetric(new BinaryOperationMeasure("divide1", BinaryOperationMeasure.Operator.DIVIDE, sales, sales))
+            .withMetric(new BinaryOperationMeasure("divide2", BinaryOperationMeasure.Operator.DIVIDE, sales, quantity))
+            .withMetric(new BinaryOperationMeasure("divide3", BinaryOperationMeasure.Operator.DIVIDE, quantity, quantity));
+
+    Table table = this.executor.execute(query);
+    double salesV = 50d;
+    long qtyV = 20l;
+    Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV / salesV, salesV / qtyV, (double) qtyV / qtyV));
+    Assertions
+            .assertThat(table.headers().stream().map(Field::name))
+            .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "divide1", "divide2", "divide3");
   }
 }

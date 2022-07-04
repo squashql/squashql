@@ -10,6 +10,7 @@ import me.paulbares.store.Field;
 
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -151,8 +152,9 @@ public class NewQueryExecutor {
 
       Class<?> lType = intermediateResult.getField(bom.leftOperand).type();
       Class<?> rType = intermediateResult.getField(bom.rightOperand).type();
+      BiFunction<Number, Number, Number> operation = BinaryOperations.createBiFunction(bom.operator, lType, rType);
       for (int i = 0; i < lo.size(); i++) {
-        r.add(BinaryOperations.apply(bom.operator, lo.get(i), ro.get(i), lType, rType));
+        r.add(operation.apply((Number) lo.get(i), (Number) ro.get(i)));
       }
 
       String newName = bom.alias == null
