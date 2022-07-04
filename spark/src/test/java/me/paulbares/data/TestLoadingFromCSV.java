@@ -1,8 +1,8 @@
 package me.paulbares.data;
 
 import me.paulbares.SparkDatastore;
-import me.paulbares.store.Datastore;
 import me.paulbares.transaction.SparkTransactionManager;
+import me.paulbares.transaction.TransactionManager;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.assertj.core.api.Assertions;
@@ -40,8 +40,8 @@ public class TestLoadingFromCSV {
     SparkDatastore datastore = new SparkDatastore();
     SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
 
-    tm.loadCsv(Datastore.MAIN_SCENARIO_NAME, customersStore, pathFunction.apply("customers.csv").toString(), delimiter, header);
-    tm.loadCsv(Datastore.MAIN_SCENARIO_NAME, ordersStore, pathFunction.apply("orders.csv").toString(), delimiter, header);
+    tm.loadCsv(TransactionManager.MAIN_SCENARIO_NAME, customersStore, pathFunction.apply("customers.csv").toString(), delimiter, header);
+    tm.loadCsv(TransactionManager.MAIN_SCENARIO_NAME, ordersStore, pathFunction.apply("orders.csv").toString(), delimiter, header);
 
     Dataset<Row> customersDS = datastore.get(customersStore);
     Dataset<Row> ordersDS = datastore.get(ordersStore);

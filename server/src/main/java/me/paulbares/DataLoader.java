@@ -6,7 +6,7 @@ import me.paulbares.transaction.SparkTransactionManager;
 
 import java.util.List;
 
-import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 /**
  * --add-opens=java.base/sun.nio.ch=ALL-UNNAMED

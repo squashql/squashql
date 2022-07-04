@@ -28,8 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
-import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = ApplicationForTest.class, properties = "spring.main.allow-bean-definition-overriding=true")

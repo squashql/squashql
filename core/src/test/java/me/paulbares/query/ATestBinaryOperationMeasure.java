@@ -13,7 +13,7 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.util.List;
 
-import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestBinaryOperationMeasure {

@@ -18,7 +18,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Function;
 
-import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestQueryEngineWithJoins {

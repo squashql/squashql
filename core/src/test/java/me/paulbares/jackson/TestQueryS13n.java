@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 import static me.paulbares.query.QueryBuilder.*;
-import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
-import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 public class TestQueryS13n {
 

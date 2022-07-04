@@ -18,8 +18,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
-import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestPeriodComparison {
@@ -164,7 +164,7 @@ public abstract class ATestPeriodComparison {
             Arrays.asList(2023, 4, "base", -50d, 35d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
-            .containsExactlyInAnyOrder(Datastore.SCENARIO_FIELD_NAME, period.year(), period.quarter(), "myMeasure", "sum(sales)");
+            .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.quarter(), "myMeasure", "sum(sales)");
   }
 
   @Test
@@ -191,6 +191,6 @@ public abstract class ATestPeriodComparison {
             Arrays.asList(2023, "base", 0d, 300d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
-            .containsExactlyInAnyOrder(Datastore.SCENARIO_FIELD_NAME, period.year(), "myMeasure", "sum(sales)");
+            .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), "myMeasure", "sum(sales)");
   }
 }

@@ -20,8 +20,8 @@ import java.util.function.Function;
 
 import static me.paulbares.query.TestUtils.createClickHouseContainer;
 import static me.paulbares.query.TestUtils.jdbcUrl;
-import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
-import static me.paulbares.store.Datastore.SCENARIO_FIELD_NAME;
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 @Testcontainers
 public class TestLoadingFromCSV {

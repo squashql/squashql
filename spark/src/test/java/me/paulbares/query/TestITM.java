@@ -3,9 +3,9 @@ package me.paulbares.query;
 import me.paulbares.SparkDatastore;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.database.SparkQueryEngine;
-import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.SparkTransactionManager;
+import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -13,7 +13,7 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.util.List;
 
-import static me.paulbares.store.Datastore.MAIN_SCENARIO_NAME;
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 /**
  * This test verifies the use case described here https://docs.google
@@ -124,7 +124,7 @@ public class TestITM {
     var query = QueryBuilder
             .query()
             .table(our)
-            .withColumn(Datastore.SCENARIO_FIELD_NAME)
+            .withColumn(TransactionManager.SCENARIO_FIELD_NAME)
             .withColumn("ean")
             .aggregatedMeasure("capdv", "sum")
             .expressionMeasure("capdv_concurrents", "sum(competitor_price * quantity)")
