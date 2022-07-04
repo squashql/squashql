@@ -44,7 +44,11 @@ public class DatabaseQuery {
   }
 
   public DatabaseQuery aggregatedMeasure(String field, String agg) {
-    withMeasure(new AggregatedMeasure(field, agg));
+    return aggregatedMeasure(null, field, agg);
+  }
+
+  public DatabaseQuery aggregatedMeasure(String alias, String field, String agg) {
+    withMeasure(new AggregatedMeasure(alias, field, agg));
     return this;
   }
 

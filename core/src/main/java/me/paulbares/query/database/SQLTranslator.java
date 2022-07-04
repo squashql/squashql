@@ -20,9 +20,10 @@ public class SQLTranslator {
     List<String> selects = new ArrayList<>();
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
+    List<String> aggregateAliases = new ArrayList<>();
 
     query.coordinates.forEach((field, values) -> groupBy.add(escape(field)));
-    query.measures.forEach(m -> aggregates.add(m.sqlExpression()));
+    query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider)));
 
     groupBy.forEach(selects::add); // coord first, then aggregates
     aggregates.forEach(selects::add);
@@ -125,7 +126,7 @@ public class SQLTranslator {
     }
   }
 
-  private static String toSql(Field field, ConditionDto dto) {
+  public static String toSql(Field field, ConditionDto dto) {
     if (dto instanceof SingleValueConditionDto single) {
       Object value = single.value;
       Function<Object, String> sqlMapper;

@@ -1,6 +1,9 @@
 package me.paulbares.query;
 
+import me.paulbares.store.Field;
+
 import java.util.Objects;
+import java.util.function.Function;
 
 import static me.paulbares.query.database.SqlUtils.escape;
 
@@ -21,7 +24,7 @@ public class ExpressionMeasure implements Measure {
   }
 
   @Override
-  public String sqlExpression() {
+  public String sqlExpression(Function<String, Field> fieldProvider) {
     return this.expression + " as " + escape(this.alias);
   }
 

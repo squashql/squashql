@@ -1,7 +1,10 @@
 package me.paulbares.query;
 
+import me.paulbares.store.Field;
+
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 public class ComparisonMeasure implements Measure {
 
@@ -32,7 +35,7 @@ public class ComparisonMeasure implements Measure {
   }
 
   @Override
-  public String sqlExpression() {
+  public String sqlExpression(Function<String, Field> fieldProvider) {
     throw new IllegalStateException();
   }
 

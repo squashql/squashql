@@ -1,6 +1,9 @@
 package me.paulbares.query;
 
+import me.paulbares.store.Field;
+
 import java.util.Objects;
+import java.util.function.Function;
 
 public class BinaryOperationMeasure implements Measure {
 
@@ -28,7 +31,7 @@ public class BinaryOperationMeasure implements Measure {
   }
 
   @Override
-  public String sqlExpression() {
+  public String sqlExpression(Function<String, Field> fieldProvider) {
     throw new IllegalStateException();
   }
 

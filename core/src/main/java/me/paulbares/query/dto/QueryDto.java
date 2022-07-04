@@ -48,6 +48,11 @@ public class QueryDto {
     return this;
   }
 
+  public QueryDto aggregatedMeasure(String alias, String field, String agg, String conditionField, ConditionDto conditionDto) {
+    withMeasure(new AggregatedMeasure(alias, field, agg, conditionField, conditionDto));
+    return this;
+  }
+
   public QueryDto expressionMeasure(String alias, String expression) {
     withMeasure(new ExpressionMeasure(alias, expression));
     return this;
