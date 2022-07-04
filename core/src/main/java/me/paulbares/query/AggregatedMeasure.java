@@ -13,9 +13,7 @@ public class AggregatedMeasure implements Measure {
 
   public String alias;
   public String field;
-
   public String aggregationFunction;
-
   public String conditionField;
   public ConditionDto conditionDto;
 
@@ -72,19 +70,20 @@ public class AggregatedMeasure implements Measure {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     AggregatedMeasure that = (AggregatedMeasure) o;
-    return Objects.equals(this.field, that.field) && Objects.equals(this.aggregationFunction, that.aggregationFunction) && Objects.equals(this.conditionField, that.conditionField) && Objects.equals(this.conditionDto, that.conditionDto);
+    return Objects.equals(this.alias, that.alias) && Objects.equals(this.field, that.field) && Objects.equals(this.aggregationFunction, that.aggregationFunction) && Objects.equals(this.conditionField, that.conditionField) && Objects.equals(this.conditionDto, that.conditionDto);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.field, this.aggregationFunction, this.conditionField, this.conditionDto);
+    return Objects.hash(this.alias, this.field, this.aggregationFunction, this.conditionField, this.conditionDto);
   }
 
   @Override
   public String toString() {
     return getClass().getSimpleName() +
-            "{" +
-            "field='" + field + '\'' +
+            '{' +
+            "alias='" + alias + '\'' +
+            ", field='" + field + '\'' +
             ", aggregationFunction='" + aggregationFunction + '\'' +
             ", conditionField='" + conditionField + '\'' +
             ", conditionDto=" + conditionDto +

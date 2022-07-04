@@ -232,8 +232,5 @@ public abstract class ATestQueryEngine {
             List.of("s2", 30l, 30l));
     Assertions.assertThat(result.headers().stream().map(Field::name))
             .containsExactly(SCENARIO_FIELD_NAME, "quantity if food or drink", "quantity filtered");
-    // FIXME alias of agg measure is not used yet but it should
-    //    Assertions.assertThat(result.headers().stream().map(Field::name)).containsExactlyInAnyOrder(
-    //            SCENARIO_FIELD_NAME, "quantity if food or drink");
   }
 }
