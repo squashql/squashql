@@ -7,6 +7,8 @@ import me.paulbares.query.dto.*;
 import java.util.List;
 import java.util.Map;
 
+import static me.paulbares.query.BinaryOperator.DIVIDE;
+import static me.paulbares.query.BinaryOperator.PLUS;
 import static me.paulbares.query.context.Totals.POSITION_BOTTOM;
 import static me.paulbares.query.context.Totals.POSITION_TOP;
 import static me.paulbares.query.dto.ConditionType.AND;
@@ -111,16 +113,49 @@ public class QueryBuilder {
             referencePosition);
   }
 
+  public static Measure divide(String alias, Measure a, Measure b) {
+    return new BinaryOperationMeasure(alias, DIVIDE ,a, b);
+  }
+
+  public static Measure plus(String alias, Measure a, Measure b) {
+    return new BinaryOperationMeasure(alias, PLUS ,a, b);
+  }
+
   public static void main(String[] args) {
     QueryDto query = QueryBuilder.query();
-    QueryBuilder.addPeriodColumnSet(query, new Period.Quarter("tr", ""));
 
-    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
-    ComparisonMeasure salesYearComp = periodComparison(
-            "salesYearComp",
-            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+    query.table("saas");
+
+    QueryBuilder.addBucketColumnSet(query,
+            "group",
+            "scenario encrypted",
+            Map.of("group1", List.of("A", "B", "C", "D"), "group2", List.of("A", "D")));
+
+    QueryBuilder.addPeriodColumnSet(query, new Period.Year("Year"));
+
+    AggregatedMeasure amount = new AggregatedMeasure("Amount", AggregationFunction.SUM);
+    ExpressionMeasure sales = new ExpressionMeasure("sales", "sum(case when `Income/Expense` = 'Revenue' then Amount end)");
+    query.withMeasure(amount);
+    query.withMeasure(sales);
+    Measure ebidtaRatio = QueryBuilder.divide("EBITDA %", amount, sales);
+    query.withMeasure(ebidtaRatio);
+
+    ComparisonMeasure growth = periodComparison(
+            "Growth",
+            ComparisonMethod.DIVIDE,
             sales,
-            Map.of("year_sales", "y-1"));
-    query.withMeasure(salesYearComp);
+            Map.of("Year", "y-1"));
+    query.withMeasure(growth);
+    Measure kpi = plus("KPI", ebidtaRatio, growth);
+    query.withMeasure(kpi);
+
+    ComparisonMeasure kpiComp = bucketComparison(
+            "kpi comp. with prev. scenario",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            kpi,
+            Map.of("scenario encrypted", "s-1", "group", "g"));
+    query.withMeasure(kpiComp);
+
+    System.out.println(query.json());
   }
 }

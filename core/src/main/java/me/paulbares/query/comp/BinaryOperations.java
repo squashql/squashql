@@ -14,14 +14,14 @@ public class BinaryOperations {
       case ABSOLUTE_DIFFERENCE ->
               outputDataType.equals(long.class) ? (a, b) -> a.longValue() - b.longValue() : (a, b) -> a.doubleValue() - b.doubleValue();
       case RELATIVE_DIFFERENCE -> (a, b) -> (a.doubleValue() - b.doubleValue()) / b.doubleValue();
-      default -> throw new IllegalArgumentException(String.format("Not supported comparison %s", method));
+      case DIVIDE -> createBiFunction(BinaryOperator.DIVIDE, dataType, dataType);
     };
   }
 
   public static Class<? extends Number> getComparisonOutputType(ComparisonMethod method, Class<?> dataType) {
     return switch (method) {
       case ABSOLUTE_DIFFERENCE -> (Class<? extends Number>) dataType;
-      case RELATIVE_DIFFERENCE -> double.class;
+      case RELATIVE_DIFFERENCE, DIVIDE -> double.class;
     };
   }
 
@@ -31,12 +31,12 @@ public class BinaryOperations {
     Class<? extends Number> outputDataType = getOutputType(binaryOperator, leftDataType, rightDataType);
     return switch (binaryOperator) {
       case PLUS ->
-              outputDataType.equals(long.class) ? (a, b) -> a.longValue() + b.longValue() : (a, b) -> a.doubleValue() + b.doubleValue();
+              outputDataType.equals(long.class) ? BinaryOperations::plusAsLong : BinaryOperations::plusAsDouble;
       case MINUS ->
-              outputDataType.equals(long.class) ? (a, b) -> a.longValue() - b.longValue() : (a, b) -> a.doubleValue() - b.doubleValue();
+              outputDataType.equals(long.class) ? BinaryOperations::minusAsLong : BinaryOperations::minusAsDouble;
       case MULTIPLY ->
-              outputDataType.equals(long.class) ? (a, b) -> a.longValue() * b.longValue() : (a, b) -> a.doubleValue() * b.doubleValue();
-      case DIVIDE -> (a, b) -> a.doubleValue() / b.doubleValue();
+              outputDataType.equals(long.class) ? BinaryOperations::multiplyAsLong : BinaryOperations::multiplyAsDouble;
+      case DIVIDE -> BinaryOperations::divideAsDouble;
     };
   }
 
@@ -51,5 +51,70 @@ public class BinaryOperations {
       outputDataType = long.class;
     }
     return outputDataType;
+  }
+
+  // asLong
+
+  public static Long plusAsLong(Number a, Number b) {
+    if (a == null) {
+      return b == null ? null : b.longValue();
+    }
+    if (b == null) {
+      return a == null ? null : a.longValue();
+    }
+    return a.longValue() + b.longValue();
+  }
+
+  public static Long minusAsLong(Number a, Number b) {
+    if (a == null) {
+      return b == null ? null : b.longValue();
+    }
+    if (b == null) {
+      return a == null ? null : a.longValue();
+    }
+    return a.longValue() - b.longValue();
+  }
+
+  public static Long multiplyAsLong(Number a, Number b) {
+    if (a == null || b == null) {
+      return null;
+    }
+    return a.longValue() * b.longValue();
+  }
+
+  // asDouble
+
+  public static Double plusAsDouble(Number a, Number b) {
+    if (a == null) {
+      return b == null ? null : b.doubleValue();
+    }
+    if (b == null) {
+      return a == null ? null : a.doubleValue();
+    }
+    return a.doubleValue() + b.doubleValue();
+  }
+
+  public static Double minusAsDouble(Number a, Number b) {
+    if (a == null) {
+      return b == null ? null : b.doubleValue();
+    }
+    if (b == null) {
+      return a == null ? null : a.doubleValue();
+    }
+    return a.doubleValue() - b.doubleValue();
+  }
+
+  public static Double multiplyAsDouble(Number a, Number b) {
+    if (a == null || b == null) {
+      return null;
+    }
+    return a.doubleValue() * b.doubleValue();
+  }
+
+  public static Double divideAsDouble(Number a, Number b) {
+    if (a == null || b == null) {
+      return null;
+    }
+    return a.doubleValue() / b.doubleValue();
   }
 }

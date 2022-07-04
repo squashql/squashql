@@ -17,6 +17,7 @@ import java.util.*;
 public class SparkQueryController {
 
   public static final String MAPPING_QUERY = "/spark-query";
+  public static final String MAPPING_QUERY_BEAUTIFY = "/spark-query-beautify";
   public static final String MAPPING_METADATA = "/spark-metadata";
 
   public static final String METADATA_FIELDS_KEY = "fields";
@@ -45,6 +46,12 @@ public class SparkQueryController {
   public ResponseEntity<String> execute(@RequestBody QueryDto query) {
     Table table = new QueryExecutor(this.itmQueryEngine).execute(query);
     return ResponseEntity.ok(JacksonUtil.tableToCsv(table));
+  }
+
+  @PostMapping(MAPPING_QUERY_BEAUTIFY)
+  public ResponseEntity<String> executeBeautify(@RequestBody QueryDto query) {
+    Table table = new QueryExecutor(this.itmQueryEngine).execute(query);
+    return ResponseEntity.ok(table.toString());
   }
 
   @GetMapping(MAPPING_METADATA)

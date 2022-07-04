@@ -33,7 +33,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     for (Map.Entry<String, String> entry : cm.referencePosition.entrySet()) {
       PeriodUnit pu = mapping.get(entry.getKey());
       referencePosition.put(pu, entry.getValue());
-      indexByPeriodUnit.put(pu, indexByColumn.get(entry.getKey()));
+      indexByPeriodUnit.put(pu, indexByColumn.getIfAbsent(entry.getKey(), -1));
     }
     return new ShiftProcedure(this.cSet.period, referencePosition, indexByPeriodUnit);
   }
@@ -63,8 +63,8 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
 
     @Override
     public boolean test(Object[] row) {
-      int yearIndex = this.indexByPeriodUnit.get(PeriodUnit.YEAR);
-      int quarterIndex = this.indexByPeriodUnit.get(PeriodUnit.QUARTER);
+      int yearIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.YEAR, -1);
+      int quarterIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.QUARTER, -1);
       Object yearTransformation = this.transformationByPeriodUnit.get(PeriodUnit.YEAR);
       Object quarterTransformation = this.transformationByPeriodUnit.get(PeriodUnit.QUARTER);
       if (this.period instanceof Period.Quarter) {
