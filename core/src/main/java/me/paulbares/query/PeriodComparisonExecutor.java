@@ -69,7 +69,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
       Object quarterTransformation = this.transformationByPeriodUnit.get(PeriodUnit.QUARTER);
       if (this.period instanceof Period.Quarter) {
         // YEAR, QUARTER
-        int year = (int) row[yearIndex];
+        long year = (long) row[yearIndex];
         if (this.referencePosition.containsKey(PeriodUnit.YEAR)) {
           if (yearTransformation != null) {
             row[yearIndex] = year + (int) yearTransformation;
@@ -86,7 +86,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
         }
       } else if (this.period instanceof Period.Year) {
         // YEAR
-        int year = (int) row[yearIndex];
+        long year = (long) row[yearIndex];
         if (this.referencePosition.containsKey(PeriodUnit.YEAR)) {
           if (yearTransformation != null) {
             row[yearIndex] = year + (int) yearTransformation;

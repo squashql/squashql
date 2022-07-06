@@ -30,9 +30,10 @@
 
     <modules>
         <module>core</module>
+        <module>bigquery</module>
+        <module>clickhouse</module>
         <module>spark</module>
         <module>server</module>
-        <module>clickhouse</module>
     </modules>
 
     <dependencyManagement>
