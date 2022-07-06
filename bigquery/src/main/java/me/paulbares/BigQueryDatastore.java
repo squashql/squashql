@@ -57,11 +57,8 @@ public class BigQueryDatastore implements Datastore {
     Set<String> tableNames = new HashSet<>();
     Iterator<Table> iterator = tablePage.getValues().iterator();
     while (iterator.hasNext()) {
-      String table = iterator.next().getTableId().getTable();
-//      tableNames.add(projectId + "." + datasetName + "." + table);
-      tableNames.add(table);
+      tableNames.add(iterator.next().getTableId().getTable());
     }
-
     return tableNames;
   }
 

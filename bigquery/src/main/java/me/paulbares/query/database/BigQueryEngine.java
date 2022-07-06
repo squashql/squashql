@@ -42,7 +42,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
               schema.getFields(),
               f -> new Field(f.getName(), BigQueryUtil.bigQueryTypeToClass(f.getType())),
               tableResult.iterateAll().iterator(),
-              (i, fieldValueList) -> read(fieldValueList, schema, i)
+              (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i)
       );
       return new ColumnarTable(
               result.getOne(),
@@ -55,7 +55,10 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     }
   }
 
-  private Object read(FieldValueList fieldValues, Schema schema, int index) {
+  /**
+   * Gets the value with the correct type, otherwise everything is read as String.
+   */
+  private Object getTypeValue(FieldValueList fieldValues, Schema schema, int index) {
     FieldValue fieldValue = fieldValues.get(index);
     com.google.cloud.bigquery.Field field = schema.getFields().get(index);
     return switch (field.getType().getStandardType()) {
