@@ -69,14 +69,14 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
       Object quarterTransformation = this.transformationByPeriodUnit.get(PeriodUnit.QUARTER);
       if (this.period instanceof Period.Quarter) {
         // YEAR, QUARTER
-        int year = (int) row[yearIndex];
+        int year = readAsLong(row[yearIndex]);
         if (this.referencePosition.containsKey(PeriodUnit.YEAR)) {
           if (yearTransformation != null) {
             row[yearIndex] = year + (int) yearTransformation;
           }
         }
         if (this.referencePosition.containsKey(PeriodUnit.QUARTER)) {
-          int quarter = (int) row[quarterIndex];
+          int quarter = readAsLong(row[quarterIndex]);
           if (quarterTransformation != null) {
             LocalDate d = LocalDate.of((Integer) row[yearIndex], quarter * 3, 1);
             LocalDate newDate = d.plusMonths(((int) quarterTransformation) * 3);
@@ -86,7 +86,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
         }
       } else if (this.period instanceof Period.Year) {
         // YEAR
-        int year = (int) row[yearIndex];
+        int year = readAsLong(row[yearIndex]);
         if (this.referencePosition.containsKey(PeriodUnit.YEAR)) {
           if (yearTransformation != null) {
             row[yearIndex] = year + (int) yearTransformation;
@@ -96,6 +96,10 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
         throw new RuntimeException(this.period + " not supported yet");
       }
       return true;
+    }
+
+    private static int readAsLong(Object o) {
+      return (int) ((Number) o).longValue(); // with some database, year could be Long object.
     }
 
     private static PeriodUnit[] getPeriodUnits(Period period) {

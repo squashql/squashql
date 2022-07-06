@@ -1,5 +1,6 @@
 package me.paulbares.query;
 
+import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.store.Field;
@@ -49,7 +50,7 @@ public class AggregatedMeasure implements Measure {
   }
 
   @Override
-  public String sqlExpression(Function<String, Field> fieldProvider) {
+  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter) {
     String sql;
     if (this.conditionDto != null) {
       String conditionSt = SQLTranslator.toSql(fieldProvider.apply(this.conditionField), this.conditionDto);
@@ -57,7 +58,7 @@ public class AggregatedMeasure implements Measure {
     } else {
       sql = this.aggregationFunction + "(" + (this.field.equals("*") ? this.field : escape(this.field)) + ")";
     }
-    return sql + " as " + escape(this.alias);
+    return sql + " as " + queryRewriter.measureAlias(escape(this.alias), this);
   }
 
   @Override

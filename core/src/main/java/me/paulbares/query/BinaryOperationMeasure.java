@@ -1,5 +1,6 @@
 package me.paulbares.query;
 
+import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.store.Field;
 
 import java.util.Objects;
@@ -31,7 +32,7 @@ public class BinaryOperationMeasure implements Measure {
   }
 
   @Override
-  public String sqlExpression(Function<String, Field> fieldProvider) {
+  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter) {
     throw new IllegalStateException();
   }
 

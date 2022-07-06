@@ -55,7 +55,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     return initialTable;
   }
 
-  protected static <Column, Record> Pair<List<Field>, List<List<Object>>> transform(
+  public static <Column, Record> Pair<List<Field>, List<List<Object>>> transform(
           List<Column> columns,
           Function<Column, Field> columnToField,
           Iterator<Record> recordIterator,

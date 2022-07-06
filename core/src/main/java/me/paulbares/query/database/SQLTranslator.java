@@ -12,18 +12,26 @@ import static me.paulbares.query.database.SqlUtils.escape;
 
 public class SQLTranslator {
 
+  private static final DefaultQueryRewriter DEFAULT_QUERY_REWRITER = new DefaultQueryRewriter();
+
   public static String translate(DatabaseQuery query, Function<String, Field> fieldProvider) {
-    return translate(query, null, fieldProvider);
+    return translate(query, null, fieldProvider, DEFAULT_QUERY_REWRITER);
   }
 
   public static String translate(DatabaseQuery query, Totals totals, Function<String, Field> fieldProvider) {
+    return translate(query, totals, fieldProvider, DEFAULT_QUERY_REWRITER);
+  }
+
+  public static String translate(DatabaseQuery query,
+                                 Totals totals,
+                                 Function<String, Field> fieldProvider,
+                                 QueryRewriter queryRewriter) {
     List<String> selects = new ArrayList<>();
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
-    List<String> aggregateAliases = new ArrayList<>();
 
     query.coordinates.forEach((field, values) -> groupBy.add(escape(field)));
-    query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider)));
+    query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter)));
 
     groupBy.forEach(selects::add); // coord first, then aggregates
     aggregates.forEach(selects::add);
@@ -32,7 +40,7 @@ public class SQLTranslator {
     statement.append("select ");
     statement.append(selects.stream().collect(Collectors.joining(", ")));
     statement.append(" from ");
-    statement.append(query.table.name);
+    statement.append(queryRewriter.tableName(query.table.name));
 
     addJoins(statement, query.table);
     addConditions(statement, query, fieldProvider);
