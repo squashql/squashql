@@ -51,7 +51,7 @@ public class QueryExecutor {
     ExecutionPlan<Measure, ExecutionContext> plan = createExecutionPlan(query);
 
     Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
-    QueryCache.QueryScope scope = new QueryCache.QueryScope(cols.stream().map(fieldSupplier).collect(Collectors.toSet()), query.conditions);
+    QueryCache.QueryScope scope = new QueryCache.QueryScope(query.table, cols.stream().map(fieldSupplier).collect(Collectors.toSet()), query.conditions);
 
     // Finish to prepare the query
     Set<Measure> cached = new HashSet<>();
@@ -75,7 +75,7 @@ public class QueryExecutor {
       prefetchResult = this.queryEngine.execute(prefetchQuery);
     } else {
       // Create an empty result that will be populated by the query cache
-      prefetchResult = this.queryCache.createResult(scope);
+      prefetchResult = this.queryCache.createRawResult(scope);
     }
 
     this.queryCache.contributeToResult(prefetchResult, cached, scope);
