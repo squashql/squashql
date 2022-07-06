@@ -12,12 +12,14 @@ import static me.paulbares.query.database.SqlUtils.escape;
 
 public class SQLTranslator {
 
+  private static final DefaultQueryRewriter DEFAULT_QUERY_REWRITER = new DefaultQueryRewriter();
+
   public static String translate(DatabaseQuery query, Function<String, Field> fieldProvider) {
-    return translate(query, null, fieldProvider, null);
+    return translate(query, null, fieldProvider, DEFAULT_QUERY_REWRITER);
   }
 
   public static String translate(DatabaseQuery query, Totals totals, Function<String, Field> fieldProvider) {
-    return translate(query, totals, fieldProvider, null);
+    return translate(query, totals, fieldProvider, DEFAULT_QUERY_REWRITER);
   }
 
   public static String translate(DatabaseQuery query,
