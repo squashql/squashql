@@ -41,7 +41,7 @@ public class QueryCache {
             headers,
             Collections.singletonList(CountMeasure.INSTANCE),
             new int[]{size - 1},
-            IntStream.range(0, size - 2).toArray(),
+            IntStream.range(0, size - 1).toArray(),
             values);
   }
 
