@@ -7,7 +7,7 @@ import me.paulbares.store.Datastore;
 import me.paulbares.transaction.SparkTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 
-public class TestSparkQueryEngineWithJoins extends ATestQueryEngineWithJoins {
+public class TestSparkQueryExecutorWithJoins extends ATestQueryExecutorWithJoins {
 
   @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {

@@ -3,6 +3,7 @@ package me.paulbares.query;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.graph.Graph;
+import me.paulbares.QueryCache;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.Repository;
@@ -17,6 +18,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static me.paulbares.query.dto.QueryDto.BUCKET;
@@ -25,9 +27,11 @@ import static me.paulbares.query.dto.QueryDto.PERIOD;
 public class QueryExecutor {
 
   public final QueryEngine queryEngine;
+  public final QueryCache queryCache;
 
   public QueryExecutor(QueryEngine queryEngine) {
     this.queryEngine = queryEngine;
+    this.queryCache = new QueryCache();
   }
 
   public Table execute(QueryDto query) {
@@ -36,7 +40,7 @@ public class QueryExecutor {
     query.columnSets.values().forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
     query.columns.forEach(finalColumns::add);
 
-    List<String> cols = new ArrayList<>();
+    Set<String> cols = new HashSet<>();
     query.columns.forEach(cols::add);
     query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).forEach(cols::add);
     DatabaseQuery prefetchQuery = new DatabaseQuery().table(query.table);
@@ -46,10 +50,36 @@ public class QueryExecutor {
     // Create plan
     ExecutionPlan<Measure, ExecutionContext> plan = createExecutionPlan(query);
 
-    // Finish to prepare the query
-    plan.getLeaves().forEach(prefetchQuery::withMeasure);
+    Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
+    QueryCache.QueryScope scope = new QueryCache.QueryScope(cols.stream().map(fieldSupplier).collect(Collectors.toSet()), query.conditions);
 
-    Table prefetchResult = this.queryEngine.execute(prefetchQuery);
+    // Finish to prepare the query
+    Set<Measure> cached = new HashSet<>();
+    Set<Measure> notCached = new HashSet<>();
+    for (Measure leaf : plan.getLeaves()) {
+      if (this.queryCache.contains(leaf, scope)) {
+        cached.add(leaf);
+      } else {
+        prefetchQuery.withMeasure(leaf);
+        notCached.add(leaf);
+      }
+    }
+
+    Table prefetchResult;
+    if (!notCached.isEmpty()) {
+      if (!plan.getLeaves().contains(CountMeasure.INSTANCE)) {
+        // Always add count
+        prefetchQuery.withMeasure(CountMeasure.INSTANCE);
+        notCached.add(CountMeasure.INSTANCE);
+      }
+      prefetchResult = this.queryEngine.execute(prefetchQuery);
+    } else {
+      // Create an empty result that will be populated by the query cache
+      prefetchResult = this.queryCache.createResult(scope);
+    }
+
+    this.queryCache.contributeToResult(prefetchResult, cached, scope);
+    this.queryCache.contributeToCache(prefetchResult, notCached, scope);
 
     if (query.columnSets.containsKey(BUCKET)) {
       // Apply this as it modifies the "shape" of the result

@@ -90,7 +90,7 @@ public abstract class ATestBinaryOperationMeasure {
 
     var query = new QueryDto()
             .table(this.storeName)
-            .context(Repository.KEY, new Repository(ATestQueryEngine.REPO_URL))
+            .context(Repository.KEY, new Repository(ATestQueryExecutor.REPO_URL))
             .withMeasure(sales)
             .withMeasure(quantity)
             .withMeasure(new BinaryOperationMeasure("plus1", BinaryOperator.PLUS, sales, sales))

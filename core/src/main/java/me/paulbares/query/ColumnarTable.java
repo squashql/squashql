@@ -55,6 +55,11 @@ public class ColumnarTable implements Table {
   }
 
   @Override
+  public List<Object> getColumn(int columnIndex) {
+    return this.values.get(columnIndex);
+  }
+
+  @Override
   public long count() {
     return this.values.get(0).size();
   }

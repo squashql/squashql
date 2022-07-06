@@ -21,7 +21,7 @@ import java.util.function.Function;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestQueryEngineWithJoins {
+public abstract class ATestQueryExecutorWithJoins {
 
   private static Function<String, Path> pathFunction = fileName -> {
     URL resource = Thread.currentThread().getContextClassLoader().getResource(fileName);

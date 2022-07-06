@@ -67,6 +67,21 @@ public interface Table extends Iterable<List<Object>> {
     return index;
   }
 
+  default int index(Field field) {
+    int index = -1, i = 0;
+    for (Field header : headers()) {
+      if (header.equals(field)) {
+        index = i;
+        break;
+      }
+      i++;
+    }
+    if (index < 0) {
+      throw new IllegalArgumentException("no field named " + field);
+    }
+    return index;
+  }
+
   /**
    * Returns the number of rows in the table.
    *

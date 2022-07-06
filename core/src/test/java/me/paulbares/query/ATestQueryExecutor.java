@@ -20,7 +20,7 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestQueryEngine {
+public abstract class ATestQueryExecutor {
 
   public static final String REPO_URL = "https://raw.githubusercontent.com/paulbares/aitm-assets/main/metrics-test.json";
 
@@ -93,12 +93,14 @@ public abstract class ATestQueryEngine {
     QueryDto query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("*", "count");
+            .withMeasure(new CountMeasure());
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("base", 3l),
             List.of("s1", 3l),
             List.of("s2", 3l));
+    Assertions.assertThat(result.headers().stream().map(Field::name))
+            .containsExactly(SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
   }
 
   @Test

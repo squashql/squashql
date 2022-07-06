@@ -68,7 +68,8 @@ public final class SingleValueConditionDto implements ConditionDto {
 
   @Override
   public String toString() {
-    return "SingleValueConditionDto{" +
+    return getClass().getSimpleName() +
+            '{' +
             "type='" + this.type + '\'' +
             ", value=" + this.value +
             '}';
