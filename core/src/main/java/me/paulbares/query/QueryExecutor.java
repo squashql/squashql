@@ -36,9 +36,6 @@ public class QueryExecutor {
 
   public Table execute(QueryDto query) {
     resolveMeasures(query);
-    List<String> finalColumns = new ArrayList<>();
-    query.columnSets.values().forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
-    query.columns.forEach(finalColumns::add);
 
     Set<String> cols = new HashSet<>();
     query.columns.forEach(cols::add);
@@ -89,6 +86,14 @@ public class QueryExecutor {
 
     plan.execute(new ExecutionContext(prefetchResult, query));
 
+    return buildFinalResult(query, prefetchResult);
+  }
+
+  private ColumnarTable buildFinalResult(QueryDto query, Table prefetchResult) {
+    List<String> finalColumns = new ArrayList<>();
+    query.columnSets.values().forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
+    query.columns.forEach(finalColumns::add);
+
     // Once complete, construct the final result with columns in correct order.
     List<Field> fields = new ArrayList<>();
     List<List<Object>> values = new ArrayList<>();
@@ -97,14 +102,13 @@ public class QueryExecutor {
       values.add(Objects.requireNonNull(prefetchResult.getColumnValues(finalColumn)));
     }
 
-    List<Measure> measures = new ArrayList<>(query.measures);
     for (Measure measure : query.measures) {
       fields.add(prefetchResult.getField(measure));
       values.add(Objects.requireNonNull(prefetchResult.getAggregateValues(measure)));
     }
 
     return new ColumnarTable(fields,
-            measures,
+            query.measures,
             IntStream.range(finalColumns.size(), fields.size()).toArray(),
             IntStream.range(0, finalColumns.size()).toArray(),
             values);
