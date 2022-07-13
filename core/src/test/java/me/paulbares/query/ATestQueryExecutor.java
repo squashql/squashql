@@ -93,7 +93,7 @@ public abstract class ATestQueryExecutor {
     QueryDto query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .withMeasure(new CountMeasure());
+            .withMeasure(CountMeasure.INSTANCE);
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("base", 3l),

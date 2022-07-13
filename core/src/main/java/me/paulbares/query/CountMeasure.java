@@ -12,7 +12,7 @@ public class CountMeasure extends AggregatedMeasure {
   /**
    * Default const.
    */
-  public CountMeasure() {
+  private CountMeasure() {
     super(field, aggregationFunction);
     this.alias = ALIAS;
   }
