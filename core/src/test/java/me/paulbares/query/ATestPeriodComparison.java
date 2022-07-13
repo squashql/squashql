@@ -8,9 +8,7 @@ import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -22,6 +20,7 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public abstract class ATestPeriodComparison {
 
   protected Datastore datastore;
@@ -97,6 +96,7 @@ public abstract class ATestPeriodComparison {
   }
 
   @Test
+  @Order(1)
   void testCompareQuarterCurrentWithSamePreviousYear() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
@@ -132,6 +132,7 @@ public abstract class ATestPeriodComparison {
   }
 
   @Test
+  @Order(2)
   void testCompareQuarterCurrentWithPrevious() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
@@ -168,6 +169,7 @@ public abstract class ATestPeriodComparison {
   }
 
   @Test
+  @Order(3)
   void testCompareYearCurrentWithPrevious() {
     Period.Year period = new Period.Year("year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
@@ -195,6 +197,7 @@ public abstract class ATestPeriodComparison {
   }
 
   @Test
+  @Order(4)
   void testCompareMonthCurrentWithPrevious() {
     // Recreate table
     beforeLoading(this.datastore.storesByName().values().iterator().next().fields().stream().filter(f -> !f.name().equals(Datastore.SCENARIO_FIELD_NAME)).toList());
