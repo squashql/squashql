@@ -65,8 +65,10 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     public boolean test(Object[] row) {
       int yearIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.YEAR, -1);
       int quarterIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.QUARTER, -1);
+      int monthIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.MONTH, -1);
       Object yearTransformation = this.transformationByPeriodUnit.get(PeriodUnit.YEAR);
       Object quarterTransformation = this.transformationByPeriodUnit.get(PeriodUnit.QUARTER);
+      Object monthTransformation = this.transformationByPeriodUnit.get(PeriodUnit.MONTH);
       if (this.period instanceof Period.Quarter) {
         // YEAR, QUARTER
         int year = readAsLong(row[yearIndex]);
@@ -92,6 +94,23 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
             row[yearIndex] = year + (int) yearTransformation;
           }
         }
+      } else if (this.period instanceof Period.Month) {
+        // YEAR, MONTH
+        int year = readAsLong(row[yearIndex]);
+        if (this.referencePosition.containsKey(PeriodUnit.YEAR)) {
+          if (yearTransformation != null) {
+            row[yearIndex] = year + (int) yearTransformation;
+          }
+        }
+        if (this.referencePosition.containsKey(PeriodUnit.MONTH)) {
+          int month = readAsLong(row[monthIndex]);
+          if (monthTransformation != null) {
+            LocalDate newDate = LocalDate.of((Integer) row[yearIndex], month, 1)
+                    .plusMonths((int) monthTransformation);
+            row[monthIndex] = newDate.getMonthValue();
+            row[yearIndex] = newDate.getYear(); // year might have changed
+          }
+        }
       } else {
         throw new RuntimeException(this.period + " not supported yet");
       }
@@ -107,6 +126,8 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
         return new PeriodUnit[]{PeriodUnit.YEAR, PeriodUnit.QUARTER};
       } else if (period instanceof Period.Year) {
         return new PeriodUnit[]{PeriodUnit.YEAR};
+      } else if (period instanceof Period.Month) {
+        return new PeriodUnit[]{PeriodUnit.YEAR, PeriodUnit.MONTH};
       } else {
         throw new RuntimeException(period + " not supported yet");
       }

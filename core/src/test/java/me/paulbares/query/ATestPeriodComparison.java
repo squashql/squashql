@@ -193,4 +193,41 @@ public abstract class ATestPeriodComparison {
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), "myMeasure", "sum(sales)");
   }
+
+  @Test
+  void testCompareMonthCurrentWithPrevious() {
+    // Recreate table
+    beforeLoading(this.datastore.storesByName().values().iterator().next().fields().stream().filter(f -> !f.name().equals(Datastore.SCENARIO_FIELD_NAME)).toList());
+    // Reload data with less rows
+    this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
+            new Object[]{"bottle", "drink", 20d, 10, 2022, 4, 12, LocalDate.of(2022, 12, 1)},
+            new Object[]{"bottle", "drink", 20d, 10, 2022, 4, 12, LocalDate.of(2022, 12, 3)},
+            new Object[]{"bottle", "drink", 15d, 5, 2023, 1, 1, LocalDate.of(2023, 1, 1)},
+            new Object[]{"bottle", "drink", 30d, 5, 2023, 1, 2, LocalDate.of(2023, 2, 1)}));
+
+    Period.Month period = new Period.Month("month_sales", "year_sales");
+    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    ComparisonMeasure m = QueryBuilder.periodComparison(
+            "myMeasure",
+            ABSOLUTE_DIFFERENCE,
+            sales,
+            Map.of(period.month(), "m-1", period.year(), "y"));
+    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
+
+    var query = new QueryDto()
+            .table(this.storeName)
+            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumnSet(QueryDto.PERIOD, periodCS)
+            .withMeasure(m)
+            .withMeasure(sales);
+
+    Table finalTable = this.executor.execute(query);
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            Arrays.asList(2022, 12, "base", null, 40d),
+            Arrays.asList(2023, 1, "base", -25d, 15d),
+            Arrays.asList(2023, 2, "base", 15d, 30d));
+    Assertions
+            .assertThat(finalTable.headers().stream().map(Field::name))
+            .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.month(), "myMeasure", "sum(sales)");
+  }
 }
