@@ -8,9 +8,7 @@ import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -22,6 +20,7 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public abstract class ATestPeriodComparison {
 
   protected Datastore datastore;
@@ -97,6 +96,7 @@ public abstract class ATestPeriodComparison {
   }
 
   @Test
+  @Order(1)
   void testCompareQuarterCurrentWithSamePreviousYear() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
@@ -132,6 +132,7 @@ public abstract class ATestPeriodComparison {
   }
 
   @Test
+  @Order(2)
   void testCompareQuarterCurrentWithPrevious() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
@@ -168,6 +169,7 @@ public abstract class ATestPeriodComparison {
   }
 
   @Test
+  @Order(3)
   void testCompareYearCurrentWithPrevious() {
     Period.Year period = new Period.Year("year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
@@ -192,5 +194,43 @@ public abstract class ATestPeriodComparison {
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), "myMeasure", "sum(sales)");
+  }
+
+  @Test
+  @Order(4)
+  void testCompareMonthCurrentWithPrevious() {
+    // Recreate table
+    beforeLoading(this.datastore.storesByName().values().iterator().next().fields().stream().filter(f -> !f.name().equals(Datastore.SCENARIO_FIELD_NAME)).toList());
+    // Reload data with less rows
+    this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
+            new Object[]{"bottle", "drink", 20d, 10, 2022, 4, 12, LocalDate.of(2022, 12, 1)},
+            new Object[]{"bottle", "drink", 20d, 10, 2022, 4, 12, LocalDate.of(2022, 12, 3)},
+            new Object[]{"bottle", "drink", 15d, 5, 2023, 1, 1, LocalDate.of(2023, 1, 1)},
+            new Object[]{"bottle", "drink", 30d, 5, 2023, 1, 2, LocalDate.of(2023, 2, 1)}));
+
+    Period.Month period = new Period.Month("month_sales", "year_sales");
+    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    ComparisonMeasure m = QueryBuilder.periodComparison(
+            "myMeasure",
+            ABSOLUTE_DIFFERENCE,
+            sales,
+            Map.of(period.month(), "m-1", period.year(), "y"));
+    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
+
+    var query = new QueryDto()
+            .table(this.storeName)
+            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumnSet(QueryDto.PERIOD, periodCS)
+            .withMeasure(m)
+            .withMeasure(sales);
+
+    Table finalTable = this.executor.execute(query);
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            Arrays.asList(2022, 12, "base", null, 40d),
+            Arrays.asList(2023, 1, "base", -25d, 15d),
+            Arrays.asList(2023, 2, "base", 15d, 30d));
+    Assertions
+            .assertThat(finalTable.headers().stream().map(Field::name))
+            .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.month(), "myMeasure", "sum(sales)");
   }
 }

@@ -8,8 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static me.paulbares.query.PeriodUnit.QUARTER;
-import static me.paulbares.query.PeriodUnit.YEAR;
+import static me.paulbares.query.PeriodUnit.*;
 
 public class PeriodColumnSetDto implements ColumnSet {
 
@@ -39,6 +38,8 @@ public class PeriodColumnSetDto implements ColumnSet {
       return List.of(q.year(), q.quarter());
     } else if (period instanceof Period.Year y) {
       return List.of(y.year());
+    } else if (period instanceof Period.Month m) {
+      return List.of(m.year(), m.month());
     } else {
       throw new RuntimeException(period + " not supported yet");
     }
@@ -49,6 +50,8 @@ public class PeriodColumnSetDto implements ColumnSet {
       return Map.of(q.quarter(), QUARTER, q.year(), YEAR);
     } else if (this.period instanceof Period.Year y) {
       return Map.of(y.year(), YEAR);
+    } else if (this.period instanceof Period.Month m) {
+      return Map.of(m.month(), MONTH, m.year(), YEAR);
     } else {
       throw new RuntimeException(this.period + " not supported yet");
     }
@@ -67,6 +70,8 @@ public class PeriodColumnSetDto implements ColumnSet {
       return List.of(new Field(q.year(), int.class), new Field(q.quarter(), int.class));
     } else if (period instanceof Period.Year y) {
       return List.of(new Field(y.year(), String.class));
+    } else if (period instanceof Period.Month m) {
+      return List.of(new Field(m.year(), int.class), new Field(m.month(), int.class));
     } else {
       throw new RuntimeException(period + " not supported yet");
     }
