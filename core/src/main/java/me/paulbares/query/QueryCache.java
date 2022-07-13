@@ -1,11 +1,7 @@
-package me.paulbares;
+package me.paulbares.query;
 
 import com.google.common.cache.AbstractCache;
 import com.google.common.cache.CacheStats;
-import me.paulbares.query.ColumnarTable;
-import me.paulbares.query.CountMeasure;
-import me.paulbares.query.Measure;
-import me.paulbares.query.Table;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Field;
@@ -20,6 +16,7 @@ public class QueryCache {
   private final Map<QueryScope, Map<Field, List<Object>>> cache = new ConcurrentHashMap<>();
   private final Map<Measure, Field> fieldByMeasure = new ConcurrentHashMap<>();
 
+  // Statistics
   static final Supplier<AbstractCache.SimpleStatsCounter> CACHE_STATS_COUNTER = () -> new AbstractCache.SimpleStatsCounter();
   private volatile AbstractCache.SimpleStatsCounter counter = CACHE_STATS_COUNTER.get();
 

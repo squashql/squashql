@@ -45,5 +45,4 @@ public class HttpClientQuerier {
     @RequestLine("GET " + SparkQueryController.MAPPING_METADATA)
     Map<Object, Object> metadata();
   }
-
 }

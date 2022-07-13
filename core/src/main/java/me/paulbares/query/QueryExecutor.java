@@ -3,7 +3,6 @@ package me.paulbares.query;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.graph.Graph;
-import me.paulbares.QueryCache;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.Repository;
@@ -57,7 +56,6 @@ public class QueryExecutor {
       if (this.queryCache.contains(leaf, scope)) {
         cached.add(leaf);
       } else {
-        prefetchQuery.withMeasure(leaf);
         notCached.add(leaf);
       }
     }
@@ -66,9 +64,9 @@ public class QueryExecutor {
     if (!notCached.isEmpty()) {
       if (!plan.getLeaves().contains(CountMeasure.INSTANCE)) {
         // Always add count
-        prefetchQuery.withMeasure(CountMeasure.INSTANCE);
         notCached.add(CountMeasure.INSTANCE);
       }
+      notCached.forEach(prefetchQuery::withMeasure);
       prefetchResult = this.queryEngine.execute(prefetchQuery);
     } else {
       // Create an empty result that will be populated by the query cache

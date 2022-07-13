@@ -1,7 +1,6 @@
 package me.paulbares.query;
 
 import com.google.common.cache.CacheStats;
-import me.paulbares.QueryCache;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.QueryDto;
