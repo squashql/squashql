@@ -40,6 +40,8 @@ public class PeriodColumnSetDto implements ColumnSet {
       return List.of(y.year());
     } else if (period instanceof Period.Month m) {
       return List.of(m.year(), m.month());
+    } else if (period instanceof Period.Semester s) {
+      return List.of(s.year(), s.semester());
     } else {
       throw new RuntimeException(period + " not supported yet");
     }
@@ -52,6 +54,8 @@ public class PeriodColumnSetDto implements ColumnSet {
       return Map.of(y.year(), YEAR);
     } else if (this.period instanceof Period.Month m) {
       return Map.of(m.month(), MONTH, m.year(), YEAR);
+    } else if (this.period instanceof Period.Semester s) {
+      return Map.of(s.semester(), SEMESTER, s.year(), YEAR);
     } else {
       throw new RuntimeException(this.period + " not supported yet");
     }
@@ -72,6 +76,8 @@ public class PeriodColumnSetDto implements ColumnSet {
       return List.of(new Field(y.year(), String.class));
     } else if (period instanceof Period.Month m) {
       return List.of(new Field(m.year(), int.class), new Field(m.month(), int.class));
+    } else if (period instanceof Period.Semester s) {
+      return List.of(new Field(s.year(), int.class), new Field(s.semester(), int.class));
     } else {
       throw new RuntimeException(period + " not supported yet");
     }

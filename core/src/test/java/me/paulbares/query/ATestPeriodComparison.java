@@ -46,6 +46,7 @@ public abstract class ATestPeriodComparison {
     Field sales = new Field("sales", double.class);
     Field qty = new Field("quantity", long.class);
     Field year = new Field("year_sales", int.class);
+    Field semester = new Field("semester_sales", int.class);
     Field quarter = new Field("quarter_sales", int.class);
     Field month = new Field("month_sales", int.class);
     Field date = new Field("date_sales", LocalDate.class);
@@ -55,40 +56,40 @@ public abstract class ATestPeriodComparison {
     this.executor = new QueryExecutor(this.queryEngine);
     this.tm = createTransactionManager();
 
-    beforeLoading(List.of(ean, category, sales, qty, year, quarter, month, date));
+    beforeLoading(List.of(ean, category, sales, qty, year, semester, quarter, month, date));
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             // 2022
-            new Object[]{"bottle", "drink", 20d, 10, 2022, 1, 1, LocalDate.of(2022, 1, 1)},
-            new Object[]{"bottle", "drink", 10d, 5, 2022, 2, 4, LocalDate.of(2022, 4, 1)},
-            new Object[]{"bottle", "drink", 20d, 10, 2022, 3, 8, LocalDate.of(2022, 8, 1)},
-            new Object[]{"bottle", "drink", 10d, 5, 2022, 4, 12, LocalDate.of(2022, 12, 1)},
+            new Object[]{"bottle", "drink", 20d, 10, 2022, 1, 1, 1, LocalDate.of(2022, 1, 1)},
+            new Object[]{"bottle", "drink", 10d, 5, 2022, 1, 2, 4, LocalDate.of(2022, 4, 1)},
+            new Object[]{"bottle", "drink", 20d, 10, 2022, 2, 3, 8, LocalDate.of(2022, 8, 1)},
+            new Object[]{"bottle", "drink", 10d, 5, 2022, 2, 4, 12, LocalDate.of(2022, 12, 1)},
 
-            new Object[]{"cookie", "food", 60d, 20, 2022, 1, 2, LocalDate.of(2022, 2, 1)},
-            new Object[]{"cookie", "food", 30d, 10, 2022, 2, 5, LocalDate.of(2022, 5, 1)},
-            new Object[]{"cookie", "food", 15d, 5, 2022, 3, 9, LocalDate.of(2022, 9, 1)},
-            new Object[]{"cookie", "food", 15d, 5, 2022, 4, 11, LocalDate.of(2022, 11, 1)},
+            new Object[]{"cookie", "food", 60d, 20, 2022, 1, 1, 2, LocalDate.of(2022, 2, 1)},
+            new Object[]{"cookie", "food", 30d, 10, 2022, 1, 2, 5, LocalDate.of(2022, 5, 1)},
+            new Object[]{"cookie", "food", 15d, 5, 2022, 2, 3, 9, LocalDate.of(2022, 9, 1)},
+            new Object[]{"cookie", "food", 15d, 5, 2022, 2, 4, 11, LocalDate.of(2022, 11, 1)},
 
-            new Object[]{"shirt", "cloth", 20d, 2, 2022, 1, 3, LocalDate.of(2022, 3, 1)},
-            new Object[]{"shirt", "cloth", 40d, 4, 2022, 2, 6, LocalDate.of(2022, 6, 1)},
-            new Object[]{"shirt", "cloth", 50d, 5, 2022, 3, 7, LocalDate.of(2022, 7, 1)},
-            new Object[]{"shirt", "cloth", 10d, 1, 2022, 4, 10, LocalDate.of(2022, 10, 1)},
+            new Object[]{"shirt", "cloth", 20d, 2, 2022, 1, 1, 3, LocalDate.of(2022, 3, 1)},
+            new Object[]{"shirt", "cloth", 40d, 4, 2022, 1, 2, 6, LocalDate.of(2022, 6, 1)},
+            new Object[]{"shirt", "cloth", 50d, 5, 2022, 2, 3, 7, LocalDate.of(2022, 7, 1)},
+            new Object[]{"shirt", "cloth", 10d, 1, 2022, 2, 4, 10, LocalDate.of(2022, 10, 1)},
 
             // 2023 (same data but 2023)
-            new Object[]{"bottle", "drink", 20d, 10, 2023, 1, 1, LocalDate.of(2023, 1, 1)},
-            new Object[]{"bottle", "drink", 10d, 5, 2023, 2, 4, LocalDate.of(2023, 4, 1)},
-            new Object[]{"bottle", "drink", 20d, 10, 2023, 3, 8, LocalDate.of(2023, 8, 1)},
-            new Object[]{"bottle", "drink", 10d, 5, 2023, 4, 12, LocalDate.of(2023, 12, 1)},
+            new Object[]{"bottle", "drink", 20d, 10, 2023, 1, 1, 1, LocalDate.of(2023, 1, 1)},
+            new Object[]{"bottle", "drink", 10d, 5, 2023, 1, 2, 4, LocalDate.of(2023, 4, 1)},
+            new Object[]{"bottle", "drink", 20d, 10, 2023, 2, 3, 8, LocalDate.of(2023, 8, 1)},
+            new Object[]{"bottle", "drink", 10d, 5, 2023, 2, 4, 12, LocalDate.of(2023, 12, 1)},
 
-            new Object[]{"cookie", "food", 60d, 20, 2023, 1, 2, LocalDate.of(2023, 2, 1)},
-            new Object[]{"cookie", "food", 30d, 10, 2023, 2, 5, LocalDate.of(2023, 5, 1)},
-            new Object[]{"cookie", "food", 15d, 5, 2023, 3, 9, LocalDate.of(2023, 9, 1)},
-            new Object[]{"cookie", "food", 15d, 5, 2023, 4, 11, LocalDate.of(2023, 11, 1)},
+            new Object[]{"cookie", "food", 60d, 20, 2023, 1, 1, 2, LocalDate.of(2023, 2, 1)},
+            new Object[]{"cookie", "food", 30d, 10, 2023, 1, 2, 5, LocalDate.of(2023, 5, 1)},
+            new Object[]{"cookie", "food", 15d, 5, 2023, 2, 3, 9, LocalDate.of(2023, 9, 1)},
+            new Object[]{"cookie", "food", 15d, 5, 2023, 2, 4, 11, LocalDate.of(2023, 11, 1)},
 
-            new Object[]{"shirt", "cloth", 20d, 2, 2023, 1, 3, LocalDate.of(2023, 3, 1)},
-            new Object[]{"shirt", "cloth", 40d, 4, 2023, 2, 6, LocalDate.of(2023, 6, 1)},
-            new Object[]{"shirt", "cloth", 50d, 5, 2023, 3, 7, LocalDate.of(2023, 7, 1)},
-            new Object[]{"shirt", "cloth", 10d, 1, 2023, 4, 10, LocalDate.of(2023, 10, 1)}
+            new Object[]{"shirt", "cloth", 20d, 2, 2023, 1, 1, 3, LocalDate.of(2023, 3, 1)},
+            new Object[]{"shirt", "cloth", 40d, 4, 2023, 1, 2, 6, LocalDate.of(2023, 6, 1)},
+            new Object[]{"shirt", "cloth", 50d, 5, 2023, 2, 3, 7, LocalDate.of(2023, 7, 1)},
+            new Object[]{"shirt", "cloth", 10d, 1, 2023, 2, 4, 10, LocalDate.of(2023, 10, 1)}
     ));
   }
 
@@ -198,15 +199,45 @@ public abstract class ATestPeriodComparison {
 
   @Test
   @Order(4)
+  void testCompareSemesterCurrentWithPrevious() {
+    Period.Semester period = new Period.Semester("semester_sales", "year_sales");
+    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    ComparisonMeasure m = QueryBuilder.periodComparison(
+            "myMeasure",
+            ABSOLUTE_DIFFERENCE,
+            sales,
+            Map.of(period.semester(), "s-1", period.year(), "y"));
+    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
+
+    var query = new QueryDto()
+            .table(this.storeName)
+            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumnSet(QueryDto.PERIOD, periodCS)
+            .withMeasure(m)
+            .withMeasure(sales);
+
+    Table finalTable = this.executor.execute(query);
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            Arrays.asList(2022, 1, "base", null, 180d),
+            Arrays.asList(2022, 2, "base", -60d, 120d),
+            Arrays.asList(2023, 1, "base", 60d, 180d),
+            Arrays.asList(2023, 2, "base", -60d, 120d));
+    Assertions
+            .assertThat(finalTable.headers().stream().map(Field::name))
+            .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.semester(), "myMeasure", "sum(sales)");
+  }
+
+  @Test
+  @Order(Integer.MAX_VALUE) // Last because the data is changed
   void testCompareMonthCurrentWithPrevious() {
     // Recreate table
     beforeLoading(this.datastore.storesByName().values().iterator().next().fields().stream().filter(f -> !f.name().equals(Datastore.SCENARIO_FIELD_NAME)).toList());
     // Reload data with less rows
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
-            new Object[]{"bottle", "drink", 20d, 10, 2022, 4, 12, LocalDate.of(2022, 12, 1)},
-            new Object[]{"bottle", "drink", 20d, 10, 2022, 4, 12, LocalDate.of(2022, 12, 3)},
-            new Object[]{"bottle", "drink", 15d, 5, 2023, 1, 1, LocalDate.of(2023, 1, 1)},
-            new Object[]{"bottle", "drink", 30d, 5, 2023, 1, 2, LocalDate.of(2023, 2, 1)}));
+            new Object[]{"bottle", "drink", 20d, 10, 2022, 2, 4, 12, LocalDate.of(2022, 12, 1)},
+            new Object[]{"bottle", "drink", 20d, 10, 2022, 2, 4, 12, LocalDate.of(2022, 12, 3)},
+            new Object[]{"bottle", "drink", 15d, 5, 2023, 1, 1, 1, LocalDate.of(2023, 1, 1)},
+            new Object[]{"bottle", "drink", 30d, 5, 2023, 1, 1, 2, LocalDate.of(2023, 2, 1)}));
 
     Period.Month period = new Period.Month("month_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");

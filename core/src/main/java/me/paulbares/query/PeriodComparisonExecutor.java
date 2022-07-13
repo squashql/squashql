@@ -64,9 +64,11 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     @Override
     public boolean test(Object[] row) {
       int yearIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.YEAR, -1);
+      int semesterIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.SEMESTER, -1);
       int quarterIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.QUARTER, -1);
       int monthIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.MONTH, -1);
       Object yearTransformation = this.transformationByPeriodUnit.get(PeriodUnit.YEAR);
+      Object semesterTransformation = this.transformationByPeriodUnit.get(PeriodUnit.SEMESTER);
       Object quarterTransformation = this.transformationByPeriodUnit.get(PeriodUnit.QUARTER);
       Object monthTransformation = this.transformationByPeriodUnit.get(PeriodUnit.MONTH);
       if (this.period instanceof Period.Quarter) {
@@ -111,6 +113,23 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
             row[yearIndex] = newDate.getYear(); // year might have changed
           }
         }
+      }  else if (this.period instanceof Period.Semester) {
+        // YEAR, SEMESTER
+        int year = readAsLong(row[yearIndex]);
+        if (this.referencePosition.containsKey(PeriodUnit.YEAR)) {
+          if (yearTransformation != null) {
+            row[yearIndex] = year + (int) yearTransformation;
+          }
+        }
+        if (this.referencePosition.containsKey(PeriodUnit.SEMESTER)) {
+          int semester = readAsLong(row[semesterIndex]);
+          if (semesterTransformation != null) {
+            LocalDate d = LocalDate.of((Integer) row[yearIndex], semester * 6, 1);
+            LocalDate newDate = d.plusMonths(((int) semesterTransformation) * 6);
+            row[semesterIndex] = newDate.getMonthValue() / 6;
+            row[yearIndex] = newDate.getYear(); // year might have changed
+          }
+        }
       } else {
         throw new RuntimeException(this.period + " not supported yet");
       }
@@ -128,6 +147,8 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
         return new PeriodUnit[]{PeriodUnit.YEAR};
       } else if (period instanceof Period.Month) {
         return new PeriodUnit[]{PeriodUnit.YEAR, PeriodUnit.MONTH};
+      } else if (period instanceof Period.Semester) {
+        return new PeriodUnit[]{PeriodUnit.YEAR, PeriodUnit.SEMESTER};
       } else {
         throw new RuntimeException(period + " not supported yet");
       }
