@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.Repository;
 import me.paulbares.query.context.Totals;
+import me.paulbares.query.context.QueryCacheContextValue;
 
 import java.io.IOException;
 
@@ -18,6 +19,8 @@ public class ContextValueDeserializer extends JsonDeserializer<ContextValue> {
       return new Totals(treeNode.get("position").asText());
     } else if (Repository.KEY.equals(p.currentName())) {
       return new Repository(treeNode.get("url").asText());
+    } else if (QueryCacheContextValue.KEY.equals(p.currentName())) {
+      return new QueryCacheContextValue(QueryCacheContextValue.Action.valueOf(treeNode.get("action").asText()));
     } else {
       throw new IllegalArgumentException("current: " + p.currentName() + "; " + treeNode.toString());
     }

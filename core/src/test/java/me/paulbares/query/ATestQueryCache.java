@@ -2,6 +2,7 @@ package me.paulbares.query;
 
 import com.google.common.cache.CacheStats;
 import me.paulbares.query.agg.AggregationFunction;
+import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
@@ -25,7 +26,7 @@ public abstract class ATestQueryCache {
   protected Datastore datastore;
 
   protected QueryExecutor queryExecutor;
-  protected QueryCache queryCache;
+  protected CaffeineQueryCache queryCache;
 
   protected TransactionManager tm;
 
@@ -51,7 +52,7 @@ public abstract class ATestQueryCache {
     this.datastore = createDatastore();
     QueryEngine queryEngine = createQueryEngine(this.datastore);
     this.queryExecutor = new QueryExecutor(queryEngine);
-    this.queryCache = this.queryExecutor.queryCache;
+    this.queryCache = this.queryExecutor.caffeineCache;
     this.tm = createTransactionManager();
 
     beforeLoading(List.of(ean, category, price, qty), List.of(comp_ean, comp_name, comp_price));
@@ -92,7 +93,7 @@ public abstract class ATestQueryCache {
     assertCacheStats(0, 3);
 
     // Execute the same
-    this.queryExecutor.execute(query);
+    result = this.queryExecutor.execute(query);
     assertCacheStats(3, 3);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
 
@@ -187,6 +188,33 @@ public abstract class ATestQueryCache {
             List.of("cloth", 10d),
             List.of("food", 3d));
     assertCacheStats(0, 4);
+  }
+
+  @Test
+  void testUseCacheContextValue() {
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
+            .aggregatedMeasure("price", AggregationFunction.SUM);
+    Table result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15d));
+    assertCacheStats(0, 2);
+
+    // Execute the same
+    result = this.queryExecutor.execute(query.context(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.NOT_USE)));
+    // No cache so no hitCount, no missCount changes
+    assertCacheStats(0, 2);
+    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15d));
+
+    query.context(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE));
+    result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15d));
+    assertCacheStats(2, 2);
+
+    query.context(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.INVALIDATE));
+    // Invalidate should empty the cache and fill it with new values.
+    result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15d));
+    assertCacheStats(0, 2);
   }
 
   private void assertCacheStats(int hitCount, int missCount) {

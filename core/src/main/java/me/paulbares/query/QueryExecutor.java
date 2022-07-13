@@ -6,6 +6,7 @@ import com.google.common.graph.Graph;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.Repository;
+import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
@@ -26,11 +27,22 @@ import static me.paulbares.query.dto.QueryDto.PERIOD;
 public class QueryExecutor {
 
   public final QueryEngine queryEngine;
-  public final QueryCache queryCache;
+  public final CaffeineQueryCache caffeineCache;
 
   public QueryExecutor(QueryEngine queryEngine) {
     this.queryEngine = queryEngine;
-    this.queryCache = new QueryCache();
+    this.caffeineCache = new CaffeineQueryCache();
+  }
+
+  private QueryCache getQueryCache(QueryCacheContextValue queryCacheContextValue) {
+    return switch (queryCacheContextValue.action) {
+      case USE -> this.caffeineCache;
+      case NOT_USE -> EmptyQueryCache.INSTANCE;
+      case INVALIDATE -> {
+        this.caffeineCache.clear();
+        yield this.caffeineCache;
+      }
+    };
   }
 
   public Table execute(QueryDto query) {
@@ -47,13 +59,14 @@ public class QueryExecutor {
     ExecutionPlan<Measure, ExecutionContext> plan = createExecutionPlan(query);
 
     Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
-    QueryCache.QueryScope scope = new QueryCache.QueryScope(query.table, cols.stream().map(fieldSupplier).collect(Collectors.toSet()), query.conditions);
+    CaffeineQueryCache.QueryScope scope = new CaffeineQueryCache.QueryScope(query.table, cols.stream().map(fieldSupplier).collect(Collectors.toSet()), query.conditions);
+    QueryCache queryCache = getQueryCache((QueryCacheContextValue) query.context.getOrDefault(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE)));
 
     // Finish to prepare the query
     Set<Measure> cached = new HashSet<>();
     Set<Measure> notCached = new HashSet<>();
     for (Measure leaf : plan.getLeaves()) {
-      if (this.queryCache.contains(leaf, scope)) {
+      if (queryCache.contains(leaf, scope)) {
         cached.add(leaf);
       } else {
         notCached.add(leaf);
@@ -70,11 +83,11 @@ public class QueryExecutor {
       prefetchResult = this.queryEngine.execute(prefetchQuery);
     } else {
       // Create an empty result that will be populated by the query cache
-      prefetchResult = this.queryCache.createRawResult(scope);
+      prefetchResult = queryCache.createRawResult(scope);
     }
 
-    this.queryCache.contributeToResult(prefetchResult, cached, scope);
-    this.queryCache.contributeToCache(prefetchResult, notCached, scope);
+    queryCache.contributeToResult(prefetchResult, cached, scope);
+    queryCache.contributeToCache(prefetchResult, notCached, scope);
 
     if (query.columnSets.containsKey(BUCKET)) {
       // Apply this as it modifies the "shape" of the result
