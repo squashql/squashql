@@ -9,6 +9,7 @@ import me.paulbares.query.dto.QueryDto;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -16,7 +17,7 @@ import static me.paulbares.query.QueryBuilder.*;
 
 public class TestSaasQuery {
 
-  String credendialsPath = null; // FIXME
+  String credendialsPath = "/Users/paul/dev/canvas-landing-355413-eb118aab8b19.json"; // FIXME
   String projectId = "canvas-landing-355413";
   String datasetName = "business_planning";
 
@@ -57,7 +58,16 @@ public class TestSaasQuery {
     BigQueryEngine engine = new BigQueryEngine(new BigQueryDatastore(BigQueryUtil.createCredentials(this.credendialsPath), this.projectId, this.datasetName));
 
     QueryExecutor executor = new QueryExecutor(engine);
-    Table execute = executor.execute(query);
-    execute.show();
+    execute(() -> executor.execute(query));
+    System.out.println(executor.caffeineCache.stats());
+    execute(() -> executor.execute(query));
+    System.out.println(executor.caffeineCache.stats());
+    execute(() -> executor.execute(query));
+  }
+
+  void execute(Runnable runnable) {
+    long start = System.nanoTime();
+    runnable.run();
+    System.out.println("Execution time: " + Duration.ofNanos(System.nanoTime() - start).toMillis() + " ms");
   }
 }
