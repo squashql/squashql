@@ -40,7 +40,7 @@ public class HttpClientQuerierTest {
     String url = "http://127.0.0.1:" + this.port;
 
     var querier = new HttpClientQuerier(url);
-    SparkQueryControllerTest.assertMetadataResult(querier.metadata(), false);
+    QueryControllerTest.assertMetadataResult(querier.metadata(), false);
   }
 
   @Test
@@ -55,7 +55,7 @@ public class HttpClientQuerierTest {
             .aggregatedMeasure("quantity", "sum");
 
     SimpleTable table = querier.run(query);
-    SparkQueryControllerTest.assertQuery(table,false);
+    QueryControllerTest.assertQuery(table,false);
   }
 
   @Test
