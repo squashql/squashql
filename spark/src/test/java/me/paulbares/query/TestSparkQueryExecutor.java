@@ -10,7 +10,7 @@ import me.paulbares.transaction.TransactionManager;
 
 import java.util.List;
 
-public class TestSparkQueryEngine extends ATestQueryEngine {
+public class TestSparkQueryExecutor extends ATestQueryExecutor {
 
   @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {

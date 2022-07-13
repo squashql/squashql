@@ -6,6 +6,7 @@ import com.google.common.graph.Graph;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.Repository;
+import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
@@ -17,6 +18,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static me.paulbares.query.dto.QueryDto.BUCKET;
@@ -25,18 +27,28 @@ import static me.paulbares.query.dto.QueryDto.PERIOD;
 public class QueryExecutor {
 
   public final QueryEngine queryEngine;
+  public final CaffeineQueryCache caffeineCache;
 
   public QueryExecutor(QueryEngine queryEngine) {
     this.queryEngine = queryEngine;
+    this.caffeineCache = new CaffeineQueryCache();
+  }
+
+  private QueryCache getQueryCache(QueryCacheContextValue queryCacheContextValue) {
+    return switch (queryCacheContextValue.action) {
+      case USE -> this.caffeineCache;
+      case NOT_USE -> EmptyQueryCache.INSTANCE;
+      case INVALIDATE -> {
+        this.caffeineCache.clear();
+        yield this.caffeineCache;
+      }
+    };
   }
 
   public Table execute(QueryDto query) {
     resolveMeasures(query);
-    List<String> finalColumns = new ArrayList<>();
-    query.columnSets.values().forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
-    query.columns.forEach(finalColumns::add);
 
-    List<String> cols = new ArrayList<>();
+    Set<String> cols = new HashSet<>();
     query.columns.forEach(cols::add);
     query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).forEach(cols::add);
     DatabaseQuery prefetchQuery = new DatabaseQuery().table(query.table);
@@ -46,10 +58,36 @@ public class QueryExecutor {
     // Create plan
     ExecutionPlan<Measure, ExecutionContext> plan = createExecutionPlan(query);
 
-    // Finish to prepare the query
-    plan.getLeaves().forEach(prefetchQuery::withMeasure);
+    Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
+    CaffeineQueryCache.QueryScope scope = new CaffeineQueryCache.QueryScope(query.table, cols.stream().map(fieldSupplier).collect(Collectors.toSet()), query.conditions);
+    QueryCache queryCache = getQueryCache((QueryCacheContextValue) query.context.getOrDefault(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE)));
 
-    Table prefetchResult = this.queryEngine.execute(prefetchQuery);
+    // Finish to prepare the query
+    Set<Measure> cached = new HashSet<>();
+    Set<Measure> notCached = new HashSet<>();
+    for (Measure leaf : plan.getLeaves()) {
+      if (queryCache.contains(leaf, scope)) {
+        cached.add(leaf);
+      } else {
+        notCached.add(leaf);
+      }
+    }
+
+    Table prefetchResult;
+    if (!notCached.isEmpty()) {
+      if (!plan.getLeaves().contains(CountMeasure.INSTANCE)) {
+        // Always add count
+        notCached.add(CountMeasure.INSTANCE);
+      }
+      notCached.forEach(prefetchQuery::withMeasure);
+      prefetchResult = this.queryEngine.execute(prefetchQuery);
+    } else {
+      // Create an empty result that will be populated by the query cache
+      prefetchResult = queryCache.createRawResult(scope);
+    }
+
+    queryCache.contributeToResult(prefetchResult, cached, scope);
+    queryCache.contributeToCache(prefetchResult, notCached, scope);
 
     if (query.columnSets.containsKey(BUCKET)) {
       // Apply this as it modifies the "shape" of the result
@@ -59,6 +97,14 @@ public class QueryExecutor {
 
     plan.execute(new ExecutionContext(prefetchResult, query));
 
+    return buildFinalResult(query, prefetchResult);
+  }
+
+  private ColumnarTable buildFinalResult(QueryDto query, Table prefetchResult) {
+    List<String> finalColumns = new ArrayList<>();
+    query.columnSets.values().forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
+    query.columns.forEach(finalColumns::add);
+
     // Once complete, construct the final result with columns in correct order.
     List<Field> fields = new ArrayList<>();
     List<List<Object>> values = new ArrayList<>();
@@ -67,14 +113,13 @@ public class QueryExecutor {
       values.add(Objects.requireNonNull(prefetchResult.getColumnValues(finalColumn)));
     }
 
-    List<Measure> measures = new ArrayList<>(query.measures);
     for (Measure measure : query.measures) {
       fields.add(prefetchResult.getField(measure));
       values.add(Objects.requireNonNull(prefetchResult.getAggregateValues(measure)));
     }
 
     return new ColumnarTable(fields,
-            measures,
+            query.measures,
             IntStream.range(finalColumns.size(), fields.size()).toArray(),
             IntStream.range(0, finalColumns.size()).toArray(),
             values);

@@ -34,6 +34,11 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   }
 
   @Override
+  public Function<String, Field> getFieldSupplier() {
+    return this.fieldSupplier;
+  }
+
+  @Override
   public T datastore() {
     return this.datastore;
   }

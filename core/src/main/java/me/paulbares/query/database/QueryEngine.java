@@ -2,6 +2,9 @@ package me.paulbares.query.database;
 
 import me.paulbares.query.Table;
 import me.paulbares.store.Datastore;
+import me.paulbares.store.Field;
+
+import java.util.function.Function;
 
 public interface QueryEngine<T extends Datastore> {
 
@@ -11,4 +14,6 @@ public interface QueryEngine<T extends Datastore> {
   Table execute(DatabaseQuery query);
 
   T datastore();
+
+  Function<String, Field> getFieldSupplier();
 }

@@ -2,6 +2,7 @@ package me.paulbares.jackson;
 
 import me.paulbares.query.*;
 import me.paulbares.query.context.Totals;
+import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.dto.*;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ public class TestQueryS13n {
             .expressionMeasure("alias1", "firstMyExpression")
             .expressionMeasure("alias2", "secondMyExpression")
             .withMeasure(new BinaryOperationMeasure("plus1", BinaryOperator.PLUS, new AggregatedMeasure("price", "sum"), new AggregatedMeasure("price", "sum")))
+            .context(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.NOT_USE))
             .context(Totals.KEY, BOTTOM);
 
     String serialize = query.json();

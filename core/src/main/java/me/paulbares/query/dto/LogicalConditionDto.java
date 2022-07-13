@@ -9,10 +9,14 @@ public final class LogicalConditionDto implements ConditionDto {
 
   public ConditionType type; // AND OR
 
-  /** The first sub-condition */
+  /**
+   * The first sub-condition
+   */
   public ConditionDto one;
 
-  /** The second sub-condition */
+  /**
+   * The second sub-condition
+   */
   public ConditionDto two;
 
   /**
@@ -50,7 +54,8 @@ public final class LogicalConditionDto implements ConditionDto {
 
   @Override
   public String toString() {
-    return "LogicalConditionDto{" +
+    return getClass().getSimpleName() +
+            '{' +
             "type='" + this.type + '\'' +
             ", one=" + this.one +
             ", two=" + this.two +

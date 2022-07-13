@@ -17,7 +17,7 @@ import java.util.List;
 import static me.paulbares.query.TestUtils.createClickHouseContainer;
 import static me.paulbares.query.TestUtils.jdbcUrl;
 
-public class TestClickHouseQueryEngine extends ATestQueryEngine {
+public class TestClickHouseQueryCache extends ATestQueryCache {
 
   @Container
   public GenericContainer container = createClickHouseContainer();
@@ -35,9 +35,10 @@ public class TestClickHouseQueryEngine extends ATestQueryEngine {
   }
 
   @Override
-  protected void beforeLoading(List<Field> fields) {
+  protected void beforeLoading(List<Field> baseStoreFields, List<Field> targetStoreFields) {
     ClickHouseTransactionManager tm = (ClickHouseTransactionManager) this.tm;
-    tm.dropAndCreateInMemoryTable(this.storeName, fields);
+    tm.dropAndCreateInMemoryTable(this.storeName, baseStoreFields);
+    tm.dropAndCreateInMemoryTable("competitor", targetStoreFields);
   }
 
   @Override
