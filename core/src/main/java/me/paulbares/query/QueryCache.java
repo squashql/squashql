@@ -13,8 +13,7 @@ import java.util.stream.IntStream;
 
 public class QueryCache {
 
-  private final Map<QueryScope, Map<Field, List<Object>>> cache = new ConcurrentHashMap<>();
-  private final Map<Measure, Field> fieldByMeasure = new ConcurrentHashMap<>();
+  private final Map<QueryScope, Table> results = new ConcurrentHashMap<>();
 
   // Statistics
   static final Supplier<AbstractCache.SimpleStatsCounter> CACHE_STATS_COUNTER = () -> new AbstractCache.SimpleStatsCounter();
@@ -23,55 +22,56 @@ public class QueryCache {
   public ColumnarTable createRawResult(QueryScope scope) {
     List<Field> headers = new ArrayList<>(scope.columns);
     headers.add(new Field(CountMeasure.ALIAS, long.class));
-    List<List<Object>> values = new ArrayList<>();
 
-    int size = headers.size();
-    for (int i = 0; i < size; i++) {
-      Map<Field, List<Object>> valuesByField = this.cache.get(scope);
-      assert valuesByField != null;
-      List<Object> v = valuesByField.get(headers.get(i));
-      assert v != null;
-      values.add(v);
+    List<List<Object>> values = new ArrayList<>();
+    Table table = this.results.get(scope);
+    for (Field f : scope.columns) {
+      values.add(table.getColumnValues(f.name()));
     }
+    values.add(table.getAggregateValues(CountMeasure.INSTANCE));
     this.counter.recordHits(1);
     return new ColumnarTable(
             headers,
             Collections.singletonList(CountMeasure.INSTANCE),
-            new int[]{size - 1},
-            IntStream.range(0, size - 1).toArray(),
+            new int[]{headers.size() - 1},
+            IntStream.range(0, headers.size() - 1).toArray(),
             values);
   }
 
   public boolean contains(Measure measure, QueryScope scope) {
-    Map<Field, List<Object>> valuesByField = this.cache.get(scope);
-    if (valuesByField != null) {
-      Field field = this.fieldByMeasure.get(measure);
-      return field != null && valuesByField.containsKey(field);
+    Table table = this.results.get(scope);
+    if (table != null) {
+      return table.measures().indexOf(measure) >= 0;
     }
     return false;
   }
 
   public void contributeToCache(Table result, Set<Measure> measures, QueryScope scope) {
-    this.cache.compute(scope, (k, v) -> {
-      Map<Field, List<Object>> points = v == null ? new HashMap<>() : v;
-      for (Field column : scope.columns()) {
-        List<Object> values = result.getColumn(result.index(column));
-        points.put(column, values);
+    this.results.compute(scope, (k, previousResult) -> {
+      if (previousResult == null) {
+        this.counter.recordMisses(measures.size());
+        return result;
+      } else {
+        for (Measure measure : measures) {
+          if (previousResult.measures().indexOf(measure) < 0) {
+            // Not in the previousResult, add it.
+            List<Object> aggregateValues = result.getAggregateValues(measure);
+            Field field = result.getField(measure);
+            previousResult.addAggregates(field, measure, aggregateValues);
+            this.counter.recordMisses(1);
+          }
+        }
+        return previousResult;
       }
-      for (Measure measure : measures) {
-        Field field = result.getField(measure);
-        points.put(result.getField(measure), result.getAggregateValues(measure));
-        this.fieldByMeasure.put(measure, field);
-        this.counter.recordMisses(1);
-      }
-      return points;
     });
   }
 
   public void contributeToResult(Table result, Set<Measure> measures, QueryScope scope) {
+    Table cacheResult = this.results.get(scope);
     for (Measure measure : measures) {
-      Field field = this.fieldByMeasure.get(measure);
-      result.addAggregates(field, measure, this.cache.get(scope).get(field));
+      List<Object> aggregateValues = cacheResult.getAggregateValues(measure);
+      Field field = cacheResult.getField(measure);
+      result.addAggregates(field, measure, aggregateValues);
       this.counter.recordHits(1);
     }
   }
@@ -81,8 +81,7 @@ public class QueryCache {
   }
 
   public void clear() {
-    this.fieldByMeasure.clear();
-    this.cache.clear();
+    this.results.clear();
     this.counter = CACHE_STATS_COUNTER.get();
   }
 
