@@ -1,19 +1,27 @@
 package me.paulbares.query;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.cache.AbstractCache;
 import com.google.common.cache.CacheStats;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Field;
 
+import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 public class QueryCache {
 
-  private final Map<QueryScope, Table> results = new ConcurrentHashMap<>();
+  /**
+   * The cached results.
+   */
+  private final Cache<QueryScope, Table> results = Caffeine.newBuilder()
+          .maximumSize(32)
+          .expireAfterWrite(Duration.ofMinutes(5))
+          .build();
 
   // Statistics
   static final Supplier<AbstractCache.SimpleStatsCounter> CACHE_STATS_COUNTER = () -> new AbstractCache.SimpleStatsCounter();
@@ -24,7 +32,7 @@ public class QueryCache {
     headers.add(new Field(CountMeasure.ALIAS, long.class));
 
     List<List<Object>> values = new ArrayList<>();
-    Table table = this.results.get(scope);
+    Table table = this.results.getIfPresent(scope);
     for (Field f : scope.columns) {
       values.add(table.getColumnValues(f.name()));
     }
@@ -39,7 +47,7 @@ public class QueryCache {
   }
 
   public boolean contains(Measure measure, QueryScope scope) {
-    Table table = this.results.get(scope);
+    Table table = this.results.getIfPresent(scope);
     if (table != null) {
       return table.measures().indexOf(measure) >= 0;
     }
@@ -47,27 +55,27 @@ public class QueryCache {
   }
 
   public void contributeToCache(Table result, Set<Measure> measures, QueryScope scope) {
-    this.results.compute(scope, (k, previousResult) -> {
-      if (previousResult == null) {
-        this.counter.recordMisses(measures.size());
-        return result;
-      } else {
-        for (Measure measure : measures) {
-          if (previousResult.measures().indexOf(measure) < 0) {
-            // Not in the previousResult, add it.
-            List<Object> aggregateValues = result.getAggregateValues(measure);
-            Field field = result.getField(measure);
-            previousResult.addAggregates(field, measure, aggregateValues);
-            this.counter.recordMisses(1);
-          }
-        }
-        return previousResult;
-      }
+    Table cache = this.results.get(scope, s -> {
+      this.counter.recordMisses(measures.size());
+      return result;
     });
+
+    for (Measure measure : measures) {
+      if (cache.measures().indexOf(measure) < 0) {
+        // Not in the previousResult, add it.
+        List<Object> aggregateValues = result.getAggregateValues(measure);
+        Field field = result.getField(measure);
+        cache.addAggregates(field, measure, aggregateValues);
+        this.counter.recordMisses(1);
+      }
+    }
   }
 
   public void contributeToResult(Table result, Set<Measure> measures, QueryScope scope) {
-    Table cacheResult = this.results.get(scope);
+    if (measures.isEmpty()) {
+      return;
+    }
+    Table cacheResult = this.results.getIfPresent(scope);
     for (Measure measure : measures) {
       List<Object> aggregateValues = cacheResult.getAggregateValues(measure);
       Field field = cacheResult.getField(measure);
@@ -81,7 +89,7 @@ public class QueryCache {
   }
 
   public void clear() {
-    this.results.clear();
+    this.results.invalidateAll();
     this.counter = CACHE_STATS_COUNTER.get();
   }
 

@@ -26,6 +26,7 @@
     <feign.version>11.6</feign.version>
     <testcontainers.version>1.16.3</testcontainers.version>
     <guava.version>31.1-jre</guava.version>
+    <caffeine.version>3.1.1</caffeine.version>
     <mockito.version>4.6.1</mockito.version>
   </properties>
 
@@ -125,6 +126,11 @@
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
         <version>${guava.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.ben-manes.caffeine</groupId>
+        <artifactId>caffeine</artifactId>
+        <version>${caffeine.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
