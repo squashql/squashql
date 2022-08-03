@@ -15,7 +15,7 @@ public class ColumnarTable implements Table {
   protected int[] measureIndices;
 
   protected final Supplier<ObjectArrayDictionary> pointDictionary;
-  private final List<List<Object>> values;
+  protected final List<List<Object>> values;
 
   public ColumnarTable(List<Field> headers,
                        List<Measure> measures,

@@ -5,8 +5,8 @@ import com.google.common.base.Suppliers;
 import com.google.common.graph.Graph;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.ContextValue;
-import me.paulbares.query.context.Repository;
 import me.paulbares.query.context.QueryCacheContextValue;
+import me.paulbares.query.context.Repository;
 import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
@@ -74,7 +74,7 @@ public class QueryExecutor {
     }
 
     Table prefetchResult;
-    if (!notCached.isEmpty()) {
+    if (!notCached.isEmpty() || (cached.isEmpty() && notCached.isEmpty())) {
       if (!plan.getLeaves().contains(CountMeasure.INSTANCE)) {
         // Always add count
         notCached.add(CountMeasure.INSTANCE);
@@ -97,7 +97,8 @@ public class QueryExecutor {
 
     plan.execute(new ExecutionContext(prefetchResult, query));
 
-    return buildFinalResult(query, prefetchResult);
+    ColumnarTable columnarTable = buildFinalResult(query, prefetchResult);
+    return TableUtils.order(columnarTable, query.comparators);
   }
 
   private ColumnarTable buildFinalResult(QueryDto query, Table prefetchResult) {

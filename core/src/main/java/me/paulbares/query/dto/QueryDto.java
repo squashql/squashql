@@ -6,8 +6,11 @@ import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.jackson.deserializer.ContextValueDeserializer;
 import me.paulbares.query.*;
 import me.paulbares.query.context.ContextValue;
+import me.paulbares.util.CustomExplicitOrdering;
 
 import java.util.*;
+
+import static me.paulbares.query.dto.OrderDto.DESC;
 
 public class QueryDto {
 
@@ -23,6 +26,8 @@ public class QueryDto {
   public List<Measure> measures = new ArrayList<>();
 
   public Map<String, ConditionDto> conditions = new HashMap<>();
+
+  public Map<String, Comparator<?>> comparators = new HashMap<>();
 
   @JsonDeserialize(contentUsing = ContextValueDeserializer.class)
   public Map<String, ContextValue> context = new HashMap<>();
@@ -85,6 +90,17 @@ public class QueryDto {
 
   public QueryDto withCondition(String field, ConditionDto conditionDto) {
     this.conditions.put(field, conditionDto);
+    return this;
+  }
+
+  public QueryDto orderBy(String column, OrderDto orderDto) {
+    Comparator<?> comp = Comparator.naturalOrder();
+    this.comparators.put(column, orderDto == DESC ? comp.reversed() : comp);
+    return this;
+  }
+
+  public QueryDto orderBy(String column, List<?> firstElements) {
+    this.comparators.put(column, new CustomExplicitOrdering(firstElements));
     return this;
   }
 
