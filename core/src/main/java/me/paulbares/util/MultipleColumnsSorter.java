@@ -1,6 +1,5 @@
 package me.paulbares.util;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -39,13 +38,5 @@ public class MultipleColumnsSorter {
     public boolean equals(Integer x, Integer y) {
       return compare(x, y) == 0;
     }
-  }
-
-  static List<Object> reorder(List<?> list, int[] order) {
-    List<Object> ordered = new ArrayList<>(list);
-    for (int i = 0; i < list.size(); i++) {
-      ordered.set(i, list.get(order[i]));
-    }
-    return ordered;
   }
 }

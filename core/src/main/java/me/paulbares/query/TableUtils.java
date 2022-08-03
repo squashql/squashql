@@ -1,9 +1,9 @@
 package me.paulbares.query;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import me.paulbares.store.Field;
+import me.paulbares.util.MultipleColumnsSorter;
+
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -78,5 +78,32 @@ public class TableUtils {
     }
     sb.append(line);
     return sb.toString();
+  }
+
+  public static Table order(ColumnarTable table, Map<String, Comparator<?>> comparatorByColumnName) {
+    List<List<?>> args = new ArrayList<>();
+    List<Comparator<?>> comparators = new ArrayList<>();
+    for (Field header : table.headers) {
+      args.add(table.getColumnValues(header.name()));
+      Comparator<?> queryComp = comparatorByColumnName.get(header.name());
+      // Always order table. If not defined, use natural order comp.
+      comparators.add(queryComp == null ? Comparator.naturalOrder() : queryComp);
+    }
+    int[] finalIndices = MultipleColumnsSorter.sort(args, comparators);
+
+    List<List<Object>> values = new ArrayList<>();
+    for (List<Object> value : table.values) {
+      values.add(reorder(value, finalIndices));
+    }
+
+    return new ColumnarTable(table.headers, table.measures, table.measureIndices, table.columnsIndices, values);
+  }
+
+  public static List<Object> reorder(List<?> list, int[] order) {
+    List<Object> ordered = new ArrayList<>(list);
+    for (int i = 0; i < list.size(); i++) {
+      ordered.set(i, list.get(order[i]));
+    }
+    return ordered;
   }
 }

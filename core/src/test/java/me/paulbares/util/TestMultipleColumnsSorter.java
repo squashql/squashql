@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import static me.paulbares.util.MultipleColumnsSorter.reorder;
+import static me.paulbares.query.TableUtils.reorder;
 
 public class TestMultipleColumnsSorter {
 
