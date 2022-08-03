@@ -265,7 +265,14 @@ public abstract class ATestQueryExecutor {
             List.of("s2", "cloth", 1l));
 
     List<String> elements = List.of("s2", MAIN_SCENARIO_NAME, "s1");
-//    query.orderBy(SCENARIO_FIELD_NAME, elements);
+    query.orderBy(SCENARIO_FIELD_NAME, elements);
     result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactlyInAnyOrder(
+            List.of("s2", "drink", 1l),
+            List.of("s2", "cloth", 1l),
+            List.of(MAIN_SCENARIO_NAME, "drink", 1l),
+            List.of(MAIN_SCENARIO_NAME, "cloth", 1l),
+            List.of("s1", "drink", 1l),
+            List.of("s1", "cloth", 1l));
   }
 }

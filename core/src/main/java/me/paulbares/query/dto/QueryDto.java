@@ -99,13 +99,8 @@ public class QueryDto {
     return this;
   }
 
-  public QueryDto orderBy(String column, List<Comparable<Object>> firstElements) {
-    this.comparators.put(column, new CustomExplicitOrdering<>(firstElements));
-    return this;
-  }
-
-  public QueryDto orderBy2(String column, List<Comparable<?>> firstElements) {
-    this.comparators.put(column, new CustomExplicitOrdering<>(firstElements));
+  public QueryDto orderBy(String column, List<?> firstElements) {
+    this.comparators.put(column, new CustomExplicitOrdering(firstElements));
     return this;
   }
 
