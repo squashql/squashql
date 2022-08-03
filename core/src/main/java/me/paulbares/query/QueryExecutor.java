@@ -13,6 +13,7 @@ import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
+import me.paulbares.util.MultipleColumnsSorter;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -74,7 +75,7 @@ public class QueryExecutor {
     }
 
     Table prefetchResult;
-    if (!notCached.isEmpty()) {
+    if (!notCached.isEmpty() || (cached.isEmpty() && notCached.isEmpty())) {
       if (!plan.getLeaves().contains(CountMeasure.INSTANCE)) {
         // Always add count
         notCached.add(CountMeasure.INSTANCE);
@@ -97,7 +98,8 @@ public class QueryExecutor {
 
     plan.execute(new ExecutionContext(prefetchResult, query));
 
-    return buildFinalResult(query, prefetchResult);
+    ColumnarTable columnarTable = buildFinalResult(query, prefetchResult);
+    return order(columnarTable, query);
   }
 
   private ColumnarTable buildFinalResult(QueryDto query, Table prefetchResult) {
@@ -123,6 +125,33 @@ public class QueryExecutor {
             IntStream.range(finalColumns.size(), fields.size()).toArray(),
             IntStream.range(0, finalColumns.size()).toArray(),
             values);
+  }
+
+  public static Table order(ColumnarTable table, QueryDto queryDto) {
+    List<List<?>> args = new ArrayList<>();
+    List<Comparator<?>> comparators = new ArrayList<>();
+    for (Field header : table.headers) {
+      args.add(table.getColumnValues(header.name()));
+      Comparator<?> queryComp = queryDto.comparators.get(header.name());
+      // Always order table. If not defined, use natural order comp.
+      comparators.add(queryComp == null ? Comparator.naturalOrder() : queryComp);
+    }
+    int[] finalIndices = MultipleColumnsSorter.sort(args, comparators);
+
+    List<List<Object>> values = new ArrayList<>();
+    for (List<Object> value : table.values) {
+      values.add(reorder(value, finalIndices));
+    }
+
+    return new ColumnarTable(table.headers, table.measures, table.measureIndices, table.columnsIndices, values);
+  }
+
+  static List<Object> reorder(List<?> list, int[] order) {
+    List<Object> ordered = new ArrayList<>(list);
+    for (int i = 0; i < list.size(); i++) {
+      ordered.set(i, list.get(order[i]));
+    }
+    return ordered;
   }
 
   private ExecutionPlan<Measure, ExecutionContext> createExecutionPlan(QueryDto query) {
