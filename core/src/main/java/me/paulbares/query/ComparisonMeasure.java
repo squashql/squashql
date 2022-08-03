@@ -1,6 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.database.QueryRewriter;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 
 import java.util.Map;
@@ -43,6 +44,20 @@ public class ComparisonMeasure implements Measure {
   @Override
   public String alias() {
     return this.alias;
+  }
+
+  @Override
+  public String expression() {
+    String alias = this.measure.alias();
+    if (this.columnSet.equals(QueryDto.PERIOD)) {
+      String formula = this.method.expressionGenerator.apply(alias + "(current period)", alias + "(reference period)");
+      return formula + ", reference = " + this.referencePosition;
+    } else if (this.columnSet.equals(QueryDto.BUCKET)) {
+      String formula = this.method.expressionGenerator.apply(alias + "(current bucket)", alias + "(reference bucket)");
+      return formula + ", reference = " + this.referencePosition;
+    } else {
+      return "unknown";
+    }
   }
 
   @Override

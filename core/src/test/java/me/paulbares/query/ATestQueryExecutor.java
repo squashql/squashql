@@ -17,6 +17,7 @@ import org.junit.jupiter.api.TestInstance;
 import java.util.List;
 import java.util.Map;
 
+import static me.paulbares.query.TableUtils.*;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -179,6 +180,13 @@ public abstract class ATestQueryExecutor {
             List.of(MAIN_SCENARIO_NAME, 15d, 33),
             List.of("s1", 17d, 33),
             List.of("s2", 14.5d, 33));
+
+    List<Map<String, Object>> metadata = TableUtils.buildTableMetadata(table);
+    Assertions.assertThat(metadata)
+                    .containsExactly(
+                            Map.of(NAME_KEY, SCENARIO_FIELD_NAME, TYPE_KEY, "string"),
+                            Map.of(NAME_KEY, "sum(price)", TYPE_KEY, "double", EXPRESSION_KEY, "sum(price)"),
+                            Map.of(NAME_KEY, "sum(quantity)", TYPE_KEY, "long", EXPRESSION_KEY, "sum(quantity)"));
   }
 
   @Test

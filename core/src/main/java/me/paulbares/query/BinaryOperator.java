@@ -1,8 +1,14 @@
 package me.paulbares.query;
 
 public enum BinaryOperator {
-  PLUS,
-  MINUS,
-  MULTIPLY,
-  DIVIDE;
+  PLUS("+"),
+  MINUS("-"),
+  MULTIPLY("*"),
+  DIVIDE("/");
+
+  public final String infix;
+
+  BinaryOperator(String infix) {
+    this.infix = infix;
+  }
 }
