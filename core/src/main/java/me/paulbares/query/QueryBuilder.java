@@ -27,6 +27,10 @@ public class QueryBuilder {
     return new AggregatedMeasure(field, aggregationFunction);
   }
 
+  public static AggregatedMeasure sum(String field) {
+    return new AggregatedMeasure(field, AggregationFunction.SUM);
+  }
+
   public static TableDto table(String name) {
     return new TableDto(name);
   }
@@ -111,6 +115,13 @@ public class QueryBuilder {
             measure,
             QueryDto.BUCKET,
             referencePosition);
+  }
+
+  public static ComparisonMeasure parentComparison(String alias,
+                                                   ComparisonMethod method,
+                                                   Measure measure,
+                                                   List<String> ancestors) {
+    return null;
   }
 
   public static Measure divide(String alias, Measure a, Measure b) {
