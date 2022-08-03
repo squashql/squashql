@@ -93,6 +93,11 @@ public class TableUtils {
         comparators.add(queryComp == null ? Comparator.naturalOrder() : queryComp);
       }
     }
+
+    if (args.isEmpty()) {
+      return table;
+    }
+
     int[] finalIndices = MultipleColumnsSorter.sort(args, comparators);
 
     List<List<Object>> values = new ArrayList<>();
