@@ -56,7 +56,7 @@ public class ComparisonMeasure implements Measure {
       String formula = this.method.expressionGenerator.apply(alias + "(current bucket)", alias + "(reference bucket)");
       return formula + ", reference = " + this.referencePosition;
     } else {
-      return "";
+      return "unknown";
     }
   }
 

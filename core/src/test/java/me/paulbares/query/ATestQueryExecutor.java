@@ -184,9 +184,9 @@ public abstract class ATestQueryExecutor {
     List<Map<String, Object>> metadata = TableUtils.buildTableMetadata(table);
     Assertions.assertThat(metadata)
                     .containsExactly(
-                            Map.of(NAME_KEY, SCENARIO_FIELD_NAME, TYPE_KEY, String.class),
-                            Map.of(NAME_KEY, "sum(price)", TYPE_KEY, double.class, EXPRESSION_KEY, "sum(price)"),
-                            Map.of(NAME_KEY, "sum(quantity)", TYPE_KEY, long.class, EXPRESSION_KEY, "sum(quantity)"));
+                            Map.of(NAME_KEY, SCENARIO_FIELD_NAME, TYPE_KEY, "string"),
+                            Map.of(NAME_KEY, "sum(price)", TYPE_KEY, "double", EXPRESSION_KEY, "sum(price)"),
+                            Map.of(NAME_KEY, "sum(quantity)", TYPE_KEY, "long", EXPRESSION_KEY, "sum(quantity)"));
   }
 
   @Test
