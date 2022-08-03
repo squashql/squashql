@@ -27,7 +27,7 @@ public class HttpClientQuerier {
     this.url = url;
   }
 
-  public SimpleTable run(QueryDto query) {
+  public Object run(QueryDto query) {
     QueryApi target = builder.target(QueryApi.class, this.url);
     return target.run(query);
   }
@@ -40,7 +40,7 @@ public class HttpClientQuerier {
   interface QueryApi {
     @RequestLine("POST " + QueryController.MAPPING_QUERY)
     @Headers("Content-Type: application/json")
-    SimpleTable run(QueryDto query);
+    Object run(QueryDto query);
 
     @RequestLine("GET " + QueryController.MAPPING_METADATA)
     Map<Object, Object> metadata();

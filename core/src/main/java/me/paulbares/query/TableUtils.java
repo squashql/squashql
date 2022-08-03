@@ -9,6 +9,10 @@ import java.util.stream.Stream;
 
 public class TableUtils {
 
+  public static final String NAME_KEY = "name";
+  public static final String TYPE_KEY = "type";
+  public static final String EXPRESSION_KEY = "expression";
+
   public static String toString(List<? extends Object> columns,
                                 Iterable<List<Object>> rows,
                                 Function<Object, String> columnElementPrinters,
@@ -78,6 +82,24 @@ public class TableUtils {
     }
     sb.append(line);
     return sb.toString();
+  }
+
+  public static List<Map<String, Object>> buildTableMetadata(Table t) {
+    List<Map<String, Object>> metadata = new ArrayList<>();
+    for (Field field : t.headers()) {
+      Map<String, Object> fieldMetadata = new HashMap<>();
+      fieldMetadata.put(NAME_KEY, field.name());
+      fieldMetadata.put(TYPE_KEY, field.type().getSimpleName().toLowerCase());
+      metadata.add(fieldMetadata);
+    }
+
+    int index = 0;
+    for (int i : t.measureIndices()) {
+      Measure m = t.measures().get(index);
+      metadata.get(i).put(EXPRESSION_KEY, m.expression());
+      index++;
+    }
+    return metadata;
   }
 
   public static Table order(ColumnarTable table, Map<String, Comparator<?>> comparatorByColumnName) {
