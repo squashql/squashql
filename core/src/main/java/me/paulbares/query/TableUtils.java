@@ -1,6 +1,5 @@
 package me.paulbares.query;
 
-import me.paulbares.store.Field;
 import me.paulbares.util.MultipleColumnsSorter;
 
 import java.util.*;
@@ -83,11 +82,16 @@ public class TableUtils {
   public static Table order(ColumnarTable table, Map<String, Comparator<?>> comparatorByColumnName) {
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
-    for (Field header : table.headers) {
-      args.add(table.getColumnValues(header.name()));
-      Comparator<?> queryComp = comparatorByColumnName.get(header.name());
-      // Always order table. If not defined, use natural order comp.
-      comparators.add(queryComp == null ? Comparator.naturalOrder() : queryComp);
+
+    for (int i = 0; i < table.headers.size(); i++) {
+      boolean isColumn = Arrays.binarySearch(table.columnsIndices, i) >= 0;
+      String headerName = table.headers.get(i).name();
+      Comparator<?> queryComp = comparatorByColumnName.get(headerName);
+      if (isColumn || queryComp != null) {
+        args.add(table.getColumnValues(headerName));
+        // Always order table. If not defined, use natural order comp.
+        comparators.add(queryComp == null ? Comparator.naturalOrder() : queryComp);
+      }
     }
     int[] finalIndices = MultipleColumnsSorter.sort(args, comparators);
 
