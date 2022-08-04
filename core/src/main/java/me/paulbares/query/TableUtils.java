@@ -1,5 +1,6 @@
 package me.paulbares.query;
 
+import me.paulbares.store.Field;
 import me.paulbares.util.MultipleColumnsSorter;
 
 import java.util.*;
@@ -84,16 +85,17 @@ public class TableUtils {
     List<Comparator<?>> comparators = new ArrayList<>();
 
     boolean hasComparatorOnMeasure = false;
-    for (int i = 0; i < table.headers.size(); i++) {
+    List<Field> headers = table.headers;
+    for (int i = 0; i < headers.size(); i++) {
       boolean isMeasure = Arrays.binarySearch(table.measureIndices, i) >= 0;
       if (isMeasure) {
-        hasComparatorOnMeasure |= comparatorByColumnName.containsKey(table.headers.get(i).name());
+        hasComparatorOnMeasure |= comparatorByColumnName.containsKey(headers.get(i).name());
       }
     }
 
-    for (int i = 0; i < table.headers.size(); i++) {
+    for (int i = 0; i < headers.size(); i++) {
       boolean isColumn = Arrays.binarySearch(table.columnsIndices, i) >= 0;
-      String headerName = table.headers.get(i).name();
+      String headerName = headers.get(i).name();
       Comparator<?> queryComp = comparatorByColumnName.get(headerName);
       // Order a column even if not explicitly asked in the query only if no comparator on any measure
       if (queryComp != null || (isColumn && !hasComparatorOnMeasure)) {
@@ -114,7 +116,7 @@ public class TableUtils {
       values.add(reorder(value, finalIndices));
     }
 
-    return new ColumnarTable(table.headers, table.measures, table.measureIndices, table.columnsIndices, values);
+    return new ColumnarTable(headers, table.measures, table.measureIndices, table.columnsIndices, values);
   }
 
   public static List<Object> reorder(List<?> list, int[] order) {
