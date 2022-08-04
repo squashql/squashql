@@ -87,8 +87,7 @@ public class TableUtils {
     for (int i = 0; i < table.headers.size(); i++) {
       boolean isMeasure = Arrays.binarySearch(table.measureIndices, i) >= 0;
       if (isMeasure) {
-        String headerName = table.headers.get(i).name();
-        hasComparatorOnMeasure |= comparatorByColumnName.containsKey(headerName);
+        hasComparatorOnMeasure |= comparatorByColumnName.containsKey(table.headers.get(i).name());
       }
     }
 
@@ -96,8 +95,8 @@ public class TableUtils {
       boolean isColumn = Arrays.binarySearch(table.columnsIndices, i) >= 0;
       String headerName = table.headers.get(i).name();
       Comparator<?> queryComp = comparatorByColumnName.get(headerName);
-      // Order a column even if no explicitly asked in the query only if no comparator on any measure
-      if (isColumn && !hasComparatorOnMeasure || queryComp != null) {
+      // Order a column even if not explicitly asked in the query only if no comparator on any measure
+      if (queryComp != null || (isColumn && !hasComparatorOnMeasure)) {
         args.add(table.getColumnValues(headerName));
         // Always order table. If not defined, use natural order comp.
         comparators.add(queryComp == null ? Comparator.naturalOrder() : queryComp);
