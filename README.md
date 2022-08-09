@@ -499,15 +499,17 @@ Example of a 2 conditions. The first one on the scenarios (single equal conditio
 
 ## JShell
 
-To interactively interact with the server and execute queries, one can use jshell. To do that, compile the project with the jshell profile `mvn clean install -Pjshell` and launch jshell by running the executable and adding the required jar to the class-path. For instance:
+To interactively interact with the server and execute queries, one can use jshell. To do that, compile the module 
+`http-client` with the jshell profile `mvn clean install -DskipTests -Pjshell` and launch jshell by running the 
+executable and adding the required jar to the class-path.
 
 ```
-/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/jshell --class-path ~/.m2/repository/me/paulbares/aitm-server/0.1-SNAPSHOT/aitm-server-0.1-SNAPSHOT.jar
+$JAVA_HOME/bin/jshell --class-path target/http-client-0.1-SNAPSHOT.jar
 ```
 
 And then (can be saved in a file):
 ```jshelllanguage
-import me.paulbares.client.*
+import me.paulbares.client.http.*
 import static me.paulbares.query.QueryBuilder.*
 
 var querier = new HttpClientQuerier("http://localhost:8080")
