@@ -36,6 +36,7 @@
     <module>clickhouse</module>
     <module>spark</module>
     <module>server</module>
+    <module>http-client</module>
   </modules>
 
   <dependencyManagement>

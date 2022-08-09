@@ -2,35 +2,26 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-
   <parent>
-    <groupId>me.paulbares</groupId>
     <artifactId>aitm-parent</artifactId>
+    <groupId>me.paulbares</groupId>
     <version>0.1-SNAPSHOT</version>
   </parent>
+  <modelVersion>4.0.0</modelVersion>
 
-  <groupId>me.paulbares</groupId>
-  <artifactId>aitm-server</artifactId>
-  <version>0.1-SNAPSHOT</version>
-  <packaging>jar</packaging>
+  <artifactId>http-client</artifactId>
+
+  <properties>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
 
   <dependencies>
     <dependency>
       <groupId>me.paulbares</groupId>
       <artifactId>aitm-core</artifactId>
       <version>0.1-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>me.paulbares</groupId>
-      <artifactId>aitm-spark</artifactId>
-      <version>0.1-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -42,7 +33,31 @@
       <artifactId>spring-boot-starter-web</artifactId>
       <version>${spring-boot.version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-okhttp</artifactId>
+      <version>${feign.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-jackson</artifactId>
+      <version>${feign.version}</version>
+    </dependency>
 
+    <!-- TEST-->
+    <dependency>
+      <groupId>me.paulbares</groupId>
+      <artifactId>aitm-server</artifactId>
+      <version>0.1-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>me.paulbares</groupId>
+      <artifactId>aitm-server</artifactId>
+      <version>0.1-SNAPSHOT</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
@@ -75,46 +90,33 @@
     </dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>${maven-jar-plugin.version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>test-jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
-
   <profiles>
     <profile>
-      <id>spring-boot</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
+      <id>jshell</id>
       <build>
         <plugins>
           <plugin>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-maven-plugin</artifactId>
-            <version>${spring-boot.version}</version>
-            <configuration>
-              <mainClass>me.paulbares.AitmApplication</mainClass>
-              <jvmArguments>
-                --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
-              </jvmArguments>
-            </configuration>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>${maven-shade-plugin.version}</version>
             <executions>
               <execution>
+                <phase>package</phase>
                 <goals>
-                  <goal>repackage</goal>
+                  <goal>shade</goal>
                 </goals>
+                <configuration>
+                  <filters>
+                    <filter>
+                      <artifact>*:*</artifact>
+                      <excludes>
+                        <exclude>META-INF/*.SF</exclude>
+                        <exclude>META-INF/*.DSA</exclude>
+                        <exclude>META-INF/*.RSA</exclude>
+                      </excludes>
+                    </filter>
+                  </filters>
+                </configuration>
               </execution>
             </executions>
           </plugin>
@@ -122,4 +124,5 @@
       </build>
     </profile>
   </profiles>
+
 </project>
