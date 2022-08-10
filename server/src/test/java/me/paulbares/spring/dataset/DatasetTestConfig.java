@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Bean;
 public class DatasetTestConfig {
 
   @Bean
-//  @Primary
   public SparkQueryEngine queryEngine() {
     return new SparkQueryEngine(DataLoader.createTestDatastoreWithData());
   }
