@@ -1,6 +1,9 @@
 package me.paulbares.query.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.jackson.deserializer.ContextValueDeserializer;
 import me.paulbares.jackson.deserializer.OrderDtoDeserializer;
@@ -9,6 +12,9 @@ import me.paulbares.query.context.ContextValue;
 
 import java.util.*;
 
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor // For Jackson
 public class QueryDto {
 
   public static final String BUCKET = "bucket";
@@ -29,12 +35,6 @@ public class QueryDto {
 
   @JsonDeserialize(contentUsing = ContextValueDeserializer.class)
   public Map<String, ContextValue> context = new HashMap<>();
-
-  /**
-   * For Jackson.
-   */
-  public QueryDto() {
-  }
 
   public QueryDto withColumn(String column) {
     this.columns.add(column);
@@ -103,18 +103,5 @@ public class QueryDto {
 
   public String json() {
     return JacksonUtil.serialize(this);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    QueryDto queryDto = (QueryDto) o;
-    return Objects.equals(this.table, queryDto.table) && Objects.equals(this.columns, queryDto.columns) && Objects.equals(this.columnSets, queryDto.columnSets) && Objects.equals(this.measures, queryDto.measures) && Objects.equals(this.conditions, queryDto.conditions) && Objects.equals(this.orders, queryDto.orders) && Objects.equals(this.context, queryDto.context);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.table, this.columns, this.columnSets, this.measures, this.conditions, this.orders, this.context);
   }
 }

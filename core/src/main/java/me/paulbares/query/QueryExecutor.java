@@ -3,6 +3,7 @@ package me.paulbares.query;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.graph.Graph;
+import lombok.extern.slf4j.Slf4j;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.QueryCacheContextValue;
@@ -12,6 +13,7 @@ import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.monitoring.QueryWatch;
 import me.paulbares.store.Field;
 
 import java.util.*;
@@ -24,29 +26,43 @@ import java.util.stream.IntStream;
 import static me.paulbares.query.dto.QueryDto.BUCKET;
 import static me.paulbares.query.dto.QueryDto.PERIOD;
 
+@Slf4j
 public class QueryExecutor {
 
   public final QueryEngine queryEngine;
-  public final CaffeineQueryCache caffeineCache;
+  public final QueryCache queryCache;
 
   public QueryExecutor(QueryEngine queryEngine) {
+    this(queryEngine, new CaffeineQueryCache());
+  }
+
+  public QueryExecutor(QueryEngine queryEngine, QueryCache cache) {
     this.queryEngine = queryEngine;
-    this.caffeineCache = new CaffeineQueryCache();
+    this.queryCache = cache;
   }
 
   private QueryCache getQueryCache(QueryCacheContextValue queryCacheContextValue) {
     return switch (queryCacheContextValue.action) {
-      case USE -> this.caffeineCache;
+      case USE -> this.queryCache;
       case NOT_USE -> EmptyQueryCache.INSTANCE;
       case INVALIDATE -> {
-        this.caffeineCache.clear();
-        yield this.caffeineCache;
+        this.queryCache.clear();
+        yield this.queryCache;
       }
     };
   }
 
   public Table execute(QueryDto query) {
+    return execute(query, new QueryWatch());
+  }
+
+  public Table execute(QueryDto query, QueryWatch queryWatch) {
+    queryWatch.start(QueryWatch.GLOBAL);
+    queryWatch.start(QueryWatch.PREPARE);
+
+    queryWatch.start(QueryWatch.PREPARE_RESOLVE_MEASURES);
     resolveMeasures(query);
+    queryWatch.stop(QueryWatch.PREPARE_RESOLVE_MEASURES);
 
     Set<String> cols = new HashSet<>();
     query.columns.forEach(cols::add);
@@ -56,10 +72,14 @@ public class QueryExecutor {
     cols.forEach(prefetchQuery::wildcardCoordinate);
 
     // Create plan
+    queryWatch.start(QueryWatch.PREPARE_CREATE_EXEC_PLAN);
     ExecutionPlan<Measure, ExecutionContext> plan = createExecutionPlan(query);
+    queryWatch.stop(QueryWatch.PREPARE_CREATE_EXEC_PLAN);
 
     Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
+    queryWatch.start(QueryWatch.PREPARE_CREATE_QUERY_SCOPE);
     CaffeineQueryCache.QueryScope scope = new CaffeineQueryCache.QueryScope(query.table, cols.stream().map(fieldSupplier).collect(Collectors.toSet()), query.conditions);
+    queryWatch.stop(QueryWatch.PREPARE_CREATE_QUERY_SCOPE);
     QueryCache queryCache = getQueryCache((QueryCacheContextValue) query.context.getOrDefault(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE)));
 
     // Finish to prepare the query
@@ -73,6 +93,9 @@ public class QueryExecutor {
       }
     }
 
+    queryWatch.stop(QueryWatch.PREPARE);
+    queryWatch.start(QueryWatch.PREFETCH);
+
     Table prefetchResult;
     if (!notCached.isEmpty() || (cached.isEmpty() && notCached.isEmpty())) {
       if (!plan.getLeaves().contains(CountMeasure.INSTANCE)) {
@@ -85,20 +108,35 @@ public class QueryExecutor {
       // Create an empty result that will be populated by the query cache
       prefetchResult = queryCache.createRawResult(scope);
     }
+    queryWatch.stop(QueryWatch.PREFETCH);
 
     queryCache.contributeToResult(prefetchResult, cached, scope);
     queryCache.contributeToCache(prefetchResult, notCached, scope);
 
+    queryWatch.start(QueryWatch.BUCKET);
     if (query.columnSets.containsKey(BUCKET)) {
       // Apply this as it modifies the "shape" of the result
       BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(BUCKET);
       prefetchResult = BucketerExecutor.bucket(prefetchResult, columnSet);
     }
+    queryWatch.stop(QueryWatch.BUCKET);
 
-    plan.execute(new ExecutionContext(prefetchResult, query));
+    queryWatch.start(QueryWatch.EXECUTE_PLAN);
+    plan.execute(new ExecutionContext(prefetchResult, query, queryWatch));
+    queryWatch.stop(QueryWatch.EXECUTE_PLAN);
+
+    queryWatch.start(QueryWatch.ORDER);
 
     ColumnarTable columnarTable = buildFinalResult(query, prefetchResult);
-    return TableUtils.order(columnarTable, query);
+    Table order = TableUtils.order(columnarTable, query);
+
+    queryWatch.stop(QueryWatch.ORDER);
+    queryWatch.stop(QueryWatch.GLOBAL);
+
+    log.info(queryWatch.toJson());
+//    log.info(queryCache.stats());
+    // FIXME log stats
+    return order;
   }
 
   private ColumnarTable buildFinalResult(QueryDto query, Table prefetchResult) {
@@ -146,12 +184,13 @@ public class QueryExecutor {
     }
   }
 
-  record ExecutionContext(Table table, QueryDto query) {
+  record ExecutionContext(Table table, QueryDto query, QueryWatch queryWatch) {
   }
 
   static class MeasureEvaluator implements BiConsumer<Measure, ExecutionContext> {
     @Override
     public void accept(Measure measure, ExecutionContext executionContext) {
+      executionContext.queryWatch.start(measure);
       if (measure instanceof ComparisonMeasure cm) {
         Map<String, Function<ColumnSet, AComparisonExecutor>> m = Map.of(
                 BUCKET, cs -> new BucketComparisonExecutor((BucketColumnSetDto) cs),
@@ -169,6 +208,7 @@ public class QueryExecutor {
       } else {
         throw new RuntimeException("nothing to do");
       }
+      executionContext.queryWatch.stop(measure);
     }
 
     private static void executeComparator(ComparisonMeasure cm, Table intermediateResult, AComparisonExecutor executor) {

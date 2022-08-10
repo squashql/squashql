@@ -4,6 +4,7 @@ import me.paulbares.query.*;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.database.SparkQueryEngine;
 import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.monitoring.QueryWatch;
 import me.paulbares.store.Store;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,10 +45,12 @@ public class QueryController {
 
   @PostMapping(MAPPING_QUERY)
   public ResponseEntity<Map<String, Object>> execute(@RequestBody QueryDto query) {
-    Table table = new QueryExecutor(this.itmQueryEngine).execute(query);
+    QueryWatch queryWatch = new QueryWatch();
+    Table table = new QueryExecutor(this.itmQueryEngine).execute(query, queryWatch);
     Map<String, Object> result = Map.of(
             "table", JacksonUtil.tableToCsv(table),
-            "metadata", TableUtils.buildTableMetadata(table));
+            "metadata", TableUtils.buildTableMetadata(table),
+            "debug", Map.of("timings", queryWatch.toJson()));
     return ResponseEntity.ok(result);
   }
 

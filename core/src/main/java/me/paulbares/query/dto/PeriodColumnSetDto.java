@@ -1,24 +1,23 @@
 package me.paulbares.query.dto;
 
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import me.paulbares.query.ColumnSet;
 import me.paulbares.query.PeriodUnit;
 import me.paulbares.store.Field;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import static me.paulbares.query.PeriodUnit.*;
 
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor // For Jackson
 public class PeriodColumnSetDto implements ColumnSet {
 
   public Period period;
-
-  /**
-   * For Jackson.
-   */
-  public PeriodColumnSetDto() {
-  }
 
   public PeriodColumnSetDto(Period period) {
     this.period = period;
@@ -81,18 +80,5 @@ public class PeriodColumnSetDto implements ColumnSet {
     } else {
       throw new RuntimeException(period + " not supported yet");
     }
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    PeriodColumnSetDto that = (PeriodColumnSetDto) o;
-    return Objects.equals(this.period, that.period);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.period);
   }
 }
