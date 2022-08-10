@@ -105,12 +105,32 @@ public class TableUtils {
   public static Table order(ColumnarTable table, Map<String, Comparator<?>> comparatorByColumnName) {
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
-    for (Field header : table.headers) {
-      args.add(table.getColumnValues(header.name()));
-      Comparator<?> queryComp = comparatorByColumnName.get(header.name());
-      // Always order table. If not defined, use natural order comp.
-      comparators.add(queryComp == null ? Comparator.naturalOrder() : queryComp);
+
+    boolean hasComparatorOnMeasure = false;
+    List<Field> headers = table.headers;
+    for (int i = 0; i < headers.size(); i++) {
+      boolean isMeasure = Arrays.binarySearch(table.measureIndices, i) >= 0;
+      if (isMeasure) {
+        hasComparatorOnMeasure |= comparatorByColumnName.containsKey(headers.get(i).name());
+      }
     }
+
+    for (int i = 0; i < headers.size(); i++) {
+      boolean isColumn = Arrays.binarySearch(table.columnsIndices, i) >= 0;
+      String headerName = headers.get(i).name();
+      Comparator<?> queryComp = comparatorByColumnName.get(headerName);
+      // Order a column even if not explicitly asked in the query only if no comparator on any measure
+      if (queryComp != null || (isColumn && !hasComparatorOnMeasure)) {
+        args.add(table.getColumnValues(headerName));
+        // Always order table. If not defined, use natural order comp.
+        comparators.add(queryComp == null ? Comparator.naturalOrder() : queryComp);
+      }
+    }
+
+    if (args.isEmpty()) {
+      return table;
+    }
+
     int[] finalIndices = MultipleColumnsSorter.sort(args, comparators);
 
     List<List<Object>> values = new ArrayList<>();
@@ -118,7 +138,7 @@ public class TableUtils {
       values.add(reorder(value, finalIndices));
     }
 
-    return new ColumnarTable(table.headers, table.measures, table.measureIndices, table.columnsIndices, values);
+    return new ColumnarTable(headers, table.measures, table.measureIndices, table.columnsIndices, values);
   }
 
   public static List<Object> reorder(List<?> list, int[] order) {
