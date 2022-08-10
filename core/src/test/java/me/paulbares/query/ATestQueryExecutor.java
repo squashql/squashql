@@ -1,6 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.jackson.JacksonUtil;
+import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.context.Repository;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.ConditionDto;
@@ -246,7 +247,7 @@ public abstract class ATestQueryExecutor {
   }
 
   @Test
-  void testOrderBy() {
+  void testOrderByColumn() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
@@ -254,7 +255,7 @@ public abstract class ATestQueryExecutor {
             .withCondition("category", QueryBuilder.in("cloth", "drink"))
             .withMeasure(CountMeasure.INSTANCE);
     Table result = this.queryExecutor.execute(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(
+    Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, "cloth", 1l),
             List.of(MAIN_SCENARIO_NAME, "drink", 1l),
             List.of("s1", "cloth", 1l),
@@ -264,7 +265,8 @@ public abstract class ATestQueryExecutor {
 
     query.orderBy("category", OrderDto.DESC);
     result = this.queryExecutor.execute(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(
+    result.show();
+    Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, "drink", 1l),
             List.of(MAIN_SCENARIO_NAME, "cloth", 1l),
             List.of("s1", "drink", 1l),
@@ -275,12 +277,33 @@ public abstract class ATestQueryExecutor {
     List<String> elements = List.of("s2", MAIN_SCENARIO_NAME, "s1");
     query.orderBy(SCENARIO_FIELD_NAME, elements);
     result = this.queryExecutor.execute(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(
+    Assertions.assertThat(result).containsExactly(
             List.of("s2", "drink", 1l),
             List.of("s2", "cloth", 1l),
             List.of(MAIN_SCENARIO_NAME, "drink", 1l),
             List.of(MAIN_SCENARIO_NAME, "cloth", 1l),
             List.of("s1", "drink", 1l),
             List.of("s1", "cloth", 1l));
+  }
+
+  @Test
+  void testOrderByMeasure() {
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
+            .withColumn("category")
+            .withMeasure(new AggregatedMeasure("price", AggregationFunction.SUM));
+    Table result = this.queryExecutor.execute(query);
+    // Default order
+    Assertions.assertThat(result).containsExactly(
+            List.of("cloth", 30d),
+            List.of("drink", 7.5d),
+            List.of("food", 9d));
+
+    query.orderBy(result.getField(new AggregatedMeasure("price", AggregationFunction.SUM)).name(), OrderDto.DESC);
+    result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of("cloth", 30d),
+            List.of("food", 9d),
+            List.of("drink", 7.5d));
   }
 }
