@@ -32,21 +32,16 @@ public class AggregatedMeasure implements Measure {
     this(alias, field, aggregationFunction, null, null);
   }
 
+  public AggregatedMeasure(String field, String aggregationFunction, String conditionField, ConditionDto conditionDto) {
+    this(null, field, aggregationFunction, conditionField, conditionDto);
+  }
+
   public AggregatedMeasure(String alias, String field, String aggregationFunction, String conditionField, ConditionDto conditionDto) {
     this.field = Objects.requireNonNull(field);
     this.aggregationFunction = Objects.requireNonNull(aggregationFunction);
     this.conditionField = conditionField;
     this.conditionDto = conditionDto;
-    if (alias == null) {
-      if (this.conditionDto != null) {
-        String conditionSt = SQLTranslator.toSql(new Field(this.conditionField, String.class), this.conditionDto);
-        this.alias = this.aggregationFunction + "If(" + this.field + ", " + conditionSt + ")";
-      } else {
-        this.alias = this.aggregationFunction + "(" + this.field + ")";
-      }
-    } else {
-      this.alias = alias;
-    }
+    this.alias = alias == null ? expression() : alias;
   }
 
   @Override
@@ -64,6 +59,16 @@ public class AggregatedMeasure implements Measure {
   @Override
   public String alias() {
     return this.alias;
+  }
+
+  @Override
+  public String expression() {
+    if (this.conditionDto != null) {
+      String conditionSt = SQLTranslator.toSql(new Field(this.conditionField, String.class), this.conditionDto);
+      return this.aggregationFunction + "If(" + this.field + ", " + conditionSt + ")";
+    } else {
+      return this.aggregationFunction + "(" + this.field + ")";
+    }
   }
 
   @Override

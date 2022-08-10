@@ -31,6 +31,11 @@ public class UnresolvedExpressionMeasure implements Measure {
   }
 
   @Override
+  public String expression() {
+    throw new RuntimeException();
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;

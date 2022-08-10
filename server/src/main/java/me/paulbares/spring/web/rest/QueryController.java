@@ -1,17 +1,17 @@
 package me.paulbares.spring.web.rest;
 
-import me.paulbares.query.QueryExecutor;
+import me.paulbares.query.*;
 import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.query.ExpressionMeasure;
-import me.paulbares.query.ExpressionResolver;
 import me.paulbares.query.database.SparkQueryEngine;
-import me.paulbares.query.Table;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Store;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+
+import static me.paulbares.query.TableUtils.NAME_KEY;
+import static me.paulbares.query.TableUtils.TYPE_KEY;
 
 @RestController
 public class QueryController {
@@ -43,9 +43,12 @@ public class QueryController {
   }
 
   @PostMapping(MAPPING_QUERY)
-  public ResponseEntity<String> execute(@RequestBody QueryDto query) {
+  public ResponseEntity<Map<String, Object>> execute(@RequestBody QueryDto query) {
     Table table = new QueryExecutor(this.itmQueryEngine).execute(query);
-    return ResponseEntity.ok(JacksonUtil.tableToCsv(table));
+    Map<String, Object> result = Map.of(
+            "table", JacksonUtil.tableToCsv(table),
+            "metadata", TableUtils.buildTableMetadata(table));
+    return ResponseEntity.ok(result);
   }
 
   @PostMapping(MAPPING_QUERY_BEAUTIFY)
@@ -60,7 +63,7 @@ public class QueryController {
     for (Store store : this.itmQueryEngine.datastore.storesByName().values()) {
       List<Map<String, String>> collect = store.fields()
               .stream()
-              .map(f -> Map.of("name", f.name(), "type", f.type().getSimpleName().toLowerCase()))
+              .map(f -> Map.of(NAME_KEY, f.name(), TYPE_KEY, f.type().getSimpleName().toLowerCase()))
               .toList();
       root.add(Map.of("name", store.name(), METADATA_FIELDS_KEY, collect));
     }

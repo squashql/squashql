@@ -1,6 +1,7 @@
 package me.paulbares.client.http;
 
 import me.paulbares.AitmApplication;
+import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ComparisonMeasure;
 import me.paulbares.query.ComparisonMethod;
@@ -59,8 +60,8 @@ public class HttpClientQuerierTest {
             .withColumn(TransactionManager.SCENARIO_FIELD_NAME)
             .aggregatedMeasure("quantity", "sum");
 
-    SimpleTable table = querier.run(query);
-    assertQuery(table,false);
+    Map<String, Object> response = (Map<String, Object>) querier.run(query);
+    assertQuery(JacksonUtil.deserialize((String) response.get("table"), SimpleTable.class),false);
   }
 
   @Test
@@ -89,7 +90,8 @@ public class HttpClientQuerierTest {
             .withMeasure(capdvDiff)
             .withMeasure(aggregatedMeasure);
 
-    SimpleTable table = querier.run(query);
+    Map<String, Object> response = (Map<String, Object>) querier.run(query);
+    SimpleTable table = JacksonUtil.deserialize((String) response.get("table"), SimpleTable.class);
     double baseValue = 40_000d;
     double mnValue = 42_000d;
     double mnmddValue = 44_000d;
@@ -119,7 +121,8 @@ public class HttpClientQuerierTest {
 
     var querier = new HttpClientQuerier(url);
 
-    SimpleTable table = querier.run(query);
+    Map<String, Object> response = (Map<String, Object>) querier.run(query);
+    SimpleTable table = JacksonUtil.deserialize((String) response.get("table"), SimpleTable.class);
     Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
             List.of(TransactionManager.MAIN_SCENARIO_NAME, "ITM Balma", 20d),
             List.of(TransactionManager.MAIN_SCENARIO_NAME, "ITM Toulouse and Drive", 20d)

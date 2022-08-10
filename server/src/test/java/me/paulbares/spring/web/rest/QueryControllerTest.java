@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import static me.paulbares.query.TableUtils.*;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -82,7 +83,8 @@ public class QueryControllerTest {
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
-              Assertions.assertThat((List) queryResult.get("rows")).containsExactlyInAnyOrder(
+              Map<String, Object> table = JacksonUtil.mapper.readValue((String) queryResult.get("table"), Map.class);
+              Assertions.assertThat((List) table.get("rows")).containsExactlyInAnyOrder(
                       List.of("MN & MDD up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
                       List.of("MN & MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196),
 
@@ -98,8 +100,16 @@ public class QueryControllerTest {
                       List.of(MAIN_SCENARIO_NAME, "ITMella 250g", 100000d, 102000d, 0.9803921568627451d),
                       List.of(MAIN_SCENARIO_NAME, "Nutella 250g", 100000d, 102000d, 0.9803921568627451d));
 
-              Assertions.assertThat((List) queryResult.get("columns")).containsExactly(
+              Assertions.assertThat((List) table.get("columns")).containsExactly(
                       SCENARIO_FIELD_NAME, "ean", "sum(capdv)", "capdv_concurrents", "indice_prix");
+
+              Assertions.assertThat((List) queryResult.get("metadata")).containsExactly(
+                      Map.of(NAME_KEY, SCENARIO_FIELD_NAME, TYPE_KEY, "string"),
+                      Map.of(NAME_KEY, "ean", TYPE_KEY, "string"),
+                      Map.of(NAME_KEY, "sum(capdv)", TYPE_KEY, "double", EXPRESSION_KEY, "sum(capdv)"),
+                      Map.of(NAME_KEY, "capdv_concurrents", TYPE_KEY, "double", EXPRESSION_KEY, "sum(competitor_price * quantity)"),
+                      Map.of(NAME_KEY, "indice_prix", TYPE_KEY, "double", EXPRESSION_KEY, "sum(capdv) / sum(competitor_price * quantity)")
+              );
             });
   }
 
@@ -222,10 +232,12 @@ public class QueryControllerTest {
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
+              Map<String, Object> table = JacksonUtil.mapper.readValue((String) queryResult.get("table"), Map.class);
+
               double baseValue = 0.9803921568627451d;
               double mnValue = 1.0294117647058822d;
               double mnmddValue = 1.0784313725490196d;
-              Assertions.assertThat((List) queryResult.get("rows")).containsExactlyInAnyOrder(
+              Assertions.assertThat((List) table.get("rows")).containsExactlyInAnyOrder(
                       List.of("group1", MAIN_SCENARIO_NAME, 0d, 0d),
                       List.of("group1", "MN up", 10_000d, mnValue - baseValue),
                       List.of("group2", MAIN_SCENARIO_NAME, 0d, 0d),
@@ -233,7 +245,7 @@ public class QueryControllerTest {
                       List.of("group3", MAIN_SCENARIO_NAME, 0d, 0d),
                       List.of("group3", "MN up", 10_000d, mnValue - baseValue),
                       List.of("group3", "MN & MDD up", 10_000d, mnmddValue - mnValue));
-              Assertions.assertThat((List) queryResult.get("columns"))
+              Assertions.assertThat((List) table.get("columns"))
                       .containsExactly("group",
                               SCENARIO_FIELD_NAME,
                               "aggregatedMeasureDiff",

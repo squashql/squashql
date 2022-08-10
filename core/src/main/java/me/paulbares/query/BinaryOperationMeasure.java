@@ -23,9 +23,7 @@ public class BinaryOperationMeasure implements Measure {
                                 BinaryOperator binaryOperator,
                                 Measure leftOperand,
                                 Measure rightOperand) {
-    this.alias = alias == null
-            ? String.format("%s %s %s", leftOperand, binaryOperator, rightOperand)
-            : alias;
+    this.alias = alias;
     this.operator = binaryOperator;
     this.leftOperand = leftOperand;
     this.rightOperand = rightOperand;
@@ -39,6 +37,23 @@ public class BinaryOperationMeasure implements Measure {
   @Override
   public String alias() {
     return this.alias;
+  }
+
+  @Override
+  public String expression() {
+    return quoteExpression(this.leftOperand) + " " + this.operator.infix + " " + quoteExpression(this.rightOperand);
+  }
+
+  private static String quoteExpression(Measure m) {
+    if (m.alias() != null) {
+      return m.alias();
+    }
+    String expression = m.expression();
+    if (!(m instanceof AggregatedMeasure)) {
+      return '(' + expression + ')';
+    } else {
+      return expression;
+    }
   }
 
   @Override
@@ -58,10 +73,10 @@ public class BinaryOperationMeasure implements Measure {
   public String toString() {
     return getClass().getSimpleName() +
             "{" +
-            "alias='" + alias + '\'' +
-            ", operator=" + operator +
-            ", leftOperand=" + leftOperand +
-            ", rightOperand=" + rightOperand +
+            "alias='" + this.alias + '\'' +
+            ", operator=" + this.operator +
+            ", leftOperand=" + this.leftOperand +
+            ", rightOperand=" + this.rightOperand +
             '}';
   }
 }

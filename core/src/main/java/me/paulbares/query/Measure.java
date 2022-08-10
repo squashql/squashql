@@ -15,4 +15,6 @@ public interface Measure {
   String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter);
 
   String alias();
+
+  String expression();
 }
