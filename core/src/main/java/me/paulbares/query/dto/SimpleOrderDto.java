@@ -2,7 +2,7 @@ package me.paulbares.query.dto;
 
 import java.util.Objects;
 
-public class SimpleOrderDto implements OrderDto {
+public final class SimpleOrderDto implements OrderDto {
 
   public OrderKeywordDto order;
 

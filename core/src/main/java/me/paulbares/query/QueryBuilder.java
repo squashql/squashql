@@ -77,8 +77,6 @@ public class QueryBuilder {
     return new SingleValueConditionDto(ConditionType.GE, value);
   }
 
-  // FIXME new
-
   public static void addPeriodColumnSet(QueryDto query, Period period) {
     query.withColumnSet(QueryDto.PERIOD, new PeriodColumnSetDto(period));
   }

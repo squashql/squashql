@@ -3,7 +3,7 @@ package me.paulbares.query.dto;
 import java.util.List;
 import java.util.Objects;
 
-public class ExplicitOrderDto implements OrderDto {
+public final class ExplicitOrderDto implements OrderDto {
 
   public List<?> explicit;
 

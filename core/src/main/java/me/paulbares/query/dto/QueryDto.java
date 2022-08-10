@@ -92,14 +92,11 @@ public class QueryDto {
   }
 
   public QueryDto orderBy(String column, OrderKeywordDto orderKeywordDto) {
-    Comparator<?> comp = Comparator.naturalOrder();
-//    this.comparators.put(column, orderDto == DESC ? comp.reversed() : comp);
     this.orders.put(column, new SimpleOrderDto(orderKeywordDto));
     return this;
   }
 
   public QueryDto orderBy(String column, List<?> firstElements) {
-//    this.comparators.put(column, new CustomExplicitOrdering(firstElements));
     this.orders.put(column, new ExplicitOrderDto(firstElements));
     return this;
   }
