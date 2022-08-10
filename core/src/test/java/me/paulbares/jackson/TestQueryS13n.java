@@ -122,4 +122,18 @@ public class TestQueryS13n {
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
     Assertions.assertThat(deserialize).isEqualTo(query);
   }
+
+  @Test
+  void testQueryWithComparator() {
+    var query = new QueryDto()
+            .table("products")
+            .withMeasure(new AggregatedMeasure("sales", "sum"));
+
+    query.orderBy("X", List.of("a", "b", "c"));
+    query.orderBy("Y", OrderKeywordDto.ASC);
+
+    String serialize = query.json();
+    QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(query);
+  }
 }

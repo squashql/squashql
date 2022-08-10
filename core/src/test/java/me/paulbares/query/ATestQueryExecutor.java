@@ -5,7 +5,7 @@ import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.context.Repository;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.ConditionDto;
-import me.paulbares.query.dto.OrderDto;
+import me.paulbares.query.dto.OrderKeywordDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
@@ -263,7 +263,7 @@ public abstract class ATestQueryExecutor {
             List.of("s2", "cloth", 1l),
             List.of("s2", "drink", 1l));
 
-    query.orderBy("category", OrderDto.DESC);
+    query.orderBy("category", OrderKeywordDto.DESC);
     result = this.queryExecutor.execute(query);
     result.show();
     Assertions.assertThat(result).containsExactly(
@@ -299,7 +299,7 @@ public abstract class ATestQueryExecutor {
             List.of("drink", 7.5d),
             List.of("food", 9d));
 
-    query.orderBy(result.getField(new AggregatedMeasure("price", AggregationFunction.SUM)).name(), OrderDto.DESC);
+    query.orderBy(result.getField(new AggregatedMeasure("price", AggregationFunction.SUM)).name(), OrderKeywordDto.DESC);
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactly(
             List.of("cloth", 30d),

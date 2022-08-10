@@ -13,6 +13,7 @@ import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
+import me.paulbares.util.Queries;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -98,7 +99,7 @@ public class QueryExecutor {
     plan.execute(new ExecutionContext(prefetchResult, query));
 
     ColumnarTable columnarTable = buildFinalResult(query, prefetchResult);
-    return TableUtils.order(columnarTable, query.comparators);
+    return TableUtils.order(columnarTable, Queries.orderToComparator(query.orders));
   }
 
   private ColumnarTable buildFinalResult(QueryDto query, Table prefetchResult) {
