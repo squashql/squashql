@@ -1,16 +1,13 @@
 package me.paulbares.query.dto;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.common.base.Objects;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.jackson.deserializer.ContextValueDeserializer;
+import me.paulbares.jackson.deserializer.OrderDtoDeserializer;
 import me.paulbares.query.*;
 import me.paulbares.query.context.ContextValue;
-import me.paulbares.util.CustomExplicitOrdering;
 
 import java.util.*;
-
-import static me.paulbares.query.dto.OrderDto.DESC;
 
 public class QueryDto {
 
@@ -27,7 +24,8 @@ public class QueryDto {
 
   public Map<String, ConditionDto> conditions = new HashMap<>();
 
-  public Map<String, Comparator<?>> comparators = new HashMap<>();
+  @JsonDeserialize(contentUsing = OrderDtoDeserializer.class)
+  public Map<String, OrderDto> orders = new HashMap<>();
 
   @JsonDeserialize(contentUsing = ContextValueDeserializer.class)
   public Map<String, ContextValue> context = new HashMap<>();
@@ -93,14 +91,16 @@ public class QueryDto {
     return this;
   }
 
-  public QueryDto orderBy(String column, OrderDto orderDto) {
+  public QueryDto orderBy(String column, OrderKeywordDto orderKeywordDto) {
     Comparator<?> comp = Comparator.naturalOrder();
-    this.comparators.put(column, orderDto == DESC ? comp.reversed() : comp);
+//    this.comparators.put(column, orderDto == DESC ? comp.reversed() : comp);
+    this.orders.put(column, new SimpleOrderDto(orderKeywordDto));
     return this;
   }
 
   public QueryDto orderBy(String column, List<?> firstElements) {
-    this.comparators.put(column, new CustomExplicitOrdering(firstElements));
+//    this.comparators.put(column, new CustomExplicitOrdering(firstElements));
+    this.orders.put(column, new ExplicitOrderDto(firstElements));
     return this;
   }
 
@@ -113,11 +113,11 @@ public class QueryDto {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     QueryDto queryDto = (QueryDto) o;
-    return Objects.equal(this.table, queryDto.table) && Objects.equal(this.columns, queryDto.columns) && Objects.equal(this.columnSets, queryDto.columnSets) && Objects.equal(this.measures, queryDto.measures) && Objects.equal(this.conditions, queryDto.conditions) && Objects.equal(this.context, queryDto.context);
+    return Objects.equals(this.table, queryDto.table) && Objects.equals(this.columns, queryDto.columns) && Objects.equals(this.columnSets, queryDto.columnSets) && Objects.equals(this.measures, queryDto.measures) && Objects.equals(this.conditions, queryDto.conditions) && Objects.equals(this.orders, queryDto.orders) && Objects.equals(this.context, queryDto.context);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(this.table, this.columns, this.columnSets, this.measures, this.conditions, this.context);
+    return Objects.hash(this.table, this.columns, this.columnSets, this.measures, this.conditions, this.orders, this.context);
   }
 }

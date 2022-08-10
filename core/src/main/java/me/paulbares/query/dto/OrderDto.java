@@ -1,5 +1,7 @@
 package me.paulbares.query.dto;
 
-public enum OrderDto {
-  ASC, DESC
+/**
+ * Marker interface.
+ */
+public interface OrderDto {
 }

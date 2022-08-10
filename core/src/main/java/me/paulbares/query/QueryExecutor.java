@@ -98,7 +98,7 @@ public class QueryExecutor {
     plan.execute(new ExecutionContext(prefetchResult, query));
 
     ColumnarTable columnarTable = buildFinalResult(query, prefetchResult);
-    return TableUtils.order(columnarTable, query.comparators);
+    return TableUtils.order(columnarTable, null);// FIXME
   }
 
   private ColumnarTable buildFinalResult(QueryDto query, Table prefetchResult) {
