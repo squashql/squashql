@@ -1,4 +1,4 @@
-package me.paulbares.client;
+package me.paulbares.client.http;
 
 import feign.Feign;
 import feign.Headers;
@@ -7,7 +7,6 @@ import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.spring.web.rest.QueryController;
 import okhttp3.OkHttpClient;
 
 import java.util.Map;
@@ -38,11 +37,11 @@ public class HttpClientQuerier {
   }
 
   interface QueryApi {
-    @RequestLine("POST " + QueryController.MAPPING_QUERY)
+    @RequestLine("POST /spark-query")
     @Headers("Content-Type: application/json")
     Object run(QueryDto query);
 
-    @RequestLine("GET " + QueryController.MAPPING_METADATA)
+    @RequestLine("GET /spark-metadata")
     Map<Object, Object> metadata();
   }
 }

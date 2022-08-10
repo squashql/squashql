@@ -83,10 +83,20 @@ public class QueryBuilder {
     query.withColumnSet(QueryDto.PERIOD, new PeriodColumnSetDto(period));
   }
 
+  public static ColumnSet createPeriodColumnSet(Period period) {
+    return new PeriodColumnSetDto(period);
+  }
+
   public static void addBucketColumnSet(QueryDto query, String name, String field, Map<String, List<String>> values) {
     BucketColumnSetDto columnSet = new BucketColumnSetDto(name, field);
     columnSet.values = values;
     query.withColumnSet(QueryDto.BUCKET, columnSet);
+  }
+
+  public static ColumnSet createBucketColumnSet(String name, String field, Map<String, List<String>> values) {
+    BucketColumnSetDto columnSet = new BucketColumnSetDto(name, field);
+    columnSet.values = values;
+    return columnSet;
   }
 
   public static ComparisonMeasure periodComparison(String alias,
@@ -122,16 +132,17 @@ public class QueryBuilder {
   }
 
   public static void main(String[] args) {
-    QueryDto query = QueryBuilder.query();
 
-    query.table("saas");
-
-    QueryBuilder.addBucketColumnSet(query,
+    ColumnSet bucketColumnSet = QueryBuilder.createBucketColumnSet(
             "group",
             "scenario encrypted",
             Map.of("group1", List.of("A", "B", "C", "D"), "group2", List.of("A", "D")));
+    ColumnSet year = QueryBuilder.createPeriodColumnSet(new Period.Year("Year"));
 
-    QueryBuilder.addPeriodColumnSet(query, new Period.Year("Year"));
+    QueryDto query = QueryBuilder.query();
+    query.table("saas");
+    query.withColumnSet(QueryDto.BUCKET, bucketColumnSet);
+    query.withColumnSet(QueryDto.PERIOD, year);
 
     AggregatedMeasure amount = new AggregatedMeasure("Amount", AggregationFunction.SUM);
     AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, "Income/Expense", QueryBuilder.eq("Revenue"));

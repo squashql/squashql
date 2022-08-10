@@ -1,15 +1,12 @@
 package me.paulbares.spring.web.rest;
 
-import me.paulbares.client.SimpleTable;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.*;
 import me.paulbares.query.context.Repository;
-import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
-import me.paulbares.spring.ApplicationForTest;
-import me.paulbares.spring.config.DatasetTestConfig;
+import me.paulbares.spring.dataset.DatasetTestConfig;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +17,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -30,7 +26,7 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = ApplicationForTest.class, properties = "spring.main.allow-bean-definition-overriding=true")
+@SpringBootTest(properties = "spring.main.allow-bean-definition-overriding=true")
 @Import(DatasetTestConfig.class)
 @AutoConfigureMockMvc
 public class QueryControllerTest {
@@ -117,21 +113,6 @@ public class QueryControllerTest {
             });
   }
 
-  static void assertQuery(SimpleTable table, boolean withTotals) {
-    List[] lists = {List.of("MDD up", 4000),
-            List.of("MN & MDD down", 4000),
-            List.of("MN & MDD up", 4000),
-            List.of("MN up", 4000),
-            List.of(MAIN_SCENARIO_NAME, 4000)};
-    if (withTotals) {
-      Arrays.copyOf(lists, lists.length + 1);
-      lists[lists.length - 1] = Arrays.asList(QueryEngine.GRAND_TOTAL, 5 * 4000);
-      Assertions.assertThat(table.rows).containsExactlyInAnyOrder(lists);
-    }
-    Assertions.assertThat(table.rows).containsExactlyInAnyOrder(lists);
-    Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "sum(quantity)");
-  }
-
   @Test
   void testMetadata() throws Exception {
     this.mvc.perform(MockMvcRequestBuilders.get(QueryController.MAPPING_METADATA))
@@ -154,7 +135,7 @@ public class QueryControllerTest {
   }
 
 
-  static void assertMetadataResult(Map objects, boolean withRepo) {
+  public static void assertMetadataResult(Map objects, boolean withRepo) {
     List<Map<String, Object>> storesArray = (List) objects.get(QueryController.METADATA_STORES_KEY);
     Assertions.assertThat(storesArray).hasSize(3);
 

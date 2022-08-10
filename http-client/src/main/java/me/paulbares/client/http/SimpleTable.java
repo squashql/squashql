@@ -1,4 +1,4 @@
-package me.paulbares.client;
+package me.paulbares.client.http;
 
 import me.paulbares.query.TableUtils;
 

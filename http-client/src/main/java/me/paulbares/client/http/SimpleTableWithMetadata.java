@@ -1,4 +1,4 @@
-package me.paulbares.client;
+package me.paulbares.client.http;
 
 import java.util.List;
 import java.util.Map;

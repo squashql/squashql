@@ -1,14 +1,15 @@
-package me.paulbares.spring.web.rest;
+package me.paulbares.client.http;
 
-import me.paulbares.client.HttpClientQuerier;
-import me.paulbares.client.SimpleTable;
+import me.paulbares.AitmApplication;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ComparisonMeasure;
+import me.paulbares.query.ComparisonMethod;
 import me.paulbares.query.QueryBuilder;
+import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.spring.config.DatasetTestConfig;
+import me.paulbares.spring.web.rest.QueryControllerTest;
 import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -16,14 +17,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static me.paulbares.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        classes = AitmApplication.class,
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "spring.main.allow-bean-definition-overriding=true")
 @Import(DatasetTestConfig.class)
 public class HttpClientQuerierTest {
 
@@ -56,7 +60,7 @@ public class HttpClientQuerierTest {
             .aggregatedMeasure("quantity", "sum");
 
     Map<String, Object> response = (Map<String, Object>) querier.run(query);
-    QueryControllerTest.assertQuery(JacksonUtil.deserialize((String) response.get("table"), SimpleTable.class),false);
+    assertQuery(JacksonUtil.deserialize((String) response.get("table"), SimpleTable.class),false);
   }
 
   @Test
@@ -73,7 +77,7 @@ public class HttpClientQuerierTest {
     AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("capdv", "sum");
     ComparisonMeasure capdvDiff = QueryBuilder.bucketComparison(
             "capdvDiff",
-            ABSOLUTE_DIFFERENCE,
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
             aggregatedMeasure,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
@@ -123,5 +127,20 @@ public class HttpClientQuerierTest {
             List.of(MAIN_SCENARIO_NAME, "ITM Toulouse and Drive", 20d)
     );
     Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "pdv", "sum(price)");
+  }
+
+  static void assertQuery(SimpleTable table, boolean withTotals) {
+    List[] lists = {List.of("MDD up", 4000),
+            List.of("MN & MDD down", 4000),
+            List.of("MN & MDD up", 4000),
+            List.of("MN up", 4000),
+            List.of(MAIN_SCENARIO_NAME, 4000)};
+    if (withTotals) {
+      Arrays.copyOf(lists, lists.length + 1);
+      lists[lists.length - 1] = Arrays.asList(QueryEngine.GRAND_TOTAL, 5 * 4000);
+      Assertions.assertThat(table.rows).containsExactlyInAnyOrder(lists);
+    }
+    Assertions.assertThat(table.rows).containsExactlyInAnyOrder(lists);
+    Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "sum(quantity)");
   }
 }
