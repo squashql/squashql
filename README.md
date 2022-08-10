@@ -507,7 +507,6 @@ executable and adding the required jar to the class-path.
 $JAVA_HOME/bin/jshell --class-path target/http-client-0.1-SNAPSHOT.jar
 ```
 
-And then (can be saved in a file):
 ```jshelllanguage
 import me.paulbares.client.http.*
 import static me.paulbares.query.QueryBuilder.*
