@@ -30,7 +30,6 @@ public class CustomExplicitOrdering implements Comparator<Object>, Serializable 
     return builder.toImmutable();
   }
 
-
   @Override
   public int compare(Object left, Object right) {
     final int rankLeft = this.rankMap.getIfAbsent(left, -1);

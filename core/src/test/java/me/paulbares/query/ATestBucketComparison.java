@@ -162,11 +162,11 @@ public abstract class ATestBucketComparison {
             "priceDiff", "sum(price)",
             "quantityDiff", "sum(quantity)");
     Assertions.assertThat(dataset).containsExactlyInAnyOrder(
-            List.of("group1", "base", 0d, 15d, 0l, 34l),
+            List.of("group1", MAIN_SCENARIO_NAME, 0d, 15d, 0l, 34l),
             List.of("group1", "s1", 2d, 17d, -2l, 32l),
-            List.of("group2", "base", 0d, 15d, 0l, 34l),
+            List.of("group2", MAIN_SCENARIO_NAME, 0d, 15d, 0l, 34l),
             List.of("group2", "s2", -0.5d, 14.5d, 1l, 35l),
-            List.of("group3", "base", 0d, 15d, 0l, 34l),
+            List.of("group3", MAIN_SCENARIO_NAME, 0d, 15d, 0l, 34l),
             List.of("group3", "s1", 2d, 17d, -2l, 32l),
             List.of("group3", "s2", -2.5, 14.5d, 3l, 35l));
   }
@@ -206,12 +206,39 @@ public abstract class ATestBucketComparison {
             "priceDiff", "sum(price)",
             "quantityDiff", "sum(quantity)");
     Assertions.assertThat(dataset).containsExactlyInAnyOrder(
-            List.of("group1", "base", 0d, 15d, 0d, 34l),
+            List.of("group1", MAIN_SCENARIO_NAME, 0d, 15d, 0d, 34l),
             List.of("group1", "s1", 0.13333333333333333d, 17d, -0.058823529411764705d, 32l),
-            List.of("group2", "base", 0d, 15d, 0d, 34l),
+            List.of("group2", MAIN_SCENARIO_NAME, 0d, 15d, 0d, 34l),
             List.of("group2", "s2", -0.03333333333333333d, 14.5d, 0.029411764705882353d, 35l),
-            List.of("group3", "base", 0d, 15d, 0d, 34l),
+            List.of("group3", MAIN_SCENARIO_NAME, 0d, 15d, 0d, 34l),
             List.of("group3", "s1", 0.13333333333333333d, 17d, -0.058823529411764705d, 32l),
             List.of("group3", "s2", -0.03333333333333333d, 14.5d, 0.029411764705882353d, 35l));
+  }
+
+  @Test
+  void testOrderIsPreserved() {
+    // The following order should be respected even if columns are ordered by default.
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, SCENARIO_FIELD_NAME)
+            .withNewBucket("B", List.of("s1", MAIN_SCENARIO_NAME))
+            .withNewBucket("A", List.of("s2", MAIN_SCENARIO_NAME, "s1"))
+            .withNewBucket("C", List.of(MAIN_SCENARIO_NAME, "s2", "s1"));
+
+    var query = new QueryDto()
+            .table(this.storeName)
+            .withColumnSet(QueryDto.BUCKET, bucketCS)
+            .withMeasure(CountMeasure.INSTANCE);
+
+    Table dataset = this.executor.execute(query);
+    Assertions.assertThat(dataset.headers().stream().map(Field::name))
+            .containsExactly(this.groupOfScenario, SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
+    Assertions.assertThat(dataset).containsExactly(
+            List.of("B", "s1", 3l),
+            List.of("B", MAIN_SCENARIO_NAME, 3l),
+            List.of("A", "s2", 3l),
+            List.of("A", MAIN_SCENARIO_NAME, 3l),
+            List.of("A", "s1", 3l),
+            List.of("C", MAIN_SCENARIO_NAME, 3l),
+            List.of("C", "s2", 3l),
+            List.of("C", "s1", 3l));
   }
 }

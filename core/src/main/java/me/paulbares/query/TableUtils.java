@@ -1,7 +1,10 @@
 package me.paulbares.query;
 
+import me.paulbares.query.dto.BucketColumnSetDto;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 import me.paulbares.util.MultipleColumnsSorter;
+import me.paulbares.util.Queries;
 
 import java.util.*;
 import java.util.function.Function;
@@ -102,7 +105,8 @@ public class TableUtils {
     return metadata;
   }
 
-  public static Table order(ColumnarTable table, Map<String, Comparator<?>> comparatorByColumnName) {
+  public static Table order(ColumnarTable table, QueryDto queryDto) {
+    Map<String, Comparator<?>> comparatorByColumnName = Queries.getComparators(queryDto);
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
 
@@ -131,7 +135,15 @@ public class TableUtils {
       return table;
     }
 
-    int[] finalIndices = MultipleColumnsSorter.sort(args, comparators);
+    int[] contextIndices = new int[args.size()];
+    Arrays.fill(contextIndices, -1);
+    ColumnSet bucket = queryDto.columnSets.get(QueryDto.BUCKET);
+    if (bucket != null) {
+      BucketColumnSetDto cs = (BucketColumnSetDto) bucket;
+      contextIndices[table.columnIndex(cs.field)] = table.columnIndex(cs.name);
+    }
+
+    int[] finalIndices = MultipleColumnsSorter.sort(args, comparators, contextIndices);
 
     List<List<Object>> values = new ArrayList<>();
     for (List<Object> value : table.values) {
