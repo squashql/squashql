@@ -7,10 +7,7 @@ import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -84,12 +81,6 @@ public abstract class ATestBucketComparison {
   }
 
   protected void beforeLoading(List<Field> fields) {
-  }
-
-  @BeforeEach
-  void beforeEach() {
-    /// FIXME restore the cache in the future
-//    this.executor.queryCache.cache.invalidateAll();
   }
 
   @Test
@@ -223,80 +214,4 @@ public abstract class ATestBucketComparison {
             List.of("group3", "s1", 0.13333333333333333d, 17d, -0.058823529411764705d, 32l),
             List.of("group3", "s2", -0.03333333333333333d, 14.5d, 0.029411764705882353d, 35l));
   }
-
-//  @Test
-//  @Disabled
-//  void testCache() {
-//    // Use own executor because stats in cache cannot be reset.
-//    var executor = new ScenarioGroupingExecutor(createQueryEngine(this.datastore));
-//
-//    Map<String, List<String>> groups = new LinkedHashMap<>();
-//    groups.put("group1", List.of("base", "s1"));
-//    groups.put("group2", List.of("base"));
-//
-//    ScenarioGroupingQueryDto query = new ScenarioGroupingQueryDto()
-//            .table(this.storeName)
-//            .addScenarioComparison(new ScenarioComparisonDto(ABS_DIFF,
-//                    new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
-//            .addScenarioComparison(new ScenarioComparisonDto(ABS_DIFF,
-//                    new AggregatedMeasure("quantity", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
-//            .groups(groups);
-//
-//    // Should put the result in cache the first time.
-//    int n = 10;
-//    for (int i = 0; i < n; i++) {
-//      executor.execute(query);
-//    }
-//
-//    int missCount = 2;
-//    int loadSuccessCount = 2;
-//    int evictionCount = 0;
-//    // Change the query. Remove a measure
-//    query = new ScenarioGroupingQueryDto()
-//            .table(this.storeName)
-//            .addScenarioComparison(new ScenarioComparisonDto(ABS_DIFF,
-//                    new AggregatedMeasure("price", "sum"), true, ScenarioGroupingExecutor.REF_POS_FIRST))
-//            .groups(groups);
-//    executor.execute(query);
-//    assertCacheStats(executor.queryCache, n - 1, missCount, loadSuccessCount, evictionCount);
-//
-//    // Change bucketing but set of groups is the same
-//    {
-//      Map<String, List<String>> newGroups = new LinkedHashMap<>();
-//      newGroups.put("newGroup", List.of("base", "s1"));
-//      query.groups(newGroups);
-//      executor.execute(query); // the result should come from the cache because sets of scenarios is the same
-//      assertCacheStats(executor.queryCache, n, missCount, loadSuccessCount, evictionCount);
-//    }
-//
-//    // Scenario removal
-//    {
-//      Map<String, List<String>> newGroups = new LinkedHashMap<>();
-//      newGroups.put("newGroup", List.of("base")); // s1 is no more here. Should not hit the cache
-//      query.groups(newGroups);
-//      executor.execute(query); // the result should come from the cache because sets of scenarios is the same
-//      assertCacheStats(executor.queryCache, n, ++missCount, ++loadSuccessCount, evictionCount);
-//    }
-//
-//    // Scenario addition
-//    {
-//      Map<String, List<String>> newGroups = new LinkedHashMap<>();
-//      newGroups.put("newGroup", List.of("base", "s1", "s2")); // s2 is added. should not hit the cache
-//      query.groups(newGroups);
-//      executor.execute(query); // the result should come from the cache because sets of scenarios is the same
-//      assertCacheStats(executor.queryCache, n, ++missCount, ++loadSuccessCount, evictionCount);
-//    }
-//  }
-//
-//  protected void assertCacheStats(ScenarioGroupingCache cache,
-//                                  int hitCount,
-//                                  int missCount,
-//                                  int loadSuccessCount,
-//                                  int evictionCount) {
-//    CacheStats stats = cache.cache.stats();
-//    Assertions.assertThat(stats.hitCount()).isEqualTo(hitCount);
-//    Assertions.assertThat(stats.missCount()).isEqualTo(missCount);
-//    Assertions.assertThat(stats.loadSuccessCount()).isEqualTo(loadSuccessCount);
-//    Assertions.assertThat(stats.evictionCount()).isEqualTo(evictionCount);
-//  }
 }
