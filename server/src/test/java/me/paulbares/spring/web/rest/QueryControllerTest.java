@@ -83,7 +83,7 @@ public class QueryControllerTest {
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
-              Map<String, Object> table = JacksonUtil.mapper.readValue((String) queryResult.get("table"), Map.class);
+              Map<String, Object> table = (Map<String, Object>) queryResult.get("table");
               Assertions.assertThat((List) table.get("rows")).containsExactlyInAnyOrder(
                       List.of("MN & MDD up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
                       List.of("MN & MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196),
@@ -133,7 +133,6 @@ public class QueryControllerTest {
               assertMetadataResult(objects, true);
             });
   }
-
 
   public static void assertMetadataResult(Map objects, boolean withRepo) {
     List<Map<String, Object>> storesArray = (List) objects.get(QueryController.METADATA_STORES_KEY);
@@ -232,7 +231,7 @@ public class QueryControllerTest {
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
-              Map<String, Object> table = JacksonUtil.mapper.readValue((String) queryResult.get("table"), Map.class);
+              Map<String, Object> table = (Map<String, Object>) queryResult.get("table");
 
               double baseValue = 0.9803921568627451d;
               double mnValue = 1.0294117647058822d;
