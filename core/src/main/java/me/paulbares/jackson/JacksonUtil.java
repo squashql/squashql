@@ -43,7 +43,7 @@ public class JacksonUtil {
     }
   }
 
-  public static Map<String, Iterable<?>> tableToCsv(Table table) {
+  public static Map<String, Iterable<?>> serializeTable(Table table) {
     List<String> fields = table.headers().stream().map(Field::name).collect(Collectors.toList());
     // Jackson can serialize Iterable<?> so there is nothing to do to serialize table!
     return Map.of("columns", fields, "rows", table);

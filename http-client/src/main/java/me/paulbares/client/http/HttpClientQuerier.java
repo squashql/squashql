@@ -17,24 +17,10 @@ public class HttpClientQuerier {
 
   private static final OkHttpClient client = new OkHttpClient();
 
-  private static final Feign.Builder builder;
-
-  static {
-    ObjectMapper mapper = JacksonUtil.mapper;
-    SimpleModule module = new SimpleModule();
-//    module.addDeserializer(SimpleTableWithMetadata.class, new JsonDeserializer<>() {
-//      @Override
-//      public SimpleTableWithMetadata deserialize(JsonParser p, DeserializationContext ctxt) {
-//        return null;
-//      }
-//    });
-    mapper.registerModule(module);
-    builder = Feign.builder()
-            .client(new feign.okhttp.OkHttpClient(client))
-            .encoder(new JacksonEncoder(JacksonUtil.mapper))
-            .decoder(new JacksonDecoder(JacksonUtil.mapper));
-  }
-
+  private static final Feign.Builder builder = Feign.builder()
+          .client(new feign.okhttp.OkHttpClient(client))
+          .encoder(new JacksonEncoder(JacksonUtil.mapper))
+          .decoder(new JacksonDecoder(JacksonUtil.mapper));
 
   public String url;
 

@@ -46,7 +46,7 @@ public class QueryController {
   public ResponseEntity<Map<String, Object>> execute(@RequestBody QueryDto query) {
     Table table = new QueryExecutor(this.itmQueryEngine).execute(query);
     Map<String, Object> result = Map.of(
-            "table", JacksonUtil.tableToCsv(table),
+            "table", JacksonUtil.serializeTable(table),
             "metadata", TableUtils.buildTableMetadata(table));
     return ResponseEntity.ok(result);
   }
