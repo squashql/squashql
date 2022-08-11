@@ -1,5 +1,7 @@
 package me.paulbares.client.http;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import feign.Feign;
 import feign.Headers;
 import feign.RequestLine;
@@ -15,10 +17,24 @@ public class HttpClientQuerier {
 
   private static final OkHttpClient client = new OkHttpClient();
 
-  private static final Feign.Builder builder = Feign.builder()
-          .client(new feign.okhttp.OkHttpClient(client))
-          .encoder(new JacksonEncoder(JacksonUtil.mapper))
-          .decoder(new JacksonDecoder(JacksonUtil.mapper));
+  private static final Feign.Builder builder;
+
+  static {
+    ObjectMapper mapper = JacksonUtil.mapper;
+    SimpleModule module = new SimpleModule();
+//    module.addDeserializer(SimpleTableWithMetadata.class, new JsonDeserializer<>() {
+//      @Override
+//      public SimpleTableWithMetadata deserialize(JsonParser p, DeserializationContext ctxt) {
+//        return null;
+//      }
+//    });
+    mapper.registerModule(module);
+    builder = Feign.builder()
+            .client(new feign.okhttp.OkHttpClient(client))
+            .encoder(new JacksonEncoder(JacksonUtil.mapper))
+            .decoder(new JacksonDecoder(JacksonUtil.mapper));
+  }
+
 
   public String url;
 
@@ -26,7 +42,7 @@ public class HttpClientQuerier {
     this.url = url;
   }
 
-  public Object run(QueryDto query) {
+  public SimpleTableWithMetadata run(QueryDto query) {
     QueryApi target = builder.target(QueryApi.class, this.url);
     return target.run(query);
   }
@@ -39,7 +55,7 @@ public class HttpClientQuerier {
   interface QueryApi {
     @RequestLine("POST /spark-query")
     @Headers("Content-Type: application/json")
-    Object run(QueryDto query);
+    SimpleTableWithMetadata run(QueryDto query);
 
     @RequestLine("GET /spark-metadata")
     Map<Object, Object> metadata();

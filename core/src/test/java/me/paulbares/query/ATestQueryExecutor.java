@@ -174,8 +174,7 @@ public abstract class ATestQueryExecutor {
             .aggregatedMeasure("price", "sum")
             .aggregatedMeasure("quantity", "sum");
     Table table = this.queryExecutor.execute(query);
-    String actual = JacksonUtil.tableToCsv(table);
-    Map map = JacksonUtil.mapper.readValue(actual, Map.class);
+    Map<String, Iterable<?>> map = JacksonUtil.tableToCsv(table);
     Assertions.assertThat((List) map.get("columns")).containsExactly(SCENARIO_FIELD_NAME, "sum(price)", "sum(quantity)");
     Assertions.assertThat((List) map.get("rows")).containsExactlyInAnyOrder(
             List.of(MAIN_SCENARIO_NAME, 15d, 33),

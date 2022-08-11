@@ -143,32 +143,32 @@ public class QueryControllerTest {
             storeName -> (List<Map<Object, Object>>) storesArray.stream().filter(s -> s.get("name").equals(storeName)).findFirst().get().get(QueryController.METADATA_FIELDS_KEY);
 
     Assertions.assertThat(f.apply("our_prices")).containsExactlyInAnyOrder(
-            Map.of("name", "ean", "type", "string"),
-            Map.of("name", "pdv", "type", "string"),
-            Map.of("name", "price", "type", "double"),
-            Map.of("name", "quantity", "type", "int"),
-            Map.of("name", "capdv", "type", "double"),
-            Map.of("name", SCENARIO_FIELD_NAME, "type", "string")
+            Map.of(NAME_KEY, "ean", TYPE_KEY, "string"),
+            Map.of(NAME_KEY, "pdv", TYPE_KEY, "string"),
+            Map.of(NAME_KEY, "price", TYPE_KEY, "double"),
+            Map.of(NAME_KEY, "quantity", TYPE_KEY, "int"),
+            Map.of(NAME_KEY, "capdv", TYPE_KEY, "double"),
+            Map.of(NAME_KEY, SCENARIO_FIELD_NAME, TYPE_KEY, "string")
     );
 
     Assertions.assertThat(f.apply("their_prices")).containsExactlyInAnyOrder(
-            Map.of("name", "competitor_ean", "type", "string"),
-            Map.of("name", "competitor_concurrent_pdv", "type", "string"),
-            Map.of("name", "competitor_brand", "type", "string"),
-            Map.of("name", "competitor_concurrent_ean", "type", "string"),
-            Map.of("name", "competitor_price", "type", "double")
+            Map.of(NAME_KEY, "competitor_ean", TYPE_KEY, "string"),
+            Map.of(NAME_KEY, "competitor_concurrent_pdv", TYPE_KEY, "string"),
+            Map.of(NAME_KEY, "competitor_brand", TYPE_KEY, "string"),
+            Map.of(NAME_KEY, "competitor_concurrent_ean", TYPE_KEY, "string"),
+            Map.of(NAME_KEY, "competitor_price", TYPE_KEY, "double")
     );
 
     Assertions.assertThat(f.apply("our_stores_their_stores")).containsExactlyInAnyOrder(
-            Map.of("name", "our_store", "type", "string"),
-            Map.of("name", "their_store", "type", "string")
+            Map.of(NAME_KEY, "our_store", TYPE_KEY, "string"),
+            Map.of(NAME_KEY, "their_store", TYPE_KEY, "string")
     );
 
     Assertions.assertThat((List) objects.get(QueryController.METADATA_AGG_FUNCS_KEY)).containsExactlyInAnyOrder(QueryController.SUPPORTED_AGG_FUNCS.toArray(new String[0]));
     if (withRepo) {
       Assertions.assertThat((List) objects.get(QueryController.METADATA_MEASURES_KEY)).containsExactlyInAnyOrder(
-              Map.of("alias", "indice_prix", "expression", "sum(capdv) / sum(competitor_price * quantity)"),
-              Map.of("alias", "capdv_concurrents", "expression", "sum(competitor_price * quantity)")
+              Map.of("alias", "indice_prix", EXPRESSION_KEY, "sum(capdv) / sum(competitor_price * quantity)"),
+              Map.of("alias", "capdv_concurrents", EXPRESSION_KEY, "sum(competitor_price * quantity)")
       );
     }
   }

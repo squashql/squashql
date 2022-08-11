@@ -5,6 +5,6 @@ import java.util.Map;
 
 public class SimpleTableWithMetadata {
 
-  public Map<String, Object> table;
+  public SimpleTable table;
   public List<Map<String, String>> metadata;
 }

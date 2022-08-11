@@ -65,7 +65,7 @@ public class QueryController {
               .stream()
               .map(f -> Map.of(NAME_KEY, f.name(), TYPE_KEY, f.type().getSimpleName().toLowerCase()))
               .toList();
-      root.add(Map.of("name", store.name(), METADATA_FIELDS_KEY, collect));
+      root.add(Map.of(NAME_KEY, store.name(), METADATA_FIELDS_KEY, collect));
     }
 
     return ResponseEntity.ok(Map.of(
