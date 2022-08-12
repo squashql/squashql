@@ -21,7 +21,7 @@ public class TestBigQueryQueryExecutor extends ATestQueryExecutor {
   protected void beforeLoading(List<Field> fields) {
     BigQueryTransactionManager tm = (BigQueryTransactionManager) this.tm;
     BigQueryTestUtil.createDatasetIfDoesNotExist(tm.getBigQuery(), datasetName);
-    tm.dropAndCreateInMemoryTable(this.datasetName, this.storeName, fields);
+    tm.dropAndCreateInMemoryTable(this.storeName, fields);
   }
 
   @Override
@@ -36,6 +36,6 @@ public class TestBigQueryQueryExecutor extends ATestQueryExecutor {
 
   @Override
   protected TransactionManager createTransactionManager() {
-    return new BigQueryTransactionManager(((BigQueryDatastore) this.datastore).getBigquery());
+    return new BigQueryTransactionManager(((BigQueryDatastore) this.datastore).getBigquery(), this.datasetName);
   }
 }
