@@ -13,12 +13,11 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
+import static me.paulbares.query.BigQueryTestUtil.PROJECT_ID;
 import static me.paulbares.query.QueryBuilder.*;
 
 public class TestSaasQuery {
 
-  String credendialsPath = "/Users/paul/dev/canvas-landing-355413-eb118aab8b19.json"; // FIXME
-  String projectId = "canvas-landing-355413";
   String datasetName = "business_planning";
 
   @Test
@@ -55,7 +54,7 @@ public class TestSaasQuery {
             Map.of("scenario_encrypted", "s-1", "group", "g"));
     query.withMeasure(kpiComp);
 
-    BigQueryEngine engine = new BigQueryEngine(new BigQueryDatastore(BigQueryUtil.createCredentials(this.credendialsPath), this.projectId, this.datasetName));
+    BigQueryEngine engine = new BigQueryEngine(new BigQueryDatastore(BigQueryUtil.createCredentials(BigQueryTestUtil.CREDENTIALS), PROJECT_ID, this.datasetName));
 
     QueryExecutor executor = new QueryExecutor(engine);
     execute(() -> executor.execute(query));
