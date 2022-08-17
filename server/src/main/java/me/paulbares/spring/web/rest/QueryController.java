@@ -46,7 +46,7 @@ public class QueryController {
   public ResponseEntity<Map<String, Object>> execute(@RequestBody QueryDto query) {
     Table table = new QueryExecutor(this.itmQueryEngine).execute(query);
     Map<String, Object> result = Map.of(
-            "table", JacksonUtil.tableToCsv(table),
+            "table", JacksonUtil.serializeTable(table),
             "metadata", TableUtils.buildTableMetadata(table));
     return ResponseEntity.ok(result);
   }
@@ -65,7 +65,7 @@ public class QueryController {
               .stream()
               .map(f -> Map.of(NAME_KEY, f.name(), TYPE_KEY, f.type().getSimpleName().toLowerCase()))
               .toList();
-      root.add(Map.of("name", store.name(), METADATA_FIELDS_KEY, collect));
+      root.add(Map.of(NAME_KEY, store.name(), METADATA_FIELDS_KEY, collect));
     }
 
     return ResponseEntity.ok(Map.of(

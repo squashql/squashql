@@ -1,5 +1,7 @@
 package me.paulbares.client.http;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import feign.Feign;
 import feign.Headers;
 import feign.RequestLine;
@@ -26,7 +28,7 @@ public class HttpClientQuerier {
     this.url = url;
   }
 
-  public Object run(QueryDto query) {
+  public SimpleTableWithMetadata run(QueryDto query) {
     QueryApi target = builder.target(QueryApi.class, this.url);
     return target.run(query);
   }
@@ -39,7 +41,7 @@ public class HttpClientQuerier {
   interface QueryApi {
     @RequestLine("POST /spark-query")
     @Headers("Content-Type: application/json")
-    Object run(QueryDto query);
+    SimpleTableWithMetadata run(QueryDto query);
 
     @RequestLine("GET /spark-metadata")
     Map<Object, Object> metadata();
