@@ -59,9 +59,7 @@ public class TestSaasQuery {
 
     QueryExecutor executor = new QueryExecutor(engine);
     execute(() -> executor.execute(query));
-    System.out.println(executor.caffeineCache.stats());
     execute(() -> executor.execute(query));
-    System.out.println(executor.caffeineCache.stats());
     execute(() -> executor.execute(query));
   }
 

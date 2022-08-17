@@ -6,6 +6,7 @@ import me.paulbares.query.context.Repository;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
+import me.paulbares.query.monitoring.QueryWatch;
 import me.paulbares.spring.dataset.DatasetTestConfig;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -109,6 +110,17 @@ public class QueryControllerTest {
                       Map.of(NAME_KEY, "sum(capdv)", TYPE_KEY, "double", EXPRESSION_KEY, "sum(capdv)"),
                       Map.of(NAME_KEY, "capdv_concurrents", TYPE_KEY, "double", EXPRESSION_KEY, "sum(competitor_price * quantity)"),
                       Map.of(NAME_KEY, "indice_prix", TYPE_KEY, "double", EXPRESSION_KEY, "sum(capdv) / sum(competitor_price * quantity)")
+              );
+
+              Map<String, Object> debug = (Map<String, Object>) queryResult.get("debug");
+              Assertions.assertThat(((Map) debug.get("cache")).size()).isEqualTo(3);
+              Assertions.assertThat(((Map) debug.get("timings")).keySet()).containsExactlyInAnyOrder(
+                      QueryWatch.EXECUTE_PLAN,
+                      QueryWatch.PREPARE_PLAN,
+                      QueryWatch.BUCKET,
+                      QueryWatch.PREFETCH,
+                      QueryWatch.ORDER,
+                      "total"
               );
             });
   }

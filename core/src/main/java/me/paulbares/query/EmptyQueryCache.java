@@ -1,5 +1,7 @@
 package me.paulbares.query;
 
+import me.paulbares.query.dto.CacheStatsDto;
+
 import java.util.Set;
 
 public class EmptyQueryCache implements QueryCache {
@@ -31,6 +33,10 @@ public class EmptyQueryCache implements QueryCache {
 
   @Override
   public void clear() {
+  }
 
+  @Override
+  public CacheStatsDto stats() {
+    return new CacheStatsDto(-1, -1, -1);
   }
 }

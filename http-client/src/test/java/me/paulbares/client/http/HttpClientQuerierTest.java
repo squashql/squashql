@@ -1,8 +1,10 @@
 package me.paulbares.client.http;
 
 import me.paulbares.AitmApplication;
-import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.query.*;
+import me.paulbares.query.AggregatedMeasure;
+import me.paulbares.query.ComparisonMeasure;
+import me.paulbares.query.ComparisonMethod;
+import me.paulbares.query.QueryBuilder;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
@@ -57,11 +59,14 @@ public class HttpClientQuerierTest {
             .withColumn(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("quantity", "sum");
 
-    SimpleTableWithMetadata response = querier.run(query);
+    HttpQueryResult response = querier.run(query);
     assertQuery(response.table, false);
     Assertions.assertThat(response.metadata).containsExactlyInAnyOrder(
             Map.of(NAME_KEY, SCENARIO_FIELD_NAME, TYPE_KEY, "string"),
             Map.of(NAME_KEY, "sum(quantity)", EXPRESSION_KEY, "sum(quantity)", TYPE_KEY, "long"));
+
+    Assertions.assertThat(response.debug.cache).isNotNull();
+    Assertions.assertThat(response.debug.timings).isNotNull();
   }
 
   @Test
@@ -90,7 +95,7 @@ public class HttpClientQuerierTest {
             .withMeasure(capdvDiff)
             .withMeasure(aggregatedMeasure);
 
-    SimpleTableWithMetadata response = querier.run(query);
+    HttpQueryResult response = querier.run(query);
     SimpleTable table = response.table;
     double baseValue = 40_000d;
     double mnValue = 42_000d;
@@ -121,7 +126,7 @@ public class HttpClientQuerierTest {
 
     var querier = new HttpClientQuerier(url);
 
-    SimpleTableWithMetadata response = querier.run(query);
+    HttpQueryResult response = querier.run(query);
     SimpleTable table = response.table;
     Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
             List.of(MAIN_SCENARIO_NAME, "ITM Balma", 20d),

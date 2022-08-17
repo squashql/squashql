@@ -1,5 +1,8 @@
 package me.paulbares.query;
 
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.store.Field;
 
@@ -8,16 +11,13 @@ import java.util.function.Function;
 
 import static me.paulbares.query.database.SqlUtils.escape;
 
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor // For Jackson
 public class ExpressionMeasure implements Measure {
 
   public String alias;
   public String expression;
-
-  /**
-   * For jackson.
-   */
-  public ExpressionMeasure() {
-  }
 
   public ExpressionMeasure(String alias, String expression) {
     this.alias = Objects.requireNonNull(alias);
@@ -37,30 +37,5 @@ public class ExpressionMeasure implements Measure {
   @Override
   public String expression() {
     return this.expression;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    ExpressionMeasure that = (ExpressionMeasure) o;
-    return alias.equals(that.alias) && expression.equals(that.expression);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(alias, expression);
-  }
-
-  @Override
-  public String toString() {
-    return "ExpressionMeasure{" +
-            "alias='" + alias + '\'' +
-            ", expression='" + expression + '\'' +
-            '}';
   }
 }

@@ -1,15 +1,21 @@
 package me.paulbares.query;
 
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.store.Field;
 
-import java.util.Objects;
 import java.util.function.Function;
 
 import static me.paulbares.query.database.SqlUtils.escape;
 
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor // For Jackson
 public class AggregatedMeasure implements Measure {
 
   public String alias;
@@ -17,12 +23,6 @@ public class AggregatedMeasure implements Measure {
   public String aggregationFunction;
   public String conditionField;
   public ConditionDto conditionDto;
-
-  /**
-   * For jackson.
-   */
-  public AggregatedMeasure() {
-  }
 
   public AggregatedMeasure(String field, String aggregationFunction) {
     this(null, field, aggregationFunction, null, null);
@@ -36,9 +36,9 @@ public class AggregatedMeasure implements Measure {
     this(null, field, aggregationFunction, conditionField, conditionDto);
   }
 
-  public AggregatedMeasure(String alias, String field, String aggregationFunction, String conditionField, ConditionDto conditionDto) {
-    this.field = Objects.requireNonNull(field);
-    this.aggregationFunction = Objects.requireNonNull(aggregationFunction);
+  public AggregatedMeasure(String alias, @NonNull String field, @NonNull String aggregationFunction, String conditionField, ConditionDto conditionDto) {
+    this.field = field;
+    this.aggregationFunction = aggregationFunction;
     this.conditionField = conditionField;
     this.conditionDto = conditionDto;
     this.alias = alias == null ? expression() : alias;
@@ -69,30 +69,5 @@ public class AggregatedMeasure implements Measure {
     } else {
       return this.aggregationFunction + "(" + this.field + ")";
     }
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    AggregatedMeasure that = (AggregatedMeasure) o;
-    return Objects.equals(this.alias, that.alias) && Objects.equals(this.field, that.field) && Objects.equals(this.aggregationFunction, that.aggregationFunction) && Objects.equals(this.conditionField, that.conditionField) && Objects.equals(this.conditionDto, that.conditionDto);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.alias, this.field, this.aggregationFunction, this.conditionField, this.conditionDto);
-  }
-
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() +
-            '{' +
-            "alias='" + alias + '\'' +
-            ", field='" + field + '\'' +
-            ", aggregationFunction='" + aggregationFunction + '\'' +
-            ", conditionField='" + conditionField + '\'' +
-            ", conditionDto=" + conditionDto +
-            '}';
   }
 }

@@ -1,9 +1,9 @@
 package me.paulbares.query;
 
-import com.google.common.cache.CacheStats;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.database.QueryEngine;
+import me.paulbares.query.dto.CacheStatsDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Datastore;
@@ -16,6 +16,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
@@ -52,7 +56,7 @@ public abstract class ATestQueryCache {
     this.datastore = createDatastore();
     QueryEngine queryEngine = createQueryEngine(this.datastore);
     this.queryExecutor = new QueryExecutor(queryEngine);
-    this.queryCache = this.queryExecutor.caffeineCache;
+    this.queryCache = (CaffeineQueryCache) this.queryExecutor.queryCache;
     this.tm = createTransactionManager();
 
     beforeLoading(List.of(ean, category, price, qty), List.of(comp_ean, comp_name, comp_price));
@@ -217,9 +221,45 @@ public abstract class ATestQueryCache {
     assertCacheStats(0, 2);
   }
 
+  @Test
+  void testEvictionMaxSize() throws InterruptedException {
+    AtomicInteger c = new AtomicInteger();
+    CountDownLatch latch = new CountDownLatch(1);
+    // Use a cache with a small size and a listener because removal is asynchronous.
+    CaffeineQueryCache cache = new CaffeineQueryCache(2, (key, value, cause) -> {
+      c.getAndIncrement();
+      latch.countDown();
+    });
+    QueryExecutor executor = new QueryExecutor(this.createQueryEngine(this.datastore), cache);
+
+    Supplier<QueryDto> querySupplier = () -> new QueryDto()
+            .table(this.storeName)
+            .withColumn(SCENARIO_FIELD_NAME)
+            .aggregatedMeasure("price", AggregationFunction.SUM);
+    // Scope 1 added to the cache
+    executor.execute(querySupplier.get());
+    assertCacheStats(cache.stats(), 0, 2);
+
+    // Scope 2 added to the cache
+    executor.execute(querySupplier.get().withColumn("category"));
+    assertCacheStats(cache.stats(), 0, 4);
+
+    // Scope 3, should evict an entry in the cache
+    executor.execute(querySupplier.get().withCondition("category", QueryBuilder.eq("drink")));
+    latch.await(60, TimeUnit.SECONDS);
+    CacheStatsDto stats = cache.stats();
+    assertCacheStats(stats, 0, 6);
+    Assertions.assertThat(c.getAndIncrement()).isEqualTo(1);
+    Assertions.assertThat(stats.evictionCount).isEqualTo(1);
+  }
+
   private void assertCacheStats(int hitCount, int missCount) {
-    CacheStats stats = this.queryCache.stats();
-    Assertions.assertThat(stats.hitCount()).isEqualTo(hitCount);
-    Assertions.assertThat(stats.missCount()).isEqualTo(missCount);
+    CacheStatsDto stats = this.queryCache.stats();
+    assertCacheStats(stats, hitCount, missCount);
+  }
+
+  private void assertCacheStats(CacheStatsDto stats, int hitCount, int missCount) {
+    Assertions.assertThat(stats.hitCount).isEqualTo(hitCount);
+    Assertions.assertThat(stats.missCount).isEqualTo(missCount);
   }
 }
