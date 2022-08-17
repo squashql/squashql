@@ -62,7 +62,7 @@ public class QueryExecutor {
 
   public Table execute(QueryDto query, QueryWatch queryWatch, CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder) {
     queryWatch.start(QueryWatch.GLOBAL);
-    queryWatch.start(QueryWatch.PREPARE);
+    queryWatch.start(QueryWatch.PREPARE_PLAN);
 
     queryWatch.start(QueryWatch.PREPARE_RESOLVE_MEASURES);
     resolveMeasures(query);
@@ -97,7 +97,7 @@ public class QueryExecutor {
       }
     }
 
-    queryWatch.stop(QueryWatch.PREPARE);
+    queryWatch.stop(QueryWatch.PREPARE_PLAN);
     queryWatch.start(QueryWatch.PREFETCH);
 
     Table prefetchResult;
@@ -137,9 +137,6 @@ public class QueryExecutor {
     queryWatch.stop(QueryWatch.ORDER);
     queryWatch.stop(QueryWatch.GLOBAL);
 
-//    log.info(queryWatch.toJson());
-//    log.info(JacksonUtil.serialize(queryCache.stats()));
-    // FIXME log stats
     CacheStatsDto stats = queryCache.stats();
     cacheStatsDtoBuilder
             .hitCount(stats.hitCount)

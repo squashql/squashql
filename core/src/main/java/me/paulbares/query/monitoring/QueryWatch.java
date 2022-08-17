@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -17,13 +18,13 @@ import static java.util.function.Function.*;
 public class QueryWatch {
 
   public static final String GLOBAL = "global";
-  public static final String PREPARE = "prepare";
+  public static final String PREPARE_PLAN = "prepare";
   public static final String PREPARE_RESOLVE_MEASURES = "resolveMeasures";
   public static final String PREPARE_CREATE_EXEC_PLAN = "createExecutionPlan";
   public static final String PREPARE_CREATE_QUERY_SCOPE = "createQueryScope";
   public static final String PREFETCH = "prefetch";
   public static final String BUCKET = "bucket";
-  public static final String EXECUTE_PLAN = "executePlan";
+  public static final String EXECUTE_PLAN = "execute";
   public static final String ORDER = "order";
   public static final Set<String> PREPARE_CHILDREN = Set.of(PREPARE_RESOLVE_MEASURES, PREPARE_CREATE_EXEC_PLAN, PREPARE_CREATE_QUERY_SCOPE);
 
@@ -49,7 +50,7 @@ public class QueryWatch {
 
   public String toJson() {
     Map<String, Stopwatch> children = new LinkedHashMap<>();
-    children.put(PREPARE, this.stopwatches.get(PREPARE));
+    children.put(PREPARE_PLAN, this.stopwatches.get(PREPARE_PLAN));
     children.put(PREFETCH, this.stopwatches.get(PREFETCH));
     children.put(BUCKET, this.stopwatches.get(BUCKET));
     children.put(EXECUTE_PLAN, this.stopwatches.get(EXECUTE_PLAN));
@@ -62,6 +63,30 @@ public class QueryWatch {
             children,
             identity());
     return sb.toString();
+  }
+
+  public QueryTimings toQueryTimings() {
+    QueryTimings queryTimings = new QueryTimings();
+    TimeUnit unit = TimeUnit.MICROSECONDS;
+    queryTimings.total = this.stopwatches.get(GLOBAL).elapsed(unit);
+
+    queryTimings.bucket = this.stopwatches.get(BUCKET).elapsed(unit);
+    queryTimings.prefetch = this.stopwatches.get(PREFETCH).elapsed(unit);
+    queryTimings.order = this.stopwatches.get(ORDER).elapsed(unit);
+
+    queryTimings.prepare.total = this.stopwatches.get(PREPARE_PLAN).elapsed(unit);
+    for (String prepareChild : PREPARE_CHILDREN) {
+      queryTimings.prepare.detail.put(prepareChild, this.stopwatches.get(prepareChild).elapsed(unit));
+    }
+
+    queryTimings.execute.total = this.stopwatches.get(EXECUTE_PLAN).elapsed(unit);
+    for (Map.Entry<Measure, Stopwatch> e : this.stopwatchByMeasure.entrySet()) {
+      String alias = e.getKey().alias();
+      String key = alias == null ? e.getKey().expression() : alias;
+      queryTimings.execute.detail.put(key, e.getValue().elapsed(unit));
+    }
+
+    return queryTimings;
   }
 
   private static <T> void addParentAndChildren(
@@ -81,8 +106,8 @@ public class QueryWatch {
     while (it.hasNext()) {
       var e = it.next();
       T stopwatchKey = e.getKey();
-      if (stopwatchKey.equals(PREPARE)) {
-        addFieldWithColon(sb, PREPARE);
+      if (stopwatchKey.equals(PREPARE_PLAN)) {
+        addFieldWithColon(sb, PREPARE_PLAN);
         Map<String, Stopwatch> collect = queryWatch.stopwatches.entrySet().stream()
                 .filter(ee -> PREPARE_CHILDREN.contains(ee.getKey()))
                 .collect(Collectors.toMap(ee -> ee.getKey(), ee -> ee.getValue()));

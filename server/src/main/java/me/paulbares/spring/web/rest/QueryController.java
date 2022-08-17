@@ -52,7 +52,7 @@ public class QueryController {
     Map<String, Object> result = Map.of(
             "table", JacksonUtil.serializeTable(table),
             "metadata", TableUtils.buildTableMetadata(table),
-            "debug", Map.of("timings", queryWatch.toJson(), "cache", builder.build()));
+            "debug", Map.of("timings", queryWatch.toQueryTimings(), "cache", builder.build()));
     return ResponseEntity.ok(result);
   }
 
