@@ -25,6 +25,7 @@ public class TestQueryS13n {
             .withColumn("ean")
             .aggregatedMeasure("price", "sum")
             .aggregatedMeasure("quantity", "sum")
+            .aggregatedMeasure(null, "price", "sum", "category", QueryBuilder.eq("food"))
             .expressionMeasure("alias1", "firstMyExpression")
             .expressionMeasure("alias2", "secondMyExpression")
             .withMeasure(new BinaryOperationMeasure("plus1", BinaryOperator.PLUS, new AggregatedMeasure("price", "sum"), new AggregatedMeasure("price", "sum")))
