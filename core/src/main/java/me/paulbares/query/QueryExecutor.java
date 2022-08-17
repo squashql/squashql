@@ -11,6 +11,7 @@ import me.paulbares.query.context.Repository;
 import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
+import me.paulbares.query.dto.CacheStatsDto;
 import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.monitoring.QueryWatch;
@@ -53,10 +54,13 @@ public class QueryExecutor {
   }
 
   public Table execute(QueryDto query) {
-    return execute(query, new QueryWatch());
+    return execute(
+            query,
+            new QueryWatch(),
+            CacheStatsDto.builder());
   }
 
-  public Table execute(QueryDto query, QueryWatch queryWatch) {
+  public Table execute(QueryDto query, QueryWatch queryWatch, CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder) {
     queryWatch.start(QueryWatch.GLOBAL);
     queryWatch.start(QueryWatch.PREPARE);
 
@@ -128,15 +132,20 @@ public class QueryExecutor {
     queryWatch.start(QueryWatch.ORDER);
 
     ColumnarTable columnarTable = buildFinalResult(query, prefetchResult);
-    Table order = TableUtils.order(columnarTable, query);
+    Table sortedTable = TableUtils.order(columnarTable, query);
 
     queryWatch.stop(QueryWatch.ORDER);
     queryWatch.stop(QueryWatch.GLOBAL);
 
-    log.info(queryWatch.toJson());
-//    log.info(queryCache.stats());
+//    log.info(queryWatch.toJson());
+//    log.info(JacksonUtil.serialize(queryCache.stats()));
     // FIXME log stats
-    return order;
+    CacheStatsDto stats = queryCache.stats();
+    cacheStatsDtoBuilder
+            .hitCount(stats.hitCount)
+            .evictionCount(stats.evictionCount)
+            .missCount(stats.missCount);
+    return sortedTable;
   }
 
   private ColumnarTable buildFinalResult(QueryDto query, Table prefetchResult) {

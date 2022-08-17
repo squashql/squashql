@@ -1,9 +1,9 @@
 package me.paulbares.query;
 
-import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.database.QueryEngine;
+import me.paulbares.query.dto.CacheStatsDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Datastore;
@@ -247,19 +247,19 @@ public abstract class ATestQueryCache {
     // Scope 3, should evict an entry in the cache
     executor.execute(querySupplier.get().withCondition("category", QueryBuilder.eq("drink")));
     latch.await(60, TimeUnit.SECONDS);
-    CacheStats stats = cache.stats();
+    CacheStatsDto stats = cache.stats();
     assertCacheStats(stats, 0, 6);
     Assertions.assertThat(c.getAndIncrement()).isEqualTo(1);
-    Assertions.assertThat(stats.evictionCount()).isEqualTo(1);
+    Assertions.assertThat(stats.evictionCount).isEqualTo(1);
   }
 
   private void assertCacheStats(int hitCount, int missCount) {
-    CacheStats stats = this.queryCache.stats();
+    CacheStatsDto stats = this.queryCache.stats();
     assertCacheStats(stats, hitCount, missCount);
   }
 
-  private void assertCacheStats(CacheStats stats, int hitCount, int missCount) {
-    Assertions.assertThat(stats.hitCount()).isEqualTo(hitCount);
-    Assertions.assertThat(stats.missCount()).isEqualTo(missCount);
+  private void assertCacheStats(CacheStatsDto stats, int hitCount, int missCount) {
+    Assertions.assertThat(stats.hitCount).isEqualTo(hitCount);
+    Assertions.assertThat(stats.missCount).isEqualTo(missCount);
   }
 }

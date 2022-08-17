@@ -1,5 +1,6 @@
 package me.paulbares.query;
 
+import me.paulbares.query.dto.CacheStatsDto;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Field;
@@ -18,6 +19,8 @@ public interface QueryCache {
   void contributeToResult(Table result, Set<Measure> measures, QueryScope scope);
 
   void clear();
+
+  CacheStatsDto stats();
 
   record QueryScope(TableDto tableDto, Set<Field> columns, Map<String, ConditionDto> conditions) {
   }

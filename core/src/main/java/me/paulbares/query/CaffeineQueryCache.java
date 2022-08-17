@@ -6,6 +6,7 @@ import com.github.benmanes.caffeine.cache.RemovalListener;
 import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import com.github.benmanes.caffeine.cache.stats.ConcurrentStatsCounter;
 import com.github.benmanes.caffeine.cache.stats.StatsCounter;
+import me.paulbares.query.dto.CacheStatsDto;
 import me.paulbares.store.Field;
 
 import java.time.Duration;
@@ -103,9 +104,9 @@ public class CaffeineQueryCache implements QueryCache {
     }
   }
 
-  public CacheStats stats() {
+  public CacheStatsDto stats() {
     CacheStats snapshot = this.measureCounter.snapshot();
-    return CacheStats.of(
+    CacheStats of = CacheStats.of(
             snapshot.hitCount(),
             snapshot.missCount(),
             0,
@@ -113,6 +114,7 @@ public class CaffeineQueryCache implements QueryCache {
             0,
             this.scopeCounter.snapshot().evictionCount(),
             0);
+    return new CacheStatsDto(snapshot.hitCount(), snapshot.missCount(), this.scopeCounter.snapshot().evictionCount());
   }
 
   @Override
