@@ -1,6 +1,5 @@
 package me.paulbares.query;
 
-import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.context.Repository;
 import me.paulbares.query.database.QueryEngine;
@@ -16,9 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.util.List;
-import java.util.Map;
 
-import static me.paulbares.query.TableUtils.*;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -54,7 +51,10 @@ public abstract class ATestQueryExecutor {
     this.tm = createTransactionManager();
 
     beforeLoading(List.of(ean, category, price, qty));
+    load();
+  }
 
+  protected void load() {
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", 2d, 10},
             new Object[]{"cookie", "food", 3d, 20},
