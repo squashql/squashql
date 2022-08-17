@@ -50,7 +50,7 @@ public class QueryController {
     CacheStatsDto.CacheStatsDtoBuilder builder = CacheStatsDto.builder();
     Table table = new QueryExecutor(this.itmQueryEngine).execute(query, queryWatch, builder);
     Map<String, Object> result = Map.of(
-            "table", JacksonUtil.tableToCsv(table),
+            "table", JacksonUtil.serializeTable(table),
             "metadata", TableUtils.buildTableMetadata(table),
             "debug", Map.of("timings", queryWatch.toJson(), "cache", builder.build()));
     return ResponseEntity.ok(result);
@@ -70,7 +70,7 @@ public class QueryController {
               .stream()
               .map(f -> Map.of(NAME_KEY, f.name(), TYPE_KEY, f.type().getSimpleName().toLowerCase()))
               .toList();
-      root.add(Map.of("name", store.name(), METADATA_FIELDS_KEY, collect));
+      root.add(Map.of(NAME_KEY, store.name(), METADATA_FIELDS_KEY, collect));
     }
 
     return ResponseEntity.ok(Map.of(

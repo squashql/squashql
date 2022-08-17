@@ -9,7 +9,7 @@ In order to build the server, you will need:
 - Install prerequisites (see above)
 - Build the project
 ```
-mvn clean install -DskipTests
+mvn clean install -DskipTests -Pspring-boot
 ```
 - Launch the project with the following command. Replace `/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java` 
 by your java path if necessary. 

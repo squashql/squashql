@@ -167,30 +167,6 @@ public abstract class ATestQueryExecutor {
   }
 
   @Test
-  void testJsonConverter() throws Exception {
-    QueryDto query = new QueryDto()
-            .table(this.storeName)
-            .withColumn(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("price", "sum")
-            .aggregatedMeasure("quantity", "sum");
-    Table table = this.queryExecutor.execute(query);
-    String actual = JacksonUtil.tableToCsv(table);
-    Map map = JacksonUtil.mapper.readValue(actual, Map.class);
-    Assertions.assertThat((List) map.get("columns")).containsExactly(SCENARIO_FIELD_NAME, "sum(price)", "sum(quantity)");
-    Assertions.assertThat((List) map.get("rows")).containsExactlyInAnyOrder(
-            List.of(MAIN_SCENARIO_NAME, 15d, 33),
-            List.of("s1", 17d, 33),
-            List.of("s2", 14.5d, 33));
-
-    List<Map<String, Object>> metadata = TableUtils.buildTableMetadata(table);
-    Assertions.assertThat(metadata)
-                    .containsExactly(
-                            Map.of(NAME_KEY, SCENARIO_FIELD_NAME, TYPE_KEY, "string"),
-                            Map.of(NAME_KEY, "sum(price)", TYPE_KEY, "double", EXPRESSION_KEY, "sum(price)"),
-                            Map.of(NAME_KEY, "sum(quantity)", TYPE_KEY, "long", EXPRESSION_KEY, "sum(quantity)"));
-  }
-
-  @Test
   void testQueryWithRepository() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
