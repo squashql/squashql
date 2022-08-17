@@ -4,10 +4,10 @@
 
 In the root directory: `tsc` to compile the project. 
 
-Local publish (do it only once): npm link
+Local publish (do it only once): `npm link`
 -> create a symbolic link to the entire folder to the global namespace
 
-Check global packages (namespace): npm list -g, the project should appear in the list.
+Check global packages (namespace): `npm list -g`, the project should appear in the list.
 
 ### Client
 Add to the project ? npm link myproject

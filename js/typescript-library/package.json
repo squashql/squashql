@@ -1,7 +1,7 @@
 {
-  "name": "mycustomlib",
+  "name": "aitm-js-query",
   "version": "1.0.0",
-  "description": "mycustomlib Can log \"hello world\" and \"goodbye world\" to the console!",
+  "description": "AITM query builder/helper",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
