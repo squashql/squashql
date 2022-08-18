@@ -2,7 +2,6 @@ package me.paulbares.jackson;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import me.paulbares.query.Table;
 import me.paulbares.store.Field;
@@ -17,10 +16,7 @@ public class JacksonUtil {
 
   static {
     mapper = new ObjectMapper();
-    mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
     var simpleModule = new SimpleModule();
-//    mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-//    simpleModule.addDeserializer(ConditionDto.class, new ConditionDeserializer());
     mapper.registerModule(simpleModule);
   }
 

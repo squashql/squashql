@@ -1,6 +1,8 @@
 package me.paulbares.jackson;
 
 import me.paulbares.query.*;
+import me.paulbares.query.context.ContextValue;
+import me.paulbares.query.context.Repository;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.dto.*;
@@ -154,5 +156,31 @@ public class TestQueryS13n {
     ConditionDto c3 = in("paris", "london");
     deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(c3), ConditionDto.class);
     Assertions.assertThat(deserialize).isEqualTo(c3);
+  }
+
+  @Test
+  void testOrders() {
+    OrderDto o = new ExplicitOrderDto(List.of("a", "b"));
+    OrderDto deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(o), OrderDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(o);
+
+    o = new SimpleOrderDto(OrderKeywordDto.DESC);
+    deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(o), OrderDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(o);
+  }
+
+  @Test
+  void testContextValues() {
+    ContextValue cv = new Repository("url");
+    ContextValue deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(cv), ContextValue.class);
+    Assertions.assertThat(deserialize).isEqualTo(cv);
+
+    cv = new Totals(Totals.KEY);
+    deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(cv), ContextValue.class);
+    Assertions.assertThat(deserialize).isEqualTo(cv);
+
+    cv = new QueryCacheContextValue(QueryCacheContextValue.Action.USE);
+    deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(cv), ContextValue.class);
+    Assertions.assertThat(deserialize).isEqualTo(cv);
   }
 }

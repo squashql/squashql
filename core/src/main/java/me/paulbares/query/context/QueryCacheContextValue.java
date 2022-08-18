@@ -1,16 +1,15 @@
 package me.paulbares.query.context;
 
-import java.util.Objects;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor // For Jackson
 public class QueryCacheContextValue implements ContextValue {
 
   public static final String KEY = "cache";
-
-  /**
-   * Jackson.
-   */
-  public QueryCacheContextValue() {
-  }
 
   public QueryCacheContextValue(Action action) {
     this.action = action;
@@ -25,18 +24,5 @@ public class QueryCacheContextValue implements ContextValue {
   @Override
   public String key() {
     return KEY;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    QueryCacheContextValue queryCacheContextValue = (QueryCacheContextValue) o;
-    return this.action == queryCacheContextValue.action;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.action);
   }
 }
