@@ -136,4 +136,23 @@ public class TestQueryS13n {
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
     Assertions.assertThat(deserialize).isEqualTo(query);
   }
+
+  @Test
+  void testConditions() {
+    ConditionDto c1 = new SingleValueConditionDto(ConditionType.EQ, 5);
+    String serialize = JacksonUtil.serialize(c1);
+    ConditionDto deserialize = JacksonUtil.deserialize(serialize, ConditionDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(c1);
+
+    ConditionDto december = and(gt("1/12/1996"), lt("31/12/1996"));
+    ConditionDto october = and(ge("1/10/1996"), le("31/10/1996"));
+    ConditionDto c2 = or(december, october);
+    serialize = JacksonUtil.serialize(c2);
+    deserialize = JacksonUtil.deserialize(serialize, ConditionDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(c2);
+
+    ConditionDto c3 = in("paris", "london");
+    deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(c3), ConditionDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(c3);
+  }
 }

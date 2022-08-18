@@ -58,7 +58,7 @@ public class QueryBuilder {
   }
 
   public static ConditionDto in(Object... values) {
-    return new SingleValueConditionDto(ConditionType.IN, values);
+    return new MultipleValueConditionDto(values);
   }
 
   public static ConditionDto lt(Object value) {
