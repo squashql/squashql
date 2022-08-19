@@ -71,10 +71,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           cache: 'maven'
-      - name: Build with Maven
-        run: mvn -pl :aitm-js,:aitm-server -am clean install --no-transfer-progress -DskipTests
-      - name: Run js tests
-        run: mvn -pl :aitm-js --no-transfer-progress test
+      - name: server - Build with Maven
+        run: mvn -pl :aitm-server -am clean install --no-transfer-progress -DskipTests
+      - name: js - build and run tests with Maven
+        run: mvn -pl :aitm-js -am clean install --no-transfer-progress
       - name: Run server tests
         run: mvn -pl :aitm-server --no-transfer-progress test
 
