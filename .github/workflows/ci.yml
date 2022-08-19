@@ -74,7 +74,7 @@ jobs:
       - name: server - Build with Maven
         run: mvn -pl :aitm-server -am clean install --no-transfer-progress -DskipTests
       - name: js - build and run tests with Maven
-        run: mvn -pl :aitm-js -am clean install --no-transfer-progress
+        run: mvn -pl :aitm-js -am clean install --no-transfer-progress -DskipTests
       - name: Run server tests
         run: mvn -pl :aitm-server --no-transfer-progress test
 
