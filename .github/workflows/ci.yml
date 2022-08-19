@@ -73,8 +73,10 @@ jobs:
           cache: 'maven'
       - name: server - Build with Maven
         run: mvn -pl :aitm-server -am clean install --no-transfer-progress -DskipTests
-      - name: js - build and run tests with Maven
+      - name: js - Build with Maven
         run: mvn -pl :aitm-js -am clean install --no-transfer-progress -DskipTests
+      - name: js - Package with Maven
+        run: mvn -pl :aitm-js package --no-transfer-progress
       - name: Run server tests
         run: mvn -pl :aitm-server --no-transfer-progress test
 
