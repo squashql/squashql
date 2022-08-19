@@ -8,6 +8,7 @@
     <groupId>me.paulbares</groupId>
     <artifactId>aitm-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
   </parent>
 
   <groupId>me.paulbares</groupId>
