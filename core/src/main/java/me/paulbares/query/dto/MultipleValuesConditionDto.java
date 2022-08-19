@@ -13,11 +13,11 @@ import static me.paulbares.query.dto.ConditionType.IN;
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
-public final class MultipleValueConditionDto implements ConditionDto {
+public final class MultipleValuesConditionDto implements ConditionDto {
 
   public Set<Object> values;
 
-  public MultipleValueConditionDto(Object value) {
+  public MultipleValuesConditionDto(Object value) {
     Set<Object> set = new HashSet<>();
     if (value.getClass().isArray()) {
       Object[] array = (Object[]) value;

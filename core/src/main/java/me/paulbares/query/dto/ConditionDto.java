@@ -9,7 +9,7 @@ import static me.paulbares.query.dto.ConditionType.OR;
  * Marker interface to represent a (logical, value) condition.
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
-public sealed interface ConditionDto permits LogicalConditionDto, SingleValueConditionDto, MultipleValueConditionDto {
+public sealed interface ConditionDto permits LogicalConditionDto, SingleValueConditionDto, MultipleValuesConditionDto {
 
   ConditionType type();
 
