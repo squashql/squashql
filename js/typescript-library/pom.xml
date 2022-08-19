@@ -80,28 +80,22 @@
           </execution>
         </executions>
       </plugin>
-
       <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>3.3.0</version>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.1.0</version>
         <executions>
           <execution>
-            <id>copy-query-json</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
+            <phase>package</phase>
             <configuration>
-              <outputDirectory>${basedir}/target/destination-folder</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>source-files</directory>
-                  <includes>
-                    <include>foo.txt</include>
-                  </includes>
-                </resource>
-              </resources>
+              <target>
+                <copy todir="${basedir}/../../server/src/test/resources/">
+                  <fileset dir="${basedir}" includes="query.json"/>
+                </copy>
+              </target>
             </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
