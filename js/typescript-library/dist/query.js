@@ -31,39 +31,3 @@ class Table {
     }
 }
 exports.Table = Table;
-// export class AggregatedMeasure implements Measure {
-//     field: string
-//     aggregationFunction: string
-//     alias?: string
-//     conditionField?: string
-//     condition?: Condition
-//
-//     constructor(field: string, aggregationFunction: string, alias?: string, conditionField?: string, condition?: Condition) {
-//         this.field = field
-//         this.aggregationFunction = aggregationFunction
-//         this.alias = alias
-//         this.conditionField = conditionField
-//         this.condition = condition
-//     }
-//
-//     class: string = PACKAGE + "AggregatedMeasure";
-//
-//     toJSON() {
-//         return {
-//             "@class": this.class,
-//             "field": this.field,
-//             "aggregationFunction": this.aggregationFunction,
-//             "alias": this.alias,
-//             "conditionField": this.conditionField,
-//             "condition": this.condition,
-//         }
-//     }
-// }
-//
-// interface Measure {
-//     readonly class: string
-// }
-//
-// interface Condition {
-//     type: string;
-// }

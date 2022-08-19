@@ -25,3 +25,6 @@ hs_err_pid*
 # spark
 metastore_db
 spark-warehouse
+
+#node
+node_modules

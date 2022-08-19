@@ -1,0 +1,1 @@
+{"columns":["a","b"],"measures":[{"@class":"me.paulbares.query.AggregatedMeasure","field":"price","aggregation_function":"sum"},{"@class":"me.paulbares.query.AggregatedMeasure","field":"price","aggregation_function":"sum","alias":"alias","condition_field":"category","condition_dto":{"type":"EQ","value":"food"}}],"table":{"name":"myTable"}}

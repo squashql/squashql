@@ -40,6 +40,7 @@
     <module>spark</module>
     <module>server</module>
     <module>http-client</module>
+    <module>js/typescript-library</module>
   </modules>
 
   <dependencyManagement>
