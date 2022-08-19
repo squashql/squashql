@@ -26,5 +26,8 @@ hs_err_pid*
 metastore_db
 spark-warehouse
 
-#node
+# node
 node_modules
+
+# specific to the project
+query.json
