@@ -1,19 +1,23 @@
 package me.paulbares.spring.web.rest;
 
+import com.google.common.collect.ImmutableList;
+import me.paulbares.query.dto.DebugInfoDto;
+import me.paulbares.query.dto.QueryResultDto;
+import me.paulbares.query.dto.SimpleTableDto;
 import me.paulbares.query.*;
-import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.database.SparkQueryEngine;
 import me.paulbares.query.dto.CacheStatsDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.monitoring.QueryWatch;
+import me.paulbares.store.Field;
 import me.paulbares.store.Store;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static me.paulbares.query.TableUtils.NAME_KEY;
-import static me.paulbares.query.TableUtils.TYPE_KEY;
 
 @RestController
 public class QueryController {
@@ -45,14 +49,22 @@ public class QueryController {
   }
 
   @PostMapping(MAPPING_QUERY)
-  public ResponseEntity<Map<String, Object>> execute(@RequestBody QueryDto query) {
+  public ResponseEntity<Object> execute(@RequestBody QueryDto query) {
     QueryWatch queryWatch = new QueryWatch();
-    CacheStatsDto.CacheStatsDtoBuilder builder = CacheStatsDto.builder();
-    Table table = new QueryExecutor(this.itmQueryEngine).execute(query, queryWatch, builder);
-    Map<String, Object> result = Map.of(
-            "table", JacksonUtil.serializeTable(table),
-            "metadata", TableUtils.buildTableMetadata(table),
-            "debug", Map.of("timings", queryWatch.toQueryTimings(), "cache", builder.build()));
+    CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
+    Table table = new QueryExecutor(this.itmQueryEngine).execute(query, queryWatch, csBuilder);
+    List<String> fields = table.headers().stream().map(Field::name).collect(Collectors.toList());
+    SimpleTableDto simpleTable = SimpleTableDto.builder()
+            .rows(ImmutableList.copyOf(table.iterator()))
+            .columns(fields)
+            .build();
+    QueryResultDto result = QueryResultDto.builder()
+            .table(simpleTable)
+            .metadata(TableUtils.buildTableMetadata(table))
+            .debug(DebugInfoDto.builder()
+                    .cache(csBuilder.build())
+                    .timings(queryWatch.toQueryTimings()).build())
+            .build();
     return ResponseEntity.ok(result);
   }
 
@@ -62,15 +74,12 @@ public class QueryController {
     return ResponseEntity.ok(table.toString());
   }
 
+  // TODO use a concrete type here
   @GetMapping(MAPPING_METADATA)
   public ResponseEntity<Map<Object, Object>> getMetadata(@RequestParam(name = "repo-url", required = false) String repo_url) {
     List<Map<String, Object>> root = new ArrayList<>();
     for (Store store : this.itmQueryEngine.datastore.storesByName().values()) {
-      List<Map<String, String>> collect = store.fields()
-              .stream()
-              .map(f -> Map.of(NAME_KEY, f.name(), TYPE_KEY, f.type().getSimpleName().toLowerCase()))
-              .toList();
-      root.add(Map.of(NAME_KEY, store.name(), METADATA_FIELDS_KEY, collect));
+      root.add(Map.of(NAME_KEY, store.name(), METADATA_FIELDS_KEY, store.fields()));
     }
 
     return ResponseEntity.ok(Map.of(

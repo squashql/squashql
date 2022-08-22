@@ -19,6 +19,7 @@ import static me.paulbares.query.database.SqlUtils.escape;
 public class AggregatedMeasure implements Measure {
 
   public String alias;
+  public String expression;
   public String field;
   public String aggregationFunction;
   public String conditionField;
@@ -41,7 +42,8 @@ public class AggregatedMeasure implements Measure {
     this.aggregationFunction = aggregationFunction;
     this.conditionField = conditionField;
     this.conditionDto = conditionDto;
-    this.alias = alias == null ? expression() : alias;
+    this.expression = MeasureUtils.createExpression(this);
+    this.alias = alias == null ? this.expression : alias;
   }
 
   @Override
@@ -63,11 +65,6 @@ public class AggregatedMeasure implements Measure {
 
   @Override
   public String expression() {
-    if (this.conditionDto != null) {
-      String conditionSt = SQLTranslator.toSql(new Field(this.conditionField, String.class), this.conditionDto);
-      return this.aggregationFunction + "If(" + this.field + ", " + conditionSt + ")";
-    } else {
-      return this.aggregationFunction + "(" + this.field + ")";
-    }
+    return this.expression;
   }
 }

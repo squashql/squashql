@@ -40,7 +40,7 @@
     <module>clickhouse</module>
     <module>spark</module>
     <module>server</module>
-    <module>http-client</module>
+    <module>java-client</module>
     <module>js/typescript-library</module>
   </modules>
 

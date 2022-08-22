@@ -4,7 +4,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
-import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 
 import java.util.Map;
@@ -16,6 +15,7 @@ import java.util.function.Function;
 public class ComparisonMeasure implements Measure {
 
   public String alias;
+  public String expression;
   public ComparisonMethod method;
   public Measure measure;
   public String columnSet;
@@ -33,6 +33,7 @@ public class ComparisonMeasure implements Measure {
     this.columnSet = columnSet;
     this.measure = measure;
     this.referencePosition = referencePosition;
+    this.expression = MeasureUtils.createExpression(this);
   }
 
   @Override
@@ -47,15 +48,6 @@ public class ComparisonMeasure implements Measure {
 
   @Override
   public String expression() {
-    String alias = this.measure.alias();
-    if (this.columnSet.equals(QueryDto.PERIOD)) {
-      String formula = this.method.expressionGenerator.apply(alias + "(current period)", alias + "(reference period)");
-      return formula + ", reference = " + this.referencePosition;
-    } else if (this.columnSet.equals(QueryDto.BUCKET)) {
-      String formula = this.method.expressionGenerator.apply(alias + "(current bucket)", alias + "(reference bucket)");
-      return formula + ", reference = " + this.referencePosition;
-    } else {
-      return "unknown";
-    }
+    return this.expression;
   }
 }

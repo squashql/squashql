@@ -23,6 +23,11 @@
     </dependency>
     <dependency>
       <groupId>me.paulbares</groupId>
+      <artifactId>aitm-java-client</artifactId>
+      <version>0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>me.paulbares</groupId>
       <artifactId>aitm-js</artifactId>
       <version>0.1-SNAPSHOT</version>
     </dependency>

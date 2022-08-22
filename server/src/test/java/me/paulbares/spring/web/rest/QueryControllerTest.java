@@ -2,12 +2,14 @@ package me.paulbares.spring.web.rest;
 
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.*;
+import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.context.Repository;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.QueryResultDto;
 import me.paulbares.query.dto.TableDto;
-import me.paulbares.query.monitoring.QueryWatch;
 import me.paulbares.spring.dataset.DatasetTestConfig;
+import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,9 +85,8 @@ public class QueryControllerTest {
             .andExpect(status().isOk())
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
-              Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
-              Map<String, Object> table = (Map<String, Object>) queryResult.get("table");
-              Assertions.assertThat((List) table.get("rows")).containsExactlyInAnyOrder(
+              QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
+              Assertions.assertThat(queryResult.table.rows).containsExactlyInAnyOrder(
                       List.of("MN & MDD up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
                       List.of("MN & MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196),
 
@@ -101,27 +102,19 @@ public class QueryControllerTest {
                       List.of(MAIN_SCENARIO_NAME, "ITMella 250g", 100000d, 102000d, 0.9803921568627451d),
                       List.of(MAIN_SCENARIO_NAME, "Nutella 250g", 100000d, 102000d, 0.9803921568627451d));
 
-              Assertions.assertThat((List) table.get("columns")).containsExactly(
+              Assertions.assertThat(queryResult.table.columns).containsExactly(
                       SCENARIO_FIELD_NAME, "ean", "sum(capdv)", "capdv_concurrents", "indice_prix");
 
-              Assertions.assertThat((List) queryResult.get("metadata")).containsExactly(
-                      Map.of(NAME_KEY, SCENARIO_FIELD_NAME, TYPE_KEY, "string"),
-                      Map.of(NAME_KEY, "ean", TYPE_KEY, "string"),
-                      Map.of(NAME_KEY, "sum(capdv)", TYPE_KEY, "double", EXPRESSION_KEY, "sum(capdv)"),
-                      Map.of(NAME_KEY, "capdv_concurrents", TYPE_KEY, "double", EXPRESSION_KEY, "sum(competitor_price * quantity)"),
-                      Map.of(NAME_KEY, "indice_prix", TYPE_KEY, "double", EXPRESSION_KEY, "sum(capdv) / sum(competitor_price * quantity)")
+              Assertions.assertThat(queryResult.metadata).containsExactly(
+                      new Field(SCENARIO_FIELD_NAME, String.class),
+                      new Field("ean", String.class),
+                      new AggregatedMeasure("capdv", AggregationFunction.SUM),
+                      new ExpressionMeasure("capdv_concurrents", "sum(competitor_price * quantity)"),
+                      new ExpressionMeasure("indice_prix", "sum(capdv) / sum(competitor_price * quantity)")
               );
 
-              Map<String, Object> debug = (Map<String, Object>) queryResult.get("debug");
-              Assertions.assertThat(((Map) debug.get("cache")).size()).isEqualTo(3);
-              Assertions.assertThat(((Map) debug.get("timings")).keySet()).containsExactlyInAnyOrder(
-                      QueryWatch.EXECUTE_PLAN,
-                      QueryWatch.PREPARE_PLAN,
-                      QueryWatch.BUCKET,
-                      QueryWatch.PREFETCH,
-                      QueryWatch.ORDER,
-                      "total"
-              );
+              Assertions.assertThat(queryResult.debug.cache).isNotNull();
+              Assertions.assertThat(queryResult.debug.timings.total).isGreaterThan(0);
             });
   }
 
@@ -154,25 +147,25 @@ public class QueryControllerTest {
             storeName -> (List<Map<Object, Object>>) storesArray.stream().filter(s -> s.get("name").equals(storeName)).findFirst().get().get(QueryController.METADATA_FIELDS_KEY);
 
     Assertions.assertThat(f.apply("our_prices")).containsExactlyInAnyOrder(
-            Map.of(NAME_KEY, "ean", TYPE_KEY, "string"),
-            Map.of(NAME_KEY, "pdv", TYPE_KEY, "string"),
+            Map.of(NAME_KEY, "ean", TYPE_KEY, String.class.getName()),
+            Map.of(NAME_KEY, "pdv", TYPE_KEY, String.class.getName()),
             Map.of(NAME_KEY, "price", TYPE_KEY, "double"),
             Map.of(NAME_KEY, "quantity", TYPE_KEY, "int"),
             Map.of(NAME_KEY, "capdv", TYPE_KEY, "double"),
-            Map.of(NAME_KEY, SCENARIO_FIELD_NAME, TYPE_KEY, "string")
+            Map.of(NAME_KEY, SCENARIO_FIELD_NAME, TYPE_KEY, String.class.getName())
     );
 
     Assertions.assertThat(f.apply("their_prices")).containsExactlyInAnyOrder(
-            Map.of(NAME_KEY, "competitor_ean", TYPE_KEY, "string"),
-            Map.of(NAME_KEY, "competitor_concurrent_pdv", TYPE_KEY, "string"),
-            Map.of(NAME_KEY, "competitor_brand", TYPE_KEY, "string"),
-            Map.of(NAME_KEY, "competitor_concurrent_ean", TYPE_KEY, "string"),
+            Map.of(NAME_KEY, "competitor_ean", TYPE_KEY, String.class.getName()),
+            Map.of(NAME_KEY, "competitor_concurrent_pdv", TYPE_KEY, String.class.getName()),
+            Map.of(NAME_KEY, "competitor_brand", TYPE_KEY, String.class.getName()),
+            Map.of(NAME_KEY, "competitor_concurrent_ean", TYPE_KEY, String.class.getName()),
             Map.of(NAME_KEY, "competitor_price", TYPE_KEY, "double")
     );
 
     Assertions.assertThat(f.apply("our_stores_their_stores")).containsExactlyInAnyOrder(
-            Map.of(NAME_KEY, "our_store", TYPE_KEY, "string"),
-            Map.of(NAME_KEY, "their_store", TYPE_KEY, "string")
+            Map.of(NAME_KEY, "our_store", TYPE_KEY, String.class.getName()),
+            Map.of(NAME_KEY, "their_store", TYPE_KEY, String.class.getName())
     );
 
     Assertions.assertThat((List) objects.get(QueryController.METADATA_AGG_FUNCS_KEY)).containsExactlyInAnyOrder(QueryController.SUPPORTED_AGG_FUNCS.toArray(new String[0]));

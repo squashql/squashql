@@ -1,6 +1,9 @@
-package me.paulbares.client.http;
+package me.paulbares.client;
 
 import me.paulbares.AitmApplication;
+import me.paulbares.client.http.HttpClientQuerier;
+import me.paulbares.query.dto.QueryResultDto;
+import me.paulbares.query.dto.SimpleTableDto;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ComparisonMeasure;
 import me.paulbares.query.ComparisonMethod;
@@ -8,7 +11,9 @@ import me.paulbares.query.QueryBuilder;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
+import me.paulbares.spring.dataset.DatasetTestConfig;
 import me.paulbares.spring.web.rest.QueryControllerTest;
+import me.paulbares.store.Field;
 import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -20,7 +25,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static me.paulbares.query.TableUtils.*;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -59,11 +63,11 @@ public class HttpClientQuerierTest {
             .withColumn(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("quantity", "sum");
 
-    HttpQueryResult response = querier.run(query);
+    QueryResultDto response = querier.run(query);
     assertQuery(response.table, false);
-    Assertions.assertThat(response.metadata).containsExactlyInAnyOrder(
-            Map.of(NAME_KEY, SCENARIO_FIELD_NAME, TYPE_KEY, "string"),
-            Map.of(NAME_KEY, "sum(quantity)", EXPRESSION_KEY, "sum(quantity)", TYPE_KEY, "long"));
+    Assertions.assertThat(response.metadata).containsExactly(
+            new Field(SCENARIO_FIELD_NAME, String.class),
+            query.measures.get(0));
 
     Assertions.assertThat(response.debug.cache).isNotNull();
     Assertions.assertThat(response.debug.timings).isNotNull();
@@ -95,8 +99,8 @@ public class HttpClientQuerierTest {
             .withMeasure(capdvDiff)
             .withMeasure(aggregatedMeasure);
 
-    HttpQueryResult response = querier.run(query);
-    SimpleTable table = response.table;
+    QueryResultDto response = querier.run(query);
+    SimpleTableDto table = response.table;
     double baseValue = 40_000d;
     double mnValue = 42_000d;
     double mnmddValue = 44_000d;
@@ -126,8 +130,8 @@ public class HttpClientQuerierTest {
 
     var querier = new HttpClientQuerier(url);
 
-    HttpQueryResult response = querier.run(query);
-    SimpleTable table = response.table;
+    QueryResultDto response = querier.run(query);
+    SimpleTableDto table = response.table;
     Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
             List.of(MAIN_SCENARIO_NAME, "ITM Balma", 20d),
             List.of(MAIN_SCENARIO_NAME, "ITM Toulouse and Drive", 20d)
@@ -135,7 +139,7 @@ public class HttpClientQuerierTest {
     Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "pdv", "sum(price)");
   }
 
-  static void assertQuery(SimpleTable table, boolean withTotals) {
+  static void assertQuery(SimpleTableDto table, boolean withTotals) {
     List[] lists = {List.of("MDD up", 4000),
             List.of("MN & MDD down", 4000),
             List.of("MN & MDD up", 4000),
