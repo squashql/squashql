@@ -46,8 +46,8 @@ public class QueryDto {
     return this;
   }
 
-  public QueryDto aggregatedMeasure(String field, String agg) {
-    withMeasure(new AggregatedMeasure(field, agg));
+  public QueryDto aggregatedMeasure(String alias, String field, String agg) {
+    withMeasure(new AggregatedMeasure(alias, field, agg));
     return this;
   }
 

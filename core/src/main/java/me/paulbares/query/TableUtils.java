@@ -94,9 +94,14 @@ public class TableUtils {
     for (Field field : t.headers()) {
       if (t.isMeasure(index)) {
         int i = Arrays.binarySearch(t.measureIndices(), index);
-        metadata.add(t.measures().get(i));
+        Measure measure = t.measures().get(i);
+        String expression = measure.expression();
+        if (expression == null) {
+          measure.setExpression(MeasureUtils.createExpression(measure));
+        }
+        metadata.add(new MetadataItem(field.name(), measure.expression(), field.type()));
       } else {
-        metadata.add(field);
+        metadata.add(new MetadataItem(field.name(), field.name(), field.type()));
       }
       index++;
     }

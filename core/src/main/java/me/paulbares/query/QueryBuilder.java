@@ -23,10 +23,6 @@ public class QueryBuilder {
     return new QueryDto();
   }
 
-  public static AggregatedMeasure aggregatedMeasure(String field, String aggregationFunction) {
-    return new AggregatedMeasure(field, aggregationFunction);
-  }
-
   public static TableDto table(String name) {
     return new TableDto(name);
   }
@@ -122,11 +118,11 @@ public class QueryBuilder {
   }
 
   public static Measure divide(String alias, Measure a, Measure b) {
-    return new BinaryOperationMeasure(alias, DIVIDE ,a, b);
+    return new BinaryOperationMeasure(alias, DIVIDE, a, b);
   }
 
   public static Measure plus(String alias, Measure a, Measure b) {
-    return new BinaryOperationMeasure(alias, PLUS ,a, b);
+    return new BinaryOperationMeasure(alias, PLUS, a, b);
   }
 
   public static void main(String[] args) {
@@ -142,7 +138,7 @@ public class QueryBuilder {
     query.withColumnSet(QueryDto.BUCKET, bucketColumnSet);
     query.withColumnSet(QueryDto.PERIOD, year);
 
-    AggregatedMeasure amount = new AggregatedMeasure("Amount", AggregationFunction.SUM);
+    AggregatedMeasure amount = new AggregatedMeasure("amount.sum", "Amount", AggregationFunction.SUM);
     AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, "Income/Expense", QueryBuilder.eq("Revenue"));
     query.withMeasure(amount);
     query.withMeasure(sales);

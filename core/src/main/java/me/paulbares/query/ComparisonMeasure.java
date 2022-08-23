@@ -50,4 +50,9 @@ public class ComparisonMeasure implements Measure {
   public String expression() {
     return this.expression;
   }
+
+  @Override
+  public void setExpression(String expression) {
+    this.expression = expression;
+  }
 }

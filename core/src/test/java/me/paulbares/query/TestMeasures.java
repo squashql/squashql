@@ -8,9 +8,11 @@ public class TestMeasures {
 
   @Test
   void testAggregatedMeasure() {
-    Assertions.assertThatThrownBy(() -> new AggregatedMeasure(null, AggregationFunction.SUM))
+    Assertions.assertThatThrownBy(() -> new AggregatedMeasure("null", null, AggregationFunction.SUM))
             .isInstanceOf(NullPointerException.class);
-    Assertions.assertThatThrownBy(() -> new AggregatedMeasure("field", null))
+    Assertions.assertThatThrownBy(() -> new AggregatedMeasure("null", "field", null))
+            .isInstanceOf(NullPointerException.class);
+    Assertions.assertThatThrownBy(() -> new AggregatedMeasure(null, "field", AggregationFunction.SUM))
             .isInstanceOf(NullPointerException.class);
   }
 }

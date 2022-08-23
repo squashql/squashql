@@ -1,30 +1,26 @@
 package me.paulbares.spring.web.rest;
 
 import com.google.common.collect.ImmutableList;
-import me.paulbares.query.dto.DebugInfoDto;
-import me.paulbares.query.dto.QueryResultDto;
-import me.paulbares.query.dto.SimpleTableDto;
 import me.paulbares.query.*;
 import me.paulbares.query.database.SparkQueryEngine;
-import me.paulbares.query.dto.CacheStatsDto;
-import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.*;
 import me.paulbares.query.monitoring.QueryWatch;
 import me.paulbares.store.Field;
 import me.paulbares.store.Store;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
-
-import static me.paulbares.query.TableUtils.NAME_KEY;
 
 @RestController
 public class QueryController {
 
-  public static final String MAPPING_QUERY = "/spark-query";
-  public static final String MAPPING_QUERY_BEAUTIFY = "/spark-query-beautify";
-  public static final String MAPPING_METADATA = "/spark-metadata";
+  public static final String MAPPING_QUERY = "/query";
+  public static final String MAPPING_QUERY_BEAUTIFY = "/query-beautify";
+  public static final String MAPPING_METADATA = "/metadata";
 
   public static final String METADATA_FIELDS_KEY = "fields";
   public static final String METADATA_STORES_KEY = "stores";
@@ -49,7 +45,7 @@ public class QueryController {
   }
 
   @PostMapping(MAPPING_QUERY)
-  public ResponseEntity<Object> execute(@RequestBody QueryDto query) {
+  public ResponseEntity<QueryResultDto> execute(@RequestBody QueryDto query) {
     QueryWatch queryWatch = new QueryWatch();
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
     Table table = new QueryExecutor(this.itmQueryEngine).execute(query, queryWatch, csBuilder);
@@ -76,21 +72,19 @@ public class QueryController {
 
   // TODO use a concrete type here
   @GetMapping(MAPPING_METADATA)
-  public ResponseEntity<Map<Object, Object>> getMetadata(@RequestParam(name = "repo-url", required = false) String repo_url) {
-    List<Map<String, Object>> root = new ArrayList<>();
+  public ResponseEntity<MetadataResultDto> getMetadata(@RequestParam(name = "repo-url", required = false) String repo_url) {
+    List<MetadataResultDto.StoreMetadata> stores = new ArrayList<>();
     for (Store store : this.itmQueryEngine.datastore.storesByName().values()) {
-      root.add(Map.of(NAME_KEY, store.name(), METADATA_FIELDS_KEY, store.fields()));
+      List<MetadataItem> items = store.fields().stream().map(f -> new MetadataItem(f.name(), f.name(), f.type())).toList();
+      stores.add(new MetadataResultDto.StoreMetadata(store.name(), items));
     }
 
-    return ResponseEntity.ok(Map.of(
-            METADATA_STORES_KEY, root,
-            METADATA_AGG_FUNCS_KEY, SUPPORTED_AGG_FUNCS,
-            METADATA_MEASURES_KEY, getExpressions(repo_url)));
+    return ResponseEntity.ok(new MetadataResultDto(stores, SUPPORTED_AGG_FUNCS, getExpressions(repo_url)));
   }
 
-  private Collection<ExpressionMeasure> getExpressions(String url) {
+  private List<Measure> getExpressions(String url) {
     if (url != null && !url.isEmpty()) {
-      return ExpressionResolver.get(url).values();
+      return new ArrayList<>(ExpressionResolver.get(url).values());
     } else {
       return Collections.emptyList();
     }

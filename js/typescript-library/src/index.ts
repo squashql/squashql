@@ -1,15 +1,17 @@
+export const PACKAGE = "me.paulbares.query."
+
 export {
-    sayHello,
-    Query,
-    Table,
+  sayHello,
+  Query,
+  Table,
 } from './query'
 
 export {
-    AggregatedMeasure
+  AggregatedMeasure, ExpressionMeasure, BinaryOperationMeasure, BinaryOperator,
 } from './measures'
 
-
 export {
-    Condition,
-    eq,
+  Condition,
+  eq, neq, lt, le, gt, ge,
+  and, or
 } from './conditions'

@@ -25,25 +25,17 @@ public class AggregatedMeasure implements Measure {
   public String conditionField;
   public ConditionDto conditionDto;
 
-  public AggregatedMeasure(String field, String aggregationFunction) {
-    this(null, field, aggregationFunction, null, null);
-  }
-
   public AggregatedMeasure(String alias, String field, String aggregationFunction) {
     this(alias, field, aggregationFunction, null, null);
   }
 
-  public AggregatedMeasure(String field, String aggregationFunction, String conditionField, ConditionDto conditionDto) {
-    this(null, field, aggregationFunction, conditionField, conditionDto);
-  }
-
-  public AggregatedMeasure(String alias, @NonNull String field, @NonNull String aggregationFunction, String conditionField, ConditionDto conditionDto) {
+  public AggregatedMeasure(@NonNull String alias, @NonNull String field, @NonNull String aggregationFunction, String conditionField, ConditionDto conditionDto) {
     this.field = field;
     this.aggregationFunction = aggregationFunction;
     this.conditionField = conditionField;
     this.conditionDto = conditionDto;
     this.expression = MeasureUtils.createExpression(this);
-    this.alias = alias == null ? this.expression : alias;
+    this.alias = alias;
   }
 
   @Override
@@ -66,5 +58,10 @@ public class AggregatedMeasure implements Measure {
   @Override
   public String expression() {
     return this.expression;
+  }
+
+  @Override
+  public void setExpression(String expression) {
+    this.expression = expression;
   }
 }

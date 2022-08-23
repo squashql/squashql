@@ -29,14 +29,14 @@ public class TestSQLTranslator {
   @Test
   void testGrandTotal() {
     DatabaseQuery query = new DatabaseQuery()
-            .aggregatedMeasure("pnl", "sum")
-            .aggregatedMeasure("delta", "sum")
-            .aggregatedMeasure("pnl", "avg")
+            .aggregatedMeasure("pnl.sum", "pnl", "sum")
+            .aggregatedMeasure("delta.sum", "delta", "sum")
+            .aggregatedMeasure("pnl.avg", "pnl", "avg")
             .aggregatedMeasure("mean pnl", "pnl", "avg")
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select sum(`pnl`) as `sum(pnl)`, sum(`delta`) as `sum(delta)`, avg(`pnl`) as `avg(pnl)`, avg(`pnl`) as `mean pnl` from " + BASE_STORE_NAME);
+            .isEqualTo("select sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg`, avg(`pnl`) as `mean pnl` from " + BASE_STORE_NAME);
   }
 
   @Test
@@ -44,13 +44,13 @@ public class TestSQLTranslator {
     DatabaseQuery query = new DatabaseQuery()
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .wildcardCoordinate("type")
-            .aggregatedMeasure("pnl", "sum")
-            .aggregatedMeasure("delta", "sum")
-            .aggregatedMeasure("pnl", "avg")
+            .aggregatedMeasure("pnl.sum", "pnl", "sum")
+            .aggregatedMeasure("delta.sum", "delta", "sum")
+            .aggregatedMeasure("pnl.avg", "pnl", "avg")
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `sum(pnl)`, sum(`delta`) as `sum(delta)`, avg(`pnl`) as `avg(pnl)` from " + BASE_STORE_NAME + " group by " +
+            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg` from " + BASE_STORE_NAME + " group by " +
                     "`scenario`, `type`");
   }
 
@@ -59,13 +59,13 @@ public class TestSQLTranslator {
     DatabaseQuery query = new DatabaseQuery()
             .coordinate(SCENARIO_FIELD_NAME, "Base")
             .wildcardCoordinate("type")
-            .aggregatedMeasure("pnl", "sum")
-            .aggregatedMeasure("delta", "sum")
-            .aggregatedMeasure("pnl", "avg")
+            .aggregatedMeasure("pnl.sum", "pnl", "sum")
+            .aggregatedMeasure("delta.sum", "delta", "sum")
+            .aggregatedMeasure("pnl.avg", "pnl", "avg")
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `sum(pnl)`, sum(`delta`) as `sum(delta)`, avg(`pnl`) as `avg(pnl)` from "
+            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg` from "
                     + BASE_STORE_NAME + " where " + "`scenario` = 'Base' group by `scenario`, `type`");
   }
 
@@ -74,13 +74,13 @@ public class TestSQLTranslator {
     DatabaseQuery query = new DatabaseQuery()
             .coordinate(SCENARIO_FIELD_NAME, "Base")
             .coordinates("type", "A", "B")
-            .aggregatedMeasure("pnl", "sum")
-            .aggregatedMeasure("delta", "sum")
-            .aggregatedMeasure("pnl", "avg")
+            .aggregatedMeasure("pnl.sum", "pnl", "sum")
+            .aggregatedMeasure("delta.sum", "delta", "sum")
+            .aggregatedMeasure("pnl.avg", "pnl", "avg")
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `sum(pnl)`, sum(`delta`) as `sum(delta)`, avg(`pnl`) as `avg(pnl)` from "
+            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg` from "
                     + BASE_STORE_NAME + " where `scenario` = 'Base' and `type` in ('A', 'B') group by `scenario`, `type`");
   }
 
@@ -88,22 +88,22 @@ public class TestSQLTranslator {
   void testDifferentMeasures() {
     DatabaseQuery query = new DatabaseQuery()
             .table(BASE_STORE_NAME)
-            .aggregatedMeasure("pnl", "sum")
+            .aggregatedMeasure("pnl.sum", "pnl", "sum")
             .expressionMeasure("indice", "100 * sum(`delta`) / sum(`pnl`)");
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select sum(`pnl`) as `sum(pnl)`, 100 * sum(`delta`) / sum(`pnl`) as `indice` from " + BASE_STORE_NAME);
+            .isEqualTo("select sum(`pnl`) as `pnl.sum`, 100 * sum(`delta`) / sum(`pnl`) as `indice` from " + BASE_STORE_NAME);
   }
 
   @Test
   void testWithTotalsTop() {
     DatabaseQuery query = new DatabaseQuery()
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("price", "sum")
+            .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query, QueryBuilder.TOP, fieldProvider))
-            .isEqualTo("select `scenario`, sum(`price`) as `sum(price)` from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
+            .isEqualTo("select `scenario`, sum(`price`) as `pnl.sum` from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
                     "order by case when `scenario` is null or `scenario` = '' then 0 else 1 end, `scenario`  asc");
   }
 
@@ -111,11 +111,11 @@ public class TestSQLTranslator {
   void testWithTotalsBottom() {
     DatabaseQuery query = new DatabaseQuery()
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("price", "sum")
+            .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query, QueryBuilder.BOTTOM, fieldProvider))
-            .isEqualTo("select `scenario`, sum(`price`) as `sum(price)` from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
+            .isEqualTo("select `scenario`, sum(`price`) as `pnl.sum` from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
                     "order by case when `scenario` is null or `scenario` = '' then 1 else 0 end, `scenario`  asc");
   }
 
@@ -141,10 +141,10 @@ public class TestSQLTranslator {
 
     DatabaseQuery query = new DatabaseQuery()
             .table(baseStore)
-            .aggregatedMeasure("pnl", "avg");
+            .aggregatedMeasure("pnl.avg", "pnl", "avg");
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select avg(`pnl`) as `avg(pnl)` from " + BASE_STORE_NAME
+            .isEqualTo("select avg(`pnl`) as `pnl.avg` from " + BASE_STORE_NAME
                     + " inner join table1 on " + BASE_STORE_NAME + ".id = table1.table1_id"
                     + " inner join table4 on table1.table1_field_2 = table4.table4_id_1 and table1.table1_field_3 = table4.table4_id_2"
                     + " left join table2 on " + BASE_STORE_NAME + ".id = table2.table2_id"
@@ -157,14 +157,14 @@ public class TestSQLTranslator {
     DatabaseQuery query = new DatabaseQuery()
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
             .wildcardCoordinate("type")
-            .aggregatedMeasure("pnl", "sum")
+            .aggregatedMeasure("pnl.sum", "pnl", "sum")
             .condition(SCENARIO_FIELD_NAME, and(eq("base"), eq("s1"), eq("s2")))
             .condition("type", or(eq("A"), eq("B")))
             .condition("pnl", lt(10d))
             .condition("delta", ge(123d))
             .table(BASE_STORE_NAME);
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `sum(pnl)` from " + BASE_STORE_NAME
+            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum` from " + BASE_STORE_NAME
                     + " where `scenario` = 'base' and `scenario` = 's1' and `scenario` = 's2'"
                     + " and `delta` >= 123.0 and `type` = 'A' or `type` = 'B' and `pnl` < 10.0"
                     + " group by `scenario`, `type`"
