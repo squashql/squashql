@@ -19,6 +19,7 @@ q.withMeasure(expression);
 const queryCondition = (0, conditions_1.or)((0, conditions_1.and)((0, conditions_1.eq)("a"), (0, conditions_1.eq)("b")), (0, conditions_1.lt)(5));
 q.withCondition("f1", queryCondition);
 q.withCondition("f2", (0, conditions_1.gt)(659));
+q.withCondition("f3", (0, conditions_1._in)([0, 1, 2]));
 console.log(JSON.stringify(q));
 let data = JSON.stringify(q);
 fs.writeFileSync('query.json', data);

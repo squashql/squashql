@@ -1,6 +1,6 @@
 import {Query} from "./query"
 import {AggregatedMeasure, BinaryOperationMeasure, BinaryOperator, ExpressionMeasure} from "./measures"
-import {and, eq, gt, lt, or} from "./conditions"
+import {and, eq, gt, _in, lt, or} from "./conditions"
 import * as fs from "fs"
 import {Querier} from "./querier";
 
@@ -21,6 +21,7 @@ q.withMeasure(expression)
 const queryCondition = or(and(eq("a"), eq("b")), lt(5));
 q.withCondition("f1", queryCondition)
 q.withCondition("f2", gt(659))
+q.withCondition("f3", _in([0, 1, 2]))
 
 console.log(JSON.stringify(q))
 

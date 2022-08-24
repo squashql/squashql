@@ -27,11 +27,11 @@ export class AggregatedMeasure implements Measure {
     return {
       "@class": this.class,
       "field": this.field,
-      "aggregation_function": this.aggregationFunction,
+      "aggregationFunction": this.aggregationFunction,
       "alias": this.alias,
       "expression": this.expression,
-      "condition_field": this.conditionField,
-      "condition_dto": this.condition,
+      "conditionField": this.conditionField,
+      "conditionDto": this.condition,
     }
   }
 }
@@ -71,8 +71,8 @@ export class BinaryOperationMeasure implements Measure {
       "@class": this.class,
       "alias": this.alias,
       "operator": this.operator,
-      "left_operand": this.leftOperand,
-      "right_operand": this.rightOperand,
+      "leftOperand": this.leftOperand,
+      "rightOperand": this.rightOperand,
     }
   }
 }

@@ -15,11 +15,11 @@ export declare class AggregatedMeasure implements Measure {
     toJSON(): {
         "@class": string;
         field: string;
-        aggregation_function: string;
+        aggregationFunction: string;
         alias: string;
         expression: string;
-        condition_field: string;
-        condition_dto: Condition;
+        conditionField: string;
+        conditionDto: Condition;
     };
 }
 export declare class ExpressionMeasure implements Measure {
@@ -45,8 +45,8 @@ export declare class BinaryOperationMeasure implements Measure {
         "@class": string;
         alias: string;
         operator: BinaryOperator;
-        left_operand: Measure;
-        right_operand: Measure;
+        leftOperand: Measure;
+        rightOperand: Measure;
     };
 }
 export declare enum BinaryOperator {
