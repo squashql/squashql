@@ -1,11 +1,15 @@
-import {Query} from "./query"
+import {Query, Table} from "./query"
 import {AggregatedMeasure, BinaryOperationMeasure, BinaryOperator, ExpressionMeasure} from "./measures"
-import {and, eq, gt, _in, lt, or} from "./conditions"
+import {_in, and, eq, gt, lt, or} from "./conditions"
 import * as fs from "fs"
-import {Querier} from "./querier";
+import {OrderKeyword} from "./order";
+
+const table = new Table("myTable")
+const refTable = new Table("refTable")
+table.innerJoin(refTable, "fromField", "toField")
 
 const q = new Query()
-q.onTable("myTable")
+q.onTable(table)
         .withColumn("a")
         .withColumn("b")
 
@@ -22,6 +26,9 @@ const queryCondition = or(and(eq("a"), eq("b")), lt(5));
 q.withCondition("f1", queryCondition)
 q.withCondition("f2", gt(659))
 q.withCondition("f3", _in([0, 1, 2]))
+
+q.orderBy("a", OrderKeyword.ASC)
+q.orderByFirstElements("b", ["1", "l", "p"])
 
 console.log(JSON.stringify(q))
 

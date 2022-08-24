@@ -84,4 +84,28 @@ export enum BinaryOperator {
   DIVIDE = "DIVIDE",
 }
 
+// Helpers
 
+export function sum(alias: string, field: string): Measure {
+  return new AggregatedMeasure(field, "sum", alias)
+}
+
+export function sumIf(alias: string, field: string, conditionField: string, condition: Condition): Measure {
+  return new AggregatedMeasure(field, "sum", alias, conditionField, condition)
+}
+
+export function plus(alias: string, measure1: Measure, measure2: Measure): Measure {
+  return new BinaryOperationMeasure(alias, BinaryOperator.PLUS, measure1, measure2)
+}
+
+export function minus(alias: string, measure1: Measure, measure2: Measure): Measure {
+  return new BinaryOperationMeasure(alias, BinaryOperator.MINUS, measure1, measure2)
+}
+
+export function multiply(alias: string, measure1: Measure, measure2: Measure): Measure {
+  return new BinaryOperationMeasure(alias, BinaryOperator.MULTIPLY, measure1, measure2)
+}
+
+export function divide(alias: string, measure1: Measure, measure2: Measure): Measure {
+  return new BinaryOperationMeasure(alias, BinaryOperator.DIVIDE, measure1, measure2)
+}

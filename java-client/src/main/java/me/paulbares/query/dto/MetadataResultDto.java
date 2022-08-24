@@ -13,12 +13,12 @@ import java.util.List;
 public class MetadataResultDto {
 
   public List<StoreMetadata> stores;
-  public List<String> aggregation_functions;
+  public List<String> aggregationFunctions;
   public List<Measure> measures;
 
-  public MetadataResultDto(List<StoreMetadata> stores, List<String> aggregation_functions, List<Measure> measures) {
+  public MetadataResultDto(List<StoreMetadata> stores, List<String> aggregationFunctions, List<Measure> measures) {
     this.stores = stores;
-    this.aggregation_functions = aggregation_functions;
+    this.aggregationFunctions = aggregationFunctions;
     this.measures = measures;
   }
 
