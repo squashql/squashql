@@ -21,11 +21,8 @@ public class QueryController {
   public static final String MAPPING_QUERY = "/query";
   public static final String MAPPING_QUERY_BEAUTIFY = "/query-beautify";
   public static final String MAPPING_METADATA = "/metadata";
+  public static final String MAPPING_EXPRESSION = "/expression";
 
-  public static final String METADATA_FIELDS_KEY = "fields";
-  public static final String METADATA_STORES_KEY = "stores";
-  public static final String METADATA_AGG_FUNCS_KEY = "aggregation_functions";
-  public static final String METADATA_MEASURES_KEY = "measures";
   // FIXME the list should be defined elsewhere
   public static final List<String> SUPPORTED_AGG_FUNCS = List.of(
           "sum",
@@ -70,7 +67,6 @@ public class QueryController {
     return ResponseEntity.ok(table.toString());
   }
 
-  // TODO use a concrete type here
   @GetMapping(MAPPING_METADATA)
   public ResponseEntity<MetadataResultDto> getMetadata(@RequestParam(name = "repo-url", required = false) String repo_url) {
     List<MetadataResultDto.StoreMetadata> stores = new ArrayList<>();
@@ -80,6 +76,18 @@ public class QueryController {
     }
 
     return ResponseEntity.ok(new MetadataResultDto(stores, SUPPORTED_AGG_FUNCS, getExpressions(repo_url)));
+  }
+
+  @PostMapping(MAPPING_EXPRESSION)
+  public ResponseEntity<List<Measure>> setMeasureExpressions(@RequestBody List<Measure> measures) {
+    List<Measure> res = new ArrayList<>(measures);
+    for (Measure measure : res) {
+      String expression = measure.expression();
+      if (expression == null) {
+        measure.setExpression(MeasureUtils.createExpression(measure));
+      }
+    }
+    return ResponseEntity.ok(res);
   }
 
   private List<Measure> getExpressions(String url) {

@@ -6,10 +6,13 @@ import feign.RequestLine;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import me.paulbares.jackson.JacksonUtil;
+import me.paulbares.query.Measure;
 import me.paulbares.query.dto.MetadataResultDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.QueryResultDto;
 import okhttp3.OkHttpClient;
+
+import java.util.List;
 
 public class HttpClientQuerier {
 
@@ -36,6 +39,11 @@ public class HttpClientQuerier {
     return target.metadata();
   }
 
+  public List<Measure> expression(List<Measure> measures) {
+    QueryApi target = builder.target(QueryApi.class, this.url);
+    return target.expression(measures);
+  }
+
   interface QueryApi {
     @RequestLine("POST /query")
     @Headers("Content-Type: application/json")
@@ -43,5 +51,9 @@ public class HttpClientQuerier {
 
     @RequestLine("GET /metadata")
     MetadataResultDto metadata();
+
+    @RequestLine("POST /expression")
+    @Headers("Content-Type: application/json")
+    List<Measure> expression(List<Measure> measures);
   }
 }
