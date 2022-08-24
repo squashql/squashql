@@ -1,7 +1,6 @@
 export const PACKAGE = "me.paulbares.query."
 
 export {
-  sayHello,
   Query,
   Table,
 } from './query'
