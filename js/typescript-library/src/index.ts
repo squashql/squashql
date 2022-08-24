@@ -8,6 +8,7 @@ export {
 
 export {
   AggregatedMeasure, ExpressionMeasure, BinaryOperationMeasure, BinaryOperator,
+  sum, sumIf, plus, minus, multiply, divide
 } from './measures'
 
 export {
@@ -15,3 +16,7 @@ export {
   eq, neq, lt, le, gt, ge,
   and, or
 } from './conditions'
+
+export {
+  Querier,
+} from './querier'

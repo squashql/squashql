@@ -13,9 +13,13 @@ export class Querier {
     });
   }
 
-  async getMetadata(): Promise<any> {
+  async getMetadata(repoUrl?: string): Promise<MetadataResult> {
     return this.axiosInstance
-            .get("/metadata")
+            .get("/metadata", {
+              params: {
+                "repo-url": repoUrl
+              }
+            })
             .then(r => r.data)
   }
 
@@ -34,7 +38,7 @@ export interface QueryResult {
 
 export interface MetadataResult {
   stores: Array<StoreMetadata>
-  aggregation_functions: Array<string>
+  aggregationFunctions: Array<string>
   measures: Array<Measure>
 }
 

@@ -159,7 +159,7 @@ public class QueryControllerTest {
             new MetadataItem("their_store", "their_store", String.class)
     );
 
-    Assertions.assertThat(metadataResultDto.aggregation_functions).containsExactlyInAnyOrder(QueryController.SUPPORTED_AGG_FUNCS.toArray(new String[0]));
+    Assertions.assertThat(metadataResultDto.aggregationFunctions).containsExactlyInAnyOrder(QueryController.SUPPORTED_AGG_FUNCS.toArray(new String[0]));
     if (withRepo) {
       Assertions.assertThat(metadataResultDto.measures).containsExactlyInAnyOrder(
               new ExpressionMeasure("indice_prix", "sum(capdv) / sum(competitor_price * quantity)"),
