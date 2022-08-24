@@ -1,5 +1,8 @@
 package me.paulbares.query.context;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public interface ContextValue {
 
   /**
