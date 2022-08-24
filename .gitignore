@@ -31,3 +31,4 @@ node_modules
 
 # specific to the project
 query.json
+js/typescript-library/dist

@@ -11,6 +11,7 @@ import me.paulbares.query.monitoring.QueryTimings;
 @EqualsAndHashCode
 @NoArgsConstructor
 public class DebugInfoDto {
+
   public CacheStatsDto cache;
   public QueryTimings timings;
 
