@@ -80,7 +80,7 @@ jobs:
       - name: Run server tests
         run: mvn -pl :aitm-server --no-transfer-progress test
 
-  http-client:
+  java-client:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -91,7 +91,7 @@ jobs:
           java-version: '17'
           cache: 'maven'
       - name: Build with Maven
-        run: mvn -pl :http-client -am clean install --no-transfer-progress -DskipTests
+        run: mvn -pl :aitm-java-client -am clean install --no-transfer-progress -DskipTests
       - name: Run http-client tests
-        run: mvn -pl :http-client --no-transfer-progress test
+        run: mvn -pl :aitm-java-client --no-transfer-progress test
 
