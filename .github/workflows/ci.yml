@@ -12,7 +12,7 @@ on:
       - main
 
 jobs:
-  compile:
+  core:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -23,10 +23,11 @@ jobs:
           java-version: '17'
           cache: 'maven'
       - name: Build with Maven
-        run: mvn clean install --no-transfer-progress -DskipTests
+        run: mvn -pl :aitm-core -am clean install --no-transfer-progress -DskipTests
+      - name: Run core tests
+        run: mvn -pl :aitm-core --no-transfer-progress test
 
   clickhouse:
-    needs: [ compile ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -37,14 +38,13 @@ jobs:
           java-version: '17'
           cache: 'maven'
       - name: Build with Maven
-        run: mvn clean install --no-transfer-progress -DskipTests
+        run: mvn -pl :aitm-clickhouse -am clean install --no-transfer-progress -DskipTests
       - name: Run clickhouse tests
-        run: cd clickhouse && mvn --no-transfer-progress test
+        run: mvn -pl :aitm-clickhouse --no-transfer-progress test
         env:
           TESTCONTAINERS_REUSE_ENABLE: true
 
   spark:
-    needs: [ compile ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -55,14 +55,13 @@ jobs:
           java-version: '17'
           cache: 'maven'
       - name: Build with Maven
-        run: mvn clean install --no-transfer-progress -DskipTests
+        run: mvn -pl :aitm-spark -am clean install --no-transfer-progress -DskipTests
       - name: Run spark tests
-        run: cd spark && mvn --no-transfer-progress test
+        run: mvn -pl :aitm-spark --no-transfer-progress test
         env:
           TESTCONTAINERS_REUSE_ENABLE: true
 
   server:
-    needs: [ compile ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -72,13 +71,16 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
           cache: 'maven'
-      - name: Build with Maven
-        run: mvn clean install --no-transfer-progress -DskipTests
+      - name: server - Build with Maven
+        run: mvn -pl :aitm-server -am clean install --no-transfer-progress -DskipTests
+      - name: js - Build with Maven
+        run: mvn -pl :aitm-js -am clean install --no-transfer-progress -DskipTests
+      - name: js - Package with Maven
+        run: mvn -pl :aitm-js package --no-transfer-progress
       - name: Run server tests
-        run: cd server && mvn --no-transfer-progress test
+        run: mvn -pl :aitm-server --no-transfer-progress test
 
-  http-client:
-    needs: [ compile ]
+  java-client:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -89,6 +91,7 @@ jobs:
           java-version: '17'
           cache: 'maven'
       - name: Build with Maven
-        run: mvn clean install --no-transfer-progress -DskipTests
+        run: mvn -pl :aitm-java-client -am clean install --no-transfer-progress -DskipTests
       - name: Run http-client tests
-        run: cd http-client && mvn --no-transfer-progress test
+        run: mvn -pl :aitm-java-client --no-transfer-progress test
+

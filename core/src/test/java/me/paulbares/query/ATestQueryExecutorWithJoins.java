@@ -85,8 +85,8 @@ public abstract class ATestQueryExecutorWithJoins {
     DatabaseQuery query = new DatabaseQuery()
             .table(ordersTable)
             .wildcardCoordinate("CategoryName")
-            .aggregatedMeasure("Quantity", "sum")
-            .aggregatedMeasure("*", "count");
+            .aggregatedMeasure("Q", "Quantity", "sum")
+            .aggregatedMeasure("count", "*", "count");
 
     Table table = this.queryEngine.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(

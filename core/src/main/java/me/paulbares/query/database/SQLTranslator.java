@@ -80,7 +80,7 @@ public class SQLTranslator {
       if (values != null && values.size() == 1) {
         conditionByField.put(field, new SingleValueConditionDto(ConditionType.EQ, values.get(0)));
       } else if (values != null && values.size() > 1) {
-        conditionByField.put(field, new MultipleValuesConditionDto(values));
+        conditionByField.put(field, new InConditionDto(values));
       }
     });
 
@@ -135,7 +135,7 @@ public class SQLTranslator {
   }
 
   public static String toSql(Field field, ConditionDto dto) {
-    if (dto instanceof SingleValueConditionDto || dto instanceof MultipleValuesConditionDto) {
+    if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
       Function<Object, String> sqlMapper;
       if (Number.class.isAssignableFrom(field.type())
               || field.type().equals(double.class)
@@ -154,7 +154,7 @@ public class SQLTranslator {
       String escape = escape(field.name());
       return switch (dto.type()) {
         case IN -> escape + " in (" +
-                ((MultipleValuesConditionDto) dto).values
+                ((InConditionDto) dto).values
                         .stream()
                         .map(sqlMapper)
                         .collect(Collectors.joining(", ")) + ")";

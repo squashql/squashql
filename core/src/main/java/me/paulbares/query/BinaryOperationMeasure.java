@@ -14,6 +14,7 @@ import java.util.function.Function;
 public class BinaryOperationMeasure implements Measure {
 
   public String alias;
+  public String expression;
   public BinaryOperator operator;
   public Measure leftOperand;
   public Measure rightOperand;
@@ -26,6 +27,7 @@ public class BinaryOperationMeasure implements Measure {
     this.operator = binaryOperator;
     this.leftOperand = leftOperand;
     this.rightOperand = rightOperand;
+    this.expression = MeasureUtils.createExpression(this);
   }
 
   @Override
@@ -40,18 +42,11 @@ public class BinaryOperationMeasure implements Measure {
 
   @Override
   public String expression() {
-    return quoteExpression(this.leftOperand) + " " + this.operator.infix + " " + quoteExpression(this.rightOperand);
+    return this.expression;
   }
 
-  private static String quoteExpression(Measure m) {
-    if (m.alias() != null) {
-      return m.alias();
-    }
-    String expression = m.expression();
-    if (!(m instanceof AggregatedMeasure)) {
-      return '(' + expression + ')';
-    } else {
-      return expression;
-    }
+  @Override
+  public void setExpression(String expression) {
+    this.expression = expression;
   }
 }

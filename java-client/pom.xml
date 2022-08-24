@@ -11,7 +11,7 @@
   </parent>
 
   <groupId>me.paulbares</groupId>
-  <artifactId>http-client</artifactId>
+  <artifactId>aitm-java-client</artifactId>
   <version>0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
@@ -20,6 +20,11 @@
       <groupId>me.paulbares</groupId>
       <artifactId>aitm-core</artifactId>
       <version>0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -40,51 +45,6 @@
       <groupId>io.github.openfeign</groupId>
       <artifactId>feign-jackson</artifactId>
       <version>${feign.version}</version>
-    </dependency>
-
-    <!-- TEST-->
-    <dependency>
-      <groupId>me.paulbares</groupId>
-      <artifactId>aitm-server</artifactId>
-      <version>0.1-SNAPSHOT</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>me.paulbares</groupId>
-      <artifactId>aitm-server</artifactId>
-      <version>0.1-SNAPSHOT</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.platform</groupId>
-      <artifactId>junit-platform-launcher</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.platform</groupId>
-      <artifactId>junit-platform-engine</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.platform</groupId>
-      <artifactId>junit-platform-commons</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 

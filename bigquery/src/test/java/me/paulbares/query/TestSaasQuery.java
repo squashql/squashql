@@ -32,7 +32,7 @@ public class TestSaasQuery {
             Map.of("group1", List.of("A", "B", "C", "D"), "group2", List.of("A", "D")));
     QueryBuilder.addPeriodColumnSet(query, new Period.Year("Year"));
 
-    AggregatedMeasure amount = new AggregatedMeasure("Amount", AggregationFunction.SUM);
+    AggregatedMeasure amount = new AggregatedMeasure("Amount", "Amount", AggregationFunction.SUM);
     AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, "Income_Expense", QueryBuilder.eq("Revenue"));
     query.withMeasure(amount);
     query.withMeasure(sales);

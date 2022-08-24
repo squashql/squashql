@@ -25,11 +25,15 @@ public class TestQueryS13n {
             .table("myTable")
             .withColumn(SCENARIO_FIELD_NAME)
             .withColumn("ean")
-            .aggregatedMeasure("price", "sum")
-            .aggregatedMeasure("quantity", "sum")
+            .aggregatedMeasure("p", "price", "sum")
+            .aggregatedMeasure("q", "quantity", "sum")
+            .aggregatedMeasure("priceAlias", "price", "sum", "category", QueryBuilder.eq("food"))
             .expressionMeasure("alias1", "firstMyExpression")
             .expressionMeasure("alias2", "secondMyExpression")
-            .withMeasure(new BinaryOperationMeasure("plus1", BinaryOperator.PLUS, new AggregatedMeasure("price", "sum"), new AggregatedMeasure("price", "sum")))
+            .withMeasure(new BinaryOperationMeasure("plus1",
+                    BinaryOperator.PLUS,
+                    new AggregatedMeasure("p", "price", "sum"),
+                    new AggregatedMeasure("p", "price", "sum")))
             .context(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.NOT_USE))
             .context(Totals.KEY, BOTTOM);
 
@@ -56,7 +60,7 @@ public class TestQueryS13n {
     query.withColumn("categoryName");
 
     // Measures
-    query.aggregatedMeasure("price", "sum");
+    query.aggregatedMeasure("p", "price", "sum");
     query.expressionMeasure("alias", "expression");
 
     // Conditions
@@ -80,7 +84,7 @@ public class TestQueryS13n {
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
 
-    AggregatedMeasure price = new AggregatedMeasure("price", "sum");
+    AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
     ComparisonMeasure priceComp = QueryBuilder.bucketComparison(
             "priceDiff",
             ABSOLUTE_DIFFERENCE,
@@ -103,7 +107,7 @@ public class TestQueryS13n {
 
   @Test
   void testRoundTripPeriodComparisonQuery() {
-    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    AggregatedMeasure sales = new AggregatedMeasure("s", "sales", "sum");
     ComparisonMeasure m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
@@ -129,7 +133,7 @@ public class TestQueryS13n {
   void testQueryWithComparator() {
     var query = new QueryDto()
             .table("products")
-            .withMeasure(new AggregatedMeasure("sales", "sum"));
+            .withMeasure(new AggregatedMeasure("s", "sales", "sum"));
 
     query.orderBy("X", List.of("a", "b", "c"));
     query.orderBy("Y", OrderKeywordDto.ASC);

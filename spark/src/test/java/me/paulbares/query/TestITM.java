@@ -126,7 +126,7 @@ public class TestITM {
             .table(our)
             .withColumn(TransactionManager.SCENARIO_FIELD_NAME)
             .withColumn("ean")
-            .aggregatedMeasure("capdv", "sum")
+            .aggregatedMeasure("p", "capdv", "sum")
             .expressionMeasure("capdv_concurrents", "sum(competitor_price * quantity)")
             .expressionMeasure("indice_prix", "sum(capdv) / sum(competitor_price * quantity)");
 

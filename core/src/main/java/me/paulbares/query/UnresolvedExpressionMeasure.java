@@ -34,4 +34,9 @@ public class UnresolvedExpressionMeasure implements Measure {
   public String expression() {
     throw new RuntimeException();
   }
+
+  @Override
+  public void setExpression(String expression) {
+    throw new RuntimeException();
+  }
 }

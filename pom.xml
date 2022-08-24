@@ -14,6 +14,7 @@
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
+    <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
     <spark.version>3.2.1</spark.version>
     <junit.version>5.7.2</junit.version>
     <junit-platform.version>1.7.2</junit-platform.version>
@@ -39,7 +40,8 @@
     <module>clickhouse</module>
     <module>spark</module>
     <module>server</module>
-    <module>http-client</module>
+    <module>java-client</module>
+    <module>js/typescript-library</module>
   </modules>
 
   <dependencyManagement>
@@ -168,6 +170,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven-compiler-plugin.version}</version>
         <configuration>
           <source>${java.version}</source>
           <target>${java.version}</target>

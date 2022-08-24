@@ -17,4 +17,6 @@ public interface Measure {
   String alias();
 
   String expression();
+
+  void setExpression(String expression);
 }

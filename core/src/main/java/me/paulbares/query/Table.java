@@ -4,6 +4,7 @@ import me.paulbares.query.dictionary.ObjectArrayDictionary;
 import me.paulbares.store.Field;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public interface Table extends Iterable<List<Object>> {
@@ -80,6 +81,10 @@ public interface Table extends Iterable<List<Object>> {
       throw new IllegalArgumentException("no field named " + field);
     }
     return index;
+  }
+
+  default boolean isMeasure(int index) {
+    return Arrays.binarySearch(measureIndices(), index) >= 0;
   }
 
   /**

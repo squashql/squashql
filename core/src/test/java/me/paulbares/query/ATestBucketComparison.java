@@ -85,7 +85,7 @@ public abstract class ATestBucketComparison {
 
   @Test
   void testAbsoluteDifferenceWithFirst() {
-    AggregatedMeasure price = new AggregatedMeasure("price", "sum");
+    AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
     ComparisonMeasure priceComp = QueryBuilder.bucketComparison(
             "priceDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
@@ -94,7 +94,7 @@ public abstract class ATestBucketComparison {
                     SCENARIO_FIELD_NAME, "first",
                     this.groupOfScenario, "g"
             ));
-    AggregatedMeasure quantity = new AggregatedMeasure("quantity", "sum");
+    AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
     ComparisonMeasure quantityComp = QueryBuilder.bucketComparison(
             "quantityDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
@@ -115,8 +115,8 @@ public abstract class ATestBucketComparison {
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
             this.groupOfScenario, SCENARIO_FIELD_NAME,
-            "priceDiff", "sum(price)",
-            "quantityDiff", "sum(quantity)");
+            "priceDiff", "p",
+            "quantityDiff", "q");
     Assertions.assertThat(dataset).containsExactlyInAnyOrder(
             List.of("group1", "base", 0d, 15d, 0l, 34l),
             List.of("group1", "s1", 2d, 17d, -2l, 32l),
@@ -129,7 +129,7 @@ public abstract class ATestBucketComparison {
 
   @Test
   void testAbsoluteDifferenceWithPrevious() {
-    AggregatedMeasure price = new AggregatedMeasure("price", "sum");
+    AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
     ComparisonMeasure priceComp = QueryBuilder.bucketComparison(
             "priceDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
@@ -138,7 +138,7 @@ public abstract class ATestBucketComparison {
                     SCENARIO_FIELD_NAME, "s-1",
                     this.groupOfScenario, "g"
             ));
-    AggregatedMeasure quantity = new AggregatedMeasure("quantity", "sum");
+    AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
     ComparisonMeasure quantityComp = QueryBuilder.bucketComparison(
             "quantityDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
@@ -159,8 +159,8 @@ public abstract class ATestBucketComparison {
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
             this.groupOfScenario, SCENARIO_FIELD_NAME,
-            "priceDiff", "sum(price)",
-            "quantityDiff", "sum(quantity)");
+            "priceDiff", "p",
+            "quantityDiff", "q");
     Assertions.assertThat(dataset).containsExactlyInAnyOrder(
             List.of("group1", MAIN_SCENARIO_NAME, 0d, 15d, 0l, 34l),
             List.of("group1", "s1", 2d, 17d, -2l, 32l),
@@ -173,7 +173,7 @@ public abstract class ATestBucketComparison {
 
   @Test
   void testRelativeDifferenceWithFirst() {
-    AggregatedMeasure price = new AggregatedMeasure("price", "sum");
+    AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
     ComparisonMeasure priceComp = QueryBuilder.bucketComparison(
             "priceDiff",
             RELATIVE_DIFFERENCE,
@@ -182,7 +182,7 @@ public abstract class ATestBucketComparison {
                     SCENARIO_FIELD_NAME, "first",
                     this.groupOfScenario, "g"
             ));
-    AggregatedMeasure quantity = new AggregatedMeasure("quantity", "sum");
+    AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
     ComparisonMeasure quantityComp = QueryBuilder.bucketComparison(
             "quantityDiff",
             RELATIVE_DIFFERENCE,
@@ -203,8 +203,8 @@ public abstract class ATestBucketComparison {
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
             this.groupOfScenario, SCENARIO_FIELD_NAME,
-            "priceDiff", "sum(price)",
-            "quantityDiff", "sum(quantity)");
+            "priceDiff", "p",
+            "quantityDiff", "q");
     Assertions.assertThat(dataset).containsExactlyInAnyOrder(
             List.of("group1", MAIN_SCENARIO_NAME, 0d, 15d, 0d, 34l),
             List.of("group1", "s1", 0.13333333333333333d, 17d, -0.058823529411764705d, 32l),

@@ -13,11 +13,13 @@ import static me.paulbares.query.dto.ConditionType.IN;
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
-public final class MultipleValuesConditionDto implements ConditionDto {
+public final class InConditionDto implements ConditionDto {
+
+  public final ConditionType type = IN;
 
   public Set<Object> values;
 
-  public MultipleValuesConditionDto(Object value) {
+  public InConditionDto(Object value) {
     Set<Object> set = new HashSet<>();
     if (value.getClass().isArray()) {
       Object[] array = (Object[]) value;
@@ -27,13 +29,13 @@ public final class MultipleValuesConditionDto implements ConditionDto {
     } else if (value instanceof Collection<?> collection) {
       set.addAll(collection);
     } else {
-      throw new IllegalArgumentException("Unexpected value type for in condition " + value);
+      throw new IllegalArgumentException("Unexpected value for in condition " + value);
     }
     this.values = set;
   }
 
   @Override
   public ConditionType type() {
-    return IN;
+    return this.type;
   }
 }

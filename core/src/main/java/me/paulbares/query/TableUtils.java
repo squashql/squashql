@@ -1,6 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.dto.BucketColumnSetDto;
+import me.paulbares.query.dto.MetadataItem;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 import me.paulbares.util.MultipleColumnsSorter;
@@ -22,7 +23,7 @@ public class TableUtils {
                                 Function<Object, String> rowElementPrinters) {
     /*
      * leftJustifiedRows - If true, it will add "-" as a flag to format string to
-     * make it left justified. Otherwise right justified.
+     * make it left justified. Otherwise, right justified.
      */
     boolean leftJustifiedRows = false;
 
@@ -87,21 +88,24 @@ public class TableUtils {
     return sb.toString();
   }
 
-  public static List<Map<String, Object>> buildTableMetadata(Table t) {
-    List<Map<String, Object>> metadata = new ArrayList<>();
-    for (Field field : t.headers()) {
-      Map<String, Object> fieldMetadata = new HashMap<>();
-      fieldMetadata.put(NAME_KEY, field.name());
-      fieldMetadata.put(TYPE_KEY, field.type().getSimpleName().toLowerCase());
-      metadata.add(fieldMetadata);
-    }
-
+  public static List<MetadataItem> buildTableMetadata(Table t) {
+    List<MetadataItem> metadata = new ArrayList<>();
     int index = 0;
-    for (int i : t.measureIndices()) {
-      Measure m = t.measures().get(index);
-      metadata.get(i).put(EXPRESSION_KEY, m.expression());
+    for (Field field : t.headers()) {
+      if (t.isMeasure(index)) {
+        int i = Arrays.binarySearch(t.measureIndices(), index);
+        Measure measure = t.measures().get(i);
+        String expression = measure.expression();
+        if (expression == null) {
+          measure.setExpression(MeasureUtils.createExpression(measure));
+        }
+        metadata.add(new MetadataItem(field.name(), measure.expression(), field.type()));
+      } else {
+        metadata.add(new MetadataItem(field.name(), field.name(), field.type()));
+      }
       index++;
     }
+
     return metadata;
   }
 
@@ -113,8 +117,7 @@ public class TableUtils {
     boolean hasComparatorOnMeasure = false;
     List<Field> headers = table.headers;
     for (int i = 0; i < headers.size(); i++) {
-      boolean isMeasure = Arrays.binarySearch(table.measureIndices, i) >= 0;
-      if (isMeasure) {
+      if (table.isMeasure(i)) {
         hasComparatorOnMeasure |= comparatorByColumnName.containsKey(headers.get(i).name());
       }
     }

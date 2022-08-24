@@ -6,10 +6,10 @@ import feign.RequestLine;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import me.paulbares.jackson.JacksonUtil;
+import me.paulbares.query.dto.MetadataResultDto;
 import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.QueryResultDto;
 import okhttp3.OkHttpClient;
-
-import java.util.Map;
 
 public class HttpClientQuerier {
 
@@ -26,22 +26,22 @@ public class HttpClientQuerier {
     this.url = url;
   }
 
-  public HttpQueryResult run(QueryDto query) {
+  public QueryResultDto run(QueryDto query) {
     QueryApi target = builder.target(QueryApi.class, this.url);
     return target.run(query);
   }
 
-  public Map<Object, Object> metadata() {
+  public MetadataResultDto metadata() {
     QueryApi target = builder.target(QueryApi.class, this.url);
     return target.metadata();
   }
 
   interface QueryApi {
-    @RequestLine("POST /spark-query")
+    @RequestLine("POST /query")
     @Headers("Content-Type: application/json")
-    HttpQueryResult run(QueryDto query);
+    QueryResultDto run(QueryDto query);
 
-    @RequestLine("GET /spark-metadata")
-    Map<Object, Object> metadata();
+    @RequestLine("GET /metadata")
+    MetadataResultDto metadata();
   }
 }
