@@ -1,4 +1,4 @@
-import {Query, sum, sumIf, eq, Querier} from "aitm-js-query/dist"
+import {Query, Table, sum, sumIf, eq, Querier} from "aitm-js-query"
 
 const querier = new Querier("http://localhost:8080");
 const assets = "https://raw.githubusercontent.com/paulbares/aitm-assets/main/metrics.json";
@@ -11,8 +11,10 @@ querier.getMetadata(assets).then(r => {
   console.log(`Agg Func: ${r.aggregationFunctions}`)
 })
 
+
+const table = new Table("saas")
 const q = new Query()
-        .onTable("saas")
+        .onTable(table)
         .withColumn("scenario encrypted")
 
 q.withMeasure(sum("amount.sum", "Amount"))
