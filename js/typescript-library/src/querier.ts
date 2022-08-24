@@ -28,11 +28,17 @@ export class Querier {
             .post("/query", query)
             .then(r => r.data)
   }
+
+  async expression(measures: Array<Measure>): Promise<Array<Measure>> {
+    return this.axiosInstance
+            .post("/expression", measures)
+            .then(r => r.data)
+  }
 }
 
 export interface QueryResult {
   table: SimpleTable,
-  metadata: MetadataResult
+  metadata: Array<MetadataItem>
   debug: any
 }
 

@@ -2,10 +2,7 @@ package me.paulbares.client;
 
 import me.paulbares.AitmApplication;
 import me.paulbares.client.http.HttpClientQuerier;
-import me.paulbares.query.AggregatedMeasure;
-import me.paulbares.query.ComparisonMeasure;
-import me.paulbares.query.ComparisonMethod;
-import me.paulbares.query.QueryBuilder;
+import me.paulbares.query.*;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.*;
 import me.paulbares.spring.dataset.DatasetTestConfig;
@@ -148,5 +145,22 @@ public class HttpClientQuerierTest {
     }
     Assertions.assertThat(table.rows).containsExactlyInAnyOrder(lists);
     Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "qs");
+  }
+
+  @Test
+  void testSetExpressions() {
+    AggregatedMeasure a = new AggregatedMeasure("a", "a", "sum");
+    AggregatedMeasure b = new AggregatedMeasure("b", "b", "sum");
+    Measure plus = QueryBuilder.plus("a+b", a, b);
+
+    List<Measure> input = List.of(a, b, plus);
+    input.forEach(m -> m.setExpression(null));// Expression should not be defined but computed and set by the server
+
+    String url = "http://127.0.0.1:" + this.port;
+    var querier = new HttpClientQuerier(url);
+
+    List<Measure> expression = querier.expression(input);
+    Assertions.assertThat(expression.stream().map(Measure::expression))
+            .containsExactly("sum(a)", "sum(b)", "a + b");
   }
 }
