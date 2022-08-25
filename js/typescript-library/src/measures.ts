@@ -3,6 +3,7 @@ import {Condition} from "./conditions";
 
 export interface Measure {
   readonly class: string
+  readonly alias: string
   expression?: string
 }
 
@@ -38,8 +39,10 @@ export class AggregatedMeasure implements Measure {
 
 export class ExpressionMeasure implements Measure {
   class: string = PACKAGE + "ExpressionMeasure";
+  alias: string;
 
-  constructor(private alias: string, private sqlExpression: string) {
+  constructor(private sqlExpression: string, alias: string) {
+    this.alias = alias
   }
 
   toJSON() {
@@ -53,7 +56,7 @@ export class ExpressionMeasure implements Measure {
 
 export class BinaryOperationMeasure implements Measure {
   class: string = PACKAGE + "BinaryOperationMeasure";
-  alias?: string
+  alias: string
   expression?: string
   operator: BinaryOperator
   leftOperand: Measure

@@ -6,6 +6,7 @@ export {
 } from './query'
 
 export {
+  Measure,
   AggregatedMeasure, ExpressionMeasure, BinaryOperationMeasure, BinaryOperator,
   sum, sumIf, plus, minus, multiply, divide
 } from './measures'
