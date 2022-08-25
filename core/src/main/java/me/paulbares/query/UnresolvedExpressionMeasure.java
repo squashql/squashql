@@ -5,8 +5,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.store.Field;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
 import java.util.function.Function;
 
 @ToString
@@ -16,8 +16,8 @@ public class UnresolvedExpressionMeasure implements Measure {
 
   public String alias;
 
-  public UnresolvedExpressionMeasure(String alias) {
-    this.alias = Objects.requireNonNull(alias);
+  public UnresolvedExpressionMeasure(@NotNull String alias) {
+    this.alias = alias;
   }
 
   @Override

@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.store.Field;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.function.Function;
@@ -21,19 +22,16 @@ public class ComparisonMeasure implements Measure {
   public String columnSet;
   public Map<String, String> referencePosition;
 
-  public ComparisonMeasure(String alias,
-                           ComparisonMethod method,
-                           Measure measure,
-                           String columnSet,
-                           Map<String, String> referencePosition) {
-    this.alias = alias == null
-            ? String.format("%s(%s, %s)", method, measure.alias(), referencePosition)
-            : alias;
+  public ComparisonMeasure(@NotNull String alias,
+                           @NotNull ComparisonMethod method,
+                           @NotNull Measure measure,
+                           @NotNull String columnSet,
+                           @NotNull Map<String, String> referencePosition) {
+    this.alias = alias;
     this.method = method;
     this.columnSet = columnSet;
     this.measure = measure;
     this.referencePosition = referencePosition;
-    this.expression = MeasureUtils.createExpression(this);
   }
 
   @Override

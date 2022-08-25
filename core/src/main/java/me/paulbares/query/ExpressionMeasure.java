@@ -5,8 +5,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.store.Field;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
 import java.util.function.Function;
 
 import static me.paulbares.query.database.SqlUtils.escape;
@@ -19,9 +19,9 @@ public class ExpressionMeasure implements Measure {
   public String alias;
   public String expression;
 
-  public ExpressionMeasure(String alias, String expression) {
-    this.alias = Objects.requireNonNull(alias);
-    this.expression = Objects.requireNonNull(expression);
+  public ExpressionMeasure(@NotNull String alias, @NotNull String expression) {
+    this.alias = alias;
+    this.expression = expression;
   }
 
   @Override
