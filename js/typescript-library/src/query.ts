@@ -1,9 +1,11 @@
 import {Measure} from "./measures";
 import {Condition} from "./conditions";
 import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order";
+import {ColumnSet} from "./columnsets";
 
 export class Query {
   columns: Array<string>
+  columnSets: Map<string, ColumnSet>
   measures: Array<Measure>
   table: Table
   conditions: Map<string, Condition>
@@ -14,6 +16,7 @@ export class Query {
     this.measures = []
     this.conditions = new Map<string, Condition>()
     this.orders = new Map<string, Order>()
+    this.columnSets = new Map<string, ColumnSet>()
   }
 
   onTable(table: Table): Query {

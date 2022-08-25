@@ -15,10 +15,10 @@ export class AggregatedMeasure implements Measure {
   conditionField?: string
   condition?: Condition
 
-  constructor(field: string, aggregationFunction: string, alias: string, conditionField?: string, condition?: Condition) {
+  constructor(alias: string, field: string, aggregationFunction: string, conditionField?: string, condition?: Condition) {
+    this.alias = alias
     this.field = field
     this.aggregationFunction = aggregationFunction
-    this.alias = alias
     this.conditionField = conditionField
     this.condition = condition
   }

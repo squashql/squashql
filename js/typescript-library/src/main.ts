@@ -13,9 +13,9 @@ q.onTable(table)
         .withColumn("a")
         .withColumn("b")
 
-const price = new AggregatedMeasure("price", "sum", "price.sum");
+const price = new AggregatedMeasure("price.sum", "price", "sum")
 q.withMeasure(price)
-const priceFood = new AggregatedMeasure("price", "sum", "alias", "category", eq("food"));
+const priceFood = new AggregatedMeasure("alias", "price", "sum", "category", eq("food"))
 q.withMeasure(priceFood)
 const plus = new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood)
 q.withMeasure(plus)
