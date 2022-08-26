@@ -1,7 +1,7 @@
 import {Measure} from "./measures";
 import {Condition} from "./conditions";
 import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order";
-import {ColumnSet} from "./columnsets";
+import {BucketColumnSet, ColumnSet, PeriodColumnSet} from "./columnsets";
 
 export class Query {
   columns: Array<string>
@@ -34,6 +34,16 @@ export class Query {
     return this
   }
 
+  withBucketColumnSet(columSet: BucketColumnSet): Query {
+    this.columnSets.set("bucket", columSet)
+    return this
+  }
+
+  withPeriodColumnSet(columSet: PeriodColumnSet): Query {
+    this.columnSets.set("period", columSet)
+    return this
+  }
+
   withMeasure(measure: Measure): Query {
     this.measures.push(measure)
     return this
@@ -53,6 +63,7 @@ export class Query {
     return {
       "table": this.table,
       "columns": this.columns,
+      "columnSets": Object.fromEntries(this.columnSets),
       "measures": this.measures,
       "conditions": Object.fromEntries(this.conditions),
       "orders": Object.fromEntries(this.orders),

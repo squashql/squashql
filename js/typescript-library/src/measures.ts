@@ -87,6 +87,16 @@ export enum BinaryOperator {
   DIVIDE = "DIVIDE",
 }
 
+class CountMeasure extends AggregatedMeasure {
+  private static _instance: CountMeasure;
+
+  public static get instance() {
+    return this._instance || (this._instance = new this("_contributors_count_", "*", "count"));
+  }
+}
+
+export const count = CountMeasure.instance;
+
 // Helpers
 
 export function sum(alias: string, field: string): Measure {

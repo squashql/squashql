@@ -4,45 +4,96 @@ export interface ColumnSet {
   readonly class: string
 }
 
-class BucketColumnSet {
-  class: string = PACKAGE + "BucketColumnSetDto"
+export class BucketColumnSet {
+  class: string = PACKAGE + "dto.BucketColumnSetDto"
 
   constructor(private name: string, private field: string, private values: Map<string, Array<string>>) {
-    this.values = new Map<string, Array<string>>();
+  }
+
+  toJSON() {
+    return {
+      "@class": this.class,
+      "name": this.name,
+      "field": this.field,
+      "values": Object.fromEntries(this.values),
+    }
   }
 }
 
-class PeriodColumnSet {
-  class: string = PACKAGE + "PeriodColumnSetDto"
+export class PeriodColumnSet {
+  class: string = PACKAGE + "dto.PeriodColumnSetDto"
 
   constructor(private period: Period) {
+  }
+
+  toJSON() {
+    return {
+      "@class": this.class,
+      "period": this.period,
+    }
   }
 }
 
 export interface Period {
+  readonly class: string,
 }
 
-class Month implements Period {
+export class Month implements Period {
+  class: string = PACKAGE + "dto.Period$Month"
 
   constructor(private month: string, private year: string) {
   }
+
+  toJSON() {
+    return {
+      "@class": this.class,
+      "month": this.month,
+      "year": this.year,
+    }
+  }
 }
 
-class Quarter implements Period {
+export class Quarter implements Period {
+  class: string = PACKAGE + "dto.Period$Quarter"
 
   constructor(private quarter: string, private year: string) {
   }
-}
 
-class Semester implements Period {
-
-  constructor(private semester: string, private year: string) {
+  toJSON() {
+    return {
+      "@class": this.class,
+      "quarter": this.quarter,
+      "year": this.year,
+    }
   }
 }
 
-class Year implements Period {
+export class Semester implements Period {
+  class: string = PACKAGE + "dto.Period$Semester"
+
+  constructor(private semester: string, private year: string) {
+  }
+
+  toJSON() {
+    return {
+      "@class": this.class,
+      "semester": this.semester,
+      "year": this.year,
+    }
+  }
+}
+
+export class Year implements Period {
+  class: string = PACKAGE + "dto.Period$Year"
 
   constructor(private year: string) {
+  }
+
+  toJSON() {
+    return {
+      "@class": this.class,
+      "year": this.year,
+    }
   }
 }
 

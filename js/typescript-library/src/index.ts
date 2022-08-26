@@ -8,7 +8,8 @@ export {
 export {
   Measure,
   AggregatedMeasure, ExpressionMeasure, BinaryOperationMeasure, BinaryOperator,
-  sum, sumIf, plus, minus, multiply, divide
+  sum, sumIf, plus, minus, multiply, divide,
+  count
 } from './measures'
 
 export {
@@ -16,6 +17,12 @@ export {
   eq, neq, lt, le, gt, ge,
   and, or
 } from './conditions'
+
+
+export {
+  ColumnSet, PeriodColumnSet, BucketColumnSet,
+  Period, Month, Year, Quarter, Semester,
+} from './columnsets'
 
 export {
   Querier,
