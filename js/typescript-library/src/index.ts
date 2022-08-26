@@ -7,7 +7,7 @@ export {
 
 export {
   Measure,
-  AggregatedMeasure, ExpressionMeasure, BinaryOperationMeasure, BinaryOperator,
+  AggregatedMeasure, ExpressionMeasure,
   sum, sumIf, plus, minus, multiply, divide,
   count
 } from './measures'

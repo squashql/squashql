@@ -97,6 +97,37 @@ class CountMeasure extends AggregatedMeasure {
 
 export const count = CountMeasure.instance;
 
+export class ComparisonMeasure implements Measure {
+  class: string = PACKAGE + "ComparisonMeasure";
+  alias: string
+  expression?: string
+
+  constructor(alias: string,
+              private method: ComparisonMethod,
+              private measure: Measure,
+              private columnSet: string,
+              private referencePosition: Map<string, string>) {
+    this.alias = alias
+  }
+
+  toJSON() {
+    return {
+      "@class": this.class,
+      "alias": this.alias,
+      "method": this.method,
+      "measure": this.measure,
+      "columnSet": this.columnSet,
+      "referencePosition": Object.fromEntries(this.referencePosition),
+    }
+  }
+}
+
+export enum ComparisonMethod {
+  ABSOLUTE_DIFFERENCE = "ABSOLUTE_DIFFERENCE",
+  RELATIVE_DIFFERENCE = "RELATIVE_DIFFERENCE",
+  DIVIDE = "DIVIDE",
+}
+
 // Helpers
 
 export function sum(alias: string, field: string): Measure {

@@ -1,5 +1,13 @@
 import {Query, Table} from "./query"
-import {AggregatedMeasure, BinaryOperationMeasure, BinaryOperator, count, ExpressionMeasure} from "./measures"
+import {
+  AggregatedMeasure,
+  BinaryOperationMeasure,
+  BinaryOperator,
+  ComparisonMeasure,
+  ComparisonMethod,
+  count,
+  ExpressionMeasure
+} from "./measures"
 import {_in, and, eq, gt, lt, or} from "./conditions"
 import * as fs from "fs"
 import {OrderKeyword} from "./order";
@@ -23,6 +31,16 @@ q.withMeasure(plus)
 const expression = new ExpressionMeasure("sum(price*quantity)", "myExpression")
 q.withMeasure(expression)
 q.withMeasure(count)
+
+// Comparisons
+q.withMeasure(new ComparisonMeasure("comp bucket", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, "bucket", new Map(Object.entries({
+  "group": "g",
+  "scenario": "s-1"
+}))))
+q.withMeasure(new ComparisonMeasure("growth", ComparisonMethod.DIVIDE, price, "period", new Map(Object.entries({
+  "Annee": "y-1",
+  "Mois": "m"
+}))))
 
 const queryCondition = or(and(eq("a"), eq("b")), lt(5));
 q.withCondition("f1", queryCondition)
