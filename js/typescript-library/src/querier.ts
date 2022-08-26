@@ -61,5 +61,5 @@ export interface MetadataItem {
 
 export interface SimpleTable {
   columns: Array<string>
-  row: Array<Array<any>>
+  rows: Array<Array<any>>
 }
