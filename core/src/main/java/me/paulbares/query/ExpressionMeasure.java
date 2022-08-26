@@ -2,10 +2,10 @@ package me.paulbares.query;
 
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.store.Field;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 
@@ -19,7 +19,7 @@ public class ExpressionMeasure implements Measure {
   public String alias;
   public String expression;
 
-  public ExpressionMeasure(@NotNull String alias, @NotNull String expression) {
+  public ExpressionMeasure(@NonNull String alias, @NonNull String expression) {
     this.alias = alias;
     this.expression = expression;
   }

@@ -8,7 +8,6 @@ import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.store.Field;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 
@@ -26,7 +25,7 @@ public class AggregatedMeasure implements Measure {
   public String conditionField;
   public ConditionDto conditionDto;
 
-  public AggregatedMeasure(@NotNull String alias, @NotNull String field, @NotNull String aggregationFunction) {
+  public AggregatedMeasure(@NonNull String alias, @NonNull String field, @NonNull String aggregationFunction) {
     this(alias, field, aggregationFunction, null, null);
   }
 

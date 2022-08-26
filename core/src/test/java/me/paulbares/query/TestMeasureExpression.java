@@ -25,7 +25,7 @@ public class TestMeasureExpression {
     Assertions.assertThat(MeasureUtils.createExpression(plus)).isEqualTo("ps + qs");
     Assertions.assertThat(MeasureUtils.createExpression(divide)).isEqualTo("ps / plus");
     plus = new BinaryOperationMeasure("plus", BinaryOperator.PLUS, agg1, agg2);
-    divide = new BinaryOperationMeasure(null, BinaryOperator.DIVIDE, agg1, plus);
+    divide = new BinaryOperationMeasure("divide", BinaryOperator.DIVIDE, agg1, plus);
     Assertions.assertThat(MeasureUtils.createExpression(divide)).isEqualTo("ps / plus");
 
     AggregatedMeasure amount = new AggregatedMeasure("sum(Amount)", "Amount", AggregationFunction.SUM);

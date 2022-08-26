@@ -2,10 +2,10 @@ package me.paulbares.query;
 
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.store.Field;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 
@@ -20,10 +20,10 @@ public class BinaryOperationMeasure implements Measure {
   public Measure leftOperand;
   public Measure rightOperand;
 
-  public BinaryOperationMeasure(@NotNull String alias,
-                                @NotNull BinaryOperator binaryOperator,
-                                @NotNull Measure leftOperand,
-                                @NotNull Measure rightOperand) {
+  public BinaryOperationMeasure(@NonNull String alias,
+                                @NonNull BinaryOperator binaryOperator,
+                                @NonNull Measure leftOperand,
+                                @NonNull Measure rightOperand) {
     this.alias = alias;
     this.operator = binaryOperator;
     this.leftOperand = leftOperand;
