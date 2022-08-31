@@ -68,7 +68,7 @@ public class TestLoadingFromCSV {
             .execute(QueryBuilder.query()
                     .table(storeName)
                     .withColumn(SCENARIO_FIELD_NAME)
-                    .aggregatedMeasure("*", "count"));
+                    .aggregatedMeasure("count", "*", "count"));
     Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("", 91L)); // empty string because no scenario in
     // csv file
   }

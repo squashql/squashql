@@ -4,9 +4,9 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.github.dockerjava.api.command.LogContainerCmd;
 import me.paulbares.SparkDatastore;
-import me.paulbares.query.database.SparkQueryEngine;
 import me.paulbares.query.Table;
 import me.paulbares.query.database.DatabaseQuery;
+import me.paulbares.query.database.SparkQueryEngine;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.SparkTransactionManager;
@@ -108,8 +108,8 @@ public class TestQueryRemote {
     DatabaseQuery query = new DatabaseQuery()
             .table(storeName)
             .wildcardCoordinate(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("price", "sum")
-            .aggregatedMeasure("quantity", "sum");
+            .aggregatedMeasure("p", "price", "sum")
+            .aggregatedMeasure("q", "quantity", "sum");
     Table result = queryEngine.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("base", 15.0d, 33l),

@@ -59,8 +59,7 @@ public class QueryWatch {
 
     queryTimings.execute.total = this.stopwatches.get(EXECUTE_PLAN).elapsed(unit);
     for (Map.Entry<Measure, Stopwatch> e : this.stopwatchByMeasure.entrySet()) {
-      String alias = e.getKey().alias();
-      String key = alias == null ? e.getKey().expression() : alias;
+      String key = e.getKey().alias();
       queryTimings.execute.detail.put(key, e.getValue().elapsed(unit));
     }
 

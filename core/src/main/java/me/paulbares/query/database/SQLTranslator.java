@@ -80,7 +80,7 @@ public class SQLTranslator {
       if (values != null && values.size() == 1) {
         conditionByField.put(field, new SingleValueConditionDto(ConditionType.EQ, values.get(0)));
       } else if (values != null && values.size() > 1) {
-        conditionByField.put(field, new SingleValueConditionDto(ConditionType.IN, values));
+        conditionByField.put(field, new InConditionDto(values));
       }
     });
 
@@ -135,8 +135,7 @@ public class SQLTranslator {
   }
 
   public static String toSql(Field field, ConditionDto dto) {
-    if (dto instanceof SingleValueConditionDto single) {
-      Object value = single.value;
+    if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
       Function<Object, String> sqlMapper;
       if (Number.class.isAssignableFrom(field.type())
               || field.type().equals(double.class)
@@ -152,19 +151,19 @@ public class SQLTranslator {
         throw new RuntimeException("Not supported " + field.type());
       }
 
-      final String escape = escape(field.name());
+      String escape = escape(field.name());
       return switch (dto.type()) {
         case IN -> escape + " in (" +
-                ((Set<Object>) ((SingleValueConditionDto) dto).value)
+                ((InConditionDto) dto).values
                         .stream()
                         .map(sqlMapper)
                         .collect(Collectors.joining(", ")) + ")";
-        case EQ -> escape + " = " + sqlMapper.apply(value);
-        case NEQ -> escape + " <> " + sqlMapper.apply(value);
-        case LT -> escape + " < " + sqlMapper.apply(value);
-        case LE -> escape + " <= " + sqlMapper.apply(value);
-        case GT -> escape + " > " + sqlMapper.apply(value);
-        case GE -> escape + " >= " + sqlMapper.apply(value);
+        case EQ -> escape + " = " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
+        case NEQ -> escape + " <> " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
+        case LT -> escape + " < " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
+        case LE -> escape + " <= " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
+        case GT -> escape + " > " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
+        case GE -> escape + " >= " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
         default -> throw new IllegalStateException("Unexpected value: " + dto.type());
       };
     } else if (dto instanceof LogicalConditionDto logical) {

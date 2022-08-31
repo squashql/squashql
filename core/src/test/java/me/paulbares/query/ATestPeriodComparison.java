@@ -100,7 +100,7 @@ public abstract class ATestPeriodComparison {
   @Order(1)
   void testCompareQuarterCurrentWithSamePreviousYear() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
-    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasure m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
@@ -136,7 +136,7 @@ public abstract class ATestPeriodComparison {
   @Order(2)
   void testCompareQuarterCurrentWithPrevious() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
-    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasure m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
@@ -173,7 +173,7 @@ public abstract class ATestPeriodComparison {
   @Order(3)
   void testCompareYearCurrentWithPrevious() {
     Period.Year period = new Period.Year("year_sales");
-    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasure m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
@@ -201,7 +201,7 @@ public abstract class ATestPeriodComparison {
   @Order(4)
   void testCompareSemesterCurrentWithPrevious() {
     Period.Semester period = new Period.Semester("semester_sales", "year_sales");
-    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasure m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
@@ -240,7 +240,7 @@ public abstract class ATestPeriodComparison {
             new Object[]{"bottle", "drink", 30d, 5, 2023, 1, 1, 2, LocalDate.of(2023, 2, 1)}));
 
     Period.Month period = new Period.Month("month_sales", "year_sales");
-    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasure m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,

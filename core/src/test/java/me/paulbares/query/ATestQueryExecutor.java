@@ -82,8 +82,8 @@ public abstract class ATestQueryExecutor {
     QueryDto query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("price", "sum")
-            .aggregatedMeasure("quantity", "sum");
+            .aggregatedMeasure("p", "price", "sum")
+            .aggregatedMeasure("q", "quantity", "sum");
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of(MAIN_SCENARIO_NAME, 15.0d, 33l),
@@ -112,8 +112,8 @@ public abstract class ATestQueryExecutor {
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
             .withCondition(SCENARIO_FIELD_NAME, QueryBuilder.in("s1", "s2"))
-            .aggregatedMeasure("price", "sum")
-            .aggregatedMeasure("quantity", "sum");
+            .aggregatedMeasure("p", "price", "sum")
+            .aggregatedMeasure("q", "quantity", "sum");
     Table table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
             List.of("s1", 17.0d, 33l),
@@ -126,8 +126,8 @@ public abstract class ATestQueryExecutor {
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
             .withCondition(SCENARIO_FIELD_NAME, QueryBuilder.eq("s1"))
-            .aggregatedMeasure("price", "sum")
-            .aggregatedMeasure("quantity", "sum");
+            .aggregatedMeasure("p", "price", "sum")
+            .aggregatedMeasure("q", "quantity", "sum");
     Table table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("s1", 17.0d, 33l));
   }
@@ -138,7 +138,7 @@ public abstract class ATestQueryExecutor {
             .table(this.storeName)
             .withColumn("category")
             .withColumn("ean")
-            .aggregatedMeasure("quantity", "sum")
+            .aggregatedMeasure("q", "quantity", "sum")
             .withCondition(SCENARIO_FIELD_NAME, QueryBuilder.eq(MAIN_SCENARIO_NAME))
             .withCondition("ean", QueryBuilder.eq("bottle"))
             .withCondition("category", QueryBuilder.in("cloth", "drink"));
@@ -267,7 +267,7 @@ public abstract class ATestQueryExecutor {
     QueryDto query = new QueryDto()
             .table(this.storeName)
             .withColumn("category")
-            .withMeasure(new AggregatedMeasure("price", AggregationFunction.SUM));
+            .withMeasure(new AggregatedMeasure("p", "price", AggregationFunction.SUM));
     Table result = this.queryExecutor.execute(query);
     // Default order
     Assertions.assertThat(result).containsExactly(
@@ -275,7 +275,7 @@ public abstract class ATestQueryExecutor {
             List.of("drink", 7.5d),
             List.of("food", 9d));
 
-    query.orderBy(result.getField(new AggregatedMeasure("price", AggregationFunction.SUM)).name(), OrderKeywordDto.DESC);
+    query.orderBy(result.getField(new AggregatedMeasure("p", "price", AggregationFunction.SUM)).name(), OrderKeywordDto.DESC);
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactly(
             List.of("cloth", 30d),

@@ -1,12 +1,15 @@
 package me.paulbares.query.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import static me.paulbares.query.dto.ConditionType.AND;
 import static me.paulbares.query.dto.ConditionType.OR;
 
 /**
  * Marker interface to represent a (logical, value) condition.
  */
-public sealed interface ConditionDto permits LogicalConditionDto, SingleValueConditionDto {
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+public sealed interface ConditionDto permits LogicalConditionDto, SingleValueConditionDto, InConditionDto {
 
   ConditionType type();
 

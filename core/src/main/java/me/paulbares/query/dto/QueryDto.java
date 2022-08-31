@@ -1,12 +1,9 @@
 package me.paulbares.query.dto;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.jackson.deserializer.ContextValueDeserializer;
-import me.paulbares.jackson.deserializer.OrderDtoDeserializer;
 import me.paulbares.query.*;
 import me.paulbares.query.context.ContextValue;
 
@@ -30,10 +27,8 @@ public class QueryDto {
 
   public Map<String, ConditionDto> conditions = new HashMap<>();
 
-  @JsonDeserialize(contentUsing = OrderDtoDeserializer.class)
   public Map<String, OrderDto> orders = new HashMap<>();
 
-  @JsonDeserialize(contentUsing = ContextValueDeserializer.class)
   public Map<String, ContextValue> context = new HashMap<>();
 
   public QueryDto withColumn(String column) {
@@ -46,8 +41,8 @@ public class QueryDto {
     return this;
   }
 
-  public QueryDto aggregatedMeasure(String field, String agg) {
-    withMeasure(new AggregatedMeasure(field, agg));
+  public QueryDto aggregatedMeasure(String alias, String field, String agg) {
+    withMeasure(new AggregatedMeasure(alias, field, agg));
     return this;
   }
 
