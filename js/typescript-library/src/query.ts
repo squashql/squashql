@@ -1,9 +1,11 @@
 import {Measure} from "./measures";
 import {Condition} from "./conditions";
 import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order";
+import {BucketColumnSet, ColumnSet, ColumnSetKey, PeriodColumnSet} from "./columnsets";
 
 export class Query {
   columns: Array<string>
+  columnSets: Map<string, ColumnSet>
   measures: Array<Measure>
   table: Table
   conditions: Map<string, Condition>
@@ -14,6 +16,7 @@ export class Query {
     this.measures = []
     this.conditions = new Map<string, Condition>()
     this.orders = new Map<string, Order>()
+    this.columnSets = new Map<string, ColumnSet>()
   }
 
   onTable(table: Table): Query {
@@ -28,6 +31,16 @@ export class Query {
 
   withColumn(colum: string): Query {
     this.columns.push(colum)
+    return this
+  }
+
+  withBucketColumnSet(columSet: BucketColumnSet): Query {
+    this.columnSets.set(ColumnSetKey.BUCKET, columSet)
+    return this
+  }
+
+  withPeriodColumnSet(columSet: PeriodColumnSet): Query {
+    this.columnSets.set(ColumnSetKey.PERIOD, columSet)
     return this
   }
 
@@ -50,6 +63,7 @@ export class Query {
     return {
       "table": this.table,
       "columns": this.columns,
+      "columnSets": Object.fromEntries(this.columnSets),
       "measures": this.measures,
       "conditions": Object.fromEntries(this.conditions),
       "orders": Object.fromEntries(this.orders),

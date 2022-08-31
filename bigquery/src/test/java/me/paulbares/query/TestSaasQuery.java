@@ -58,7 +58,10 @@ public class TestSaasQuery {
     BigQueryEngine engine = new BigQueryEngine(new BigQueryDatastore(BigQueryUtil.createCredentials(this.credendialsPath), this.projectId, this.datasetName));
 
     QueryExecutor executor = new QueryExecutor(engine);
-    execute(() -> executor.execute(query));
+    execute(() -> {
+      Table execute = executor.execute(query);
+      execute.show();
+    });
     execute(() -> executor.execute(query));
     execute(() -> executor.execute(query));
   }

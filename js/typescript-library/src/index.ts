@@ -6,9 +6,15 @@ export {
 } from './query'
 
 export {
+  OrderKeyword,
+} from './order'
+
+export {
   Measure,
-  AggregatedMeasure, ExpressionMeasure, BinaryOperationMeasure, BinaryOperator,
-  sum, sumIf, plus, minus, multiply, divide
+  AggregatedMeasure, ExpressionMeasure, ComparisonMeasure,
+  sum, sumIf, plus, minus, multiply, divide,
+  count,
+  ComparisonMethod,
 } from './measures'
 
 export {
@@ -18,5 +24,10 @@ export {
 } from './conditions'
 
 export {
-  Querier,
+  ColumnSet, ColumnSetKey, PeriodColumnSet, BucketColumnSet,
+  Period, Month, Year, Quarter, Semester,
+} from './columnsets'
+
+export {
+  Querier, QueryResult, MetadataResult, StoreMetadata, MetadataItem, SimpleTable
 } from './querier'

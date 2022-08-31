@@ -1,8 +1,17 @@
 import {Query, Table} from "./query"
-import {AggregatedMeasure, BinaryOperationMeasure, BinaryOperator, ExpressionMeasure} from "./measures"
+import {
+  AggregatedMeasure,
+  BinaryOperationMeasure,
+  BinaryOperator,
+  ComparisonMeasure,
+  ComparisonMethod,
+  count,
+  ExpressionMeasure
+} from "./measures"
 import {_in, and, eq, gt, lt, or} from "./conditions"
 import * as fs from "fs"
 import {OrderKeyword} from "./order";
+import {BucketColumnSet, ColumnSetKey, Month, PeriodColumnSet} from "./columnsets";
 
 const table = new Table("myTable")
 const refTable = new Table("refTable")
@@ -13,14 +22,25 @@ q.onTable(table)
         .withColumn("a")
         .withColumn("b")
 
-const price = new AggregatedMeasure("price", "sum", "price.sum");
+const price = new AggregatedMeasure("price.sum", "price", "sum")
 q.withMeasure(price)
-const priceFood = new AggregatedMeasure("price", "sum", "alias", "category", eq("food"));
+const priceFood = new AggregatedMeasure("alias", "price", "sum", "category", eq("food"))
 q.withMeasure(priceFood)
 const plus = new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood)
 q.withMeasure(plus)
-const expression = new ExpressionMeasure("myExpression", "sum(price*quantity)")
+const expression = new ExpressionMeasure("sum(price*quantity)", "myExpression")
 q.withMeasure(expression)
+q.withMeasure(count)
+
+// Comparisons
+q.withMeasure(new ComparisonMeasure("comp bucket", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, ColumnSetKey.BUCKET, new Map(Object.entries({
+  "group": "g",
+  "scenario": "s-1"
+}))))
+q.withMeasure(new ComparisonMeasure("growth", ComparisonMethod.DIVIDE, price, ColumnSetKey.PERIOD, new Map(Object.entries({
+  "Annee": "y-1",
+  "Mois": "m"
+}))))
 
 const queryCondition = or(and(eq("a"), eq("b")), lt(5));
 q.withCondition("f1", queryCondition)
@@ -29,6 +49,13 @@ q.withCondition("f3", _in([0, 1, 2]))
 
 q.orderBy("a", OrderKeyword.ASC)
 q.orderByFirstElements("b", ["1", "l", "p"])
+
+const values = new Map(Object.entries({
+  "a": ["a1", "a2"],
+  "b": ["b1", "b2"]
+}));
+q.withBucketColumnSet(new BucketColumnSet("group", "scenario", values))
+q.withPeriodColumnSet(new PeriodColumnSet(new Month("mois", "annee")))
 
 console.log(JSON.stringify(q))
 
