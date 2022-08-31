@@ -131,11 +131,11 @@ export enum ComparisonMethod {
 // Helpers
 
 export function sum(alias: string, field: string): Measure {
-  return new AggregatedMeasure(field, "sum", alias)
+  return new AggregatedMeasure(alias, field, "sum")
 }
 
 export function sumIf(alias: string, field: string, conditionField: string, condition: Condition): Measure {
-  return new AggregatedMeasure(field, "sum", alias, conditionField, condition)
+  return new AggregatedMeasure(alias, field, "sum", conditionField, condition)
 }
 
 export function plus(alias: string, measure1: Measure, measure2: Measure): Measure {

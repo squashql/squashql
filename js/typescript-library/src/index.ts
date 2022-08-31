@@ -11,9 +11,10 @@ export {
 
 export {
   Measure,
-  AggregatedMeasure, ExpressionMeasure,
+  AggregatedMeasure, ExpressionMeasure, ComparisonMeasure,
   sum, sumIf, plus, minus, multiply, divide,
-  count
+  count,
+  ComparisonMethod,
 } from './measures'
 
 export {
