@@ -6,6 +6,10 @@ export {
 } from './query'
 
 export {
+  OrderKeyword,
+} from './order'
+
+export {
   Measure,
   AggregatedMeasure, ExpressionMeasure,
   sum, sumIf, plus, minus, multiply, divide,
@@ -18,12 +22,11 @@ export {
   and, or
 } from './conditions'
 
-
 export {
   ColumnSet, PeriodColumnSet, BucketColumnSet,
   Period, Month, Year, Quarter, Semester,
 } from './columnsets'
 
 export {
-  Querier,
+  Querier, QueryResult, MetadataResult, StoreMetadata, MetadataItem, SimpleTable
 } from './querier'
