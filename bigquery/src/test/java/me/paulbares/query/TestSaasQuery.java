@@ -6,6 +6,7 @@ import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.database.BigQueryEngine;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.QueryDto;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -21,7 +22,7 @@ public class TestSaasQuery {
   String datasetName = "business_planning";
 
   @Test
-//  @Disabled
+  @Disabled
   void test() {
     QueryDto query = QueryBuilder.query().table("saas");
 
