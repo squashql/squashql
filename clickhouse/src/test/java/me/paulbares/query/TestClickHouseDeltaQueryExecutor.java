@@ -52,26 +52,33 @@ public class TestClickHouseDeltaQueryExecutor extends TestClickHouseQueryExecuto
             .port(dataSource.getPort())
             .build();
 
-    String scenarioStoreName = ClickHouseDeltaTransactionManager.scenarioStoreName(this.storeName, "s1");
+    String scenarioName = "s1";
+    String scenarioStoreName = ClickHouseDeltaTransactionManager.scenarioStoreName(this.storeName, scenarioName);
+    String sqlS1 = "SELECT *, '" + scenarioName + "' AS " + TransactionManager.SCENARIO_FIELD_NAME + " FROM " + this.storeName + " WHERE ean NOT IN ( SELECT ean FROM " + scenarioStoreName + " )\n" +
+            "UNION ALL\n" +
+            "SELECT *, '" + scenarioName + "' FROM " + scenarioStoreName + "";
+    String sqlBase = "SELECT *, '" + MAIN_SCENARIO_NAME + "' AS " + TransactionManager.SCENARIO_FIELD_NAME + " FROM " + this.storeName;
+    String sql = sqlBase + "\n" + "UNION ALL\n" + sqlS1;
+
     try (ClickHouseClient client = ClickHouseClient.newInstance(ClickHouseProtocol.HTTP);
          ClickHouseResponse response = client.connect(server)
                  .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
-                 .query("SELECT * FROM " + this.storeName + " WHERE ean NOT IN ( SELECT ean FROM " + scenarioStoreName + " )\n" +
-                         "UNION ALL\n" +
-                         "SELECT * FROM " + scenarioStoreName + ";")
+                 .query("SELECT scenario FROM (" + sql + ") as a")
                  .execute()
                  .get()) {
+//      new ClickHouseResultSet(response.dat)
+//      .forEach(r -> System.out.println(r.iterator().forEachRemaining(o -> System.out.print(o + ","))));
       Pair<List<Field>, List<List<Object>>> result = transform(response.getColumns(),
               c -> new Field(c.getColumnName(), ClickHouseUtil.clickHouseTypeToClass(c.getDataType())),
               response.records().iterator(),
               (i, r) -> r.getValue(i).asObject());
-      System.out.println(result);
-//      return new ColumnarTable(
-//              result.getOne(),
-//              query.measures,
-//              IntStream.range(query.coordinates.size(), query.coordinates.size() + query.measures.size()).toArray(),
-//              IntStream.range(0, query.coordinates.size()).toArray(),
-//              result.getTwo());
+      System.out.println(response.getSummary().getStatistics());
+      new ColumnarTable(
+              result.getOne(),
+              List.of(),
+              new int[0],
+              new int[0],
+              result.getTwo()).show();
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);
     }
