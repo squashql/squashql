@@ -4,6 +4,11 @@ export interface ColumnSet {
   readonly class: string
 }
 
+export enum ColumnSetKey {
+  BUCKET = "bucket",
+  PERIOD = "period",
+}
+
 export class BucketColumnSet {
   class: string = PACKAGE + "dto.BucketColumnSetDto"
 

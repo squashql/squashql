@@ -24,7 +24,7 @@ export {
 } from './conditions'
 
 export {
-  ColumnSet, PeriodColumnSet, BucketColumnSet,
+  ColumnSet, ColumnSetKey, PeriodColumnSet, BucketColumnSet,
   Period, Month, Year, Quarter, Semester,
 } from './columnsets'
 

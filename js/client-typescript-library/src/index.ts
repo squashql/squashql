@@ -1,16 +1,17 @@
 import {
+  BucketColumnSet,
+  ColumnSetKey,
   ComparisonMeasure,
   ComparisonMethod,
   divide,
-  plus,
   eq,
+  PeriodColumnSet,
+  plus,
   Querier,
   Query,
   sum,
   sumIf,
   Table,
-  BucketColumnSet,
-  PeriodColumnSet,
   Year
 } from "aitm-js-query"
 
@@ -39,7 +40,7 @@ q.withMeasure(sales)
 q.withMeasure(ebidtaRatio)
 
 const refPeriod = {"Year": "y-1"}
-const growth = new ComparisonMeasure("Growth", ComparisonMethod.DIVIDE, sales, "period", new Map(Object.entries(refPeriod)));
+const growth = new ComparisonMeasure("Growth", ComparisonMethod.DIVIDE, sales, ColumnSetKey.PERIOD, new Map(Object.entries(refPeriod)));
 q.withMeasure(growth)
 q.withPeriodColumnSet(new PeriodColumnSet(new Year("Year")))
 
@@ -50,7 +51,7 @@ const refScenario = {"scenario encrypted": "s-1", "group": "g"}
 const kpiComp = new ComparisonMeasure("KPI comp. with prev. scenario",
         ComparisonMethod.ABSOLUTE_DIFFERENCE,
         kpi,
-        "bucket",
+        ColumnSetKey.BUCKET,
         new Map(Object.entries(refScenario)));
 q.withMeasure(kpiComp);
 const groups = {

@@ -11,7 +11,7 @@ import {
 import {_in, and, eq, gt, lt, or} from "./conditions"
 import * as fs from "fs"
 import {OrderKeyword} from "./order";
-import {BucketColumnSet, Month, PeriodColumnSet} from "./columnsets";
+import {BucketColumnSet, ColumnSetKey, Month, PeriodColumnSet} from "./columnsets";
 
 const table = new Table("myTable")
 const refTable = new Table("refTable")
@@ -33,11 +33,11 @@ q.withMeasure(expression)
 q.withMeasure(count)
 
 // Comparisons
-q.withMeasure(new ComparisonMeasure("comp bucket", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, "bucket", new Map(Object.entries({
+q.withMeasure(new ComparisonMeasure("comp bucket", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, ColumnSetKey.BUCKET, new Map(Object.entries({
   "group": "g",
   "scenario": "s-1"
 }))))
-q.withMeasure(new ComparisonMeasure("growth", ComparisonMethod.DIVIDE, price, "period", new Map(Object.entries({
+q.withMeasure(new ComparisonMeasure("growth", ComparisonMethod.DIVIDE, price, ColumnSetKey.PERIOD, new Map(Object.entries({
   "Annee": "y-1",
   "Mois": "m"
 }))))

@@ -1,5 +1,6 @@
 import {PACKAGE} from "./index";
 import {Condition} from "./conditions";
+import {ColumnSetKey} from "./columnsets";
 
 export interface Measure {
   readonly class: string
@@ -105,7 +106,7 @@ export class ComparisonMeasure implements Measure {
   constructor(alias: string,
               private method: ComparisonMethod,
               private measure: Measure,
-              private columnSet: string,
+              private columnSet: ColumnSetKey,
               private referencePosition: Map<string, string>) {
     this.alias = alias
   }
