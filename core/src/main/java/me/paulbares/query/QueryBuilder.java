@@ -7,8 +7,7 @@ import me.paulbares.query.dto.*;
 import java.util.List;
 import java.util.Map;
 
-import static me.paulbares.query.BinaryOperator.DIVIDE;
-import static me.paulbares.query.BinaryOperator.PLUS;
+import static me.paulbares.query.BinaryOperator.*;
 import static me.paulbares.query.context.Totals.POSITION_BOTTOM;
 import static me.paulbares.query.context.Totals.POSITION_TOP;
 import static me.paulbares.query.dto.ConditionType.AND;
@@ -121,8 +120,28 @@ public class QueryBuilder {
     return new BinaryOperationMeasure(alias, DIVIDE, a, b);
   }
 
+  public static Measure multiply(String alias, Measure a, Measure b) {
+    return new BinaryOperationMeasure(alias, MULTIPLY, a, b);
+  }
+
+  public static Measure minus(String alias, Measure a, Measure b) {
+    return new BinaryOperationMeasure(alias, MINUS, a, b);
+  }
+
   public static Measure plus(String alias, Measure a, Measure b) {
     return new BinaryOperationMeasure(alias, PLUS, a, b);
+  }
+
+  public static Measure min(String alias, String field) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.MIN);
+  }
+
+  public static Measure sum(String alias, String field) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.SUM);
+  }
+
+  public static Measure avg(String alias, String field) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.AVG);
   }
 
   public static void main(String[] args) {

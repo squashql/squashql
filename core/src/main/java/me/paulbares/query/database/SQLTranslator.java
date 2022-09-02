@@ -40,35 +40,41 @@ public class SQLTranslator {
     statement.append("select ");
     statement.append(selects.stream().collect(Collectors.joining(", ")));
     statement.append(" from ");
-    statement.append(queryRewriter.tableName(query.table.name));
+    if (query.subQuery != null) {
+      statement.append("(");
+      statement.append(translate(query, totals, fieldProvider, queryRewriter));
+      statement.append(")");
+    } else {
+      statement.append(queryRewriter.tableName(query.table.name));
 
-    addJoins(statement, query.table);
-    addConditions(statement, query, fieldProvider);
+      addJoins(statement, query.table, queryRewriter);
+      addConditions(statement, query, fieldProvider);
 
-    if (!groupBy.isEmpty()) {
-      statement.append(" group by ");
-      if (totals != null) {
-        statement.append("rollup(");
-      }
-      statement.append(groupBy.stream().collect(Collectors.joining(", ")));
+      if (!groupBy.isEmpty()) {
+        statement.append(" group by ");
+        if (totals != null) {
+          statement.append("rollup(");
+        }
+        statement.append(groupBy.stream().collect(Collectors.joining(", ")));
 
-      if (totals != null) {
-        statement.append(") order by ");
-        String order = " asc"; // default for now
-        // https://stackoverflow.com/a/7862601
-        // to move totals and subtotals at the top or at the bottom and keep normal order for other rows.
-        String position = totals.position == null ? Totals.POSITION_TOP : totals.position; // default top
-        // Note: with Spark, values of totals are set to null but for Clickhouse, they are set to '' for string type,
-        // 0 for integer... this is why there is the following case condition (for clickhouse, only string type is
-        // handled
-        // for the moment).
-        String orderBy = "case when %s is null or %s = '' then %d else %d end, %s %s";
-        int first = position.equals(Totals.POSITION_TOP) ? 0 : 1;
-        int second = first ^ 1;
-        String orderByStatement = groupBy.stream()
-                .map(g -> orderBy.formatted(g, g, first, second, g, order))
-                .collect(Collectors.joining(", "));
-        statement.append(orderByStatement);
+        if (totals != null) {
+          statement.append(") order by ");
+          String order = " asc"; // default for now
+          // https://stackoverflow.com/a/7862601
+          // to move totals and subtotals at the top or at the bottom and keep normal order for other rows.
+          String position = totals.position == null ? Totals.POSITION_TOP : totals.position; // default top
+          // Note: with Spark, values of totals are set to null but for Clickhouse, they are set to '' for string type,
+          // 0 for integer... this is why there is the following case condition (for clickhouse, only string type is
+          // handled
+          // for the moment).
+          String orderBy = "case when %s is null or %s = '' then %d else %d end, %s %s";
+          int first = position.equals(Totals.POSITION_TOP) ? 0 : 1;
+          int second = first ^ 1;
+          String orderByStatement = groupBy.stream()
+                  .map(g -> orderBy.formatted(g, g, first, second, g, order))
+                  .collect(Collectors.joining(", "));
+          statement.append(orderByStatement);
+        }
       }
     }
     return statement.toString();
@@ -109,27 +115,27 @@ public class SQLTranslator {
     }
   }
 
-  private static void addJoins(StringBuilder statement, TableDto tableQuery) {
+  private static void addJoins(StringBuilder statement, TableDto tableQuery, QueryRewriter queryRewriter) {
     for (JoinDto join : tableQuery.joins) {
       statement
               .append(" ")
               .append(join.type)
               .append(" join ")
-              .append(join.table.name)
+              .append(queryRewriter.tableName(join.table.name))
               .append(" on ");
       for (int i = 0; i < join.mappings.size(); i++) {
         JoinMappingDto mapping = join.mappings.get(i);
         statement
-                .append(tableQuery.name).append('.').append(mapping.from)
+                .append(queryRewriter.tableName(mapping.fromTable)).append('.').append(mapping.from)
                 .append(" = ")
-                .append(join.table.name).append('.').append(mapping.to);
+                .append(queryRewriter.tableName(mapping.toTable)).append('.').append(mapping.to);
         if (i < join.mappings.size() - 1) {
           statement.append(" and ");
         }
       }
 
       if (!join.table.joins.isEmpty()) {
-        addJoins(statement, join.table);
+        addJoins(statement, join.table, queryRewriter);
       }
     }
   }

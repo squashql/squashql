@@ -34,6 +34,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       }
     });
 
+    System.out.println(sql);
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(sql).build();
     try {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
@@ -58,7 +59,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   /**
    * Gets the value with the correct type, otherwise everything is read as String.
    */
-  private Object getTypeValue(FieldValueList fieldValues, Schema schema, int index) {
+  public static Object getTypeValue(FieldValueList fieldValues, Schema schema, int index) {
     FieldValue fieldValue = fieldValues.get(index);
     com.google.cloud.bigquery.Field field = schema.getFields().get(index);
     return switch (field.getType().getStandardType()) {

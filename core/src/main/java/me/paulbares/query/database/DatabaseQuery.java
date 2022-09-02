@@ -18,6 +18,7 @@ import java.util.*;
 public class DatabaseQuery {
 
   public TableDto table;
+  public DatabaseQuery subQuery;
   public Map<String, List<String>> coordinates = new LinkedHashMap<>();
   public Map<String, ConditionDto> conditions = new LinkedHashMap<>();
   public List<Measure> measures = new ArrayList<>();
@@ -64,6 +65,11 @@ public class DatabaseQuery {
 
   public DatabaseQuery table(String tableName) {
     this.table = new TableDto(tableName);
+    return this;
+  }
+
+  public DatabaseQuery subQuery(DatabaseQuery subQuery) {
+    this.subQuery = subQuery;
     return this;
   }
 

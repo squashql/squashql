@@ -123,15 +123,15 @@ public class TestSQLTranslator {
   void testJoins() {
     TableDto baseStore = new TableDto(BASE_STORE_NAME);
     TableDto table1 = new TableDto("table1");
-    JoinMappingDto mappingBaseToTable1 = new JoinMappingDto("id", "table1_id");
+    JoinMappingDto mappingBaseToTable1 = new JoinMappingDto(baseStore.name, "id", table1.name, "table1_id");
     TableDto table2 = new TableDto("table2");
-    JoinMappingDto mappingBaseToTable2 = new JoinMappingDto("id", "table2_id");
+    JoinMappingDto mappingBaseToTable2 = new JoinMappingDto(baseStore.name, "id", table2.name, "table2_id");
     TableDto table3 = new TableDto("table3");
-    JoinMappingDto mappingTable2ToTable3 = new JoinMappingDto("table2_field_1", "table3_id");
+    JoinMappingDto mappingTable2ToTable3 = new JoinMappingDto(table2.name, "table2_field_1", table3.name, "table3_id");
     TableDto table4 = new TableDto("table4");
     List<JoinMappingDto> mappingTable1ToTable4 = List.of(
-            new JoinMappingDto("table1_field_2", "table4_id_1"),
-            new JoinMappingDto("table1_field_3", "table4_id_2"));
+            new JoinMappingDto(table1.name, "table1_field_2", table4.name,"table4_id_1"),
+            new JoinMappingDto(table1.name,"table1_field_3", table4.name,"table4_id_2"));
 
     baseStore.joins.add(new JoinDto(table1, "inner", mappingBaseToTable1));
     baseStore.joins.add(new JoinDto(table2, "left", mappingBaseToTable2));
@@ -150,6 +150,33 @@ public class TestSQLTranslator {
                     + " left join table2 on " + BASE_STORE_NAME + ".id = table2.table2_id"
                     + " inner join table3 on table2.table2_field_1 = table3.table3_id"
             );
+  }
+
+  @Test
+  void testJoinsEquijoinsMultipleCondCrossTables() {
+    TableDto a = new TableDto("A");
+    TableDto b = new TableDto("B");
+    JoinMappingDto jAToB = new JoinMappingDto(a.name, "a_id",b.name, "b_id");
+    TableDto c = new TableDto("C");
+    // should be able to ref. both column of A and B in the join.
+    List<JoinMappingDto> jCToAB = List.of(
+            new JoinMappingDto(c.name, "c_other_id", b.name, "b_other_id"),
+            new JoinMappingDto(c.name, "c_x", a.name, "a_x"));
+
+    a.join(b, "inner", jAToB);
+    a.join(c, "left", jCToAB);
+
+    DatabaseQuery query = new DatabaseQuery().table(a).wildcardCoordinate("c.y");
+
+    String translate = SQLTranslator.translate(query, fieldProvider);
+    System.out.println(translate);
+    //    Assertions.assertThat(translate)
+//            .isEqualTo("select avg(`pnl`) as `pnl.avg` from " + BASE_STORE_NAME
+//                    + " inner join table1 on " + BASE_STORE_NAME + ".id = table1.table1_id"
+//                    + " inner join table4 on table1.table1_field_2 = table4.table4_id_1 and table1.table1_field_3 = table4.table4_id_2"
+//                    + " left join table2 on " + BASE_STORE_NAME + ".id = table2.table2_id"
+//                    + " inner join table3 on table2.table2_field_1 = table3.table3_id"
+//            );
   }
 
   @Test

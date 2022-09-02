@@ -26,6 +26,7 @@ public class TestITM {
   protected SparkDatastore datastore;
 
   protected QueryEngine queryEngine;
+  
   protected QueryExecutor queryExecutor;
 
   @BeforeAll
