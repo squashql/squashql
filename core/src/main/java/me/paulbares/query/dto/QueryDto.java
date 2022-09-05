@@ -19,7 +19,7 @@ public class QueryDto {
 
   public TableDto table;
 
-  public QueryDto query;
+  public QueryDto subQuery;
 
   public List<String> columns = new ArrayList<>();
 
@@ -78,8 +78,8 @@ public class QueryDto {
     return this;
   }
 
-  public QueryDto table(QueryDto query) {
-    this.query = query;
+  public QueryDto table(QueryDto subQuery) {
+    this.subQuery = subQuery;
     return this;
   }
 

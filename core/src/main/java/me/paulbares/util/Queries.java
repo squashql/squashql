@@ -1,6 +1,7 @@
 package me.paulbares.util;
 
-import me.paulbares.query.ColumnSet;
+import me.paulbares.query.*;
+import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.dto.*;
 
 import java.util.*;
@@ -42,5 +43,56 @@ public final class Queries {
     }
 
     return res;
+  }
+
+  public static DatabaseQuery toDatabaseQuery(QueryDto query) {
+    Set<String> cols = new HashSet<>();
+    query.columns.forEach(cols::add);
+    query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).forEach(cols::add);
+    DatabaseQuery prefetchQuery = new DatabaseQuery();
+    if (query.table != null) {
+      prefetchQuery.table(query.table);
+    } else if (query.subQuery != null) {
+      prefetchQuery.subQuery(toSubDatabaseQuery(query.subQuery));
+    } else {
+      throw new IllegalArgumentException("A table or sub-query was expected in " + query);
+    }
+    prefetchQuery.conditions = query.conditions;
+    cols.forEach(prefetchQuery::wildcardCoordinate);
+    return prefetchQuery;
+  }
+
+  public static DatabaseQuery toSubDatabaseQuery(QueryDto query) {
+    if (query.subQuery != null) {
+      throw new IllegalArgumentException("sub-query in a sub-query is not supported");
+    }
+
+    Set<String> cols = new HashSet<>();
+    query.columns.forEach(cols::add);
+    if (query.columnSets != null && !query.columnSets.isEmpty()) {
+      throw new IllegalArgumentException("column sets are not expected in sub query: " + query);
+    }
+    if (query.context != null && !query.context.isEmpty()) {
+      throw new IllegalArgumentException("context values are not expected in sub query: " + query);
+    }
+
+    for (Measure measure : query.measures) {
+      if (measure instanceof AggregatedMeasure
+              || measure instanceof ExpressionMeasure
+              || measure instanceof BinaryOperationMeasure) {
+        continue;
+      }
+      throw new IllegalArgumentException("Only "
+              + AggregatedMeasure.class.getSimpleName() + ", "
+              + ExpressionMeasure.class.getSimpleName() + " or "
+              + BinaryOperationMeasure.class.getSimpleName() + " can be used in a sub-query but "
+              + measure + " was provided");
+    }
+
+    DatabaseQuery prefetchQuery = new DatabaseQuery().table(query.table);
+    prefetchQuery.conditions = query.conditions;
+    cols.forEach(prefetchQuery::wildcardCoordinate);
+    query.measures.forEach(prefetchQuery::withMeasure);
+    return prefetchQuery;
   }
 }

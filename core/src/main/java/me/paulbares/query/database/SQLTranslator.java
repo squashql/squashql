@@ -31,7 +31,7 @@ public class SQLTranslator {
     List<String> aggregates = new ArrayList<>();
 
     query.coordinates.forEach((field, values) -> groupBy.add(escape(field)));
-    query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter)));
+    query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true)));
 
     groupBy.forEach(selects::add); // coord first, then aggregates
     aggregates.forEach(selects::add);
@@ -42,7 +42,7 @@ public class SQLTranslator {
     statement.append(" from ");
     if (query.subQuery != null) {
       statement.append("(");
-      statement.append(translate(query, totals, fieldProvider, queryRewriter));
+      statement.append(translate(query.subQuery, totals, fieldProvider, queryRewriter));
       statement.append(")");
     } else {
       statement.append(queryRewriter.tableName(query.table.name));

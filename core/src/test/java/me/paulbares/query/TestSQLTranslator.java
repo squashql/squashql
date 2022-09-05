@@ -130,8 +130,8 @@ public class TestSQLTranslator {
     JoinMappingDto mappingTable2ToTable3 = new JoinMappingDto(table2.name, "table2_field_1", table3.name, "table3_id");
     TableDto table4 = new TableDto("table4");
     List<JoinMappingDto> mappingTable1ToTable4 = List.of(
-            new JoinMappingDto(table1.name, "table1_field_2", table4.name,"table4_id_1"),
-            new JoinMappingDto(table1.name,"table1_field_3", table4.name,"table4_id_2"));
+            new JoinMappingDto(table1.name, "table1_field_2", table4.name, "table4_id_1"),
+            new JoinMappingDto(table1.name, "table1_field_3", table4.name, "table4_id_2"));
 
     baseStore.joins.add(new JoinDto(table1, "inner", mappingBaseToTable1));
     baseStore.joins.add(new JoinDto(table2, "left", mappingBaseToTable2));
@@ -156,27 +156,23 @@ public class TestSQLTranslator {
   void testJoinsEquijoinsMultipleCondCrossTables() {
     TableDto a = new TableDto("A");
     TableDto b = new TableDto("B");
-    JoinMappingDto jAToB = new JoinMappingDto(a.name, "a_id",b.name, "b_id");
+    JoinMappingDto jAToB = new JoinMappingDto(a.name, "a_id", b.name, "b_id");
     TableDto c = new TableDto("C");
     // should be able to ref. both column of A and B in the join.
     List<JoinMappingDto> jCToAB = List.of(
             new JoinMappingDto(c.name, "c_other_id", b.name, "b_other_id"),
-            new JoinMappingDto(c.name, "c_x", a.name, "a_x"));
+            new JoinMappingDto(c.name, "c_f", a.name, "a_f"));
 
     a.join(b, "inner", jAToB);
     a.join(c, "left", jCToAB);
 
     DatabaseQuery query = new DatabaseQuery().table(a).wildcardCoordinate("c.y");
 
-    String translate = SQLTranslator.translate(query, fieldProvider);
-    System.out.println(translate);
-    //    Assertions.assertThat(translate)
-//            .isEqualTo("select avg(`pnl`) as `pnl.avg` from " + BASE_STORE_NAME
-//                    + " inner join table1 on " + BASE_STORE_NAME + ".id = table1.table1_id"
-//                    + " inner join table4 on table1.table1_field_2 = table4.table4_id_1 and table1.table1_field_3 = table4.table4_id_2"
-//                    + " left join table2 on " + BASE_STORE_NAME + ".id = table2.table2_id"
-//                    + " inner join table3 on table2.table2_field_1 = table3.table3_id"
-//            );
+    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
+            .isEqualTo("select `c.y` from A " +
+                    "inner join B on A.a_id = B.b_id " +
+                    "left join C on C.c_other_id = B.b_other_id and C.c_f = A.a_f " +
+                    "group by `c.y`");
   }
 
   @Test
@@ -196,5 +192,31 @@ public class TestSQLTranslator {
                     + " and `delta` >= 123.0 and `type` = 'A' or `type` = 'B' and `pnl` < 10.0"
                     + " group by `scenario`, `type`"
             );
+  }
+
+  @Test
+  void testSelectFromSelect() {
+    // Kind of leaf agg. !!!
+    TableDto a = new TableDto("a");
+    DatabaseQuery subQuery = new DatabaseQuery()
+            .table(a)
+            .wildcardCoordinate("c1")
+            .withMeasure(avg("mean", "c2"));
+
+    DatabaseQuery query = new DatabaseQuery()
+            .subQuery(subQuery)
+            .withMeasure(sum("sum GT", "mean"));
+    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
+            .isEqualTo("select sum(`mean`) as `sum GT` from (select `c1`, avg(`c2`) as `mean` from a group by `c1`)");
+  }
+
+  @Test
+  void testBinaryOperationMeasure() {
+    TableDto a = new TableDto("a");
+    DatabaseQuery query = new DatabaseQuery()
+            .table(a)
+            .withMeasure(plus("plus", sum("pnl.sum", "pnl"), avg("delta.avg", "delta")));
+    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
+            .isEqualTo("select sum(`pnl`)+avg(`delta`) as `plus` from a");
   }
 }

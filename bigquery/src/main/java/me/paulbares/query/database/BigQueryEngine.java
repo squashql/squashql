@@ -28,13 +28,12 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
       @Override
       public String measureAlias(String alias, Measure measure) {
-        String a = alias.replace("(", "_");
-        a = a.replace(")", "_");
-        return a;
+        return alias
+                .replace("(", "_")
+                .replace(")", "_");
       }
     });
 
-    System.out.println(sql);
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(sql).build();
     try {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);

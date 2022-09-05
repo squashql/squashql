@@ -16,6 +16,7 @@ import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.monitoring.QueryWatch;
 import me.paulbares.store.Field;
+import me.paulbares.util.Queries;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -68,12 +69,7 @@ public class QueryExecutor {
     resolveMeasures(query);
     queryWatch.stop(QueryWatch.PREPARE_RESOLVE_MEASURES);
 
-    Set<String> cols = new HashSet<>();
-    query.columns.forEach(cols::add);
-    query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).forEach(cols::add);
-    DatabaseQuery prefetchQuery = new DatabaseQuery().table(query.table);
-    prefetchQuery.conditions = query.conditions;
-    cols.forEach(prefetchQuery::wildcardCoordinate);
+    DatabaseQuery prefetchQuery = Queries.toDatabaseQuery(query);
 
     // Create plan
     queryWatch.start(QueryWatch.PREPARE_CREATE_EXEC_PLAN);
@@ -82,7 +78,8 @@ public class QueryExecutor {
 
     Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
     queryWatch.start(QueryWatch.PREPARE_CREATE_QUERY_SCOPE);
-    CaffeineQueryCache.QueryScope scope = new CaffeineQueryCache.QueryScope(query.table, cols.stream().map(fieldSupplier).collect(Collectors.toSet()), query.conditions);
+    // FIXME query.table can be null
+    CaffeineQueryCache.QueryScope scope = new CaffeineQueryCache.QueryScope(query.table, prefetchQuery.coordinates.keySet().stream().map(fieldSupplier).collect(Collectors.toSet()), query.conditions);
     queryWatch.stop(QueryWatch.PREPARE_CREATE_QUERY_SCOPE);
     QueryCache queryCache = getQueryCache((QueryCacheContextValue) query.context.getOrDefault(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE)));
 
@@ -170,7 +167,7 @@ public class QueryExecutor {
             values);
   }
 
-  private ExecutionPlan<Measure, ExecutionContext> createExecutionPlan(QueryDto query) {
+  private static ExecutionPlan<Measure, ExecutionContext> createExecutionPlan(QueryDto query) {
     GraphDependencyBuilder<Measure> builder = new GraphDependencyBuilder<>(m -> getMeasureDependencies(m));
     Graph<GraphDependencyBuilder.NodeWithId<Measure>> graph = builder.build(query.measures);
     ExecutionPlan<Measure, ExecutionContext> plan = new ExecutionPlan<>(graph, new MeasureEvaluator());
