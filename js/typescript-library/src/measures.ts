@@ -1,6 +1,6 @@
-import {PACKAGE} from "./index";
-import {Condition} from "./conditions";
-import {ColumnSetKey} from "./columnsets";
+import {PACKAGE} from "./index"
+import {Condition} from "./conditions"
+import {ColumnSetKey} from "./columnsets"
 
 export interface Measure {
   readonly class: string
@@ -9,7 +9,7 @@ export interface Measure {
 }
 
 export class AggregatedMeasure implements Measure {
-  class: string = PACKAGE + "AggregatedMeasure";
+  class: string = PACKAGE + "AggregatedMeasure"
   field: string
   aggregationFunction: string
   alias: string
@@ -39,10 +39,10 @@ export class AggregatedMeasure implements Measure {
 }
 
 export class ExpressionMeasure implements Measure {
-  class: string = PACKAGE + "ExpressionMeasure";
-  alias: string;
+  class: string = PACKAGE + "ExpressionMeasure"
+  alias: string
 
-  constructor(private sqlExpression: string, alias: string) {
+  constructor(alias: string, private sqlExpression: string) {
     this.alias = alias
   }
 
@@ -56,7 +56,7 @@ export class ExpressionMeasure implements Measure {
 }
 
 export class BinaryOperationMeasure implements Measure {
-  class: string = PACKAGE + "BinaryOperationMeasure";
+  class: string = PACKAGE + "BinaryOperationMeasure"
   alias: string
   expression?: string
   operator: BinaryOperator
@@ -89,7 +89,7 @@ export enum BinaryOperator {
 }
 
 class CountMeasure extends AggregatedMeasure {
-  private static _instance: CountMeasure;
+  private static _instance: CountMeasure
 
   public static get instance() {
     return this._instance || (this._instance = new this("_contributors_count_", "*", "count"));
@@ -99,7 +99,7 @@ class CountMeasure extends AggregatedMeasure {
 export const count = CountMeasure.instance;
 
 export class ComparisonMeasure implements Measure {
-  class: string = PACKAGE + "ComparisonMeasure";
+  class: string = PACKAGE + "ComparisonMeasure"
   alias: string
   expression?: string
 
@@ -133,6 +133,18 @@ export enum ComparisonMethod {
 
 export function sum(alias: string, field: string): Measure {
   return new AggregatedMeasure(alias, field, "sum")
+}
+
+export function min(alias: string, field: string): Measure {
+  return new AggregatedMeasure(alias, field, "min")
+}
+
+export function max(alias: string, field: string): Measure {
+  return new AggregatedMeasure(alias, field, "max")
+}
+
+export function avg(alias: string, field: string): Measure {
+  return new AggregatedMeasure(alias, field, "avg")
 }
 
 export function sumIf(alias: string, field: string, conditionField: string, condition: Condition): Measure {

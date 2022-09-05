@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
+import static me.paulbares.query.QueryBuilder.*;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -192,6 +193,54 @@ public abstract class ATestQueryCache {
             List.of("cloth", 10d),
             List.of("food", 3d));
     assertCacheStats(0, 4);
+  }
+
+  @Test
+  void testWithSubQuery() {
+    QueryDto firstSubQuery = new QueryDto()
+            .table(this.storeName)
+            .withColumn("category")
+            .withMeasure(sum("ca", "price")); // ca per scenario
+
+    QueryDto queryDto = new QueryDto()
+            .table(firstSubQuery)
+            .withMeasure(avg("mean", "ca"));// avg of ca
+    Table result = this.queryExecutor.execute(queryDto);
+    Assertions.assertThat(result).containsExactly(List.of(5d));
+    assertCacheStats(0, 2);
+
+    // Change the sub query
+    QueryDto subQuery = new QueryDto()
+            .table(this.storeName)
+            .withColumn("category")
+            .withMeasure(min("ca", "price")); // change agg function
+    queryDto = new QueryDto()
+            .table(subQuery)
+            .withMeasure(avg("mean", "ca"));// avg of ca
+    result = this.queryExecutor.execute(queryDto);
+    Assertions.assertThat(result).containsExactly(List.of(5d));
+    assertCacheStats(0, 4);
+
+    // Change again the sub query
+    subQuery = new QueryDto()
+            .table(this.storeName)
+            .withColumn("ean") // change here
+            .withMeasure(min("ca", "price"));
+    queryDto = new QueryDto()
+            .table(subQuery)
+            .withMeasure(avg("mean", "ca"));// avg of ca
+    result = this.queryExecutor.execute(queryDto);
+    Assertions.assertThat(result).containsExactly(List.of(5d));
+    assertCacheStats(0, 6);
+
+    // Hit the cache
+    queryDto = new QueryDto()
+            .table(firstSubQuery) // same first sub-query
+            .withMeasure(avg("mean", "ca"))
+            .withMeasure(sum("mean", "ca"));// ask for another measure
+    result = this.queryExecutor.execute(queryDto);
+    Assertions.assertThat(result).containsExactly(List.of(5d, 15d));
+    assertCacheStats(1, 7);
   }
 
   @Test

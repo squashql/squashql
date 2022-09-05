@@ -45,12 +45,13 @@ public class CaffeineQueryCache implements QueryCache {
 
   @Override
   public ColumnarTable createRawResult(QueryScope scope) {
-    List<Field> headers = new ArrayList<>(scope.columns());
+    Set<Field> columns = scope.columns();
+    List<Field> headers = new ArrayList<>(columns);
     headers.add(new Field(CountMeasure.ALIAS, long.class));
 
     List<List<Object>> values = new ArrayList<>();
     Table table = this.results.getIfPresent(scope);
-    for (Field f : scope.columns()) {
+    for (Field f : columns) {
       values.add(table.getColumnValues(f.name()));
     }
     values.add(table.getAggregateValues(CountMeasure.INSTANCE));

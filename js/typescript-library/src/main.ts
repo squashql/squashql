@@ -1,4 +1,4 @@
-import {Query, Table} from "./query"
+import {JoinMapping, JoinType, Query, Table} from "./query"
 import {
   AggregatedMeasure,
   BinaryOperationMeasure,
@@ -6,7 +6,7 @@ import {
   ComparisonMeasure,
   ComparisonMethod,
   count,
-  ExpressionMeasure
+  ExpressionMeasure, sum
 } from "./measures"
 import {_in, and, eq, gt, lt, or} from "./conditions"
 import * as fs from "fs"
@@ -16,6 +16,7 @@ import {BucketColumnSet, ColumnSetKey, Month, PeriodColumnSet} from "./columnset
 const table = new Table("myTable")
 const refTable = new Table("refTable")
 table.innerJoin(refTable, "fromField", "toField")
+table.join(new Table("a"), JoinType.LEFT, [new JoinMapping("a", "a_id", "myTable", "id")])
 
 const q = new Query()
 q.onTable(table)
@@ -28,7 +29,7 @@ const priceFood = new AggregatedMeasure("alias", "price", "sum", "category", eq(
 q.withMeasure(priceFood)
 const plus = new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood)
 q.withMeasure(plus)
-const expression = new ExpressionMeasure("sum(price*quantity)", "myExpression")
+const expression = new ExpressionMeasure("myExpression", "sum(price*quantity)")
 q.withMeasure(expression)
 q.withMeasure(count)
 
@@ -56,6 +57,15 @@ const values = new Map(Object.entries({
 }));
 q.withBucketColumnSet(new BucketColumnSet("group", "scenario", values))
 q.withPeriodColumnSet(new PeriodColumnSet(new Month("mois", "annee")))
+
+// SubQuery - Note this is not valid because a table has been set above but we are just testing
+// the json here.
+
+const subQ = new Query()
+subQ.onTable(table)
+        .withColumn("aa")
+        .withMeasure(sum("sum_aa", "f"))
+q.onVirtualTable(subQ)
 
 console.log(JSON.stringify(q))
 

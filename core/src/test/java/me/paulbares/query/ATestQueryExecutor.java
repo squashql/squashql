@@ -282,4 +282,18 @@ public abstract class ATestQueryExecutor {
             List.of("food", 9d),
             List.of("drink", 7.5d));
   }
+
+  @Test
+  void testSubQuery() {
+    QueryDto subQuery = new QueryDto()
+            .table(this.storeName)
+            .withColumn("scenario")
+            .withMeasure(QueryBuilder.sum("ca", "price")); // ca per scenario
+
+    QueryDto queryDto = new QueryDto()
+            .table(subQuery)
+            .withMeasure(QueryBuilder.avg("mean", "ca"));// avg of ca
+    Table result = this.queryExecutor.execute(queryDto);
+    Assertions.assertThat(result).containsExactly(List.of(15.5d));
+  }
 }

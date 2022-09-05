@@ -1,8 +1,7 @@
 export const PACKAGE = "me.paulbares.query."
 
 export {
-  Query,
-  Table,
+  Query, Table, JoinType, JoinMapping,
 } from './query'
 
 export {
@@ -12,14 +11,14 @@ export {
 export {
   Measure,
   AggregatedMeasure, ExpressionMeasure, ComparisonMeasure,
-  sum, sumIf, plus, minus, multiply, divide,
+  sum, min, max, avg, sumIf, plus, minus, multiply, divide,
   count,
   ComparisonMethod,
 } from './measures'
 
 export {
   Condition,
-  eq, neq, lt, le, gt, ge,
+  eq, neq, lt, le, gt, ge, _in,
   and, or
 } from './conditions'
 

@@ -1,8 +1,7 @@
 package me.paulbares.query;
 
-import me.paulbares.query.database.QueryEngine;
-import me.paulbares.query.dto.JoinMappingDto;
 import me.paulbares.query.database.DatabaseQuery;
+import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.transaction.TransactionManager;
@@ -77,10 +76,10 @@ public abstract class ATestQueryExecutorWithJoins {
     TableDto productsTable = new TableDto(this.products);
     TableDto categoriesTable = new TableDto(this.categories);
 
-    ordersTable.join(orderDetailsTable, "inner", new JoinMappingDto("OrderID", "OrderID"));
-    ordersTable.join(shippersTable, "inner", new JoinMappingDto("ShipperID", "ShipperID"));
-    orderDetailsTable.join(productsTable, "inner", new JoinMappingDto("ProductID", "ProductID"));
-    productsTable.join(categoriesTable, "inner", new JoinMappingDto("CategoryID", "CategoryID"));
+    ordersTable.innerJoin(orderDetailsTable, "OrderID", "OrderID");
+    ordersTable.innerJoin(shippersTable, "ShipperID", "ShipperID");
+    orderDetailsTable.innerJoin(productsTable, "ProductID", "ProductID");
+    productsTable.innerJoin(categoriesTable, "CategoryID", "CategoryID");
 
     DatabaseQuery query = new DatabaseQuery()
             .table(ordersTable)
