@@ -12,22 +12,22 @@ public class EmptyQueryCache implements QueryCache {
   }
 
   @Override
-  public ColumnarTable createRawResult(Key scope) {
+  public ColumnarTable createRawResult(QueryScope scope) {
     throw new IllegalStateException();
   }
 
   @Override
-  public boolean contains(Measure measure, Key scope) {
+  public boolean contains(Measure measure, QueryScope scope) {
     return false;
   }
 
   @Override
-  public void contributeToCache(Table result, Set<Measure> measures, Key scope) {
+  public void contributeToCache(Table result, Set<Measure> measures, QueryScope scope) {
     // NOOP
   }
 
   @Override
-  public void contributeToResult(Table result, Set<Measure> measures, Key scope) {
+  public void contributeToResult(Table result, Set<Measure> measures, QueryScope scope) {
     // NOOP
   }
 
