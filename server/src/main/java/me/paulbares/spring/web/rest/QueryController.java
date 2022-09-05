@@ -36,16 +36,18 @@ public class QueryController {
           "count");
 
   protected final QueryEngine queryEngine;
+  protected final QueryExecutor queryExecutor;
 
   public QueryController(QueryEngine queryEngine) {
     this.queryEngine = queryEngine;
+    this.queryExecutor = new QueryExecutor(this.queryEngine);
   }
 
   @PostMapping(MAPPING_QUERY)
   public ResponseEntity<QueryResultDto> execute(@RequestBody QueryDto query) {
     QueryWatch queryWatch = new QueryWatch();
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
-    Table table = new QueryExecutor(this.queryEngine).execute(query, queryWatch, csBuilder);
+    Table table = this.queryExecutor.execute(query, queryWatch, csBuilder);
     List<String> fields = table.headers().stream().map(Field::name).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))
@@ -63,7 +65,7 @@ public class QueryController {
 
   @PostMapping(MAPPING_QUERY_BEAUTIFY)
   public ResponseEntity<String> executeBeautify(@RequestBody QueryDto query) {
-    Table table = new QueryExecutor(this.queryEngine).execute(query);
+    Table table = this.queryExecutor.execute(query);
     return ResponseEntity.ok(table.toString());
   }
 
