@@ -29,7 +29,7 @@ const priceFood = new AggregatedMeasure("alias", "price", "sum", "category", eq(
 q.withMeasure(priceFood)
 const plus = new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood)
 q.withMeasure(plus)
-const expression = new ExpressionMeasure("sum(price*quantity)", "myExpression")
+const expression = new ExpressionMeasure("myExpression", "sum(price*quantity)")
 q.withMeasure(expression)
 q.withMeasure(count)
 

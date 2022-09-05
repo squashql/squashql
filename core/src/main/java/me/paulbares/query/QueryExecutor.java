@@ -78,8 +78,7 @@ public class QueryExecutor {
 
     Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
     queryWatch.start(QueryWatch.PREPARE_CREATE_QUERY_SCOPE);
-    // FIXME query.table can be null
-    CaffeineQueryCache.QueryScope scope = new CaffeineQueryCache.QueryScope(query.table, prefetchQuery.coordinates.keySet().stream().map(fieldSupplier).collect(Collectors.toSet()), query.conditions);
+    QueryCache.Key key = createCacheKey(query, prefetchQuery, fieldSupplier);
     queryWatch.stop(QueryWatch.PREPARE_CREATE_QUERY_SCOPE);
     QueryCache queryCache = getQueryCache((QueryCacheContextValue) query.context.getOrDefault(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE)));
 
@@ -87,7 +86,7 @@ public class QueryExecutor {
     Set<Measure> cached = new HashSet<>();
     Set<Measure> notCached = new HashSet<>();
     for (Measure leaf : plan.getLeaves()) {
-      if (queryCache.contains(leaf, scope)) {
+      if (queryCache.contains(leaf, key)) {
         cached.add(leaf);
       } else {
         notCached.add(leaf);
@@ -107,12 +106,12 @@ public class QueryExecutor {
       prefetchResult = this.queryEngine.execute(prefetchQuery);
     } else {
       // Create an empty result that will be populated by the query cache
-      prefetchResult = queryCache.createRawResult(scope);
+      prefetchResult = queryCache.createRawResult(key);
     }
     queryWatch.stop(QueryWatch.PREFETCH);
 
-    queryCache.contributeToResult(prefetchResult, cached, scope);
-    queryCache.contributeToCache(prefetchResult, notCached, scope);
+    queryCache.contributeToResult(prefetchResult, cached, key);
+    queryCache.contributeToCache(prefetchResult, notCached, key);
 
     queryWatch.start(QueryWatch.BUCKET);
     if (query.columnSets.containsKey(BUCKET)) {
@@ -140,6 +139,15 @@ public class QueryExecutor {
             .evictionCount(stats.evictionCount)
             .missCount(stats.missCount);
     return sortedTable;
+  }
+
+  private static QueryCache.Key createCacheKey(QueryDto query, DatabaseQuery prefetchQuery, Function<String, Field> fieldSupplier) {
+    Set<Field> fields = prefetchQuery.coordinates.keySet().stream().map(fieldSupplier).collect(Collectors.toSet());
+    if (query.table != null) {
+      return new CaffeineQueryCache.QueryScope(query.table, fields, query.conditions);
+    } else {
+      return new QueryCache.SubQueryScope(query.subQuery, fields, query.conditions);
+    }
   }
 
   private ColumnarTable buildFinalResult(QueryDto query, Table prefetchResult) {

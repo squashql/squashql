@@ -26,14 +26,14 @@ public class CaffeineQueryCache implements QueryCache {
   /**
    * The cached results.
    */
-  private final Cache<QueryScope, Table> results;
+  private final Cache<Key, Table> results;
 
   public CaffeineQueryCache() {
     this(MAX_SIZE, (a, b, c) -> {
     });
   }
 
-  public CaffeineQueryCache(int maxSize, RemovalListener<QueryScope, Table> evictionListener) {
+  public CaffeineQueryCache(int maxSize, RemovalListener<Key, Table> evictionListener) {
     this.results = Caffeine.newBuilder()
             .maximumSize(maxSize)
             .expireAfterWrite(Duration.ofMinutes(5))
@@ -44,13 +44,14 @@ public class CaffeineQueryCache implements QueryCache {
   }
 
   @Override
-  public ColumnarTable createRawResult(QueryScope scope) {
-    List<Field> headers = new ArrayList<>(scope.columns());
+  public ColumnarTable createRawResult(Key scope) {
+    Set<Field> columns = scope.columns();
+    List<Field> headers = new ArrayList<>(columns);
     headers.add(new Field(CountMeasure.ALIAS, long.class));
 
     List<List<Object>> values = new ArrayList<>();
     Table table = this.results.getIfPresent(scope);
-    for (Field f : scope.columns()) {
+    for (Field f : columns) {
       values.add(table.getColumnValues(f.name()));
     }
     values.add(table.getAggregateValues(CountMeasure.INSTANCE));
@@ -64,7 +65,7 @@ public class CaffeineQueryCache implements QueryCache {
   }
 
   @Override
-  public boolean contains(Measure measure, QueryScope scope) {
+  public boolean contains(Measure measure, Key scope) {
     Table table = this.results.getIfPresent(scope);
     if (table != null) {
       return table.measures().indexOf(measure) >= 0;
@@ -73,7 +74,7 @@ public class CaffeineQueryCache implements QueryCache {
   }
 
   @Override
-  public void contributeToCache(Table result, Set<Measure> measures, QueryScope scope) {
+  public void contributeToCache(Table result, Set<Measure> measures, Key scope) {
     Table cache = this.results.get(scope, s -> {
       this.measureCounter.recordMisses(measures.size());
       return result;
@@ -91,7 +92,7 @@ public class CaffeineQueryCache implements QueryCache {
   }
 
   @Override
-  public void contributeToResult(Table result, Set<Measure> measures, QueryScope scope) {
+  public void contributeToResult(Table result, Set<Measure> measures, Key scope) {
     if (measures.isEmpty()) {
       return;
     }

@@ -1,8 +1,9 @@
 package me.paulbares.spring.dataset;
 
-import me.paulbares.SaaSUseCaseDataLoader;
+import me.paulbares.BigQueryDatastore;
+import me.paulbares.BigQueryUtil;
+import me.paulbares.query.database.BigQueryEngine;
 import me.paulbares.query.database.QueryEngine;
-import me.paulbares.query.database.SparkQueryEngine;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,8 +18,8 @@ public class DatasetConfig {
   @Bean
   @ConditionalOnMissingBean
   public QueryEngine queryEngine() {
-//    BigQueryDatastore datastore = new BigQueryDatastore(BigQueryUtil.createCredentials(this.credendialsPath), this.projectId, this.datasetName);
-//    return new BigQueryEngine(datastore);
-    return new SparkQueryEngine(SaaSUseCaseDataLoader.createTestDatastoreWithData());
+    BigQueryDatastore datastore = new BigQueryDatastore(BigQueryUtil.createCredentials(this.credendialsPath), this.projectId, this.datasetName);
+    return new BigQueryEngine(datastore);
+//    return new SparkQueryEngine(SaaSUseCaseDataLoader.createTestDatastoreWithData());
   }
 }
