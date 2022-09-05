@@ -16,7 +16,7 @@ public class DatasetConfig {
   String datasetName = "optiprix";
 
   @Bean
-  @ConditionalOnMissingBean
+  @ConditionalOnMissingBean // This is for the tests. Tests can use another one if defined.
   public QueryEngine queryEngine() {
     BigQueryDatastore datastore = new BigQueryDatastore(BigQueryUtil.createCredentials(this.credendialsPath), this.projectId, this.datasetName);
     return new BigQueryEngine(datastore);
