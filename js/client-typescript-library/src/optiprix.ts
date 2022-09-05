@@ -79,4 +79,5 @@ const q = new Query()
 querier.execute(q).then(r => {
   console.log(`Metadata result: ${toString(r.metadata)}`);
   console.log(`Table: ${toString(r.table)}`);
+  console.log(`Debug: ${toString(r.debug)}`);
 })

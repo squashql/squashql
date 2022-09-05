@@ -2,7 +2,7 @@ package me.paulbares.spring.web.rest;
 
 import com.google.common.collect.ImmutableList;
 import me.paulbares.query.*;
-import me.paulbares.query.database.SparkQueryEngine;
+import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.*;
 import me.paulbares.query.monitoring.QueryWatch;
 import me.paulbares.store.Field;
@@ -35,17 +35,17 @@ public class QueryController {
           "stddev_pop",
           "count");
 
-  protected final SparkQueryEngine itmQueryEngine;
+  protected final QueryEngine queryEngine;
 
-  public QueryController(SparkQueryEngine itmQueryEngine) {
-    this.itmQueryEngine = itmQueryEngine;
+  public QueryController(QueryEngine queryEngine) {
+    this.queryEngine = queryEngine;
   }
 
   @PostMapping(MAPPING_QUERY)
   public ResponseEntity<QueryResultDto> execute(@RequestBody QueryDto query) {
     QueryWatch queryWatch = new QueryWatch();
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
-    Table table = new QueryExecutor(this.itmQueryEngine).execute(query, queryWatch, csBuilder);
+    Table table = new QueryExecutor(this.queryEngine).execute(query, queryWatch, csBuilder);
     List<String> fields = table.headers().stream().map(Field::name).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))
@@ -63,14 +63,14 @@ public class QueryController {
 
   @PostMapping(MAPPING_QUERY_BEAUTIFY)
   public ResponseEntity<String> executeBeautify(@RequestBody QueryDto query) {
-    Table table = new QueryExecutor(this.itmQueryEngine).execute(query);
+    Table table = new QueryExecutor(this.queryEngine).execute(query);
     return ResponseEntity.ok(table.toString());
   }
 
   @GetMapping(MAPPING_METADATA)
   public ResponseEntity<MetadataResultDto> getMetadata(@RequestParam(name = "repo-url", required = false) String repo_url) {
     List<MetadataResultDto.StoreMetadata> stores = new ArrayList<>();
-    for (Store store : this.itmQueryEngine.datastore.storesByName().values()) {
+    for (Store store : this.queryEngine.datastore().storesByName().values()) {
       List<MetadataItem> items = store.fields().stream().map(f -> new MetadataItem(f.name(), f.name(), f.type())).toList();
       stores.add(new MetadataResultDto.StoreMetadata(store.name(), items));
     }
