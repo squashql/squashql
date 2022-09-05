@@ -14,11 +14,25 @@ mvn -pl :aitm-server -am clean install -DskipTests -Pspring-boot
 - Launch the project with the following command. Replace `/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java` 
 by your java path if necessary. 
 ```
-/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -Ddataset.path=/Users/paul/Downloads/saas.csv -jar server/target/aitm-server-0.1-SNAPSHOT.jar
+/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -Ddataset.path=saas.csv -jar server/target/aitm-server-0.1-SNAPSHOT.jar
 ```
 Do not forget to change the path to the file in the above command: `-Ddataset.path=/Users/paul/Downloads/saas.csv`
 
 Server address is: `http://localhost:8080`
+
+## BigQuery
+
+You need to generate a key for your project. Go to [https://cloud.google.com/bigquery/docs/quickstarts/quickstart-client-libraries](https://cloud.google.com/bigquery/docs/quickstarts/quickstart-client-libraries)
+
+### Optiprix
+```
+$JAVA_HOME/bin/java -Dspring.profiles.active=optiprix -Dbigquery.credentials.path=/Users/paul/dev/aitmindiceprix-686299293f2f.json -jar server/target/aitm-server-0.1-SNAPSHOT.jar
+```
+
+### CDG
+```
+$JAVA_HOME/bin/java -Dspring.profiles.active=cdg -Dbigquery.credentials.path=/path/to/your/key.json -jar server/target/aitm-server-0.1-SNAPSHOT.jar
+```
 
 ## JShell
 
