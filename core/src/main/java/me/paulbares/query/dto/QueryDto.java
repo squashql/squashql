@@ -19,6 +19,8 @@ public class QueryDto {
 
   public TableDto table;
 
+  public QueryDto subQuery;
+
   public List<String> columns = new ArrayList<>();
 
   public Map<String, ColumnSet> columnSets = new LinkedHashMap<>();
@@ -73,6 +75,11 @@ public class QueryDto {
 
   public QueryDto table(TableDto table) {
     this.table = table;
+    return this;
+  }
+
+  public QueryDto table(QueryDto subQuery) {
+    this.subQuery = subQuery;
     return this;
   }
 

@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
+import me.paulbares.query.database.SqlUtils;
 import me.paulbares.store.Field;
 
 import java.util.function.Function;
@@ -31,8 +32,13 @@ public class BinaryOperationMeasure implements Measure {
   }
 
   @Override
-  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter) {
-    throw new IllegalStateException();
+  public String sqlExpression(Function<String, Field> fp, QueryRewriter qr, boolean withAlias) {
+    String sql = new StringBuilder()
+            .append(this.leftOperand.sqlExpression(fp, qr, false))
+            .append(this.operator.infix)
+            .append(this.rightOperand.sqlExpression(fp, qr, false))
+            .toString();
+    return withAlias ? SqlUtils.appendAlias(sql, qr, this.alias, this) : sql;
   }
 
   @Override

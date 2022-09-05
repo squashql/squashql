@@ -35,7 +35,7 @@ public class ComparisonMeasure implements Measure {
   }
 
   @Override
-  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter) {
+  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     throw new IllegalStateException();
   }
 

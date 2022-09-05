@@ -10,6 +10,7 @@ export class Query {
   table: Table
   conditions: Map<string, Condition>
   orders: Map<string, Order>
+  subQuery: Query
 
   constructor() {
     this.columns = []
@@ -21,6 +22,11 @@ export class Query {
 
   onTable(table: Table): Query {
     this.table = table
+    return this
+  }
+
+  onVirtualTable(query: Query): Query {
+    this.subQuery = query
     return this
   }
 
@@ -62,6 +68,7 @@ export class Query {
   toJSON() {
     return {
       "table": this.table,
+      "subQuery": this.subQuery,
       "columns": this.columns,
       "columnSets": Object.fromEntries(this.columnSets),
       "measures": this.measures,
@@ -74,24 +81,23 @@ export class Query {
 export class Table {
   private joins: Array<Join> = []
 
-  constructor(private name: string) {
+  constructor(public name: string) {
   }
 
-  join(other: Table, type: JoinType, mapping: JoinMapping) {
-    this.joins.push(new Join(other, type, [mapping]))
+  join(other: Table, type: JoinType, mappings: Array<JoinMapping>) {
+    this.joins.push(new Join(other, type, mappings))
   }
-
 
   innerJoin(other: Table, from: string, to: string) {
-    this.joins.push(new Join(other, JoinType.INNER, [new JoinMapping(from, to)]))
+    this.joins.push(new Join(other, JoinType.INNER, [new JoinMapping(this.name, from, other.name, to)]))
   }
 
   leftJoin(other: Table, from: string, to: string) {
-    this.joins.push(new Join(other, JoinType.LEFT, [new JoinMapping(from, to)]))
+    this.joins.push(new Join(other, JoinType.LEFT, [new JoinMapping(this.name, from, other.name, to)]))
   }
 }
 
-enum JoinType {
+export enum JoinType {
   INNER = "inner",
   LEFT = "left",
 }
@@ -101,7 +107,7 @@ class Join {
   }
 }
 
-class JoinMapping {
-  constructor(private from: string, private to: string) {
+export class JoinMapping {
+  constructor(private fromTable: string, private from: string, private toTable: string, private to: string) {
   }
 }

@@ -5,11 +5,10 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
+import me.paulbares.query.database.SqlUtils;
 import me.paulbares.store.Field;
 
 import java.util.function.Function;
-
-import static me.paulbares.query.database.SqlUtils.escape;
 
 @ToString
 @EqualsAndHashCode
@@ -25,8 +24,8 @@ public class ExpressionMeasure implements Measure {
   }
 
   @Override
-  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter) {
-    return this.expression + " as " + escape(this.alias);
+  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
+    return withAlias ? SqlUtils.appendAlias(this.expression, queryRewriter, this.alias, this) : this.expression;
   }
 
   @Override

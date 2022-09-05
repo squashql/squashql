@@ -28,9 +28,9 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
       @Override
       public String measureAlias(String alias, Measure measure) {
-        String a = alias.replace("(", "_");
-        a = a.replace(")", "_");
-        return a;
+        return alias
+                .replace("(", "_")
+                .replace(")", "_");
       }
     });
 
@@ -58,7 +58,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   /**
    * Gets the value with the correct type, otherwise everything is read as String.
    */
-  private Object getTypeValue(FieldValueList fieldValues, Schema schema, int index) {
+  public static Object getTypeValue(FieldValueList fieldValues, Schema schema, int index) {
     FieldValue fieldValue = fieldValues.get(index);
     com.google.cloud.bigquery.Field field = schema.getFields().get(index);
     return switch (field.getType().getStandardType()) {
