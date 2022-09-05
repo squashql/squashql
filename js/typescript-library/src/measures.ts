@@ -135,6 +135,18 @@ export function sum(alias: string, field: string): Measure {
   return new AggregatedMeasure(alias, field, "sum")
 }
 
+export function min(alias: string, field: string): Measure {
+  return new AggregatedMeasure(alias, field, "min")
+}
+
+export function max(alias: string, field: string): Measure {
+  return new AggregatedMeasure(alias, field, "max")
+}
+
+export function avg(alias: string, field: string): Measure {
+  return new AggregatedMeasure(alias, field, "avg")
+}
+
 export function sumIf(alias: string, field: string, conditionField: string, condition: Condition): Measure {
   return new AggregatedMeasure(alias, field, "sum", conditionField, condition)
 }
