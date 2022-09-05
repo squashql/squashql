@@ -3,7 +3,6 @@ package me.paulbares.transaction;
 import com.clickhouse.jdbc.ClickHouseConnection;
 import com.clickhouse.jdbc.ClickHouseDataSource;
 import me.paulbares.ClickHouseDatastore;
-import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 
 import java.sql.PreparedStatement;
@@ -13,6 +12,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
+
+import static me.paulbares.transaction.TransactionManager.scenarioStoreName;
 
 public class ClickHouseDeltaTransactionManager extends ClickHouseTransactionManager {
 
@@ -62,13 +63,5 @@ public class ClickHouseDeltaTransactionManager extends ClickHouseTransactionMana
   @Override
   public void loadCsv(String scenario, String store, String path, String delimiter, boolean header) {
     throw new RuntimeException("not implemented yet");
-  }
-
-  public static String scenarioStoreName(String store, String scenario) {
-    if (scenario.equals(Datastore.MAIN_SCENARIO_NAME)) {
-      return store;
-    } else {
-      return "__" + store + "_" + scenario + "__";
-    }
   }
 }

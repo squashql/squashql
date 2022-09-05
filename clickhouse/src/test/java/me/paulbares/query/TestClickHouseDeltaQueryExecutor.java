@@ -4,10 +4,15 @@ import com.clickhouse.client.*;
 import com.clickhouse.jdbc.ClickHouseDataSource;
 import me.paulbares.ClickHouseDatastore;
 import me.paulbares.ClickHouseUtil;
+import me.paulbares.query.database.ClickHouseDeltaQueryEngine;
+import me.paulbares.query.database.QueryEngine;
+import me.paulbares.query.dto.QueryDto;
+import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.ClickHouseDeltaTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 import org.eclipse.collections.api.tuple.Pair;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -16,6 +21,7 @@ import java.util.concurrent.ExecutionException;
 
 import static me.paulbares.query.database.AQueryEngine.transform;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 public class TestClickHouseDeltaQueryExecutor extends TestClickHouseQueryExecutor {
 
@@ -44,7 +50,24 @@ public class TestClickHouseDeltaQueryExecutor extends TestClickHouseQueryExecuto
     return new ClickHouseDeltaTransactionManager(((ClickHouseDatastore) this.datastore).dataSource);
   }
 
+  @Override
+  protected QueryEngine createQueryEngine(Datastore datastore) {
+    return new ClickHouseDeltaQueryEngine((ClickHouseDatastore) datastore);
+  }
+
   @Test
+  void testZob() {
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
+            .withColumn(SCENARIO_FIELD_NAME)
+            .aggregatedMeasure("p", "price", "sum")
+            .aggregatedMeasure("q", "quantity", "sum");
+    Table result = this.queryExecutor.execute(query);
+    result.show();
+  }
+
+  @Test
+  @Disabled
   void name() {
     ClickHouseDataSource dataSource = ((ClickHouseDatastore) this.datastore).dataSource;
     ClickHouseNode server = ClickHouseNode.builder()
@@ -53,7 +76,7 @@ public class TestClickHouseDeltaQueryExecutor extends TestClickHouseQueryExecuto
             .build();
 
     String scenarioName = "s1";
-    String scenarioStoreName = ClickHouseDeltaTransactionManager.scenarioStoreName(this.storeName, scenarioName);
+    String scenarioStoreName = TransactionManager.scenarioStoreName(this.storeName, scenarioName);
     String sqlS1 = "SELECT *, '" + scenarioName + "' AS " + TransactionManager.SCENARIO_FIELD_NAME + " FROM " + this.storeName + " WHERE ean NOT IN ( SELECT ean FROM " + scenarioStoreName + " )\n" +
             "UNION ALL\n" +
             "SELECT *, '" + scenarioName + "' FROM " + scenarioStoreName + "";
@@ -73,12 +96,13 @@ public class TestClickHouseDeltaQueryExecutor extends TestClickHouseQueryExecuto
               response.records().iterator(),
               (i, r) -> r.getValue(i).asObject());
       System.out.println(response.getSummary().getStatistics());
-      new ColumnarTable(
+      ColumnarTable table = new ColumnarTable(
               result.getOne(),
               List.of(),
               new int[0],
               new int[0],
-              result.getTwo()).show();
+              result.getTwo());
+      table.show();
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);
     }
