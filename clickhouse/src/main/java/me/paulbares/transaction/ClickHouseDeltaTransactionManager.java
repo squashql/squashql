@@ -31,7 +31,6 @@ public class ClickHouseDeltaTransactionManager extends ClickHouseTransactionMana
 
   @Override
   public void load(String scenario, String store, List<Object[]> tuples) {
-    // Check the table contains a column scenario.
     ensureScenarioTableIsPresent(store, scenario);
     String join = String.join(",", IntStream.range(0, tuples.get(0).length).mapToObj(i -> "?").toList());
     String pattern = "insert into " + scenarioStoreName(store, scenario) + " values(" + join + ")";

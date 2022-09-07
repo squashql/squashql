@@ -40,8 +40,8 @@ public class DataLoader {
     SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
 
     tm.createTemporaryTable(our_price_store.name(), our_price_store.fields());
-    tm.createTemporaryTable(their_prices_store.name(), their_prices_store.fields(), null);
-    tm.createTemporaryTable(our_stores_their_stores_store.name(), our_stores_their_stores_store.fields(), null);
+    tm.createTemporaryTable(datastore.spark, their_prices_store.name(), their_prices_store.fields(), false);
+    tm.createTemporaryTable(datastore.spark, our_stores_their_stores_store.name(), our_stores_their_stores_store.fields(), false);
 
     tm.load(MAIN_SCENARIO_NAME,
             "our_prices", List.of(

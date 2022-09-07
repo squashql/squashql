@@ -32,7 +32,6 @@ public class TestClickHouseDeltaQueryExecutor extends TestClickHouseQueryExecuto
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
 
-
     // Only the delta
     List<Object[]> es = new ArrayList<>();
     es.add(new Object[]{"bottle", "drink", 4d, 10});
@@ -130,7 +129,7 @@ public class TestClickHouseDeltaQueryExecutor extends TestClickHouseQueryExecuto
 //                 .query("SELECT ean, category FROM " + this.storeName + " EXCEPT SELECT ean, category FROM " + scenarioStoreName)
 //                 .query("SELECT scenario, ean FROM (" + sql + ") as a")
                  .query("SELECT * " +
-                         "FROM myAwesomeStore WHERE NOT EXISTS ( SELECT 1 FROM __myAwesomeStore_scenario_s1__ WHERE ean = __myAwesomeStore_scenario_s1__.ean )")
+                         "FROM myAwesomeStore WHERE NOT EXISTS ( SELECT 1 FROM __myAwesomeStore_scenario_s1__ WHERE myAwesomeStore.ean = __myAwesomeStore_scenario_s1__.ean )")
 //                 .query(ClickHouseDeltaQueryEngine.virtualTableStatementWhereNotExists(this.storeName, List.of("s1"), List.of("ean")))
                  .execute()
                  .get()) {

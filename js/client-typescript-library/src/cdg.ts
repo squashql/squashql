@@ -21,3 +21,13 @@ querier.getMetadata().then(r => {
   console.log(`Measures: ${toString(r.measures)}`)
   console.log(`Agg Func: ${r.aggregationFunctions}`)
 })
+
+const table = new Table("ProjectionScenario")
+const q = new Query()
+        .onTable(table)
+        .withColumn("Scenario")
+
+querier.execute(q).then(r => {
+  console.log(`Metadata result: ${toString(r.metadata)}`);
+  console.log(`Table: ${toString(r.table)}`);
+})
