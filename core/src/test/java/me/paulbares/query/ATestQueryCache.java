@@ -60,7 +60,7 @@ public abstract class ATestQueryCache {
     this.queryCache = (CaffeineQueryCache) this.queryExecutor.queryCache;
     this.tm = createTransactionManager();
 
-    beforeLoading(List.of(ean, category, price, qty), List.of(comp_ean, comp_name, comp_price));
+    beforeLoad(List.of(ean, category, price, qty), List.of(comp_ean, comp_name, comp_price));
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", 2d, 10},
@@ -83,7 +83,7 @@ public abstract class ATestQueryCache {
     this.queryCache.clear();
   }
 
-  protected void beforeLoading(List<Field> baseStoreFields, List<Field> targetStoreFields) {
+  protected void beforeLoad(List<Field> baseStoreFields, List<Field> targetStoreFields) {
   }
 
   @Test

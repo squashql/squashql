@@ -47,7 +47,7 @@ public abstract class ATestBinaryOperationMeasure {
     this.executor = new QueryExecutor(this.queryEngine);
     this.tm = createTransactionManager();
 
-    beforeLoading(List.of(ean, category, sales, qty));
+    beforeLoad(List.of(ean, category, sales, qty));
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", 20d, 10l},
@@ -55,7 +55,7 @@ public abstract class ATestBinaryOperationMeasure {
     ));
   }
 
-  protected void beforeLoading(List<Field> fields) {
+  protected void beforeLoad(List<Field> fields) {
   }
 
   /**

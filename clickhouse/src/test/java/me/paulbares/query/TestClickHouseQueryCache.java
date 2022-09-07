@@ -35,7 +35,7 @@ public class TestClickHouseQueryCache extends ATestQueryCache {
   }
 
   @Override
-  protected void beforeLoading(List<Field> baseStoreFields, List<Field> targetStoreFields) {
+  protected void beforeLoad(List<Field> baseStoreFields, List<Field> targetStoreFields) {
     ClickHouseTransactionManager tm = (ClickHouseTransactionManager) this.tm;
     tm.dropAndCreateInMemoryTable(this.storeName, baseStoreFields);
     tm.dropAndCreateInMemoryTable("competitor", targetStoreFields);

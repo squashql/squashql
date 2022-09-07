@@ -54,7 +54,7 @@ public abstract class ATestQueryColumnSets {
     this.executor = new QueryExecutor(this.queryEngine);
     this.tm = createTransactionManager();
 
-    beforeLoading(List.of(ean, category, sales, qty, year, quarter));
+    beforeLoad(List.of(ean, category, sales, qty, year, quarter));
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             // 2022
@@ -105,7 +105,7 @@ public abstract class ATestQueryColumnSets {
     ));
   }
 
-  protected void beforeLoading(List<Field> fields) {
+  protected void beforeLoad(List<Field> fields) {
   }
 
   @Test

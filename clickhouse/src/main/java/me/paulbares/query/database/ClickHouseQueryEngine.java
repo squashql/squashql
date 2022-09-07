@@ -1,6 +1,7 @@
 package me.paulbares.query.database;
 
 import com.clickhouse.client.*;
+import com.clickhouse.jdbc.ClickHouseDataSource;
 import me.paulbares.ClickHouseDatastore;
 import me.paulbares.ClickHouseUtil;
 import me.paulbares.query.ColumnarTable;
@@ -21,11 +22,14 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
     String sql = SQLTranslator.translate(query, null, this.fieldSupplier);
+    return getResults(sql, this.datastore.dataSource, query);
+  }
 
+  static Table getResults(String sql, ClickHouseDataSource dataSource, DatabaseQuery query) {
     // connect to localhost, use default port of the preferred protocol
     ClickHouseNode server = ClickHouseNode.builder()
-            .host(this.datastore.dataSource.getHost())
-            .port(this.datastore.dataSource.getPort())
+            .host(dataSource.getHost())
+            .port(dataSource.getPort())
             .build();
 
     try (ClickHouseClient client = ClickHouseClient.newInstance(ClickHouseProtocol.HTTP);

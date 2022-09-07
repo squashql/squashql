@@ -59,7 +59,7 @@ public abstract class ATestBucketComparison {
     this.executor = new QueryExecutor(queryEngine);
     this.tm = createTransactionManager();
 
-    beforeLoading(fields);
+    beforeLoad(fields);
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", 2d, 11},
@@ -80,7 +80,7 @@ public abstract class ATestBucketComparison {
     ));
   }
 
-  protected void beforeLoading(List<Field> fields) {
+  protected void beforeLoad(List<Field> fields) {
   }
 
   @Test

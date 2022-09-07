@@ -22,17 +22,21 @@ public class SparkTransactionManager implements TransactionManager {
   }
 
   public void createTemporaryTable(String table, List<Field> fields) {
-    createTemporaryTable(table, fields, SCENARIO_FIELD_NAME);
+    createTemporaryTable(this.spark, table, fields, true);
   }
 
-  public void createTemporaryTable(String table, List<Field> fields, String scenarioColumn) {
+  public void createTemporaryTable(String table, List<Field> fields, boolean cjMode) {
+    createTemporaryTable(this.spark, table, fields, cjMode);
+  }
+
+  public static void createTemporaryTable(SparkSession spark, String table, List<Field> fields, boolean cjMode) {
     ImmutableList<Field> all = ImmutableListFactoryImpl.INSTANCE.ofAll(fields);
-    if (scenarioColumn != null) {
+    if (cjMode) {
       all = all.newWith(new Field(SCENARIO_FIELD_NAME, String.class));
     }
     StructType schema = SparkUtil.createSchema(all.castToList());
-    this.spark.conf().set("spark.sql.caseSensitive", String.valueOf(true)); // without it, table names are lowercase.
-    this.spark
+    spark.conf().set("spark.sql.caseSensitive", String.valueOf(true)); // without it, table names are lowercase.
+    spark
             .createDataFrame(Collections.emptyList(), schema)
             .createOrReplaceTempView(table);
   }
@@ -57,16 +61,16 @@ public class SparkTransactionManager implements TransactionManager {
     Dataset<Row> dataFrame = this.spark.createDataFrame(
             rows,
             SparkUtil.createSchema(SparkDatastore.getFields(this.spark, store)));// to load pojo
-    appendDataset(store, dataFrame);
+    appendDataset(this.spark, store, dataFrame);
   }
 
-  private void appendDataset(String store, Dataset<Row> dataset) {
+  static void appendDataset(SparkSession spark, String store, Dataset<Row> dataset) {
     String viewName = "tmp_" + store;
-    this.spark.sql("ALTER VIEW " + store + " RENAME TO " + viewName);
-    Dataset<Row> table = this.spark.table(viewName);
+    spark.sql("ALTER VIEW " + store + " RENAME TO " + viewName);
+    Dataset<Row> table = spark.table(viewName);
     Dataset<Row> union = table.union(dataset);
     union.createOrReplaceTempView(store);
-    this.spark.catalog().dropTempView(viewName);
+    spark.catalog().dropTempView(viewName);
   }
 
   private void ensureScenarioColumnIsPresent(String store) {
@@ -99,7 +103,7 @@ public class SparkTransactionManager implements TransactionManager {
       this.spark.conf().set("spark.sql.caseSensitive", String.valueOf(true)); // without it, table names are lowercase.
       dataFrame.createOrReplaceTempView(store);
     } else {
-      appendDataset(store, dataFrame);
+      appendDataset(this.spark, store, dataFrame);
     }
   }
 }

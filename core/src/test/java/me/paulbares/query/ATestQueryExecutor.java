@@ -50,8 +50,11 @@ public abstract class ATestQueryExecutor {
     this.queryExecutor = new QueryExecutor(queryEngine);
     this.tm = createTransactionManager();
 
-    beforeLoading(List.of(ean, category, price, qty));
+    beforeLoad(List.of(ean, category, price, qty));
+    load();
+  }
 
+  protected void load() {
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", 2d, 10},
             new Object[]{"cookie", "food", 3d, 20},
@@ -71,7 +74,7 @@ public abstract class ATestQueryExecutor {
     ));
   }
 
-  protected void beforeLoading(List<Field> fields) {
+  protected void beforeLoad(List<Field> fields) {
   }
 
   @Test

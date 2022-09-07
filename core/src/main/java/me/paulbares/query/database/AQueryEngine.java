@@ -21,7 +21,11 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   protected AQueryEngine(T datastore) {
     this.datastore = datastore;
-    this.fieldSupplier = fieldName -> {
+    this.fieldSupplier = createFieldSupplier();
+  }
+
+  protected Function<String, Field> createFieldSupplier() {
+    return fieldName -> {
       for (Store store : this.datastore.storesByName().values()) {
         for (Field field : store.fields()) {
           if (field.name().equals(fieldName)) {
