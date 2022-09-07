@@ -56,7 +56,7 @@ public abstract class ATestPeriodComparison {
     this.executor = new QueryExecutor(this.queryEngine);
     this.tm = createTransactionManager();
 
-    beforeLoading(List.of(ean, category, sales, qty, year, semester, quarter, month, date));
+    beforeLoad(List.of(ean, category, sales, qty, year, semester, quarter, month, date));
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             // 2022
@@ -93,7 +93,7 @@ public abstract class ATestPeriodComparison {
     ));
   }
 
-  protected void beforeLoading(List<Field> fields) {
+  protected void beforeLoad(List<Field> fields) {
   }
 
   @Test
@@ -231,7 +231,7 @@ public abstract class ATestPeriodComparison {
   @Order(Integer.MAX_VALUE) // Last because the data is changed
   void testCompareMonthCurrentWithPrevious() {
     // Recreate table
-    beforeLoading(this.datastore.storesByName().values().iterator().next().fields().stream().filter(f -> !f.name().equals(Datastore.SCENARIO_FIELD_NAME)).toList());
+    beforeLoad(this.datastore.storesByName().values().iterator().next().fields().stream().filter(f -> !f.name().equals(Datastore.SCENARIO_FIELD_NAME)).toList());
     // Reload data with less rows
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", 20d, 10, 2022, 2, 4, 12, LocalDate.of(2022, 12, 1)},

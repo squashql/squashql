@@ -35,7 +35,7 @@ public class TestClickHousePeriodComparison extends ATestPeriodComparison {
   }
 
   @Override
-  protected void beforeLoading(List<Field> fields) {
+  protected void beforeLoad(List<Field> fields) {
     ClickHouseTransactionManager tm = (ClickHouseTransactionManager) this.tm;
     tm.dropAndCreateInMemoryTable(this.storeName, fields);
   }
