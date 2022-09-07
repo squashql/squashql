@@ -23,7 +23,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
-    String sql = SQLTranslator.translate(query, null, this.fieldSupplier, this.queryRewriter);
+    String sql = SQLTranslator.translate(query, null, this.fieldSupplier, this.queryRewriter, (qr, name) -> qr.tableName(name));
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(sql).build();
     try {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
