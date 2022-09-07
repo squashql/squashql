@@ -4,7 +4,6 @@ import me.paulbares.query.Table;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.store.Store;
-import me.paulbares.transaction.TransactionManager;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 
@@ -22,17 +21,17 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   protected AQueryEngine(T datastore) {
     this.datastore = datastore;
-    this.fieldSupplier = fieldName -> {
+    this.fieldSupplier = createFieldSupplier();
+  }
+
+  protected Function<String, Field> createFieldSupplier() {
+    return fieldName -> {
       for (Store store : this.datastore.storesByName().values()) {
         for (Field field : store.fields()) {
           if (field.name().equals(fieldName)) {
             return field;
           }
         }
-      }
-      // FIXME
-      if (fieldName.equals(TransactionManager.SCENARIO_FIELD_NAME)) {
-        return new Field(fieldName, String.class);
       }
       throw new IllegalArgumentException("Cannot find field with name " + fieldName);
     };

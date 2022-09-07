@@ -2,7 +2,7 @@ package me.paulbares.query;
 
 import me.paulbares.SparkDatastore;
 import me.paulbares.query.database.QueryEngine;
-import me.paulbares.query.database.SparkQueryEngine;
+import me.paulbares.query.database.SparkDeltaQueryEngine;
 import me.paulbares.store.Datastore;
 import me.paulbares.transaction.SparkDeltaTransactionManager;
 import me.paulbares.transaction.TransactionManager;
@@ -35,7 +35,7 @@ public class TestSparkDeltaQueryExecutor extends TestSparkQueryExecutor {
 
   @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {
-    return new SparkQueryEngine((SparkDatastore) datastore);
+    return new SparkDeltaQueryEngine((SparkDatastore) datastore);
   }
 
   @Override

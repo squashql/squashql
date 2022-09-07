@@ -3,29 +3,36 @@ package me.paulbares.query.database;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.*;
 import me.paulbares.store.Field;
+import me.paulbares.transaction.TransactionManager;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static me.paulbares.query.database.SqlUtils.escape;
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 public class SQLTranslator {
 
   private static final DefaultQueryRewriter DEFAULT_QUERY_REWRITER = new DefaultQueryRewriter();
 
   public static String translate(DatabaseQuery query, Function<String, Field> fieldProvider) {
-    return translate(query, null, fieldProvider, DEFAULT_QUERY_REWRITER);
+    return translate(query, null, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));
   }
 
   public static String translate(DatabaseQuery query, Totals totals, Function<String, Field> fieldProvider) {
-    return translate(query, totals, fieldProvider, DEFAULT_QUERY_REWRITER);
+    return translate(query, totals, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));
   }
 
   public static String translate(DatabaseQuery query,
                                  Totals totals,
                                  Function<String, Field> fieldProvider,
-                                 QueryRewriter queryRewriter) {
+                                 QueryRewriter queryRewriter,
+                                 BiFunction<QueryRewriter, String, String> tableTransformer) {
     List<String> selects = new ArrayList<>();
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
@@ -42,10 +49,10 @@ public class SQLTranslator {
     statement.append(" from ");
     if (query.subQuery != null) {
       statement.append("(");
-      statement.append(translate(query.subQuery, totals, fieldProvider, queryRewriter));
+      statement.append(translate(query.subQuery, totals, fieldProvider, queryRewriter, tableTransformer));
       statement.append(")");
     } else {
-      statement.append(queryRewriter.tableName(query.table.name));
+      statement.append(tableTransformer.apply(queryRewriter, query.table.name));
 
       addJoins(statement, query.table, queryRewriter);
       addConditions(statement, query, fieldProvider);
@@ -184,5 +191,54 @@ public class SQLTranslator {
     } else {
       throw new RuntimeException("Not supported condition " + dto);
     }
+  }
+
+  public static String virtualTableStatementWhereNotIn(String baseTableName, List<String> scenarios, List<String> columnKeys, QueryRewriter qr) {
+    List<String> vtScenarios = new ArrayList<>(scenarios.size());
+    for (String scenarioName : scenarios) {
+      String scenarioStoreName = TransactionManager.scenarioStoreName(baseTableName, scenarioName);
+      String keys = String.join(",", columnKeys);
+      String sql = "SELECT *, '" + scenarioName + "' AS " + TransactionManager.SCENARIO_FIELD_NAME + "\n" +
+              "FROM " + qr.tableName(baseTableName) + " WHERE (" + keys + ") NOT IN ( SELECT " + keys + " FROM " + qr.tableName(scenarioStoreName) + " )\n" +
+              "UNION ALL\n" +
+              "SELECT *, '" + scenarioName + "' FROM " + qr.tableName(scenarioStoreName) + "";
+      vtScenarios.add(sql);
+    }
+    String sqlBase = "SELECT *, '" + MAIN_SCENARIO_NAME + "' AS " + TransactionManager.SCENARIO_FIELD_NAME + " FROM " + qr.tableName(baseTableName);
+
+    String virtualTable = sqlBase;
+    for (String vtScenario : vtScenarios) {
+      virtualTable += "\n" + "UNION ALL\n" + vtScenario;
+    }
+    return virtualTable;
+  }
+
+  public static String virtualTableStatementWhereNotExists(String baseTableName, List<String> scenarios, List<String> columnKeys, QueryRewriter qr) {
+    List<String> vtScenarios = new ArrayList<>(scenarios.size());
+    for (String scenarioName : scenarios) {
+      String scenarioStoreName = TransactionManager.scenarioStoreName(baseTableName, scenarioName);
+      StringBuilder condition = new StringBuilder();
+      for (int i = 0; i < columnKeys.size(); i++) {
+        String key = columnKeys.get(i);
+        condition.append(baseTableName).append('.').append(key)
+                .append(" = ")
+                .append(scenarioStoreName).append('.').append(key);
+        if (i < columnKeys.size() - 1) {
+          condition.append(" AND ");
+        }
+      }
+      String sql = "SELECT *, '" + scenarioName + "' AS " + TransactionManager.SCENARIO_FIELD_NAME + "\n" +
+              "FROM " + qr.tableName(baseTableName) + " WHERE NOT EXISTS ( SELECT 1 FROM " + qr.tableName(scenarioStoreName) + " WHERE " + condition + " )\n" +
+              "UNION ALL\n" +
+              "SELECT *, '" + scenarioName + "' FROM " + qr.tableName(scenarioStoreName) + "";
+      vtScenarios.add(sql);
+    }
+    String sqlBase = "SELECT *, '" + MAIN_SCENARIO_NAME + "' AS " + TransactionManager.SCENARIO_FIELD_NAME + " FROM " + qr.tableName(baseTableName);
+
+    String virtualTable = sqlBase;
+    for (String vtScenario : vtScenarios) {
+      virtualTable += "\nUNION ALL\n" + vtScenario;
+    }
+    return virtualTable;
   }
 }

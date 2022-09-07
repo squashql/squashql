@@ -24,11 +24,13 @@ public interface TransactionManager {
     }
   }
 
-  String pattern = "__(?:.*)_scenario_(.*)__";
-
-  static boolean isScenarioStore(String storeName) {
-    Pattern compile = Pattern.compile(pattern);
-    Matcher matcher = compile.matcher(storeName);
-    return matcher.find();
+  static String extractScenarioFromStoreName(String baseStoreName, String scenarioStoreName) {
+    Pattern compile = Pattern.compile("__" + baseStoreName + "_scenario_(.*)__");
+    Matcher matcher = compile.matcher(scenarioStoreName);
+    if (matcher.find()) {
+      return matcher.group(1);
+    } else {
+      return null;
+    }
   }
 }

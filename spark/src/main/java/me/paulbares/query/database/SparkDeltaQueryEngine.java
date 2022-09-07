@@ -1,16 +1,16 @@
 package me.paulbares.query.database;
 
-import me.paulbares.ClickHouseDatastore;
+import me.paulbares.SparkDatastore;
 import me.paulbares.query.Table;
 
 import java.util.List;
 
-import static me.paulbares.query.database.ClickHouseQueryEngine.getResults;
-import static me.paulbares.query.database.SQLTranslator.virtualTableStatementWhereNotIn;
+import static me.paulbares.query.database.SQLTranslator.virtualTableStatementWhereNotExists;
+import static me.paulbares.query.database.SparkQueryEngine.getResults;
 
-public class ClickHouseDeltaQueryEngine extends ADeltaQueryEngine<ClickHouseDatastore> {
+public class SparkDeltaQueryEngine extends ADeltaQueryEngine<SparkDatastore> {
 
-  public ClickHouseDeltaQueryEngine(ClickHouseDatastore datastore) {
+  public SparkDeltaQueryEngine(SparkDatastore datastore) {
     super(datastore);
   }
 
@@ -24,10 +24,10 @@ public class ClickHouseDeltaQueryEngine extends ADeltaQueryEngine<ClickHouseData
       if (listOfScenarios.isEmpty()) {
         return newTableName;
       } else {
-        String virtualTable = virtualTableStatementWhereNotIn(query.table.name, listOfScenarios, keys, DefaultQueryRewriter.INSTANCE);
+        String virtualTable = virtualTableStatementWhereNotExists(query.table.name, listOfScenarios, keys, qr);
         return "(" + virtualTable + ") as vt_" + newTableName;
       }
     });
-    return getResults(sql, this.datastore.dataSource, query);
+    return getResults(sql, this.datastore.spark, query);
   }
 }
