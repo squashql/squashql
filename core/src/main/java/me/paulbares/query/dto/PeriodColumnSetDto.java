@@ -72,7 +72,7 @@ public class PeriodColumnSetDto implements ColumnSet {
     if (period instanceof Period.Quarter q) {
       return List.of(new Field(q.year(), int.class), new Field(q.quarter(), int.class));
     } else if (period instanceof Period.Year y) {
-      return List.of(new Field(y.year(), String.class));
+      return List.of(new Field(y.year(), int.class));
     } else if (period instanceof Period.Month m) {
       return List.of(new Field(m.year(), int.class), new Field(m.month(), int.class));
     } else if (period instanceof Period.Semester s) {

@@ -1,6 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.dto.Period;
+import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
@@ -21,7 +22,7 @@ public class TestPeriodShiftProcedure {
       new PeriodComparisonExecutor.ShiftProcedure(
               period,
               Map.of(PeriodUnit.YEAR, refPos[0], PeriodUnit.QUARTER, refPos[1]),
-              indexByPeriodUnit).test(point);
+              indexByPeriodUnit).test(point, new Field[]{new Field("year", int.class), new Field("quarter", int.class)});
       return point;
     };
 
@@ -48,7 +49,7 @@ public class TestPeriodShiftProcedure {
       new PeriodComparisonExecutor.ShiftProcedure(
               period,
               Map.of(PeriodUnit.YEAR, refPos[0], PeriodUnit.MONTH, refPos[1]),
-              indexByPeriodUnit).test(point);
+              indexByPeriodUnit).test(point, new Field[]{new Field("year", long.class), new Field("month", int.class)});
       return point;
     };
 
@@ -75,7 +76,7 @@ public class TestPeriodShiftProcedure {
       new PeriodComparisonExecutor.ShiftProcedure(
               period,
               Map.of(PeriodUnit.YEAR, refPos[0], PeriodUnit.SEMESTER, refPos[1]),
-              indexByPeriodUnit).test(point);
+              indexByPeriodUnit).test(point, new Field[]{new Field("year", int.class), new Field("semester", int.class)});
       return point;
     };
 

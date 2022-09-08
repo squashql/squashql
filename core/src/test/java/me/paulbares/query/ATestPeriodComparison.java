@@ -45,7 +45,7 @@ public abstract class ATestPeriodComparison {
     Field category = new Field("category", String.class);
     Field sales = new Field("sales", double.class);
     Field qty = new Field("quantity", long.class);
-    Field year = new Field("year_sales", int.class);
+    Field year = new Field("year_sales", long.class); // Use long to make sure we support also long as type
     Field semester = new Field("semester_sales", int.class);
     Field quarter = new Field("quarter_sales", int.class);
     Field month = new Field("month_sales", int.class);
@@ -119,14 +119,14 @@ public abstract class ATestPeriodComparison {
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022, 1, null, 100d),
-            Arrays.asList(2022, 2, null, 80d),
-            Arrays.asList(2022, 3, null, 85d),
-            Arrays.asList(2022, 4, null, 35d),
-            Arrays.asList(2023, 1, 0d, 100d),
-            Arrays.asList(2023, 2, 0d, 80d),
-            Arrays.asList(2023, 3, 0d, 85d),
-            Arrays.asList(2023, 4, 0d, 35d));
+            Arrays.asList(2022l, 1, null, 100d),
+            Arrays.asList(2022l, 2, null, 80d),
+            Arrays.asList(2022l, 3, null, 85d),
+            Arrays.asList(2022l, 4, null, 35d),
+            Arrays.asList(2023l, 1, 0d, 100d),
+            Arrays.asList(2023l, 2, 0d, 80d),
+            Arrays.asList(2023l, 3, 0d, 85d),
+            Arrays.asList(2023l, 4, 0d, 35d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(period.year(), period.quarter(), "myMeasure", "sum(sales)");
@@ -156,14 +156,14 @@ public abstract class ATestPeriodComparison {
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022, 1, "base", null, 100d),
-            Arrays.asList(2022, 2, "base", -20d, 80d),
-            Arrays.asList(2022, 3, "base", 5d, 85d),
-            Arrays.asList(2022, 4, "base", -50d, 35d),
-            Arrays.asList(2023, 1, "base", 65d, 100d),
-            Arrays.asList(2023, 2, "base", -20d, 80d),
-            Arrays.asList(2023, 3, "base", 5d, 85d),
-            Arrays.asList(2023, 4, "base", -50d, 35d));
+            Arrays.asList(2022l, 1, "base", null, 100d),
+            Arrays.asList(2022l, 2, "base", -20d, 80d),
+            Arrays.asList(2022l, 3, "base", 5d, 85d),
+            Arrays.asList(2022l, 4, "base", -50d, 35d),
+            Arrays.asList(2023l, 1, "base", 65d, 100d),
+            Arrays.asList(2023l, 2, "base", -20d, 80d),
+            Arrays.asList(2023l, 3, "base", 5d, 85d),
+            Arrays.asList(2023l, 4, "base", -50d, 35d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.quarter(), "myMeasure", "sum(sales)");
@@ -190,8 +190,8 @@ public abstract class ATestPeriodComparison {
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022, "base", null, 300d),
-            Arrays.asList(2023, "base", 0d, 300d));
+            Arrays.asList(2022l, "base", null, 300d),
+            Arrays.asList(2023l, "base", 0d, 300d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), "myMeasure", "sum(sales)");
@@ -218,10 +218,10 @@ public abstract class ATestPeriodComparison {
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022, 1, "base", null, 180d),
-            Arrays.asList(2022, 2, "base", -60d, 120d),
-            Arrays.asList(2023, 1, "base", 60d, 180d),
-            Arrays.asList(2023, 2, "base", -60d, 120d));
+            Arrays.asList(2022l, 1, "base", null, 180d),
+            Arrays.asList(2022l, 2, "base", -60d, 120d),
+            Arrays.asList(2023l, 1, "base", 60d, 180d),
+            Arrays.asList(2023l, 2, "base", -60d, 120d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.semester(), "myMeasure", "sum(sales)");
@@ -257,9 +257,9 @@ public abstract class ATestPeriodComparison {
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022, 12, "base", null, 40d),
-            Arrays.asList(2023, 1, "base", -25d, 15d),
-            Arrays.asList(2023, 2, "base", 15d, 30d));
+            Arrays.asList(2022l, 12, "base", null, 40d),
+            Arrays.asList(2023l, 1, "base", -25d, 15d),
+            Arrays.asList(2023l, 2, "base", 15d, 30d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.month(), "myMeasure", "sum(sales)");

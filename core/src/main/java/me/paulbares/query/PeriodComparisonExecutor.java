@@ -2,6 +2,7 @@ package me.paulbares.query;
 
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.PeriodColumnSetDto;
+import me.paulbares.store.Field;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
@@ -10,7 +11,7 @@ import java.time.LocalDate;
 import java.time.temporal.IsoFields;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 
 public class PeriodComparisonExecutor extends AComparisonExecutor {
 
@@ -26,7 +27,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
   }
 
   @Override
-  protected Predicate<Object[]> createShiftProcedure(ComparisonMeasure cm, ObjectIntMap<String> indexByColumn) {
+  protected BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasure cm, ObjectIntMap<String> indexByColumn) {
     Map<PeriodUnit, String> referencePosition = new HashMap<>();
     Map<String, PeriodUnit> mapping = this.cSet.mapping();
     MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
@@ -38,7 +39,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     return new ShiftProcedure(this.cSet.period, referencePosition, indexByPeriodUnit);
   }
 
-  static class ShiftProcedure implements Predicate<Object[]> {
+  static class ShiftProcedure implements BiPredicate<Object[], Field[]> {
 
     final Period period;
     final Map<PeriodUnit, String> referencePosition;
@@ -62,7 +63,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     }
 
     @Override
-    public boolean test(Object[] row) {
+    public boolean test(Object[] row, Field[] fields) {
       int yearIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.YEAR, -1);
       int semesterIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.SEMESTER, -1);
       int quarterIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.QUARTER, -1);
@@ -76,16 +77,16 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
         int year = readAsLong(row[yearIndex]);
         if (this.referencePosition.containsKey(PeriodUnit.YEAR)) {
           if (yearTransformation != null) {
-            row[yearIndex] = year + (int) yearTransformation;
+            write(row, yearIndex, fields[yearIndex], year + (int) yearTransformation);
           }
         }
         if (this.referencePosition.containsKey(PeriodUnit.QUARTER)) {
           int quarter = readAsLong(row[quarterIndex]);
           if (quarterTransformation != null) {
-            LocalDate d = LocalDate.of((Integer) row[yearIndex], quarter * 3, 1);
+            LocalDate d = LocalDate.of(readAsLong(row[yearIndex]), quarter * 3, 1);
             LocalDate newDate = d.plusMonths(((int) quarterTransformation) * 3);
-            row[quarterIndex] = (int) IsoFields.QUARTER_OF_YEAR.getFrom(newDate);
-            row[yearIndex] = newDate.getYear(); // year might have changed
+            write(row, quarterIndex, fields[quarterIndex], (int) IsoFields.QUARTER_OF_YEAR.getFrom(newDate));
+            write(row, yearIndex, fields[yearIndex], newDate.getYear());// year might have changed
           }
         }
       } else if (this.period instanceof Period.Year) {
@@ -93,7 +94,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
         int year = readAsLong(row[yearIndex]);
         if (this.referencePosition.containsKey(PeriodUnit.YEAR)) {
           if (yearTransformation != null) {
-            row[yearIndex] = year + (int) yearTransformation;
+            write(row, yearIndex, fields[yearIndex], year + (int) yearTransformation);
           }
         }
       } else if (this.period instanceof Period.Month) {
@@ -101,33 +102,33 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
         int year = readAsLong(row[yearIndex]);
         if (this.referencePosition.containsKey(PeriodUnit.YEAR)) {
           if (yearTransformation != null) {
-            row[yearIndex] = year + (int) yearTransformation;
+            write(row, yearIndex, fields[yearIndex], year + (int) yearTransformation);
           }
         }
         if (this.referencePosition.containsKey(PeriodUnit.MONTH)) {
           int month = readAsLong(row[monthIndex]);
           if (monthTransformation != null) {
-            LocalDate newDate = LocalDate.of((Integer) row[yearIndex], month, 1)
+            LocalDate newDate = LocalDate.of(readAsLong(row[yearIndex]), month, 1)
                     .plusMonths((int) monthTransformation);
-            row[monthIndex] = newDate.getMonthValue();
-            row[yearIndex] = newDate.getYear(); // year might have changed
+            write(row, monthIndex, fields[monthIndex], newDate.getMonthValue());
+            write(row, yearIndex, fields[yearIndex], newDate.getYear()); // year might have changed
           }
         }
-      }  else if (this.period instanceof Period.Semester) {
+      } else if (this.period instanceof Period.Semester) {
         // YEAR, SEMESTER
         int year = readAsLong(row[yearIndex]);
         if (this.referencePosition.containsKey(PeriodUnit.YEAR)) {
           if (yearTransformation != null) {
-            row[yearIndex] = year + (int) yearTransformation;
+            write(row, yearIndex, fields[yearIndex], year + (int) yearTransformation);
           }
         }
         if (this.referencePosition.containsKey(PeriodUnit.SEMESTER)) {
           int semester = readAsLong(row[semesterIndex]);
           if (semesterTransformation != null) {
-            LocalDate d = LocalDate.of((Integer) row[yearIndex], semester * 6, 1);
+            LocalDate d = LocalDate.of(readAsLong(row[yearIndex]), semester * 6, 1);
             LocalDate newDate = d.plusMonths(((int) semesterTransformation) * 6);
-            row[semesterIndex] = newDate.getMonthValue() / 6;
-            row[yearIndex] = newDate.getYear(); // year might have changed
+            write(row, semesterIndex, fields[semesterIndex], newDate.getMonthValue() / 6);
+            write(row, yearIndex, fields[yearIndex], newDate.getYear()); // year might have changed
           }
         }
       } else {
@@ -138,6 +139,16 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
 
     private static int readAsLong(Object o) {
       return (int) ((Number) o).longValue(); // with some database, year could be Long object.
+    }
+
+    private static void write(Object[] rowIndex, int index, Field field, int number) {
+      if (field.type() == Long.class || field.type() == long.class) {
+        rowIndex[index] = (long) number;
+      } else if (field.type() == Integer.class || field.type() == int.class) {
+        rowIndex[index] = number;
+      } else {
+        throw new IllegalArgumentException("Unsupported type " + field.type());
+      }
     }
 
     private static PeriodUnit[] getPeriodUnits(Period period) {
