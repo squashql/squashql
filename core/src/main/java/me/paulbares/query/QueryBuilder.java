@@ -144,6 +144,14 @@ public class QueryBuilder {
     return new AggregatedMeasure(alias, field, AggregationFunction.AVG);
   }
 
+  public static Measure integer(long value) {
+    return new ConstantMeasure(value, long.class);
+  }
+
+  public static Measure decimal(double value) {
+    return new ConstantMeasure(value, double.class);
+  }
+
   public static void main(String[] args) {
 
     ColumnSet bucketColumnSet = QueryBuilder.createBucketColumnSet(
