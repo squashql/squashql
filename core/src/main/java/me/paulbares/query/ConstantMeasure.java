@@ -12,7 +12,7 @@ import java.util.function.Function;
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
-public abstract class ConstantMeasure<T> implements Measure {
+public class ConstantMeasure<T> implements Measure {
 
   public T value;
   public String expression;

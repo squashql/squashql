@@ -32,8 +32,6 @@ public class ExecutionPlan<N, Context> {
   }
 
   public void execute(Context context) {
-//    this.leaves.forEach(n -> consumeAndMarkAsProcessed(n, context));
-
     for (N node : this.roots) {
       executeRecursively(node, context);
     }
