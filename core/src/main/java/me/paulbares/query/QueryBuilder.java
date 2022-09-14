@@ -116,11 +116,11 @@ public class QueryBuilder {
             referencePosition);
   }
 
-  public static ComparisonMeasureReferencePosition parentComparison(String alias,
+  public static ParentComparisonMeasure parentComparison(String alias,
                                                                     ComparisonMethod method,
                                                                     Measure measure,
                                                                     List<String> ancestors) {
-    return null;
+    return new ParentComparisonMeasure(alias, method, measure, ancestors);
   }
 
   public static Measure divide(String alias, Measure a, Measure b) {

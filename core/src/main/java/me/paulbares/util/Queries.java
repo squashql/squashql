@@ -48,7 +48,7 @@ public final class Queries {
   public static DatabaseQuery toDatabaseQuery(QueryDto query) {
     Set<String> cols = new HashSet<>();
     query.columns.forEach(cols::add);
-    query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).forEach(cols::add);
+    query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).forEach(cols::add); // FIXME integrate it with getRequiredColumnScopes???
     DatabaseQuery prefetchQuery = new DatabaseQuery();
     if (query.table != null) {
       prefetchQuery.table(query.table);

@@ -4,6 +4,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.graph.Graph;
 import lombok.extern.slf4j.Slf4j;
+import me.paulbares.query.QueryCache.TableScope;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.QueryCacheContextValue;
@@ -69,16 +70,33 @@ public class QueryExecutor {
     resolveMeasures(query);
     queryWatch.stop(QueryWatch.PREPARE_RESOLVE_MEASURES);
 
-    DatabaseQuery prefetchQuery = Queries.toDatabaseQuery(query);
+//    {
+      DatabaseQuery prefetchQuery = Queries.toDatabaseQuery(query);
+
+      List<String> writeScope = new ArrayList<>(prefetchQuery.coordinates.keySet());
+
+      Set<DatabaseQuery> prefetchQueries = new HashSet<>();
+      for (Measure measure : query.measures) {
+        Set<Set<String>> requiredColumnScopes = getRequiredColumnScopes(prefetchQuery, measure);
+        for (Set<String> requiredColumnScope : requiredColumnScopes) {
+          DatabaseQuery pq = new DatabaseQuery();
+          pq.table = prefetchQuery.table;
+          pq.subQuery = prefetchQuery.subQuery;
+          pq.conditions = prefetchQuery.conditions;
+          requiredColumnScope.forEach(pq::wildcardCoordinate);
+          prefetchQueries.add(pq);
+        }
+      }
+//    }
 
     // Create plan
     queryWatch.start(QueryWatch.PREPARE_CREATE_EXEC_PLAN);
-    ExecutionPlan<Measure, ExecutionContext> plan = createExecutionPlan(query);
+    ExecutionPlan<Measure, ExecutionContext> plan = createExecutionPlan(query.measures);
     queryWatch.stop(QueryWatch.PREPARE_CREATE_EXEC_PLAN);
 
     Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
     queryWatch.start(QueryWatch.PREPARE_CREATE_QUERY_SCOPE);
-    QueryCache.QueryScope queryScope = createCacheKey(query, prefetchQuery, fieldSupplier);
+    QueryCache.QueryScope queryScope = createCacheScope(query, prefetchQuery, fieldSupplier);
     queryWatch.stop(QueryWatch.PREPARE_CREATE_QUERY_SCOPE);
     QueryCache queryCache = getQueryCache((QueryCacheContextValue) query.context.getOrDefault(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE)));
 
@@ -142,10 +160,10 @@ public class QueryExecutor {
     return sortedTable;
   }
 
-  private static QueryCache.QueryScope createCacheKey(QueryDto query, DatabaseQuery prefetchQuery, Function<String, Field> fieldSupplier) {
+  private static QueryCache.QueryScope createCacheScope(QueryDto query, DatabaseQuery prefetchQuery, Function<String, Field> fieldSupplier) {
     Set<Field> fields = prefetchQuery.coordinates.keySet().stream().map(fieldSupplier).collect(Collectors.toSet());
     if (query.table != null) {
-      return new QueryCache.TableScope(query.table, fields, query.conditions);
+      return new TableScope(query.table, fields, query.conditions);
     } else {
       return new QueryCache.SubQueryScope(query.subQuery, fields, query.conditions);
     }
@@ -176,16 +194,16 @@ public class QueryExecutor {
             values);
   }
 
-  private static ExecutionPlan<Measure, ExecutionContext> createExecutionPlan(QueryDto query) {
+  private static ExecutionPlan<Measure, ExecutionContext> createExecutionPlan(List<Measure> measures) {
     GraphDependencyBuilder<Measure> builder = new GraphDependencyBuilder<>(m -> getMeasureDependencies(m));
-    Graph<GraphDependencyBuilder.NodeWithId<Measure>> graph = builder.build(query.measures);
+    Graph<GraphDependencyBuilder.NodeWithId<Measure>> graph = builder.build(measures);
     ExecutionPlan<Measure, ExecutionContext> plan = new ExecutionPlan<>(graph, new MeasureEvaluator());
     return plan;
   }
 
   private static Set<Measure> getMeasureDependencies(Measure measure) {
-    if (measure instanceof ComparisonMeasureReferencePosition cm) {
-      return Set.of(cm.measure);
+    if (measure instanceof ComparisonMeasure cm) {
+      return Set.of(cm.getMeasure());
     } else if (measure instanceof BinaryOperationMeasure bom) {
       Set<Measure> s = new HashSet<>();
       s.add(bom.leftOperand);
@@ -194,6 +212,28 @@ public class QueryExecutor {
     } else {
       return Collections.emptySet();
     }
+  }
+
+  private static Set<Set<String>> getRequiredColumnScopes(DatabaseQuery prefetchQuery, Measure measure) {
+    Set<Set<String>> columnScopes = new HashSet<>();
+    Set<String> coordinates = prefetchQuery.coordinates.keySet();
+    Set<String> originalScope = new HashSet<>(coordinates);
+    columnScopes.add(originalScope);
+
+    if (measure instanceof ParentComparisonMeasure pcm) {
+      List<String> ancestors = pcm.ancestors;
+      // FIXME do sthg of no ancestor in coord? or if no compatible e.g coordines [country] only and ancestors []
+      for (String coordinate : coordinates) {
+        int index = ancestors.indexOf(coordinate);
+        if (index >= 0) {
+          Set<String> copy = new HashSet<>(originalScope);
+          copy.removeAll(ancestors);
+          copy.addAll(ancestors.subList(index, ancestors.size()));
+          columnScopes.add(copy);
+        }
+      }
+    }
+    return columnScopes;
   }
 
   record ExecutionContext(Table table, QueryDto query, QueryWatch queryWatch) {
@@ -219,6 +259,18 @@ public class QueryExecutor {
         if (executor != null) {
           executeComparator(cm, executionContext.table, executor);
         }
+      } else if (measure instanceof ParentComparisonMeasure pcm) {
+        // FIXME
+        Table whereToWrite = executionContext.table;
+        Map<Set<String>, Table> tableByScope = new HashMap<>();
+        List<String> ancestors = pcm.ancestors;
+//        ObjectArrayDictionary points = whereToWrite.pointDictionary();
+//        whereToWrite.columnIndex()
+        whereToWrite.forEach(row -> {
+          Object[] parentRow = null; // TODO to compute
+          
+        });
+        throw new IllegalStateException("not finished");
       } else if (measure instanceof BinaryOperationMeasure bom) {
         executeBinaryOperation(bom, executionContext.table);
       } else if (measure instanceof ConstantMeasure cm) {

@@ -40,6 +40,16 @@ public class ComparisonMeasureReferencePosition implements Measure, ComparisonMe
   }
 
   @Override
+  public Measure getMeasure() {
+    return this.measure;
+  }
+
+  @Override
+  public ComparisonMethod getComparisonMethod() {
+    return this.method;
+  }
+
+  @Override
   public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     throw new IllegalStateException();
   }

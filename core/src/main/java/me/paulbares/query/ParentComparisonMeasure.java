@@ -28,14 +28,23 @@ public class ParentComparisonMeasure implements Measure, ComparisonMeasure {
                                  @NonNull List<String> ancestors) {
     this.alias = alias;
     this.method = method;
-    this.columnSetKey = columnSetKey;
     this.measure = measure;
     this.ancestors = ancestors;
   }
 
   @Override
   public ColumnSetKey getColumnSetKey() {
-    return this.columnSetKey;
+    return ColumnSetKey.PARENT;
+  }
+
+  @Override
+  public Measure getMeasure() {
+    return this.measure;
+  }
+
+  @Override
+  public ComparisonMethod getComparisonMethod() {
+    return this.method;
   }
 
   @Override

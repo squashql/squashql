@@ -71,10 +71,16 @@ public abstract class ATestParentComparison {
             .withMeasure(pop);
 
     // If no ancestors is expressed in the query, return 1.
-    QueryBuilder.parentComparison("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
+    ParentComparisonMeasure pOp = QueryBuilder.parentComparison("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
     // When adding this measure to the query, new rows should appear. with subtotal and GT.
+
+    query.withMeasure(pOp);
 
     Table result = this.executor.execute(query);
     result.show();
   }
+
+  // TODO test with other columns
+  // TODO test with conditions
+  // TODO do a test that compare a measure computed by AITM
 }
