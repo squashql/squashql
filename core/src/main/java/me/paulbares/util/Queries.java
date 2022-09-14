@@ -3,6 +3,7 @@ package me.paulbares.util;
 import me.paulbares.query.*;
 import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.dto.*;
+import me.paulbares.store.Field;
 
 import java.util.*;
 
@@ -58,6 +59,20 @@ public final class Queries {
       throw new IllegalArgumentException("A table or sub-query was expected in " + query);
     }
     prefetchQuery.conditions = query.conditions;
+    cols.forEach(prefetchQuery::wildcardCoordinate);
+    return prefetchQuery;
+  }
+
+  public static DatabaseQuery toDatabaseQuery(QueryExecutor.QueryScope queryScope) {
+    Set<String> cols = new HashSet<>();
+    queryScope.columns().stream().map(Field::name).forEach(cols::add);
+    DatabaseQuery prefetchQuery = new DatabaseQuery();
+    if (queryScope.tableDto() != null) {
+      prefetchQuery.table(queryScope.tableDto());
+    } else {
+      throw new IllegalArgumentException("see what to do"); // FIXME
+    }
+    prefetchQuery.conditions = queryScope.conditions();
     cols.forEach(prefetchQuery::wildcardCoordinate);
     return prefetchQuery;
   }

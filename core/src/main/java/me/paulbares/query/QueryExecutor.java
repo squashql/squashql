@@ -4,6 +4,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.graph.Graph;
 import lombok.extern.slf4j.Slf4j;
+import me.paulbares.query.QueryCache.SubQueryScope;
 import me.paulbares.query.QueryCache.TableScope;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.context.ContextValue;
@@ -11,10 +12,7 @@ import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.context.Repository;
 import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.database.QueryEngine;
-import me.paulbares.query.dto.BucketColumnSetDto;
-import me.paulbares.query.dto.CacheStatsDto;
-import me.paulbares.query.dto.PeriodColumnSetDto;
-import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.*;
 import me.paulbares.query.monitoring.QueryWatch;
 import me.paulbares.store.Field;
 import me.paulbares.util.Queries;
@@ -63,96 +61,76 @@ public class QueryExecutor {
   }
 
   public Table execute(QueryDto query, QueryWatch queryWatch, CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder) {
-    queryWatch.start(QueryWatch.GLOBAL);
-    queryWatch.start(QueryWatch.PREPARE_PLAN);
-
-    queryWatch.start(QueryWatch.PREPARE_RESOLVE_MEASURES);
     resolveMeasures(query);
-    queryWatch.stop(QueryWatch.PREPARE_RESOLVE_MEASURES);
 
-//    {
-      DatabaseQuery prefetchQuery = Queries.toDatabaseQuery(query);
+    Set<QueryScope> scopes = new HashSet<>();
+    QueryScope queryScope = new QueryScope(query.table, query.subQuery, query.columns.stream().map(this.queryEngine.getFieldSupplier()).toList(), query.conditions);
+    scopes.add(queryScope);
 
-      List<String> writeScope = new ArrayList<>(prefetchQuery.coordinates.keySet());
+    for (Measure measure : query.measures) {
+      Set<QueryScope> requiredScopes = computeRequiredScopes(queryScope, measure);
+      scopes.addAll(requiredScopes);
+    }
 
-      Set<DatabaseQuery> prefetchQueries = new HashSet<>();
-      for (Measure measure : query.measures) {
-        Set<Set<String>> requiredColumnScopes = getRequiredColumnScopes(prefetchQuery, measure);
-        for (Set<String> requiredColumnScope : requiredColumnScopes) {
-          DatabaseQuery pq = new DatabaseQuery();
-          pq.table = prefetchQuery.table;
-          pq.subQuery = prefetchQuery.subQuery;
-          pq.conditions = prefetchQuery.conditions;
-          requiredColumnScope.forEach(pq::wildcardCoordinate);
-          prefetchQueries.add(pq);
+    Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
+    Map<QueryScope, ExecutionPlan<Measure, ExecutionContext>> plans = new HashMap<>();
+    for (QueryScope scope : scopes) {
+      prefetchQueryByQueryScope.put(scope, Queries.toDatabaseQuery(scope));
+      // Create plan
+      plans.put(scope, createExecutionPlan(query.measures, this.queryEngine.getFieldSupplier()));
+    }
+
+    Map<QueryScope, Table> tableByScope = new HashMap<>();
+    // FIXME there might be a dependency between the plans...
+    for (QueryScope scope : scopes) {
+      DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
+      ExecutionPlan<Measure, ExecutionContext> plan = plans.get(scope);
+      Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
+      QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(queryScope, prefetchQuery, fieldSupplier);
+      QueryCache queryCache = getQueryCache((QueryCacheContextValue) query.context.getOrDefault(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE)));
+
+      // Finish to prepare the query
+      Set<Measure> cached = new HashSet<>();
+      Set<Measure> notCached = new HashSet<>();
+      Set<Measure> leaves = plan.getLeaves();
+      for (Measure leaf : leaves.stream().filter(m -> !(m instanceof ConstantMeasure)).toList()) {
+        if (queryCache.contains(leaf, prefetchQueryScope)) {
+          cached.add(leaf);
+        } else {
+          notCached.add(leaf);
         }
       }
-//    }
 
-    // Create plan
-    queryWatch.start(QueryWatch.PREPARE_CREATE_EXEC_PLAN);
-    ExecutionPlan<Measure, ExecutionContext> plan = createExecutionPlan(query.measures);
-    queryWatch.stop(QueryWatch.PREPARE_CREATE_EXEC_PLAN);
-
-    Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
-    queryWatch.start(QueryWatch.PREPARE_CREATE_QUERY_SCOPE);
-    QueryCache.QueryScope queryScope = createCacheScope(query, prefetchQuery, fieldSupplier);
-    queryWatch.stop(QueryWatch.PREPARE_CREATE_QUERY_SCOPE);
-    QueryCache queryCache = getQueryCache((QueryCacheContextValue) query.context.getOrDefault(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE)));
-
-    // Finish to prepare the query
-    Set<Measure> cached = new HashSet<>();
-    Set<Measure> notCached = new HashSet<>();
-    Set<Measure> leaves = plan.getLeaves();
-    for (Measure leaf : leaves.stream().filter(m -> !(m instanceof ConstantMeasure)).toList()) {
-      if (queryCache.contains(leaf, queryScope)) {
-        cached.add(leaf);
+      Table result;
+      if (!notCached.isEmpty() || (cached.isEmpty() && notCached.isEmpty())) {
+        if (!leaves.contains(CountMeasure.INSTANCE)) {
+          // Always add count
+          notCached.add(CountMeasure.INSTANCE);
+        }
+        notCached.forEach(prefetchQuery::withMeasure);
+        result = this.queryEngine.execute(prefetchQuery);
       } else {
-        notCached.add(leaf);
+        // Create an empty result that will be populated by the query cache
+        result = queryCache.createRawResult(prefetchQueryScope);
       }
-    }
 
-    queryWatch.stop(QueryWatch.PREPARE_PLAN);
-    queryWatch.start(QueryWatch.PREFETCH);
+      queryCache.contributeToResult(result, cached, prefetchQueryScope);
+      queryCache.contributeToCache(result, notCached, prefetchQueryScope);
 
-    Table prefetchResult;
-    if (!notCached.isEmpty() || (cached.isEmpty() && notCached.isEmpty())) {
-      if (!leaves.contains(CountMeasure.INSTANCE)) {
-        // Always add count
-        notCached.add(CountMeasure.INSTANCE);
+      if (query.columnSets.containsKey(BUCKET)) {
+        // Apply this as it modifies the "shape" of the result
+        BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(BUCKET);
+        result = BucketerExecutor.bucket(result, columnSet);
       }
-      notCached.forEach(prefetchQuery::withMeasure);
-      prefetchResult = this.queryEngine.execute(prefetchQuery);
-    } else {
-      // Create an empty result that will be populated by the query cache
-      prefetchResult = queryCache.createRawResult(queryScope);
+
+      tableByScope.put(scope, result);
+      plan.execute(new ExecutionContext(result, scope, tableByScope, query, queryWatch));
     }
-    queryWatch.stop(QueryWatch.PREFETCH);
 
-    queryCache.contributeToResult(prefetchResult, cached, queryScope);
-    queryCache.contributeToCache(prefetchResult, notCached, queryScope);
-
-    queryWatch.start(QueryWatch.BUCKET);
-    if (query.columnSets.containsKey(BUCKET)) {
-      // Apply this as it modifies the "shape" of the result
-      BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(BUCKET);
-      prefetchResult = BucketerExecutor.bucket(prefetchResult, columnSet);
-    }
-    queryWatch.stop(QueryWatch.BUCKET);
-
-    queryWatch.start(QueryWatch.EXECUTE_PLAN);
-    plan.execute(new ExecutionContext(prefetchResult, query, queryWatch));
-    queryWatch.stop(QueryWatch.EXECUTE_PLAN);
-
-    queryWatch.start(QueryWatch.ORDER);
-
-    ColumnarTable columnarTable = buildFinalResult(query, prefetchResult);
+    ColumnarTable columnarTable = buildFinalResult(query, tableByScope.get(queryScope));
     Table sortedTable = TableUtils.order(columnarTable, query);
 
-    queryWatch.stop(QueryWatch.ORDER);
-    queryWatch.stop(QueryWatch.GLOBAL);
-
-    CacheStatsDto stats = queryCache.stats();
+    CacheStatsDto stats = this.queryCache.stats();
     cacheStatsDtoBuilder
             .hitCount(stats.hitCount)
             .evictionCount(stats.evictionCount)
@@ -160,12 +138,12 @@ public class QueryExecutor {
     return sortedTable;
   }
 
-  private static QueryCache.QueryScope createCacheScope(QueryDto query, DatabaseQuery prefetchQuery, Function<String, Field> fieldSupplier) {
+  private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(QueryScope queryScope, DatabaseQuery prefetchQuery, Function<String, Field> fieldSupplier) {
     Set<Field> fields = prefetchQuery.coordinates.keySet().stream().map(fieldSupplier).collect(Collectors.toSet());
-    if (query.table != null) {
-      return new TableScope(query.table, fields, query.conditions);
+    if (queryScope.tableDto != null) {
+      return new TableScope(queryScope.tableDto, fields, queryScope.conditions);
     } else {
-      return new QueryCache.SubQueryScope(query.subQuery, fields, query.conditions);
+      return new SubQueryScope(queryScope.subQuery, fields, queryScope.conditions);
     }
   }
 
@@ -194,10 +172,10 @@ public class QueryExecutor {
             values);
   }
 
-  private static ExecutionPlan<Measure, ExecutionContext> createExecutionPlan(List<Measure> measures) {
+  private static ExecutionPlan<Measure, ExecutionContext> createExecutionPlan(List<Measure> measures, Function<String, Field> fieldSupplier) {
     GraphDependencyBuilder<Measure> builder = new GraphDependencyBuilder<>(m -> getMeasureDependencies(m));
     Graph<GraphDependencyBuilder.NodeWithId<Measure>> graph = builder.build(measures);
-    ExecutionPlan<Measure, ExecutionContext> plan = new ExecutionPlan<>(graph, new MeasureEvaluator());
+    ExecutionPlan<Measure, ExecutionContext> plan = new ExecutionPlan<>(graph, new MeasureEvaluator(fieldSupplier));
     return plan;
   }
 
@@ -214,35 +192,37 @@ public class QueryExecutor {
     }
   }
 
-  private static Set<Set<String>> getRequiredColumnScopes(DatabaseQuery prefetchQuery, Measure measure) {
-    Set<Set<String>> columnScopes = new HashSet<>();
-    Set<String> coordinates = prefetchQuery.coordinates.keySet();
-    Set<String> originalScope = new HashSet<>(coordinates);
-    columnScopes.add(originalScope);
+  private Set<QueryScope> computeRequiredScopes(QueryScope queryScope, Measure measure) {
+    Set<QueryScope> requiredScopes = new HashSet<>();
 
     if (measure instanceof ParentComparisonMeasure pcm) {
-      List<String> ancestors = pcm.ancestors;
-      // FIXME do sthg of no ancestor in coord? or if no compatible e.g coordines [country] only and ancestors []
-      for (String coordinate : coordinates) {
-        int index = ancestors.indexOf(coordinate);
-        if (index >= 0) {
-          Set<String> copy = new HashSet<>(originalScope);
-          copy.removeAll(ancestors);
-          copy.addAll(ancestors.subList(index, ancestors.size()));
-          columnScopes.add(copy);
-        }
-      }
+      requiredScopes.addAll(MeasureUtils.getParentScopes(queryScope, pcm, this.queryEngine.getFieldSupplier()));
     }
-    return columnScopes;
+    return requiredScopes;
   }
 
-  record ExecutionContext(Table table, QueryDto query, QueryWatch queryWatch) {
+  public record QueryScope(TableDto tableDto, QueryDto subQuery, List<Field> columns,
+                           Map<String, ConditionDto> conditions) {
+  }
+
+  record ExecutionContext(Table writeToTable,
+                          QueryScope queryScope,
+                          Map<QueryScope, Table> readFromTables,
+                          QueryDto query,
+                          QueryWatch queryWatch) {
   }
 
   static class MeasureEvaluator implements BiConsumer<Measure, ExecutionContext> {
+
+    private final Function<String, Field> fieldSupplier;
+
+    public MeasureEvaluator(Function<String, Field> fieldSupplier) {
+      this.fieldSupplier = fieldSupplier;
+    }
+
     @Override
     public void accept(Measure measure, ExecutionContext executionContext) {
-      if (executionContext.table.measures().contains(measure)) {
+      if (executionContext.writeToTable.measures().contains(measure)) {
         return; // nothing to do
       }
 
@@ -257,24 +237,62 @@ public class QueryExecutor {
         }
         AComparisonExecutor executor = m.get(cm.columnSetKey).apply(t);
         if (executor != null) {
-          executeComparator(cm, executionContext.table, executor);
+          executeComparator(cm, executionContext.writeToTable, executor);
         }
       } else if (measure instanceof ParentComparisonMeasure pcm) {
         // FIXME
-        Table whereToWrite = executionContext.table;
-        Map<Set<String>, Table> tableByScope = new HashMap<>();
+        Table whereToWrite = executionContext.writeToTable;
         List<String> ancestors = pcm.ancestors;
-//        ObjectArrayDictionary points = whereToWrite.pointDictionary();
-//        whereToWrite.columnIndex()
+
+        List<Field> ancestorCandidates = new ArrayList<>(executionContext.queryScope.columns);
+        ancestorCandidates.retainAll(ancestors.stream().map(this.fieldSupplier).toList());
+        int[] ancestorIndices = new int[ancestorCandidates.size()];
+        for (int i = 0; i < ancestorCandidates.size(); i++) {
+          ancestorIndices[i] = whereToWrite.index(ancestorCandidates.get(i));
+        }
+        // FIXME take the first above executionContext.queryScope
+        QueryScope parentScope = MeasureUtils.getParentScopes(executionContext.queryScope, pcm, this.fieldSupplier).get(0);  // Take the first one
+        Table parentTable = executionContext.readFromTables.get(parentScope);
+        List<Object> aggregateValues = whereToWrite.getAggregateValues(pcm.measure);
+        List<Object> parentAggregateValues = parentTable.getAggregateValues(pcm.measure);
+        List<Object> result = new ArrayList<>((int) whereToWrite.count());
+        BiFunction<Number, Number, Number> divide = BinaryOperations.createComparisonBiFunction(ComparisonMethod.DIVIDE, double.class);
+
+        int[] rowIndex = new int[1];
         whereToWrite.forEach(row -> {
-          Object[] parentRow = null; // TODO to compute
-          
+          // Start - Shift operation
+          int rowSize = row.size() - 1;
+          Object[] parentRow = new Object[rowSize];
+          int j = 0;
+          for (int i = 0; i < rowSize; i++) {
+            if (ancestorIndices[0] != i) {
+              parentRow[j++] = row.get(i);
+            }
+          }
+          // End - Shift operation
+          int position = parentTable.pointDictionary().getPosition(parentRow);
+          if (position != -1) {
+            Object referenceValue = parentAggregateValues.get(position);
+            Object currentValue = aggregateValues.get(rowIndex[0]);
+            Object div = divide.apply((Number) currentValue, (Number) referenceValue);
+            result.add(div);
+          } else {
+            result.add(null); // nothing to compare with
+          }
+
+//          int parentPosition = whereToWrite.pointDictionary().map(parentRow);
+
+          rowIndex[0]++;
+          // New rows must appear.
         });
+
+        // Add total and subtotal here?
+
         throw new IllegalStateException("not finished");
       } else if (measure instanceof BinaryOperationMeasure bom) {
-        executeBinaryOperation(bom, executionContext.table);
+        executeBinaryOperation(bom, executionContext.writeToTable);
       } else if (measure instanceof ConstantMeasure cm) {
-        executeConstantOperation(cm, executionContext.table);
+        executeConstantOperation(cm, executionContext.writeToTable);
       } else {
         throw new IllegalStateException(measure + " not expected");
       }

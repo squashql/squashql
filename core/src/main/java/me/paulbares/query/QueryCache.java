@@ -11,28 +11,28 @@ import java.util.Set;
 
 public interface QueryCache {
 
-  ColumnarTable createRawResult(QueryScope scope);
+  ColumnarTable createRawResult(PrefetchQueryScope scope);
 
-  boolean contains(Measure measure, QueryScope scope);
+  boolean contains(Measure measure, PrefetchQueryScope scope);
 
-  void contributeToCache(Table result, Set<Measure> measures, QueryScope scope);
+  void contributeToCache(Table result, Set<Measure> measures, PrefetchQueryScope scope);
 
-  void contributeToResult(Table result, Set<Measure> measures, QueryScope scope);
+  void contributeToResult(Table result, Set<Measure> measures, PrefetchQueryScope scope);
 
   void clear();
 
   CacheStatsDto stats();
 
-  record TableScope(TableDto tableDto, Set<Field> columns, Map<String, ConditionDto> conditions) implements QueryScope {
+  record TableScope(TableDto tableDto, Set<Field> columns, Map<String, ConditionDto> conditions) implements PrefetchQueryScope {
   }
 
-  record SubQueryScope(QueryDto subQueryDto, Set<Field> columns, Map<String, ConditionDto> conditions) implements QueryScope {
+  record SubQueryScope(QueryDto subQueryDto, Set<Field> columns, Map<String, ConditionDto> conditions) implements PrefetchQueryScope {
   }
 
   /**
    * Marker interface.
    */
-  interface QueryScope {
+  interface PrefetchQueryScope {
     Set<Field> columns();
   }
 }

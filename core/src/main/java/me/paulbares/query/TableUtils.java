@@ -129,7 +129,7 @@ public class TableUtils {
       // Order a column even if not explicitly asked in the query only if no comparator on any measure
       if (queryComp != null || (isColumn && !hasComparatorOnMeasure)) {
         args.add(table.getColumnValues(headerName));
-        // Always order table. If not defined, use natural order comp.
+        // Always order writeToTable. If not defined, use natural order comp.
         comparators.add(queryComp == null ? Comparator.naturalOrder() : queryComp);
       }
     }
