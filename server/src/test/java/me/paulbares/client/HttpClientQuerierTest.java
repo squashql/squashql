@@ -78,7 +78,7 @@ public class HttpClientQuerierTest {
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
 
     AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("capdv", "capdv", "sum");
-    ComparisonMeasure capdvDiff = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition capdvDiff = QueryBuilder.bucketComparison(
             "capdvDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             aggregatedMeasure,
@@ -88,7 +88,7 @@ public class HttpClientQuerierTest {
             ));
     var query = new QueryDto()
             .table("our_prices")
-            .withColumnSet(QueryDto.BUCKET, bucketCS)
+            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
             .withMeasure(capdvDiff)
             .withMeasure(aggregatedMeasure);
 

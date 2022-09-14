@@ -36,7 +36,7 @@ public abstract class ATestParentComparison {
     Field city = new Field("city", String.class);
     Field country = new Field("country", String.class);
     Field continent = new Field("continent", String.class);
-    Field population = new Field("population", int.class);
+    Field population = new Field("population", double.class);
 
     this.datastore = createDatastore();
     this.queryEngine = createQueryEngine(this.datastore);
@@ -47,6 +47,7 @@ public abstract class ATestParentComparison {
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"paris", "france", "eu", 2},
+            new Object[]{"lyon", "france", "eu", 0.5},
             new Object[]{"london", "uk", "eu", 9},
             new Object[]{"nyc", "usa", "am", 8},
             new Object[]{"chicago", "usa", "am", 3},
@@ -61,17 +62,17 @@ public abstract class ATestParentComparison {
 
   @Test
   void test() {
+    Measure pop = QueryBuilder.sum("population", "population");
     QueryDto query = QueryBuilder.query()
             .table(this.storeName)
             .withColumn("continent")
             .withColumn("country")
             .withColumn("city")
-            .withMeasure(QueryBuilder.sum("population"));
+            .withMeasure(pop);
 
-    QueryBuilder.parentComparison("percentOfParent",
-            ComparisonMethod.DIVIDE,
-            QueryBuilder.sum("population"),
-            List.of("city", "country", "continent"));
+    // If no ancestors is expressed in the query, return 1.
+    QueryBuilder.parentComparison("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
+    // When adding this measure to the query, new rows should appear. with subtotal and GT.
 
     Table result = this.executor.execute(query);
     result.show();

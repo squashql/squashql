@@ -140,7 +140,7 @@ public class TableUtils {
 
     int[] contextIndices = new int[args.size()];
     Arrays.fill(contextIndices, -1);
-    ColumnSet bucket = queryDto.columnSets.get(QueryDto.BUCKET);
+    ColumnSet bucket = queryDto.columnSets.get(ColumnSetKey.BUCKET);
     if (bucket != null) {
       BucketColumnSetDto cs = (BucketColumnSetDto) bucket;
       contextIndices[table.columnIndex(cs.field)] = table.columnIndex(cs.name);

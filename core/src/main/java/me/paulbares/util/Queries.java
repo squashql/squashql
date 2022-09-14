@@ -29,7 +29,7 @@ public final class Queries {
     });
 
     // Special case for Bucket that defines implicitly an order.
-    ColumnSet bucket = queryDto.columnSets.get(QueryDto.BUCKET);
+    ColumnSet bucket = queryDto.columnSets.get(ColumnSetKey.BUCKET);
     if (bucket != null) {
       BucketColumnSetDto cs = (BucketColumnSetDto) bucket;
       Map<Object, List<Object>> m = new LinkedHashMap<>();

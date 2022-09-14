@@ -73,7 +73,7 @@ public class QueryBuilder {
   }
 
   public static void addPeriodColumnSet(QueryDto query, Period period) {
-    query.withColumnSet(QueryDto.PERIOD, new PeriodColumnSetDto(period));
+    query.withColumnSet(ColumnSetKey.PERIOD, new PeriodColumnSetDto(period));
   }
 
   public static ColumnSet createPeriodColumnSet(Period period) {
@@ -83,7 +83,7 @@ public class QueryBuilder {
   public static void addBucketColumnSet(QueryDto query, String name, String field, Map<String, List<String>> values) {
     BucketColumnSetDto columnSet = new BucketColumnSetDto(name, field);
     columnSet.values = values;
-    query.withColumnSet(QueryDto.BUCKET, columnSet);
+    query.withColumnSet(ColumnSetKey.BUCKET, columnSet);
   }
 
   public static ColumnSet createBucketColumnSet(String name, String field, Map<String, List<String>> values) {
@@ -92,34 +92,34 @@ public class QueryBuilder {
     return columnSet;
   }
 
-  public static ComparisonMeasure periodComparison(String alias,
-                                                   ComparisonMethod method,
-                                                   Measure measure,
-                                                   Map<String, String> referencePosition) {
-    return new ComparisonMeasure(
+  public static ComparisonMeasureReferencePosition periodComparison(String alias,
+                                                                    ComparisonMethod method,
+                                                                    Measure measure,
+                                                                    Map<String, String> referencePosition) {
+    return new ComparisonMeasureReferencePosition(
             alias,
             method,
             measure,
-            QueryDto.PERIOD,
+            ColumnSetKey.PERIOD,
             referencePosition);
   }
 
-  public static ComparisonMeasure bucketComparison(String alias,
-                                                   ComparisonMethod method,
-                                                   Measure measure,
-                                                   Map<String, String> referencePosition) {
-    return new ComparisonMeasure(
+  public static ComparisonMeasureReferencePosition bucketComparison(String alias,
+                                                                    ComparisonMethod method,
+                                                                    Measure measure,
+                                                                    Map<String, String> referencePosition) {
+    return new ComparisonMeasureReferencePosition(
             alias,
             method,
             measure,
-            QueryDto.BUCKET,
+            ColumnSetKey.BUCKET,
             referencePosition);
   }
 
-  public static ComparisonMeasure parentComparison(String alias,
-                                                   ComparisonMethod method,
-                                                   Measure measure,
-                                                   List<String> ancestors) {
+  public static ComparisonMeasureReferencePosition parentComparison(String alias,
+                                                                    ComparisonMethod method,
+                                                                    Measure measure,
+                                                                    List<String> ancestors) {
     return null;
   }
 
@@ -168,8 +168,8 @@ public class QueryBuilder {
 
     QueryDto query = QueryBuilder.query();
     query.table("saas");
-    query.withColumnSet(QueryDto.BUCKET, bucketColumnSet);
-    query.withColumnSet(QueryDto.PERIOD, year);
+    query.withColumnSet(ColumnSetKey.BUCKET, bucketColumnSet);
+    query.withColumnSet(ColumnSetKey.PERIOD, year);
 
     AggregatedMeasure amount = new AggregatedMeasure("amount.sum", "Amount", AggregationFunction.SUM);
     AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, "Income/Expense", QueryBuilder.eq("Revenue"));
@@ -178,7 +178,7 @@ public class QueryBuilder {
     Measure ebidtaRatio = QueryBuilder.divide("EBITDA %", amount, sales);
     query.withMeasure(ebidtaRatio);
 
-    ComparisonMeasure growth = periodComparison(
+    ComparisonMeasureReferencePosition growth = periodComparison(
             "Growth",
             ComparisonMethod.DIVIDE,
             sales,
@@ -187,7 +187,7 @@ public class QueryBuilder {
     Measure kpi = plus("KPI", ebidtaRatio, growth);
     query.withMeasure(kpi);
 
-    ComparisonMeasure kpiComp = bucketComparison(
+    ComparisonMeasureReferencePosition kpiComp = bucketComparison(
             "KPI comp. with prev. scenario",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             kpi,

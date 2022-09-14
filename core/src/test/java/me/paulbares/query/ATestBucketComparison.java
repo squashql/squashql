@@ -86,7 +86,7 @@ public abstract class ATestBucketComparison {
   @Test
   void testAbsoluteDifferenceWithFirst() {
     AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
-    ComparisonMeasure priceComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition priceComp = QueryBuilder.bucketComparison(
             "priceDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
@@ -95,7 +95,7 @@ public abstract class ATestBucketComparison {
                     this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
-    ComparisonMeasure quantityComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition quantityComp = QueryBuilder.bucketComparison(
             "quantityDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
@@ -106,7 +106,7 @@ public abstract class ATestBucketComparison {
 
     var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(QueryDto.BUCKET, this.bucketCS)
+            .withColumnSet(ColumnSetKey.BUCKET, this.bucketCS)
             .withMeasure(priceComp)
             .withMeasure(price)
             .withMeasure(quantityComp)
@@ -130,7 +130,7 @@ public abstract class ATestBucketComparison {
   @Test
   void testAbsoluteDifferenceWithPrevious() {
     AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
-    ComparisonMeasure priceComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition priceComp = QueryBuilder.bucketComparison(
             "priceDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
@@ -139,7 +139,7 @@ public abstract class ATestBucketComparison {
                     this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
-    ComparisonMeasure quantityComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition quantityComp = QueryBuilder.bucketComparison(
             "quantityDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
@@ -150,7 +150,7 @@ public abstract class ATestBucketComparison {
 
     var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(QueryDto.BUCKET, this.bucketCS)
+            .withColumnSet(ColumnSetKey.BUCKET, this.bucketCS)
             .withMeasure(priceComp)
             .withMeasure(price)
             .withMeasure(quantityComp)
@@ -174,7 +174,7 @@ public abstract class ATestBucketComparison {
   @Test
   void testRelativeDifferenceWithFirst() {
     AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
-    ComparisonMeasure priceComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition priceComp = QueryBuilder.bucketComparison(
             "priceDiff",
             RELATIVE_DIFFERENCE,
             price,
@@ -183,7 +183,7 @@ public abstract class ATestBucketComparison {
                     this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
-    ComparisonMeasure quantityComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition quantityComp = QueryBuilder.bucketComparison(
             "quantityDiff",
             RELATIVE_DIFFERENCE,
             quantity,
@@ -194,7 +194,7 @@ public abstract class ATestBucketComparison {
 
     var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(QueryDto.BUCKET, this.bucketCS)
+            .withColumnSet(ColumnSetKey.BUCKET, this.bucketCS)
             .withMeasure(priceComp)
             .withMeasure(price)
             .withMeasure(quantityComp)
@@ -225,7 +225,7 @@ public abstract class ATestBucketComparison {
 
     var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(QueryDto.BUCKET, bucketCS)
+            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
             .withMeasure(CountMeasure.INSTANCE);
 
     Table dataset = this.executor.execute(query);

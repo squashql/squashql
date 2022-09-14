@@ -1,6 +1,7 @@
 package me.paulbares.util;
 
-import me.paulbares.query.ComparisonMeasure;
+import me.paulbares.query.ColumnSetKey;
+import me.paulbares.query.ComparisonMeasureReferencePosition;
 import me.paulbares.query.ComparisonMethod;
 import me.paulbares.query.Measure;
 import me.paulbares.query.context.ContextValue;
@@ -36,7 +37,7 @@ public class TestDatabaseQueryCreation {
   @Test
   void testColumnSetInSubQuery() {
     QueryDto subQuery = new QueryDto().table("table")
-            .withColumnSet("a", new PeriodColumnSetDto(new Period.Year("year")));
+            .withColumnSet(ColumnSetKey.PERIOD, new PeriodColumnSetDto(new Period.Year("year")));
     QueryDto queryDto = new QueryDto().table(subQuery);
 
     Assertions.assertThatThrownBy(() -> Queries.toDatabaseQuery(queryDto))
@@ -58,7 +59,7 @@ public class TestDatabaseQueryCreation {
   @Test
   void testUnsupportedMeasureInSubQuery() {
     QueryDto subQuery = new QueryDto().table("table")
-            .withMeasure(new ComparisonMeasure("alias", ComparisonMethod.DIVIDE, Mockito.mock(Measure.class), QueryDto.PERIOD, Collections.emptyMap()));
+            .withMeasure(new ComparisonMeasureReferencePosition("alias", ComparisonMethod.DIVIDE, Mockito.mock(Measure.class), ColumnSetKey.PERIOD, Collections.emptyMap()));
     QueryDto queryDto = new QueryDto().table(subQuery);
 
     Assertions.assertThatThrownBy(() -> Queries.toDatabaseQuery(queryDto))

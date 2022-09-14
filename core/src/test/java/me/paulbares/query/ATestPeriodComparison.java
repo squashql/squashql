@@ -101,7 +101,7 @@ public abstract class ATestPeriodComparison {
   void testCompareQuarterCurrentWithSamePreviousYear() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
-    ComparisonMeasure m = QueryBuilder.periodComparison(
+    ComparisonMeasureReferencePosition m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
@@ -113,7 +113,7 @@ public abstract class ATestPeriodComparison {
 
     var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(QueryDto.PERIOD, periodCS)
+            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(m)
             .withMeasure(sales);
 
@@ -137,7 +137,7 @@ public abstract class ATestPeriodComparison {
   void testCompareQuarterCurrentWithPrevious() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
-    ComparisonMeasure m = QueryBuilder.periodComparison(
+    ComparisonMeasureReferencePosition m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
@@ -150,7 +150,7 @@ public abstract class ATestPeriodComparison {
     var query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .withColumnSet(QueryDto.PERIOD, periodCS)
+            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(m)
             .withMeasure(sales);
 
@@ -174,7 +174,7 @@ public abstract class ATestPeriodComparison {
   void testCompareYearCurrentWithPrevious() {
     Period.Year period = new Period.Year("year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
-    ComparisonMeasure m = QueryBuilder.periodComparison(
+    ComparisonMeasureReferencePosition m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
@@ -184,7 +184,7 @@ public abstract class ATestPeriodComparison {
     var query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .withColumnSet(QueryDto.PERIOD, periodCS)
+            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(m)
             .withMeasure(sales);
 
@@ -202,7 +202,7 @@ public abstract class ATestPeriodComparison {
   void testCompareSemesterCurrentWithPrevious() {
     Period.Semester period = new Period.Semester("semester_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
-    ComparisonMeasure m = QueryBuilder.periodComparison(
+    ComparisonMeasureReferencePosition m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
@@ -212,7 +212,7 @@ public abstract class ATestPeriodComparison {
     var query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .withColumnSet(QueryDto.PERIOD, periodCS)
+            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(m)
             .withMeasure(sales);
 
@@ -241,7 +241,7 @@ public abstract class ATestPeriodComparison {
 
     Period.Month period = new Period.Month("month_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
-    ComparisonMeasure m = QueryBuilder.periodComparison(
+    ComparisonMeasureReferencePosition m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
@@ -251,7 +251,7 @@ public abstract class ATestPeriodComparison {
     var query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .withColumnSet(QueryDto.PERIOD, periodCS)
+            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(m)
             .withMeasure(sales);
 

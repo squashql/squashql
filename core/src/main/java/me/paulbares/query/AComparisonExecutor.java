@@ -18,12 +18,12 @@ public abstract class AComparisonExecutor {
 
   public static final String REF_POS_FIRST = "first";
 
-  protected abstract BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasure cm, ObjectIntMap<String> indexByColumn);
+  protected abstract BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn);
 
   public abstract ColumnSet getColumnSet();
 
   public List<Object> compare(
-          ComparisonMeasure cm,
+          ComparisonMeasureReferencePosition cm,
           Table intermediateResult) {
     MutableObjectIntMap<String> indexByColumn = new ObjectIntHashMap<>();
     cm.referencePosition.entrySet().forEach(entry -> {

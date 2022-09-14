@@ -44,7 +44,7 @@ public class TestMeasures {
     AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, "Income/Expense", QueryBuilder.eq("Revenue"));
     Measure ebidtaRatio = QueryBuilder.divide("EBITDA %", amount, sales);
 
-    ComparisonMeasure growth = periodComparison(
+    ComparisonMeasureReferencePosition growth = periodComparison(
             "Growth",
             ComparisonMethod.DIVIDE,
             sales,
@@ -54,7 +54,7 @@ public class TestMeasures {
     Map<String, String> referencePosition = new LinkedHashMap<>();
     referencePosition.put("scenario encrypted", "s-1");
     referencePosition.put("group", "g");
-    ComparisonMeasure kpiComp = bucketComparison(
+    ComparisonMeasureReferencePosition kpiComp = bucketComparison(
             "KPI comp. with prev. scenario",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             kpi,

@@ -119,7 +119,7 @@ public abstract class ATestQueryColumnSets {
 
     var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(QueryDto.BUCKET, bucketCS)
+            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
             .withMeasure(sales);
 
     Table execute = this.executor.execute(query);
@@ -138,7 +138,7 @@ public abstract class ATestQueryColumnSets {
     query = new QueryDto()
             .table(this.storeName)
             .withColumn("category")
-            .withColumnSet(QueryDto.BUCKET, bucketCS)
+            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
             .withMeasure(sales);
 
     execute = this.executor.execute(query);
@@ -172,8 +172,8 @@ public abstract class ATestQueryColumnSets {
 
     var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(QueryDto.BUCKET, bucketCS)
-            .withColumnSet(QueryDto.PERIOD, periodCS)
+            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
+            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(sales);
 
     double base = 120d, up = 160d, down = 80d;
@@ -205,7 +205,7 @@ public abstract class ATestQueryColumnSets {
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
 
-    ComparisonMeasure salesYearComp = QueryBuilder.periodComparison(
+    ComparisonMeasureReferencePosition salesYearComp = QueryBuilder.periodComparison(
             "salesYearComp",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
@@ -213,8 +213,8 @@ public abstract class ATestQueryColumnSets {
 
     var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(QueryDto.BUCKET, bucketCS)
-            .withColumnSet(QueryDto.PERIOD, periodCS)
+            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
+            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(salesYearComp)
             .withMeasure(sales);
 
@@ -247,7 +247,7 @@ public abstract class ATestQueryColumnSets {
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
 
-    ComparisonMeasure salesYearComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition salesYearComp = QueryBuilder.bucketComparison(
             "salesYearComp",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
@@ -255,8 +255,8 @@ public abstract class ATestQueryColumnSets {
 
     var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(QueryDto.BUCKET, bucketCS)
-            .withColumnSet(QueryDto.PERIOD, periodCS)
+            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
+            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(salesYearComp)
             .withMeasure(sales);
 
@@ -287,14 +287,14 @@ public abstract class ATestQueryColumnSets {
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
 
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", AggregationFunction.SUM);
-    ComparisonMeasure salesGroupComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition salesGroupComp = QueryBuilder.bucketComparison(
             "salesGroupComp",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
             Map.of(SCENARIO_FIELD_NAME, "s-1", groupOfScenario, "g"));
 
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(new Period.Year("year_sales"));
-    ComparisonMeasure salesYearComp = QueryBuilder.periodComparison(
+    ComparisonMeasureReferencePosition salesYearComp = QueryBuilder.periodComparison(
             "salesYearComp",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
@@ -302,8 +302,8 @@ public abstract class ATestQueryColumnSets {
 
     var query = new QueryDto()
             .table(this.storeName)
-            .withColumnSet(QueryDto.BUCKET, bucketCS)
-            .withColumnSet(QueryDto.PERIOD, periodCS)
+            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
+            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(salesYearComp)
             .withMeasure(salesGroupComp)
             .withMeasure(sales);

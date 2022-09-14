@@ -25,8 +25,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static me.paulbares.query.dto.QueryDto.BUCKET;
-import static me.paulbares.query.dto.QueryDto.PERIOD;
+import static me.paulbares.query.ColumnSetKey.BUCKET;
+import static me.paulbares.query.ColumnSetKey.PERIOD;
 
 @Slf4j
 public class QueryExecutor {
@@ -184,7 +184,7 @@ public class QueryExecutor {
   }
 
   private static Set<Measure> getMeasureDependencies(Measure measure) {
-    if (measure instanceof ComparisonMeasure cm) {
+    if (measure instanceof ComparisonMeasureReferencePosition cm) {
       return Set.of(cm.measure);
     } else if (measure instanceof BinaryOperationMeasure bom) {
       Set<Measure> s = new HashSet<>();
@@ -207,15 +207,15 @@ public class QueryExecutor {
       }
 
       executionContext.queryWatch.start(measure);
-      if (measure instanceof ComparisonMeasure cm) {
-        Map<String, Function<ColumnSet, AComparisonExecutor>> m = Map.of(
+      if (measure instanceof ComparisonMeasureReferencePosition cm) {
+        Map<ColumnSetKey, Function<ColumnSet, AComparisonExecutor>> m = Map.of(
                 BUCKET, cs -> new BucketComparisonExecutor((BucketColumnSetDto) cs),
                 PERIOD, cs -> new PeriodComparisonExecutor((PeriodColumnSetDto) cs));
-        ColumnSet t = executionContext.query.columnSets.get(cm.columnSet);
+        ColumnSet t = executionContext.query.columnSets.get(cm.columnSetKey);
         if (t == null) {
-          throw new IllegalArgumentException(String.format("columnSet %s is not specified in the query but is used in a comparison measure: %s", cm.columnSet, cm));
+          throw new IllegalArgumentException(String.format("columnSet %s is not specified in the query but is used in a comparison measure: %s", cm.columnSetKey, cm));
         }
-        AComparisonExecutor executor = m.get(cm.columnSet).apply(t);
+        AComparisonExecutor executor = m.get(cm.columnSetKey).apply(t);
         if (executor != null) {
           executeComparator(cm, executionContext.table, executor);
         }
@@ -229,7 +229,7 @@ public class QueryExecutor {
       executionContext.queryWatch.stop(measure);
     }
 
-    private static void executeComparator(ComparisonMeasure cm, Table intermediateResult, AComparisonExecutor executor) {
+    private static void executeComparator(ComparisonMeasureReferencePosition cm, Table intermediateResult, AComparisonExecutor executor) {
       List<Object> agg = executor.compare(cm, intermediateResult);
       Field field = new Field(cm.alias(), BinaryOperations.getComparisonOutputType(cm.method, intermediateResult.getField(cm.measure).type()));
       intermediateResult.addAggregates(field, cm, agg);
@@ -296,7 +296,7 @@ public class QueryExecutor {
   }
 
   private static void resolveMeasureDependencies(ContextValue repo, Supplier<Map<String, ExpressionMeasure>> supplier, Measure measure) {
-    if (measure instanceof ComparisonMeasure cm) {
+    if (measure instanceof ComparisonMeasureReferencePosition cm) {
       cm.measure = resolveExpressionMeasure(repo, supplier, cm.measure);
       resolveMeasureDependencies(repo, supplier, cm.measure);
     } else if (measure instanceof BinaryOperationMeasure bom) {

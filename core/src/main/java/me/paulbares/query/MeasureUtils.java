@@ -2,7 +2,6 @@ package me.paulbares.query;
 
 import lombok.NoArgsConstructor;
 import me.paulbares.query.database.SQLTranslator;
-import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 
 @NoArgsConstructor
@@ -18,17 +17,19 @@ public final class MeasureUtils {
       }
     } else if (m instanceof BinaryOperationMeasure bom) {
       return quoteExpression(bom.leftOperand) + " " + bom.operator.infix + " " + quoteExpression(bom.rightOperand);
-    } else if (m instanceof ComparisonMeasure cm) {
+    } else if (m instanceof ComparisonMeasureReferencePosition cm) {
       String alias = cm.measure.alias();
-      if (cm.columnSet.equals(QueryDto.PERIOD)) {
-        String formula = cm.method.expressionGenerator.apply(alias + "(current period)", alias + "(reference period)");
-        return formula + ", reference = " + cm.referencePosition;
-      } else if (cm.columnSet.equals(QueryDto.BUCKET)) {
-        String formula = cm.method.expressionGenerator.apply(alias + "(current bucket)", alias + "(reference bucket)");
-        return formula + ", reference = " + cm.referencePosition;
-      } else {
-        return "unknown";
-      }
+      return switch (cm.columnSetKey) {
+        case BUCKET -> {
+          String formula = cm.method.expressionGenerator.apply(alias + "(current bucket)", alias + "(reference bucket)");
+          yield formula + ", reference = " + cm.referencePosition;
+        }
+        case PERIOD -> {
+          String formula = cm.method.expressionGenerator.apply(alias + "(current period)", alias + "(reference period)");
+          yield formula + ", reference = " + cm.referencePosition;
+        }
+        case PARENT -> "unknown";
+      };
     } else if (m instanceof ExpressionMeasure em) {
       return em.expression;
     } else if (m instanceof ConstantMeasure cm) {
