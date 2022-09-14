@@ -12,8 +12,15 @@ public class BinaryOperations {
     Class<? extends Number> outputDataType = getComparisonOutputType(method, dataType);
     return switch (method) {
       case ABSOLUTE_DIFFERENCE ->
-              outputDataType.equals(long.class) ? (a, b) -> a.longValue() - b.longValue() : (a, b) -> a.doubleValue() - b.doubleValue();
-      case RELATIVE_DIFFERENCE -> (a, b) -> (a.doubleValue() - b.doubleValue()) / b.doubleValue();
+              outputDataType.equals(long.class) ? BinaryOperations::minusAsLong : BinaryOperations::minusAsDouble;
+      case RELATIVE_DIFFERENCE -> (a, b) -> {
+        Double diff = BinaryOperations.minusAsDouble(a, b);
+        if (diff == null || b == null) {
+          return null;
+        } else {
+          return (a.doubleValue() - b.doubleValue()) / b.doubleValue();
+        }
+      };
       case DIVIDE -> createBiFunction(BinaryOperator.DIVIDE, dataType, dataType);
     };
   }
@@ -30,10 +37,8 @@ public class BinaryOperations {
                                                                     Class<?> rightDataType) {
     Class<? extends Number> outputDataType = getOutputType(binaryOperator, leftDataType, rightDataType);
     return switch (binaryOperator) {
-      case PLUS ->
-              outputDataType.equals(long.class) ? BinaryOperations::plusAsLong : BinaryOperations::plusAsDouble;
-      case MINUS ->
-              outputDataType.equals(long.class) ? BinaryOperations::minusAsLong : BinaryOperations::minusAsDouble;
+      case PLUS -> outputDataType.equals(long.class) ? BinaryOperations::plusAsLong : BinaryOperations::plusAsDouble;
+      case MINUS -> outputDataType.equals(long.class) ? BinaryOperations::minusAsLong : BinaryOperations::minusAsDouble;
       case MULTIPLY ->
               outputDataType.equals(long.class) ? BinaryOperations::multiplyAsLong : BinaryOperations::multiplyAsDouble;
       case DIVIDE -> BinaryOperations::divideAsDouble;
