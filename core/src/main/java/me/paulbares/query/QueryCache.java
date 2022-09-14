@@ -1,6 +1,8 @@
 package me.paulbares.query;
 
+import me.paulbares.query.dto.CacheStatsDto;
 import me.paulbares.query.dto.ConditionDto;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Field;
 
@@ -19,6 +21,18 @@ public interface QueryCache {
 
   void clear();
 
-  record QueryScope(TableDto tableDto, Set<Field> columns, Map<String, ConditionDto> conditions) {
+  CacheStatsDto stats();
+
+  record TableScope(TableDto tableDto, Set<Field> columns, Map<String, ConditionDto> conditions) implements QueryScope {
+  }
+
+  record SubQueryScope(QueryDto subQueryDto, Set<Field> columns, Map<String, ConditionDto> conditions) implements QueryScope {
+  }
+
+  /**
+   * Marker interface.
+   */
+  interface QueryScope {
+    Set<Field> columns();
   }
 }

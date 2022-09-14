@@ -1,13 +1,9 @@
 package me.paulbares.jackson;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import me.paulbares.jackson.deserializer.ConditionDeserializer;
 import me.paulbares.query.Table;
-import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.store.Field;
 
 import java.util.List;
@@ -20,10 +16,7 @@ public class JacksonUtil {
 
   static {
     mapper = new ObjectMapper();
-    mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
     var simpleModule = new SimpleModule();
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-    simpleModule.addDeserializer(ConditionDto.class, new ConditionDeserializer());
     mapper.registerModule(simpleModule);
   }
 
@@ -43,9 +36,9 @@ public class JacksonUtil {
     }
   }
 
-  public static String tableToCsv(Table table) {
+  public static Map<String, Iterable<?>> serializeTable(Table table) {
     List<String> fields = table.headers().stream().map(Field::name).collect(Collectors.toList());
     // Jackson can serialize Iterable<?> so there is nothing to do to serialize table!
-    return JacksonUtil.serialize(Map.of("columns", fields, "rows", table));
+    return Map.of("columns", fields, "rows", table);
   }
 }

@@ -1,7 +1,11 @@
 package me.paulbares.query;
 
+import me.paulbares.query.dto.BucketColumnSetDto;
+import me.paulbares.query.dto.MetadataItem;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 import me.paulbares.util.MultipleColumnsSorter;
+import me.paulbares.util.Queries;
 
 import java.util.*;
 import java.util.function.Function;
@@ -9,13 +13,17 @@ import java.util.stream.Stream;
 
 public class TableUtils {
 
+  public static final String NAME_KEY = "name";
+  public static final String TYPE_KEY = "type";
+  public static final String EXPRESSION_KEY = "expression";
+
   public static String toString(List<? extends Object> columns,
                                 Iterable<List<Object>> rows,
                                 Function<Object, String> columnElementPrinters,
                                 Function<Object, String> rowElementPrinters) {
     /*
      * leftJustifiedRows - If true, it will add "-" as a flag to format string to
-     * make it left justified. Otherwise right justified.
+     * make it left justified. Otherwise, right justified.
      */
     boolean leftJustifiedRows = false;
 
@@ -80,23 +88,72 @@ public class TableUtils {
     return sb.toString();
   }
 
-  public static Table order(ColumnarTable table, Map<String, Comparator<?>> comparatorByColumnName) {
+  public static List<MetadataItem> buildTableMetadata(Table t) {
+    List<MetadataItem> metadata = new ArrayList<>();
+    int index = 0;
+    for (Field field : t.headers()) {
+      if (t.isMeasure(index)) {
+        int i = Arrays.binarySearch(t.measureIndices(), index);
+        Measure measure = t.measures().get(i);
+        String expression = measure.expression();
+        if (expression == null) {
+          measure.setExpression(MeasureUtils.createExpression(measure));
+        }
+        metadata.add(new MetadataItem(field.name(), measure.expression(), field.type()));
+      } else {
+        metadata.add(new MetadataItem(field.name(), field.name(), field.type()));
+      }
+      index++;
+    }
+
+    return metadata;
+  }
+
+  public static Table order(ColumnarTable table, QueryDto queryDto) {
+    Map<String, Comparator<?>> comparatorByColumnName = Queries.getComparators(queryDto);
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
-    for (Field header : table.headers) {
-      args.add(table.getColumnValues(header.name()));
-      Comparator<?> queryComp = comparatorByColumnName.get(header.name());
-      // Always order table. If not defined, use natural order comp.
-      comparators.add(queryComp == null ? Comparator.naturalOrder() : queryComp);
+
+    boolean hasComparatorOnMeasure = false;
+    List<Field> headers = table.headers;
+    for (int i = 0; i < headers.size(); i++) {
+      if (table.isMeasure(i)) {
+        hasComparatorOnMeasure |= comparatorByColumnName.containsKey(headers.get(i).name());
+      }
     }
-    int[] finalIndices = MultipleColumnsSorter.sort(args, comparators);
+
+    for (int i = 0; i < headers.size(); i++) {
+      boolean isColumn = Arrays.binarySearch(table.columnsIndices, i) >= 0;
+      String headerName = headers.get(i).name();
+      Comparator<?> queryComp = comparatorByColumnName.get(headerName);
+      // Order a column even if not explicitly asked in the query only if no comparator on any measure
+      if (queryComp != null || (isColumn && !hasComparatorOnMeasure)) {
+        args.add(table.getColumnValues(headerName));
+        // Always order table. If not defined, use natural order comp.
+        comparators.add(queryComp == null ? Comparator.naturalOrder() : queryComp);
+      }
+    }
+
+    if (args.isEmpty()) {
+      return table;
+    }
+
+    int[] contextIndices = new int[args.size()];
+    Arrays.fill(contextIndices, -1);
+    ColumnSet bucket = queryDto.columnSets.get(QueryDto.BUCKET);
+    if (bucket != null) {
+      BucketColumnSetDto cs = (BucketColumnSetDto) bucket;
+      contextIndices[table.columnIndex(cs.field)] = table.columnIndex(cs.name);
+    }
+
+    int[] finalIndices = MultipleColumnsSorter.sort(args, comparators, contextIndices);
 
     List<List<Object>> values = new ArrayList<>();
     for (List<Object> value : table.values) {
       values.add(reorder(value, finalIndices));
     }
 
-    return new ColumnarTable(table.headers, table.measures, table.measureIndices, table.columnsIndices, values);
+    return new ColumnarTable(headers, table.measures, table.measureIndices, table.columnsIndices, values);
   }
 
   public static List<Object> reorder(List<?> list, int[] order) {

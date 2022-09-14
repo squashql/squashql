@@ -1,10 +1,10 @@
 package me.paulbares.query;
 
-import me.paulbares.jackson.JacksonUtil;
+import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.context.Repository;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.ConditionDto;
-import me.paulbares.query.dto.OrderDto;
+import me.paulbares.query.dto.OrderKeywordDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.util.List;
-import java.util.Map;
 
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
@@ -51,8 +50,11 @@ public abstract class ATestQueryExecutor {
     this.queryExecutor = new QueryExecutor(queryEngine);
     this.tm = createTransactionManager();
 
-    beforeLoading(List.of(ean, category, price, qty));
+    beforeLoad(List.of(ean, category, price, qty));
+    load();
+  }
 
+  protected void load() {
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", 2d, 10},
             new Object[]{"cookie", "food", 3d, 20},
@@ -72,7 +74,7 @@ public abstract class ATestQueryExecutor {
     ));
   }
 
-  protected void beforeLoading(List<Field> fields) {
+  protected void beforeLoad(List<Field> fields) {
   }
 
   @Test
@@ -80,8 +82,8 @@ public abstract class ATestQueryExecutor {
     QueryDto query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("price", "sum")
-            .aggregatedMeasure("quantity", "sum");
+            .aggregatedMeasure("p", "price", "sum")
+            .aggregatedMeasure("q", "quantity", "sum");
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of(MAIN_SCENARIO_NAME, 15.0d, 33l),
@@ -110,8 +112,8 @@ public abstract class ATestQueryExecutor {
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
             .withCondition(SCENARIO_FIELD_NAME, QueryBuilder.in("s1", "s2"))
-            .aggregatedMeasure("price", "sum")
-            .aggregatedMeasure("quantity", "sum");
+            .aggregatedMeasure("p", "price", "sum")
+            .aggregatedMeasure("q", "quantity", "sum");
     Table table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
             List.of("s1", 17.0d, 33l),
@@ -124,8 +126,8 @@ public abstract class ATestQueryExecutor {
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
             .withCondition(SCENARIO_FIELD_NAME, QueryBuilder.eq("s1"))
-            .aggregatedMeasure("price", "sum")
-            .aggregatedMeasure("quantity", "sum");
+            .aggregatedMeasure("p", "price", "sum")
+            .aggregatedMeasure("q", "quantity", "sum");
     Table table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("s1", 17.0d, 33l));
   }
@@ -136,7 +138,7 @@ public abstract class ATestQueryExecutor {
             .table(this.storeName)
             .withColumn("category")
             .withColumn("ean")
-            .aggregatedMeasure("quantity", "sum")
+            .aggregatedMeasure("q", "quantity", "sum")
             .withCondition(SCENARIO_FIELD_NAME, QueryBuilder.eq(MAIN_SCENARIO_NAME))
             .withCondition("ean", QueryBuilder.eq("bottle"))
             .withCondition("category", QueryBuilder.in("cloth", "drink"));
@@ -162,23 +164,6 @@ public abstract class ATestQueryExecutor {
             List.of(MAIN_SCENARIO_NAME),
             List.of("s1"),
             List.of("s2"));
-  }
-
-  @Test
-  void testJsonConverter() throws Exception {
-    QueryDto query = new QueryDto()
-            .table(this.storeName)
-            .withColumn(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("price", "sum")
-            .aggregatedMeasure("quantity", "sum");
-    Table table = this.queryExecutor.execute(query);
-    String actual = JacksonUtil.tableToCsv(table);
-    Map map = JacksonUtil.mapper.readValue(actual, Map.class);
-    Assertions.assertThat((List) map.get("columns")).containsExactly(SCENARIO_FIELD_NAME, "sum(price)", "sum(quantity)");
-    Assertions.assertThat((List) map.get("rows")).containsExactlyInAnyOrder(
-            List.of(MAIN_SCENARIO_NAME, 15d, 33),
-            List.of("s1", 17d, 33),
-            List.of("s2", 14.5d, 33));
   }
 
   @Test
@@ -238,7 +223,7 @@ public abstract class ATestQueryExecutor {
   }
 
   @Test
-  void testOrderBy() {
+  void testOrderByColumn() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
@@ -246,7 +231,7 @@ public abstract class ATestQueryExecutor {
             .withCondition("category", QueryBuilder.in("cloth", "drink"))
             .withMeasure(CountMeasure.INSTANCE);
     Table result = this.queryExecutor.execute(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(
+    Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, "cloth", 1l),
             List.of(MAIN_SCENARIO_NAME, "drink", 1l),
             List.of("s1", "cloth", 1l),
@@ -254,9 +239,10 @@ public abstract class ATestQueryExecutor {
             List.of("s2", "cloth", 1l),
             List.of("s2", "drink", 1l));
 
-    query.orderBy("category", OrderDto.DESC);
+    query.orderBy("category", OrderKeywordDto.DESC);
     result = this.queryExecutor.execute(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(
+    result.show();
+    Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, "drink", 1l),
             List.of(MAIN_SCENARIO_NAME, "cloth", 1l),
             List.of("s1", "drink", 1l),
@@ -267,12 +253,67 @@ public abstract class ATestQueryExecutor {
     List<String> elements = List.of("s2", MAIN_SCENARIO_NAME, "s1");
     query.orderBy(SCENARIO_FIELD_NAME, elements);
     result = this.queryExecutor.execute(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(
+    Assertions.assertThat(result).containsExactly(
             List.of("s2", "drink", 1l),
             List.of("s2", "cloth", 1l),
             List.of(MAIN_SCENARIO_NAME, "drink", 1l),
             List.of(MAIN_SCENARIO_NAME, "cloth", 1l),
             List.of("s1", "drink", 1l),
             List.of("s1", "cloth", 1l));
+  }
+
+  @Test
+  void testOrderByMeasure() {
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
+            .withColumn("category")
+            .withMeasure(new AggregatedMeasure("p", "price", AggregationFunction.SUM));
+    Table result = this.queryExecutor.execute(query);
+    // Default order
+    Assertions.assertThat(result).containsExactly(
+            List.of("cloth", 30d),
+            List.of("drink", 7.5d),
+            List.of("food", 9d));
+
+    query.orderBy(result.getField(new AggregatedMeasure("p", "price", AggregationFunction.SUM)).name(), OrderKeywordDto.DESC);
+    result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of("cloth", 30d),
+            List.of("food", 9d),
+            List.of("drink", 7.5d));
+  }
+
+  @Test
+  void testSubQuery() {
+    QueryDto subQuery = new QueryDto()
+            .table(this.storeName)
+            .withColumn("scenario")
+            .withMeasure(QueryBuilder.sum("ca", "price")); // ca per scenario
+
+    QueryDto queryDto = new QueryDto()
+            .table(subQuery)
+            .withMeasure(QueryBuilder.avg("mean", "ca"));// avg of ca
+    Table result = this.queryExecutor.execute(queryDto);
+    Assertions.assertThat(result).containsExactly(List.of(15.5d));
+  }
+
+  @Test
+  void testConstantMeasures() {
+    Measure integer = QueryBuilder.integer(100);
+    Measure decimal = QueryBuilder.decimal(100);
+    Measure ca = QueryBuilder.sum("ca", "price");
+    Measure qty = QueryBuilder.sum("qty", "quantity");
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
+            .withMeasure(QueryBuilder.multiply("a1", integer, ca))
+            .withMeasure(QueryBuilder.multiply("a2", decimal, ca))
+            .withMeasure(QueryBuilder.multiply("b1", integer, qty))
+            .withMeasure(QueryBuilder.multiply("b2", decimal, qty))
+            .withMeasure(integer)
+            .withMeasure(decimal);
+    Table result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactly(List.of(4650d, 4650d, 9900l, 9900d, 100l, 100d));
+    Assertions.assertThat(result.headers().stream().map(Field::name).toList())
+            .containsExactly("a1", "a2", "b1", "b2", "constant(100)", "constant(100.0)");
   }
 }

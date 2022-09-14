@@ -1,9 +1,9 @@
 package me.paulbares.query;
 
-import com.google.common.cache.CacheStats;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.database.QueryEngine;
+import me.paulbares.query.dto.CacheStatsDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Datastore;
@@ -16,7 +16,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
+import static me.paulbares.query.QueryBuilder.*;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -52,10 +57,10 @@ public abstract class ATestQueryCache {
     this.datastore = createDatastore();
     QueryEngine queryEngine = createQueryEngine(this.datastore);
     this.queryExecutor = new QueryExecutor(queryEngine);
-    this.queryCache = this.queryExecutor.caffeineCache;
+    this.queryCache = (CaffeineQueryCache) this.queryExecutor.queryCache;
     this.tm = createTransactionManager();
 
-    beforeLoading(List.of(ean, category, price, qty), List.of(comp_ean, comp_name, comp_price));
+    beforeLoad(List.of(ean, category, price, qty), List.of(comp_ean, comp_name, comp_price));
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", 2d, 10},
@@ -78,7 +83,7 @@ public abstract class ATestQueryCache {
     this.queryCache.clear();
   }
 
-  protected void beforeLoading(List<Field> baseStoreFields, List<Field> targetStoreFields) {
+  protected void beforeLoad(List<Field> baseStoreFields, List<Field> targetStoreFields) {
   }
 
   @Test
@@ -86,8 +91,8 @@ public abstract class ATestQueryCache {
     QueryDto query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("price", AggregationFunction.SUM)
-            .aggregatedMeasure("quantity", AggregationFunction.SUM);
+            .aggregatedMeasure("ps", "price", AggregationFunction.SUM)
+            .aggregatedMeasure("qs", "quantity", AggregationFunction.SUM);
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
     assertCacheStats(0, 3);
@@ -101,7 +106,7 @@ public abstract class ATestQueryCache {
     query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("quantity", AggregationFunction.SUM);
+            .aggregatedMeasure("qs", "quantity", AggregationFunction.SUM);
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 33l));
     assertCacheStats(5, 3);
@@ -112,7 +117,7 @@ public abstract class ATestQueryCache {
     QueryDto query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("price", AggregationFunction.SUM);
+            .aggregatedMeasure("ps", "price", AggregationFunction.SUM);
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d));
     assertCacheStats(0, 2);
@@ -120,7 +125,7 @@ public abstract class ATestQueryCache {
     // remove column, no column.
     query = new QueryDto()
             .table(this.storeName)
-            .aggregatedMeasure("price", AggregationFunction.SUM);
+            .aggregatedMeasure("ps", "price", AggregationFunction.SUM);
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15.0d));
     assertCacheStats(0, 4);
@@ -135,7 +140,7 @@ public abstract class ATestQueryCache {
     QueryDto query = new QueryDto()
             .table(this.storeName)
             .withColumn("category")
-            .aggregatedMeasure("price", AggregationFunction.SUM);
+            .aggregatedMeasure("ps", "price", AggregationFunction.SUM);
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("drink", 2d),
@@ -169,7 +174,7 @@ public abstract class ATestQueryCache {
     QueryDto query = new QueryDto()
             .table(table)
             .withColumn("category")
-            .aggregatedMeasure("price", AggregationFunction.SUM);
+            .aggregatedMeasure("ps", "price", AggregationFunction.SUM);
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("drink", 4d), // value are doubled because of the join
@@ -181,7 +186,7 @@ public abstract class ATestQueryCache {
     query = new QueryDto()
             .table(this.storeName)
             .withColumn("category")
-            .aggregatedMeasure("price", AggregationFunction.SUM);
+            .aggregatedMeasure("ps", "price", AggregationFunction.SUM);
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("drink", 2d),
@@ -191,10 +196,58 @@ public abstract class ATestQueryCache {
   }
 
   @Test
+  void testWithSubQuery() {
+    QueryDto firstSubQuery = new QueryDto()
+            .table(this.storeName)
+            .withColumn("category")
+            .withMeasure(sum("ca", "price")); // ca per scenario
+
+    QueryDto queryDto = new QueryDto()
+            .table(firstSubQuery)
+            .withMeasure(avg("mean", "ca"));// avg of ca
+    Table result = this.queryExecutor.execute(queryDto);
+    Assertions.assertThat(result).containsExactly(List.of(5d));
+    assertCacheStats(0, 2);
+
+    // Change the sub query
+    QueryDto subQuery = new QueryDto()
+            .table(this.storeName)
+            .withColumn("category")
+            .withMeasure(min("ca", "price")); // change agg function
+    queryDto = new QueryDto()
+            .table(subQuery)
+            .withMeasure(avg("mean", "ca"));// avg of ca
+    result = this.queryExecutor.execute(queryDto);
+    Assertions.assertThat(result).containsExactly(List.of(5d));
+    assertCacheStats(0, 4);
+
+    // Change again the sub query
+    subQuery = new QueryDto()
+            .table(this.storeName)
+            .withColumn("ean") // change here
+            .withMeasure(min("ca", "price"));
+    queryDto = new QueryDto()
+            .table(subQuery)
+            .withMeasure(avg("mean", "ca"));// avg of ca
+    result = this.queryExecutor.execute(queryDto);
+    Assertions.assertThat(result).containsExactly(List.of(5d));
+    assertCacheStats(0, 6);
+
+    // Hit the cache
+    queryDto = new QueryDto()
+            .table(firstSubQuery) // same first sub-query
+            .withMeasure(avg("mean", "ca"))
+            .withMeasure(sum("mean", "ca"));// ask for another measure
+    result = this.queryExecutor.execute(queryDto);
+    Assertions.assertThat(result).containsExactly(List.of(5d, 15d));
+    assertCacheStats(1, 7);
+  }
+
+  @Test
   void testUseCacheContextValue() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .aggregatedMeasure("price", AggregationFunction.SUM);
+            .aggregatedMeasure("ps", "price", AggregationFunction.SUM);
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15d));
     assertCacheStats(0, 2);
@@ -217,9 +270,45 @@ public abstract class ATestQueryCache {
     assertCacheStats(0, 2);
   }
 
+  @Test
+  void testEvictionMaxSize() throws InterruptedException {
+    AtomicInteger c = new AtomicInteger();
+    CountDownLatch latch = new CountDownLatch(1);
+    // Use a cache with a small size and a listener because removal is asynchronous.
+    CaffeineQueryCache cache = new CaffeineQueryCache(2, (key, value, cause) -> {
+      c.getAndIncrement();
+      latch.countDown();
+    });
+    QueryExecutor executor = new QueryExecutor(this.createQueryEngine(this.datastore), cache);
+
+    Supplier<QueryDto> querySupplier = () -> new QueryDto()
+            .table(this.storeName)
+            .withColumn(SCENARIO_FIELD_NAME)
+            .aggregatedMeasure("ps", "price", AggregationFunction.SUM);
+    // Scope 1 added to the cache
+    executor.execute(querySupplier.get());
+    assertCacheStats(cache.stats(), 0, 2);
+
+    // Scope 2 added to the cache
+    executor.execute(querySupplier.get().withColumn("category"));
+    assertCacheStats(cache.stats(), 0, 4);
+
+    // Scope 3, should evict an entry in the cache
+    executor.execute(querySupplier.get().withCondition("category", QueryBuilder.eq("drink")));
+    latch.await(60, TimeUnit.SECONDS);
+    CacheStatsDto stats = cache.stats();
+    assertCacheStats(stats, 0, 6);
+    Assertions.assertThat(c.getAndIncrement()).isEqualTo(1);
+    Assertions.assertThat(stats.evictionCount).isEqualTo(1);
+  }
+
   private void assertCacheStats(int hitCount, int missCount) {
-    CacheStats stats = this.queryCache.stats();
-    Assertions.assertThat(stats.hitCount()).isEqualTo(hitCount);
-    Assertions.assertThat(stats.missCount()).isEqualTo(missCount);
+    CacheStatsDto stats = this.queryCache.stats();
+    assertCacheStats(stats, hitCount, missCount);
+  }
+
+  private void assertCacheStats(CacheStatsDto stats, int hitCount, int missCount) {
+    Assertions.assertThat(stats.hitCount).isEqualTo(hitCount);
+    Assertions.assertThat(stats.missCount).isEqualTo(missCount);
   }
 }

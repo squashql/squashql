@@ -45,7 +45,7 @@ public abstract class ATestPeriodComparison {
     Field category = new Field("category", String.class);
     Field sales = new Field("sales", double.class);
     Field qty = new Field("quantity", long.class);
-    Field year = new Field("year_sales", int.class);
+    Field year = new Field("year_sales", long.class); // Use long to make sure we support also long as type
     Field semester = new Field("semester_sales", int.class);
     Field quarter = new Field("quarter_sales", int.class);
     Field month = new Field("month_sales", int.class);
@@ -56,7 +56,7 @@ public abstract class ATestPeriodComparison {
     this.executor = new QueryExecutor(this.queryEngine);
     this.tm = createTransactionManager();
 
-    beforeLoading(List.of(ean, category, sales, qty, year, semester, quarter, month, date));
+    beforeLoad(List.of(ean, category, sales, qty, year, semester, quarter, month, date));
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             // 2022
@@ -93,14 +93,14 @@ public abstract class ATestPeriodComparison {
     ));
   }
 
-  protected void beforeLoading(List<Field> fields) {
+  protected void beforeLoad(List<Field> fields) {
   }
 
   @Test
   @Order(1)
   void testCompareQuarterCurrentWithSamePreviousYear() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
-    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasure m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
@@ -119,14 +119,14 @@ public abstract class ATestPeriodComparison {
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022, 1, null, 100d),
-            Arrays.asList(2022, 2, null, 80d),
-            Arrays.asList(2022, 3, null, 85d),
-            Arrays.asList(2022, 4, null, 35d),
-            Arrays.asList(2023, 1, 0d, 100d),
-            Arrays.asList(2023, 2, 0d, 80d),
-            Arrays.asList(2023, 3, 0d, 85d),
-            Arrays.asList(2023, 4, 0d, 35d));
+            Arrays.asList(2022l, 1, null, 100d),
+            Arrays.asList(2022l, 2, null, 80d),
+            Arrays.asList(2022l, 3, null, 85d),
+            Arrays.asList(2022l, 4, null, 35d),
+            Arrays.asList(2023l, 1, 0d, 100d),
+            Arrays.asList(2023l, 2, 0d, 80d),
+            Arrays.asList(2023l, 3, 0d, 85d),
+            Arrays.asList(2023l, 4, 0d, 35d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(period.year(), period.quarter(), "myMeasure", "sum(sales)");
@@ -136,7 +136,7 @@ public abstract class ATestPeriodComparison {
   @Order(2)
   void testCompareQuarterCurrentWithPrevious() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
-    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasure m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
@@ -156,14 +156,14 @@ public abstract class ATestPeriodComparison {
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022, 1, "base", null, 100d),
-            Arrays.asList(2022, 2, "base", -20d, 80d),
-            Arrays.asList(2022, 3, "base", 5d, 85d),
-            Arrays.asList(2022, 4, "base", -50d, 35d),
-            Arrays.asList(2023, 1, "base", 65d, 100d),
-            Arrays.asList(2023, 2, "base", -20d, 80d),
-            Arrays.asList(2023, 3, "base", 5d, 85d),
-            Arrays.asList(2023, 4, "base", -50d, 35d));
+            Arrays.asList(2022l, 1, "base", null, 100d),
+            Arrays.asList(2022l, 2, "base", -20d, 80d),
+            Arrays.asList(2022l, 3, "base", 5d, 85d),
+            Arrays.asList(2022l, 4, "base", -50d, 35d),
+            Arrays.asList(2023l, 1, "base", 65d, 100d),
+            Arrays.asList(2023l, 2, "base", -20d, 80d),
+            Arrays.asList(2023l, 3, "base", 5d, 85d),
+            Arrays.asList(2023l, 4, "base", -50d, 35d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.quarter(), "myMeasure", "sum(sales)");
@@ -173,7 +173,7 @@ public abstract class ATestPeriodComparison {
   @Order(3)
   void testCompareYearCurrentWithPrevious() {
     Period.Year period = new Period.Year("year_sales");
-    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasure m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
@@ -190,8 +190,8 @@ public abstract class ATestPeriodComparison {
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022, "base", null, 300d),
-            Arrays.asList(2023, "base", 0d, 300d));
+            Arrays.asList(2022l, "base", null, 300d),
+            Arrays.asList(2023l, "base", 0d, 300d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), "myMeasure", "sum(sales)");
@@ -201,7 +201,7 @@ public abstract class ATestPeriodComparison {
   @Order(4)
   void testCompareSemesterCurrentWithPrevious() {
     Period.Semester period = new Period.Semester("semester_sales", "year_sales");
-    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasure m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
@@ -218,10 +218,10 @@ public abstract class ATestPeriodComparison {
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022, 1, "base", null, 180d),
-            Arrays.asList(2022, 2, "base", -60d, 120d),
-            Arrays.asList(2023, 1, "base", 60d, 180d),
-            Arrays.asList(2023, 2, "base", -60d, 120d));
+            Arrays.asList(2022l, 1, "base", null, 180d),
+            Arrays.asList(2022l, 2, "base", -60d, 120d),
+            Arrays.asList(2023l, 1, "base", 60d, 180d),
+            Arrays.asList(2023l, 2, "base", -60d, 120d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.semester(), "myMeasure", "sum(sales)");
@@ -231,7 +231,7 @@ public abstract class ATestPeriodComparison {
   @Order(Integer.MAX_VALUE) // Last because the data is changed
   void testCompareMonthCurrentWithPrevious() {
     // Recreate table
-    beforeLoading(this.datastore.storesByName().values().iterator().next().fields().stream().filter(f -> !f.name().equals(Datastore.SCENARIO_FIELD_NAME)).toList());
+    beforeLoad(this.datastore.storesByName().values().iterator().next().fields().stream().filter(f -> !f.name().equals(Datastore.SCENARIO_FIELD_NAME)).toList());
     // Reload data with less rows
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", 20d, 10, 2022, 2, 4, 12, LocalDate.of(2022, 12, 1)},
@@ -240,7 +240,7 @@ public abstract class ATestPeriodComparison {
             new Object[]{"bottle", "drink", 30d, 5, 2023, 1, 1, 2, LocalDate.of(2023, 2, 1)}));
 
     Period.Month period = new Period.Month("month_sales", "year_sales");
-    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasure m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
@@ -257,9 +257,9 @@ public abstract class ATestPeriodComparison {
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022, 12, "base", null, 40d),
-            Arrays.asList(2023, 1, "base", -25d, 15d),
-            Arrays.asList(2023, 2, "base", 15d, 30d));
+            Arrays.asList(2022l, 12, "base", null, 40d),
+            Arrays.asList(2023l, 1, "base", -25d, 15d),
+            Arrays.asList(2023l, 2, "base", 15d, 30d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.month(), "myMeasure", "sum(sales)");

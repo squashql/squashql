@@ -21,7 +21,11 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   protected AQueryEngine(T datastore) {
     this.datastore = datastore;
-    this.fieldSupplier = fieldName -> {
+    this.fieldSupplier = createFieldSupplier();
+  }
+
+  protected Function<String, Field> createFieldSupplier() {
+    return fieldName -> {
       for (Store store : this.datastore.storesByName().values()) {
         for (Field field : store.fields()) {
           if (field.name().equals(fieldName)) {
@@ -47,10 +51,14 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   @Override
   public Table execute(DatabaseQuery query) {
-    Store store = this.datastore.storesByName().get(query.table.name);
-    if (store == null) {
-      throw new IllegalArgumentException(String.format("Cannot find table with name %s. Available tables: %s",
-              query.table.name, this.datastore.storesByName().values().stream().map(Store::name).toList()));
+    if (query.table != null) {
+      String tableName = query.table.name;
+      // Can be null if sub-query
+      Store store = this.datastore.storesByName().get(tableName);
+      if (store == null) {
+        throw new IllegalArgumentException(String.format("Cannot find table with name %s. Available tables: %s",
+                tableName, this.datastore.storesByName().values().stream().map(Store::name).toList()));
+      }
     }
     Table aggregates = retrieveAggregates(query);
     return postProcessDataset(aggregates, query);

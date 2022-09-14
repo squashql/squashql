@@ -25,3 +25,11 @@ hs_err_pid*
 # spark
 metastore_db
 spark-warehouse
+
+# node
+node_modules
+
+# specific to the project
+query.json
+js/typescript-library/dist
+js/client-typescript-library/build

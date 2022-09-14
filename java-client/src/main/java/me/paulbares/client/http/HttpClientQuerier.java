@@ -1,4 +1,4 @@
-package me.paulbares.client;
+package me.paulbares.client.http;
 
 import feign.Feign;
 import feign.Headers;
@@ -6,11 +6,13 @@ import feign.RequestLine;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import me.paulbares.jackson.JacksonUtil;
+import me.paulbares.query.Measure;
+import me.paulbares.query.dto.MetadataResultDto;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.spring.web.rest.QueryController;
+import me.paulbares.query.dto.QueryResultDto;
 import okhttp3.OkHttpClient;
 
-import java.util.Map;
+import java.util.List;
 
 public class HttpClientQuerier {
 
@@ -27,22 +29,31 @@ public class HttpClientQuerier {
     this.url = url;
   }
 
-  public SimpleTable run(QueryDto query) {
+  public QueryResultDto run(QueryDto query) {
     QueryApi target = builder.target(QueryApi.class, this.url);
     return target.run(query);
   }
 
-  public Map<Object, Object> metadata() {
+  public MetadataResultDto metadata() {
     QueryApi target = builder.target(QueryApi.class, this.url);
     return target.metadata();
   }
 
-  interface QueryApi {
-    @RequestLine("POST " + QueryController.MAPPING_QUERY)
-    @Headers("Content-Type: application/json")
-    SimpleTable run(QueryDto query);
+  public List<Measure> expression(List<Measure> measures) {
+    QueryApi target = builder.target(QueryApi.class, this.url);
+    return target.expression(measures);
+  }
 
-    @RequestLine("GET " + QueryController.MAPPING_METADATA)
-    Map<Object, Object> metadata();
+  interface QueryApi {
+    @RequestLine("POST /query")
+    @Headers("Content-Type: application/json")
+    QueryResultDto run(QueryDto query);
+
+    @RequestLine("GET /metadata")
+    MetadataResultDto metadata();
+
+    @RequestLine("POST /expression")
+    @Headers("Content-Type: application/json")
+    List<Measure> expression(List<Measure> measures);
   }
 }

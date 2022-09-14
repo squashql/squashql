@@ -29,7 +29,7 @@ public class TestSparkBinaryOperationMeasure extends ATestBinaryOperationMeasure
   }
 
   @Override
-  protected void beforeLoading(List<Field> fields) {
+  protected void beforeLoad(List<Field> fields) {
     SparkTransactionManager tm = (SparkTransactionManager) this.tm;
     tm.createTemporaryTable(this.storeName, fields);
   }

@@ -1,13 +1,12 @@
-package me.paulbares.spring.web.rest;
+package me.paulbares.client;
 
-import me.paulbares.client.HttpClientQuerier;
-import me.paulbares.client.SimpleTable;
-import me.paulbares.query.AggregatedMeasure;
-import me.paulbares.query.ComparisonMeasure;
-import me.paulbares.query.QueryBuilder;
-import me.paulbares.query.dto.BucketColumnSetDto;
-import me.paulbares.query.dto.QueryDto;
-import me.paulbares.spring.config.DatasetTestConfig;
+import me.paulbares.AitmApplication;
+import me.paulbares.client.http.HttpClientQuerier;
+import me.paulbares.query.*;
+import me.paulbares.query.database.QueryEngine;
+import me.paulbares.query.dto.*;
+import me.paulbares.spring.dataset.DatasetTestConfig;
+import me.paulbares.spring.web.rest.QueryControllerTest;
 import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -15,14 +14,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static me.paulbares.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        classes = AitmApplication.class,
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "spring.main.allow-bean-definition-overriding=true")
 @Import(DatasetTestConfig.class)
 public class HttpClientQuerierTest {
 
@@ -52,10 +54,16 @@ public class HttpClientQuerierTest {
     QueryDto query = new QueryDto()
             .table("our_prices")
             .withColumn(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("quantity", "sum");
+            .aggregatedMeasure("qs", "quantity", "sum");
 
-    SimpleTable table = querier.run(query);
-    QueryControllerTest.assertQuery(table,false);
+    QueryResultDto response = querier.run(query);
+    assertQuery(response.table, false);
+    Assertions.assertThat(response.metadata).containsExactly(
+            new MetadataItem(SCENARIO_FIELD_NAME, SCENARIO_FIELD_NAME, String.class),
+            new MetadataItem("qs", "sum(quantity)", long.class));
+
+    Assertions.assertThat(response.debug.cache).isNotNull();
+    Assertions.assertThat(response.debug.timings).isNotNull();
   }
 
   @Test
@@ -69,10 +77,10 @@ public class HttpClientQuerierTest {
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
 
-    AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("capdv", "sum");
+    AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("capdv", "capdv", "sum");
     ComparisonMeasure capdvDiff = QueryBuilder.bucketComparison(
             "capdvDiff",
-            ABSOLUTE_DIFFERENCE,
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
             aggregatedMeasure,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
@@ -84,7 +92,8 @@ public class HttpClientQuerierTest {
             .withMeasure(capdvDiff)
             .withMeasure(aggregatedMeasure);
 
-    SimpleTable table = querier.run(query);
+    QueryResultDto response = querier.run(query);
+    SimpleTableDto table = response.table;
     double baseValue = 40_000d;
     double mnValue = 42_000d;
     double mnmddValue = 44_000d;
@@ -97,7 +106,7 @@ public class HttpClientQuerierTest {
             List.of("group3", "MN up", mnValue - baseValue, mnValue),
             List.of("group3", "MN & MDD up", mnmddValue - baseValue, mnmddValue));
     Assertions.assertThat(table.columns)
-            .containsExactly("group", SCENARIO_FIELD_NAME, "capdvDiff", "sum(capdv)");
+            .containsExactly("group", SCENARIO_FIELD_NAME, "capdvDiff", "capdv");
   }
 
   @Test
@@ -108,17 +117,50 @@ public class HttpClientQuerierTest {
             .withColumn(SCENARIO_FIELD_NAME)
             .withColumn("pdv")
             .withCondition(SCENARIO_FIELD_NAME, QueryBuilder.eq(MAIN_SCENARIO_NAME))
-            .aggregatedMeasure("price", "sum");
+            .aggregatedMeasure("ps", "price", "sum");
 
     String url = "http://127.0.0.1:" + this.port;
 
     var querier = new HttpClientQuerier(url);
 
-    SimpleTable table = querier.run(query);
+    QueryResultDto response = querier.run(query);
+    SimpleTableDto table = response.table;
     Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
             List.of(MAIN_SCENARIO_NAME, "ITM Balma", 20d),
             List.of(MAIN_SCENARIO_NAME, "ITM Toulouse and Drive", 20d)
     );
-    Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "pdv", "sum(price)");
+    Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "pdv", "ps");
+  }
+
+  static void assertQuery(SimpleTableDto table, boolean withTotals) {
+    List[] lists = {List.of("MDD up", 4000),
+            List.of("MN & MDD down", 4000),
+            List.of("MN & MDD up", 4000),
+            List.of("MN up", 4000),
+            List.of(MAIN_SCENARIO_NAME, 4000)};
+    if (withTotals) {
+      Arrays.copyOf(lists, lists.length + 1);
+      lists[lists.length - 1] = Arrays.asList(QueryEngine.GRAND_TOTAL, 5 * 4000);
+      Assertions.assertThat(table.rows).containsExactlyInAnyOrder(lists);
+    }
+    Assertions.assertThat(table.rows).containsExactlyInAnyOrder(lists);
+    Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "qs");
+  }
+
+  @Test
+  void testSetExpressions() {
+    AggregatedMeasure a = new AggregatedMeasure("a", "a", "sum");
+    AggregatedMeasure b = new AggregatedMeasure("b", "b", "sum");
+    Measure plus = QueryBuilder.plus("a+b", a, b);
+
+    List<Measure> input = List.of(a, b, plus);
+    input.forEach(m -> m.setExpression(null));// Expression should not be defined but computed and set by the server
+
+    String url = "http://127.0.0.1:" + this.port;
+    var querier = new HttpClientQuerier(url);
+
+    List<Measure> expression = querier.expression(input);
+    Assertions.assertThat(expression.stream().map(Measure::expression))
+            .containsExactly("sum(a)", "sum(b)", "a + b");
   }
 }

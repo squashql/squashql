@@ -1,15 +1,10 @@
 package me.paulbares.spring.web.rest;
 
-import me.paulbares.client.SimpleTable;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.*;
 import me.paulbares.query.context.Repository;
-import me.paulbares.query.database.QueryEngine;
-import me.paulbares.query.dto.BucketColumnSetDto;
-import me.paulbares.query.dto.QueryDto;
-import me.paulbares.query.dto.TableDto;
-import me.paulbares.spring.ApplicationForTest;
-import me.paulbares.spring.config.DatasetTestConfig;
+import me.paulbares.query.dto.*;
+import me.paulbares.spring.dataset.DatasetTestConfig;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +15,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -29,7 +23,7 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = ApplicationForTest.class, properties = "spring.main.allow-bean-definition-overriding=true")
+@SpringBootTest(properties = "spring.main.allow-bean-definition-overriding=true")
 @Import(DatasetTestConfig.class)
 @AutoConfigureMockMvc
 public class QueryControllerTest {
@@ -66,7 +60,7 @@ public class QueryControllerTest {
             .table(our)
             .withColumn(SCENARIO_FIELD_NAME)
             .withColumn("ean")
-            .aggregatedMeasure("capdv", "sum");
+            .aggregatedMeasure("capdv", "capdv", "sum");
 
     if (withRepo) {
       query
@@ -85,8 +79,8 @@ public class QueryControllerTest {
             .andExpect(status().isOk())
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
-              Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
-              Assertions.assertThat((List) queryResult.get("rows")).containsExactlyInAnyOrder(
+              QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
+              Assertions.assertThat(queryResult.table.rows).containsExactlyInAnyOrder(
                       List.of("MN & MDD up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
                       List.of("MN & MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196),
 
@@ -102,24 +96,20 @@ public class QueryControllerTest {
                       List.of(MAIN_SCENARIO_NAME, "ITMella 250g", 100000d, 102000d, 0.9803921568627451d),
                       List.of(MAIN_SCENARIO_NAME, "Nutella 250g", 100000d, 102000d, 0.9803921568627451d));
 
-              Assertions.assertThat((List) queryResult.get("columns")).containsExactly(
-                      SCENARIO_FIELD_NAME, "ean", "sum(capdv)", "capdv_concurrents", "indice_prix");
-            });
-  }
+              Assertions.assertThat(queryResult.table.columns).containsExactly(
+                      SCENARIO_FIELD_NAME, "ean", "capdv", "capdv_concurrents", "indice_prix");
 
-  static void assertQuery(SimpleTable table, boolean withTotals) {
-    List[] lists = {List.of("MDD up", 4000),
-            List.of("MN & MDD down", 4000),
-            List.of("MN & MDD up", 4000),
-            List.of("MN up", 4000),
-            List.of(MAIN_SCENARIO_NAME, 4000)};
-    if (withTotals) {
-      Arrays.copyOf(lists, lists.length + 1);
-      lists[lists.length - 1] = Arrays.asList(QueryEngine.GRAND_TOTAL, 5 * 4000);
-      Assertions.assertThat(table.rows).containsExactlyInAnyOrder(lists);
-    }
-    Assertions.assertThat(table.rows).containsExactlyInAnyOrder(lists);
-    Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "sum(quantity)");
+              Assertions.assertThat(queryResult.metadata).containsExactly(
+                      new MetadataItem(SCENARIO_FIELD_NAME, SCENARIO_FIELD_NAME, String.class),
+                      new MetadataItem("ean", "ean", String.class),
+                      new MetadataItem("capdv", "sum(capdv)", double.class),
+                      new MetadataItem("capdv_concurrents", "sum(competitor_price * quantity)", double.class),
+                      new MetadataItem("indice_prix", "sum(capdv) / sum(competitor_price * quantity)", double.class)
+              );
+
+              Assertions.assertThat(queryResult.debug.cache).isNotNull();
+              Assertions.assertThat(queryResult.debug.timings.total).isGreaterThan(0);
+            });
   }
 
   @Test
@@ -127,8 +117,8 @@ public class QueryControllerTest {
     this.mvc.perform(MockMvcRequestBuilders.get(QueryController.MAPPING_METADATA))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
-              Map objects = JacksonUtil.mapper.readValue(contentAsString, Map.class);
-              assertMetadataResult(objects, false);
+              MetadataResultDto metadataResultDto = JacksonUtil.mapper.readValue(contentAsString, MetadataResultDto.class);
+              assertMetadataResult(metadataResultDto, false);
             });
   }
 
@@ -138,46 +128,42 @@ public class QueryControllerTest {
                     .param("repo-url", REPO_URL))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
-              Map objects = JacksonUtil.mapper.readValue(contentAsString, Map.class);
-              assertMetadataResult(objects, true);
+              MetadataResultDto metadataResultDto = JacksonUtil.mapper.readValue(contentAsString, MetadataResultDto.class);
+              assertMetadataResult(metadataResultDto, true);
             });
   }
 
+  public static void assertMetadataResult(MetadataResultDto metadataResultDto, boolean withRepo) {
+    Function<String, MetadataResultDto.StoreMetadata> f =
+            storeName -> (MetadataResultDto.StoreMetadata) metadataResultDto.stores.stream().filter(s -> s.name.equals(storeName)).findFirst().get();
 
-  static void assertMetadataResult(Map objects, boolean withRepo) {
-    List<Map<String, Object>> storesArray = (List) objects.get(QueryController.METADATA_STORES_KEY);
-    Assertions.assertThat(storesArray).hasSize(3);
-
-    Function<String, List<Map<Object, Object>>> f =
-            storeName -> (List<Map<Object, Object>>) storesArray.stream().filter(s -> s.get("name").equals(storeName)).findFirst().get().get(QueryController.METADATA_FIELDS_KEY);
-
-    Assertions.assertThat(f.apply("our_prices")).containsExactlyInAnyOrder(
-            Map.of("name", "ean", "type", "string"),
-            Map.of("name", "pdv", "type", "string"),
-            Map.of("name", "price", "type", "double"),
-            Map.of("name", "quantity", "type", "int"),
-            Map.of("name", "capdv", "type", "double"),
-            Map.of("name", SCENARIO_FIELD_NAME, "type", "string")
+    Assertions.assertThat(f.apply("our_prices").fields).containsExactlyInAnyOrder(
+            new MetadataItem("ean", "ean", String.class),
+            new MetadataItem("pdv", "pdv", String.class),
+            new MetadataItem("price", "price", double.class),
+            new MetadataItem("quantity", "quantity", int.class),
+            new MetadataItem("capdv", "capdv", double.class),
+            new MetadataItem(SCENARIO_FIELD_NAME, SCENARIO_FIELD_NAME, String.class)
     );
 
-    Assertions.assertThat(f.apply("their_prices")).containsExactlyInAnyOrder(
-            Map.of("name", "competitor_ean", "type", "string"),
-            Map.of("name", "competitor_concurrent_pdv", "type", "string"),
-            Map.of("name", "competitor_brand", "type", "string"),
-            Map.of("name", "competitor_concurrent_ean", "type", "string"),
-            Map.of("name", "competitor_price", "type", "double")
+    Assertions.assertThat(f.apply("their_prices").fields).containsExactlyInAnyOrder(
+            new MetadataItem("competitor_ean", "competitor_ean", String.class),
+            new MetadataItem("competitor_concurrent_pdv", "competitor_concurrent_pdv", String.class),
+            new MetadataItem("competitor_brand", "competitor_brand", String.class),
+            new MetadataItem("competitor_concurrent_ean", "competitor_concurrent_ean", String.class),
+            new MetadataItem("competitor_price", "competitor_price", double.class)
     );
 
-    Assertions.assertThat(f.apply("our_stores_their_stores")).containsExactlyInAnyOrder(
-            Map.of("name", "our_store", "type", "string"),
-            Map.of("name", "their_store", "type", "string")
+    Assertions.assertThat(f.apply("our_stores_their_stores").fields).containsExactlyInAnyOrder(
+            new MetadataItem("our_store", "our_store", String.class),
+            new MetadataItem("their_store", "their_store", String.class)
     );
 
-    Assertions.assertThat((List) objects.get(QueryController.METADATA_AGG_FUNCS_KEY)).containsExactlyInAnyOrder(QueryController.SUPPORTED_AGG_FUNCS.toArray(new String[0]));
+    Assertions.assertThat(metadataResultDto.aggregationFunctions).containsExactlyInAnyOrder(QueryController.SUPPORTED_AGG_FUNCS.toArray(new String[0]));
     if (withRepo) {
-      Assertions.assertThat((List) objects.get(QueryController.METADATA_MEASURES_KEY)).containsExactlyInAnyOrder(
-              Map.of("alias", "indice_prix", "expression", "sum(capdv) / sum(competitor_price * quantity)"),
-              Map.of("alias", "capdv_concurrents", "expression", "sum(competitor_price * quantity)")
+      Assertions.assertThat(metadataResultDto.measures).containsExactlyInAnyOrder(
+              new ExpressionMeasure("indice_prix", "sum(capdv) / sum(competitor_price * quantity)"),
+              new ExpressionMeasure("capdv_concurrents", "sum(competitor_price * quantity)")
       );
     }
   }
@@ -198,7 +184,7 @@ public class QueryControllerTest {
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
 
-    AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("capdv", "sum");
+    AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("capdv", "capdv", "sum");
     Measure indicePrix;
     if (withRepo) {
       indicePrix = new UnresolvedExpressionMeasure("indice_prix");
@@ -241,10 +227,12 @@ public class QueryControllerTest {
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
+              Map<String, Object> table = (Map<String, Object>) queryResult.get("table");
+
               double baseValue = 0.9803921568627451d;
               double mnValue = 1.0294117647058822d;
               double mnmddValue = 1.0784313725490196d;
-              Assertions.assertThat((List) queryResult.get("rows")).containsExactlyInAnyOrder(
+              Assertions.assertThat((List) table.get("rows")).containsExactlyInAnyOrder(
                       List.of("group1", MAIN_SCENARIO_NAME, 0d, 0d),
                       List.of("group1", "MN up", 10_000d, mnValue - baseValue),
                       List.of("group2", MAIN_SCENARIO_NAME, 0d, 0d),
@@ -252,7 +240,7 @@ public class QueryControllerTest {
                       List.of("group3", MAIN_SCENARIO_NAME, 0d, 0d),
                       List.of("group3", "MN up", 10_000d, mnValue - baseValue),
                       List.of("group3", "MN & MDD up", 10_000d, mnmddValue - mnValue));
-              Assertions.assertThat((List) queryResult.get("columns"))
+              Assertions.assertThat((List) table.get("columns"))
                       .containsExactly("group",
                               SCENARIO_FIELD_NAME,
                               "aggregatedMeasureDiff",

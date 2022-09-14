@@ -47,7 +47,7 @@ public abstract class ATestBinaryOperationMeasure {
     this.executor = new QueryExecutor(this.queryEngine);
     this.tm = createTransactionManager();
 
-    beforeLoading(List.of(ean, category, sales, qty));
+    beforeLoad(List.of(ean, category, sales, qty));
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", 20d, 10l},
@@ -55,7 +55,7 @@ public abstract class ATestBinaryOperationMeasure {
     ));
   }
 
-  protected void beforeLoading(List<Field> fields) {
+  protected void beforeLoad(List<Field> fields) {
   }
 
   /**
@@ -63,8 +63,8 @@ public abstract class ATestBinaryOperationMeasure {
    */
   @Test
   void testPlus() {
-    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
-    AggregatedMeasure quantity = new AggregatedMeasure("quantity", AggregationFunction.SUM);
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", AggregationFunction.SUM);
+    AggregatedMeasure quantity = new AggregatedMeasure("sum(quantity)", "quantity", AggregationFunction.SUM);
 
     var query = new QueryDto()
             .table(this.storeName)
@@ -85,7 +85,7 @@ public abstract class ATestBinaryOperationMeasure {
 
   @Test
   void testPlusWithRepo() {
-    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", AggregationFunction.SUM);
     UnresolvedExpressionMeasure quantity = new UnresolvedExpressionMeasure("quantity");
 
     var query = new QueryDto()
@@ -111,8 +111,8 @@ public abstract class ATestBinaryOperationMeasure {
    */
   @Test
   void testMinus() {
-    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
-    AggregatedMeasure quantity = new AggregatedMeasure("quantity", AggregationFunction.SUM);
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", AggregationFunction.SUM);
+    AggregatedMeasure quantity = new AggregatedMeasure("sum(quantity)", "quantity", AggregationFunction.SUM);
 
     var query = new QueryDto()
             .table(this.storeName)
@@ -136,8 +136,8 @@ public abstract class ATestBinaryOperationMeasure {
    */
   @Test
   void testMultiply() {
-    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
-    AggregatedMeasure quantity = new AggregatedMeasure("quantity", AggregationFunction.SUM);
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", AggregationFunction.SUM);
+    AggregatedMeasure quantity = new AggregatedMeasure("sum(quantity)", "quantity", AggregationFunction.SUM);
 
     var query = new QueryDto()
             .table(this.storeName)
@@ -161,8 +161,8 @@ public abstract class ATestBinaryOperationMeasure {
    */
   @Test
   void testDivide() {
-    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
-    AggregatedMeasure quantity = new AggregatedMeasure("quantity", AggregationFunction.SUM);
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", AggregationFunction.SUM);
+    AggregatedMeasure quantity = new AggregatedMeasure("sum(quantity)", "quantity", AggregationFunction.SUM);
 
     var query = new QueryDto()
             .table(this.storeName)

@@ -14,26 +14,16 @@ import java.util.stream.IntStream;
 
 public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
+  private final QueryRewriter queryRewriter;
+
   public BigQueryEngine(BigQueryDatastore datastore) {
     super(datastore);
+    this.queryRewriter = new BigQueryQueryRewriter();
   }
 
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
-    String sql = SQLTranslator.translate(query, null, this.fieldSupplier, new QueryRewriter() {
-      @Override
-      public String tableName(String table) {
-        return SqlUtils.escape(datastore.projectId + "." + datastore.datasetName + "." + table);
-      }
-
-      @Override
-      public String measureAlias(String alias, Measure measure) {
-        String a = alias.replace("(", "_");
-        a = a.replace(")", "_");
-        return a;
-      }
-    });
-
+    String sql = SQLTranslator.translate(query, null, this.fieldSupplier, this.queryRewriter, (qr, name) -> qr.tableName(name));
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(sql).build();
     try {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
@@ -58,7 +48,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   /**
    * Gets the value with the correct type, otherwise everything is read as String.
    */
-  private Object getTypeValue(FieldValueList fieldValues, Schema schema, int index) {
+  public static Object getTypeValue(FieldValueList fieldValues, Schema schema, int index) {
     FieldValue fieldValue = fieldValues.get(index);
     com.google.cloud.bigquery.Field field = schema.getFields().get(index);
     return switch (field.getType().getStandardType()) {
@@ -68,5 +58,19 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       case BYTES -> fieldValue.getBytesValue();
       default -> fieldValue.getValue();
     };
+  }
+
+  class BigQueryQueryRewriter implements QueryRewriter {
+    @Override
+    public String tableName(String table) {
+      return SqlUtils.escape(datastore.projectId + "." + datastore.datasetName + "." + table);
+    }
+
+    @Override
+    public String measureAlias(String alias, Measure measure) {
+      return alias
+              .replace("(", "_")
+              .replace(")", "_");
+    }
   }
 }

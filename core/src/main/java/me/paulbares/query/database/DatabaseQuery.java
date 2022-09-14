@@ -1,27 +1,27 @@
 package me.paulbares.query.database;
 
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ExpressionMeasure;
 import me.paulbares.query.Measure;
-import me.paulbares.query.UnresolvedExpressionMeasure;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.TableDto;
 
 import java.util.*;
 
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor // For Jackson
 public class DatabaseQuery {
 
   public TableDto table;
+  public DatabaseQuery subQuery;
   public Map<String, List<String>> coordinates = new LinkedHashMap<>();
   public Map<String, ConditionDto> conditions = new LinkedHashMap<>();
   public List<Measure> measures = new ArrayList<>();
-
-  /**
-   * For Jackson.
-   */
-  public DatabaseQuery() {
-  }
 
   public DatabaseQuery wildcardCoordinate(String field) {
     this.coordinates.put(field, null);
@@ -43,10 +43,6 @@ public class DatabaseQuery {
     return this;
   }
 
-  public DatabaseQuery aggregatedMeasure(String field, String agg) {
-    return aggregatedMeasure(null, field, agg);
-  }
-
   public DatabaseQuery aggregatedMeasure(String alias, String field, String agg) {
     withMeasure(new AggregatedMeasure(alias, field, agg));
     return this;
@@ -54,11 +50,6 @@ public class DatabaseQuery {
 
   public DatabaseQuery expressionMeasure(String alias, String expression) {
     withMeasure(new ExpressionMeasure(alias, expression));
-    return this;
-  }
-
-  public DatabaseQuery unresolvedExpressionMeasure(String alias) {
-    withMeasure(new UnresolvedExpressionMeasure(alias));
     return this;
   }
 
@@ -77,20 +68,14 @@ public class DatabaseQuery {
     return this;
   }
 
-  public DatabaseQuery condition(String field, ConditionDto conditionDto) {
-    this.conditions.put(field, conditionDto);
+  public DatabaseQuery subQuery(DatabaseQuery subQuery) {
+    this.subQuery = subQuery;
     return this;
   }
 
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() +
-            '{' +
-            "table=" + this.table +
-            ", coordinates=" + this.coordinates +
-            ", conditions=" + this.conditions +
-            ", measures=" + this.measures +
-            '}';
+  public DatabaseQuery condition(String field, ConditionDto conditionDto) {
+    this.conditions.put(field, conditionDto);
+    return this;
   }
 
   public String json() {

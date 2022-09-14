@@ -1,23 +1,25 @@
 package me.paulbares.query.dto;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.common.base.Objects;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.jackson.deserializer.ContextValueDeserializer;
 import me.paulbares.query.*;
 import me.paulbares.query.context.ContextValue;
-import me.paulbares.util.CustomExplicitOrdering;
 
 import java.util.*;
 
-import static me.paulbares.query.dto.OrderDto.DESC;
-
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor // For Jackson
 public class QueryDto {
 
   public static final String BUCKET = "bucket";
   public static final String PERIOD = "period";
 
   public TableDto table;
+
+  public QueryDto subQuery;
 
   public List<String> columns = new ArrayList<>();
 
@@ -27,16 +29,9 @@ public class QueryDto {
 
   public Map<String, ConditionDto> conditions = new HashMap<>();
 
-  public Map<String, Comparator<?>> comparators = new HashMap<>();
+  public Map<String, OrderDto> orders = new HashMap<>();
 
-  @JsonDeserialize(contentUsing = ContextValueDeserializer.class)
   public Map<String, ContextValue> context = new HashMap<>();
-
-  /**
-   * For Jackson.
-   */
-  public QueryDto() {
-  }
 
   public QueryDto withColumn(String column) {
     this.columns.add(column);
@@ -48,8 +43,8 @@ public class QueryDto {
     return this;
   }
 
-  public QueryDto aggregatedMeasure(String field, String agg) {
-    withMeasure(new AggregatedMeasure(field, agg));
+  public QueryDto aggregatedMeasure(String alias, String field, String agg) {
+    withMeasure(new AggregatedMeasure(alias, field, agg));
     return this;
   }
 
@@ -83,6 +78,11 @@ public class QueryDto {
     return this;
   }
 
+  public QueryDto table(QueryDto subQuery) {
+    this.subQuery = subQuery;
+    return this;
+  }
+
   public QueryDto table(String tableName) {
     table(new TableDto(tableName));
     return this;
@@ -93,31 +93,17 @@ public class QueryDto {
     return this;
   }
 
-  public QueryDto orderBy(String column, OrderDto orderDto) {
-    Comparator<?> comp = Comparator.naturalOrder();
-    this.comparators.put(column, orderDto == DESC ? comp.reversed() : comp);
+  public QueryDto orderBy(String column, OrderKeywordDto orderKeywordDto) {
+    this.orders.put(column, new SimpleOrderDto(orderKeywordDto));
     return this;
   }
 
   public QueryDto orderBy(String column, List<?> firstElements) {
-    this.comparators.put(column, new CustomExplicitOrdering(firstElements));
+    this.orders.put(column, new ExplicitOrderDto(firstElements));
     return this;
   }
 
   public String json() {
     return JacksonUtil.serialize(this);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    QueryDto queryDto = (QueryDto) o;
-    return Objects.equal(this.table, queryDto.table) && Objects.equal(this.columns, queryDto.columns) && Objects.equal(this.columnSets, queryDto.columnSets) && Objects.equal(this.measures, queryDto.measures) && Objects.equal(this.conditions, queryDto.conditions) && Objects.equal(this.context, queryDto.context);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(this.table, this.columns, this.columnSets, this.measures, this.conditions, this.context);
   }
 }

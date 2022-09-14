@@ -1,7 +1,6 @@
 package me.paulbares;
 
 import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.query.database.SparkQueryEngine;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -14,11 +13,6 @@ public class AitmApplication {
 
   public static void main(String[] args) {
     SpringApplication.run(AitmApplication.class, args);
-  }
-
-  @Bean
-  public SparkQueryEngine queryEngine() {
-    return new SparkQueryEngine(SaaSUseCaseDataLoader.createTestDatastoreWithData());
   }
 
   @Bean

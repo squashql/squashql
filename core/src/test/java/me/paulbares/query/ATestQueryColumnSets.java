@@ -54,7 +54,7 @@ public abstract class ATestQueryColumnSets {
     this.executor = new QueryExecutor(this.queryEngine);
     this.tm = createTransactionManager();
 
-    beforeLoading(List.of(ean, category, sales, qty, year, quarter));
+    beforeLoad(List.of(ean, category, sales, qty, year, quarter));
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             // 2022
@@ -105,7 +105,7 @@ public abstract class ATestQueryColumnSets {
     ));
   }
 
-  protected void beforeLoading(List<Field> fields) {
+  protected void beforeLoad(List<Field> fields) {
   }
 
   @Test
@@ -115,7 +115,7 @@ public abstract class ATestQueryColumnSets {
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"))
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "down", "up"));
-    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", AggregationFunction.SUM);
 
     var query = new QueryDto()
             .table(this.storeName)
@@ -164,7 +164,7 @@ public abstract class ATestQueryColumnSets {
   void testBucketAndPeriodColumnSetsNoComparison() {
     Period.Year period = new Period.Year("year_sales");
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
-    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", AggregationFunction.SUM);
     String groupOfScenario = "Group of scenario";
     BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
@@ -199,7 +199,7 @@ public abstract class ATestQueryColumnSets {
   void testBucketAndPeriodColumnSetsComparisonPeriod() {
     Period.Year period = new Period.Year("year_sales");
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
-    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", AggregationFunction.SUM);
     String groupOfScenario = "Group of scenario";
     BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
@@ -241,7 +241,7 @@ public abstract class ATestQueryColumnSets {
   void testBucketAndPeriodColumnSetsComparisonBucket() {
     Period.Year period = new Period.Year("year_sales");
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
-    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", AggregationFunction.SUM);
     String groupOfScenario = "Group of scenario";
     BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
@@ -286,7 +286,7 @@ public abstract class ATestQueryColumnSets {
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
 
-    AggregatedMeasure sales = new AggregatedMeasure("sales", AggregationFunction.SUM);
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", AggregationFunction.SUM);
     ComparisonMeasure salesGroupComp = QueryBuilder.bucketComparison(
             "salesGroupComp",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,

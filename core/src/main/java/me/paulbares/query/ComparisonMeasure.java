@@ -1,34 +1,33 @@
 package me.paulbares.query;
 
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.store.Field;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor // For Jackson
 public class ComparisonMeasure implements Measure {
 
   public String alias;
+  public String expression;
   public ComparisonMethod method;
   public Measure measure;
   public String columnSet;
   public Map<String, String> referencePosition;
 
-  /**
-   * For jackson.
-   */
-  public ComparisonMeasure() {
-  }
-
-  public ComparisonMeasure(String alias,
-                           ComparisonMethod method,
-                           Measure measure,
-                           String columnSet,
-                           Map<String, String> referencePosition) {
-    this.alias = alias == null
-            ? String.format("%s(%s, %s)", method, measure.alias(), referencePosition)
-            : alias;
+  public ComparisonMeasure(@NonNull String alias,
+                           @NonNull ComparisonMethod method,
+                           @NonNull Measure measure,
+                           @NonNull String columnSet,
+                           @NonNull Map<String, String> referencePosition) {
+    this.alias = alias;
     this.method = method;
     this.columnSet = columnSet;
     this.measure = measure;
@@ -36,7 +35,7 @@ public class ComparisonMeasure implements Measure {
   }
 
   @Override
-  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter) {
+  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     throw new IllegalStateException();
   }
 
@@ -46,35 +45,12 @@ public class ComparisonMeasure implements Measure {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    ComparisonMeasure that = (ComparisonMeasure) o;
-    return Objects.equals(this.alias, that.alias)
-            && this.method.equals(that.method)
-            && this.measure.equals(that.measure)
-            && this.columnSet.equals(that.columnSet)
-            && this.referencePosition.equals(that.referencePosition);
+  public String expression() {
+    return this.expression;
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(this.alias, this.method, this.measure, this.columnSet, this.referencePosition);
-  }
-
-  @Override
-  public String toString() {
-    return getClass().getSimpleName()
-            + '{' +
-            "alias='" + this.alias + '\'' +
-            ", method='" + this.method + '\'' +
-            ", measure=" + this.measure +
-            ", columnSet=" + this.columnSet +
-            ", referencePosition=" + this.referencePosition +
-            '}';
+  public void setExpression(String expression) {
+    this.expression = expression;
   }
 }

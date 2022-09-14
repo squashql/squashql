@@ -1,39 +1,44 @@
 package me.paulbares.query;
 
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
+import me.paulbares.query.database.SqlUtils;
 import me.paulbares.store.Field;
 
-import java.util.Objects;
 import java.util.function.Function;
 
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor // For Jackson
 public class BinaryOperationMeasure implements Measure {
 
   public String alias;
+  public String expression;
   public BinaryOperator operator;
   public Measure leftOperand;
   public Measure rightOperand;
 
-  /**
-   * For jackson.
-   */
-  public BinaryOperationMeasure() {
-  }
-
-  public BinaryOperationMeasure(String alias,
-                                BinaryOperator binaryOperator,
-                                Measure leftOperand,
-                                Measure rightOperand) {
-    this.alias = alias == null
-            ? String.format("%s %s %s", leftOperand, binaryOperator, rightOperand)
-            : alias;
+  public BinaryOperationMeasure(@NonNull String alias,
+                                @NonNull BinaryOperator binaryOperator,
+                                @NonNull Measure leftOperand,
+                                @NonNull Measure rightOperand) {
+    this.alias = alias;
     this.operator = binaryOperator;
     this.leftOperand = leftOperand;
     this.rightOperand = rightOperand;
   }
 
   @Override
-  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter) {
-    throw new IllegalStateException();
+  public String sqlExpression(Function<String, Field> fp, QueryRewriter qr, boolean withAlias) {
+    String sql = new StringBuilder()
+            .append(this.leftOperand.sqlExpression(fp, qr, false))
+            .append(this.operator.infix)
+            .append(this.rightOperand.sqlExpression(fp, qr, false))
+            .toString();
+    return withAlias ? SqlUtils.appendAlias(sql, qr, this.alias, this) : sql;
   }
 
   @Override
@@ -42,26 +47,12 @@ public class BinaryOperationMeasure implements Measure {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    BinaryOperationMeasure that = (BinaryOperationMeasure) o;
-    return Objects.equals(this.alias, that.alias) && this.operator == that.operator && Objects.equals(this.leftOperand, that.leftOperand) && Objects.equals(this.rightOperand, that.rightOperand);
+  public String expression() {
+    return this.expression;
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(this.alias, this.operator, this.leftOperand, this.rightOperand);
-  }
-
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() +
-            "{" +
-            "alias='" + alias + '\'' +
-            ", operator=" + operator +
-            ", leftOperand=" + leftOperand +
-            ", rightOperand=" + rightOperand +
-            '}';
+  public void setExpression(String expression) {
+    this.expression = expression;
   }
 }

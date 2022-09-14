@@ -1,29 +1,28 @@
 package me.paulbares.spring.web.rest;
 
-import me.paulbares.query.QueryExecutor;
-import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.query.ExpressionMeasure;
-import me.paulbares.query.ExpressionResolver;
-import me.paulbares.query.database.SparkQueryEngine;
-import me.paulbares.query.Table;
-import me.paulbares.query.dto.QueryDto;
+import com.google.common.collect.ImmutableList;
+import me.paulbares.query.*;
+import me.paulbares.query.database.QueryEngine;
+import me.paulbares.query.dto.*;
+import me.paulbares.query.monitoring.QueryWatch;
+import me.paulbares.store.Field;
 import me.paulbares.store.Store;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 public class QueryController {
 
-  public static final String MAPPING_QUERY = "/spark-query";
-  public static final String MAPPING_QUERY_BEAUTIFY = "/spark-query-beautify";
-  public static final String MAPPING_METADATA = "/spark-metadata";
+  public static final String MAPPING_QUERY = "/query";
+  public static final String MAPPING_QUERY_BEAUTIFY = "/query-beautify";
+  public static final String MAPPING_METADATA = "/metadata";
+  public static final String MAPPING_EXPRESSION = "/expression";
 
-  public static final String METADATA_FIELDS_KEY = "fields";
-  public static final String METADATA_STORES_KEY = "stores";
-  public static final String METADATA_AGG_FUNCS_KEY = "aggregation_functions";
-  public static final String METADATA_MEASURES_KEY = "measures";
   // FIXME the list should be defined elsewhere
   public static final List<String> SUPPORTED_AGG_FUNCS = List.of(
           "sum",
@@ -36,44 +35,66 @@ public class QueryController {
           "stddev_pop",
           "count");
 
-  protected final SparkQueryEngine itmQueryEngine;
+  protected final QueryEngine queryEngine;
+  protected final QueryExecutor queryExecutor;
 
-  public QueryController(SparkQueryEngine itmQueryEngine) {
-    this.itmQueryEngine = itmQueryEngine;
+  public QueryController(QueryEngine queryEngine) {
+    this.queryEngine = queryEngine;
+    this.queryExecutor = new QueryExecutor(this.queryEngine);
   }
 
   @PostMapping(MAPPING_QUERY)
-  public ResponseEntity<String> execute(@RequestBody QueryDto query) {
-    Table table = new QueryExecutor(this.itmQueryEngine).execute(query);
-    return ResponseEntity.ok(JacksonUtil.tableToCsv(table));
+  public ResponseEntity<QueryResultDto> execute(@RequestBody QueryDto query) {
+    QueryWatch queryWatch = new QueryWatch();
+    CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
+    Table table = this.queryExecutor.execute(query, queryWatch, csBuilder);
+    List<String> fields = table.headers().stream().map(Field::name).collect(Collectors.toList());
+    SimpleTableDto simpleTable = SimpleTableDto.builder()
+            .rows(ImmutableList.copyOf(table.iterator()))
+            .columns(fields)
+            .build();
+    QueryResultDto result = QueryResultDto.builder()
+            .table(simpleTable)
+            .metadata(TableUtils.buildTableMetadata(table))
+            .debug(DebugInfoDto.builder()
+                    .cache(csBuilder.build())
+                    .timings(queryWatch.toQueryTimings()).build())
+            .build();
+    return ResponseEntity.ok(result);
   }
 
   @PostMapping(MAPPING_QUERY_BEAUTIFY)
   public ResponseEntity<String> executeBeautify(@RequestBody QueryDto query) {
-    Table table = new QueryExecutor(this.itmQueryEngine).execute(query);
+    Table table = this.queryExecutor.execute(query);
     return ResponseEntity.ok(table.toString());
   }
 
   @GetMapping(MAPPING_METADATA)
-  public ResponseEntity<Map<Object, Object>> getMetadata(@RequestParam(name = "repo-url", required = false) String repo_url) {
-    List<Map<String, Object>> root = new ArrayList<>();
-    for (Store store : this.itmQueryEngine.datastore.storesByName().values()) {
-      List<Map<String, String>> collect = store.fields()
-              .stream()
-              .map(f -> Map.of("name", f.name(), "type", f.type().getSimpleName().toLowerCase()))
-              .toList();
-      root.add(Map.of("name", store.name(), METADATA_FIELDS_KEY, collect));
+  public ResponseEntity<MetadataResultDto> getMetadata(@RequestParam(name = "repo-url", required = false) String repo_url) {
+    List<MetadataResultDto.StoreMetadata> stores = new ArrayList<>();
+    for (Store store : this.queryEngine.datastore().storesByName().values()) {
+      List<MetadataItem> items = store.fields().stream().map(f -> new MetadataItem(f.name(), f.name(), f.type())).toList();
+      stores.add(new MetadataResultDto.StoreMetadata(store.name(), items));
     }
 
-    return ResponseEntity.ok(Map.of(
-            METADATA_STORES_KEY, root,
-            METADATA_AGG_FUNCS_KEY, SUPPORTED_AGG_FUNCS,
-            METADATA_MEASURES_KEY, getExpressions(repo_url)));
+    return ResponseEntity.ok(new MetadataResultDto(stores, SUPPORTED_AGG_FUNCS, getExpressions(repo_url)));
   }
 
-  private Collection<ExpressionMeasure> getExpressions(String url) {
+  @PostMapping(MAPPING_EXPRESSION)
+  public ResponseEntity<List<Measure>> setMeasureExpressions(@RequestBody List<Measure> measures) {
+    List<Measure> res = new ArrayList<>(measures);
+    for (Measure measure : res) {
+      String expression = measure.expression();
+      if (expression == null) {
+        measure.setExpression(MeasureUtils.createExpression(measure));
+      }
+    }
+    return ResponseEntity.ok(res);
+  }
+
+  private List<Measure> getExpressions(String url) {
     if (url != null && !url.isEmpty()) {
-      return ExpressionResolver.get(url).values();
+      return new ArrayList<>(ExpressionResolver.get(url).values());
     } else {
       return Collections.emptyList();
     }

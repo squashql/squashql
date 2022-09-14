@@ -7,8 +7,7 @@ import me.paulbares.query.dto.*;
 import java.util.List;
 import java.util.Map;
 
-import static me.paulbares.query.BinaryOperator.DIVIDE;
-import static me.paulbares.query.BinaryOperator.PLUS;
+import static me.paulbares.query.BinaryOperator.*;
 import static me.paulbares.query.context.Totals.POSITION_BOTTOM;
 import static me.paulbares.query.context.Totals.POSITION_TOP;
 import static me.paulbares.query.dto.ConditionType.AND;
@@ -21,14 +20,6 @@ public class QueryBuilder {
 
   public static QueryDto query() {
     return new QueryDto();
-  }
-
-  public static AggregatedMeasure aggregatedMeasure(String field, String aggregationFunction) {
-    return new AggregatedMeasure(field, aggregationFunction);
-  }
-
-  public static AggregatedMeasure sum(String field) {
-    return new AggregatedMeasure(field, AggregationFunction.SUM);
   }
 
   public static TableDto table(String name) {
@@ -62,7 +53,7 @@ public class QueryBuilder {
   }
 
   public static ConditionDto in(Object... values) {
-    return new SingleValueConditionDto(ConditionType.IN, values);
+    return new InConditionDto(values);
   }
 
   public static ConditionDto lt(Object value) {
@@ -81,16 +72,24 @@ public class QueryBuilder {
     return new SingleValueConditionDto(ConditionType.GE, value);
   }
 
-  // FIXME new
-
   public static void addPeriodColumnSet(QueryDto query, Period period) {
     query.withColumnSet(QueryDto.PERIOD, new PeriodColumnSetDto(period));
+  }
+
+  public static ColumnSet createPeriodColumnSet(Period period) {
+    return new PeriodColumnSetDto(period);
   }
 
   public static void addBucketColumnSet(QueryDto query, String name, String field, Map<String, List<String>> values) {
     BucketColumnSetDto columnSet = new BucketColumnSetDto(name, field);
     columnSet.values = values;
     query.withColumnSet(QueryDto.BUCKET, columnSet);
+  }
+
+  public static ColumnSet createBucketColumnSet(String name, String field, Map<String, List<String>> values) {
+    BucketColumnSetDto columnSet = new BucketColumnSetDto(name, field);
+    columnSet.values = values;
+    return columnSet;
   }
 
   public static ComparisonMeasure periodComparison(String alias,
@@ -125,26 +124,54 @@ public class QueryBuilder {
   }
 
   public static Measure divide(String alias, Measure a, Measure b) {
-    return new BinaryOperationMeasure(alias, DIVIDE ,a, b);
+    return new BinaryOperationMeasure(alias, DIVIDE, a, b);
+  }
+
+  public static Measure multiply(String alias, Measure a, Measure b) {
+    return new BinaryOperationMeasure(alias, MULTIPLY, a, b);
+  }
+
+  public static Measure minus(String alias, Measure a, Measure b) {
+    return new BinaryOperationMeasure(alias, MINUS, a, b);
   }
 
   public static Measure plus(String alias, Measure a, Measure b) {
-    return new BinaryOperationMeasure(alias, PLUS ,a, b);
+    return new BinaryOperationMeasure(alias, PLUS, a, b);
+  }
+
+  public static Measure min(String alias, String field) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.MIN);
+  }
+
+  public static Measure sum(String alias, String field) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.SUM);
+  }
+
+  public static Measure avg(String alias, String field) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.AVG);
+  }
+
+  public static Measure integer(long value) {
+    return new LongConstantMeasure(value);
+  }
+
+  public static Measure decimal(double value) {
+    return new DoubleConstantMeasure(value);
   }
 
   public static void main(String[] args) {
-    QueryDto query = QueryBuilder.query();
-
-    query.table("saas");
-
-    QueryBuilder.addBucketColumnSet(query,
+    ColumnSet bucketColumnSet = QueryBuilder.createBucketColumnSet(
             "group",
             "scenario encrypted",
             Map.of("group1", List.of("A", "B", "C", "D"), "group2", List.of("A", "D")));
+    ColumnSet year = QueryBuilder.createPeriodColumnSet(new Period.Year("Year"));
 
-    QueryBuilder.addPeriodColumnSet(query, new Period.Year("Year"));
+    QueryDto query = QueryBuilder.query();
+    query.table("saas");
+    query.withColumnSet(QueryDto.BUCKET, bucketColumnSet);
+    query.withColumnSet(QueryDto.PERIOD, year);
 
-    AggregatedMeasure amount = new AggregatedMeasure("Amount", AggregationFunction.SUM);
+    AggregatedMeasure amount = new AggregatedMeasure("amount.sum", "Amount", AggregationFunction.SUM);
     AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, "Income/Expense", QueryBuilder.eq("Revenue"));
     query.withMeasure(amount);
     query.withMeasure(sales);

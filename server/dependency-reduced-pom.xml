@@ -93,10 +93,6 @@
           <groupId>org.hamcrest</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>mockito-core</artifactId>
-          <groupId>org.mockito</groupId>
-        </exclusion>
-        <exclusion>
           <artifactId>mockito-junit-jupiter</artifactId>
           <groupId>org.mockito</groupId>
         </exclusion>

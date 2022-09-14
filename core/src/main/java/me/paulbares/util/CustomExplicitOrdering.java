@@ -1,5 +1,6 @@
 package me.paulbares.util;
 
+import lombok.EqualsAndHashCode;
 import org.eclipse.collections.api.map.primitive.ImmutableObjectIntMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.impl.map.mutable.primitive.MutableObjectIntMapFactoryImpl;
@@ -8,12 +9,12 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Similar to {@code com.google.common.collect.ExplicitOrdering} but do not throw a
  * {@code com.google.common.collect.Ordering.IncomparableValueException} when value is not in the given list.
  */
+@EqualsAndHashCode
 public class CustomExplicitOrdering implements Comparator<Object>, Serializable {
   final ImmutableObjectIntMap<?> rankMap;
 
@@ -29,7 +30,6 @@ public class CustomExplicitOrdering implements Comparator<Object>, Serializable 
     }
     return builder.toImmutable();
   }
-
 
   @Override
   public int compare(Object left, Object right) {
@@ -48,18 +48,5 @@ public class CustomExplicitOrdering implements Comparator<Object>, Serializable 
       Comparator comparator = Comparator.naturalOrder();
       return comparator.compare(left, right);
     }
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    CustomExplicitOrdering that = (CustomExplicitOrdering) o;
-    return Objects.equals(this.rankMap, that.rankMap);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.rankMap);
   }
 }

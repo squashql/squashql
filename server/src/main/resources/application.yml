@@ -1,0 +1,17 @@
+spring:
+  profiles:
+    active: spark
+---
+spring:
+  config:
+    activate:
+      on-profile: optiprix
+projectId: aitmindiceprix
+datasetName: optiprix
+---
+spring:
+  config:
+    activate:
+      on-profile: cdg
+projectId: controle-de-gestion-361212
+datasetName: Forecast

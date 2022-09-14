@@ -1,6 +1,6 @@
 package me.paulbares.spring.web.rest;
 
-import me.paulbares.spring.config.DatasetTestConfig;
+import me.paulbares.spring.dataset.DatasetTestConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

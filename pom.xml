@@ -14,6 +14,7 @@
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
+    <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
     <spark.version>3.2.1</spark.version>
     <junit.version>5.7.2</junit.version>
     <junit-platform.version>1.7.2</junit-platform.version>
@@ -28,6 +29,9 @@
     <guava.version>31.1-jre</guava.version>
     <caffeine.version>3.1.1</caffeine.version>
     <mockito.version>4.6.1</mockito.version>
+    <lombok.version>1.18.24</lombok.version>
+    <slf4j.version>1.7.36</slf4j.version>
+    <logback.version>1.2.11</logback.version>
   </properties>
 
   <modules>
@@ -36,6 +40,8 @@
     <module>clickhouse</module>
     <module>spark</module>
     <module>server</module>
+    <module>java-client</module>
+    <module>js/typescript-library</module>
   </modules>
 
   <dependencyManagement>
@@ -132,6 +138,21 @@
         <artifactId>caffeine</artifactId>
         <version>${caffeine.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>${lombok.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${logback.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -149,6 +170,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven-compiler-plugin.version}</version>
         <configuration>
           <source>${java.version}</source>
           <target>${java.version}</target>

@@ -1,5 +1,10 @@
 package me.paulbares.query.dto;
 
-public enum OrderDto {
-  ASC, DESC
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+/**
+ * Marker interface.
+ */
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+public sealed interface OrderDto permits ExplicitOrderDto, SimpleOrderDto {
 }

@@ -29,7 +29,7 @@ public class TestSparkBucketComparison extends ATestBucketComparison {
   }
 
   @Override
-  protected void beforeLoading(List<Field> fields) {
+  protected void beforeLoad(List<Field> fields) {
     ((SparkTransactionManager) tm).createTemporaryTable(storeName, fields);
   }
 }
