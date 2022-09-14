@@ -308,8 +308,12 @@ public abstract class ATestQueryExecutor {
             .withMeasure(QueryBuilder.multiply("a1", integer, ca))
             .withMeasure(QueryBuilder.multiply("a2", decimal, ca))
             .withMeasure(QueryBuilder.multiply("b1", integer, qty))
-            .withMeasure(QueryBuilder.multiply("b2", decimal, qty));
+            .withMeasure(QueryBuilder.multiply("b2", decimal, qty))
+            .withMeasure(integer)
+            .withMeasure(decimal);
     Table result = this.queryExecutor.execute(query);
-    Assertions.assertThat(result).containsExactly(List.of(4650d, 4650d, 9900l, 9900d));
+    Assertions.assertThat(result).containsExactly(List.of(4650d, 4650d, 9900l, 9900d, 100l, 100d));
+    Assertions.assertThat(result.headers().stream().map(Field::name).toList())
+            .containsExactly("a1", "a2", "b1", "b2", "constant(100)", "constant(100.0)");
   }
 }

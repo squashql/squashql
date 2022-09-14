@@ -250,16 +250,17 @@ public class QueryExecutor {
       intermediateResult.addAggregates(field, bom, r);
     }
 
-    private static void executeConstantOperation(ConstantMeasure cm, Table intermediateResult) {
-      Object value = cm.value;
-      Class<?> type = cm.type;
+    private static void executeConstantOperation(ConstantMeasure<?> cm, Table intermediateResult) {
       Object v;
-      if (type == double.class) {
-        v = ((Number) value).doubleValue();
-      } else if (type == long.class) {
-        v = ((Number) value).longValue();
+      Class<?> type;
+      if (cm instanceof DoubleConstantMeasure dcm) {
+        v = ((Number) dcm.value).doubleValue();
+        type = double.class;
+      } else if (cm instanceof LongConstantMeasure lcm) {
+        v = ((Number) lcm.value).longValue();
+        type = long.class;
       } else {
-        throw new IllegalArgumentException("Unexpected type " + type + ". Only double and long are supported");
+        throw new IllegalArgumentException("Unexpected type " + cm.getValue().getClass() + ". Only double and long are supported");
       }
       Field field = new Field(cm.alias(), type);
       List<Object> r = Collections.nCopies((int) intermediateResult.count(), v);

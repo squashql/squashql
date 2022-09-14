@@ -28,7 +28,7 @@ public class TestMeasures {
     Measure agg3 = new AggregatedMeasure("qs", "quantity", "sum", "category", QueryBuilder.eq("drink"));
     Measure plus = new BinaryOperationMeasure("plus", BinaryOperator.PLUS, agg1, agg2);
     Measure divide = new BinaryOperationMeasure("divide", BinaryOperator.DIVIDE, agg1, plus);
-    Measure constant = new ConstantMeasure(100d, double.class);
+    Measure constant = new DoubleConstantMeasure(100d);
 
     Assertions.assertThat(MeasureUtils.createExpression(agg1)).isEqualTo("sum(price)");
     Assertions.assertThat(MeasureUtils.createExpression(agg2)).isEqualTo("sum(quantity)");

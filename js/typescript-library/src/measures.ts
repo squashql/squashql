@@ -129,6 +129,36 @@ export enum ComparisonMethod {
   DIVIDE = "DIVIDE",
 }
 
+class LongConstantMeasure implements Measure {
+  class: string = PACKAGE + "LongConstantMeasure"
+  alias: string
+
+  constructor(private value: Number) {
+  }
+
+  toJSON() {
+    return {
+      "@class": this.class,
+      "value": this.value,
+    }
+  }
+}
+
+class DoubleConstantMeasure implements Measure {
+  class: string = PACKAGE + "DoubleConstantMeasure"
+  alias: string
+
+  constructor(private value: Number) {
+  }
+
+  toJSON() {
+    return {
+      "@class": this.class,
+      "value": this.value,
+    }
+  }
+}
+
 // Helpers
 
 export function sum(alias: string, field: string): Measure {
@@ -165,4 +195,12 @@ export function multiply(alias: string, measure1: Measure, measure2: Measure): M
 
 export function divide(alias: string, measure1: Measure, measure2: Measure): Measure {
   return new BinaryOperationMeasure(alias, BinaryOperator.DIVIDE, measure1, measure2)
+}
+
+export function integer(value: Number): Measure {
+  return new LongConstantMeasure(value);
+}
+
+export function decimal(value: Number): Measure {
+  return new DoubleConstantMeasure(value);
 }

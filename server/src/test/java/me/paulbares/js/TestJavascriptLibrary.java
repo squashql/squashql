@@ -37,6 +37,8 @@ public class TestJavascriptLibrary {
     var expression = new ExpressionMeasure("myExpression", "sum(price*quantity)");
     q.withMeasure(expression);
     q.withMeasure(CountMeasure.INSTANCE);
+    q.withMeasure(integer(123));
+    q.withMeasure(decimal(1.23));
 
     q.withMeasure(new ComparisonMeasure("comp bucket",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,

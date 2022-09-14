@@ -145,15 +145,14 @@ public class QueryBuilder {
   }
 
   public static Measure integer(long value) {
-    return new ConstantMeasure(value, long.class);
+    return new LongConstantMeasure(value);
   }
 
   public static Measure decimal(double value) {
-    return new ConstantMeasure(value, double.class);
+    return new DoubleConstantMeasure(value);
   }
 
   public static void main(String[] args) {
-
     ColumnSet bucketColumnSet = QueryBuilder.createBucketColumnSet(
             "group",
             "scenario encrypted",

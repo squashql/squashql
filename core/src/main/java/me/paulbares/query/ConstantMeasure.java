@@ -12,15 +12,17 @@ import java.util.function.Function;
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
-public class ConstantMeasure implements Measure {
+public abstract class ConstantMeasure<T> implements Measure {
 
-  public Object value;
-  public Class<?> type;
+  public T value;
   public String expression;
 
-  public ConstantMeasure(@NonNull Object value, @NonNull Class<?> type) {
+  public ConstantMeasure(@NonNull T value) {
     this.value = value;
-    this.type = type;
+  }
+
+  public T getValue() {
+    return this.value;
   }
 
   @Override
