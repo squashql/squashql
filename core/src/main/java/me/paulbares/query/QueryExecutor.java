@@ -85,7 +85,8 @@ public class QueryExecutor {
     // Finish to prepare the query
     Set<Measure> cached = new HashSet<>();
     Set<Measure> notCached = new HashSet<>();
-    for (Measure leaf : plan.getLeaves()) {
+    Set<Measure> leaves = plan.getLeaves();
+    for (Measure leaf : leaves.stream().filter(m -> !(m instanceof ConstantMeasure)).toList()) {
       if (queryCache.contains(leaf, queryScope)) {
         cached.add(leaf);
       } else {
@@ -98,7 +99,7 @@ public class QueryExecutor {
 
     Table prefetchResult;
     if (!notCached.isEmpty() || (cached.isEmpty() && notCached.isEmpty())) {
-      if (!plan.getLeaves().contains(CountMeasure.INSTANCE)) {
+      if (!leaves.contains(CountMeasure.INSTANCE)) {
         // Always add count
         notCached.add(CountMeasure.INSTANCE);
       }
@@ -201,6 +202,10 @@ public class QueryExecutor {
   static class MeasureEvaluator implements BiConsumer<Measure, ExecutionContext> {
     @Override
     public void accept(Measure measure, ExecutionContext executionContext) {
+      if (executionContext.table.measures().contains(measure)) {
+        return; // nothing to do
+      }
+
       executionContext.queryWatch.start(measure);
       if (measure instanceof ComparisonMeasure cm) {
         Map<String, Function<ColumnSet, AComparisonExecutor>> m = Map.of(
@@ -216,8 +221,10 @@ public class QueryExecutor {
         }
       } else if (measure instanceof BinaryOperationMeasure bom) {
         executeBinaryOperation(bom, executionContext.table);
+      } else if (measure instanceof ConstantMeasure cm) {
+        executeConstantOperation(cm, executionContext.table);
       } else {
-        throw new RuntimeException("nothing to do");
+        throw new IllegalStateException(measure + " not expected");
       }
       executionContext.queryWatch.stop(measure);
     }
@@ -241,6 +248,23 @@ public class QueryExecutor {
       }
       Field field = new Field(bom.alias(), BinaryOperations.getOutputType(bom.operator, lType, rType));
       intermediateResult.addAggregates(field, bom, r);
+    }
+
+    private static void executeConstantOperation(ConstantMeasure<?> cm, Table intermediateResult) {
+      Object v;
+      Class<?> type;
+      if (cm instanceof DoubleConstantMeasure dcm) {
+        v = ((Number) dcm.value).doubleValue();
+        type = double.class;
+      } else if (cm instanceof LongConstantMeasure lcm) {
+        v = ((Number) lcm.value).longValue();
+        type = long.class;
+      } else {
+        throw new IllegalArgumentException("Unexpected type " + cm.getValue().getClass() + ". Only double and long are supported");
+      }
+      Field field = new Field(cm.alias(), type);
+      List<Object> r = Collections.nCopies((int) intermediateResult.count(), v);
+      intermediateResult.addAggregates(field, cm, r);
     }
   }
 

@@ -6,7 +6,7 @@ import {
   ComparisonMeasure,
   ComparisonMethod,
   count,
-  ExpressionMeasure, sum
+  ExpressionMeasure, sum, integer, decimal,
 } from "./measures"
 import {_in, and, eq, gt, lt, or} from "./conditions"
 import * as fs from "fs"
@@ -32,6 +32,8 @@ q.withMeasure(plus)
 const expression = new ExpressionMeasure("myExpression", "sum(price*quantity)")
 q.withMeasure(expression)
 q.withMeasure(count)
+q.withMeasure(integer(123))
+q.withMeasure(decimal(1.23))
 
 // Comparisons
 q.withMeasure(new ComparisonMeasure("comp bucket", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, ColumnSetKey.BUCKET, new Map(Object.entries({

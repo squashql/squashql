@@ -9,9 +9,9 @@ export {
 } from './order'
 
 export {
-  Measure,
-  AggregatedMeasure, ExpressionMeasure, ComparisonMeasure,
+  Measure, AggregatedMeasure, ExpressionMeasure, ComparisonMeasure,
   sum, min, max, avg, sumIf, plus, minus, multiply, divide,
+  integer, decimal,
   count,
   ComparisonMethod,
 } from './measures'

@@ -31,6 +31,8 @@ public final class MeasureUtils {
       }
     } else if (m instanceof ExpressionMeasure em) {
       return em.expression;
+    } else if (m instanceof ConstantMeasure cm) {
+      return String.valueOf(cm.value);
     } else {
       throw new IllegalArgumentException("Unexpected type " + m.getClass());
     }

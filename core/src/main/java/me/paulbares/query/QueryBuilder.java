@@ -144,8 +144,15 @@ public class QueryBuilder {
     return new AggregatedMeasure(alias, field, AggregationFunction.AVG);
   }
 
-  public static void main(String[] args) {
+  public static Measure integer(long value) {
+    return new LongConstantMeasure(value);
+  }
 
+  public static Measure decimal(double value) {
+    return new DoubleConstantMeasure(value);
+  }
+
+  public static void main(String[] args) {
     ColumnSet bucketColumnSet = QueryBuilder.createBucketColumnSet(
             "group",
             "scenario encrypted",
