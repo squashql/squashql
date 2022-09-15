@@ -6,7 +6,9 @@ import me.paulbares.store.Field;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public final class MeasureUtils {
@@ -64,6 +66,32 @@ public final class MeasureUtils {
       requiredScopes.add(new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), copy, queryScope.conditions()));
     }
     return requiredScopes;
+  }
+
+  public static QueryExecutor.QueryScope getParentScope(QueryExecutor.QueryScope queryScope, ParentComparisonMeasure pcm, Function<String, Field> fieldSupplier) {
+    int lowestColumnIndex = -1;
+    Set<String> cols = queryScope.columns().stream().map(Field::name).collect(Collectors.toSet());
+    for (int i = 0; i < pcm.ancestors.size(); i++) {
+      if (cols.contains(pcm.ancestors.get(i))) {
+        lowestColumnIndex = i;
+        break;
+      }
+    }
+    List<Field> copy = new ArrayList<>(queryScope.columns());
+    List<Field> toRemove = pcm.ancestors.subList(0, lowestColumnIndex + 1).stream().map(fieldSupplier).toList();
+    copy.removeAll(toRemove);
+    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), copy, queryScope.conditions());
+  }
+
+  public static int zob(QueryExecutor.QueryScope queryScope, ParentComparisonMeasure pcm) {
+    List<String> cols = queryScope.columns().stream().map(Field::name).collect(Collectors.toList());
+    for (int i = 0; i < pcm.ancestors.size(); i++) {
+      int index = cols.indexOf(pcm.ancestors.get(i));
+      if (index >= 0) {
+        return index;
+      }
+    }
+    return -1;
   }
 
   public static boolean isPrimitive(Measure m) {

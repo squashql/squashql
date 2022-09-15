@@ -15,6 +15,7 @@ import java.util.function.Function;
 
 import static me.paulbares.query.ColumnSetKey.BUCKET;
 import static me.paulbares.query.ColumnSetKey.PERIOD;
+import static me.paulbares.query.MeasureUtils.zob;
 
 public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeKey, QueryExecutor.ExecutionContext>, MeasureVisitor<Void> {
 
@@ -79,7 +80,6 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
 
   @Override
   public Void visit(ParentComparisonMeasure pcm) {
-    // FIXME
     Table whereToWrite = this.executionContext.writeToTable();
     List<String> ancestors = pcm.ancestors;
 
@@ -89,8 +89,8 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
     for (int i = 0; i < ancestorCandidates.size(); i++) {
       ancestorIndices[i] = whereToWrite.index(ancestorCandidates.get(i));
     }
-    // FIXME take the first above executionContext.queryScope
-    QueryExecutor.QueryScope parentScope = MeasureUtils.getParentScopes(this.executionContext.queryScope(), pcm, this.fieldSupplier).get(0);  // Take the first one
+    // FIXME
+    QueryExecutor.QueryScope parentScope = MeasureUtils.getParentScope(this.executionContext.queryScope(), pcm, this.fieldSupplier);
     Table parentTable = this.executionContext.tableByScope().get(parentScope);
     List<Object> aggregateValues = whereToWrite.getAggregateValues(pcm.measure);
     List<Object> parentAggregateValues = parentTable.getAggregateValues(pcm.measure);
@@ -100,12 +100,12 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
     int[] rowIndex = new int[1];
     whereToWrite.forEach(row -> {
       // Start - Shift operation
-      int rowSize = row.size() - 1;
-      Object[] parentRow = new Object[rowSize];
-      int j = 0;
-      for (int i = 0; i < rowSize; i++) {
-        if (ancestorIndices[0] != i) {
-          parentRow[j++] = row.get(i);
+      Object[] parentRow = new Object[whereToWrite.columnIndices().length - 1];
+      int i = 0;
+      for (int columnIndex : whereToWrite.columnIndices()) {
+        if (zob(this.executionContext.queryScope(), pcm) != columnIndex) {
+          parentRow[i] = row.get(columnIndex);
+          i++;
         }
       }
       // End - Shift operation
@@ -119,15 +119,17 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
         result.add(null); // nothing to compare with
       }
 
-//          int parentPosition = whereToWrite.pointDictionary().map(parentRow);
+      // int parentPosition = whereToWrite.pointDictionary().map(parentRow);
 
       rowIndex[0]++;
       // New rows must appear.
     });
 
-    // Add total and subtotal here?
+    // TODO Add total and subtotal here?
 
-    throw new IllegalStateException("not finished");
+    Field field = new Field(pcm.alias(), double.class);
+    whereToWrite.addAggregates(field, pcm, result);
+    return null;
   }
 
   @Override
