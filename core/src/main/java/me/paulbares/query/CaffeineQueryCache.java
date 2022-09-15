@@ -55,7 +55,6 @@ public class CaffeineQueryCache implements QueryCache {
       values.add(table.getColumnValues(f.name()));
     }
     values.add(table.getAggregateValues(CountMeasure.INSTANCE));
-    this.measureCounter.recordHits(1);
     return new ColumnarTable(
             headers,
             Collections.singletonList(CountMeasure.INSTANCE),
@@ -115,7 +114,7 @@ public class CaffeineQueryCache implements QueryCache {
             0,
             this.scopeCounter.snapshot().evictionCount(),
             0);
-    return new CacheStatsDto(snapshot.hitCount(), snapshot.missCount(), this.scopeCounter.snapshot().evictionCount());
+    return new CacheStatsDto(of.hitCount(), of.missCount(), this.scopeCounter.snapshot().evictionCount());
   }
 
   @Override

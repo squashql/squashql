@@ -25,11 +25,11 @@ public final class MeasureUtils {
       String alias = cm.measure.alias();
       return switch (cm.columnSetKey) {
         case BUCKET -> {
-          String formula = cm.method.expressionGenerator.apply(alias + "(current bucket)", alias + "(reference bucket)");
+          String formula = cm.comparisonMethod.expressionGenerator.apply(alias + "(current bucket)", alias + "(reference bucket)");
           yield formula + ", reference = " + cm.referencePosition;
         }
         case PERIOD -> {
-          String formula = cm.method.expressionGenerator.apply(alias + "(current period)", alias + "(reference period)");
+          String formula = cm.comparisonMethod.expressionGenerator.apply(alias + "(current period)", alias + "(reference period)");
           yield formula + ", reference = " + cm.referencePosition;
         }
         case PARENT -> "unknown";
@@ -64,5 +64,9 @@ public final class MeasureUtils {
       requiredScopes.add(new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), copy, queryScope.conditions()));
     }
     return requiredScopes;
+  }
+
+  public static boolean isPrimitive(Measure m) {
+    return m instanceof AggregatedMeasure || m instanceof ExpressionMeasure;
   }
 }

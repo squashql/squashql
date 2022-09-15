@@ -241,7 +241,6 @@ public abstract class ATestQueryExecutor {
 
     query.orderBy("category", OrderKeywordDto.DESC);
     result = this.queryExecutor.execute(query);
-    result.show();
     Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, "drink", 1l),
             List.of(MAIN_SCENARIO_NAME, "cloth", 1l),

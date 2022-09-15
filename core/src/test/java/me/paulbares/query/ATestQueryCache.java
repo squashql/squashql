@@ -197,38 +197,43 @@ public abstract class ATestQueryCache {
 
   @Test
   void testWithSubQuery() {
+    Measure ca = sum("ca", "price");
+    Measure sum_ca = sum("sum_ca", "ca");
+    Measure avg_ca = avg("mean_ca", "ca");
+    Measure min = min("ca", "price");
+
     QueryDto firstSubQuery = new QueryDto()
             .table(this.storeName)
             .withColumn("category")
-            .withMeasure(sum("ca", "price")); // ca per scenario
+            .withMeasure(ca); // ca per scenario
 
     QueryDto queryDto = new QueryDto()
             .table(firstSubQuery)
-            .withMeasure(avg("mean", "ca"));// avg of ca
+            .withMeasure(avg_ca);// avg of ca
     Table result = this.queryExecutor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(5d));
     assertCacheStats(0, 2);
 
     // Change the sub query
-    QueryDto subQuery = new QueryDto()
+    QueryDto secondSubQuery = new QueryDto()
             .table(this.storeName)
             .withColumn("category")
-            .withMeasure(min("ca", "price")); // change agg function
+            .withMeasure(min); // change agg function
     queryDto = new QueryDto()
-            .table(subQuery)
-            .withMeasure(avg("mean", "ca"));// avg of ca
+            .table(secondSubQuery)
+            .withMeasure(avg_ca);// avg of ca
     result = this.queryExecutor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(5d));
     assertCacheStats(0, 4);
 
     // Change again the sub query
-    subQuery = new QueryDto()
+    secondSubQuery = new QueryDto()
             .table(this.storeName)
             .withColumn("ean") // change here
-            .withMeasure(min("ca", "price"));
+            .withMeasure(min);
     queryDto = new QueryDto()
-            .table(subQuery)
-            .withMeasure(avg("mean", "ca"));// avg of ca
+            .table(secondSubQuery)
+            .withMeasure(avg_ca);// avg of ca
     result = this.queryExecutor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(5d));
     assertCacheStats(0, 6);
@@ -236,11 +241,11 @@ public abstract class ATestQueryCache {
     // Hit the cache
     queryDto = new QueryDto()
             .table(firstSubQuery) // same first sub-query
-            .withMeasure(avg("mean", "ca"))
-            .withMeasure(sum("mean", "ca"));// ask for another measure
+            .withMeasure(avg_ca)
+            .withMeasure(sum_ca);// ask for another measure
     result = this.queryExecutor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(5d, 15d));
-    assertCacheStats(1, 7);
+    assertCacheStats(2, 7); // avg_ca and count hit the cache
   }
 
   @Test

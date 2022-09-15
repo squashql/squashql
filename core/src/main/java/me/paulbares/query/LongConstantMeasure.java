@@ -13,4 +13,9 @@ public class LongConstantMeasure extends ConstantMeasure<Long> {
   public LongConstantMeasure(@NonNull Long value) {
     super(value);
   }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
+  }
 }

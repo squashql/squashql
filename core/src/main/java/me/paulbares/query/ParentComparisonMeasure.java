@@ -66,4 +66,9 @@ public class ParentComparisonMeasure implements Measure, ComparisonMeasure {
   public void setExpression(String expression) {
     this.expression = expression;
   }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
+  }
 }

@@ -17,18 +17,18 @@ public class ComparisonMeasureReferencePosition implements Measure, ComparisonMe
 
   public String alias;
   public String expression;
-  public ComparisonMethod method;
+  public ComparisonMethod comparisonMethod;
   public Measure measure;
   public ColumnSetKey columnSetKey;
   public Map<String, String> referencePosition;
 
   public ComparisonMeasureReferencePosition(@NonNull String alias,
-                                            @NonNull ComparisonMethod method,
+                                            @NonNull ComparisonMethod comparisonMethod,
                                             @NonNull Measure measure,
                                             @NonNull ColumnSetKey columnSetKey,
                                             @NonNull Map<String, String> referencePosition) {
     this.alias = alias;
-    this.method = method;
+    this.comparisonMethod = comparisonMethod;
     this.columnSetKey = columnSetKey;
     this.measure = measure;
     this.referencePosition = referencePosition;
@@ -46,7 +46,7 @@ public class ComparisonMeasureReferencePosition implements Measure, ComparisonMe
 
   @Override
   public ComparisonMethod getComparisonMethod() {
-    return this.method;
+    return this.comparisonMethod;
   }
 
   @Override
@@ -67,5 +67,10 @@ public class ComparisonMeasureReferencePosition implements Measure, ComparisonMe
   @Override
   public void setExpression(String expression) {
     this.expression = expression;
+  }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
   }
 }

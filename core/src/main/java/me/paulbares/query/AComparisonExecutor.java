@@ -38,7 +38,7 @@ public abstract class AComparisonExecutor {
     List<Object> result = new ArrayList<>((int) intermediateResult.count());
     int[] rowIndex = new int[1];
     List<Object> aggregateValues = intermediateResult.getAggregateValues(cm.measure);
-    BiFunction<Number, Number, Number> comparisonBiFunction = BinaryOperations.createComparisonBiFunction(cm.method, intermediateResult.getField(cm.measure).type());
+    BiFunction<Number, Number, Number> comparisonBiFunction = BinaryOperations.createComparisonBiFunction(cm.comparisonMethod, intermediateResult.getField(cm.measure).type());
     intermediateResult.forEach(row -> {
       int i = 0;
       for (int columnIndex : intermediateResult.columnIndices()) {

@@ -13,4 +13,9 @@ public class DoubleConstantMeasure extends ConstantMeasure<Double> {
   public DoubleConstantMeasure(@NonNull Double value) {
     super(value);
   }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
+  }
 }

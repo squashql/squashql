@@ -98,15 +98,15 @@ class CountMeasure extends AggregatedMeasure {
 
 export const count = CountMeasure.instance;
 
-export class ComparisonMeasure implements Measure {
-  class: string = PACKAGE + "ComparisonMeasure"
+export class ComparisonMeasureReferencePosition implements Measure {
+  class: string = PACKAGE + "ComparisonMeasureReferencePosition"
   alias: string
   expression?: string
 
   constructor(alias: string,
-              private method: ComparisonMethod,
+              private comparisonMethod: ComparisonMethod,
               private measure: Measure,
-              private columnSet: ColumnSetKey,
+              private columnSetKey: ColumnSetKey,
               private referencePosition: Map<string, string>) {
     this.alias = alias
   }
@@ -115,9 +115,9 @@ export class ComparisonMeasure implements Measure {
     return {
       "@class": this.class,
       "alias": this.alias,
-      "method": this.method,
+      "comparisonMethod": this.comparisonMethod,
       "measure": this.measure,
-      "columnSet": this.columnSet,
+      "columnSetKey": this.columnSetKey,
       "referencePosition": Object.fromEntries(this.referencePosition),
     }
   }

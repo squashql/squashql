@@ -3,7 +3,7 @@ import {
   AggregatedMeasure,
   BinaryOperationMeasure,
   BinaryOperator,
-  ComparisonMeasure,
+  ComparisonMeasureReferencePosition,
   ComparisonMethod,
   count,
   ExpressionMeasure, sum, integer, decimal,
@@ -36,11 +36,11 @@ q.withMeasure(integer(123))
 q.withMeasure(decimal(1.23))
 
 // Comparisons
-q.withMeasure(new ComparisonMeasure("comp bucket", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, ColumnSetKey.BUCKET, new Map(Object.entries({
+q.withMeasure(new ComparisonMeasureReferencePosition("comp bucket", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, ColumnSetKey.BUCKET, new Map(Object.entries({
   "group": "g",
   "scenario": "s-1"
 }))))
-q.withMeasure(new ComparisonMeasure("growth", ComparisonMethod.DIVIDE, price, ColumnSetKey.PERIOD, new Map(Object.entries({
+q.withMeasure(new ComparisonMeasureReferencePosition("growth", ComparisonMethod.DIVIDE, price, ColumnSetKey.PERIOD, new Map(Object.entries({
   "Annee": "y-1",
   "Mois": "m"
 }))))

@@ -46,31 +46,33 @@ public final class Queries {
     return res;
   }
 
-  public static DatabaseQuery toDatabaseQuery(QueryDto query) {
-    Set<String> cols = new HashSet<>();
-    query.columns.forEach(cols::add);
-    query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).forEach(cols::add); // FIXME integrate it with getRequiredColumnScopes???
-    DatabaseQuery prefetchQuery = new DatabaseQuery();
-    if (query.table != null) {
-      prefetchQuery.table(query.table);
-    } else if (query.subQuery != null) {
-      prefetchQuery.subQuery(toSubDatabaseQuery(query.subQuery));
-    } else {
-      throw new IllegalArgumentException("A table or sub-query was expected in " + query);
-    }
-    prefetchQuery.conditions = query.conditions;
-    cols.forEach(prefetchQuery::wildcardCoordinate);
-    return prefetchQuery;
-  }
+//  public static DatabaseQuery queryToDatabaseQuery(QueryDto query) {
+//    Set<String> cols = new HashSet<>();
+//    query.columns.forEach(cols::add);
+//    query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).forEach(cols::add); // FIXME integrate it with getRequiredColumnScopes???
+//    DatabaseQuery prefetchQuery = new DatabaseQuery();
+//    if (query.table != null) {
+//      prefetchQuery.table(query.table);
+//    } else if (query.subQuery != null) {
+//      prefetchQuery.subQuery(toSubDatabaseQuery(query.subQuery));
+//    } else {
+//      throw new IllegalArgumentException("A table or sub-query was expected in " + query);
+//    }
+//    prefetchQuery.conditions = query.conditions;
+//    cols.forEach(prefetchQuery::wildcardCoordinate);
+//    return prefetchQuery;
+//  }
 
-  public static DatabaseQuery toDatabaseQuery(QueryExecutor.QueryScope queryScope) {
+  public static DatabaseQuery queryScopeToDatabaseQuery(QueryExecutor.QueryScope queryScope) {
     Set<String> cols = new HashSet<>();
     queryScope.columns().stream().map(Field::name).forEach(cols::add);
     DatabaseQuery prefetchQuery = new DatabaseQuery();
     if (queryScope.tableDto() != null) {
       prefetchQuery.table(queryScope.tableDto());
+    } else if (queryScope.subQuery() != null) {
+      prefetchQuery.subQuery(toSubDatabaseQuery(queryScope.subQuery()));
     } else {
-      throw new IllegalArgumentException("see what to do"); // FIXME
+      throw new IllegalArgumentException("A table or sub-query was expected in " + queryScope);
     }
     prefetchQuery.conditions = queryScope.conditions();
     cols.forEach(prefetchQuery::wildcardCoordinate);

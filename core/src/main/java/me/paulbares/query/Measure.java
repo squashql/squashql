@@ -19,4 +19,6 @@ public interface Measure {
   String expression();
 
   void setExpression(String expression);
+
+  <R> R accept(MeasureVisitor<R> visitor);
 }
