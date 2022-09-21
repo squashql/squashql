@@ -1,9 +1,9 @@
 steps:
-- id: 'Package the project'
+- id: 'package'
   name: maven:3.8-eclipse-temurin-17
   entrypoint: mvn
   args: ['-pl',':aitm-server','-am','clean','install','-DskipTests','-Pspring-boot']
-- id: 'Package the project'
+- id: 'deploy'
   name: maven:3.8-eclipse-temurin-17
   entrypoint: mvn
   args: ['-pl',':aitm-server','-Pgcloud-cdg','-DskipTests','package','appengine:deploy']
