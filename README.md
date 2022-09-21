@@ -67,3 +67,40 @@ query.context("totals", TOP)
 
 query.condition("type-marque", eq("MDD"))
 ```
+
+## GCloud
+
+Check which account is used
+```
+gcloud auth list
+```
+
+Check the project
+```
+gcloud config list project
+```
+
+Deploy
+```
+mvn -Pgcloud-cdg -DskipTests package appengine:deploy
+```
+
+Read the logs
+```
+gcloud app logs tail -s default
+```
+
+### Deploy from local machine
+
+```
+mvn -pl :aitm-server -am clean install -DskipTests -Pspring-boot \
+&& mvn -pl :aitm-server -Pgcloud-cdg -DskipTests package appengine:deploy
+```
+
+### Deploy from CloudBuild
+
+Check the file cloudbuild.yaml in the root directory. The service account used by Cloud Build needs the following roles:
+- App Engine Admin
+- App Engine Deployer
+- Cloud Build Service Account
+- Service Account User 

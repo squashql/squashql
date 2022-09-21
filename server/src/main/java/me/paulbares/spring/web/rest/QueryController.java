@@ -7,6 +7,7 @@ import me.paulbares.query.dto.*;
 import me.paulbares.query.monitoring.QueryWatch;
 import me.paulbares.store.Field;
 import me.paulbares.store.Store;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +18,8 @@ import java.util.stream.Collectors;
 
 @RestController
 public class QueryController {
+
+  public static final String HTTP_HEADER_API_KEY = "x-api-key";
 
   public static final String MAPPING_QUERY = "/query";
   public static final String MAPPING_QUERY_BEAUTIFY = "/query-beautify";
@@ -37,14 +40,17 @@ public class QueryController {
 
   protected final QueryEngine queryEngine;
   protected final QueryExecutor queryExecutor;
+  protected final String apiKey;
 
-  public QueryController(QueryEngine queryEngine) {
+  public QueryController(QueryEngine queryEngine, Environment environment) {
     this.queryEngine = queryEngine;
+    this.apiKey = environment.getRequiredProperty(HTTP_HEADER_API_KEY);
     this.queryExecutor = new QueryExecutor(this.queryEngine);
   }
 
   @PostMapping(MAPPING_QUERY)
-  public ResponseEntity<QueryResultDto> execute(@RequestBody QueryDto query) {
+  public ResponseEntity<QueryResultDto> execute(@RequestHeader(HTTP_HEADER_API_KEY) String apiKey, @RequestBody QueryDto query) throws IllegalAccessException {
+    checkApiKey(apiKey);
     QueryWatch queryWatch = new QueryWatch();
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
     Table table = this.queryExecutor.execute(query, queryWatch, csBuilder);
@@ -64,13 +70,16 @@ public class QueryController {
   }
 
   @PostMapping(MAPPING_QUERY_BEAUTIFY)
-  public ResponseEntity<String> executeBeautify(@RequestBody QueryDto query) {
+  public ResponseEntity<String> executeBeautify(@RequestHeader(HTTP_HEADER_API_KEY) String apiKey, @RequestBody QueryDto query) throws IllegalAccessException {
+    checkApiKey(apiKey);
     Table table = this.queryExecutor.execute(query);
     return ResponseEntity.ok(table.toString());
   }
 
   @GetMapping(MAPPING_METADATA)
-  public ResponseEntity<MetadataResultDto> getMetadata(@RequestParam(name = "repo-url", required = false) String repo_url) {
+  public ResponseEntity<MetadataResultDto> getMetadata(@RequestHeader(HTTP_HEADER_API_KEY) String apiKey,
+                                                       @RequestParam(name = "repo-url", required = false) String repo_url) throws IllegalAccessException {
+    checkApiKey(apiKey);
     List<MetadataResultDto.StoreMetadata> stores = new ArrayList<>();
     for (Store store : this.queryEngine.datastore().storesByName().values()) {
       List<MetadataItem> items = store.fields().stream().map(f -> new MetadataItem(f.name(), f.name(), f.type())).toList();
@@ -97,6 +106,12 @@ public class QueryController {
       return new ArrayList<>(ExpressionResolver.get(url).values());
     } else {
       return Collections.emptyList();
+    }
+  }
+
+  private void checkApiKey(String httpHeaderApiKey) throws IllegalAccessException {
+    if (!this.apiKey.equals(httpHeaderApiKey)) {
+      throw new IllegalAccessException();
     }
   }
 }
