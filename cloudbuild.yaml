@@ -3,6 +3,11 @@ steps:
   name: maven:3.8-eclipse-temurin-17
   entrypoint: mvn
   args: ['-pl',':aitm-server','-am','clean','install','-DskipTests','-Pspring-boot']
-- id: 'Deploy to app engine'
-  name: 'gcr.io/cloud-builders/gcloud'
-  args: [ 'app', 'deploy', 'target/appengine-staging/app.yaml' ]
+- id: 'Package the project'
+  name: maven:3.8-eclipse-temurin-17
+  entrypoint: mvn
+  args: ['-pl',':aitm-server','-Pgcloud-cdg','-DskipTests','package','appengine:deploy']
+  #mvn -pl :aitm-server  -Pgcloud-cdg -DskipTests package appengine:deploy
+# - id: 'Deploy to app engine'
+#   name: 'gcr.io/cloud-builders/gcloud'
+#   args: [ 'app', 'deploy', 'target/appengine-staging/app.yaml' ]
