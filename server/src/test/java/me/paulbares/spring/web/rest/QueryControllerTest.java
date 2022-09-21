@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -33,6 +34,9 @@ public class QueryControllerTest {
 
   @Autowired
   private MockMvc mvc;
+
+  @Autowired
+  private Environment env;
 
   private TableDto createTableDto() {
     var our = QueryBuilder.table("our_prices");
@@ -74,6 +78,7 @@ public class QueryControllerTest {
     }
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY)
+                    .header(QueryController.HTTP_HEADER_API_KEY, this.env.getRequiredProperty(QueryController.HTTP_HEADER_API_KEY))
                     .content(JacksonUtil.serialize(query))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -114,7 +119,8 @@ public class QueryControllerTest {
 
   @Test
   void testMetadata() throws Exception {
-    this.mvc.perform(MockMvcRequestBuilders.get(QueryController.MAPPING_METADATA))
+    this.mvc.perform(MockMvcRequestBuilders.get(QueryController.MAPPING_METADATA)
+                    .header(QueryController.HTTP_HEADER_API_KEY, this.env.getRequiredProperty(QueryController.HTTP_HEADER_API_KEY)))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               MetadataResultDto metadataResultDto = JacksonUtil.mapper.readValue(contentAsString, MetadataResultDto.class);
@@ -125,7 +131,8 @@ public class QueryControllerTest {
   @Test
   void testMetadataWithRepository() throws Exception {
     this.mvc.perform(MockMvcRequestBuilders.get(QueryController.MAPPING_METADATA)
-                    .param("repo-url", REPO_URL))
+                    .param("repo-url", REPO_URL)
+                    .header(QueryController.HTTP_HEADER_API_KEY, this.env.getRequiredProperty(QueryController.HTTP_HEADER_API_KEY)))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               MetadataResultDto metadataResultDto = JacksonUtil.mapper.readValue(contentAsString, MetadataResultDto.class);
@@ -221,6 +228,7 @@ public class QueryControllerTest {
     }
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY)
+                    .header(QueryController.HTTP_HEADER_API_KEY, this.env.getRequiredProperty(QueryController.HTTP_HEADER_API_KEY))
                     .content(JacksonUtil.serialize(query))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
