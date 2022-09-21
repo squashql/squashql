@@ -67,3 +67,25 @@ query.context("totals", TOP)
 
 query.condition("type-marque", eq("MDD"))
 ```
+
+## GCloud
+
+Check which account is used
+```
+gcloud auth list
+```
+
+Check the project
+```
+gcloud config list project
+```
+
+Deploy
+```
+mvn -Pgcloud-cdg -DskipTests package appengine:deploy
+```
+
+Read the logs
+```
+gcloud app logs tail -s default
+```
