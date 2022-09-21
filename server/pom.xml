@@ -119,12 +119,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-maven-plugin</artifactId>
             <version>${spring-boot.version}</version>
-<!--            <configuration>-->
-<!--              <mainClass>me.paulbares.AitmApplication</mainClass>-->
-<!--              <jvmArguments>-->
-<!--                -Dspring.profiles.active=cdg -Dbigquery.credentials.path=src/main/resources/controle-de-gestion-361212-43410c6ca88a.json-->
-<!--              </jvmArguments>-->
-<!--            </configuration>-->
             <executions>
               <execution>
                 <goals>
