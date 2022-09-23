@@ -43,10 +43,8 @@ public class MeasurePrefetcherVisitor implements MeasureVisitor<Map<QueryExecuto
 
   @Override
   public Map<QueryExecutor.QueryScope, Set<Measure>> visit(ParentComparisonMeasure measure) {
-    List<QueryExecutor.QueryScope> parentScopes = MeasureUtils.getParentScopes(this.originalQueryScope, measure, this.fieldSupplier);
-    Map<QueryExecutor.QueryScope, Set<Measure>> r = new HashMap<>();
-    parentScopes.forEach(s -> r.put(s, Set.of(measure.measure)));
-    return r;
+    QueryExecutor.QueryScope parentScope = MeasureUtils.getParentScope(this.originalQueryScope, measure, this.fieldSupplier);
+    return Map.of(parentScope, Set.of(measure.measure));
   }
 
   @Override

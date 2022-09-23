@@ -81,19 +81,10 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
   @Override
   public Void visit(ParentComparisonMeasure pcm) {
     Table whereToWrite = this.executionContext.writeToTable();
-    List<String> ancestors = pcm.ancestors;
-
-    List<Field> ancestorCandidates = new ArrayList<>(this.executionContext.queryScope().columns());
-    ancestorCandidates.retainAll(ancestors.stream().map(this.fieldSupplier).toList());
-    int[] ancestorIndices = new int[ancestorCandidates.size()];
-    for (int i = 0; i < ancestorCandidates.size(); i++) {
-      ancestorIndices[i] = whereToWrite.index(ancestorCandidates.get(i));
-    }
-    // FIXME
     QueryExecutor.QueryScope parentScope = MeasureUtils.getParentScope(this.executionContext.queryScope(), pcm, this.fieldSupplier);
-    Table parentTable = this.executionContext.tableByScope().get(parentScope);
+    Table whereToRead = this.executionContext.tableByScope().get(parentScope);
     List<Object> aggregateValues = whereToWrite.getAggregateValues(pcm.measure);
-    List<Object> parentAggregateValues = parentTable.getAggregateValues(pcm.measure);
+    List<Object> parentAggregateValues = whereToRead.getAggregateValues(pcm.measure);
     List<Object> result = new ArrayList<>((int) whereToWrite.count());
     BiFunction<Number, Number, Number> divide = BinaryOperations.createComparisonBiFunction(ComparisonMethod.DIVIDE, double.class);
 
@@ -103,13 +94,13 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
       Object[] parentRow = new Object[whereToWrite.columnIndices().length - 1];
       int i = 0;
       for (int columnIndex : whereToWrite.columnIndices()) {
-        if (zob(this.executionContext.queryScope(), pcm) != columnIndex) {
+        if (zob(this.executionContext.queryScope(), pcm) != columnIndex) { // FIXME check the logic here
           parentRow[i] = row.get(columnIndex);
           i++;
         }
       }
       // End - Shift operation
-      int position = parentTable.pointDictionary().getPosition(parentRow);
+      int position = whereToRead.pointDictionary().getPosition(parentRow);
       if (position != -1) {
         Object referenceValue = parentAggregateValues.get(position);
         Object currentValue = aggregateValues.get(rowIndex[0]);
@@ -118,14 +109,8 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
       } else {
         result.add(null); // nothing to compare with
       }
-
-      // int parentPosition = whereToWrite.pointDictionary().map(parentRow);
-
       rowIndex[0]++;
-      // New rows must appear.
     });
-
-    // TODO Add total and subtotal here?
 
     Field field = new Field(pcm.alias(), double.class);
     whereToWrite.addAggregates(field, pcm, result);

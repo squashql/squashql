@@ -1,11 +1,14 @@
 package me.paulbares.query;
 
 import me.paulbares.query.agg.AggregationFunction;
+import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static me.paulbares.query.QueryBuilder.*;
 
@@ -66,5 +69,28 @@ public class TestMeasures {
     Assertions.assertThat(MeasureUtils.createExpression(growth)).isEqualTo("sales(current period) / sales(reference period), reference = {Year=y-1}");
     Assertions.assertThat(MeasureUtils.createExpression(kpi)).isEqualTo("EBITDA % + Growth");
     Assertions.assertThat(MeasureUtils.createExpression(kpiComp)).isEqualTo("KPI(current bucket) - KPI(reference bucket), reference = {scenario encrypted=s-1, group=g}");
+  }
+
+  @Test
+  void testParentComparisonQueryScope() {
+    Field continent = new Field("continent", String.class);
+    Field country = new Field("country", String.class);
+    Field city = new Field("city", String.class);
+    Field other = new Field("other", String.class);
+
+    MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, country, city), List.of(city, country, continent));
+    MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, country, city), List.of(city, country));
+    MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, country), List.of(city, country, continent));
+    MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, country, city), List.of(city, continent));
+    MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, country, city), List.of(other, country, continent));
+    // TODO check if it is ok
+//    Assertions.assertThatThrownBy(() -> MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, country, city), List.of(other, country, continent)))
+//            .isInstanceOf(IllegalArgumentException.class)
+//            .hasMessageContaining(other + " should be in the query");
+    MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, country, city), List.of(country, continent));
+    MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, country, other), List.of(country, continent)); // Ok
+    Assertions.assertThatThrownBy(() -> MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, city), List.of(city, country, continent)))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining(country + " field is used in a parent comparison. It should be set as column in the query.");
   }
 }

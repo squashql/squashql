@@ -90,6 +90,26 @@ public abstract class ATestParentComparison {
             Arrays.asList("eu", "uk", "london", 9d, 1d));
   }
 
+  @Test
+  void test2() {
+    Measure pop = QueryBuilder.sum("population", "population");
+    QueryDto query = QueryBuilder.query()
+            .table(this.storeName)
+            .withColumn("continent")
+            .withColumn("country")
+            .withColumn("city")
+            .withMeasure(pop);
+
+    // If no ancestors is expressed in the query, return 1.
+    ParentComparisonMeasure pOp = QueryBuilder.parentComparison("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("country", "continent"));
+    // When adding this measure to the query, new rows should appear. with subtotal and GT.
+
+    query.withMeasure(pOp);
+
+    Table result = this.executor.execute(query);
+    result.show();
+  }
+
   // TODO test with other columns
   // TODO test with conditions
   // TODO do a test that compare a measure computed by AITM

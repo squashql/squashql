@@ -57,15 +57,34 @@ public final class MeasureUtils {
     }
   }
 
-  public static List<QueryExecutor.QueryScope> getParentScopes(QueryExecutor.QueryScope queryScope, ParentComparisonMeasure pcm, Function<String, Field> fieldSupplier) {
-    List<QueryExecutor.QueryScope> requiredScopes = new ArrayList<>();
-    for (int i = 1; i < pcm.ancestors.size(); i++) {
-      List<Field> copy = new ArrayList<>(queryScope.columns());
-      List<Field> toRemove = pcm.ancestors.subList(0, i).stream().map(fieldSupplier).toList();
-      copy.removeAll(toRemove);
-      requiredScopes.add(new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), copy, queryScope.conditions()));
+//  public static List<QueryExecutor.QueryScope> getParentScopes(QueryExecutor.QueryScope queryScope, ParentComparisonMeasure pcm, Function<String, Field> fieldSupplier) {
+//    // We must make sure all ancestors are in the scope of the query.
+//    List<QueryExecutor.QueryScope> requiredScopes = new ArrayList<>();
+//    for (int i = 1; i < pcm.ancestors.size(); i++) {
+//      List<Field> copy = new ArrayList<>(queryScope.columns());
+//      List<Field> toRemove = pcm.ancestors.subList(0, i).stream().map(fieldSupplier).toList();
+//      copy.removeAll(toRemove);
+//      requiredScopes.add(new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), copy, queryScope.conditions()));
+//    }
+//    return requiredScopes;
+//  }
+
+  public static void checkQueryScopeForParentComparison(Set<Field> queriedFields, List<Field> ancestors) {
+    Field parent = null;
+    for (int i = 0; i < ancestors.size(); i++) {
+      Field ancestor = ancestors.get(i);
+      if (queriedFields.contains(ancestor)) {
+        parent = ancestors.get(i + 1);
+        break;
+      }
+//      else {
+//        // throw only if aggregation is higher than
+//        throw new IllegalArgumentException(ancestor + " should be in the query");
+//      }
     }
-    return requiredScopes;
+    if (!queriedFields.contains(parent)) {
+      throw new IllegalArgumentException(parent + " field is used in a parent comparison. It should be set as column in the query.");
+    }
   }
 
   public static QueryExecutor.QueryScope getParentScope(QueryExecutor.QueryScope queryScope, ParentComparisonMeasure pcm, Function<String, Field> fieldSupplier) {
