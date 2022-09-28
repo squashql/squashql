@@ -201,15 +201,16 @@ public class TestSQLTranslator {
     DatabaseQuery subQuery = new DatabaseQuery()
             .table(a)
             .wildcardCoordinate("c1")
+            .wildcardCoordinate("c3")
             .withMeasure(avg("mean", "c2"));
 
     DatabaseQuery query = new DatabaseQuery()
             .subQuery(subQuery)
-            .wildcardCoordinate("c3")
+            .wildcardCoordinate("c3") // c3 needs to be in the subquery
             .withMeasure(sum("sum GT", "mean"))
             .condition("type", eq("myType"));
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select `c3`, sum(`mean`) as `sum GT` from (select `c1`, avg(`c2`) as `mean` from a group by `c1`) where `type` = 'myType' group by `c3`");
+            .isEqualTo("select `c3`, sum(`mean`) as `sum GT` from (select `c1`, `c3`, avg(`c2`) as `mean` from a group by `c1`, `c3`) where `type` = 'myType' group by `c3`");
   }
 
   @Test
