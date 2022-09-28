@@ -249,6 +249,25 @@ public abstract class ATestQueryCache {
   }
 
   @Test
+  void testQueryWithSubQueryAndColumnsAndConditions() {
+    QueryDto firstSubQuery = new QueryDto()
+            .table(this.storeName)
+            .withColumn("category")
+            .withColumn("ean")
+            .withMeasure(sum("ca", "price")); // ca per scenario
+
+    QueryDto queryDto = new QueryDto()
+            .table(firstSubQuery)
+            .withColumn("ean") // ean needs to be in the subquery to make it work!
+            .withMeasure(avg("mean", "ca"));// avg of ca
+    Table result = this.queryExecutor.execute(queryDto);
+    Assertions.assertThat(result).containsExactly(
+            List.of("bottle", 2d),
+            List.of("cookie", 3d),
+            List.of("shirt", 10d));
+  }
+
+  @Test
   void testUseCacheContextValue() {
     QueryDto query = new QueryDto()
             .table(this.storeName)
