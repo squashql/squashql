@@ -88,7 +88,7 @@ public interface Table extends Iterable<List<Object>> {
   }
 
   /**
-   * Returns the number of rows in the writeToTable.
+   * Returns the number of rows in the table.
    *
    * @return the number of rows
    */

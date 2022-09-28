@@ -63,7 +63,7 @@ public abstract class ATestParentComparison {
   }
 
   @Test
-  void test() {
+  void testSimple() {
     Measure pop = QueryBuilder.sum("population", "population");
     QueryDto query = QueryBuilder.query()
             .table(this.storeName)
@@ -91,7 +91,7 @@ public abstract class ATestParentComparison {
   }
 
   @Test
-  void test2() {
+  void testWithMissingAncestor() {
     Measure pop = QueryBuilder.sum("population", "population");
     QueryDto query = QueryBuilder.query()
             .table(this.storeName)
@@ -100,17 +100,41 @@ public abstract class ATestParentComparison {
             .withColumn("city")
             .withMeasure(pop);
 
-    // If no ancestors is expressed in the query, return 1.
     ParentComparisonMeasure pOp = QueryBuilder.parentComparison("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("country", "continent"));
-    // When adding this measure to the query, new rows should appear. with subtotal and GT.
 
     query.withMeasure(pOp);
 
     Table result = this.executor.execute(query);
-    result.show();
+    // Always 1 because the parent scope will be [city, continent] so each cell value is compared to itself.
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList("am", "canada", "montreal", 2d, 1d),
+            Arrays.asList("am", "canada", "otawa", 1d, 1d),
+            Arrays.asList("am", "canada", "toronto", 3d, 1d),
+            Arrays.asList("am", "usa", "chicago", 3d, 1d),
+            Arrays.asList("am", "usa", "nyc", 8d, 1d),
+            Arrays.asList("eu", "france", "lyon", 0.5, 1d),
+            Arrays.asList("eu", "france", "paris", 2d, 1d),
+            Arrays.asList("eu", "uk", "london", 9d, 1d));
   }
 
-  // TODO test with other columns
+  @Test
+  void testWithCalculatedMeasure() {
+    Measure pop = QueryBuilder.multiply("double", QueryBuilder.sum("population", "population"), QueryBuilder.integer(2));
+    QueryDto query = QueryBuilder.query()
+            .table(this.storeName)
+            .withColumn("continent")
+            .withColumn("country")
+            .withColumn("city")
+            .withMeasure(pop);
+
+    ParentComparisonMeasure pOp = QueryBuilder.parentComparison("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
+
+    query.withMeasure(pOp);
+
+    Assertions.assertThatThrownBy(() -> this.executor.execute(query))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("primitive measure");
+  }
+
   // TODO test with conditions
-  // TODO do a test that compare a measure computed by AITM
 }

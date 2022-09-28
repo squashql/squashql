@@ -23,18 +23,21 @@ public final class MeasureUtils {
       }
     } else if (m instanceof BinaryOperationMeasure bom) {
       return quoteExpression(bom.leftOperand) + " " + bom.operator.infix + " " + quoteExpression(bom.rightOperand);
-    } else if (m instanceof ComparisonMeasureReferencePosition cm) {
-      String alias = cm.measure.alias();
-      return switch (cm.columnSetKey) {
+    } else if (m instanceof ComparisonMeasure cm) {
+      String alias = cm.getMeasure().alias();
+      return switch (cm.getColumnSetKey()) {
         case BUCKET -> {
-          String formula = cm.comparisonMethod.expressionGenerator.apply(alias + "(current bucket)", alias + "(reference bucket)");
-          yield formula + ", reference = " + cm.referencePosition;
+          String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current bucket)", alias + "(reference bucket)");
+          yield formula + ", reference = " + ((ComparisonMeasureReferencePosition) cm).referencePosition;
         }
         case PERIOD -> {
-          String formula = cm.comparisonMethod.expressionGenerator.apply(alias + "(current period)", alias + "(reference period)");
-          yield formula + ", reference = " + cm.referencePosition;
+          String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current period)", alias + "(reference period)");
+          yield formula + ", reference = " + ((ComparisonMeasureReferencePosition) cm).referencePosition;
         }
-        case PARENT -> "unknown";
+        case PARENT -> {
+          String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
+          yield formula + ", ancestors = " + ((ParentComparisonMeasure) cm).ancestors;
+        }
       };
     } else if (m instanceof ExpressionMeasure em) {
       return em.expression;
@@ -57,18 +60,6 @@ public final class MeasureUtils {
     }
   }
 
-//  public static List<QueryExecutor.QueryScope> getParentScopes(QueryExecutor.QueryScope queryScope, ParentComparisonMeasure pcm, Function<String, Field> fieldSupplier) {
-//    // We must make sure all ancestors are in the scope of the query.
-//    List<QueryExecutor.QueryScope> requiredScopes = new ArrayList<>();
-//    for (int i = 1; i < pcm.ancestors.size(); i++) {
-//      List<Field> copy = new ArrayList<>(queryScope.columns());
-//      List<Field> toRemove = pcm.ancestors.subList(0, i).stream().map(fieldSupplier).toList();
-//      copy.removeAll(toRemove);
-//      requiredScopes.add(new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), copy, queryScope.conditions()));
-//    }
-//    return requiredScopes;
-//  }
-
   public static void checkQueryScopeForParentComparison(Set<Field> queriedFields, List<Field> ancestors) {
     Field parent = null;
     for (int i = 0; i < ancestors.size(); i++) {
@@ -77,10 +68,6 @@ public final class MeasureUtils {
         parent = ancestors.get(i + 1);
         break;
       }
-//      else {
-//        // throw only if aggregation is higher than
-//        throw new IllegalArgumentException(ancestor + " should be in the query");
-//      }
     }
     if (!queriedFields.contains(parent)) {
       throw new IllegalArgumentException(parent + " field is used in a parent comparison. It should be set as column in the query.");

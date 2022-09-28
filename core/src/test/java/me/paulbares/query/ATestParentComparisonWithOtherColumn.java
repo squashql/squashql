@@ -161,7 +161,4 @@ public abstract class ATestParentComparisonWithOtherColumn {
             Arrays.asList("home", "lyon", 2d, 2d / (2 + 2 + 2)),
             Arrays.asList("home", "paris", 2d, 2d / (2 + 2 + 2)));
   }
-
-  // TODO test with conditions
-  // TODO do a test that compare a measure computed by AITM
 }
