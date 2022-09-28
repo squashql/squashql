@@ -94,58 +94,44 @@ public class TestMeasures {
     {
       Set<Field> queryFields = Set.of(continent, country, city);
       List<Field> ancestors = List.of(city, country, continent);
-      MeasureUtils.checkQueryScopeForParentComparison(queryFields, ancestors);
       QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
       Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, country);
     }
     {
       Set<Field> queryFields = Set.of(continent, country, city);
       List<Field> ancestors = List.of(city, country);
-      MeasureUtils.checkQueryScopeForParentComparison(queryFields, ancestors);
       QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
       Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, country);
     }
     {
       Set<Field> queryFields = Set.of(continent, country);
       List<Field> ancestors = List.of(city, country, continent);
-      MeasureUtils.checkQueryScopeForParentComparison(queryFields, ancestors);
       QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
       Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent);
     }
     {
       Set<Field> queryFields = Set.of(continent, country, city);
       List<Field> ancestors = List.of(city, continent);
-      MeasureUtils.checkQueryScopeForParentComparison(queryFields, ancestors);
       QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
       Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, country);
     }
     {
       Set<Field> queryFields = Set.of(continent, country, city);
       List<Field> ancestors = List.of(other, country, continent);
-      MeasureUtils.checkQueryScopeForParentComparison(queryFields, ancestors);
       QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
       Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, city);
     }
     {
       Set<Field> queryFields = Set.of(continent, country, city);
       List<Field> ancestors = List.of(country, continent);
-      MeasureUtils.checkQueryScopeForParentComparison(queryFields, ancestors);
       QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
       Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, city);
     }
     {
       Set<Field> queryFields = Set.of(continent, country, other);
       List<Field> ancestors = List.of(country, continent);
-      MeasureUtils.checkQueryScopeForParentComparison(queryFields, ancestors); // Ok
       QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
       Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(other, continent);
-    }
-    {
-      Set<Field> queryFields = Set.of(continent, city);
-      List<Field> ancestors = List.of(city, country, continent);
-      Assertions.assertThatThrownBy(() -> MeasureUtils.checkQueryScopeForParentComparison(queryFields, ancestors))
-              .isInstanceOf(IllegalArgumentException.class)
-              .hasMessageContaining(country + " field is used in a parent comparison. It should be set as column in the query.");
     }
   }
 }

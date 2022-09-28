@@ -101,7 +101,7 @@ public abstract class ATestParentComparisonWithOtherColumn {
 
     Table result = this.executor.execute(query);
     // Note: contrary to what you might expect, the result here is the same than having List.of("city", "country","continent")
-    // and it is not meant to compute the percent of the grand parent.
+    // and it is not meant to compute the percent of the grandparent.
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("eu", "france", "lyon", 3.1d, 3.1d / (4d + 3.1d)),
             Arrays.asList("eu", "france", "paris", 4d, 4d / (4d + 3.1d)),

@@ -60,20 +60,6 @@ public final class MeasureUtils {
     }
   }
 
-  public static void checkQueryScopeForParentComparison(Set<Field> queriedFields, List<Field> ancestors) {
-    Field parent = null;
-    for (int i = 0; i < ancestors.size(); i++) {
-      Field ancestor = ancestors.get(i);
-      if (queriedFields.contains(ancestor)) {
-        parent = ancestors.get(i + 1);
-        break;
-      }
-    }
-    if (!queriedFields.contains(parent)) {
-      throw new IllegalArgumentException(parent + " field is used in a parent comparison. It should be set as column in the query.");
-    }
-  }
-
   public static QueryExecutor.QueryScope getParentScope(QueryExecutor.QueryScope queryScope, ParentComparisonMeasure pcm, Function<String, Field> fieldSupplier) {
     int lowestColumnIndex = -1;
     Set<String> cols = queryScope.columns().stream().map(Field::name).collect(Collectors.toSet());
