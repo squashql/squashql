@@ -6,7 +6,7 @@ on:
       tags:
         description: 'Launch manually'
   schedule:
-    - cron: '0 */4 * * *'
+    - cron: '0 4 * * *'
   pull_request:
     branches:
       - main
