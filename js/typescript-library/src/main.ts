@@ -6,7 +6,7 @@ import {
   ComparisonMeasureReferencePosition,
   ComparisonMethod,
   count,
-  ExpressionMeasure, sum, integer, decimal,
+  ExpressionMeasure, sum, integer, decimal, ParentComparisonMeasure,
 } from "./measures"
 import {_in, and, eq, gt, lt, or} from "./conditions"
 import * as fs from "fs"
@@ -44,6 +44,8 @@ q.withMeasure(new ComparisonMeasureReferencePosition("growth", ComparisonMethod.
   "Annee": "y-1",
   "Mois": "m"
 }))))
+
+q.withMeasure(new ParentComparisonMeasure("parent", ComparisonMethod.DIVIDE, price, ["Mois", "Annee"]))
 
 const queryCondition = or(and(eq("a"), eq("b")), lt(5));
 q.withCondition("f1", queryCondition)

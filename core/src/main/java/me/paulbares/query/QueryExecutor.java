@@ -67,7 +67,7 @@ public class QueryExecutor {
     queryWatch.stop(QueryWatch.PREPARE_RESOLVE_MEASURES);
 
     queryWatch.start(QueryWatch.EXECUTE_PREFETCH_PLAN);
-    Function fieldSupplier = this.queryEngine.getFieldSupplier();
+    Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
     QueryScope queryScope = createQueryScope(query, fieldSupplier);
     Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> graph = computeDependencyGraph(query, fieldSupplier, queryScope);
     // Compute what needs to be prefetched

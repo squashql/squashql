@@ -9,7 +9,7 @@ export {
 } from './order'
 
 export {
-  Measure, AggregatedMeasure, ExpressionMeasure, ComparisonMeasureReferencePosition,
+  Measure, AggregatedMeasure, ExpressionMeasure, ComparisonMeasureReferencePosition, ParentComparisonMeasure,
   sum, min, max, avg, sumIf, plus, minus, multiply, divide,
   integer, decimal,
   count,

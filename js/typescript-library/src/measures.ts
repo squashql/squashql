@@ -5,17 +5,17 @@ import {ColumnSetKey} from "./columnsets"
 export interface Measure {
   readonly class: string
   readonly alias: string
-  expression?: string
+  readonly expression?: string
 }
 
 export class AggregatedMeasure implements Measure {
-  class: string = PACKAGE + "AggregatedMeasure"
-  field: string
-  aggregationFunction: string
-  alias: string
-  expression?: string
-  conditionField?: string
-  condition?: Condition
+  readonly class: string = PACKAGE + "AggregatedMeasure"
+  readonly field: string
+  readonly aggregationFunction: string
+  readonly alias: string
+  readonly expression?: string
+  readonly conditionField?: string
+  readonly condition?: Condition
 
   constructor(alias: string, field: string, aggregationFunction: string, conditionField?: string, condition?: Condition) {
     this.alias = alias
@@ -39,8 +39,8 @@ export class AggregatedMeasure implements Measure {
 }
 
 export class ExpressionMeasure implements Measure {
-  class: string = PACKAGE + "ExpressionMeasure"
-  alias: string
+  readonly class: string = PACKAGE + "ExpressionMeasure"
+  readonly alias: string
 
   constructor(alias: string, private sqlExpression: string) {
     this.alias = alias
@@ -56,12 +56,12 @@ export class ExpressionMeasure implements Measure {
 }
 
 export class BinaryOperationMeasure implements Measure {
-  class: string = PACKAGE + "BinaryOperationMeasure"
-  alias: string
-  expression?: string
-  operator: BinaryOperator
-  leftOperand: Measure
-  rightOperand: Measure
+  readonly class: string = PACKAGE + "BinaryOperationMeasure"
+  readonly alias: string
+  readonly expression?: string
+  readonly operator: BinaryOperator
+  readonly leftOperand: Measure
+  readonly rightOperand: Measure
 
   constructor(alias: string, operator: BinaryOperator, leftOperand: Measure, rightOperand: Measure) {
     this.alias = alias
@@ -99,9 +99,9 @@ class CountMeasure extends AggregatedMeasure {
 export const count = CountMeasure.instance;
 
 export class ComparisonMeasureReferencePosition implements Measure {
-  class: string = PACKAGE + "ComparisonMeasureReferencePosition"
-  alias: string
-  expression?: string
+  readonly class: string = PACKAGE + "ComparisonMeasureReferencePosition"
+  readonly alias: string
+  readonly expression?: string
 
   constructor(alias: string,
               private comparisonMethod: ComparisonMethod,
@@ -123,6 +123,31 @@ export class ComparisonMeasureReferencePosition implements Measure {
   }
 }
 
+export class ParentComparisonMeasure implements Measure {
+  readonly class: string = PACKAGE + "ParentComparisonMeasure"
+  readonly alias: string
+  readonly expression?: string
+  readonly columnSetKey: ColumnSetKey = ColumnSetKey.PARENT
+
+  constructor(alias: string,
+              private comparisonMethod: ComparisonMethod,
+              private measure: Measure,
+              private ancestors: Array<string>) {
+    this.alias = alias
+  }
+
+  toJSON() {
+    return {
+      "@class": this.class,
+      "alias": this.alias,
+      "comparisonMethod": this.comparisonMethod,
+      "measure": this.measure,
+      "columnSetKey": this.columnSetKey,
+      "ancestors": this.ancestors,
+    }
+  }
+}
+
 export enum ComparisonMethod {
   ABSOLUTE_DIFFERENCE = "ABSOLUTE_DIFFERENCE",
   RELATIVE_DIFFERENCE = "RELATIVE_DIFFERENCE",
@@ -130,8 +155,8 @@ export enum ComparisonMethod {
 }
 
 class LongConstantMeasure implements Measure {
-  class: string = PACKAGE + "LongConstantMeasure"
-  alias: string
+  readonly class: string = PACKAGE + "LongConstantMeasure"
+  readonly alias: string
 
   constructor(private value: Number) {
   }
@@ -145,8 +170,8 @@ class LongConstantMeasure implements Measure {
 }
 
 class DoubleConstantMeasure implements Measure {
-  class: string = PACKAGE + "DoubleConstantMeasure"
-  alias: string
+  readonly class: string = PACKAGE + "DoubleConstantMeasure"
+  readonly alias: string
 
   constructor(private value: Number) {
   }

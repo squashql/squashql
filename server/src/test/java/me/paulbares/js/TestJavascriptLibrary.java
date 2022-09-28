@@ -52,6 +52,11 @@ public class TestJavascriptLibrary {
             ColumnSetKey.PERIOD,
             Map.of("Annee", "y-1", "Mois", "m")));
 
+    q.withMeasure(new ParentComparisonMeasure("parent",
+            ComparisonMethod.DIVIDE,
+            price,
+            List.of("Mois", "Annee")));
+
     var queryCondition = or(and(eq("a"), eq("b")), lt(5));
     q.withCondition("f1", queryCondition);
     q.withCondition("f2", gt(659));

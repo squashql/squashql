@@ -17,7 +17,7 @@ public class ParentComparisonMeasure implements Measure, ComparisonMeasure {
 
   public String alias;
   public String expression;
-  public ComparisonMethod method;
+  public ComparisonMethod comparisonMethod;
   public Measure measure;
   public ColumnSetKey columnSetKey;
   public List<String> ancestors;
@@ -27,7 +27,7 @@ public class ParentComparisonMeasure implements Measure, ComparisonMeasure {
                                  @NonNull Measure measure,
                                  @NonNull List<String> ancestors) {
     this.alias = alias;
-    this.method = method;
+    this.comparisonMethod = method;
     this.measure = measure;
     this.ancestors = ancestors;
   }
@@ -44,7 +44,7 @@ public class ParentComparisonMeasure implements Measure, ComparisonMeasure {
 
   @Override
   public ComparisonMethod getComparisonMethod() {
-    return this.method;
+    return this.comparisonMethod;
   }
 
   @Override

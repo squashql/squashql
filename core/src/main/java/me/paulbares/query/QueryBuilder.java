@@ -194,6 +194,8 @@ public class QueryBuilder {
             Map.of("scenario encrypted", "s-1", "group", "g"));
     query.withMeasure(kpiComp);
 
+    parentComparison("parent", ComparisonMethod.DIVIDE, amount, List.of("month", "year"));
+
     System.out.println(query.json());
   }
 }
