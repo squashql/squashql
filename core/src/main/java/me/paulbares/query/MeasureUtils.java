@@ -102,17 +102,6 @@ public final class MeasureUtils {
     return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), copy, queryScope.conditions());
   }
 
-  public static int zob(QueryExecutor.QueryScope queryScope, ParentComparisonMeasure pcm) {
-    List<String> cols = queryScope.columns().stream().map(Field::name).collect(Collectors.toList());
-    for (int i = 0; i < pcm.ancestors.size(); i++) {
-      int index = cols.indexOf(pcm.ancestors.get(i));
-      if (index >= 0) {
-        return index;
-      }
-    }
-    return -1;
-  }
-
   public static boolean isPrimitive(Measure m) {
     return m instanceof AggregatedMeasure || m instanceof ExpressionMeasure;
   }

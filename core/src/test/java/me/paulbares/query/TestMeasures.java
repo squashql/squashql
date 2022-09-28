@@ -1,14 +1,16 @@
 package me.paulbares.query;
 
+import me.paulbares.query.QueryExecutor.QueryScope;
 import me.paulbares.query.agg.AggregationFunction;
+import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static me.paulbares.query.QueryBuilder.*;
 
@@ -78,19 +80,69 @@ public class TestMeasures {
     Field city = new Field("city", String.class);
     Field other = new Field("other", String.class);
 
-    MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, country, city), List.of(city, country, continent));
-    MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, country, city), List.of(city, country));
-    MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, country), List.of(city, country, continent));
-    MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, country, city), List.of(city, continent));
-    MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, country, city), List.of(other, country, continent));
-    // TODO check if it is ok
-//    Assertions.assertThatThrownBy(() -> MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, country, city), List.of(other, country, continent)))
-//            .isInstanceOf(IllegalArgumentException.class)
-//            .hasMessageContaining(other + " should be in the query");
-    MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, country, city), List.of(country, continent));
-    MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, country, other), List.of(country, continent)); // Ok
-    Assertions.assertThatThrownBy(() -> MeasureUtils.checkQueryScopeForParentComparison(Set.of(continent, city), List.of(city, country, continent)))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining(country + " field is used in a parent comparison. It should be set as column in the query.");
+    Map<String, List<Field>> collect = List.of(continent, country, city, other).stream().collect(Collectors.groupingBy(Field::name));
+    Function<String, Field> fieldSupplier = name -> collect.get(name).iterator().next();
+
+    BiFunction<List<Field>, List<Field>, QueryScope> parentScopeProvider = (queryScopeColumns, pcmAncestors) -> {
+      QueryScope queryScope = new QueryScope(new TableDto("myTable"), null, queryScopeColumns, Collections.emptyMap());
+      return MeasureUtils.getParentScope(queryScope, QueryBuilder.parentComparison("pcm", ComparisonMethod.DIVIDE, QueryBuilder.sum("sum", "whatever"), pcmAncestors.stream().map(Field::name).toList()), fieldSupplier);
+    };
+
+    {
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(city, country, continent);
+      MeasureUtils.checkQueryScopeForParentComparison(queryFields, ancestors);
+      QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
+      Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, country);
+    }
+    {
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(city, country);
+      MeasureUtils.checkQueryScopeForParentComparison(queryFields, ancestors);
+      QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
+      Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, country);
+    }
+    {
+      Set<Field> queryFields = Set.of(continent, country);
+      List<Field> ancestors = List.of(city, country, continent);
+      MeasureUtils.checkQueryScopeForParentComparison(queryFields, ancestors);
+      QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
+      Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent);
+    }
+    {
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(city, continent);
+      MeasureUtils.checkQueryScopeForParentComparison(queryFields, ancestors);
+      QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
+      Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, country);
+    }
+    {
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(other, country, continent);
+      MeasureUtils.checkQueryScopeForParentComparison(queryFields, ancestors);
+      QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
+      Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, city);
+    }
+    {
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(country, continent);
+      MeasureUtils.checkQueryScopeForParentComparison(queryFields, ancestors);
+      QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
+      Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, city);
+    }
+    {
+      Set<Field> queryFields = Set.of(continent, country, other);
+      List<Field> ancestors = List.of(country, continent);
+      MeasureUtils.checkQueryScopeForParentComparison(queryFields, ancestors); // Ok
+      QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
+      Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(other, continent);
+    }
+    {
+      Set<Field> queryFields = Set.of(continent, city);
+      List<Field> ancestors = List.of(city, country, continent);
+      Assertions.assertThatThrownBy(() -> MeasureUtils.checkQueryScopeForParentComparison(queryFields, ancestors))
+              .isInstanceOf(IllegalArgumentException.class)
+              .hasMessageContaining(country + " field is used in a parent comparison. It should be set as column in the query.");
+    }
   }
 }

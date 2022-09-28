@@ -4,6 +4,8 @@ import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.store.Field;
+import org.eclipse.collections.api.map.primitive.MutableIntIntMap;
+import org.eclipse.collections.impl.map.mutable.primitive.MutableIntIntMapFactoryImpl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,7 +17,6 @@ import java.util.function.Function;
 
 import static me.paulbares.query.ColumnSetKey.BUCKET;
 import static me.paulbares.query.ColumnSetKey.PERIOD;
-import static me.paulbares.query.MeasureUtils.zob;
 
 public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeKey, QueryExecutor.ExecutionContext>, MeasureVisitor<Void> {
 
@@ -88,18 +89,23 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
     List<Object> result = new ArrayList<>((int) whereToWrite.count());
     BiFunction<Number, Number, Number> divide = BinaryOperations.createComparisonBiFunction(ComparisonMethod.DIVIDE, double.class);
 
+    MutableIntIntMap mapping = MutableIntIntMapFactoryImpl.INSTANCE.empty();
+    for (int index : whereToRead.columnIndices()) {
+      Field field = whereToRead.headers().get(index);
+      int indexWhereToWrite = whereToWrite.index(field);
+      mapping.put(index, indexWhereToWrite);
+    }
+
     int[] rowIndex = new int[1];
     whereToWrite.forEach(row -> {
       // Start - Shift operation
-      Object[] parentRow = new Object[whereToWrite.columnIndices().length - 1];
-      int i = 0;
-      for (int columnIndex : whereToWrite.columnIndices()) {
-        if (zob(this.executionContext.queryScope(), pcm) != columnIndex) { // FIXME check the logic here
-          parentRow[i] = row.get(columnIndex);
-          i++;
-        }
+      Object[] parentRow = new Object[parentScope.columns().size()];
+      for (int columnIndex : whereToRead.columnIndices()) {
+        int index = mapping.getIfAbsent(columnIndex, -1);
+        parentRow[columnIndex] = row.get(index);
       }
       // End - Shift operation
+
       int position = whereToRead.pointDictionary().getPosition(parentRow);
       if (position != -1) {
         Object referenceValue = parentAggregateValues.get(position);

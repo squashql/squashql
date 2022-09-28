@@ -17,7 +17,7 @@ import java.util.List;
 import static me.paulbares.query.TestUtils.createClickHouseContainer;
 import static me.paulbares.query.TestUtils.jdbcUrl;
 
-public class TestClickHouseParentComparison2 extends ATestParentComparison2 {
+public class TestClickHouseParentComparisonWithOtherColumn extends ATestParentComparisonWithOtherColumn {
 
   @Container
   public GenericContainer container = createClickHouseContainer();
