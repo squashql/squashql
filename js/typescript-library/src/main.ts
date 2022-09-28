@@ -4,9 +4,10 @@ import {
   BinaryOperationMeasure,
   BinaryOperator,
   ComparisonMeasureReferencePosition,
+  ParentComparisonMeasure,
   ComparisonMethod,
   count,
-  ExpressionMeasure, sum, integer, decimal, ParentComparisonMeasure,
+  ExpressionMeasure, sum, integer, decimal,
 } from "./measures"
 import {_in, and, eq, gt, lt, or} from "./conditions"
 import * as fs from "fs"
