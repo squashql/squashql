@@ -53,38 +53,40 @@ public class SQLTranslator {
       statement.append(")");
     } else {
       statement.append(tableTransformer.apply(queryRewriter, query.table.name));
-
       addJoins(statement, query.table, queryRewriter);
-      addConditions(statement, query, fieldProvider);
+    }
+    addConditions(statement, query, fieldProvider);
+    addGroupBy(totals, groupBy, statement);
+    return statement.toString();
+  }
 
-      if (!groupBy.isEmpty()) {
-        statement.append(" group by ");
-        if (totals != null) {
-          statement.append("rollup(");
-        }
-        statement.append(groupBy.stream().collect(Collectors.joining(", ")));
+  private static void addGroupBy(Totals totals, List<String> groupBy, StringBuilder statement) {
+    if (!groupBy.isEmpty()) {
+      statement.append(" group by ");
+      if (totals != null) {
+        statement.append("rollup(");
+      }
+      statement.append(groupBy.stream().collect(Collectors.joining(", ")));
 
-        if (totals != null) {
-          statement.append(") order by ");
-          String order = " asc"; // default for now
-          // https://stackoverflow.com/a/7862601
-          // to move totals and subtotals at the top or at the bottom and keep normal order for other rows.
-          String position = totals.position == null ? Totals.POSITION_TOP : totals.position; // default top
-          // Note: with Spark, values of totals are set to null but for Clickhouse, they are set to '' for string type,
-          // 0 for integer... this is why there is the following case condition (for clickhouse, only string type is
-          // handled
-          // for the moment).
-          String orderBy = "case when %s is null or %s = '' then %d else %d end, %s %s";
-          int first = position.equals(Totals.POSITION_TOP) ? 0 : 1;
-          int second = first ^ 1;
-          String orderByStatement = groupBy.stream()
-                  .map(g -> orderBy.formatted(g, g, first, second, g, order))
-                  .collect(Collectors.joining(", "));
-          statement.append(orderByStatement);
-        }
+      if (totals != null) {
+        statement.append(") order by ");
+        String order = " asc"; // default for now
+        // https://stackoverflow.com/a/7862601
+        // to move totals and subtotals at the top or at the bottom and keep normal order for other rows.
+        String position = totals.position == null ? Totals.POSITION_TOP : totals.position; // default top
+        // Note: with Spark, values of totals are set to null but for Clickhouse, they are set to '' for string type,
+        // 0 for integer... this is why there is the following case condition (for clickhouse, only string type is
+        // handled
+        // for the moment).
+        String orderBy = "case when %s is null or %s = '' then %d else %d end, %s %s";
+        int first = position.equals(Totals.POSITION_TOP) ? 0 : 1;
+        int second = first ^ 1;
+        String orderByStatement = groupBy.stream()
+                .map(g -> orderBy.formatted(g, g, first, second, g, order))
+                .collect(Collectors.joining(", "));
+        statement.append(orderByStatement);
       }
     }
-    return statement.toString();
   }
 
   private static Map<String, ConditionDto> extractConditions(DatabaseQuery query) {
