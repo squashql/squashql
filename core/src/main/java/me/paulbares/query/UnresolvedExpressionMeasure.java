@@ -39,4 +39,9 @@ public class UnresolvedExpressionMeasure implements Measure {
   public void setExpression(String expression) {
     throw new RuntimeException();
   }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
+  }
 }

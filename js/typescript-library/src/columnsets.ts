@@ -5,8 +5,9 @@ export interface ColumnSet {
 }
 
 export enum ColumnSetKey {
-  BUCKET = "bucket",
-  PERIOD = "period",
+  BUCKET = "BUCKET",
+  PERIOD = "PERIOD",
+  PARENT = "PARENT",
 }
 
 export class BucketColumnSet {

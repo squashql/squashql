@@ -13,4 +13,18 @@ public class DoubleConstantMeasure extends ConstantMeasure<Double> {
   public DoubleConstantMeasure(@NonNull Double value) {
     super(value);
   }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
+  }
+
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder(getClass().getSimpleName() + "{");
+    sb.append("value=").append(value);
+    sb.append(", expression='").append(expression).append('\'');
+    sb.append('}');
+    return sb.toString();
+  }
 }

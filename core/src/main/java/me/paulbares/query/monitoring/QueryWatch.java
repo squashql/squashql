@@ -15,13 +15,12 @@ public class QueryWatch {
   public static final String GLOBAL = "global";
   public static final String PREPARE_PLAN = "prepare";
   public static final String PREPARE_RESOLVE_MEASURES = "resolveMeasures";
-  public static final String PREPARE_CREATE_EXEC_PLAN = "createExecutionPlan";
-  public static final String PREPARE_CREATE_QUERY_SCOPE = "createQueryScope";
+  public static final String EXECUTE_PREFETCH_PLAN = "executePrefetchPlan";
   public static final String PREFETCH = "prefetch";
   public static final String BUCKET = "bucket";
-  public static final String EXECUTE_PLAN = "execute";
+  public static final String EXECUTE_EVALUATION_PLAN = "executeEvaluationPlan";
   public static final String ORDER = "order";
-  public static final Set<String> PREPARE_CHILDREN = Set.of(PREPARE_RESOLVE_MEASURES, PREPARE_CREATE_EXEC_PLAN, PREPARE_CREATE_QUERY_SCOPE);
+  public static final Set<String> PREPARE_CHILDREN = Set.of(PREPARE_RESOLVE_MEASURES, EXECUTE_PREFETCH_PLAN);
 
   private Map<String, Stopwatch> stopwatches = new HashMap<>();
 
@@ -57,7 +56,7 @@ public class QueryWatch {
       queryTimings.prepare.detail.put(prepareChild, this.stopwatches.get(prepareChild).elapsed(unit));
     }
 
-    queryTimings.execute.total = this.stopwatches.get(EXECUTE_PLAN).elapsed(unit);
+    queryTimings.execute.total = this.stopwatches.get(EXECUTE_EVALUATION_PLAN).elapsed(unit);
     for (Map.Entry<Measure, Stopwatch> e : this.stopwatchByMeasure.entrySet()) {
       String key = e.getKey().alias();
       queryTimings.execute.detail.put(key, e.getValue().elapsed(unit));

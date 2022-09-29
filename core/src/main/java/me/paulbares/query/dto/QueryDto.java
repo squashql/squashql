@@ -14,16 +14,13 @@ import java.util.*;
 @NoArgsConstructor // For Jackson
 public class QueryDto {
 
-  public static final String BUCKET = "bucket";
-  public static final String PERIOD = "period";
-
   public TableDto table;
 
   public QueryDto subQuery;
 
   public List<String> columns = new ArrayList<>();
 
-  public Map<String, ColumnSet> columnSets = new LinkedHashMap<>();
+  public Map<ColumnSetKey, ColumnSet> columnSets = new LinkedHashMap<>();
 
   public List<Measure> measures = new ArrayList<>();
 
@@ -38,8 +35,8 @@ public class QueryDto {
     return this;
   }
 
-  public QueryDto withColumnSet(String type, ColumnSet columnSet) {
-    this.columnSets.put(type, columnSet);
+  public QueryDto withColumnSet(ColumnSetKey columnSetKey, ColumnSet columnSet) {
+    this.columnSets.put(columnSetKey, columnSet);
     return this;
   }
 

@@ -11,7 +11,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 
 public class BucketComparisonExecutor extends AComparisonExecutor {
 
@@ -27,7 +26,7 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
   }
 
   @Override
-  protected BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasure cm, ObjectIntMap<String> indexByColumn) {
+  protected BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
     return new ShiftProcedure(this.cSet, cm.referencePosition, indexByColumn);
   }
 

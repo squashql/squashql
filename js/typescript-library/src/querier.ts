@@ -30,6 +30,12 @@ export class Querier {
             .then(r => r.data)
   }
 
+  async execute0(query: Query): Promise<QueryResult> {
+    return this.axiosInstance
+            .post("/query-beautify", query)
+            .then(r => r.data)
+  }
+
   async expression(measures: Array<Measure>): Promise<Array<Measure>> {
     return this.axiosInstance
             .post("/expression", measures)

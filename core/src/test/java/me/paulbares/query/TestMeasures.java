@@ -1,11 +1,16 @@
 package me.paulbares.query;
 
+import me.paulbares.query.QueryExecutor.QueryScope;
 import me.paulbares.query.agg.AggregationFunction;
+import me.paulbares.query.dto.TableDto;
+import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static me.paulbares.query.QueryBuilder.*;
 
@@ -44,7 +49,7 @@ public class TestMeasures {
     AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, "Income/Expense", QueryBuilder.eq("Revenue"));
     Measure ebidtaRatio = QueryBuilder.divide("EBITDA %", amount, sales);
 
-    ComparisonMeasure growth = periodComparison(
+    ComparisonMeasureReferencePosition growth = periodComparison(
             "Growth",
             ComparisonMethod.DIVIDE,
             sales,
@@ -54,11 +59,13 @@ public class TestMeasures {
     Map<String, String> referencePosition = new LinkedHashMap<>();
     referencePosition.put("scenario encrypted", "s-1");
     referencePosition.put("group", "g");
-    ComparisonMeasure kpiComp = bucketComparison(
+    ComparisonMeasureReferencePosition kpiComp = bucketComparison(
             "KPI comp. with prev. scenario",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             kpi,
             referencePosition);
+
+    ParentComparisonMeasure parentComparisonMeasure = parentComparison("parent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
 
     Assertions.assertThat(MeasureUtils.createExpression(amount)).isEqualTo("sum(Amount)");
     Assertions.assertThat(MeasureUtils.createExpression(sales)).isEqualTo("sumIf(Amount, `Income/Expense` = 'Revenue')");
@@ -66,5 +73,65 @@ public class TestMeasures {
     Assertions.assertThat(MeasureUtils.createExpression(growth)).isEqualTo("sales(current period) / sales(reference period), reference = {Year=y-1}");
     Assertions.assertThat(MeasureUtils.createExpression(kpi)).isEqualTo("EBITDA % + Growth");
     Assertions.assertThat(MeasureUtils.createExpression(kpiComp)).isEqualTo("KPI(current bucket) - KPI(reference bucket), reference = {scenario encrypted=s-1, group=g}");
+    Assertions.assertThat(MeasureUtils.createExpression(parentComparisonMeasure)).isEqualTo("sum(Amount) / sum(Amount)(parent), ancestors = [city, country, continent]");
+  }
+
+  @Test
+  void testParentComparisonQueryScope() {
+    Field continent = new Field("continent", String.class);
+    Field country = new Field("country", String.class);
+    Field city = new Field("city", String.class);
+    Field other = new Field("other", String.class);
+
+    Map<String, List<Field>> collect = List.of(continent, country, city, other).stream().collect(Collectors.groupingBy(Field::name));
+    Function<String, Field> fieldSupplier = name -> collect.get(name).iterator().next();
+
+    BiFunction<List<Field>, List<Field>, QueryScope> parentScopeProvider = (queryScopeColumns, pcmAncestors) -> {
+      QueryScope queryScope = new QueryScope(new TableDto("myTable"), null, queryScopeColumns, Collections.emptyMap());
+      return MeasureUtils.getParentScope(queryScope, QueryBuilder.parentComparison("pcm", ComparisonMethod.DIVIDE, QueryBuilder.sum("sum", "whatever"), pcmAncestors.stream().map(Field::name).toList()), fieldSupplier);
+    };
+
+    {
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(city, country, continent);
+      QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
+      Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, country);
+    }
+    {
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(city, country);
+      QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
+      Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, country);
+    }
+    {
+      Set<Field> queryFields = Set.of(continent, country);
+      List<Field> ancestors = List.of(city, country, continent);
+      QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
+      Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent);
+    }
+    {
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(city, continent);
+      QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
+      Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, country);
+    }
+    {
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(other, country, continent);
+      QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
+      Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, city);
+    }
+    {
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(country, continent);
+      QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
+      Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, city);
+    }
+    {
+      Set<Field> queryFields = Set.of(continent, country, other);
+      List<Field> ancestors = List.of(country, continent);
+      QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
+      Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(other, continent);
+    }
   }
 }

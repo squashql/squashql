@@ -40,17 +40,22 @@ public class TestJavascriptLibrary {
     q.withMeasure(integer(123));
     q.withMeasure(decimal(1.23));
 
-    q.withMeasure(new ComparisonMeasure("comp bucket",
+    q.withMeasure(new ComparisonMeasureReferencePosition("comp bucket",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
-            QueryDto.BUCKET,
+            ColumnSetKey.BUCKET,
             Map.of("scenario", "s-1", "group", "g")));
 
-    q.withMeasure(new ComparisonMeasure("growth",
+    q.withMeasure(new ComparisonMeasureReferencePosition("growth",
             ComparisonMethod.DIVIDE,
             price,
-            QueryDto.PERIOD,
+            ColumnSetKey.PERIOD,
             Map.of("Annee", "y-1", "Mois", "m")));
+
+    q.withMeasure(new ParentComparisonMeasure("parent",
+            ComparisonMethod.DIVIDE,
+            price,
+            List.of("Mois", "Annee")));
 
     var queryCondition = or(and(eq("a"), eq("b")), lt(5));
     q.withCondition("f1", queryCondition);
@@ -63,8 +68,8 @@ public class TestJavascriptLibrary {
     BucketColumnSetDto columnSet = new BucketColumnSetDto("group", "scenario")
             .withNewBucket("a", List.of("a1", "a2"))
             .withNewBucket("b", List.of("b1", "b2"));
-    q.withColumnSet(QueryDto.BUCKET, columnSet);
-    q.withColumnSet(QueryDto.PERIOD, new PeriodColumnSetDto(new Period.Month("mois", "annee")));
+    q.withColumnSet(ColumnSetKey.BUCKET, columnSet);
+    q.withColumnSet(ColumnSetKey.PERIOD, new PeriodColumnSetDto(new Period.Month("mois", "annee")));
 
     QueryDto subQuery = new QueryDto()
             .table(table)

@@ -42,4 +42,9 @@ public class ExpressionMeasure implements Measure {
   public void setExpression(String expression) {
     this.expression = expression;
   }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
+  }
 }

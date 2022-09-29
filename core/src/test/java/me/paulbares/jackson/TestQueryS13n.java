@@ -85,7 +85,7 @@ public class TestQueryS13n {
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
 
     AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
-    ComparisonMeasure priceComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition priceComp = QueryBuilder.bucketComparison(
             "priceDiff",
             ABSOLUTE_DIFFERENCE,
             price,
@@ -96,7 +96,7 @@ public class TestQueryS13n {
 
     var query = new QueryDto()
             .table("products")
-            .withColumnSet(QueryDto.BUCKET, bucketCS)
+            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
             .withMeasure(priceComp)
             .withMeasure(price);
 
@@ -108,7 +108,7 @@ public class TestQueryS13n {
   @Test
   void testRoundTripPeriodComparisonQuery() {
     AggregatedMeasure sales = new AggregatedMeasure("s", "sales", "sum");
-    ComparisonMeasure m = QueryBuilder.periodComparison(
+    ComparisonMeasureReferencePosition m = QueryBuilder.periodComparison(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
@@ -120,7 +120,7 @@ public class TestQueryS13n {
     var query = new QueryDto()
             .table("products")
             .withColumn(SCENARIO_FIELD_NAME)
-            .withColumnSet(QueryDto.PERIOD, periodCS)
+            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(m)
             .withMeasure(sales);
 

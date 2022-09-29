@@ -39,7 +39,7 @@ public class TestSaasQuery {
     Measure ebidtaRatio = QueryBuilder.divide("EBITDA %", amount, sales);
     query.withMeasure(ebidtaRatio);
 
-    ComparisonMeasure growth = periodComparison(
+    ComparisonMeasureReferencePosition growth = periodComparison(
             "Growth",
             ComparisonMethod.DIVIDE,
             sales,
@@ -48,7 +48,7 @@ public class TestSaasQuery {
     Measure kpi = plus("KPI", ebidtaRatio, growth);
     query.withMeasure(kpi);
 
-    ComparisonMeasure kpiComp = bucketComparison(
+    ComparisonMeasureReferencePosition kpiComp = bucketComparison(
             "KPI comp. with prev. scenario",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             kpi,

@@ -200,7 +200,7 @@ public class QueryControllerTest {
               "indice_prix",
               "sum(capdv) / sum(competitor_price * quantity)");
     }
-    ComparisonMeasure aggregatedMeasureDiff = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition aggregatedMeasureDiff = QueryBuilder.bucketComparison(
             "aggregatedMeasureDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             aggregatedMeasure,
@@ -208,7 +208,7 @@ public class QueryControllerTest {
                     SCENARIO_FIELD_NAME, "s-1",
                     "group", "g"
             ));
-    ComparisonMeasure indicePrixDiff = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition indicePrixDiff = QueryBuilder.bucketComparison(
             "indicePrixDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             indicePrix,
@@ -219,7 +219,7 @@ public class QueryControllerTest {
 
     var query = new QueryDto()
             .table(createTableDto())
-            .withColumnSet(QueryDto.BUCKET, bucketCS)
+            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
             .withMeasure(aggregatedMeasureDiff)
             .withMeasure(indicePrixDiff);
 

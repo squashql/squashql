@@ -4,29 +4,26 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.graph.Graph;
 import lombok.extern.slf4j.Slf4j;
-import me.paulbares.query.comp.BinaryOperations;
+import me.paulbares.MeasurePrefetcherVisitor;
+import me.paulbares.query.QueryCache.SubQueryScope;
+import me.paulbares.query.QueryCache.TableScope;
 import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.context.Repository;
 import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.database.QueryEngine;
-import me.paulbares.query.dto.BucketColumnSetDto;
-import me.paulbares.query.dto.CacheStatsDto;
-import me.paulbares.query.dto.PeriodColumnSetDto;
-import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.*;
 import me.paulbares.query.monitoring.QueryWatch;
 import me.paulbares.store.Field;
 import me.paulbares.util.Queries;
 
 import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
-import static me.paulbares.query.dto.QueryDto.BUCKET;
-import static me.paulbares.query.dto.QueryDto.PERIOD;
+import static me.paulbares.query.ColumnSetKey.BUCKET;
 
 @Slf4j
 public class QueryExecutor {
@@ -69,72 +66,86 @@ public class QueryExecutor {
     resolveMeasures(query);
     queryWatch.stop(QueryWatch.PREPARE_RESOLVE_MEASURES);
 
-    DatabaseQuery prefetchQuery = Queries.toDatabaseQuery(query);
-
-    // Create plan
-    queryWatch.start(QueryWatch.PREPARE_CREATE_EXEC_PLAN);
-    ExecutionPlan<Measure, ExecutionContext> plan = createExecutionPlan(query);
-    queryWatch.stop(QueryWatch.PREPARE_CREATE_EXEC_PLAN);
-
+    queryWatch.start(QueryWatch.EXECUTE_PREFETCH_PLAN);
     Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
-    queryWatch.start(QueryWatch.PREPARE_CREATE_QUERY_SCOPE);
-    QueryCache.QueryScope queryScope = createCacheKey(query, prefetchQuery, fieldSupplier);
-    queryWatch.stop(QueryWatch.PREPARE_CREATE_QUERY_SCOPE);
-    QueryCache queryCache = getQueryCache((QueryCacheContextValue) query.context.getOrDefault(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE)));
+    QueryScope queryScope = createQueryScope(query, fieldSupplier);
+    Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> graph = computeDependencyGraph(query, fieldSupplier, queryScope);
+    // Compute what needs to be prefetched
+    Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
+    Map<QueryScope, Set<Measure>> measuresByQueryScope = new HashMap<>();
+    ExecutionPlan<QueryPlanNodeKey, Void> prefetchingPlan = new ExecutionPlan<>(graph, (node, v) -> {
+      QueryScope scope = node.queryScope;
+      prefetchQueryByQueryScope.computeIfAbsent(scope, k -> Queries.queryScopeToDatabaseQuery(scope));
+      measuresByQueryScope.computeIfAbsent(scope, k -> new HashSet<>()).add(node.measure);
+    });
+    prefetchingPlan.execute(null);
+    queryWatch.stop(QueryWatch.EXECUTE_PREFETCH_PLAN);
 
-    // Finish to prepare the query
-    Set<Measure> cached = new HashSet<>();
-    Set<Measure> notCached = new HashSet<>();
-    Set<Measure> leaves = plan.getLeaves();
-    for (Measure leaf : leaves.stream().filter(m -> !(m instanceof ConstantMeasure)).toList()) {
-      if (queryCache.contains(leaf, queryScope)) {
-        cached.add(leaf);
-      } else {
-        notCached.add(leaf);
-      }
-    }
-
-    queryWatch.stop(QueryWatch.PREPARE_PLAN);
     queryWatch.start(QueryWatch.PREFETCH);
+    Map<QueryScope, Table> tableByScope = new HashMap<>();
+    for (QueryScope scope : prefetchQueryByQueryScope.keySet()) {
+      DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
+      Set<Measure> measures = measuresByQueryScope.get(scope);
+      QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(queryScope, prefetchQuery, fieldSupplier);
+      QueryCache queryCache = getQueryCache((QueryCacheContextValue) query.context.getOrDefault(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE)));
 
-    Table prefetchResult;
-    if (!notCached.isEmpty() || (cached.isEmpty() && notCached.isEmpty())) {
-      if (!leaves.contains(CountMeasure.INSTANCE)) {
-        // Always add count
-        notCached.add(CountMeasure.INSTANCE);
+      // Finish to prepare the query
+      Set<Measure> cached = new HashSet<>();
+      Set<Measure> notCached = new HashSet<>();
+      Set<Measure> primitives = measures.stream().filter(MeasureUtils::isPrimitive).collect(Collectors.toSet());
+      for (Measure primitive : primitives) {
+        if (queryCache.contains(primitive, prefetchQueryScope)) {
+          cached.add(primitive);
+        } else {
+          notCached.add(primitive);
+        }
       }
-      notCached.forEach(prefetchQuery::withMeasure);
-      prefetchResult = this.queryEngine.execute(prefetchQuery);
-    } else {
-      // Create an empty result that will be populated by the query cache
-      prefetchResult = queryCache.createRawResult(queryScope);
+
+      Table result;
+      if (!notCached.isEmpty() || (cached.isEmpty() && notCached.isEmpty())) {
+        if (!primitives.contains(CountMeasure.INSTANCE)) {
+          // Always add count
+          notCached.add(CountMeasure.INSTANCE);
+        }
+        notCached.forEach(prefetchQuery::withMeasure);
+        result = this.queryEngine.execute(prefetchQuery);
+      } else {
+        // Create an empty result that will be populated by the query cache
+        result = queryCache.createRawResult(prefetchQueryScope);
+      }
+
+      queryCache.contributeToResult(result, cached, prefetchQueryScope);
+      queryCache.contributeToCache(result, notCached, prefetchQueryScope);
+
+      tableByScope.put(scope, result);
     }
     queryWatch.stop(QueryWatch.PREFETCH);
 
-    queryCache.contributeToResult(prefetchResult, cached, queryScope);
-    queryCache.contributeToCache(prefetchResult, notCached, queryScope);
-
+    Table result = tableByScope.get(queryScope);
     queryWatch.start(QueryWatch.BUCKET);
     if (query.columnSets.containsKey(BUCKET)) {
       // Apply this as it modifies the "shape" of the result
       BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(BUCKET);
-      prefetchResult = BucketerExecutor.bucket(prefetchResult, columnSet);
+      result = BucketerExecutor.bucket(result, columnSet);
     }
     queryWatch.stop(QueryWatch.BUCKET);
 
-    queryWatch.start(QueryWatch.EXECUTE_PLAN);
-    plan.execute(new ExecutionContext(prefetchResult, query, queryWatch));
-    queryWatch.stop(QueryWatch.EXECUTE_PLAN);
+    queryWatch.start(QueryWatch.EXECUTE_EVALUATION_PLAN);
+
+    ExecutionPlan<QueryPlanNodeKey, ExecutionContext> plan = new ExecutionPlan<>(graph, new MeasureEvaluator(fieldSupplier));
+    plan.execute(new ExecutionContext(result, queryScope, tableByScope, query, queryWatch));
+
+    queryWatch.stop(QueryWatch.EXECUTE_EVALUATION_PLAN);
 
     queryWatch.start(QueryWatch.ORDER);
 
-    ColumnarTable columnarTable = buildFinalResult(query, prefetchResult);
+    ColumnarTable columnarTable = buildFinalResult(query, result);
     Table sortedTable = TableUtils.order(columnarTable, query);
 
     queryWatch.stop(QueryWatch.ORDER);
     queryWatch.stop(QueryWatch.GLOBAL);
 
-    CacheStatsDto stats = queryCache.stats();
+    CacheStatsDto stats = this.queryCache.stats();
     cacheStatsDtoBuilder
             .hitCount(stats.hitCount)
             .evictionCount(stats.evictionCount)
@@ -142,12 +153,38 @@ public class QueryExecutor {
     return sortedTable;
   }
 
-  private static QueryCache.QueryScope createCacheKey(QueryDto query, DatabaseQuery prefetchQuery, Function<String, Field> fieldSupplier) {
+  private static Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> computeDependencyGraph(
+          QueryDto query, Function fieldSupplier, QueryScope queryScope) {
+    MeasurePrefetcherVisitor visitor = new MeasurePrefetcherVisitor(queryScope, fieldSupplier);
+    GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
+      Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(visitor);
+      Set<QueryPlanNodeKey> set = new HashSet<>();
+      for (Map.Entry<QueryScope, Set<Measure>> entry : dependencies.entrySet()) {
+        for (Measure measure : entry.getValue()) {
+          set.add(new QueryPlanNodeKey(entry.getKey(), measure));
+        }
+      }
+      return set;
+    });
+    Set<Measure> queriedMeasures = new HashSet<>(query.measures);
+    queriedMeasures.add(CountMeasure.INSTANCE); // Always add count
+    return builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList());
+  }
+
+  public static QueryScope createQueryScope(QueryDto query, Function<String, Field> fieldSupplier) {
+    // If column set, it changes the scope
+    List<Field> columns = Stream.concat(
+            query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
+            query.columns.stream()).map(fieldSupplier).toList();
+    return new QueryScope(query.table, query.subQuery, columns, query.conditions);
+  }
+
+  private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(QueryScope queryScope, DatabaseQuery prefetchQuery, Function<String, Field> fieldSupplier) {
     Set<Field> fields = prefetchQuery.coordinates.keySet().stream().map(fieldSupplier).collect(Collectors.toSet());
-    if (query.table != null) {
-      return new QueryCache.TableScope(query.table, fields, query.conditions);
+    if (queryScope.tableDto != null) {
+      return new TableScope(queryScope.tableDto, fields, queryScope.conditions);
     } else {
-      return new QueryCache.SubQueryScope(query.subQuery, fields, query.conditions);
+      return new SubQueryScope(queryScope.subQuery, fields, queryScope.conditions);
     }
   }
 
@@ -176,97 +213,22 @@ public class QueryExecutor {
             values);
   }
 
-  private static ExecutionPlan<Measure, ExecutionContext> createExecutionPlan(QueryDto query) {
-    GraphDependencyBuilder<Measure> builder = new GraphDependencyBuilder<>(m -> getMeasureDependencies(m));
-    Graph<GraphDependencyBuilder.NodeWithId<Measure>> graph = builder.build(query.measures);
-    ExecutionPlan<Measure, ExecutionContext> plan = new ExecutionPlan<>(graph, new MeasureEvaluator());
-    return plan;
+  public record QueryScope(TableDto tableDto,
+                           QueryDto subQuery,
+                           List<Field> columns,
+                           Map<String, ConditionDto> conditions) {
   }
 
-  private static Set<Measure> getMeasureDependencies(Measure measure) {
-    if (measure instanceof ComparisonMeasure cm) {
-      return Set.of(cm.measure);
-    } else if (measure instanceof BinaryOperationMeasure bom) {
-      Set<Measure> s = new HashSet<>();
-      s.add(bom.leftOperand);
-      s.add(bom.rightOperand);
-      return s;
-    } else {
-      return Collections.emptySet();
-    }
+  public record QueryPlanNodeKey(QueryScope queryScope, Measure measure) {
   }
 
-  record ExecutionContext(Table table, QueryDto query, QueryWatch queryWatch) {
+  public record ExecutionContext(Table writeToTable,
+                                 QueryScope queryScope,
+                                 Map<QueryScope, Table> tableByScope,
+                                 QueryDto query,
+                                 QueryWatch queryWatch) {
   }
 
-  static class MeasureEvaluator implements BiConsumer<Measure, ExecutionContext> {
-    @Override
-    public void accept(Measure measure, ExecutionContext executionContext) {
-      if (executionContext.table.measures().contains(measure)) {
-        return; // nothing to do
-      }
-
-      executionContext.queryWatch.start(measure);
-      if (measure instanceof ComparisonMeasure cm) {
-        Map<String, Function<ColumnSet, AComparisonExecutor>> m = Map.of(
-                BUCKET, cs -> new BucketComparisonExecutor((BucketColumnSetDto) cs),
-                PERIOD, cs -> new PeriodComparisonExecutor((PeriodColumnSetDto) cs));
-        ColumnSet t = executionContext.query.columnSets.get(cm.columnSet);
-        if (t == null) {
-          throw new IllegalArgumentException(String.format("columnSet %s is not specified in the query but is used in a comparison measure: %s", cm.columnSet, cm));
-        }
-        AComparisonExecutor executor = m.get(cm.columnSet).apply(t);
-        if (executor != null) {
-          executeComparator(cm, executionContext.table, executor);
-        }
-      } else if (measure instanceof BinaryOperationMeasure bom) {
-        executeBinaryOperation(bom, executionContext.table);
-      } else if (measure instanceof ConstantMeasure cm) {
-        executeConstantOperation(cm, executionContext.table);
-      } else {
-        throw new IllegalStateException(measure + " not expected");
-      }
-      executionContext.queryWatch.stop(measure);
-    }
-
-    private static void executeComparator(ComparisonMeasure cm, Table intermediateResult, AComparisonExecutor executor) {
-      List<Object> agg = executor.compare(cm, intermediateResult);
-      Field field = new Field(cm.alias(), BinaryOperations.getComparisonOutputType(cm.method, intermediateResult.getField(cm.measure).type()));
-      intermediateResult.addAggregates(field, cm, agg);
-    }
-
-    private static void executeBinaryOperation(BinaryOperationMeasure bom, Table intermediateResult) {
-      List<Object> lo = intermediateResult.getAggregateValues(bom.leftOperand);
-      List<Object> ro = intermediateResult.getAggregateValues(bom.rightOperand);
-      List<Object> r = new ArrayList<>(lo.size());
-
-      Class<?> lType = intermediateResult.getField(bom.leftOperand).type();
-      Class<?> rType = intermediateResult.getField(bom.rightOperand).type();
-      BiFunction<Number, Number, Number> operation = BinaryOperations.createBiFunction(bom.operator, lType, rType);
-      for (int i = 0; i < lo.size(); i++) {
-        r.add(operation.apply((Number) lo.get(i), (Number) ro.get(i)));
-      }
-      Field field = new Field(bom.alias(), BinaryOperations.getOutputType(bom.operator, lType, rType));
-      intermediateResult.addAggregates(field, bom, r);
-    }
-
-    private static void executeConstantOperation(ConstantMeasure<?> cm, Table intermediateResult) {
-      Object v;
-      Class<?> type;
-      if (cm instanceof DoubleConstantMeasure dcm) {
-        v = ((Number) dcm.value).doubleValue();
-        type = double.class;
-      } else if (cm instanceof LongConstantMeasure lcm) {
-        v = ((Number) lcm.value).longValue();
-        type = long.class;
-      } else {
-        throw new IllegalArgumentException("Unexpected type " + cm.getValue().getClass() + ". Only double and long are supported");
-      }
-      Field field = new Field(cm.alias(), type);
-      List<Object> r = Collections.nCopies((int) intermediateResult.count(), v);
-      intermediateResult.addAggregates(field, cm, r);
-    }
-  }
 
   protected static void resolveMeasures(QueryDto queryDto) {
     ContextValue repo = queryDto.context.get(Repository.KEY);
@@ -296,7 +258,7 @@ public class QueryExecutor {
   }
 
   private static void resolveMeasureDependencies(ContextValue repo, Supplier<Map<String, ExpressionMeasure>> supplier, Measure measure) {
-    if (measure instanceof ComparisonMeasure cm) {
+    if (measure instanceof ComparisonMeasureReferencePosition cm) {
       cm.measure = resolveExpressionMeasure(repo, supplier, cm.measure);
       resolveMeasureDependencies(repo, supplier, cm.measure);
     } else if (measure instanceof BinaryOperationMeasure bom) {

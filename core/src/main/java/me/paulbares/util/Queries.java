@@ -3,6 +3,7 @@ package me.paulbares.util;
 import me.paulbares.query.*;
 import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.dto.*;
+import me.paulbares.store.Field;
 
 import java.util.*;
 
@@ -29,7 +30,7 @@ public final class Queries {
     });
 
     // Special case for Bucket that defines implicitly an order.
-    ColumnSet bucket = queryDto.columnSets.get(QueryDto.BUCKET);
+    ColumnSet bucket = queryDto.columnSets.get(ColumnSetKey.BUCKET);
     if (bucket != null) {
       BucketColumnSetDto cs = (BucketColumnSetDto) bucket;
       Map<Object, List<Object>> m = new LinkedHashMap<>();
@@ -45,19 +46,18 @@ public final class Queries {
     return res;
   }
 
-  public static DatabaseQuery toDatabaseQuery(QueryDto query) {
+  public static DatabaseQuery queryScopeToDatabaseQuery(QueryExecutor.QueryScope queryScope) {
     Set<String> cols = new HashSet<>();
-    query.columns.forEach(cols::add);
-    query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).forEach(cols::add);
+    queryScope.columns().stream().map(Field::name).forEach(cols::add);
     DatabaseQuery prefetchQuery = new DatabaseQuery();
-    if (query.table != null) {
-      prefetchQuery.table(query.table);
-    } else if (query.subQuery != null) {
-      prefetchQuery.subQuery(toSubDatabaseQuery(query.subQuery));
+    if (queryScope.tableDto() != null) {
+      prefetchQuery.table(queryScope.tableDto());
+    } else if (queryScope.subQuery() != null) {
+      prefetchQuery.subQuery(toSubDatabaseQuery(queryScope.subQuery()));
     } else {
-      throw new IllegalArgumentException("A table or sub-query was expected in " + query);
+      throw new IllegalArgumentException("A table or sub-query was expected in " + queryScope);
     }
-    prefetchQuery.conditions = query.conditions;
+    prefetchQuery.conditions = queryScope.conditions();
     cols.forEach(prefetchQuery::wildcardCoordinate);
     return prefetchQuery;
   }

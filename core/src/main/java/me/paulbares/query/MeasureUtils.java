@@ -2,8 +2,13 @@ package me.paulbares.query;
 
 import lombok.NoArgsConstructor;
 import me.paulbares.query.database.SQLTranslator;
-import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public final class MeasureUtils {
@@ -19,16 +24,21 @@ public final class MeasureUtils {
     } else if (m instanceof BinaryOperationMeasure bom) {
       return quoteExpression(bom.leftOperand) + " " + bom.operator.infix + " " + quoteExpression(bom.rightOperand);
     } else if (m instanceof ComparisonMeasure cm) {
-      String alias = cm.measure.alias();
-      if (cm.columnSet.equals(QueryDto.PERIOD)) {
-        String formula = cm.method.expressionGenerator.apply(alias + "(current period)", alias + "(reference period)");
-        return formula + ", reference = " + cm.referencePosition;
-      } else if (cm.columnSet.equals(QueryDto.BUCKET)) {
-        String formula = cm.method.expressionGenerator.apply(alias + "(current bucket)", alias + "(reference bucket)");
-        return formula + ", reference = " + cm.referencePosition;
-      } else {
-        return "unknown";
-      }
+      String alias = cm.getMeasure().alias();
+      return switch (cm.getColumnSetKey()) {
+        case BUCKET -> {
+          String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current bucket)", alias + "(reference bucket)");
+          yield formula + ", reference = " + ((ComparisonMeasureReferencePosition) cm).referencePosition;
+        }
+        case PERIOD -> {
+          String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current period)", alias + "(reference period)");
+          yield formula + ", reference = " + ((ComparisonMeasureReferencePosition) cm).referencePosition;
+        }
+        case PARENT -> {
+          String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
+          yield formula + ", ancestors = " + ((ParentComparisonMeasure) cm).ancestors;
+        }
+      };
     } else if (m instanceof ExpressionMeasure em) {
       return em.expression;
     } else if (m instanceof ConstantMeasure cm) {
@@ -48,5 +58,24 @@ public final class MeasureUtils {
     } else {
       return expression;
     }
+  }
+
+  public static QueryExecutor.QueryScope getParentScope(QueryExecutor.QueryScope queryScope, ParentComparisonMeasure pcm, Function<String, Field> fieldSupplier) {
+    int lowestColumnIndex = -1;
+    Set<String> cols = queryScope.columns().stream().map(Field::name).collect(Collectors.toSet());
+    for (int i = 0; i < pcm.ancestors.size(); i++) {
+      if (cols.contains(pcm.ancestors.get(i))) {
+        lowestColumnIndex = i;
+        break;
+      }
+    }
+    List<Field> copy = new ArrayList<>(queryScope.columns());
+    List<Field> toRemove = pcm.ancestors.subList(0, lowestColumnIndex + 1).stream().map(fieldSupplier).toList();
+    copy.removeAll(toRemove);
+    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), copy, queryScope.conditions());
+  }
+
+  public static boolean isPrimitive(Measure m) {
+    return m instanceof AggregatedMeasure || m instanceof ExpressionMeasure;
   }
 }
