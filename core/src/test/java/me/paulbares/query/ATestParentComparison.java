@@ -86,6 +86,24 @@ public abstract class ATestParentComparison {
             Arrays.asList("eu", "france", "lyon", 0.5, 0.2),
             Arrays.asList("eu", "france", "paris", 2d, 0.8),
             Arrays.asList("eu", "uk", "london", 9d, 1d));
+
+    query = QueryBuilder.query()
+            .table(this.storeName)
+            .withColumn("continent")
+            .withColumn("country")
+            .withColumn("city")
+            .withMeasure(pOp); // query only parent
+
+    result = this.executor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList("am", "canada", "montreal", .3333333333333333),
+            Arrays.asList("am", "canada", "otawa", .16666666666666666),
+            Arrays.asList("am", "canada", "toronto", 0.5),
+            Arrays.asList("am", "usa", "chicago", .2727272727272727),
+            Arrays.asList("am", "usa", "nyc", .7272727272727273),
+            Arrays.asList("eu", "france", "lyon", 0.2),
+            Arrays.asList("eu", "france", "paris", 0.8),
+            Arrays.asList("eu", "uk", "london", 1d));
   }
 
   @Test

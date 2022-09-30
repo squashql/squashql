@@ -48,7 +48,7 @@ public class MeasurePrefetcherVisitor implements MeasureVisitor<Map<QueryExecuto
       // Not support for the moment
       throw new IllegalArgumentException("Only a primitive measure can be used in a parent comparison measure");
     }
-    return Map.of(parentScope, Set.of(measure.measure));
+    return Map.of(parentScope, Set.of(measure.measure), this.originalQueryScope, Set.of(measure.measure));
   }
 
   @Override
