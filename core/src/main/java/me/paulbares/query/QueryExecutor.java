@@ -121,17 +121,18 @@ public class QueryExecutor {
     }
     queryWatch.stop(QueryWatch.PREFETCH);
 
-    Table result = tableByScope.get(queryScope);
     queryWatch.start(QueryWatch.BUCKET);
     if (query.columnSets.containsKey(BUCKET)) {
       // Apply this as it modifies the "shape" of the result
       BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(BUCKET);
-      result = BucketerExecutor.bucket(result, columnSet);
+      // Reshape all results
+      tableByScope.replaceAll((scope, table) -> BucketerExecutor.bucket(table, columnSet));
     }
     queryWatch.stop(QueryWatch.BUCKET);
 
     queryWatch.start(QueryWatch.EXECUTE_EVALUATION_PLAN);
 
+    Table result = tableByScope.get(queryScope);
     ExecutionPlan<QueryPlanNodeKey, ExecutionContext> plan = new ExecutionPlan<>(graph, new MeasureEvaluator(fieldSupplier));
     plan.execute(new ExecutionContext(result, queryScope, tableByScope, query, queryWatch));
 

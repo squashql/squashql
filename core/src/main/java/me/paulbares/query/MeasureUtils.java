@@ -88,6 +88,8 @@ public final class MeasureUtils {
     Map<String, ConditionDto> newConditions = new HashMap<>(queryScope.conditions());
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.PERIOD))
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(newConditions::remove));
+    Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
+            .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(newConditions::remove));
     return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), newConditions);
   }
 
