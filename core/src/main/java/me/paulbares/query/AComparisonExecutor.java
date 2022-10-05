@@ -2,8 +2,11 @@ package me.paulbares.query;
 
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.store.Field;
+import org.eclipse.collections.api.map.primitive.IntIntMap;
+import org.eclipse.collections.api.map.primitive.MutableIntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
+import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 
 import java.util.ArrayList;
@@ -26,12 +29,6 @@ public abstract class AComparisonExecutor {
           ComparisonMeasureReferencePosition cm,
           Table writeToTable,
           Table readFromTable) {
-    System.out.println("$$$$ Write ");
-    System.out.println(writeToTable);
-
-    System.out.println("$$$$ Read ");
-    System.out.println(readFromTable);
-
     MutableObjectIntMap<String> indexByColumn = new ObjectIntHashMap<>();
     cm.referencePosition.entrySet().forEach(entry -> {
       int columnIndex = readFromTable.columnIndex(entry.getKey());
@@ -47,11 +44,13 @@ public abstract class AComparisonExecutor {
     List<Object> writeAggregateValues = writeToTable.getAggregateValues(cm.measure);
     BiFunction<Number, Number, Number> comparisonBiFunction = BinaryOperations.createComparisonBiFunction(cm.comparisonMethod, readFromTable.getField(cm.measure).type());
     int[] rowIndex = new int[1];
+    IntIntMap mapping = buildMapping(writeToTable, readFromTable);
     writeToTable.forEach(row -> {
       int i = 0;
       for (int columnIndex : readFromTable.columnIndices()) {
-        buffer[i] = row.get(columnIndex);
-        fields[i] = readFromTable.headers().get(i);
+        fields[i] = readFromTable.headers().get(columnIndex);
+        int index = mapping.getIfAbsent(columnIndex, -1);
+        buffer[i] = row.get(index);
         i++;
       }
       boolean success = procedure.test(buffer, fields);
@@ -68,6 +67,16 @@ public abstract class AComparisonExecutor {
     });
 
     return result;
+  }
+
+  public IntIntMap buildMapping(Table writeToTable, Table readFromTable) {
+    MutableIntIntMap mapping = new IntIntHashMap();
+    for (int columnIndex : readFromTable.columnIndices()) {
+      Field field = readFromTable.headers().get(columnIndex);
+      int index = writeToTable.index(field);
+      mapping.put(columnIndex, index);
+    }
+    return mapping;
   }
 
   public static Object parse(String transformation) {

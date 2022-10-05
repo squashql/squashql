@@ -24,7 +24,7 @@ public class MeasurePrefetcherVisitor implements MeasureVisitor<Map<QueryExecuto
   }
 
   private Map<QueryExecutor.QueryScope, Set<Measure>> original() {
-    return Map.of(this.originalQueryScope, Collections.emptySet());
+    return Collections.emptyMap();
   }
 
   @Override

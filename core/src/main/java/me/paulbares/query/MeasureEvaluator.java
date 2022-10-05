@@ -158,16 +158,16 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
 
   @Override
   public Void visit(UnresolvedExpressionMeasure measure) {
-    throw new IllegalStateException();
+    throw new IllegalStateException(UnresolvedExpressionMeasure.class.getName());
   }
 
   @Override
   public Void visit(AggregatedMeasure measure) {
-    throw new IllegalStateException();
+    throw new IllegalStateException(AggregatedMeasure.class.getName());
   }
 
   @Override
   public Void visit(ExpressionMeasure measure) {
-    throw new IllegalStateException();
+    throw new IllegalStateException(ExpressionMeasure.class.getSimpleName());
   }
 }

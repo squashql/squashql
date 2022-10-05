@@ -128,43 +128,32 @@ public abstract class ATestPeriodComparison {
             Arrays.asList(2023l, 2, 0d, 80d),
             Arrays.asList(2023l, 3, 0d, 85d),
             Arrays.asList(2023l, 4, 0d, 35d));
-    Assertions
-            .assertThat(finalTable.headers().stream().map(Field::name))
+    Assertions.assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(period.year(), period.quarter(), "myMeasure", "sum(sales)");
 
     // Add a condition and make sure condition is cleared during prefetching.s
     query = new QueryDto()
             .table(this.storeName)
             .withColumnSet(ColumnSetKey.PERIOD, periodCS)
-            .withMeasure(m)
             .withCondition("year_sales", eq(2023l))
-            .withMeasure(sales);
-
-
-    System.out.println("$$$$ START Q1 ");
+            .withMeasure(m);
 
     finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2023l, 1, 0d, 100d),
-            Arrays.asList(2023l, 2, 0d, 80d),
-            Arrays.asList(2023l, 3, 0d, 85d),
-            Arrays.asList(2023l, 4, 0d, 35d));
-    System.out.println("$$$$ DONE Q1 ");
-
-    System.out.println("$$$$ START Q2 ");
+            Arrays.asList(2023l, 1, 0d),
+            Arrays.asList(2023l, 2, 0d),
+            Arrays.asList(2023l, 3, 0d),
+            Arrays.asList(2023l, 4, 0d));
 
     query = new QueryDto()
             .table(this.storeName)
             .withColumnSet(ColumnSetKey.PERIOD, periodCS)
-            .withMeasure(m)
             .withCondition("quarter_sales", eq(1))
-            .withMeasure(sales);
+            .withMeasure(m);
     finalTable = this.executor.execute(query);
-    System.out.println("$$$$ END Q2 ");
-
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022l, 1, null, 100d),
-            Arrays.asList(2023l, 1, 0d, 100d));
+            Arrays.asList(2022l, 1, null),
+            Arrays.asList(2023l, 1, 0d));
   }
 
   @Test
