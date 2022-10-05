@@ -149,17 +149,17 @@ public abstract class ATestPeriodComparison {
             Arrays.asList(2023l, 2, 0d, 80d),
             Arrays.asList(2023l, 3, 0d, 85d),
             Arrays.asList(2023l, 4, 0d, 35d));
-//
-//    query = new QueryDto()
-//            .table(this.storeName)
-//            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
-//            .withMeasure(m)
-//            .withCondition("quarter_sales", eq(1))
-//            .withMeasure(sales);
-//    finalTable = this.executor.execute(query);
-//    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-//            Arrays.asList(2022l, 1, null, 100d),
-//            Arrays.asList(2023l, 1, 0d, 100d));
+
+    query = new QueryDto()
+            .table(this.storeName)
+            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
+            .withMeasure(m)
+            .withCondition("quarter_sales", eq(1))
+            .withMeasure(sales);
+    finalTable = this.executor.execute(query);
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            Arrays.asList(2022l, 1, null, 100d),
+            Arrays.asList(2023l, 1, 0d, 100d));
   }
 
   @Test
