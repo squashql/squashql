@@ -143,6 +143,7 @@ public abstract class ATestPeriodComparison {
 
     this.executor = new QueryExecutor(this.queryEngine);
     finalTable = this.executor.execute(query);
+    System.out.println("$$$$ Done Executing query");
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2023l, 1, 0d, 100d),
             Arrays.asList(2023l, 2, 0d, 80d),
