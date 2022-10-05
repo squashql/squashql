@@ -255,8 +255,7 @@ public abstract class ATestPeriodComparison {
   }
 
   @Test
-  @Order(Integer.MAX_VALUE)
-    // Last because the data is changed
+  @Order(Integer.MAX_VALUE) // Last because the data is changed
   void testCompareMonthCurrentWithPrevious() {
     // Recreate table
     beforeLoad(this.datastore.storesByName().values().iterator().next().fields().stream().filter(f -> !f.name().equals(Datastore.SCENARIO_FIELD_NAME)).toList());
