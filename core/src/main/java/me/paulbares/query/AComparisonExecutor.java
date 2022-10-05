@@ -44,7 +44,7 @@ public abstract class AComparisonExecutor {
     List<Object> writeAggregateValues = writeToTable.getAggregateValues(cm.measure);
     BiFunction<Number, Number, Number> comparisonBiFunction = BinaryOperations.createComparisonBiFunction(cm.comparisonMethod, readFromTable.getField(cm.measure).type());
     int[] rowIndex = new int[1];
-    IntIntMap mapping = buildMapping(writeToTable, readFromTable);
+    IntIntMap mapping = buildMapping(writeToTable, readFromTable); // columns might be in a different order
     writeToTable.forEach(row -> {
       int i = 0;
       for (int columnIndex : readFromTable.columnIndices()) {
