@@ -95,10 +95,8 @@ public class QueryExecutor {
       Set<Measure> primitives = measures.stream().filter(MeasureUtils::isPrimitive).collect(Collectors.toSet());
       for (Measure primitive : primitives) {
         if (queryCache.contains(primitive, prefetchQueryScope)) {
-          System.out.println("$$$$ cache " + primitive + " for scope " + prefetchQueryScope);
           cached.add(primitive);
         } else {
-          System.out.println("$$$$ notCached " + primitive + " for scope " + prefetchQueryScope);
           notCached.add(primitive);
         }
       }

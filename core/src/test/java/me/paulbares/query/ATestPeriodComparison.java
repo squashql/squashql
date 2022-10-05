@@ -133,7 +133,6 @@ public abstract class ATestPeriodComparison {
             .containsExactlyInAnyOrder(period.year(), period.quarter(), "myMeasure", "sum(sales)");
 
     // Add a condition and make sure condition is cleared during prefetching.s
-    System.out.println("$$$$ Executing query 1");
     query = new QueryDto()
             .table(this.storeName)
             .withColumnSet(ColumnSetKey.PERIOD, periodCS)
@@ -141,35 +140,23 @@ public abstract class ATestPeriodComparison {
             .withCondition("year_sales", eq(2023l))
             .withMeasure(sales);
 
-    this.executor = new QueryExecutor(this.queryEngine);
     finalTable = this.executor.execute(query);
-    System.out.println("$$$$ Done Executing query 1");
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2023l, 1, 0d, 100d),
             Arrays.asList(2023l, 2, 0d, 80d),
             Arrays.asList(2023l, 3, 0d, 85d),
             Arrays.asList(2023l, 4, 0d, 35d));
 
-    System.out.println("$$$$ Executing query 2");
     query = new QueryDto()
             .table(this.storeName)
             .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(m)
             .withCondition("quarter_sales", eq(1))
             .withMeasure(sales);
-    this.executor = new QueryExecutor(this.queryEngine);
     finalTable = this.executor.execute(query);
-    System.out.println("$$$$ Done Executing query 2");
-    try {
-      Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-              Arrays.asList(2022l, 1, null, 100d),
-              Arrays.asList(2023l, 1, 0d, 100d));
-      System.out.println("$$$$ success ");
-    } catch (Error error) {
-      System.out.println("$$$$ failure ");
-      error.printStackTrace();
-      throw error;
-    }
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            Arrays.asList(2022l, 1, null, 100d),
+            Arrays.asList(2023l, 1, 0d, 100d));
   }
 
   @Test
@@ -267,8 +254,9 @@ public abstract class ATestPeriodComparison {
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.semester(), "myMeasure", "sum(sales)");
   }
 
+  // Last because the data is changed
   @Test
-  @Order(Integer.MAX_VALUE) // Last because the data is changed
+  @Order(Integer.MAX_VALUE)
   void testCompareMonthCurrentWithPrevious() {
     // Recreate table
     beforeLoad(this.datastore.storesByName().values().iterator().next().fields().stream().filter(f -> !f.name().equals(Datastore.SCENARIO_FIELD_NAME)).toList());
