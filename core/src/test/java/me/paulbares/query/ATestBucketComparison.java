@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import static me.paulbares.query.ComparisonMethod.RELATIVE_DIFFERENCE;
+import static me.paulbares.query.QueryBuilder.eq;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -91,7 +92,7 @@ public abstract class ATestBucketComparison {
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
             Map.of(
-                    SCENARIO_FIELD_NAME, "first",
+                    SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
@@ -100,7 +101,7 @@ public abstract class ATestBucketComparison {
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
             Map.of(
-                    SCENARIO_FIELD_NAME, "first",
+                    SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
             ));
 
@@ -125,6 +126,18 @@ public abstract class ATestBucketComparison {
             List.of("group3", "base", 0d, 15d, 0l, 34l),
             List.of("group3", "s1", 2d, 17d, -2l, 32l),
             List.of("group3", "s2", -0.5d, 14.5d, 1l, 35l));
+
+    // Add a condition
+    query = new QueryDto()
+            .table(this.storeName)
+            .withColumnSet(ColumnSetKey.BUCKET, this.bucketCS)
+            .withCondition(SCENARIO_FIELD_NAME, eq("s1"))
+            .withMeasure(priceComp);
+
+    dataset = this.executor.execute(query);
+    Assertions.assertThat(dataset).containsExactlyInAnyOrder(
+            List.of("group1", "s1", 2d),
+            List.of("group3", "s1", 2d));
   }
 
   @Test
@@ -143,10 +156,7 @@ public abstract class ATestBucketComparison {
             "quantityDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
-            Map.of(
-                    SCENARIO_FIELD_NAME, "s-1",
-                    this.groupOfScenario, "g"
-            ));
+            Map.of(SCENARIO_FIELD_NAME, "s-1", this.groupOfScenario, "g"));
 
     var query = new QueryDto()
             .table(this.storeName)
@@ -179,7 +189,7 @@ public abstract class ATestBucketComparison {
             RELATIVE_DIFFERENCE,
             price,
             Map.of(
-                    SCENARIO_FIELD_NAME, "first",
+                    SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
@@ -188,7 +198,7 @@ public abstract class ATestBucketComparison {
             RELATIVE_DIFFERENCE,
             quantity,
             Map.of(
-                    SCENARIO_FIELD_NAME, "first",
+                    SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
             ));
 

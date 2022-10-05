@@ -1,24 +1,30 @@
 package me.paulbares;
 
 import me.paulbares.query.*;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 import org.eclipse.collections.impl.set.mutable.MutableSetFactoryImpl;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 public class MeasurePrefetcherVisitor implements MeasureVisitor<Map<QueryExecutor.QueryScope, Set<Measure>>> {
 
+  private final QueryDto query;
   private final QueryExecutor.QueryScope originalQueryScope;
   private final Function<String, Field> fieldSupplier;
 
-  public MeasurePrefetcherVisitor(QueryExecutor.QueryScope originalQueryScope, Function<String, Field> fieldSupplier) {
+  public MeasurePrefetcherVisitor(QueryDto query, QueryExecutor.QueryScope originalQueryScope, Function<String, Field> fieldSupplier) {
+    this.query = query;
     this.originalQueryScope = originalQueryScope;
     this.fieldSupplier = fieldSupplier;
   }
 
   private Map<QueryExecutor.QueryScope, Set<Measure>> original() {
-    return Map.of(this.originalQueryScope, Collections.emptySet());
+    return Collections.emptyMap();
   }
 
   @Override
@@ -38,7 +44,10 @@ public class MeasurePrefetcherVisitor implements MeasureVisitor<Map<QueryExecuto
 
   @Override
   public Map<QueryExecutor.QueryScope, Set<Measure>> visit(ComparisonMeasureReferencePosition measure) {
-    return Map.of(this.originalQueryScope, Set.of(measure.measure));
+    QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.query, this.originalQueryScope);
+    Map<QueryExecutor.QueryScope, Set<Measure>> result = new HashMap<>(Map.of(this.originalQueryScope, Set.of(measure.measure)));
+    result.put(readScope, Set.of(measure.measure));
+    return result;
   }
 
   @Override

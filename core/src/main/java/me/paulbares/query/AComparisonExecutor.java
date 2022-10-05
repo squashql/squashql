@@ -2,8 +2,11 @@ package me.paulbares.query;
 
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.store.Field;
+import org.eclipse.collections.api.map.primitive.IntIntMap;
+import org.eclipse.collections.api.map.primitive.MutableIntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
+import org.eclipse.collections.impl.map.mutable.primitive.IntIntHashMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 
 import java.util.ArrayList;
@@ -24,33 +27,37 @@ public abstract class AComparisonExecutor {
 
   public List<Object> compare(
           ComparisonMeasureReferencePosition cm,
-          Table intermediateResult) {
+          Table writeToTable,
+          Table readFromTable) {
     MutableObjectIntMap<String> indexByColumn = new ObjectIntHashMap<>();
     cm.referencePosition.entrySet().forEach(entry -> {
-      int columnIndex = intermediateResult.columnIndex(entry.getKey());
-      int index = Arrays.binarySearch(intermediateResult.columnIndices(), columnIndex);
+      int columnIndex = readFromTable.columnIndex(entry.getKey());
+      int index = Arrays.binarySearch(readFromTable.columnIndices(), columnIndex);
       indexByColumn.put(entry.getKey(), index);
     });
     BiPredicate<Object[], Field[]> procedure = createShiftProcedure(cm, indexByColumn);
 
-    Object[] buffer = new Object[intermediateResult.columnIndices().length];
-    Field[] fields = new Field[intermediateResult.columnIndices().length];
-    List<Object> result = new ArrayList<>((int) intermediateResult.count());
+    Object[] buffer = new Object[readFromTable.columnIndices().length];
+    Field[] fields = new Field[readFromTable.columnIndices().length];
+    List<Object> result = new ArrayList<>((int) writeToTable.count());
+    List<Object> readAggregateValues = readFromTable.getAggregateValues(cm.measure);
+    List<Object> writeAggregateValues = writeToTable.getAggregateValues(cm.measure);
+    BiFunction<Number, Number, Number> comparisonBiFunction = BinaryOperations.createComparisonBiFunction(cm.comparisonMethod, readFromTable.getField(cm.measure).type());
     int[] rowIndex = new int[1];
-    List<Object> aggregateValues = intermediateResult.getAggregateValues(cm.measure);
-    BiFunction<Number, Number, Number> comparisonBiFunction = BinaryOperations.createComparisonBiFunction(cm.comparisonMethod, intermediateResult.getField(cm.measure).type());
-    intermediateResult.forEach(row -> {
+    IntIntMap mapping = buildMapping(writeToTable, readFromTable); // columns might be in a different order
+    writeToTable.forEach(row -> {
       int i = 0;
-      for (int columnIndex : intermediateResult.columnIndices()) {
-        buffer[i] = row.get(columnIndex);
-        fields[i] = intermediateResult.headers().get(i);
+      for (int columnIndex : readFromTable.columnIndices()) {
+        fields[i] = readFromTable.headers().get(columnIndex);
+        int index = mapping.getIfAbsent(columnIndex, -1);
+        buffer[i] = row.get(index);
         i++;
       }
       boolean success = procedure.test(buffer, fields);
-      int position = intermediateResult.pointDictionary().getPosition(buffer);
-      if (success && position != -1) {
-        Object currentValue = aggregateValues.get(rowIndex[0]);
-        Object referenceValue = aggregateValues.get(position);
+      int readPosition = readFromTable.pointDictionary().getPosition(buffer);
+      if (success && readPosition != -1) {
+        Object currentValue = writeAggregateValues.get(rowIndex[0]);
+        Object referenceValue = readAggregateValues.get(readPosition);
         Object diff = comparisonBiFunction.apply((Number) currentValue, (Number) referenceValue);
         result.add(diff);
       } else {
@@ -60,6 +67,16 @@ public abstract class AComparisonExecutor {
     });
 
     return result;
+  }
+
+  public IntIntMap buildMapping(Table writeToTable, Table readFromTable) {
+    MutableIntIntMap mapping = new IntIntHashMap();
+    for (int columnIndex : readFromTable.columnIndices()) {
+      Field field = readFromTable.headers().get(columnIndex);
+      int index = writeToTable.index(field);
+      mapping.put(columnIndex, index);
+    }
+    return mapping;
   }
 
   public static Object parse(String transformation) {

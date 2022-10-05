@@ -86,7 +86,7 @@ public class QueryExecutor {
     for (QueryScope scope : prefetchQueryByQueryScope.keySet()) {
       DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
       Set<Measure> measures = measuresByQueryScope.get(scope);
-      QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(queryScope, prefetchQuery, fieldSupplier);
+      QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(scope, prefetchQuery, fieldSupplier);
       QueryCache queryCache = getQueryCache((QueryCacheContextValue) query.context.getOrDefault(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE)));
 
       // Finish to prepare the query
@@ -121,17 +121,18 @@ public class QueryExecutor {
     }
     queryWatch.stop(QueryWatch.PREFETCH);
 
-    Table result = tableByScope.get(queryScope);
     queryWatch.start(QueryWatch.BUCKET);
     if (query.columnSets.containsKey(BUCKET)) {
       // Apply this as it modifies the "shape" of the result
       BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(BUCKET);
-      result = BucketerExecutor.bucket(result, columnSet);
+      // Reshape all results
+      tableByScope.replaceAll((scope, table) -> BucketerExecutor.bucket(table, columnSet));
     }
     queryWatch.stop(QueryWatch.BUCKET);
 
     queryWatch.start(QueryWatch.EXECUTE_EVALUATION_PLAN);
 
+    Table result = tableByScope.get(queryScope);
     ExecutionPlan<QueryPlanNodeKey, ExecutionContext> plan = new ExecutionPlan<>(graph, new MeasureEvaluator(fieldSupplier));
     plan.execute(new ExecutionContext(result, queryScope, tableByScope, query, queryWatch));
 
@@ -155,7 +156,7 @@ public class QueryExecutor {
 
   private static Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> computeDependencyGraph(
           QueryDto query, Function fieldSupplier, QueryScope queryScope) {
-    MeasurePrefetcherVisitor visitor = new MeasurePrefetcherVisitor(queryScope, fieldSupplier);
+    MeasurePrefetcherVisitor visitor = new MeasurePrefetcherVisitor(query, queryScope, fieldSupplier);
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
       Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(visitor);
       Set<QueryPlanNodeKey> set = new HashSet<>();

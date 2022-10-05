@@ -12,26 +12,26 @@ import java.util.function.Function;
 
 public class BucketerExecutor {
 
-  public static Table bucket(Table intermediateResult,
+  public static Table bucket(Table table,
                              BucketColumnSetDto bucketColumnSetDto) {
     Function<Object[], List<Object[]>> bucketer = createBucketer(bucketColumnSetDto);
 
     int[] indexColumnsToRead = new int[bucketColumnSetDto.getColumnsForPrefetching().size()];
     for (int i = 0; i < bucketColumnSetDto.getColumnsForPrefetching().size(); i++) {
-      indexColumnsToRead[i] = intermediateResult.columnIndex(bucketColumnSetDto.getColumnsForPrefetching().get(i));
+      indexColumnsToRead[i] = table.columnIndex(bucketColumnSetDto.getColumnsForPrefetching().get(i));
     }
 
     MutableIntSet indexColsInPrefetch = new IntHashSet();
     List<Field> newColumns = bucketColumnSetDto.getNewColumns();
-    List<Field> finalHeaders = new ArrayList<>(intermediateResult.headers());
-    MutableIntList columnIndices = new IntArrayList(intermediateResult.columnIndices());
+    List<Field> finalHeaders = new ArrayList<>(table.headers());
+    MutableIntList columnIndices = new IntArrayList(table.columnIndices());
     for (int i = 0; i < newColumns.size(); i++) {
       Field field = newColumns.get(i);
       if (!bucketColumnSetDto.getColumnsForPrefetching().contains(field.name())) {
         indexColsInPrefetch.add(i);
       }
 
-      if (!intermediateResult.headers().contains(field)) {
+      if (!table.headers().contains(field)) {
         finalHeaders.add(field); // append to the end
         columnIndices.add(finalHeaders.size() - 1);
       }
@@ -42,9 +42,9 @@ public class BucketerExecutor {
       newColumnValues.add(new ArrayList<>());
     }
 
-    int originalHeadersSize = intermediateResult.headers().size();
+    int originalHeadersSize = table.headers().size();
     Object[] buffer = new Object[indexColumnsToRead.length];
-    for (List<Object> row : intermediateResult) {
+    for (List<Object> row : table) {
       transferValues(indexColumnsToRead, buffer, row);
       List<Object[]> bucketValuesList = bucketer.apply(buffer);
       for (Object[] bucketValues : bucketValuesList) {
@@ -62,8 +62,8 @@ public class BucketerExecutor {
 
     return new ColumnarTable(
             finalHeaders,
-            intermediateResult.measures(),
-            intermediateResult.measureIndices(),
+            table.measures(),
+            table.measureIndices(),
             columnIndices.toArray(),
             newColumnValues);
   }

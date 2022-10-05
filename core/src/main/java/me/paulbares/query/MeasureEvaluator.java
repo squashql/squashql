@@ -62,21 +62,23 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
     Map<ColumnSetKey, Function<ColumnSet, AComparisonExecutor>> m = Map.of(
             BUCKET, cs -> new BucketComparisonExecutor((BucketColumnSetDto) cs),
             PERIOD, cs -> new PeriodComparisonExecutor((PeriodColumnSetDto) cs));
-    ColumnSet t = this.executionContext.query().columnSets.get(cm.columnSetKey);
-    if (t == null) {
+    ColumnSet cs = this.executionContext.query().columnSets.get(cm.columnSetKey);
+    if (cs == null) {
       throw new IllegalArgumentException(String.format("columnSet %s is not specified in the query but is used in a comparison measure: %s", cm.columnSetKey, cm));
     }
-    AComparisonExecutor executor = m.get(cm.columnSetKey).apply(t);
+    AComparisonExecutor executor = m.get(cm.columnSetKey).apply(cs);
     if (executor != null) {
-      executeComparator(cm, this.executionContext.writeToTable(), executor);
+      QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.executionContext.query(), this.executionContext.queryScope());
+      Table readFromTable = this.executionContext.tableByScope().get(readScope); // Table where to read the aggregates
+      executeComparator(cm, this.executionContext.writeToTable(), readFromTable, executor);
     }
     return null;
   }
 
-  private static void executeComparator(ComparisonMeasureReferencePosition cm, Table intermediateResult, AComparisonExecutor executor) {
-    List<Object> agg = executor.compare(cm, intermediateResult);
-    Field field = new Field(cm.alias(), BinaryOperations.getComparisonOutputType(cm.comparisonMethod, intermediateResult.getField(cm.measure).type()));
-    intermediateResult.addAggregates(field, cm, agg);
+  private static void executeComparator(ComparisonMeasureReferencePosition cm, Table writeToTable, Table readFromTable, AComparisonExecutor executor) {
+    List<Object> agg = executor.compare(cm, writeToTable, readFromTable);
+    Field field = new Field(cm.alias(), BinaryOperations.getComparisonOutputType(cm.comparisonMethod, writeToTable.getField(cm.measure).type()));
+    writeToTable.addAggregates(field, cm, agg);
   }
 
   @Override
@@ -156,16 +158,16 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
 
   @Override
   public Void visit(UnresolvedExpressionMeasure measure) {
-    throw new IllegalStateException();
+    throw new IllegalStateException(UnresolvedExpressionMeasure.class.getName());
   }
 
   @Override
   public Void visit(AggregatedMeasure measure) {
-    throw new IllegalStateException();
+    throw new IllegalStateException(AggregatedMeasure.class.getName());
   }
 
   @Override
   public Void visit(ExpressionMeasure measure) {
-    throw new IllegalStateException();
+    throw new IllegalStateException(ExpressionMeasure.class.getSimpleName());
   }
 }
