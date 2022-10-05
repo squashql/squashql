@@ -157,6 +157,7 @@ public abstract class ATestPeriodComparison {
             .withMeasure(m)
             .withCondition("quarter_sales", eq(1))
             .withMeasure(sales);
+    this.executor = new QueryExecutor(this.queryEngine);
     finalTable = this.executor.execute(query);
     System.out.println("$$$$ Done Executing query 2");
     try {
