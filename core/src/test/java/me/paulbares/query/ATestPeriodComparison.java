@@ -140,6 +140,7 @@ public abstract class ATestPeriodComparison {
             .withCondition("year_sales", eq(2023l))
             .withMeasure(sales);
 
+    this.executor = new QueryExecutor(this.queryEngine);
     finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2023l, 1, 0d, 100d),
