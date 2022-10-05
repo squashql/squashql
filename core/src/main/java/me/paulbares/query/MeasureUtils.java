@@ -3,6 +3,7 @@ package me.paulbares.query;
 import lombok.NoArgsConstructor;
 import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.dto.ConditionDto;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 
 import java.util.*;
@@ -79,6 +80,15 @@ public final class MeasureUtils {
     List<Field> toRemove = pcm.ancestors.subList(0, lowestColumnIndex + 1).stream().map(fieldSupplier).toList();
     copy.removeAll(toRemove);
     return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), copy, newConditions);
+  }
+
+  public static QueryExecutor.QueryScope getReadScopeComparisonMeasureReferencePosition(
+          QueryDto query,
+          QueryExecutor.QueryScope queryScope) {
+    Map<String, ConditionDto> newConditions = new HashMap<>(queryScope.conditions());
+    Optional.ofNullable(query.columnSets.get(ColumnSetKey.PERIOD))
+            .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(newConditions::remove));
+    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), newConditions);
   }
 
   public static boolean isPrimitive(Measure m) {
