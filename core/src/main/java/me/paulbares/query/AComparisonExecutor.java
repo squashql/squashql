@@ -26,6 +26,12 @@ public abstract class AComparisonExecutor {
           ComparisonMeasureReferencePosition cm,
           Table writeToTable,
           Table readFromTable) {
+    System.out.println("$$$$ Write ");
+    System.out.println(writeToTable);
+
+    System.out.println("$$$$ Read ");
+    System.out.println(readFromTable);
+
     MutableObjectIntMap<String> indexByColumn = new ObjectIntHashMap<>();
     cm.referencePosition.entrySet().forEach(entry -> {
       int columnIndex = readFromTable.columnIndex(entry.getKey());

@@ -140,12 +140,18 @@ public abstract class ATestPeriodComparison {
             .withCondition("year_sales", eq(2023l))
             .withMeasure(sales);
 
+
+    System.out.println("$$$$ START Q1 ");
+
     finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2023l, 1, 0d, 100d),
             Arrays.asList(2023l, 2, 0d, 80d),
             Arrays.asList(2023l, 3, 0d, 85d),
             Arrays.asList(2023l, 4, 0d, 35d));
+    System.out.println("$$$$ DONE Q1 ");
+
+    System.out.println("$$$$ START Q2 ");
 
     query = new QueryDto()
             .table(this.storeName)
@@ -154,6 +160,8 @@ public abstract class ATestPeriodComparison {
             .withCondition("quarter_sales", eq(1))
             .withMeasure(sales);
     finalTable = this.executor.execute(query);
+    System.out.println("$$$$ END Q2 ");
+
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2022l, 1, null, 100d),
             Arrays.asList(2023l, 1, 0d, 100d));
