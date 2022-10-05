@@ -90,6 +90,10 @@ public final class MeasureUtils {
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(newConditions::remove));
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(newConditions::remove));
+    System.out.println("$$$$ getReadScopeComparisonMeasureReferencePosition");
+    System.out.println("$$$$ before " + queryScope.conditions());
+    System.out.println("$$$$ after " + newConditions);
+
     return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), newConditions);
   }
 
