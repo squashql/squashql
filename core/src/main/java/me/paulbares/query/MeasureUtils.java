@@ -2,11 +2,10 @@ package me.paulbares.query;
 
 import lombok.NoArgsConstructor;
 import me.paulbares.query.database.SQLTranslator;
+import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.store.Field;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -60,19 +59,26 @@ public final class MeasureUtils {
     }
   }
 
-  public static QueryExecutor.QueryScope getParentScope(QueryExecutor.QueryScope queryScope, ParentComparisonMeasure pcm, Function<String, Field> fieldSupplier) {
+  public static QueryExecutor.QueryScope getParentScopeWithClearedConditions(QueryExecutor.QueryScope queryScope, ParentComparisonMeasure pcm, Function<String, Field> fieldSupplier) {
     int lowestColumnIndex = -1;
     Set<String> cols = queryScope.columns().stream().map(Field::name).collect(Collectors.toSet());
     for (int i = 0; i < pcm.ancestors.size(); i++) {
-      if (cols.contains(pcm.ancestors.get(i))) {
+      String ancestor = pcm.ancestors.get(i);
+      if (cols.contains(ancestor)) {
         lowestColumnIndex = i;
         break;
       }
     }
+
+    Map<String, ConditionDto> newConditions = new HashMap<>(queryScope.conditions());
+    for (String ancestor : pcm.ancestors) {
+      newConditions.remove(ancestor);
+    }
+
     List<Field> copy = new ArrayList<>(queryScope.columns());
     List<Field> toRemove = pcm.ancestors.subList(0, lowestColumnIndex + 1).stream().map(fieldSupplier).toList();
     copy.removeAll(toRemove);
-    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), copy, queryScope.conditions());
+    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), copy, newConditions);
   }
 
   public static boolean isPrimitive(Measure m) {

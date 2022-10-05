@@ -11,6 +11,8 @@ import org.junit.jupiter.api.*;
 import java.util.Arrays;
 import java.util.List;
 
+import static me.paulbares.query.QueryBuilder.eq;
+import static me.paulbares.query.QueryBuilder.in;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -101,6 +103,51 @@ public abstract class ATestParentComparison {
             Arrays.asList("am", "canada", "toronto", 0.5),
             Arrays.asList("am", "usa", "chicago", .2727272727272727),
             Arrays.asList("am", "usa", "nyc", .7272727272727273),
+            Arrays.asList("eu", "france", "lyon", 0.2),
+            Arrays.asList("eu", "france", "paris", 0.8),
+            Arrays.asList("eu", "uk", "london", 1d));
+  }
+
+  @Test
+  void testClearFilter() {
+    Measure pop = QueryBuilder.sum("population", "population");
+    ParentComparisonMeasure pOp = QueryBuilder.parentComparison("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
+    QueryDto query = QueryBuilder.query()
+            .table(this.storeName)
+            .withColumn("continent")
+            .withColumn("country")
+            .withColumn("city")
+            .withCondition("city", in("montreal", "toronto"))
+            .withMeasure(pOp); // query only parent
+
+    Table result = this.executor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList("am", "canada", "montreal", .3333333333333333),
+            Arrays.asList("am", "canada", "toronto", 0.5));
+
+    query = QueryBuilder.query()
+            .table(this.storeName)
+            .withColumn("continent")
+            .withColumn("country")
+            .withColumn("city")
+            .withCondition("country", eq("canada"))
+            .withMeasure(pOp); // query only parent
+
+    result = this.executor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList("am", "canada", "montreal", .3333333333333333),
+            Arrays.asList("am", "canada", "otawa", .16666666666666666),
+            Arrays.asList("am", "canada", "toronto", 0.5));
+
+    query = QueryBuilder.query()
+            .table(this.storeName)
+            .withColumn("continent")
+            .withColumn("country")
+            .withColumn("city")
+            .withCondition("continent", eq("eu"))
+            .withMeasure(pOp); // query only parent
+    result = this.executor.execute(query);
+    Assertions.assertThat(result).containsExactly(
             Arrays.asList("eu", "france", "lyon", 0.2),
             Arrays.asList("eu", "france", "paris", 0.8),
             Arrays.asList("eu", "uk", "london", 1d));
