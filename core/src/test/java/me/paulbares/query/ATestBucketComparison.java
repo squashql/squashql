@@ -156,10 +156,7 @@ public abstract class ATestBucketComparison {
             "quantityDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
-            Map.of(
-                    SCENARIO_FIELD_NAME, "s-1",
-                    this.groupOfScenario, "g"
-            ));
+            Map.of(SCENARIO_FIELD_NAME, "s-1", this.groupOfScenario, "g"));
 
     var query = new QueryDto()
             .table(this.storeName)
