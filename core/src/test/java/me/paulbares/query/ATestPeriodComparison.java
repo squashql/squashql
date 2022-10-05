@@ -159,9 +159,16 @@ public abstract class ATestPeriodComparison {
             .withMeasure(sales);
     finalTable = this.executor.execute(query);
     System.out.println("$$$$ Done Executing query 2");
-    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022l, 1, null, 100d),
-            Arrays.asList(2023l, 1, 0d, 100d));
+    try {
+      Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+              Arrays.asList(2022l, 1, null, 100d),
+              Arrays.asList(2023l, 1, 0d, 100d));
+      System.out.println("$$$$ success ");
+    } catch (Error error) {
+      System.out.println("$$$$ failure ");
+      error.printStackTrace();
+      throw error;
+    }
   }
 
   @Test
