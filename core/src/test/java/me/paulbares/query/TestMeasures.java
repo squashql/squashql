@@ -2,9 +2,11 @@ package me.paulbares.query;
 
 import me.paulbares.query.QueryExecutor.QueryScope;
 import me.paulbares.query.agg.AggregationFunction;
+import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
+import org.assertj.core.util.TriFunction;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
@@ -30,7 +32,7 @@ public class TestMeasures {
   void testExpressions() {
     Measure agg1 = new AggregatedMeasure("ps", "price", "sum");
     Measure agg2 = new AggregatedMeasure("qs", "quantity", "sum");
-    Measure agg3 = new AggregatedMeasure("qs", "quantity", "sum", "category", QueryBuilder.eq("drink"));
+    Measure agg3 = new AggregatedMeasure("qs", "quantity", "sum", "category", eq("drink"));
     Measure plus = new BinaryOperationMeasure("plus", BinaryOperator.PLUS, agg1, agg2);
     Measure divide = new BinaryOperationMeasure("divide", BinaryOperator.DIVIDE, agg1, plus);
     Measure constant = new DoubleConstantMeasure(100d);
@@ -46,7 +48,7 @@ public class TestMeasures {
     Assertions.assertThat(MeasureUtils.createExpression(divide)).isEqualTo("ps / plus");
 
     AggregatedMeasure amount = new AggregatedMeasure("sum(Amount)", "Amount", AggregationFunction.SUM);
-    AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, "Income/Expense", QueryBuilder.eq("Revenue"));
+    AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, "Income/Expense", eq("Revenue"));
     Measure ebidtaRatio = QueryBuilder.divide("EBITDA %", amount, sales);
 
     ComparisonMeasureReferencePosition growth = periodComparison(
@@ -88,7 +90,7 @@ public class TestMeasures {
 
     BiFunction<List<Field>, List<Field>, QueryScope> parentScopeProvider = (queryScopeColumns, pcmAncestors) -> {
       QueryScope queryScope = new QueryScope(new TableDto("myTable"), null, queryScopeColumns, Collections.emptyMap());
-      return MeasureUtils.getParentScope(queryScope, QueryBuilder.parentComparison("pcm", ComparisonMethod.DIVIDE, QueryBuilder.sum("sum", "whatever"), pcmAncestors.stream().map(Field::name).toList()), fieldSupplier);
+      return MeasureUtils.getParentScopeWithClearedConditions(queryScope, QueryBuilder.parentComparison("pcm", ComparisonMethod.DIVIDE, QueryBuilder.sum("sum", "whatever"), pcmAncestors.stream().map(Field::name).toList()), fieldSupplier);
     };
 
     {
@@ -132,6 +134,33 @@ public class TestMeasures {
       List<Field> ancestors = List.of(country, continent);
       QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
       Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(other, continent);
+    }
+  }
+
+  @Test
+  void testParentComparisonQueryScopeWithCondition() {
+    Field continent = new Field("continent", String.class);
+    Field country = new Field("country", String.class);
+    Field city = new Field("city", String.class);
+    Field other = new Field("other", String.class);
+
+    Map<String, List<Field>> collect = List.of(continent, country, city, other).stream().collect(Collectors.groupingBy(Field::name));
+    Function<String, Field> fieldSupplier = name -> collect.get(name).iterator().next();
+
+    TriFunction<List<Field>, List<Field>, Map<String, ConditionDto>, QueryScope> parentScopeProvider = (queryScopeColumns, pcmAncestors, conditions) -> {
+      QueryScope queryScope = new QueryScope(new TableDto("myTable"),
+              null,
+              queryScopeColumns,
+              conditions);
+      return MeasureUtils.getParentScopeWithClearedConditions(queryScope, QueryBuilder.parentComparison("pcm", ComparisonMethod.DIVIDE, QueryBuilder.sum("sum", "whatever"), pcmAncestors.stream().map(Field::name).toList()), fieldSupplier);
+    };
+
+    {
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(city, country, continent);
+      QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors, Map.of("city", eq("paris"), "other", eq("value")));
+      Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, country);
+      Assertions.assertThat(parentScope.conditions()).isEqualTo(Map.of("other", eq("value")));
     }
   }
 }
