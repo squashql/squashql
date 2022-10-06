@@ -9,7 +9,7 @@ export class Querier {
   constructor(private url: string) {
     this.axiosInstance = axios.create({
       baseURL: url,
-      timeout: 10_000,
+      timeout: 30_000,
       headers: {'x-api-key': 'c3981f51-e9e8-47e1-aa81-7c26e05c98d9'}
     });
   }
