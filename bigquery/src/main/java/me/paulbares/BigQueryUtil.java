@@ -3,6 +3,7 @@ package me.paulbares;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -25,6 +26,9 @@ public final class BigQueryUtil {
   public static ServiceAccountCredentials createCredentials(String path) {
     try {
       InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
+      if (resourceAsStream == null) {
+        resourceAsStream = new FileInputStream(path);
+      }
       return ServiceAccountCredentials.fromStream(resourceAsStream);
     } catch (IOException e) {
       throw new RuntimeException(e);
