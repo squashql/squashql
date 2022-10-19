@@ -40,6 +40,19 @@ class SingleValueCondition implements Condition {
   }
 }
 
+class ConstantCondition implements Condition {
+  class: string = PACKAGE + "dto.ConstantConditionDto";
+
+  constructor(readonly type: ConditionType) {
+  }
+
+  toJSON() {
+    return {
+      ...toJSON(this),
+    }
+  }
+}
+
 class InCondition implements Condition {
   type: ConditionType = ConditionType.IN;
   class: string = PACKAGE + "dto.InConditionDto";
@@ -79,17 +92,11 @@ export function or(left: Condition, right: Condition): Condition {
 }
 
 export function isNull(): Condition {
-  return {
-    class: PACKAGE + "dto.ConstantConditionDto",
-    type: ConditionType.NULL
-  }
+  return new ConstantCondition(ConditionType.NULL)
 }
 
 export function isNotNull(): Condition {
-  return {
-    class: PACKAGE + "dto.ConstantConditionDto",
-    type: ConditionType.NOT_NULL
-  }
+  return new ConstantCondition(ConditionType.NOT_NULL)
 }
 
 export function _in(value: Array<any>): Condition {
