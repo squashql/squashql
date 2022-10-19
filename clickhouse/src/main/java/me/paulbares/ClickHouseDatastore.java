@@ -1,6 +1,6 @@
 package me.paulbares;
 
-import com.clickhouse.client.ClickHouseDataType;
+import com.clickhouse.client.ClickHouseColumn;
 import com.clickhouse.client.config.ClickHouseDefaults;
 import com.clickhouse.jdbc.ClickHouseConnection;
 import com.clickhouse.jdbc.ClickHouseDataSource;
@@ -13,14 +13,7 @@ import me.paulbares.store.Store;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Supplier;
 
 public class ClickHouseDatastore implements Datastore {
@@ -92,8 +85,8 @@ public class ClickHouseDatastore implements Datastore {
       while (columns.next()) {
         String columnName = (String) columns.getObject("COLUMN_NAME");
         String typeName = (String) columns.getObject("TYPE_NAME");
-        ClickHouseDataType dataType = ClickHouseDataType.of(typeName);
-        fields.add(new Field(columnName, ClickHouseUtil.clickHouseTypeToClass(dataType)));
+        ClickHouseColumn column = ClickHouseColumn.of("", typeName);
+        fields.add(new Field(columnName, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())));
       }
 
       return fields;

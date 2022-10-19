@@ -15,6 +15,8 @@ enum ConditionType {
   IN = "IN",
   AND = "AND",
   OR = "OR",
+  NULL = "NULL",
+  NOT_NULL = "NOT_NULL",
 }
 
 function toJSON(c: Condition) {
@@ -74,6 +76,20 @@ export function and(left: Condition, right: Condition): Condition {
 
 export function or(left: Condition, right: Condition): Condition {
   return new LogicalCondition(ConditionType.OR, left, right)
+}
+
+export function isNull(): Condition {
+  return {
+    class: PACKAGE + "dto.ConstantConditionDto",
+    type: ConditionType.NULL
+  }
+}
+
+export function isNotNull(): Condition {
+  return {
+    class: PACKAGE + "dto.ConstantConditionDto",
+    type: ConditionType.NOT_NULL
+  }
 }
 
 export function _in(value: Array<any>): Condition {

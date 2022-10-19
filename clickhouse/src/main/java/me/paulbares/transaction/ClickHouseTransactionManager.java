@@ -44,7 +44,7 @@ public class ClickHouseTransactionManager implements TransactionManager {
       int size = list.size();
       for (int i = 0; i < size; i++) {
         Field field = list.get(i);
-        sb.append(field.name()).append(' ').append(classToClickHouseType(field.type()));
+        sb.append(field.name()).append(" Nullable(").append(classToClickHouseType(field.type())).append(')');
         if (i < size - 1) {
           sb.append(", ");
         }

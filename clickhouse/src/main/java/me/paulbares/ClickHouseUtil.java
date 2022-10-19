@@ -1,7 +1,6 @@
 package me.paulbares;
 
 import com.clickhouse.client.ClickHouseDataType;
-import me.paulbares.store.Datastore;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,15 +32,7 @@ public final class ClickHouseUtil {
   }
 
   public static Class<?> clickHouseTypeToClass(ClickHouseDataType dataType) {
-    return switch (dataType) {
-      case Int32 -> int.class;
-      case Int64, UInt64 -> long.class;
-      case Float32 -> float.class;
-      case Float64 -> double.class;
-      case String -> String.class;
-      case Date -> LocalDate.class;
-      default -> throw new IllegalArgumentException("Unsupported data type " + dataType);
-    };
+    return dataType.getObjectClass();
   }
 
   public static void show(ResultSet set) {
