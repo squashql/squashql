@@ -4,6 +4,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import me.paulbares.query.ColumnSet;
+import me.paulbares.query.ColumnSetKey;
 import me.paulbares.query.PeriodUnit;
 import me.paulbares.store.Field;
 
@@ -80,5 +81,10 @@ public class PeriodColumnSetDto implements ColumnSet {
     } else {
       throw new RuntimeException(period + " not supported yet");
     }
+  }
+
+  @Override
+  public ColumnSetKey getColumnSetKey() {
+    return ColumnSetKey.PERIOD;
   }
 }

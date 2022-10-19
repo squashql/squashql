@@ -4,6 +4,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import me.paulbares.query.ColumnSet;
+import me.paulbares.query.ColumnSetKey;
 import me.paulbares.store.Field;
 
 import java.util.*;
@@ -37,5 +38,10 @@ public class BucketColumnSetDto implements ColumnSet {
   @Override
   public List<Field> getNewColumns() {
     return List.of(new Field(this.name, String.class), new Field(this.field, String.class));
+  }
+
+  @Override
+  public ColumnSetKey getColumnSetKey() {
+    return ColumnSetKey.BUCKET;
   }
 }

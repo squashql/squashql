@@ -178,7 +178,7 @@ public class QueryBuilder {
     Measure ebidtaRatio = QueryBuilder.divide("EBITDA %", amount, sales);
     query.withMeasure(ebidtaRatio);
 
-    ComparisonMeasureReferencePosition growth = periodComparison(
+    Measure growth = periodComparison(
             "Growth",
             ComparisonMethod.DIVIDE,
             sales,
