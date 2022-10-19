@@ -12,7 +12,7 @@ import java.util.Map;
 
 import static me.paulbares.query.QueryBuilder.periodComparison;
 
-public class QueryBuilder2 implements HasFromTable, HasCondition, HasGroupBy, HasJoin {
+public class QueryBuilder2 implements HasFromTable, HasCondition, HasGroupBy, HasTable {
 
   private final QueryDto queryDto = new QueryDto();
 
@@ -23,12 +23,12 @@ public class QueryBuilder2 implements HasFromTable, HasCondition, HasGroupBy, Ha
   }
 
   @Override
-  public HasStartIncompleteJoin join(TableDto tableDto) {
+  public HasStartedBuildingJoin join(TableDto tableDto) {
     return null;
   }
 
   @Override
-  public HasJoin where(String field, ConditionDto conditionDto) {
+  public HasTable where(String field, ConditionDto conditionDto) {
     this.queryDto.withCondition(field, conditionDto);
     return this;
   }

@@ -1,7 +1,9 @@
 package me.paulbares.query.builder;
 
-import me.paulbares.query.dto.ConditionDto;
+import me.paulbares.query.dto.TableDto;
 
-public interface HasJoin extends HasCondition {
-  HasJoin where(String field, ConditionDto conditionDto);
+public interface HasJoin extends HasTable {
+  HasJoin on(String fromTable, String from, String toTable, String to);
+
+  HasStartedBuildingJoin join(TableDto tableDto);
 }

@@ -4,7 +4,7 @@ import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.TableDto;
 
 public interface HasFromTable extends HasCondition {
-  HasJoin where(String field, ConditionDto conditionDto);
+  HasTable where(String field, ConditionDto conditionDto);
 
-  HasStartIncompleteJoin join(TableDto tableDto);
+  HasStartedBuildingJoin join(TableDto tableDto);
 }
