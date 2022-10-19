@@ -1,56 +1,25 @@
-package me.paulbares.query;
+package me.paulbares.query.builder;
 
+import me.paulbares.query.*;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import static me.paulbares.query.QueryBuilder.periodComparison;
 
-interface HasFromTable extends HasCondition {
-  HasJoin where(String field, ConditionDto conditionDto);
-
-  HasStartIncompleteJoin join(TableDto tableDto);
-}
-
-interface HasJoin extends HasCondition {
-  HasJoin where(String field, ConditionDto conditionDto);
-}
-
-interface HasStartIncompleteJoin {
-  HasStartJoin on(String fromTable, String from, String toTable, String to);
-}
-
-interface HasStartJoin extends HasJoin {
-  HasStartJoin on(String fromTable, String from, String toTable, String to);
-
-  HasStartIncompleteJoin join(TableDto tableDto);
-}
-
-interface HasCondition {
-  HasGroupBy groupBy(List<String> columns, ColumnSet... columnSets);
-}
-
-interface HasGroupBy {
-  default void select(List<String> columns, List<Measure> measures) {
-    select(columns, Collections.emptyList(), measures);
-  }
-
-  void select(List<String> columns, List<ColumnSet> columnSets, List<Measure> measures);
-}
-
 public class QueryBuilder2 implements HasFromTable, HasCondition, HasGroupBy, HasJoin {
 
   private final QueryDto queryDto = new QueryDto();
 
-  public HasFromTable from(TableDto table) {
-    this.queryDto.table = table;
-    return this;
+  public static HasFromTable from(TableDto table) {
+    QueryBuilder2 qb = new QueryBuilder2();
+    qb.queryDto.table = table;
+    return qb;
   }
 
   @Override
