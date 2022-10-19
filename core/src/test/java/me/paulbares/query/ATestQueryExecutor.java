@@ -16,6 +16,7 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.util.List;
 
+import static me.paulbares.query.agg.AggregationFunction.AVG;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -294,6 +295,20 @@ public abstract class ATestQueryExecutor {
             .withMeasure(QueryBuilder.avg("mean", "ca"));// avg of ca
     Table result = this.queryExecutor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(15.5d));
+  }
+
+  @Test
+  void testSubQueryAggIfWithConditionOnSubQueryField() {
+    QueryDto subQuery = new QueryDto()
+            .table(this.storeName)
+            .withColumn("scenario")
+            .withMeasure(QueryBuilder.sum("ca", "price")); // ca per scenario
+
+    QueryDto queryDto = new QueryDto()
+            .table(subQuery)
+            .withMeasure(new AggregatedMeasure("myFinalMeasure", "ca", AVG, "ca", QueryBuilder.ge(15.0)));
+    Table result = this.queryExecutor.execute(queryDto);
+    Assertions.assertThat(result).containsExactly(List.of((15. + 17.) / 2)); // avg of ca >= 15
   }
 
   @Test

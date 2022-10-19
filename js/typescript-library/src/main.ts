@@ -76,20 +76,3 @@ console.log(JSON.stringify(q))
 
 let data = JSON.stringify(q);
 fs.writeFileSync('query.json', data);
-
-// TODO delete
-// console.log()
-// console.log("METADATA")
-// let querier = new Querier("http://localhost:8080");
-// querier.getMetadata().then(d => console.log(d))
-//
-// let q2 = new Query()
-//         .onTable("saas")
-//         .withColumn("Scenario Name")
-//         .withMeasure(new AggregatedMeasure("Amount", "sum", "amount.sum"));
-//
-// querier.execute(q2)
-//         .then(d => {
-//           console.log(d.table)
-//           console.log(d.metadata)
-//         })

@@ -206,6 +206,10 @@ export function sumIf(alias: string, field: string, conditionField: string, cond
   return new AggregatedMeasure(alias, field, "sum", conditionField, condition)
 }
 
+export function countIf(alias: string, field: string, conditionField: string, condition: Condition): Measure {
+  return new AggregatedMeasure(alias, field, "count", conditionField, condition)
+}
+
 export function plus(alias: string, measure1: Measure, measure2: Measure): Measure {
   return new BinaryOperationMeasure(alias, BinaryOperator.PLUS, measure1, measure2)
 }
