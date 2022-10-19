@@ -10,7 +10,7 @@ export {
 
 export {
   Measure, AggregatedMeasure, ExpressionMeasure, ComparisonMeasureReferencePosition, ParentComparisonMeasure,
-  sum, min, max, avg, sumIf, plus, minus, multiply, divide,
+  sum, min, max, avg, sumIf, countIf, plus, minus, multiply, divide,
   integer, decimal,
   count,
   ComparisonMethod,

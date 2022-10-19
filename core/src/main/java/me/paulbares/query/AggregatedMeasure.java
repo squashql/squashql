@@ -4,6 +4,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.database.SqlUtils;
@@ -17,6 +18,7 @@ import static me.paulbares.query.database.SqlUtils.escape;
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
+@Slf4j
 public class AggregatedMeasure implements Measure {
 
   public String alias;
@@ -42,7 +44,16 @@ public class AggregatedMeasure implements Measure {
   public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     String sql;
     if (this.conditionDto != null) {
-      String conditionSt = SQLTranslator.toSql(fieldProvider.apply(this.conditionField), this.conditionDto);
+      Field f;
+      try {
+        f = fieldProvider.apply(this.conditionField);
+      } catch (Exception e) {
+        // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
+        // contains only "raw" fields, it will throw an exception.
+        log.info("Cannot find field " + this.conditionField + " with default field provider, fallback to default type: " + Number.class.getSimpleName());
+        f = new Field(this.conditionField, Number.class);
+      }
+      String conditionSt = SQLTranslator.toSql(f, this.conditionDto);
       sql = this.aggregationFunction + "(case when " + conditionSt + " then " + this.field + " end)";
     } else {
       sql = this.aggregationFunction + "(" + (this.field.equals("*") ? this.field : escape(this.field)) + ")";
