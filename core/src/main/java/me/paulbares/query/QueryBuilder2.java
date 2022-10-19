@@ -12,8 +12,24 @@ import java.util.Map;
 
 import static me.paulbares.query.QueryBuilder.periodComparison;
 
-interface HasFrom extends HasCondition {
-  HasFrom where(String field, ConditionDto conditionDto);
+interface HasFromTable extends HasCondition {
+  HasJoin where(String field, ConditionDto conditionDto);
+
+  HasStartIncompleteJoin join(TableDto tableDto);
+}
+
+interface HasJoin extends HasCondition {
+  HasJoin where(String field, ConditionDto conditionDto);
+}
+
+interface HasStartIncompleteJoin {
+  HasStartJoin on(String fromTable, String from, String toTable, String to);
+}
+
+interface HasStartJoin extends HasJoin {
+  HasStartJoin on(String fromTable, String from, String toTable, String to);
+
+  HasStartIncompleteJoin join(TableDto tableDto);
 }
 
 interface HasCondition {
@@ -28,17 +44,22 @@ interface HasGroupBy {
   void select(List<String> columns, List<ColumnSet> columnSets, List<Measure> measures);
 }
 
-public class QueryBuilder2 implements HasFrom, HasCondition, HasGroupBy {
+public class QueryBuilder2 implements HasFromTable, HasCondition, HasGroupBy, HasJoin {
 
   private final QueryDto queryDto = new QueryDto();
 
-  public HasFrom from(TableDto table) {
+  public HasFromTable from(TableDto table) {
     this.queryDto.table = table;
     return this;
   }
 
   @Override
-  public HasFrom where(String field, ConditionDto conditionDto) {
+  public HasStartIncompleteJoin join(TableDto tableDto) {
+    return null;
+  }
+
+  @Override
+  public HasJoin where(String field, ConditionDto conditionDto) {
     this.queryDto.withCondition(field, conditionDto);
     return this;
   }
@@ -72,8 +93,15 @@ public class QueryBuilder2 implements HasFrom, HasCondition, HasGroupBy {
             Map.of("Year", "y-1"));
 
     QueryBuilder2 qb = new QueryBuilder2();
+    TableDto saas = new TableDto("saas");
+    TableDto a = new TableDto("a");
     qb
-            .from(new TableDto("saas"))
+            .from(saas)
+            .join(a)
+            .on(a.name, "id", saas.name, "id")
+//            .on(a.name, "id", saas.name, "id")
+            .join(a)
+            .on(a.name, "id", saas.name, "id")
             .where(null, null)
             .where(null, null)
             .groupBy(List.of("col1", "col2"), year)
