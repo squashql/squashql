@@ -9,7 +9,7 @@ import {
   count,
   ExpressionMeasure, sum, integer, decimal,
 } from "./measures"
-import {_in, and, eq, gt, lt, or} from "./conditions"
+import {_in, and, eq, gt, lt, or, isNull, isNotNull} from "./conditions"
 import * as fs from "fs"
 import {OrderKeyword} from "./order";
 import {BucketColumnSet, ColumnSetKey, Month, PeriodColumnSet} from "./columnsets";
@@ -52,6 +52,8 @@ const queryCondition = or(and(eq("a"), eq("b")), lt(5));
 q.withCondition("f1", queryCondition)
 q.withCondition("f2", gt(659))
 q.withCondition("f3", _in([0, 1, 2]))
+q.withCondition("f4", isNull())
+q.withCondition("f5", isNotNull())
 
 q.orderBy("a", OrderKeyword.ASC)
 q.orderByFirstElements("b", ["1", "l", "p"])

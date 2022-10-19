@@ -18,7 +18,7 @@ export {
 
 export {
   Condition,
-  eq, neq, lt, le, gt, ge, _in,
+  eq, neq, lt, le, gt, ge, _in, isNull, isNotNull,
   and, or
 } from './conditions'
 
