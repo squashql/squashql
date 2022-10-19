@@ -43,6 +43,7 @@ public abstract class ATestQueryExecutor {
   void setup() {
     Field ean = new Field("ean", String.class);
     Field category = new Field("category", String.class);
+    Field subcategory = new Field("subcategory", String.class);
     Field price = new Field("price", double.class);
     Field qty = new Field("quantity", int.class);
 
@@ -51,27 +52,27 @@ public abstract class ATestQueryExecutor {
     this.queryExecutor = new QueryExecutor(queryEngine);
     this.tm = createTransactionManager();
 
-    beforeLoad(List.of(ean, category, price, qty));
+    beforeLoad(List.of(ean, category, subcategory, price, qty));
     load();
   }
 
   protected void load() {
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
-            new Object[]{"bottle", "drink", 2d, 10},
-            new Object[]{"cookie", "food", 3d, 20},
-            new Object[]{"shirt", "cloth", 10d, 3}
+            new Object[]{"bottle", "drink", null, 2d, 10},
+            new Object[]{"cookie", "food", "biscuit", 3d, 20},
+            new Object[]{"shirt", "cloth", null, 10d, 3}
     ));
 
     this.tm.load("s1", this.storeName, List.of(
-            new Object[]{"bottle", "drink", 4d, 10},
-            new Object[]{"cookie", "food", 3d, 20},
-            new Object[]{"shirt", "cloth", 10d, 3}
+            new Object[]{"bottle", "drink", null, 4d, 10},
+            new Object[]{"cookie", "food", "biscuit", 3d, 20},
+            new Object[]{"shirt", "cloth", null, 10d, 3}
     ));
 
     this.tm.load("s2", this.storeName, List.of(
-            new Object[]{"bottle", "drink", 1.5d, 10},
-            new Object[]{"cookie", "food", 3d, 20},
-            new Object[]{"shirt", "cloth", 10d, 3}
+            new Object[]{"bottle", "drink", null, 1.5d, 10},
+            new Object[]{"cookie", "food", "biscuit", 3d, 20},
+            new Object[]{"shirt", "cloth", null, 10d, 3}
     ));
   }
 
@@ -150,6 +151,24 @@ public abstract class ATestQueryExecutor {
     query.withCondition("quantity", QueryBuilder.gt(10));
     table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).isEmpty();
+  }
+
+  @Test
+  void testConditionsNullNotNull() {
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
+            .withColumn("ean")
+            .withMeasure(CountMeasure.INSTANCE)
+            .withCondition("subcategory", QueryBuilder.isNotNull());
+    Table table = this.queryExecutor.execute(query);
+    Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("cookie", 3l));
+
+    query.withCondition("subcategory", QueryBuilder.isNull());
+    table = this.queryExecutor.execute(query);
+    Assertions.assertThat(table).containsExactlyInAnyOrder(
+            List.of("bottle", 3l),
+            List.of("shirt", 3l)
+    );
   }
 
   /**

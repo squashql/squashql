@@ -33,8 +33,7 @@ public class TestOptiprix {
             .table(subQuery)
             .withMeasure(new ExpressionMeasure("InitialPriceIndex", "100*sum(itmInitialComparableTurnover)/sum(competitorComparableTurnover)"))
             .withMeasure(new ExpressionMeasure("RecommendedPriceIndex", "100*sum(itmRecommendedComparableTurnover)/sum(competitorComparableTurnover)"))
-            .withMeasure(new ExpressionMeasure("FinalPriceIndex", "100*sum(itmFinalComparableTurnover)/sum(competitorComparableTurnover)"))
-            ;
+            .withMeasure(new ExpressionMeasure("FinalPriceIndex", "100*sum(itmFinalComparableTurnover)/sum(competitorComparableTurnover)"));
 
     QueryWatch queryWatch = new QueryWatch();
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
@@ -45,21 +44,21 @@ public class TestOptiprix {
   }
 
   private static QueryDto subQuery() {
-    TableDto recommandation = new TableDto("recommandation");
+    TableDto recommendation = new TableDto("recommendation_with_simulation");
     TableDto current_selling_prices = new TableDto("current_selling_prices");
     TableDto competitor_catchment_area = new TableDto("competitor_catchment_area");
     TableDto competitor_price = new TableDto("competitor_price");
     TableDto competitor_store = new TableDto("competitor_store");
 
-    recommandation.join(current_selling_prices, INNER,
-            List.of(new JoinMappingDto(recommandation.name, "rec_ean", current_selling_prices.name, "cur_ean"),
-                    new JoinMappingDto(recommandation.name, "rec_store_id", current_selling_prices.name, "cur_store_id")));
-    recommandation.innerJoin(competitor_catchment_area, "rec_store_id", "cca_store_id");
+    recommendation.join(current_selling_prices, INNER,
+            List.of(new JoinMappingDto(recommendation.name, "rec_ean", current_selling_prices.name, "cur_ean"),
+                    new JoinMappingDto(recommendation.name, "rec_store_id", current_selling_prices.name, "cur_store_id")));
+    recommendation.innerJoin(competitor_catchment_area, "rec_store_id", "cca_store_id");
 
-    recommandation.join(competitor_price, INNER, List.of(
+    recommendation.join(competitor_price, INNER, List.of(
             new JoinMappingDto(competitor_catchment_area.name, "cca_competitor_store_id", competitor_price.name, "cp_store_id"),
-            new JoinMappingDto(recommandation.name, "rec_ean", competitor_price.name, "cp_ean")));
-    recommandation.join(competitor_store, LEFT,
+            new JoinMappingDto(recommendation.name, "rec_ean", competitor_price.name, "cp_ean")));
+    recommendation.join(competitor_store, LEFT,
             List.of(new JoinMappingDto(competitor_price.name, "cp_store_id", competitor_store.name, "cs_store_id"),
                     new JoinMappingDto(competitor_price.name, "cp_store_type", competitor_store.name, "cs_store_type")));
 
@@ -77,7 +76,7 @@ public class TestOptiprix {
             min("min_cur_vmm", "cur_vmm"));
 
     QueryDto query = QueryBuilder.query()
-            .table(recommandation)
+            .table(recommendation)
             .withMeasure(CountMeasure.INSTANCE)
             .withMeasure(itmInitialComparableTurnover)
             .withMeasure(itmRecommendedComparableTurnover)
@@ -93,5 +92,48 @@ public class TestOptiprix {
             .withColumn("cs_company")
     ;
     return query;
+  }
+
+  @Test
+  @Disabled
+  void test2() {
+    var initialPrice = avg("Prix_initial(AVG)", "rec_initial_price");
+    var recommendedPrice = avg(
+            "Prix_recommande(AVG)",
+            "rec_recommended_price"
+    );
+    var finalPrice = avg("Prix_final(AVG)", "rec_final_price");
+
+    var priceVariation = minus("Variation_de_prix_EUR", finalPrice, initialPrice);
+
+    var pricingKeyLevelSubQuery = new QueryDto()
+            .table(new TableDto("recommendation_with_simulation"))
+            .withMeasure(priceVariation)
+            .withColumn("rec_ean")
+            .withColumn("rec_store_id")
+            .withColumn("rec_simulation");
+
+    var decreasePricesAvg = new AggregatedMeasure(
+            "Baisse_moyenne_des_prix_en_baisse_EUR",
+            "Variation_de_prix_EUR",
+            "avg",
+            "Variation_de_prix_EUR",
+            lt(0)
+    );
+
+    BigQueryDatastore datastore = new BigQueryDatastore(BigQueryUtil.createCredentials(this.credendialsPath), this.projectId, this.datasetName);
+    BigQueryEngine engine = new BigQueryEngine(datastore);
+    QueryExecutor executor = new QueryExecutor(engine);
+
+    QueryDto query = new QueryDto()
+            .table(pricingKeyLevelSubQuery)
+            .withColumn("rec_simulation")
+            .withMeasure(decreasePricesAvg);
+    QueryWatch queryWatch = new QueryWatch();
+    CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
+    Table execute = executor.execute(query, queryWatch, csBuilder);
+    execute.show();
+    System.out.println(queryWatch);
+    System.out.println(csBuilder);
   }
 }

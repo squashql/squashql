@@ -15,6 +15,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -69,7 +70,7 @@ public class TestLoadingFromCSV {
                     .table(storeName)
                     .withColumn(SCENARIO_FIELD_NAME)
                     .aggregatedMeasure("count", "*", "count"));
-    Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("", 91L)); // empty string because no scenario in
+    Assertions.assertThat(table).containsExactlyInAnyOrder(Arrays.asList(null, 91L)); // empty string because no scenario in
     // csv file
   }
 }

@@ -61,6 +61,8 @@ public class TestJavascriptLibrary {
     q.withCondition("f1", queryCondition);
     q.withCondition("f2", gt(659));
     q.withCondition("f3", in(0, 1, 2));
+    q.withCondition("f4", isNull());
+    q.withCondition("f5", isNotNull());
 
     q.orderBy("a", OrderKeywordDto.ASC);
     q.orderBy("b", List.of("1", "l", "p"));

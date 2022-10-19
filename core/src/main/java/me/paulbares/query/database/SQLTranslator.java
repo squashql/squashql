@@ -190,6 +190,13 @@ public class SQLTranslator {
         default -> throw new IllegalStateException("Incorrect type " + logical.type);
       };
       return first + typeString + second;
+    } else if (dto instanceof ConstantConditionDto cc) {
+      String escape = escape(field.name());
+      return switch (cc.type()) {
+        case NULL -> escape + " is null";
+        case NOT_NULL -> escape + " is not null";
+        default -> throw new IllegalStateException("Unexpected value: " + dto.type());
+      };
     } else {
       throw new RuntimeException("Not supported condition " + dto);
     }

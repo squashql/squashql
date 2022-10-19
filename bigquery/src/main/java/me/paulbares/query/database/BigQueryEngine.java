@@ -50,6 +50,10 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
    */
   public static Object getTypeValue(FieldValueList fieldValues, Schema schema, int index) {
     FieldValue fieldValue = fieldValues.get(index);
+    if (fieldValue.isNull()) {
+      // There is a check in BQ client when trying to access the value and throw if null.
+      return null;
+    }
     com.google.cloud.bigquery.Field field = schema.getFields().get(index);
     return switch (field.getType().getStandardType()) {
       case BOOL -> fieldValue.getBooleanValue();

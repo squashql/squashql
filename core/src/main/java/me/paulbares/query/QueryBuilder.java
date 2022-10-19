@@ -48,6 +48,14 @@ public class QueryBuilder {
     return new SingleValueConditionDto(ConditionType.EQ, value);
   }
 
+  public static ConditionDto isNull() {
+    return ConditionDto.NULL_CONDITION;
+  }
+
+  public static ConditionDto isNotNull() {
+    return ConditionDto.NOT_NULL_CONDITION;
+  }
+
   public static ConditionDto neq(Object value) {
     return new SingleValueConditionDto(ConditionType.NEQ, value);
   }
@@ -117,9 +125,9 @@ public class QueryBuilder {
   }
 
   public static ParentComparisonMeasure parentComparison(String alias,
-                                                                    ComparisonMethod method,
-                                                                    Measure measure,
-                                                                    List<String> ancestors) {
+                                                         ComparisonMethod method,
+                                                         Measure measure,
+                                                         List<String> ancestors) {
     return new ParentComparisonMeasure(alias, method, measure, ancestors);
   }
 
