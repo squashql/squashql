@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static me.paulbares.query.database.SqlUtils.escape;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
@@ -33,19 +34,22 @@ public class SQLTranslator {
                                  Function<String, Field> fieldProvider,
                                  QueryRewriter queryRewriter,
                                  BiFunction<QueryRewriter, String, String> tableTransformer) {
-    List<String> selects = new ArrayList<>();
+//    List<String> selects = new ArrayList<>();
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
 
     query.coordinates.forEach((field, values) -> groupBy.add(escape(field)));
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true)));
 
-    groupBy.forEach(selects::add); // coord first, then aggregates
-    aggregates.forEach(selects::add);
+//    groupBy.forEach(selects::add); // coord first, then aggregates
+//    aggregates.forEach(selects::add);
 
     StringBuilder statement = new StringBuilder();
     statement.append("select ");
-    statement.append(selects.stream().collect(Collectors.joining(", ")));
+    Function<String, String> f = s -> String.format("COALESCE(%s, 'All %s') AS %s", s, s, s);
+//    statement.append(selects.stream().collect(Collectors.joining(", ")));
+    statement.append(Stream.concat(groupBy.stream().map(f::apply), aggregates.stream()).collect(Collectors.joining(", ")));
+//    statement.append(aggregates.stream().collect(Collectors.joining(", ")));
     statement.append(" from ");
     if (query.subQuery != null) {
       statement.append("(");

@@ -2,6 +2,7 @@ package me.paulbares.query;
 
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.context.Repository;
+import me.paulbares.query.context.Totals;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.OrderKeywordDto;
@@ -91,6 +92,20 @@ public abstract class ATestQueryExecutor {
             List.of(MAIN_SCENARIO_NAME, 15.0d, 33l),
             List.of("s1", 17.0d, 33l),
             List.of("s2", 14.5d, 33l));
+  }
+
+  @Test
+  void testQueryWildcardWithTotal() {
+    QueryDto query = new QueryDto()
+            .table(this.storeName)
+            .withColumn(SCENARIO_FIELD_NAME)
+            .aggregatedMeasure("p", "price", "sum")
+            .aggregatedMeasure("q", "quantity", "sum");
+    query.context(Totals.KEY, QueryBuilder.TOP);
+    Table result = this.queryExecutor.execute(query);
+    result.show();
+    Assertions.fail("todo");
+    // see https://github.com/ClickHouse/ClickHouse/issues/8045 for null instead of ""
   }
 
   @Test
