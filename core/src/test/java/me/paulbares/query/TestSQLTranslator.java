@@ -57,36 +57,6 @@ public class TestSQLTranslator {
   }
 
   @Test
-  void testSingleConditionSingleField() {
-    DatabaseQuery query = new DatabaseQuery()
-            .coordinate(SCENARIO_FIELD_NAME, "Base")
-            .wildcardCoordinate("type")
-            .aggregatedMeasure("pnl.sum", "pnl", "sum")
-            .aggregatedMeasure("delta.sum", "delta", "sum")
-            .aggregatedMeasure("pnl.avg", "pnl", "avg")
-            .table(BASE_STORE_NAME);
-
-    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg` from "
-                    + BASE_STORE_NAME + " where " + "`scenario` = 'Base' group by `scenario`, `type`");
-  }
-
-  @Test
-  void testConditionsSeveralField() {
-    DatabaseQuery query = new DatabaseQuery()
-            .coordinate(SCENARIO_FIELD_NAME, "Base")
-            .coordinates("type", "A", "B")
-            .aggregatedMeasure("pnl.sum", "pnl", "sum")
-            .aggregatedMeasure("delta.sum", "delta", "sum")
-            .aggregatedMeasure("pnl.avg", "pnl", "avg")
-            .table(BASE_STORE_NAME);
-
-    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg` from "
-                    + BASE_STORE_NAME + " where `scenario` = 'Base' and `type` in ('A', 'B') group by `scenario`, `type`");
-  }
-
-  @Test
   void testDifferentMeasures() {
     DatabaseQuery query = new DatabaseQuery()
             .table(BASE_STORE_NAME)

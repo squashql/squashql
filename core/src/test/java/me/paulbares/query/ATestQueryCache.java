@@ -1,11 +1,11 @@
 package me.paulbares.query;
 
 import me.paulbares.query.agg.AggregationFunction;
+import me.paulbares.query.builder.QueryBuilder2;
 import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.CacheStatsDto;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
@@ -168,13 +168,12 @@ public abstract class ATestQueryCache {
 
   @Test
   void testQueryWithJoin() {
-    TableDto table = QueryBuilder.table(this.storeName);
-    table.innerJoin(QueryBuilder.table("competitor"), "ean", "comp_ean");
-
-    QueryDto query = new QueryDto()
-            .table(table)
-            .withColumn("category")
-            .aggregatedMeasure("ps", "price", AggregationFunction.SUM);
+    QueryDto query = QueryBuilder2
+            .from(this.storeName)
+            .inner_join("competitor")
+            .on(this.storeName, "ean", "competitor", "comp_ean")
+            .select(List.of("category"), List.of(sum("ps", "price")))
+            .build();
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("drink", 4d), // value are doubled because of the join
@@ -183,10 +182,10 @@ public abstract class ATestQueryCache {
     assertCacheStats(0, 2);
 
     // Same query but wo. join. Should not hit the cache
-    query = new QueryDto()
-            .table(this.storeName)
-            .withColumn("category")
-            .aggregatedMeasure("ps", "price", AggregationFunction.SUM);
+    query = QueryBuilder2
+            .from(this.storeName)
+            .select(List.of("category"), List.of(sum("ps", "price")))
+            .build();
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("drink", 2d),

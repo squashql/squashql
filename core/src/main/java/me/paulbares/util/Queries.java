@@ -47,8 +47,8 @@ public final class Queries {
   }
 
   public static DatabaseQuery queryScopeToDatabaseQuery(QueryExecutor.QueryScope queryScope) {
-    Set<String> cols = new HashSet<>();
-    queryScope.columns().stream().map(Field::name).forEach(cols::add);
+    Set<String> selects = new HashSet<>();
+    queryScope.columns().stream().map(Field::name).forEach(selects::add);
     DatabaseQuery prefetchQuery = new DatabaseQuery();
     if (queryScope.tableDto() != null) {
       prefetchQuery.table(queryScope.tableDto());
@@ -58,7 +58,7 @@ public final class Queries {
       throw new IllegalArgumentException("A table or sub-query was expected in " + queryScope);
     }
     prefetchQuery.conditions = queryScope.conditions();
-    cols.forEach(prefetchQuery::wildcardCoordinate);
+    selects.forEach(prefetchQuery::wildcardCoordinate);
     return prefetchQuery;
   }
 

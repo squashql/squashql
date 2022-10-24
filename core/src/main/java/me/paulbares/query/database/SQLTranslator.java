@@ -37,7 +37,7 @@ public class SQLTranslator {
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
 
-    query.coordinates.forEach((field, values) -> groupBy.add(escape(field)));
+    query.select.forEach(field -> groupBy.add(escape(field)));
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true)));
 
     groupBy.forEach(selects::add); // coord first, then aggregates
@@ -91,14 +91,6 @@ public class SQLTranslator {
 
   private static Map<String, ConditionDto> extractConditions(DatabaseQuery query) {
     Map<String, ConditionDto> conditionByField = new HashMap<>();
-    query.coordinates.forEach((field, values) -> {
-      if (values != null && values.size() == 1) {
-        conditionByField.put(field, new SingleValueConditionDto(ConditionType.EQ, values.get(0)));
-      } else if (values != null && values.size() > 1) {
-        conditionByField.put(field, new InConditionDto(values));
-      }
-    });
-
     query.conditions.forEach((field, condition) -> {
       ConditionDto old = conditionByField.get(field);
       if (old != null) {

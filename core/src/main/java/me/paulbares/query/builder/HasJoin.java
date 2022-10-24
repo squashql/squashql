@@ -1,9 +1,7 @@
 package me.paulbares.query.builder;
 
-import me.paulbares.query.dto.TableDto;
-
 public interface HasJoin extends HasTable {
   HasJoin on(String fromTable, String from, String toTable, String to);
-
-  HasStartedBuildingJoin join(TableDto tableDto);
+  HasStartedBuildingJoin left_outer_join(String tableName);
+  HasStartedBuildingJoin inner_join(String tableName);
 }
