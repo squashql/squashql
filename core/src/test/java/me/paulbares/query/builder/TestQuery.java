@@ -12,14 +12,14 @@ import java.util.List;
 
 import static me.paulbares.query.QueryBuilder.sum;
 
-public class TestQueryBuilder2 {
+public class TestQuery {
 
   @Test
   void testSimple() {
     ColumnSet year = QueryBuilder.createPeriodColumnSet(new Period.Year("Year"));
     Measure sum = sum("sum", "f2");
 
-    QueryDto build = QueryBuilder2
+    QueryDto build = Query
             .from("saas")
             .select(List.of("col1", "col2"), List.of(year), List.of(sum))
             .build();
@@ -34,7 +34,7 @@ public class TestQueryBuilder2 {
     Assertions.assertThat(build).isEqualTo(q);
 
     // Only one condition
-    build = QueryBuilder2
+    build = Query
             .from("saas")
             .where("f1", QueryBuilder.eq("A"))
             .select(List.of("col1", "col2"), List.of(year), List.of(sum))
@@ -43,7 +43,7 @@ public class TestQueryBuilder2 {
     Assertions.assertThat(build).isEqualTo(q.withCondition("f1", QueryBuilder.eq("A")));
 
     // Multiple conditions
-    build = QueryBuilder2
+    build = Query
             .from("saas")
             .where("f1", QueryBuilder.eq("A"))
             .where("f2", QueryBuilder.eq("B"))
@@ -53,7 +53,7 @@ public class TestQueryBuilder2 {
     Assertions.assertThat(build).isEqualTo(q.withCondition("f2", QueryBuilder.eq("B")));
 
     // with limit
-    build = QueryBuilder2
+    build = Query
             .from("saas")
             .select(List.of("col1", "col2"), List.of(year), List.of(sum))
             .limit(100)
@@ -77,7 +77,7 @@ public class TestQueryBuilder2 {
       TableDto saas = new TableDto("saas");
       TableDto other = new TableDto("other");
 
-      QueryDto build = QueryBuilder2
+      QueryDto build = Query
               .from("saas")
               .leftOuterJoin("other")
               .on(other.name, "id", saas.name, "id")
@@ -110,7 +110,7 @@ public class TestQueryBuilder2 {
               .withMeasure(sum);
 
       // With two join conditions
-      QueryDto build = QueryBuilder2
+      QueryDto build = Query
               .from("saas")
               .innerJoin("other")
               .on(other.name, "id", saas.name, "id")
@@ -135,7 +135,7 @@ public class TestQueryBuilder2 {
       saas.join(other, JoinType.INNER, new JoinMappingDto(other.name, "id", saas.name, "id"));
 
       // With condition on the "joined" table
-      QueryDto build = QueryBuilder2
+      QueryDto build = Query
               .from("saas")
               .innerJoin("other")
               .on(other.name, "id", saas.name, "id")
@@ -163,7 +163,7 @@ public class TestQueryBuilder2 {
     saas.join(other, JoinType.LEFT, new JoinMappingDto(other.name, "id", saas.name, "id"));
     saas.join(another, JoinType.INNER, new JoinMappingDto(another.name, "id", saas.name, "id"));
 
-    QueryDto build = QueryBuilder2
+    QueryDto build = Query
             .from("saas")
             .leftOuterJoin("other")
             .on(other.name, "id", saas.name, "id")
@@ -171,6 +171,68 @@ public class TestQueryBuilder2 {
             .on(another.name, "id", saas.name, "id")
             .select(List.of("col1", "col2"), List.of(sum))
             .build();
+
+    Assertions.assertThat(build).isEqualTo(q);
+  }
+
+  @Test
+  void testOrderBy() {
+    Measure sum = sum("sum", "f2");
+
+    // Single order by
+    QueryDto build = Query
+            .from("saas")
+            .select(List.of("col1", "col2"), List.of(sum))
+            .orderBy("col1", OrderKeywordDto.ASC)
+            .build();
+
+    QueryDto q = new QueryDto()
+            .table("saas")
+            .withColumn("col1")
+            .withColumn("col2")
+            .orderBy("col1", OrderKeywordDto.ASC)
+            .withMeasure(sum);
+
+    Assertions.assertThat(build).isEqualTo(q);
+
+    // Multiple orders by
+    build = Query
+            .from("saas")
+            .select(List.of("col1", "col2"), List.of(sum))
+            .orderBy("col1", OrderKeywordDto.ASC)
+            .orderBy("col2", List.of("1", "10"))
+            .build();
+
+    q = new QueryDto()
+            .table("saas")
+            .withColumn("col1")
+            .withColumn("col2")
+            .orderBy("col1", OrderKeywordDto.ASC)
+            .orderBy("col2", List.of("1", "10"))
+            .withMeasure(sum);
+
+    Assertions.assertThat(build).isEqualTo(q);
+  }
+
+  @Test
+  void testOrderByWithLimit() {
+    Measure sum = sum("sum", "f2");
+
+    // Single order by
+    QueryDto build = Query
+            .from("saas")
+            .select(List.of("col1", "col2"), List.of(sum))
+            .orderBy("col1", OrderKeywordDto.ASC)
+            .limit(10)
+            .build();
+
+    QueryDto q = new QueryDto()
+            .table("saas")
+            .withColumn("col1")
+            .withColumn("col2")
+            .orderBy("col1", OrderKeywordDto.ASC)
+            .withLimit(10)
+            .withMeasure(sum);
 
     Assertions.assertThat(build).isEqualTo(q);
   }

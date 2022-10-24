@@ -1,7 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.agg.AggregationFunction;
-import me.paulbares.query.builder.QueryBuilder2;
+import me.paulbares.query.builder.Query;
 import me.paulbares.query.context.Repository;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.ConditionDto;
@@ -84,7 +84,7 @@ public abstract class ATestQueryExecutor {
 
   @Test
   void testQueryWildcard() {
-    QueryDto query = QueryBuilder2
+    QueryDto query = Query
             .from(this.storeName)
             .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
@@ -97,7 +97,7 @@ public abstract class ATestQueryExecutor {
 
   @Test
   void testQueryWildcardCount() {
-    QueryDto query = QueryBuilder2
+    QueryDto query = Query
             .from(this.storeName)
             .select(List.of(SCENARIO_FIELD_NAME), List.of(CountMeasure.INSTANCE))
             .build();
@@ -112,7 +112,7 @@ public abstract class ATestQueryExecutor {
 
   @Test
   void testQuerySeveralCoordinates() {
-    QueryDto query = QueryBuilder2
+    QueryDto query = Query
             .from(this.storeName)
             .where(SCENARIO_FIELD_NAME, QueryBuilder.in("s1", "s2"))
             .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price"), sum("q", "quantity")))
@@ -156,7 +156,7 @@ public abstract class ATestQueryExecutor {
 
   @Test
   void testConditionsNullNotNull() {
-    QueryDto query = QueryBuilder2.from(this.storeName)
+    QueryDto query = Query.from(this.storeName)
             .where("subcategory", QueryBuilder.isNotNull())
             .select(List.of("ean"), List.of(CountMeasure.INSTANCE))
             .build();
@@ -304,11 +304,11 @@ public abstract class ATestQueryExecutor {
 
   @Test
   void testSubQuery() {
-    QueryDto subQuery = QueryBuilder2.from(this.storeName)
+    QueryDto subQuery = Query.from(this.storeName)
             .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("ca", "price")))// ca per scenario
             .build();
 
-    QueryDto queryDto = QueryBuilder2.from(subQuery)
+    QueryDto queryDto = Query.from(subQuery)
             .select(Collections.emptyList(), List.of(QueryBuilder.avg("mean", "ca")))// avg of ca
             .build();
     Table result = this.queryExecutor.execute(queryDto);

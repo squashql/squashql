@@ -1,7 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.agg.AggregationFunction;
-import me.paulbares.query.builder.QueryBuilder2;
+import me.paulbares.query.builder.Query;
 import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.CacheStatsDto;
@@ -168,7 +168,7 @@ public abstract class ATestQueryCache {
 
   @Test
   void testQueryWithJoin() {
-    QueryDto query = QueryBuilder2
+    QueryDto query = Query
             .from(this.storeName)
             .innerJoin("competitor")
             .on(this.storeName, "ean", "competitor", "comp_ean")
@@ -182,7 +182,7 @@ public abstract class ATestQueryCache {
     assertCacheStats(0, 2);
 
     // Same query but wo. join. Should not hit the cache
-    query = QueryBuilder2
+    query = Query
             .from(this.storeName)
             .select(List.of("category"), List.of(sum("ps", "price")))
             .build();

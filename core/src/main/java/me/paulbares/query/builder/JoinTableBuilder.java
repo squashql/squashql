@@ -8,13 +8,13 @@ import java.util.List;
 
 public class JoinTableBuilder implements HasStartedBuildingJoin {
 
-  final QueryBuilder2 parent;
+  final Query parent;
   final String tableName;
   final JoinType joinType;
 
   final List<JoinMappingDto> mappingDtos = new ArrayList<>();
 
-  public JoinTableBuilder(QueryBuilder2 parent, String tableName, JoinType joinType) {
+  public JoinTableBuilder(Query parent, String tableName, JoinType joinType) {
     this.parent = parent;
     this.tableName = tableName;
     this.joinType = joinType;

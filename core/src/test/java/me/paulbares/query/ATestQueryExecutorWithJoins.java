@@ -1,6 +1,6 @@
 package me.paulbares.query;
 
-import me.paulbares.query.builder.QueryBuilder2;
+import me.paulbares.query.builder.Query;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
@@ -70,7 +70,7 @@ public abstract class ATestQueryExecutorWithJoins {
 
   @Test
   void testQuerySingleCoordinate() {
-    QueryDto queryDto = QueryBuilder2
+    QueryDto queryDto = Query
             .from(this.orders)
             .innerJoin(this.orderDetails)
             .on(this.orderDetails, "OrderID", this.orders, "OrderID")

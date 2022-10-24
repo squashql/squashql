@@ -1,28 +1,25 @@
 package me.paulbares.query.builder;
 
-import me.paulbares.query.*;
-import me.paulbares.query.agg.AggregationFunction;
+import me.paulbares.query.ColumnSet;
+import me.paulbares.query.Measure;
 import me.paulbares.query.dto.*;
 
 import java.util.List;
-import java.util.Map;
 
-import static me.paulbares.query.QueryBuilder.periodComparison;
-
-public class QueryBuilder2 implements HasCondition, HasTable, HasSelect, HasJoin, HasStartedBuildingTable, CanBeBuildQuery {
+public class Query implements HasCondition, HasTable, HasSelect, HasJoin, HasStartedBuildingTable, HasOrderBy {
 
   private final QueryDto queryDto = new QueryDto();
 
   private JoinTableBuilder currentJoinTableBuilder;
 
   public static HasStartedBuildingTable from(String tableName) {
-    QueryBuilder2 qb = new QueryBuilder2();
+    Query qb = new Query();
     qb.queryDto.table = new TableDto(tableName);
     return qb;
   }
 
   public static HasTable from(QueryDto subQuery) {
-    QueryBuilder2 qb = new QueryBuilder2();
+    Query qb = new Query();
     qb.queryDto.subQuery = subQuery;
     return qb;
   }
@@ -80,37 +77,21 @@ public class QueryBuilder2 implements HasCondition, HasTable, HasSelect, HasJoin
   }
 
   @Override
+  public HasSelect orderBy(String column, OrderKeywordDto orderKeywordDto) {
+    this.queryDto.orderBy(column, orderKeywordDto);
+    return this;
+  }
+
+  @Override
+  public HasSelect orderBy(String column, List<?> firstElements) {
+    this.queryDto.orderBy(column, firstElements);
+    return this;
+  }
+
+  @Override
   public QueryDto build() {
     return this.queryDto;
   }
 
   // FIXME orderBy
-
-  public static void main(String[] args) {
-    ColumnSet year = QueryBuilder.createPeriodColumnSet(new Period.Year("Year"));
-    Measure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, "Income/Expense", QueryBuilder.eq("Revenue"));
-    Measure growth = periodComparison(
-            "Growth",
-            ComparisonMethod.DIVIDE,
-            sales,
-            Map.of("Year", "y-1"));
-
-    QueryBuilder2 qb = new QueryBuilder2();
-    TableDto saas = new TableDto("saas");
-    TableDto a = new TableDto("a");
-    qb
-            .from("saas")
-            .innerJoin(a.name)
-            .on(a.name, "id", saas.name, "id")
-//            .on(a.name, "id", saas.name, "id")
-            .leftOuterJoin(a.name)
-            .on(a.name, "id", saas.name, "id")
-            .where(null, null)
-            .where(null, null)
-            .select(List.of("col1", "col2"), List.of(year), List.of(growth))
-
-    ;
-
-    System.out.println(qb.queryDto.json());
-  }
 }

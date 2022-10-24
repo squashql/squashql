@@ -1,10 +1,9 @@
 package me.paulbares.query;
 
-import me.paulbares.query.builder.QueryBuilder2;
+import me.paulbares.query.builder.Query;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
@@ -109,7 +108,7 @@ public abstract class ATestBucketComparison {
                     this.groupOfScenario, "g"
             ));
 
-    var query = QueryBuilder2
+    var query = Query
             .from(this.storeName)
             .select_(List.of(this.bucketCS), List.of(priceComp, price, quantityComp, quantity))
             .build();
