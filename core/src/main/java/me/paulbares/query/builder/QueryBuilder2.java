@@ -9,19 +9,19 @@ import java.util.Map;
 
 import static me.paulbares.query.QueryBuilder.periodComparison;
 
-public class QueryBuilder2 implements HasFromTable, HasCondition, HasTable, HasSelect, HasJoin {
+public class QueryBuilder2 implements HasCondition, HasTable, HasSelect, HasJoin, HasStartedBuildingTable {
 
   private final QueryDto queryDto = new QueryDto();
 
   private JoinTableBuilder currentJoinTableBuilder;
 
-  public static HasFromTable from(String tableName) {
+  public static HasStartedBuildingTable from(String tableName) {
     QueryBuilder2 qb = new QueryBuilder2();
     qb.queryDto.table = new TableDto(tableName);
     return qb;
   }
 
-  public static HasFromTable from(QueryDto subQuery) {
+  public static HasTable from(QueryDto subQuery) {
     QueryBuilder2 qb = new QueryBuilder2();
     qb.queryDto.subQuery = subQuery;
     return qb;
