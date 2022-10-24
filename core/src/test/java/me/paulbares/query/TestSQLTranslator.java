@@ -44,8 +44,8 @@ public class TestSQLTranslator {
   @Test
   void testGroupBy() {
     DatabaseQuery query = new DatabaseQuery()
-            .wildcardCoordinate(SCENARIO_FIELD_NAME)
-            .wildcardCoordinate("type")
+            .withSelect(SCENARIO_FIELD_NAME)
+            .withSelect("type")
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
             .aggregatedMeasure("delta.sum", "delta", "sum")
             .aggregatedMeasure("pnl.avg", "pnl", "avg")
@@ -70,7 +70,7 @@ public class TestSQLTranslator {
   @Test
   void testWithTotalsTop() {
     DatabaseQuery query = new DatabaseQuery()
-            .wildcardCoordinate(SCENARIO_FIELD_NAME)
+            .withSelect(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
@@ -82,7 +82,7 @@ public class TestSQLTranslator {
   @Test
   void testWithTotalsBottom() {
     DatabaseQuery query = new DatabaseQuery()
-            .wildcardCoordinate(SCENARIO_FIELD_NAME)
+            .withSelect(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
@@ -138,7 +138,7 @@ public class TestSQLTranslator {
     a.join(b, INNER, jAToB);
     a.join(c, LEFT, jCToAB);
 
-    DatabaseQuery query = new DatabaseQuery().table(a).wildcardCoordinate("c.y");
+    DatabaseQuery query = new DatabaseQuery().table(a).withSelect("c.y");
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select `c.y` from A " +
@@ -150,8 +150,8 @@ public class TestSQLTranslator {
   @Test
   void testConditions() {
     DatabaseQuery query = new DatabaseQuery()
-            .wildcardCoordinate(SCENARIO_FIELD_NAME)
-            .wildcardCoordinate("type")
+            .withSelect(SCENARIO_FIELD_NAME)
+            .withSelect("type")
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
             .condition(SCENARIO_FIELD_NAME, and(eq("base"), eq("s1"), eq("s2")))
             .condition("type", or(eq("A"), eq("B")))
@@ -172,13 +172,13 @@ public class TestSQLTranslator {
     TableDto a = new TableDto("a");
     DatabaseQuery subQuery = new DatabaseQuery()
             .table(a)
-            .wildcardCoordinate("c1")
-            .wildcardCoordinate("c3")
+            .withSelect("c1")
+            .withSelect("c3")
             .withMeasure(avg("mean", "c2"));
 
     DatabaseQuery query = new DatabaseQuery()
             .subQuery(subQuery)
-            .wildcardCoordinate("c3") // c3 needs to be in the subquery
+            .withSelect("c3") // c3 needs to be in the subquery
             .withMeasure(sum("sum GT", "mean"))
             .condition("type", eq("myType"));
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))

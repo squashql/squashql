@@ -92,6 +92,4 @@ public class Query implements HasCondition, HasTable, HasSelect, HasJoin, HasSta
   public QueryDto build() {
     return this.queryDto;
   }
-
-  // FIXME orderBy
 }

@@ -58,7 +58,7 @@ public final class Queries {
       throw new IllegalArgumentException("A table or sub-query was expected in " + queryScope);
     }
     prefetchQuery.conditions = queryScope.conditions();
-    selects.forEach(prefetchQuery::wildcardCoordinate);
+    selects.forEach(prefetchQuery::withSelect);
     return prefetchQuery;
   }
 
@@ -91,7 +91,7 @@ public final class Queries {
 
     DatabaseQuery prefetchQuery = new DatabaseQuery().table(query.table);
     prefetchQuery.conditions = query.conditions;
-    cols.forEach(prefetchQuery::wildcardCoordinate);
+    cols.forEach(prefetchQuery::withSelect);
     query.measures.forEach(prefetchQuery::withMeasure);
     return prefetchQuery;
   }

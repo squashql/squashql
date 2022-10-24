@@ -23,7 +23,7 @@ public class DatabaseQuery {
   public Map<String, ConditionDto> conditions = new LinkedHashMap<>();
   public List<Measure> measures = new ArrayList<>();
 
-  public DatabaseQuery wildcardCoordinate(String field) {
+  public DatabaseQuery withSelect(String field) {
     this.select.add(field);
     return this;
   }
