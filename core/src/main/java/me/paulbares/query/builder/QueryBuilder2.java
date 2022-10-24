@@ -28,12 +28,12 @@ public class QueryBuilder2 implements HasFromTable, HasCondition, HasTable, HasS
   }
 
   @Override
-  public HasStartedBuildingJoin left_outer_join(String tableName) {
+  public HasStartedBuildingJoin leftOuterJoin(String tableName) {
     return join(tableName, JoinType.LEFT);
   }
 
   @Override
-  public HasStartedBuildingJoin inner_join(String tableName) {
+  public HasStartedBuildingJoin innerJoin(String tableName) {
     return join(tableName, JoinType.INNER);
   }
 
@@ -93,10 +93,10 @@ public class QueryBuilder2 implements HasFromTable, HasCondition, HasTable, HasS
     TableDto a = new TableDto("a");
     qb
             .from("saas")
-            .inner_join(a.name)
+            .innerJoin(a.name)
             .on(a.name, "id", saas.name, "id")
 //            .on(a.name, "id", saas.name, "id")
-            .left_outer_join(a.name)
+            .leftOuterJoin(a.name)
             .on(a.name, "id", saas.name, "id")
             .where(null, null)
             .where(null, null)

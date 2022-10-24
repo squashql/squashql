@@ -72,13 +72,13 @@ public abstract class ATestQueryExecutorWithJoins {
   void testQuerySingleCoordinate() {
     QueryDto queryDto = QueryBuilder2
             .from(this.orders)
-            .inner_join(this.orderDetails)
+            .innerJoin(this.orderDetails)
             .on(this.orderDetails, "OrderID", this.orders, "OrderID")
-            .inner_join(this.shippers)
+            .innerJoin(this.shippers)
             .on(this.shippers, "ShipperID", this.orders, "ShipperID")
-            .inner_join(this.products)
+            .innerJoin(this.products)
             .on(this.products, "ProductID", this.orderDetails, "ProductID")
-            .inner_join(this.categories)
+            .innerJoin(this.categories)
             .on(this.products, "CategoryID", this.categories, "CategoryID")
             .select(List.of("CategoryName"), List.of(QueryBuilder.sum("Q", "Quantity"), CountMeasure.INSTANCE))
             .build();

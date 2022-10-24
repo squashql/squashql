@@ -170,7 +170,7 @@ public abstract class ATestQueryCache {
   void testQueryWithJoin() {
     QueryDto query = QueryBuilder2
             .from(this.storeName)
-            .inner_join("competitor")
+            .innerJoin("competitor")
             .on(this.storeName, "ean", "competitor", "comp_ean")
             .select(List.of("category"), List.of(sum("ps", "price")))
             .build();

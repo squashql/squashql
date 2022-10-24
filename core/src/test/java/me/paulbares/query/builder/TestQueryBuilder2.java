@@ -43,14 +43,14 @@ public class TestQueryBuilder2 {
 
     QueryBuilder2
             .from("saas")
-            .left_outer_join("other")
+            .leftOuterJoin("other")
             .on(other.name, "id", saas.name, "id")
             .select(List.of("col1", "col2"), List.of(sum("sum", "f2")));
 
     // With two join conditions
     QueryBuilder2
             .from("saas")
-            .inner_join("other")
+            .innerJoin("other")
             .on(other.name, "id", saas.name, "id")
             .on(other.name, "a", saas.name, "b")
             .select(List.of("col1", "col2"), List.of(sum("sum", "f2")));
@@ -58,7 +58,7 @@ public class TestQueryBuilder2 {
     // With condition on the "joined" table
     QueryBuilder2
             .from("saas")
-            .inner_join("other")
+            .innerJoin("other")
             .on(other.name, "id", saas.name, "id")
             .where("f1", QueryBuilder.eq("A"))
             .select(List.of("col1", "col2"), List.of(sum("sum", "f2")));
@@ -74,9 +74,9 @@ public class TestQueryBuilder2 {
 
     QueryBuilder2
             .from("saas")
-            .left_outer_join("other")
+            .leftOuterJoin("other")
             .on(other.name, "id", saas.name, "id")
-            .inner_join("another")
+            .innerJoin("another")
             .on(another.name, "id", saas.name, "id")
             .select(List.of("col1", "col2"), List.of(sum("sum", "f2")));
 
