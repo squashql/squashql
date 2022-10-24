@@ -120,7 +120,7 @@ public class SQLTranslator {
     for (JoinDto join : tableQuery.joins) {
       statement
               .append(" ")
-              .append(join.type)
+              .append(join.type.name().toLowerCase())
               .append(" join ")
               .append(queryRewriter.tableName(join.table.name))
               .append(" on ");
