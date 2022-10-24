@@ -30,6 +30,8 @@ public class QueryDto {
 
   public Map<String, ContextValue> context = new HashMap<>();
 
+  public int limit = -1;
+
   public QueryDto withColumn(String column) {
     this.columns.add(column);
     return this;
@@ -97,6 +99,11 @@ public class QueryDto {
 
   public QueryDto orderBy(String column, List<?> firstElements) {
     this.orders.put(column, new ExplicitOrderDto(firstElements));
+    return this;
+  }
+
+  public QueryDto withLimit(int limit) {
+    this.limit = limit;
     return this;
   }
 

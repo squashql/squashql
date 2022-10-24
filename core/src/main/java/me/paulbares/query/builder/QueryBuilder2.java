@@ -9,7 +9,7 @@ import java.util.Map;
 
 import static me.paulbares.query.QueryBuilder.periodComparison;
 
-public class QueryBuilder2 implements HasCondition, HasTable, HasSelect, HasJoin, HasStartedBuildingTable {
+public class QueryBuilder2 implements HasCondition, HasTable, HasSelect, HasJoin, HasStartedBuildingTable, CanBeBuildQuery {
 
   private final QueryDto queryDto = new QueryDto();
 
@@ -47,6 +47,7 @@ public class QueryBuilder2 implements HasCondition, HasTable, HasSelect, HasJoin
     JoinTableBuilder jtb = this.currentJoinTableBuilder;
     if (jtb != null) {
       this.queryDto.table.join(new TableDto(jtb.tableName), jtb.joinType, jtb.mappingDtos);
+      this.currentJoinTableBuilder = null;
     }
   }
 
@@ -69,6 +70,12 @@ public class QueryBuilder2 implements HasCondition, HasTable, HasSelect, HasJoin
     columns.forEach(this.queryDto::withColumn);
     columnSets.forEach(cs -> this.queryDto.withColumnSet(cs.getColumnSetKey(), cs));
     measures.forEach(this.queryDto::withMeasure);
+    return this;
+  }
+
+  @Override
+  public CanBeBuildQuery limit(int limit) {
+    this.queryDto.withLimit(limit);
     return this;
   }
 
