@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import static me.paulbares.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
-import static me.paulbares.query.QueryBuilder.eq;
+import static me.paulbares.query.Functions.eq;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -102,10 +102,11 @@ public abstract class ATestPeriodComparison {
   void testCompareQuarterCurrentWithSamePreviousYear() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
-    ComparisonMeasureReferencePosition m = QueryBuilder.periodComparison(
+    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
+            ColumnSetKey.PERIOD,
             Map.of(
                     "quarter_sales", "q",
                     "year_sales", "y-1"
@@ -161,10 +162,11 @@ public abstract class ATestPeriodComparison {
   void testCompareQuarterCurrentWithPrevious() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
-    ComparisonMeasureReferencePosition m = QueryBuilder.periodComparison(
+    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
+            ColumnSetKey.PERIOD,
             Map.of(
                     "quarter_sales", "q-1",
                     "year_sales", "y"
@@ -198,10 +200,11 @@ public abstract class ATestPeriodComparison {
   void testCompareYearCurrentWithPrevious() {
     Period.Year period = new Period.Year("year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
-    ComparisonMeasureReferencePosition m = QueryBuilder.periodComparison(
+    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
+            ColumnSetKey.PERIOD,
             Map.of("year_sales", "y-1"));
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
 
@@ -226,10 +229,11 @@ public abstract class ATestPeriodComparison {
   void testCompareSemesterCurrentWithPrevious() {
     Period.Semester period = new Period.Semester("semester_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
-    ComparisonMeasureReferencePosition m = QueryBuilder.periodComparison(
+    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
+            ColumnSetKey.PERIOD,
             Map.of(period.semester(), "s-1", period.year(), "y"));
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
 
@@ -266,10 +270,11 @@ public abstract class ATestPeriodComparison {
 
     Period.Month period = new Period.Month("month_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
-    ComparisonMeasureReferencePosition m = QueryBuilder.periodComparison(
+    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
+            ColumnSetKey.PERIOD,
             Map.of(period.month(), "m-1", period.year(), "y"));
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
 

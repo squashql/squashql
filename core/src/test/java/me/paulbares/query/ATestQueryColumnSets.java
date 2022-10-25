@@ -205,10 +205,11 @@ public abstract class ATestQueryColumnSets {
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
 
-    ComparisonMeasureReferencePosition salesYearComp = QueryBuilder.periodComparison(
+    ComparisonMeasureReferencePosition salesYearComp = new ComparisonMeasureReferencePosition(
             "salesYearComp",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
+            ColumnSetKey.PERIOD,
             Map.of("year_sales", "y-1"));
 
     var query = new QueryDto()
@@ -247,10 +248,11 @@ public abstract class ATestQueryColumnSets {
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
 
-    ComparisonMeasureReferencePosition salesYearComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition salesYearComp = new ComparisonMeasureReferencePosition(
             "salesYearComp",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
+            ColumnSetKey.BUCKET,
             Map.of(SCENARIO_FIELD_NAME, "s-1", groupOfScenario, "g"));
 
     var query = new QueryDto()
@@ -287,17 +289,19 @@ public abstract class ATestQueryColumnSets {
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "down"));
 
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", AggregationFunction.SUM);
-    ComparisonMeasureReferencePosition salesGroupComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition salesGroupComp = new ComparisonMeasureReferencePosition(
             "salesGroupComp",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
+            ColumnSetKey.BUCKET,
             Map.of(SCENARIO_FIELD_NAME, "s-1", groupOfScenario, "g"));
 
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(new Period.Year("year_sales"));
-    ComparisonMeasureReferencePosition salesYearComp = QueryBuilder.periodComparison(
+    ComparisonMeasureReferencePosition salesYearComp = new ComparisonMeasureReferencePosition(
             "salesYearComp",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
+            ColumnSetKey.PERIOD,
             Map.of("year_sales", "y-1"));
 
     var query = new QueryDto()

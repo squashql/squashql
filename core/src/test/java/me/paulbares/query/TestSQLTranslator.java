@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.function.Function;
 
-import static me.paulbares.query.QueryBuilder.*;
+import static me.paulbares.query.Functions.*;
 import static me.paulbares.query.dto.JoinType.INNER;
 import static me.paulbares.query.dto.JoinType.LEFT;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
@@ -74,7 +74,7 @@ public class TestSQLTranslator {
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
-    Assertions.assertThat(SQLTranslator.translate(query, QueryBuilder.TOP, fieldProvider))
+    Assertions.assertThat(SQLTranslator.translate(query, Functions.TOP, fieldProvider))
             .isEqualTo("select `scenario`, sum(`price`) as `pnl.sum` from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
                     "order by case when `scenario` is null or `scenario` = '' then 0 else 1 end, `scenario`  asc");
   }
@@ -86,7 +86,7 @@ public class TestSQLTranslator {
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
-    Assertions.assertThat(SQLTranslator.translate(query, QueryBuilder.BOTTOM, fieldProvider))
+    Assertions.assertThat(SQLTranslator.translate(query, Functions.BOTTOM, fieldProvider))
             .isEqualTo("select `scenario`, sum(`price`) as `pnl.sum` from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
                     "order by case when `scenario` is null or `scenario` = '' then 1 else 0 end, `scenario`  asc");
   }

@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import static me.paulbares.query.QueryBuilder.*;
+import static me.paulbares.query.Functions.*;
 
 public class TestJavascriptLibrary {
 

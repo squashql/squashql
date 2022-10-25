@@ -1,5 +1,6 @@
 package me.paulbares.query;
 
+import me.paulbares.query.builder.Query;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
@@ -11,8 +12,8 @@ import org.junit.jupiter.api.*;
 import java.util.Arrays;
 import java.util.List;
 
-import static me.paulbares.query.QueryBuilder.eq;
-import static me.paulbares.query.QueryBuilder.in;
+import static me.paulbares.query.Functions.eq;
+import static me.paulbares.query.Functions.in;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -66,17 +67,12 @@ public abstract class ATestParentComparison {
 
   @Test
   void testSimple() {
-    Measure pop = QueryBuilder.sum("population", "population");
-    QueryDto query = QueryBuilder.query()
-            .table(this.storeName)
-            .withColumn("continent")
-            .withColumn("country")
-            .withColumn("city")
-            .withMeasure(pop);
-
-    // If no ancestors is expressed in the query, return 1.
-    ParentComparisonMeasure pOp = QueryBuilder.parentComparison("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
-    query.withMeasure(pOp);
+    Measure pop = Functions.sum("population", "population");
+    ParentComparisonMeasure pOp = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("continent", "country", "city"), List.of(pop, pOp))
+            .build();
 
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -89,12 +85,10 @@ public abstract class ATestParentComparison {
             Arrays.asList("eu", "france", "paris", 2d, 0.8),
             Arrays.asList("eu", "uk", "london", 9d, 1d));
 
-    query = QueryBuilder.query()
-            .table(this.storeName)
-            .withColumn("continent")
-            .withColumn("country")
-            .withColumn("city")
-            .withMeasure(pOp); // query only parent
+    query = Query
+            .from(this.storeName)
+            .select(List.of("continent", "country", "city"), List.of(pOp))
+            .build(); // query only parent
 
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -110,28 +104,24 @@ public abstract class ATestParentComparison {
 
   @Test
   void testClearFilter() {
-    Measure pop = QueryBuilder.sum("population", "population");
-    ParentComparisonMeasure pOp = QueryBuilder.parentComparison("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
-    QueryDto query = QueryBuilder.query()
-            .table(this.storeName)
-            .withColumn("continent")
-            .withColumn("country")
-            .withColumn("city")
-            .withCondition("city", in("montreal", "toronto"))
-            .withMeasure(pOp); // query only parent
+    Measure pop = Functions.sum("population", "population");
+    ParentComparisonMeasure pOp = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
+    QueryDto query = Query
+            .from(this.storeName)
+            .where("city", in("montreal", "toronto"))
+            .select(List.of("continent", "country", "city"), List.of(pOp))
+            .build(); // query only parent
 
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("am", "canada", "montreal", .3333333333333333),
             Arrays.asList("am", "canada", "toronto", 0.5));
 
-    query = QueryBuilder.query()
-            .table(this.storeName)
-            .withColumn("continent")
-            .withColumn("country")
-            .withColumn("city")
-            .withCondition("country", eq("canada"))
-            .withMeasure(pOp); // query only parent
+    query = Query
+            .from(this.storeName)
+            .where("country", eq("canada"))
+            .select(List.of("continent", "country", "city"), List.of(pOp))
+            .build(); // query only parent
 
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -139,13 +129,11 @@ public abstract class ATestParentComparison {
             Arrays.asList("am", "canada", "otawa", .16666666666666666),
             Arrays.asList("am", "canada", "toronto", 0.5));
 
-    query = QueryBuilder.query()
-            .table(this.storeName)
-            .withColumn("continent")
-            .withColumn("country")
-            .withColumn("city")
-            .withCondition("continent", eq("eu"))
-            .withMeasure(pOp); // query only parent
+    query = Query
+            .from(this.storeName)
+            .where("continent", eq("eu"))
+            .select(List.of("continent", "country", "city"), List.of(pOp))
+            .build(); // query only parent
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("eu", "france", "lyon", 0.2),
@@ -155,17 +143,12 @@ public abstract class ATestParentComparison {
 
   @Test
   void testWithMissingAncestor() {
-    Measure pop = QueryBuilder.sum("population", "population");
-    QueryDto query = QueryBuilder.query()
-            .table(this.storeName)
-            .withColumn("continent")
-            .withColumn("country")
-            .withColumn("city")
-            .withMeasure(pop);
-
-    ParentComparisonMeasure pOp = QueryBuilder.parentComparison("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("country", "continent"));
-
-    query.withMeasure(pOp);
+    Measure pop = Functions.sum("population", "population");
+    ParentComparisonMeasure pOp = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("country", "continent"));
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("continent", "country", "city"), List.of(pop, pOp))
+            .build(); // query only parent
 
     Table result = this.executor.execute(query);
     // Always 1 because the parent scope will be [city, continent] so each cell value is compared to itself.
@@ -182,22 +165,15 @@ public abstract class ATestParentComparison {
 
   @Test
   void testWithCalculatedMeasure() {
-    Measure pop = QueryBuilder.multiply("double", QueryBuilder.sum("population", "population"), QueryBuilder.integer(2));
-    QueryDto query = QueryBuilder.query()
-            .table(this.storeName)
-            .withColumn("continent")
-            .withColumn("country")
-            .withColumn("city")
-            .withMeasure(pop);
-
-    ParentComparisonMeasure pOp = QueryBuilder.parentComparison("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
-
-    query.withMeasure(pOp);
+    Measure pop = Functions.multiply("double", Functions.sum("population", "population"), Functions.integer(2));
+    ParentComparisonMeasure pOp = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("continent", "country", "city"), List.of(pop, pOp))
+            .build(); // query only parent
 
     Assertions.assertThatThrownBy(() -> this.executor.execute(query))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("primitive measure");
   }
-
-  // TODO test with conditions
 }

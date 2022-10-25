@@ -80,7 +80,7 @@ public abstract class ATestQueryExecutorWithJoins {
             .on(this.products, "ProductID", this.orderDetails, "ProductID")
             .innerJoin(this.categories)
             .on(this.products, "CategoryID", this.categories, "CategoryID")
-            .select(List.of("CategoryName"), List.of(QueryBuilder.sum("Q", "Quantity"), CountMeasure.INSTANCE))
+            .select(List.of("CategoryName"), List.of(Functions.sum("Q", "Quantity"), CountMeasure.INSTANCE))
             .build();
 
     Table table = this.queryExecutor.execute(queryDto);

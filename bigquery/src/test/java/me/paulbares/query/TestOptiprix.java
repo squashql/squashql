@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static me.paulbares.query.QueryBuilder.*;
+import static me.paulbares.query.Functions.*;
 import static me.paulbares.query.dto.JoinType.INNER;
 import static me.paulbares.query.dto.JoinType.LEFT;
 
@@ -29,7 +29,7 @@ public class TestOptiprix {
 
     QueryDto subQuery = subQuery();
 
-    QueryDto query = query()
+    QueryDto query = new QueryDto()
             .table(subQuery)
             .withMeasure(new ExpressionMeasure("InitialPriceIndex", "100*sum(itmInitialComparableTurnover)/sum(competitorComparableTurnover)"))
             .withMeasure(new ExpressionMeasure("RecommendedPriceIndex", "100*sum(itmRecommendedComparableTurnover)/sum(competitorComparableTurnover)"))
@@ -75,7 +75,7 @@ public class TestOptiprix {
             avg("avg_cp_gross_price", "cp_gross_price"),
             min("min_cur_vmm", "cur_vmm"));
 
-    QueryDto query = QueryBuilder.query()
+    QueryDto query = new QueryDto()
             .table(recommendation)
             .withMeasure(CountMeasure.INSTANCE)
             .withMeasure(itmInitialComparableTurnover)

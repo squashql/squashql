@@ -2,21 +2,21 @@ package me.paulbares.query.builder;
 
 import me.paulbares.query.ColumnSet;
 import me.paulbares.query.ColumnSetKey;
+import me.paulbares.query.Functions;
 import me.paulbares.query.Measure;
-import me.paulbares.query.QueryBuilder;
 import me.paulbares.query.dto.*;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static me.paulbares.query.QueryBuilder.sum;
+import static me.paulbares.query.Functions.sum;
 
 public class TestQuery {
 
   @Test
   void testSimple() {
-    ColumnSet year = QueryBuilder.createPeriodColumnSet(new Period.Year("Year"));
+    ColumnSet year = new PeriodColumnSetDto(new Period.Year("Year"));
     Measure sum = sum("sum", "f2");
 
     QueryDto build = Query
@@ -36,21 +36,21 @@ public class TestQuery {
     // Only one condition
     build = Query
             .from("saas")
-            .where("f1", QueryBuilder.eq("A"))
+            .where("f1", Functions.eq("A"))
             .select(List.of("col1", "col2"), List.of(year), List.of(sum))
             .build();
 
-    Assertions.assertThat(build).isEqualTo(q.withCondition("f1", QueryBuilder.eq("A")));
+    Assertions.assertThat(build).isEqualTo(q.withCondition("f1", Functions.eq("A")));
 
     // Multiple conditions
     build = Query
             .from("saas")
-            .where("f1", QueryBuilder.eq("A"))
-            .where("f2", QueryBuilder.eq("B"))
+            .where("f1", Functions.eq("A"))
+            .where("f2", Functions.eq("B"))
             .select(List.of("col1", "col2"), List.of(year), List.of(sum))
             .build();
 
-    Assertions.assertThat(build).isEqualTo(q.withCondition("f2", QueryBuilder.eq("B")));
+    Assertions.assertThat(build).isEqualTo(q.withCondition("f2", Functions.eq("B")));
 
     // with limit
     build = Query
@@ -130,7 +130,7 @@ public class TestQuery {
               .withColumn("col1")
               .withColumn("col2")
               .withMeasure(sum)
-              .withCondition("f1", QueryBuilder.eq("A"));
+              .withCondition("f1", Functions.eq("A"));
 
       saas.join(other, JoinType.INNER, new JoinMappingDto(other.name, "id", saas.name, "id"));
 
@@ -139,7 +139,7 @@ public class TestQuery {
               .from("saas")
               .innerJoin("other")
               .on(other.name, "id", saas.name, "id")
-              .where("f1", QueryBuilder.eq("A"))
+              .where("f1", Functions.eq("A"))
               .select(List.of("col1", "col2"), List.of(sum))
               .build();
 

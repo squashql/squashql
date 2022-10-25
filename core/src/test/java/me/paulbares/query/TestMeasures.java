@@ -14,7 +14,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static me.paulbares.query.QueryBuilder.*;
+import static me.paulbares.query.Functions.*;
 
 public class TestMeasures {
 
@@ -49,25 +49,27 @@ public class TestMeasures {
 
     AggregatedMeasure amount = new AggregatedMeasure("sum(Amount)", "Amount", AggregationFunction.SUM);
     AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, "Income/Expense", eq("Revenue"));
-    Measure ebidtaRatio = QueryBuilder.divide("EBITDA %", amount, sales);
+    Measure ebidtaRatio = Functions.divide("EBITDA %", amount, sales);
 
-    ComparisonMeasureReferencePosition growth = periodComparison(
+    ComparisonMeasureReferencePosition growth = new ComparisonMeasureReferencePosition(
             "Growth",
             ComparisonMethod.DIVIDE,
             sales,
+            ColumnSetKey.PERIOD,
             Map.of("Year", "y-1"));
     Measure kpi = plus("KPI", ebidtaRatio, growth);
 
     Map<String, String> referencePosition = new LinkedHashMap<>();
     referencePosition.put("scenario encrypted", "s-1");
     referencePosition.put("group", "g");
-    ComparisonMeasureReferencePosition kpiComp = bucketComparison(
+    ComparisonMeasureReferencePosition kpiComp = new ComparisonMeasureReferencePosition(
             "KPI comp. with prev. scenario",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             kpi,
+            ColumnSetKey.BUCKET,
             referencePosition);
 
-    ParentComparisonMeasure parentComparisonMeasure = parentComparison("parent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
+    ParentComparisonMeasure parentComparisonMeasure = new ParentComparisonMeasure("parent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
 
     Assertions.assertThat(MeasureUtils.createExpression(amount)).isEqualTo("sum(Amount)");
     Assertions.assertThat(MeasureUtils.createExpression(sales)).isEqualTo("sumIf(Amount, `Income/Expense` = 'Revenue')");
@@ -90,7 +92,7 @@ public class TestMeasures {
 
     BiFunction<List<Field>, List<Field>, QueryScope> parentScopeProvider = (queryScopeColumns, pcmAncestors) -> {
       QueryScope queryScope = new QueryScope(new TableDto("myTable"), null, queryScopeColumns, Collections.emptyMap());
-      return MeasureUtils.getParentScopeWithClearedConditions(queryScope, QueryBuilder.parentComparison("pcm", ComparisonMethod.DIVIDE, QueryBuilder.sum("sum", "whatever"), pcmAncestors.stream().map(Field::name).toList()), fieldSupplier);
+      return MeasureUtils.getParentScopeWithClearedConditions(queryScope, new ParentComparisonMeasure("pcm", ComparisonMethod.DIVIDE, Functions.sum("sum", "whatever"), pcmAncestors.stream().map(Field::name).toList()), fieldSupplier);
     };
 
     {
@@ -152,7 +154,7 @@ public class TestMeasures {
               null,
               queryScopeColumns,
               conditions);
-      return MeasureUtils.getParentScopeWithClearedConditions(queryScope, QueryBuilder.parentComparison("pcm", ComparisonMethod.DIVIDE, QueryBuilder.sum("sum", "whatever"), pcmAncestors.stream().map(Field::name).toList()), fieldSupplier);
+      return MeasureUtils.getParentScopeWithClearedConditions(queryScope, new ParentComparisonMeasure("pcm", ComparisonMethod.DIVIDE, Functions.sum("sum", "whatever"), pcmAncestors.stream().map(Field::name).toList()), fieldSupplier);
     };
 
     {

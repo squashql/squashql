@@ -78,10 +78,11 @@ public class HttpClientQuerierTest {
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
 
     AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("capdv", "capdv", "sum");
-    ComparisonMeasureReferencePosition capdvDiff = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition capdvDiff = new ComparisonMeasureReferencePosition(
             "capdvDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             aggregatedMeasure,
+            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
                     "group", "g"
@@ -116,7 +117,7 @@ public class HttpClientQuerierTest {
             .table("our_prices")
             .withColumn(SCENARIO_FIELD_NAME)
             .withColumn("pdv")
-            .withCondition(SCENARIO_FIELD_NAME, QueryBuilder.eq(MAIN_SCENARIO_NAME))
+            .withCondition(SCENARIO_FIELD_NAME, Functions.eq(MAIN_SCENARIO_NAME))
             .aggregatedMeasure("ps", "price", "sum");
 
     String url = "http://127.0.0.1:" + this.port;
@@ -151,7 +152,7 @@ public class HttpClientQuerierTest {
   void testSetExpressions() {
     AggregatedMeasure a = new AggregatedMeasure("a", "a", "sum");
     AggregatedMeasure b = new AggregatedMeasure("b", "b", "sum");
-    Measure plus = QueryBuilder.plus("a+b", a, b);
+    Measure plus = Functions.plus("a+b", a, b);
 
     List<Measure> input = List.of(a, b, plus);
     input.forEach(m -> m.setExpression(null));// Expression should not be defined but computed and set by the server

@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
-import static me.paulbares.query.QueryBuilder.*;
+import static me.paulbares.query.Functions.*;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -148,17 +148,17 @@ public abstract class ATestQueryCache {
             List.of("food", 3d));
     assertCacheStats(0, 2);
 
-    query.withCondition("category", QueryBuilder.eq("drink"));
+    query.withCondition("category", Functions.eq("drink"));
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("drink", 2d));
     assertCacheStats(0, 4);
 
-    query.withCondition("category", QueryBuilder.eq("drink"));
+    query.withCondition("category", Functions.eq("drink"));
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("drink", 2d));
     assertCacheStats(2, 4);
 
-    query.withCondition("category", QueryBuilder.in("food", "cloth"));
+    query.withCondition("category", Functions.in("food", "cloth"));
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("cloth", 10d),
@@ -317,7 +317,7 @@ public abstract class ATestQueryCache {
     assertCacheStats(cache.stats(), 0, 4);
 
     // Scope 3, should evict an entry in the cache
-    executor.execute(querySupplier.get().withCondition("category", QueryBuilder.eq("drink")));
+    executor.execute(querySupplier.get().withCondition("category", Functions.eq("drink")));
     latch.await(60, TimeUnit.SECONDS);
     CacheStatsDto stats = cache.stats();
     assertCacheStats(stats, 0, 6);

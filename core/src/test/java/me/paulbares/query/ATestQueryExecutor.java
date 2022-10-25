@@ -18,7 +18,7 @@ import org.junit.jupiter.api.TestInstance;
 import java.util.Collections;
 import java.util.List;
 
-import static me.paulbares.query.QueryBuilder.sum;
+import static me.paulbares.query.Functions.sum;
 import static me.paulbares.query.agg.AggregationFunction.AVG;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
@@ -114,7 +114,7 @@ public abstract class ATestQueryExecutor {
   void testQuerySeveralCoordinates() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, QueryBuilder.in("s1", "s2"))
+            .where(SCENARIO_FIELD_NAME, Functions.in("s1", "s2"))
             .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
     Table table = this.queryExecutor.execute(query);
@@ -128,7 +128,7 @@ public abstract class ATestQueryExecutor {
     QueryDto query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .withCondition(SCENARIO_FIELD_NAME, QueryBuilder.eq("s1"))
+            .withCondition(SCENARIO_FIELD_NAME, Functions.eq("s1"))
             .aggregatedMeasure("p", "price", "sum")
             .aggregatedMeasure("q", "quantity", "sum");
     Table table = this.queryExecutor.execute(query);
@@ -142,14 +142,14 @@ public abstract class ATestQueryExecutor {
             .withColumn("category")
             .withColumn("ean")
             .aggregatedMeasure("q", "quantity", "sum")
-            .withCondition(SCENARIO_FIELD_NAME, QueryBuilder.eq(MAIN_SCENARIO_NAME))
-            .withCondition("ean", QueryBuilder.eq("bottle"))
-            .withCondition("category", QueryBuilder.in("cloth", "drink"));
+            .withCondition(SCENARIO_FIELD_NAME, Functions.eq(MAIN_SCENARIO_NAME))
+            .withCondition("ean", Functions.eq("bottle"))
+            .withCondition("category", Functions.in("cloth", "drink"));
 
     Table table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("drink", "bottle", 10l));
 
-    query.withCondition("quantity", QueryBuilder.gt(10));
+    query.withCondition("quantity", Functions.gt(10));
     table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).isEmpty();
   }
@@ -157,13 +157,13 @@ public abstract class ATestQueryExecutor {
   @Test
   void testConditionsNullNotNull() {
     QueryDto query = Query.from(this.storeName)
-            .where("subcategory", QueryBuilder.isNotNull())
+            .where("subcategory", Functions.isNotNull())
             .select(List.of("ean"), List.of(CountMeasure.INSTANCE))
             .build();
     Table table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("cookie", 3l));
 
-    query.withCondition("subcategory", QueryBuilder.isNull());
+    query.withCondition("subcategory", Functions.isNull());
     table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
             List.of("bottle", 3l),
@@ -224,7 +224,7 @@ public abstract class ATestQueryExecutor {
    */
   @Test
   void testSumIf() {
-    ConditionDto or = QueryBuilder.eq("food").or(QueryBuilder.eq("drink"));
+    ConditionDto or = Functions.eq("food").or(Functions.eq("drink"));
 
     QueryDto query = new QueryDto()
             .table(this.storeName)
@@ -248,7 +248,7 @@ public abstract class ATestQueryExecutor {
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
             .withColumn("category")
-            .withCondition("category", QueryBuilder.in("cloth", "drink"))
+            .withCondition("category", Functions.in("cloth", "drink"))
             .withMeasure(CountMeasure.INSTANCE);
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -309,7 +309,7 @@ public abstract class ATestQueryExecutor {
             .build();
 
     QueryDto queryDto = Query.from(subQuery)
-            .select(Collections.emptyList(), List.of(QueryBuilder.avg("mean", "ca")))// avg of ca
+            .select(Collections.emptyList(), List.of(Functions.avg("mean", "ca")))// avg of ca
             .build();
     Table result = this.queryExecutor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(15.5d));
@@ -324,23 +324,23 @@ public abstract class ATestQueryExecutor {
 
     QueryDto queryDto = new QueryDto()
             .table(subQuery)
-            .withMeasure(new AggregatedMeasure("myFinalMeasure", "ca", AVG, "ca", QueryBuilder.ge(15.0)));
+            .withMeasure(new AggregatedMeasure("myFinalMeasure", "ca", AVG, "ca", Functions.ge(15.0)));
     Table result = this.queryExecutor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(List.of((15. + 17.) / 2)); // avg of ca >= 15
   }
 
   @Test
   void testConstantMeasures() {
-    Measure integer = QueryBuilder.integer(100);
-    Measure decimal = QueryBuilder.decimal(100);
+    Measure integer = Functions.integer(100);
+    Measure decimal = Functions.decimal(100);
     Measure ca = sum("ca", "price");
     Measure qty = sum("qty", "quantity");
     QueryDto query = new QueryDto()
             .table(this.storeName)
-            .withMeasure(QueryBuilder.multiply("a1", integer, ca))
-            .withMeasure(QueryBuilder.multiply("a2", decimal, ca))
-            .withMeasure(QueryBuilder.multiply("b1", integer, qty))
-            .withMeasure(QueryBuilder.multiply("b2", decimal, qty))
+            .withMeasure(Functions.multiply("a1", integer, ca))
+            .withMeasure(Functions.multiply("a2", decimal, ca))
+            .withMeasure(Functions.multiply("b1", integer, qty))
+            .withMeasure(Functions.multiply("b2", decimal, qty))
             .withMeasure(integer)
             .withMeasure(decimal);
     Table result = this.queryExecutor.execute(query);
