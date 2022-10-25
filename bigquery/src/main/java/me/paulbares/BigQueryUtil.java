@@ -6,6 +6,7 @@ import com.google.cloud.bigquery.LegacySQLTypeName;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
 
 public final class BigQueryUtil {
 
@@ -19,6 +20,7 @@ public final class BigQueryUtil {
       case FLOAT64 -> double.class;
       case STRING -> String.class;
       case BYTES -> byte.class;
+      case DATE -> LocalDate.class;
       default -> throw new IllegalArgumentException("Unsupported data type " + dataType);
     };
   }
