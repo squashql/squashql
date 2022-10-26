@@ -1,5 +1,5 @@
 import axios, {AxiosInstance} from "axios";
-import {Query} from "./query";
+import {QueryDto} from "./queryDto";
 import {Measure} from "./measures";
 
 export class Querier {
@@ -24,13 +24,13 @@ export class Querier {
             .then(r => r.data)
   }
 
-  async execute(query: Query): Promise<QueryResult> {
+  async execute(query: QueryDto): Promise<QueryResult> {
     return this.axiosInstance
             .post("/query", query)
             .then(r => r.data)
   }
 
-  async execute0(query: Query): Promise<QueryResult> {
+  async execute0(query: QueryDto): Promise<QueryResult> {
     return this.axiosInstance
             .post("/query-beautify", query)
             .then(r => r.data)
