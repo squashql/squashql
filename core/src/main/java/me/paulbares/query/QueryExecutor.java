@@ -69,7 +69,7 @@ public class QueryExecutor {
     queryWatch.start(QueryWatch.EXECUTE_PREFETCH_PLAN);
     Function<String, TypedField> fieldSupplier = this.queryEngine.getFieldSupplier();
     QueryScope queryScope = createQueryScope(query);
-    Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> graph = computeDependencyGraph(query, fieldSupplier, queryScope);
+    Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> graph = computeDependencyGraph(query, queryScope);
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
     Map<QueryScope, Set<Measure>> measuresByQueryScope = new HashMap<>();
@@ -111,7 +111,7 @@ public class QueryExecutor {
         result = this.queryEngine.execute(prefetchQuery);
       } else {
         // Create an empty result that will be populated by the query cache
-        result = queryCache.createRawResult(prefetchQueryScope);
+        result = queryCache.createRawResult(prefetchQueryScope, QueryExecutor.withFallback(fieldSupplier, String.class));
       }
 
       queryCache.contributeToResult(result, cached, prefetchQueryScope);
@@ -155,8 +155,9 @@ public class QueryExecutor {
   }
 
   private static Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> computeDependencyGraph(
-          QueryDto query, Function fieldSupplier, QueryScope queryScope) {
-    MeasurePrefetcherVisitor visitor = new MeasurePrefetcherVisitor(query, queryScope, fieldSupplier);
+          QueryDto query,
+          QueryScope queryScope) {
+    MeasurePrefetcherVisitor visitor = new MeasurePrefetcherVisitor(query, queryScope);
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
       Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(visitor);
       Set<QueryPlanNodeKey> set = new HashSet<>();
@@ -268,5 +269,20 @@ public class QueryExecutor {
       resolveMeasureDependencies(repo, supplier, bom.leftOperand);
       resolveMeasureDependencies(repo, supplier, bom.rightOperand);
     }
+  }
+
+  public static Function<String, TypedField> withFallback(Function<String, TypedField> fieldProvider, Class<?> fallbackType) {
+    return fieldName -> {
+      TypedField f;
+      try {
+        f = fieldProvider.apply(fieldName);
+      } catch (Exception e) {
+        // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
+        // contains only "raw" fields, it will throw an exception.
+        log.info("Cannot find field " + fieldName + " with default field provider, fallback to default type: " + fallbackType.getSimpleName());
+        f = new TypedField(fieldName, Number.class);
+      }
+      return f;
+    };
   }
 }

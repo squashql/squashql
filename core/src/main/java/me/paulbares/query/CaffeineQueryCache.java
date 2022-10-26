@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 public class CaffeineQueryCache implements QueryCache {
@@ -44,9 +45,9 @@ public class CaffeineQueryCache implements QueryCache {
   }
 
   @Override
-  public ColumnarTable createRawResult(PrefetchQueryScope scope) {
+  public ColumnarTable createRawResult(PrefetchQueryScope scope, Function<String, TypedField> fieldSupplier) {
     Set<Field> columns = scope.columns();
-    List<TypedField> headers = new ArrayList<>(columns.stream().map(c -> new TypedField(c.name(), String.class)).toList());
+    List<TypedField> headers = new ArrayList<>(columns.stream().map(c -> fieldSupplier.apply(c.name())).toList());
     headers.add(new TypedField(CountMeasure.ALIAS, long.class));
 
     List<List<Object>> values = new ArrayList<>();

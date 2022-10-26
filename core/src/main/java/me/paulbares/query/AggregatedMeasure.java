@@ -44,15 +44,7 @@ public class AggregatedMeasure implements Measure {
   public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     String sql;
     if (this.conditionDto != null) {
-      TypedField f;
-      try {
-        f = fieldProvider.apply(this.conditionField);
-      } catch (Exception e) {
-        // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
-        // contains only "raw" fields, it will throw an exception.
-        log.info("Cannot find field " + this.conditionField + " with default field provider, fallback to default type: " + Number.class.getSimpleName());
-        f = new TypedField(this.conditionField, Number.class);
-      }
+      TypedField f = QueryExecutor.withFallback(fieldProvider, Number.class).apply(this.conditionField);
       String conditionSt = SQLTranslator.toSql(f, this.conditionDto);
       sql = this.aggregationFunction + "(case when " + conditionSt + " then " + this.field + " end)";
     } else {

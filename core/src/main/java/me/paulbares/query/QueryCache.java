@@ -4,13 +4,15 @@ import me.paulbares.query.dto.CacheStatsDto;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
+import me.paulbares.store.TypedField;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 public interface QueryCache {
 
-  ColumnarTable createRawResult(PrefetchQueryScope scope);
+  ColumnarTable createRawResult(PrefetchQueryScope scope, Function<String, TypedField> fieldSupplier);
 
   boolean contains(Measure measure, PrefetchQueryScope scope);
 

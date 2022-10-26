@@ -2,25 +2,21 @@ package me.paulbares;
 
 import me.paulbares.query.*;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.store.TypedField;
 import org.eclipse.collections.impl.set.mutable.MutableSetFactoryImpl;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 public class MeasurePrefetcherVisitor implements MeasureVisitor<Map<QueryExecutor.QueryScope, Set<Measure>>> {
 
   private final QueryDto query;
   private final QueryExecutor.QueryScope originalQueryScope;
-  private final Function<String, TypedField> fieldSupplier;
 
-  public MeasurePrefetcherVisitor(QueryDto query, QueryExecutor.QueryScope originalQueryScope, Function<String, TypedField> fieldSupplier) {
+  public MeasurePrefetcherVisitor(QueryDto query, QueryExecutor.QueryScope originalQueryScope) {
     this.query = query;
     this.originalQueryScope = originalQueryScope;
-    this.fieldSupplier = fieldSupplier;
   }
 
   private Map<QueryExecutor.QueryScope, Set<Measure>> original() {
