@@ -6,7 +6,7 @@ import me.paulbares.query.dto.*;
 
 import java.util.List;
 
-public class Query implements HasCondition, HasTable, HasSelect, HasJoin, HasStartedBuildingTable, HasOrderBy {
+public class Query implements HasCondition, HasSelect, HasJoin, HasStartedBuildingTable, HasOrderBy {
 
   private final QueryDto queryDto = new QueryDto();
 

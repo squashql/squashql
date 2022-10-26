@@ -1,113 +1,133 @@
 import {Measure} from "./measures";
+import {ColumnSet} from "./columnsets";
+import {JoinMapping, JoinType, QueryDto, Table} from "./queryDto";
 import {Condition} from "./conditions";
-import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order";
-import {BucketColumnSet, ColumnSet, ColumnSetKey, PeriodColumnSet} from "./columnsets";
+import {OrderKeyword} from "./order";
 
-export class Query {
-  columns: Array<string>
-  columnSets: Map<string, ColumnSet>
-  measures: Array<Measure>
-  table: Table
-  conditions: Map<string, Condition>
-  orders: Map<string, Order>
-  subQuery: Query
+interface CanAddOrderBy {
+  orderBy(column: string, order: OrderKeyword): HasSelect
 
-  constructor() {
-    this.columns = []
-    this.measures = []
-    this.conditions = new Map<string, Condition>()
-    this.orders = new Map<string, Order>()
-    this.columnSets = new Map<string, ColumnSet>()
-  }
+  orderByFirstElements(column: string, firstElements: Array<any>): HasSelect
+}
 
-  onTable(table: Table): Query {
-    this.table = table
+interface CanBeBuildQuery {
+  build(): QueryDto
+}
+
+interface CanStartBuildingJoin {
+  leftOuterJoin(tableName: string): HasStartedBuildingJoin
+
+  innerJoin(tableName: string): HasStartedBuildingJoin
+}
+
+interface HasCondition {
+  select(columns: string[], columnSets: ColumnSet[], measures: Measure[]): HasSelect
+}
+
+type HasJoin = HasTable & HasStartedBuildingJoin & CanStartBuildingJoin
+
+interface HasOrderBy extends CanBeBuildQuery {
+  limit(limit: number): CanBeBuildQuery;
+}
+
+type HasSelect = HasOrderBy & CanAddOrderBy
+
+interface HasStartedBuildingJoin {
+  on(fromTable: string, from: string, toTable: string, to: string): HasJoin
+}
+
+type HasStartedBuildingTable = HasTable & CanStartBuildingJoin
+
+interface HasTable extends HasCondition {
+  where(field: string, condition: Condition): HasTable
+}
+
+export function from(tableName: string): HasStartedBuildingTable {
+  const queryBuilder = new QueryBuilder();
+  queryBuilder.queryDto.table = new Table(tableName)
+  return queryBuilder
+}
+
+export function fromSubQuery(subQuery: QueryDto): HasStartedBuildingTable {
+  const queryBuilder = new QueryBuilder();
+  queryBuilder.queryDto.subQuery = subQuery
+  return queryBuilder
+}
+
+class QueryBuilder implements HasCondition, HasSelect, HasJoin, HasStartedBuildingTable, HasOrderBy {
+  readonly queryDto: QueryDto = new QueryDto()
+  private currentJoinTableBuilder: JoinTableBuilder = null;
+
+  on(fromTable: string, from: string, toTable: string, to: string): HasJoin {
+    this.currentJoinTableBuilder.on(fromTable, from, toTable, to)
     return this
   }
 
-  onVirtualTable(query: Query): Query {
-    this.subQuery = query
-    return this
+  innerJoin(tableName: string): HasStartedBuildingJoin {
+    return this.join(tableName, JoinType.INNER)
   }
 
-  withCondition(field: string, condition: Condition): Query {
-    this.conditions.set(field, condition);
-    return this;
+  leftOuterJoin(tableName: string): HasStartedBuildingJoin {
+    return this.join(tableName, JoinType.LEFT)
   }
 
-  withColumn(colum: string): Query {
-    this.columns.push(colum)
-    return this
+  private join(tableName: string, joinType: JoinType): HasStartedBuildingJoin {
+    this.addJoinToQueryDto()
+    this.currentJoinTableBuilder = new JoinTableBuilder(this, tableName, joinType)
+    return this.currentJoinTableBuilder
   }
 
-  withBucketColumnSet(columSet: BucketColumnSet): Query {
-    this.columnSets.set(ColumnSetKey.BUCKET, columSet)
-    return this
-  }
-
-  withPeriodColumnSet(columSet: PeriodColumnSet): Query {
-    this.columnSets.set(ColumnSetKey.PERIOD, columSet)
-    return this
-  }
-
-  withMeasure(measure: Measure): Query {
-    this.measures.push(measure)
-    return this
-  }
-
-  orderBy(column: string, order: OrderKeyword): Query {
-    this.orders.set(column, new SimpleOrder(order))
-    return this
-  }
-
-  orderByFirstElements(column: string, firstElements: Array<any>): Query {
-    this.orders.set(column, new ExplicitOrderDto(firstElements))
-    return this
-  }
-
-  toJSON() {
-    return {
-      "table": this.table,
-      "subQuery": this.subQuery,
-      "columns": this.columns,
-      "columnSets": Object.fromEntries(this.columnSets),
-      "measures": this.measures,
-      "conditions": Object.fromEntries(this.conditions),
-      "orders": Object.fromEntries(this.orders),
+  private addJoinToQueryDto() {
+    const jtb = this.currentJoinTableBuilder
+    if (jtb != null) {
+      this.queryDto.table.join(new Table(jtb.tableName), jtb.joinType, jtb.mappings)
+      this.currentJoinTableBuilder = null
     }
   }
+
+  select(columns: string[], columnSets: ColumnSet[], measures: Measure[]): HasSelect {
+    this.addJoinToQueryDto()
+    columns.forEach(c => this.queryDto.withColumn(c))
+    columnSets.forEach(cs => this.queryDto.columnSets.set(cs.key, cs))
+    measures.forEach(m => this.queryDto.withMeasure(m))
+    return this
+  }
+
+  where(field: string, condition: Condition): HasTable {
+    this.addJoinToQueryDto()
+    this.queryDto.withCondition(field, condition)
+    return this
+  }
+
+  build(): QueryDto {
+    return this.queryDto
+  }
+
+  limit(limit: number): CanBeBuildQuery {
+    this.queryDto.limit = limit
+    return undefined
+  }
+
+  orderBy(column: string, order: OrderKeyword): HasSelect {
+    this.queryDto.orderBy(column, order)
+    return this
+  }
+
+  orderByFirstElements(column: string, firstElements: Array<any>): HasSelect {
+    this.queryDto.orderByFirstElements(column, firstElements)
+    return this
+  }
 }
 
-export class Table {
-  private joins: Array<Join> = []
+class JoinTableBuilder implements HasStartedBuildingJoin {
 
-  constructor(public name: string) {
+  readonly mappings: Array<JoinMapping> = []
+
+  constructor(public parent: QueryBuilder, public tableName: string, public joinType: JoinType) {
   }
 
-  join(other: Table, type: JoinType, mappings: Array<JoinMapping>) {
-    this.joins.push(new Join(other, type, mappings))
-  }
-
-  innerJoin(other: Table, from: string, to: string) {
-    this.joins.push(new Join(other, JoinType.INNER, [new JoinMapping(this.name, from, other.name, to)]))
-  }
-
-  leftJoin(other: Table, from: string, to: string) {
-    this.joins.push(new Join(other, JoinType.LEFT, [new JoinMapping(this.name, from, other.name, to)]))
-  }
-}
-
-export enum JoinType {
-  INNER = "INNER",
-  LEFT = "LEFT",
-}
-
-class Join {
-  constructor(private table: Table, private type: JoinType, private mappings: Array<JoinMapping>) {
-  }
-}
-
-export class JoinMapping {
-  constructor(private fromTable: string, private from: string, private toTable: string, private to: string) {
+  on(fromTable: string, from: string, toTable: string, to: string): HasJoin {
+    this.mappings.push(new JoinMapping(fromTable, from, toTable, to))
+    return this.parent
   }
 }
