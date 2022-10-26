@@ -11,7 +11,6 @@ public class JoinTableBuilder implements HasStartedBuildingJoin {
   final Query parent;
   final String tableName;
   final JoinType joinType;
-
   final List<JoinMappingDto> mappingDtos = new ArrayList<>();
 
   public JoinTableBuilder(Query parent, String tableName, JoinType joinType) {
