@@ -20,19 +20,19 @@ public class TableDto {
     this.name = name;
   }
 
-  public void join(TableDto other, String joinType, JoinMappingDto mapping) {
+  public void join(TableDto other, JoinType joinType, JoinMappingDto mapping) {
     this.joins.add(new JoinDto(other, joinType, mapping));
   }
 
-  public void join(TableDto other, String joinType, List<JoinMappingDto> JoinMappingDtos) {
+  public void join(TableDto other, JoinType joinType, List<JoinMappingDto> JoinMappingDtos) {
     this.joins.add(new JoinDto(other, joinType, JoinMappingDtos));
   }
 
   public void innerJoin(TableDto other, String from, String to) {
-    this.joins.add(new JoinDto(other, "inner", new JoinMappingDto(this.name, from, other.name, to)));
+    this.joins.add(new JoinDto(other, JoinType.INNER, new JoinMappingDto(this.name, from, other.name, to)));
   }
 
   public void leftJoin(TableDto other, String from, String to) {
-    this.joins.add(new JoinDto(other, "left", new JoinMappingDto(this.name, from, other.name, to)));
+    this.joins.add(new JoinDto(other, JoinType.LEFT, new JoinMappingDto(this.name, from, other.name, to)));
   }
 }

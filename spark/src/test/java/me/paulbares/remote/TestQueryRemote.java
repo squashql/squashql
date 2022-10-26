@@ -107,7 +107,7 @@ public class TestQueryRemote {
 
     DatabaseQuery query = new DatabaseQuery()
             .table(storeName)
-            .wildcardCoordinate(SCENARIO_FIELD_NAME)
+            .withSelect(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("p", "price", "sum")
             .aggregatedMeasure("q", "quantity", "sum");
     Table result = queryEngine.execute(query);

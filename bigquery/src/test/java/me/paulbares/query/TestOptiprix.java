@@ -3,17 +3,16 @@ package me.paulbares.query;
 import me.paulbares.BigQueryDatastore;
 import me.paulbares.BigQueryUtil;
 import me.paulbares.query.database.BigQueryEngine;
-import me.paulbares.query.dto.CacheStatsDto;
-import me.paulbares.query.dto.JoinMappingDto;
-import me.paulbares.query.dto.QueryDto;
-import me.paulbares.query.dto.TableDto;
+import me.paulbares.query.dto.*;
 import me.paulbares.query.monitoring.QueryWatch;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static me.paulbares.query.QueryBuilder.*;
+import static me.paulbares.query.Functions.*;
+import static me.paulbares.query.dto.JoinType.INNER;
+import static me.paulbares.query.dto.JoinType.LEFT;
 
 public class TestOptiprix {
 
@@ -30,7 +29,7 @@ public class TestOptiprix {
 
     QueryDto subQuery = subQuery();
 
-    QueryDto query = query()
+    QueryDto query = new QueryDto()
             .table(subQuery)
             .withMeasure(new ExpressionMeasure("InitialPriceIndex", "100*sum(itmInitialComparableTurnover)/sum(competitorComparableTurnover)"))
             .withMeasure(new ExpressionMeasure("RecommendedPriceIndex", "100*sum(itmRecommendedComparableTurnover)/sum(competitorComparableTurnover)"))
@@ -51,15 +50,15 @@ public class TestOptiprix {
     TableDto competitor_price = new TableDto("competitor_price");
     TableDto competitor_store = new TableDto("competitor_store");
 
-    recommendation.join(current_selling_prices, "inner",
+    recommendation.join(current_selling_prices, INNER,
             List.of(new JoinMappingDto(recommendation.name, "rec_ean", current_selling_prices.name, "cur_ean"),
                     new JoinMappingDto(recommendation.name, "rec_store_id", current_selling_prices.name, "cur_store_id")));
     recommendation.innerJoin(competitor_catchment_area, "rec_store_id", "cca_store_id");
 
-    recommendation.join(competitor_price, "inner", List.of(
+    recommendation.join(competitor_price, INNER, List.of(
             new JoinMappingDto(competitor_catchment_area.name, "cca_competitor_store_id", competitor_price.name, "cp_store_id"),
             new JoinMappingDto(recommendation.name, "rec_ean", competitor_price.name, "cp_ean")));
-    recommendation.join(competitor_store, "left",
+    recommendation.join(competitor_store, LEFT,
             List.of(new JoinMappingDto(competitor_price.name, "cp_store_id", competitor_store.name, "cs_store_id"),
                     new JoinMappingDto(competitor_price.name, "cp_store_type", competitor_store.name, "cs_store_type")));
 
@@ -76,7 +75,7 @@ public class TestOptiprix {
             avg("avg_cp_gross_price", "cp_gross_price"),
             min("min_cur_vmm", "cur_vmm"));
 
-    QueryDto query = QueryBuilder.query()
+    QueryDto query = new QueryDto()
             .table(recommendation)
             .withMeasure(CountMeasure.INSTANCE)
             .withMeasure(itmInitialComparableTurnover)

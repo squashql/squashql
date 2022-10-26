@@ -37,8 +37,8 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       return new ColumnarTable(
               result.getOne(),
               query.measures,
-              IntStream.range(query.coordinates.size(), query.coordinates.size() + query.measures.size()).toArray(),
-              IntStream.range(0, query.coordinates.size()).toArray(),
+              IntStream.range(query.select.size(), query.select.size() + query.measures.size()).toArray(),
+              IntStream.range(0, query.select.size()).toArray(),
               result.getTwo());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);

@@ -19,27 +19,12 @@ public class DatabaseQuery {
 
   public TableDto table;
   public DatabaseQuery subQuery;
-  public Map<String, List<String>> coordinates = new LinkedHashMap<>();
+  public List<String> select = new ArrayList<>();
   public Map<String, ConditionDto> conditions = new LinkedHashMap<>();
   public List<Measure> measures = new ArrayList<>();
 
-  public DatabaseQuery wildcardCoordinate(String field) {
-    this.coordinates.put(field, null);
-    return this;
-  }
-
-  public DatabaseQuery coordinate(String field, String value) {
-    coordinates(field, value);
-    return this;
-  }
-
-  public DatabaseQuery coordinates(String field, String first, String... others) {
-    List<String> values = new ArrayList<>();
-    values.add(first);
-    if (others != null) {
-      values.addAll(Arrays.stream(others).toList());
-    }
-    this.coordinates.put(field, values);
+  public DatabaseQuery withSelect(String field) {
+    this.select.add(field);
     return this;
   }
 

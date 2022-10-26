@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import static me.paulbares.query.QueryBuilder.*;
+import static me.paulbares.query.Functions.*;
 
 public class TestJavascriptLibrary {
 
@@ -21,7 +21,7 @@ public class TestJavascriptLibrary {
     var table = new TableDto("myTable");
     var refTable = new TableDto("refTable");
     table.innerJoin(refTable, "fromField", "toField");
-    table.join(new TableDto("a"), "left", new JoinMappingDto("a", "a_id", "myTable", "id"));
+    table.join(new TableDto("a"), JoinType.LEFT, new JoinMappingDto("a", "a_id", "myTable", "id"));
 
     QueryDto q = new QueryDto()
             .table(table)

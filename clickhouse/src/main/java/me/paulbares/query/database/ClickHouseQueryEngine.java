@@ -45,8 +45,8 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
       return new ColumnarTable(
               result.getOne(),
               query.measures,
-              IntStream.range(query.coordinates.size(), query.coordinates.size() + query.measures.size()).toArray(),
-              IntStream.range(0, query.coordinates.size()).toArray(),
+              IntStream.range(query.select.size(), query.select.size() + query.measures.size()).toArray(),
+              IntStream.range(0, query.select.size()).toArray(),
               result.getTwo());
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);

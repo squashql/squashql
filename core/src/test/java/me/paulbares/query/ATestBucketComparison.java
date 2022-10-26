@@ -1,5 +1,6 @@
 package me.paulbares.query;
 
+import me.paulbares.query.builder.Query;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
@@ -7,14 +8,16 @@ import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import static me.paulbares.query.ComparisonMethod.RELATIVE_DIFFERENCE;
-import static me.paulbares.query.QueryBuilder.eq;
+import static me.paulbares.query.Functions.eq;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -87,31 +90,30 @@ public abstract class ATestBucketComparison {
   @Test
   void testAbsoluteDifferenceWithFirst() {
     AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
-    ComparisonMeasureReferencePosition priceComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition priceComp = new ComparisonMeasureReferencePosition(
             "priceDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
+            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
-    ComparisonMeasureReferencePosition quantityComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition quantityComp = new ComparisonMeasureReferencePosition(
             "quantityDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
+            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
             ));
 
-    var query = new QueryDto()
-            .table(this.storeName)
-            .withColumnSet(ColumnSetKey.BUCKET, this.bucketCS)
-            .withMeasure(priceComp)
-            .withMeasure(price)
-            .withMeasure(quantityComp)
-            .withMeasure(quantity);
+    var query = Query
+            .from(this.storeName)
+            .select_(List.of(this.bucketCS), List.of(priceComp, price, quantityComp, quantity))
+            .build();
 
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
@@ -143,19 +145,21 @@ public abstract class ATestBucketComparison {
   @Test
   void testAbsoluteDifferenceWithPrevious() {
     AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
-    ComparisonMeasureReferencePosition priceComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition priceComp = new ComparisonMeasureReferencePosition(
             "priceDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
+            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, "s-1",
                     this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
-    ComparisonMeasureReferencePosition quantityComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition quantityComp = new ComparisonMeasureReferencePosition(
             "quantityDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
+            ColumnSetKey.BUCKET,
             Map.of(SCENARIO_FIELD_NAME, "s-1", this.groupOfScenario, "g"));
 
     var query = new QueryDto()
@@ -184,19 +188,21 @@ public abstract class ATestBucketComparison {
   @Test
   void testRelativeDifferenceWithFirst() {
     AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
-    ComparisonMeasureReferencePosition priceComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition priceComp = new ComparisonMeasureReferencePosition(
             "priceDiff",
             RELATIVE_DIFFERENCE,
             price,
+            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
             ));
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
-    ComparisonMeasureReferencePosition quantityComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition quantityComp = new ComparisonMeasureReferencePosition(
             "quantityDiff",
             RELATIVE_DIFFERENCE,
             quantity,
+            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
