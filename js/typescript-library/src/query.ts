@@ -98,8 +98,8 @@ export class Table {
 }
 
 export enum JoinType {
-  INNER = "inner",
-  LEFT = "left",
+  INNER = "INNER",
+  LEFT = "LEFT",
 }
 
 class Join {
