@@ -22,7 +22,7 @@ interface CanStartBuildingJoin {
 
 interface HasCondition {
   /**
-   * Selects columns from a table to bed displayed and the measures to compute. Note that the columns and columnSets
+   * Selects columns from a table to be displayed and the measures to compute. Note that the columns and columnSets
    * added to select are automatically added to the groupBy clause of the query: aggregated results are then grouped by
    * the columns and columnSets indicated.
    */
