@@ -132,7 +132,7 @@ public abstract class ATestPeriodComparison {
     Assertions.assertThat(finalTable.headers().stream().map(TypedField::name))
             .containsExactlyInAnyOrder(period.year(), period.quarter(), "myMeasure", "sum(sales)");
 
-    // Add a condition and make sure condition is cleared during prefetching.s
+    // Add a condition and make sure condition is cleared during prefetching.
     query = new QueryDto()
             .table(this.storeName)
             .withColumnSet(ColumnSetKey.PERIOD, periodCS)
