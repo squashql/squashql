@@ -5,7 +5,7 @@ import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.database.SparkQueryEngine;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import me.paulbares.transaction.SparkTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
@@ -33,17 +33,17 @@ public class TestITM {
 
   @BeforeAll
   void setup() {
-    Field ean = new Field("ean", String.class);
-    Field pdv = new Field("pdv", String.class);
-    Field price = new Field("price", double.class);
-    Field qty = new Field("quantity", int.class);
-    Field capdv = new Field("capdv", double.class);
+    TypedField ean = new TypedField("ean", String.class);
+    TypedField pdv = new TypedField("pdv", String.class);
+    TypedField price = new TypedField("price", double.class);
+    TypedField qty = new TypedField("quantity", int.class);
+    TypedField capdv = new TypedField("capdv", double.class);
 
-    Field compEan = new Field("competitor_ean", String.class);
-    Field compConcurrentPdv = new Field("competitor_concurrent_pdv", String.class);
-    Field compBrand = new Field("competitor_brand", String.class);
-    Field compConcurrentEan = new Field("competitor_concurrent_ean", String.class);
-    Field compPrice = new Field("competitor_price", double.class);
+    TypedField compEan = new TypedField("competitor_ean", String.class);
+    TypedField compConcurrentPdv = new TypedField("competitor_concurrent_pdv", String.class);
+    TypedField compBrand = new TypedField("competitor_brand", String.class);
+    TypedField compConcurrentEan = new TypedField("competitor_concurrent_ean", String.class);
+    TypedField compPrice = new TypedField("competitor_price", double.class);
 
     this.datastore = new SparkDatastore();
 
@@ -51,8 +51,8 @@ public class TestITM {
     tm.createTemporaryTable("our_prices", List.of(ean, pdv, price, qty, capdv));
     tm.createTemporaryTable("their_prices", List.of(compEan, compConcurrentPdv, compBrand, compConcurrentEan, compPrice), false);
     tm.createTemporaryTable("our_stores_their_stores", List.of(
-            new Field("our_store", String.class),
-            new Field("their_store", String.class)
+            new TypedField("our_store", String.class),
+            new TypedField("their_store", String.class)
     ), false);
 
     tm.load(MAIN_SCENARIO_NAME,

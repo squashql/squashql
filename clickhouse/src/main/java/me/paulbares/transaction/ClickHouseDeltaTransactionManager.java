@@ -3,7 +3,7 @@ package me.paulbares.transaction;
 import com.clickhouse.jdbc.ClickHouseConnection;
 import com.clickhouse.jdbc.ClickHouseDataSource;
 import me.paulbares.ClickHouseDatastore;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -24,7 +24,7 @@ public class ClickHouseDeltaTransactionManager extends ClickHouseTransactionMana
   }
 
   @Override
-  public void dropAndCreateInMemoryTable(String table, List<Field> fields) {
+  public void dropAndCreateInMemoryTable(String table, List<TypedField> fields) {
     ClickHouseTransactionManager.dropAndCreateInMemoryTable(this.clickHouseDataSource, table, fields, false);
     this.storeAlreadyCreated.add(table);
   }

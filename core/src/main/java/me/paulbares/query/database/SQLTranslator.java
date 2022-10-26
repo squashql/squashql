@@ -1,12 +1,12 @@
 package me.paulbares.query.database;
 
+import me.paulbares.query.Field;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.*;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import me.paulbares.transaction.TransactionManager;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -20,17 +20,17 @@ public class SQLTranslator {
 
   private static final DefaultQueryRewriter DEFAULT_QUERY_REWRITER = new DefaultQueryRewriter();
 
-  public static String translate(DatabaseQuery query, Function<String, Field> fieldProvider) {
+  public static String translate(DatabaseQuery query, Function<String, TypedField> fieldProvider) {
     return translate(query, null, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));
   }
 
-  public static String translate(DatabaseQuery query, Totals totals, Function<String, Field> fieldProvider) {
+  public static String translate(DatabaseQuery query, Totals totals, Function<String, TypedField> fieldProvider) {
     return translate(query, totals, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));
   }
 
   public static String translate(DatabaseQuery query,
                                  Totals totals,
-                                 Function<String, Field> fieldProvider,
+                                 Function<String, TypedField> fieldProvider,
                                  QueryRewriter queryRewriter,
                                  BiFunction<QueryRewriter, String, String> tableTransformer) {
     List<String> selects = new ArrayList<>();
@@ -50,7 +50,7 @@ public class SQLTranslator {
     if (query.subQuery != null) {
       statement.append("(");
       statement.append(translate(query.subQuery, totals, fieldProvider, queryRewriter, tableTransformer));
-      statement.append(")");
+      statement.append(") as __temp_table__, " + query.subQuery.table.name); // FIXME
     } else {
       statement.append(tableTransformer.apply(queryRewriter, query.table.name));
       addJoins(statement, query.table, queryRewriter);
@@ -89,21 +89,8 @@ public class SQLTranslator {
     }
   }
 
-  private static Map<String, ConditionDto> extractConditions(DatabaseQuery query) {
-    Map<String, ConditionDto> conditionByField = new HashMap<>();
-    query.conditions.forEach((field, condition) -> {
-      ConditionDto old = conditionByField.get(field);
-      if (old != null) {
-        throw new IllegalArgumentException(String.format("A condition for field %s already exists %s", field, old));
-      }
-      conditionByField.put(field, condition);
-    });
-
-    return conditionByField;
-  }
-
-  protected static void addConditions(StringBuilder statement, DatabaseQuery query, Function<String, Field> fieldProvider) {
-    Map<String, ConditionDto> conditionByField = extractConditions(query);
+  protected static void addConditions(StringBuilder statement, DatabaseQuery query, Function<String, TypedField> fieldProvider) {
+    Map<String, ConditionDto> conditionByField = query.conditions;
 
     if (!conditionByField.isEmpty()) {
       String andConditions = conditionByField.entrySet()
@@ -141,10 +128,12 @@ public class SQLTranslator {
     }
   }
 
-  public static String toSql(Field field, ConditionDto dto) {
+  public static String toSql(TypedField field, ConditionDto dto) {
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
       Function<Object, String> sqlMapper;
-      if (Number.class.isAssignableFrom(field.type())
+      if (dto instanceof SingleValueConditionDto svc && svc.value instanceof Field vf) {
+        sqlMapper = s -> escape(vf.name());
+      } else if (Number.class.isAssignableFrom(field.type())
               || field.type().equals(double.class)
               || field.type().equals(int.class)
               || field.type().equals(long.class)

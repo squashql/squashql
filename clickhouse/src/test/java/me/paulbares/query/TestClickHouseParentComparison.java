@@ -4,7 +4,7 @@ import me.paulbares.ClickHouseDatastore;
 import me.paulbares.query.database.ClickHouseQueryEngine;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import me.paulbares.transaction.ClickHouseTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 import org.junit.jupiter.api.AfterAll;
@@ -35,7 +35,7 @@ public class TestClickHouseParentComparison extends ATestParentComparison {
   }
 
   @Override
-  protected void beforeLoading(List<Field> fields) {
+  protected void beforeLoading(List<TypedField> fields) {
     ClickHouseTransactionManager tm = (ClickHouseTransactionManager) this.tm;
     tm.dropAndCreateInMemoryTable(this.storeName, fields);
   }

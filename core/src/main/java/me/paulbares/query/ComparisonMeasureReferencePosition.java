@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 
 import java.util.Map;
 import java.util.function.Function;
@@ -50,7 +50,7 @@ public class ComparisonMeasureReferencePosition implements Measure, ComparisonMe
   }
 
   @Override
-  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
+  public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     throw new IllegalStateException();
   }
 

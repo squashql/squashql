@@ -2,7 +2,7 @@ package me.paulbares.transaction;
 
 import me.paulbares.SparkDatastore;
 import me.paulbares.SparkUtil;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -24,7 +24,7 @@ public class SparkDeltaTransactionManager extends SparkTransactionManager {
   }
 
   @Override
-  public void createTemporaryTable(String table, List<Field> fields) {
+  public void createTemporaryTable(String table, List<TypedField> fields) {
     createTemporaryTable(this.spark, table, fields, false);
   }
 

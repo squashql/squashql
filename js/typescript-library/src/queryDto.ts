@@ -80,6 +80,11 @@ export class QueryDto {
   }
 }
 
+export class Field {
+  constructor(public name: string) {
+  }
+}
+
 export class Table {
   private joins: Array<Join> = []
 

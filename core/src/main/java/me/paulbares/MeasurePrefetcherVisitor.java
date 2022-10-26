@@ -2,7 +2,7 @@ package me.paulbares;
 
 import me.paulbares.query.*;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import org.eclipse.collections.impl.set.mutable.MutableSetFactoryImpl;
 
 import java.util.Collections;
@@ -15,9 +15,9 @@ public class MeasurePrefetcherVisitor implements MeasureVisitor<Map<QueryExecuto
 
   private final QueryDto query;
   private final QueryExecutor.QueryScope originalQueryScope;
-  private final Function<String, Field> fieldSupplier;
+  private final Function<String, TypedField> fieldSupplier;
 
-  public MeasurePrefetcherVisitor(QueryDto query, QueryExecutor.QueryScope originalQueryScope, Function<String, Field> fieldSupplier) {
+  public MeasurePrefetcherVisitor(QueryDto query, QueryExecutor.QueryScope originalQueryScope, Function<String, TypedField> fieldSupplier) {
     this.query = query;
     this.originalQueryScope = originalQueryScope;
     this.fieldSupplier = fieldSupplier;
@@ -56,7 +56,7 @@ public class MeasurePrefetcherVisitor implements MeasureVisitor<Map<QueryExecuto
       // Not support for the moment
       throw new IllegalArgumentException("Only a primitive measure can be used in a parent comparison measure");
     }
-    QueryExecutor.QueryScope parentScope = MeasureUtils.getParentScopeWithClearedConditions(this.originalQueryScope, measure, this.fieldSupplier);
+    QueryExecutor.QueryScope parentScope = MeasureUtils.getParentScopeWithClearedConditions(this.originalQueryScope, measure);
     return Map.of(parentScope, Set.of(measure.measure), this.originalQueryScope, Set.of(measure.measure));
   }
 

@@ -7,7 +7,7 @@ import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.CacheStatsDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -45,14 +45,14 @@ public abstract class ATestQueryCache {
 
   @BeforeAll
   void setup() {
-    Field ean = new Field("ean", String.class);
-    Field category = new Field("category", String.class);
-    Field price = new Field("price", double.class);
-    Field qty = new Field("quantity", int.class);
+    TypedField ean = new TypedField("ean", String.class);
+    TypedField category = new TypedField("category", String.class);
+    TypedField price = new TypedField("price", double.class);
+    TypedField qty = new TypedField("quantity", int.class);
 
-    Field comp_ean = new Field("comp_ean", String.class);
-    Field comp_name = new Field("comp_name", String.class);
-    Field comp_price = new Field("comp_price", double.class);
+    TypedField comp_ean = new TypedField("comp_ean", String.class);
+    TypedField comp_name = new TypedField("comp_name", String.class);
+    TypedField comp_price = new TypedField("comp_price", double.class);
 
     this.datastore = createDatastore();
     QueryEngine queryEngine = createQueryEngine(this.datastore);
@@ -83,7 +83,7 @@ public abstract class ATestQueryCache {
     this.queryCache.clear();
   }
 
-  protected void beforeLoad(List<Field> baseStoreFields, List<Field> targetStoreFields) {
+  protected void beforeLoad(List<TypedField> baseStoreFields, List<TypedField> targetStoreFields) {
   }
 
   @Test

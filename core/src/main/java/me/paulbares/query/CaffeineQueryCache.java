@@ -7,7 +7,7 @@ import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import com.github.benmanes.caffeine.cache.stats.ConcurrentStatsCounter;
 import com.github.benmanes.caffeine.cache.stats.StatsCounter;
 import me.paulbares.query.dto.CacheStatsDto;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -46,8 +46,8 @@ public class CaffeineQueryCache implements QueryCache {
   @Override
   public ColumnarTable createRawResult(PrefetchQueryScope scope) {
     Set<Field> columns = scope.columns();
-    List<Field> headers = new ArrayList<>(columns);
-    headers.add(new Field(CountMeasure.ALIAS, long.class));
+    List<TypedField> headers = new ArrayList<>(columns.stream().map(c -> new TypedField(c.name(), String.class)).toList());
+    headers.add(new TypedField(CountMeasure.ALIAS, long.class));
 
     List<List<Object>> values = new ArrayList<>();
     Table table = this.results.getIfPresent(scope);
@@ -83,7 +83,7 @@ public class CaffeineQueryCache implements QueryCache {
       if (cache.measures().indexOf(measure) < 0) {
         // Not in the previousResult, add it.
         List<Object> aggregateValues = result.getAggregateValues(measure);
-        Field field = result.getField(measure);
+        TypedField field = result.getField(measure);
         cache.addAggregates(field, measure, aggregateValues);
         this.measureCounter.recordMisses(1);
       }
@@ -98,7 +98,7 @@ public class CaffeineQueryCache implements QueryCache {
     Table cacheResult = this.results.getIfPresent(scope);
     for (Measure measure : measures) {
       List<Object> aggregateValues = cacheResult.getAggregateValues(measure);
-      Field field = cacheResult.getField(measure);
+      TypedField field = cacheResult.getField(measure);
       result.addAggregates(field, measure, aggregateValues);
       this.measureCounter.recordHits(1);
     }

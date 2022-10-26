@@ -5,7 +5,7 @@ import me.paulbares.query.*;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.*;
 import me.paulbares.query.monitoring.QueryWatch;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import me.paulbares.store.Store;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
@@ -54,7 +54,7 @@ public class QueryController {
     QueryWatch queryWatch = new QueryWatch();
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
     Table table = this.queryExecutor.execute(query, queryWatch, csBuilder);
-    List<String> fields = table.headers().stream().map(Field::name).collect(Collectors.toList());
+    List<String> fields = table.headers().stream().map(TypedField::name).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))
             .columns(fields)

@@ -6,7 +6,7 @@ import lombok.ToString;
 import me.paulbares.query.ColumnSet;
 import me.paulbares.query.ColumnSetKey;
 import me.paulbares.query.PeriodUnit;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 
 import java.util.List;
 import java.util.Map;
@@ -65,19 +65,19 @@ public class PeriodColumnSetDto implements ColumnSet {
    * Gets the list of new fields that will appear in the final result table once the bucketing is done.
    */
   @Override
-  public List<Field> getNewColumns() {
+  public List<TypedField> getNewColumns() {
     return getNewColumns(this.period);
   }
 
-  public static List<Field> getNewColumns(Period period) {
+  public static List<TypedField> getNewColumns(Period period) {
     if (period instanceof Period.Quarter q) {
-      return List.of(new Field(q.year(), int.class), new Field(q.quarter(), int.class));
+      return List.of(new TypedField(q.year(), int.class), new TypedField(q.quarter(), int.class));
     } else if (period instanceof Period.Year y) {
-      return List.of(new Field(y.year(), int.class));
+      return List.of(new TypedField(y.year(), int.class));
     } else if (period instanceof Period.Month m) {
-      return List.of(new Field(m.year(), int.class), new Field(m.month(), int.class));
+      return List.of(new TypedField(m.year(), int.class), new TypedField(m.month(), int.class));
     } else if (period instanceof Period.Semester s) {
-      return List.of(new Field(s.year(), int.class), new Field(s.semester(), int.class));
+      return List.of(new TypedField(s.year(), int.class), new TypedField(s.semester(), int.class));
     } else {
       throw new RuntimeException(period + " not supported yet");
     }

@@ -4,7 +4,7 @@ import me.paulbares.ClickHouseDatastore;
 import me.paulbares.query.database.ClickHouseQueryEngine;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import me.paulbares.transaction.ClickHouseTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 import org.junit.jupiter.api.AfterAll;
@@ -35,7 +35,7 @@ public class TestClickHouseQueryColumnSets extends ATestQueryColumnSets {
   }
 
   @Override
-  protected void beforeLoad(List<Field> fields) {
+  protected void beforeLoad(List<TypedField> fields) {
     ClickHouseTransactionManager tm = (ClickHouseTransactionManager) this.tm;
     tm.dropAndCreateInMemoryTable(this.storeName, fields);
   }

@@ -14,7 +14,7 @@ import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.*;
 import me.paulbares.query.monitoring.QueryWatch;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import me.paulbares.util.Queries;
 
 import java.util.*;
@@ -67,8 +67,8 @@ public class QueryExecutor {
     queryWatch.stop(QueryWatch.PREPARE_RESOLVE_MEASURES);
 
     queryWatch.start(QueryWatch.EXECUTE_PREFETCH_PLAN);
-    Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
-    QueryScope queryScope = createQueryScope(query, fieldSupplier);
+    Function<String, TypedField> fieldSupplier = this.queryEngine.getFieldSupplier();
+    QueryScope queryScope = createQueryScope(query);
     Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> graph = computeDependencyGraph(query, fieldSupplier, queryScope);
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
@@ -86,7 +86,7 @@ public class QueryExecutor {
     for (QueryScope scope : prefetchQueryByQueryScope.keySet()) {
       DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
       Set<Measure> measures = measuresByQueryScope.get(scope);
-      QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(scope, prefetchQuery, fieldSupplier);
+      QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(scope, prefetchQuery);
       QueryCache queryCache = getQueryCache((QueryCacheContextValue) query.context.getOrDefault(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE)));
 
       // Finish to prepare the query
@@ -172,16 +172,16 @@ public class QueryExecutor {
     return builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList());
   }
 
-  public static QueryScope createQueryScope(QueryDto query, Function<String, Field> fieldSupplier) {
+  public static QueryScope createQueryScope(QueryDto query) {
     // If column set, it changes the scope
     List<Field> columns = Stream.concat(
             query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
-            query.columns.stream()).map(fieldSupplier).toList();
+            query.columns.stream()).map(Field::new).toList();
     return new QueryScope(query.table, query.subQuery, columns, query.conditions);
   }
 
-  private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(QueryScope queryScope, DatabaseQuery prefetchQuery, Function<String, Field> fieldSupplier) {
-    Set<Field> fields = prefetchQuery.select.stream().map(fieldSupplier).collect(Collectors.toSet());
+  private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(QueryScope queryScope, DatabaseQuery prefetchQuery) {
+    Set<Field> fields = prefetchQuery.select.stream().map(Field::new).collect(Collectors.toSet());
     if (queryScope.tableDto != null) {
       return new TableScope(queryScope.tableDto, fields, queryScope.conditions);
     } else {
@@ -191,11 +191,11 @@ public class QueryExecutor {
 
   private ColumnarTable buildFinalResult(QueryDto query, Table prefetchResult) {
     List<String> finalColumns = new ArrayList<>();
-    query.columnSets.values().forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
+    query.columnSets.values().forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(TypedField::name).toList()));
     query.columns.forEach(finalColumns::add);
 
     // Once complete, construct the final result with columns in correct order.
-    List<Field> fields = new ArrayList<>();
+    List<TypedField> fields = new ArrayList<>();
     List<List<Object>> values = new ArrayList<>();
     for (String finalColumn : finalColumns) {
       fields.add(prefetchResult.getField(finalColumn));

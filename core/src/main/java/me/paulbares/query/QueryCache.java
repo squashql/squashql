@@ -4,7 +4,6 @@ import me.paulbares.query.dto.CacheStatsDto;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
-import me.paulbares.store.Field;
 
 import java.util.Map;
 import java.util.Set;

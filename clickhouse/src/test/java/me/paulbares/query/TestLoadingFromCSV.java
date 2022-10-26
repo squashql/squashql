@@ -3,7 +3,7 @@ package me.paulbares.query;
 import me.paulbares.ClickHouseDatastore;
 import me.paulbares.query.database.ClickHouseQueryEngine;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import me.paulbares.transaction.ClickHouseTransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -54,13 +54,13 @@ public class TestLoadingFromCSV {
 
     String storeName = "myAwesomeStore";
     tm.dropAndCreateInMemoryTable(storeName, List.of(
-            new Field("CustomerID", int.class),
-            new Field("CustomerName", String.class),
-            new Field("ContactName", String.class),
-            new Field("Address", String.class),
-            new Field("City", String.class),
-            new Field("PostalCode", String.class),
-            new Field("Country", String.class)
+            new TypedField("CustomerID", int.class),
+            new TypedField("CustomerName", String.class),
+            new TypedField("ContactName", String.class),
+            new TypedField("Address", String.class),
+            new TypedField("City", String.class),
+            new TypedField("PostalCode", String.class),
+            new TypedField("Country", String.class)
     ));
 
     tm.loadCsv(MAIN_SCENARIO_NAME, storeName, pathFunction.apply("customers.csv").toString(), delimiter, header);

@@ -4,10 +4,10 @@ import {
   ComparisonMeasureReferencePosition,
   ComparisonMethod,
   eq,
-  from,
+  from, fromSubQuery,
   Querier,
   sum,
-  sumIf,
+  sumIf, _in, isNull, avg, Field, lt
 } from "aitm-js-query"
 
 const querier = new Querier("http://localhost:8080");
@@ -37,12 +37,14 @@ const amountComparison = new ComparisonMeasureReferencePosition("amount compar. 
         ColumnSetKey.BUCKET,
         new Map(Object.entries(refScenario)));
 
-const q = from("ProjectionScenario")
-        .select(
-                [],
-                [bucketColumnSet],
-                [amount, amountComparison, sales])
+const subQuery = from("DEPATMENT")
+        .select([], [], [avg("averageBudget", "BUDGET")])
         .build();
+
+const q = fromSubQuery(subQuery)
+        .where("averageBudget", lt(new Field("SALARY")))
+        .select(["Instructor.ID", "Instructor.NAME", "Instructor.DEPARTMENT", "Instructor.SALARY"], [], [])
+        .build()
 
 // q.withMeasure(sales)
 // const pop = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, sales, ["Month", "Year"]);

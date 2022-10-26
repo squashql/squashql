@@ -3,7 +3,7 @@ package me.paulbares.query;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.PeriodColumnSetDto;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import org.eclipse.collections.api.map.primitive.MutableIntIntMap;
 import org.eclipse.collections.impl.map.mutable.primitive.MutableIntIntMapFactoryImpl;
 
@@ -20,10 +20,10 @@ import static me.paulbares.query.ColumnSetKey.PERIOD;
 
 public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeKey, QueryExecutor.ExecutionContext>, MeasureVisitor<Void> {
 
-  private final Function<String, Field> fieldSupplier;
+  private final Function<String, TypedField> fieldSupplier;
   private QueryExecutor.ExecutionContext executionContext;
 
-  public MeasureEvaluator(Function<String, Field> fieldSupplier) {
+  public MeasureEvaluator(Function<String, TypedField> fieldSupplier) {
     this.fieldSupplier = fieldSupplier;
   }
 
@@ -52,7 +52,7 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
     for (int i = 0; i < lo.size(); i++) {
       r.add(operation.apply((Number) lo.get(i), (Number) ro.get(i)));
     }
-    Field field = new Field(bom.alias(), BinaryOperations.getOutputType(bom.operator, lType, rType));
+    TypedField field = new TypedField(bom.alias(), BinaryOperations.getOutputType(bom.operator, lType, rType));
     intermediateResult.addAggregates(field, bom, r);
     return null;
   }
@@ -77,14 +77,14 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
 
   private static void executeComparator(ComparisonMeasureReferencePosition cm, Table writeToTable, Table readFromTable, AComparisonExecutor executor) {
     List<Object> agg = executor.compare(cm, writeToTable, readFromTable);
-    Field field = new Field(cm.alias(), BinaryOperations.getComparisonOutputType(cm.comparisonMethod, writeToTable.getField(cm.measure).type()));
+    TypedField field = new TypedField(cm.alias(), BinaryOperations.getComparisonOutputType(cm.comparisonMethod, writeToTable.getField(cm.measure).type()));
     writeToTable.addAggregates(field, cm, agg);
   }
 
   @Override
   public Void visit(ParentComparisonMeasure pcm) {
     Table whereToWrite = this.executionContext.writeToTable();
-    QueryExecutor.QueryScope parentScope = MeasureUtils.getParentScopeWithClearedConditions(this.executionContext.queryScope(), pcm, this.fieldSupplier);
+    QueryExecutor.QueryScope parentScope = MeasureUtils.getParentScopeWithClearedConditions(this.executionContext.queryScope(), pcm);
     Table whereToRead = this.executionContext.tableByScope().get(parentScope);
     List<Object> aggregateValues = whereToWrite.getAggregateValues(pcm.measure);
     List<Object> parentAggregateValues = whereToRead.getAggregateValues(pcm.measure);
@@ -93,7 +93,7 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
 
     MutableIntIntMap mapping = MutableIntIntMapFactoryImpl.INSTANCE.empty();
     for (int index : whereToRead.columnIndices()) {
-      Field field = whereToRead.headers().get(index);
+      TypedField field = whereToRead.headers().get(index);
       int indexWhereToWrite = whereToWrite.index(field);
       mapping.put(index, indexWhereToWrite);
     }
@@ -120,7 +120,7 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
       rowIndex[0]++;
     });
 
-    Field field = new Field(pcm.alias(), double.class);
+    TypedField field = new TypedField(pcm.alias(), double.class);
     whereToWrite.addAggregates(field, pcm, result);
     return null;
   }
@@ -149,7 +149,7 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
     } else {
       throw new IllegalArgumentException("Unexpected type " + cm.getValue().getClass() + ". Only double and long are supported");
     }
-    Field field = new Field(cm.alias(), type);
+    TypedField field = new TypedField(cm.alias(), type);
     List<Object> r = Collections.nCopies((int) intermediateResult.count(), v);
     intermediateResult.addAggregates(field, cm, r);
   }

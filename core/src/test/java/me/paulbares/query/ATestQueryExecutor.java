@@ -8,7 +8,7 @@ import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.OrderKeywordDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,7 +18,7 @@ import org.junit.jupiter.api.TestInstance;
 import java.util.Collections;
 import java.util.List;
 
-import static me.paulbares.query.Functions.sum;
+import static me.paulbares.query.Functions.*;
 import static me.paulbares.query.agg.AggregationFunction.AVG;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
@@ -44,11 +44,11 @@ public abstract class ATestQueryExecutor {
 
   @BeforeAll
   void setup() {
-    Field ean = new Field("ean", String.class);
-    Field category = new Field("category", String.class);
-    Field subcategory = new Field("subcategory", String.class);
-    Field price = new Field("price", double.class);
-    Field qty = new Field("quantity", int.class);
+    TypedField ean = new TypedField("ean", String.class);
+    TypedField category = new TypedField("category", String.class);
+    TypedField subcategory = new TypedField("subcategory", String.class);
+    TypedField price = new TypedField("price", double.class);
+    TypedField qty = new TypedField("quantity", int.class);
 
     this.datastore = createDatastore();
     QueryEngine queryEngine = createQueryEngine(this.datastore);
@@ -79,7 +79,7 @@ public abstract class ATestQueryExecutor {
     ));
   }
 
-  protected void beforeLoad(List<Field> fields) {
+  protected void beforeLoad(List<TypedField> fields) {
   }
 
   @Test
@@ -106,7 +106,7 @@ public abstract class ATestQueryExecutor {
             List.of(MAIN_SCENARIO_NAME, 3l),
             List.of("s1", 3l),
             List.of("s2", 3l));
-    Assertions.assertThat(result.headers().stream().map(Field::name))
+    Assertions.assertThat(result.headers().stream().map(TypedField::name))
             .containsExactly(SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
   }
 
@@ -238,7 +238,7 @@ public abstract class ATestQueryExecutor {
             List.of(MAIN_SCENARIO_NAME, 30l, 30l),
             List.of("s1", 30l, 30l),
             List.of("s2", 30l, 30l));
-    Assertions.assertThat(result.headers().stream().map(Field::name))
+    Assertions.assertThat(result.headers().stream().map(TypedField::name))
             .containsExactly(SCENARIO_FIELD_NAME, "quantity if food or drink", "quantity filtered");
   }
 
@@ -316,6 +316,24 @@ public abstract class ATestQueryExecutor {
   }
 
   @Test
+  void testSubQueryWithCondition() {
+    // Find all ean whose price is greater than the average price of all eans by scenario
+    QueryDto subQuery = Query.from(this.storeName)
+            .select(List.of(SCENARIO_FIELD_NAME), List.of(avg("ca", "price")))// ca per scenario
+            .build();
+    QueryDto queryDto = Query.from(subQuery)
+            .where("price", gt(new Field("ca")))
+            .select(List.of(SCENARIO_FIELD_NAME, "ean", "price", "ca"), List.of())// avg of ca
+            .build();
+    Table result = this.queryExecutor.execute(queryDto);
+    Assertions.assertThat(result).containsExactly(
+            List.of("base", "shirt", 10d, 5d),
+            List.of("s1", "shirt", 10d, 5.666666666666667d),
+            List.of("s2", "shirt", 10d, 4.833333333333333d)
+    );
+  }
+
+  @Test
   void testSubQueryAggIfWithConditionOnSubQueryField() {
     QueryDto subQuery = new QueryDto()
             .table(this.storeName)
@@ -345,7 +363,7 @@ public abstract class ATestQueryExecutor {
             .withMeasure(decimal);
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactly(List.of(4650d, 4650d, 9900l, 9900d, 100l, 100d));
-    Assertions.assertThat(result.headers().stream().map(Field::name).toList())
+    Assertions.assertThat(result.headers().stream().map(TypedField::name).toList())
             .containsExactly("a1", "a2", "b1", "b2", "constant(100)", "constant(100.0)");
   }
 }

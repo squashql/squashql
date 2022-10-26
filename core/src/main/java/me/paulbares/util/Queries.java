@@ -3,7 +3,6 @@ package me.paulbares.util;
 import me.paulbares.query.*;
 import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.dto.*;
-import me.paulbares.store.Field;
 
 import java.util.*;
 

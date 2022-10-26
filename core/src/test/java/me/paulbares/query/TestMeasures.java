@@ -4,17 +4,16 @@ import me.paulbares.query.QueryExecutor.QueryScope;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.TableDto;
-import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.util.TriFunction;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static me.paulbares.query.Functions.*;
+import static me.paulbares.query.Functions.eq;
+import static me.paulbares.query.Functions.plus;
 
 public class TestMeasures {
 
@@ -82,17 +81,16 @@ public class TestMeasures {
 
   @Test
   void testParentComparisonQueryScope() {
-    Field continent = new Field("continent", String.class);
-    Field country = new Field("country", String.class);
-    Field city = new Field("city", String.class);
-    Field other = new Field("other", String.class);
+    Field continent = new Field("continent");
+    Field country = new Field("country");
+    Field city = new Field("city");
+    Field other = new Field("other");
 
     Map<String, List<Field>> collect = List.of(continent, country, city, other).stream().collect(Collectors.groupingBy(Field::name));
-    Function<String, Field> fieldSupplier = name -> collect.get(name).iterator().next();
 
     BiFunction<List<Field>, List<Field>, QueryScope> parentScopeProvider = (queryScopeColumns, pcmAncestors) -> {
       QueryScope queryScope = new QueryScope(new TableDto("myTable"), null, queryScopeColumns, Collections.emptyMap());
-      return MeasureUtils.getParentScopeWithClearedConditions(queryScope, new ParentComparisonMeasure("pcm", ComparisonMethod.DIVIDE, Functions.sum("sum", "whatever"), pcmAncestors.stream().map(Field::name).toList()), fieldSupplier);
+      return MeasureUtils.getParentScopeWithClearedConditions(queryScope, new ParentComparisonMeasure("pcm", ComparisonMethod.DIVIDE, Functions.sum("sum", "whatever"), pcmAncestors.stream().map(Field::name).toList()));
     };
 
     {
@@ -141,20 +139,19 @@ public class TestMeasures {
 
   @Test
   void testParentComparisonQueryScopeWithCondition() {
-    Field continent = new Field("continent", String.class);
-    Field country = new Field("country", String.class);
-    Field city = new Field("city", String.class);
-    Field other = new Field("other", String.class);
+    Field continent = new Field("continent");
+    Field country = new Field("country");
+    Field city = new Field("city");
+    Field other = new Field("other");
 
     Map<String, List<Field>> collect = List.of(continent, country, city, other).stream().collect(Collectors.groupingBy(Field::name));
-    Function<String, Field> fieldSupplier = name -> collect.get(name).iterator().next();
 
     TriFunction<List<Field>, List<Field>, Map<String, ConditionDto>, QueryScope> parentScopeProvider = (queryScopeColumns, pcmAncestors, conditions) -> {
       QueryScope queryScope = new QueryScope(new TableDto("myTable"),
               null,
               queryScopeColumns,
               conditions);
-      return MeasureUtils.getParentScopeWithClearedConditions(queryScope, new ParentComparisonMeasure("pcm", ComparisonMethod.DIVIDE, Functions.sum("sum", "whatever"), pcmAncestors.stream().map(Field::name).toList()), fieldSupplier);
+      return MeasureUtils.getParentScopeWithClearedConditions(queryScope, new ParentComparisonMeasure("pcm", ComparisonMethod.DIVIDE, Functions.sum("sum", "whatever"), pcmAncestors.stream().map(Field::name).toList()));
     };
 
     {

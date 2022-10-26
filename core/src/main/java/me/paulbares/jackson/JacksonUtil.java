@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import me.paulbares.query.Table;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 
 import java.util.List;
 import java.util.Map;
@@ -37,7 +37,7 @@ public class JacksonUtil {
   }
 
   public static Map<String, Iterable<?>> serializeTable(Table table) {
-    List<String> fields = table.headers().stream().map(Field::name).collect(Collectors.toList());
+    List<String> fields = table.headers().stream().map(TypedField::name).collect(Collectors.toList());
     // Jackson can serialize Iterable<?> so there is nothing to do to serialize table!
     return Map.of("columns", fields, "rows", table);
   }

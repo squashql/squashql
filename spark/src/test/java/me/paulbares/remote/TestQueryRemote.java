@@ -8,7 +8,7 @@ import me.paulbares.query.Table;
 import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.database.SparkQueryEngine;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import me.paulbares.transaction.SparkTransactionManager;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparkSession;
@@ -87,10 +87,10 @@ public class TestQueryRemote {
     SparkQueryEngine queryEngine = new SparkQueryEngine(datastore);
     SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
 
-    Field ean = new Field("ean", String.class);
-    Field category = new Field("category", String.class);
-    Field price = new Field("price", double.class);
-    Field qty = new Field("quantity", int.class);
+    TypedField ean = new TypedField("ean", String.class);
+    TypedField category = new TypedField("category", String.class);
+    TypedField price = new TypedField("price", double.class);
+    TypedField qty = new TypedField("quantity", int.class);
     tm.createTemporaryTable(storeName, List.of(ean, category, price, qty));
 
     tm.load(MAIN_SCENARIO_NAME, storeName, List.of(

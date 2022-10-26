@@ -4,7 +4,7 @@ import me.paulbares.SparkDatastore;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.database.SparkQueryEngine;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import me.paulbares.transaction.SparkTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 
@@ -29,7 +29,7 @@ public class TestSparkBucketComparison extends ATestBucketComparison {
   }
 
   @Override
-  protected void beforeLoad(List<Field> fields) {
+  protected void beforeLoad(List<TypedField> fields) {
     ((SparkTransactionManager) tm).createTemporaryTable(storeName, fields);
   }
 }

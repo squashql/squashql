@@ -6,7 +6,7 @@ import lombok.NonNull;
 import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.query.database.SqlUtils;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 
 import java.util.function.Function;
 
@@ -32,7 +32,7 @@ public class BinaryOperationMeasure implements Measure {
   }
 
   @Override
-  public String sqlExpression(Function<String, Field> fp, QueryRewriter qr, boolean withAlias) {
+  public String sqlExpression(Function<String, TypedField> fp, QueryRewriter qr, boolean withAlias) {
     String sql = new StringBuilder()
             .append(this.leftOperand.sqlExpression(fp, qr, false))
             .append(this.operator.infix)

@@ -1,8 +1,9 @@
 package me.paulbares.query.database;
 
+import me.paulbares.query.CountMeasure;
 import me.paulbares.query.Table;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import me.paulbares.store.Store;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -17,28 +18,32 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   public final T datastore;
 
-  public final Function<String, Field> fieldSupplier;
+  public final Function<String, TypedField> fieldSupplier;
 
   protected AQueryEngine(T datastore) {
     this.datastore = datastore;
     this.fieldSupplier = createFieldSupplier();
   }
 
-  protected Function<String, Field> createFieldSupplier() {
+  protected Function<String, TypedField> createFieldSupplier() {
     return fieldName -> {
       for (Store store : this.datastore.storesByName().values()) {
-        for (Field field : store.fields()) {
+        for (TypedField field : store.fields()) {
           if (field.name().equals(fieldName)) {
             return field;
           }
         }
+      }
+
+      if(fieldName.equals(CountMeasure.INSTANCE.alias())) {
+        return new TypedField(CountMeasure.INSTANCE.alias(), long.class);
       }
       throw new IllegalArgumentException("Cannot find field with name " + fieldName);
     };
   }
 
   @Override
-  public Function<String, Field> getFieldSupplier() {
+  public Function<String, TypedField> getFieldSupplier() {
     return this.fieldSupplier;
   }
 
@@ -68,12 +73,12 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     return initialTable;
   }
 
-  public static <Column, Record> Pair<List<Field>, List<List<Object>>> transform(
+  public static <Column, Record> Pair<List<TypedField>, List<List<Object>>> transform(
           List<Column> columns,
-          Function<Column, Field> columnToField,
+          Function<Column, TypedField> columnToField,
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue) {
-    List<Field> fields = columns.stream().map(columnToField::apply).toList();
+    List<TypedField> fields = columns.stream().map(columnToField::apply).toList();
     List<List<Object>> values = new ArrayList<>();
     fields.forEach(f -> values.add(new ArrayList<>()));
     recordIterator.forEachRemaining(r -> {

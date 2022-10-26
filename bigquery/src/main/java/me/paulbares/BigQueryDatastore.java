@@ -8,7 +8,7 @@ import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.Table;
 import com.google.common.base.Suppliers;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import me.paulbares.store.Store;
 
 import java.util.*;
@@ -62,11 +62,11 @@ public class BigQueryDatastore implements Datastore {
     return tableNames;
   }
 
-  public static List<Field> getFields(BigQuery query, String datasetName, String tableName) {
-    List<Field> fields = new ArrayList<>();
+  public static List<TypedField> getFields(BigQuery query, String datasetName, String tableName) {
+    List<TypedField> fields = new ArrayList<>();
     Schema schema = query.getTable(datasetName, tableName).getDefinition().getSchema();
     for (com.google.cloud.bigquery.Field field : schema.getFields()) {
-      fields.add(new Field(field.getName(), BigQueryUtil.bigQueryTypeToClass(field.getType())));
+      fields.add(new TypedField(field.getName(), BigQueryUtil.bigQueryTypeToClass(field.getType())));
     }
     return fields;
   }

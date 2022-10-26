@@ -5,7 +5,7 @@ import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.dto.JoinDto;
 import me.paulbares.query.dto.JoinMappingDto;
 import me.paulbares.query.dto.TableDto;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -21,10 +21,10 @@ public class TestSQLTranslator {
 
   private static final String BASE_STORE_NAME = "baseStore";
 
-  private static final Function<String, Field> fieldProvider = s -> switch (s) {
-    case "pnl" -> new Field(s, double.class);
-    case "delta" -> new Field(s, Double.class);
-    case "type", SCENARIO_FIELD_NAME -> new Field(s, String.class);
+  private static final Function<String, TypedField> fieldProvider = s -> switch (s) {
+    case "pnl" -> new TypedField(s, double.class);
+    case "delta" -> new TypedField(s, Double.class);
+    case "type", SCENARIO_FIELD_NAME -> new TypedField(s, String.class);
     default -> throw new RuntimeException("not supported " + s);
   };
 
@@ -148,15 +148,15 @@ public class TestSQLTranslator {
   }
 
   @Test
-  void testConditions() {
+  void testConditionsWithValue() {
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(SCENARIO_FIELD_NAME)
             .withSelect("type")
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
             .condition(SCENARIO_FIELD_NAME, and(eq("base"), eq("s1"), eq("s2")))
+            .condition("delta", ge(123d))
             .condition("type", or(eq("A"), eq("B")))
             .condition("pnl", lt(10d))
-            .condition("delta", ge(123d))
             .table(BASE_STORE_NAME);
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum` from " + BASE_STORE_NAME
@@ -164,6 +164,12 @@ public class TestSQLTranslator {
                     + " and `delta` >= 123.0 and `type` = 'A' or `type` = 'B' and `pnl` < 10.0"
                     + " group by `scenario`, `type`"
             );
+  }
+
+  @Test
+  void testConditionsWithOtherField() {
+    Assertions.assertThat(SQLTranslator.toSql(new TypedField("pnl.sum", double.class), eq(new Field("pnl.avg"))))
+            .isEqualTo("`pnl.sum` = `pnl.avg`");
   }
 
   @Test
@@ -182,7 +188,7 @@ public class TestSQLTranslator {
             .withMeasure(sum("sum GT", "mean"))
             .condition("type", eq("myType"));
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select `c3`, sum(`mean`) as `sum GT` from (select `c1`, `c3`, avg(`c2`) as `mean` from a group by `c1`, `c3`) where `type` = 'myType' group by `c3`");
+            .isEqualTo("select `c3`, sum(`mean`) as `sum GT` from (select `c1`, `c3`, avg(`c2`) as `mean` from a group by `c1`, `c3`) as __temp_table__, a where `type` = 'myType' group by `c3`");
   }
 
   @Test

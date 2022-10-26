@@ -2,7 +2,7 @@ package me.paulbares.query;
 
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.PeriodColumnSetDto;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
@@ -27,7 +27,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
   }
 
   @Override
-  protected BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
+  protected BiPredicate<Object[], TypedField[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
     Map<PeriodUnit, String> referencePosition = new HashMap<>();
     Map<String, PeriodUnit> mapping = this.cSet.mapping();
     MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
@@ -39,7 +39,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     return new ShiftProcedure(this.cSet.period, referencePosition, indexByPeriodUnit);
   }
 
-  static class ShiftProcedure implements BiPredicate<Object[], Field[]> {
+  static class ShiftProcedure implements BiPredicate<Object[], TypedField[]> {
 
     final Period period;
     final Map<PeriodUnit, String> referencePosition;
@@ -63,7 +63,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     }
 
     @Override
-    public boolean test(Object[] row, Field[] fields) {
+    public boolean test(Object[] row, TypedField[] fields) {
       int yearIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.YEAR, -1);
       int semesterIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.SEMESTER, -1);
       int quarterIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.QUARTER, -1);
@@ -141,7 +141,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
       return (int) ((Number) o).longValue(); // with some database, year could be Long object.
     }
 
-    private static void write(Object[] rowIndex, int index, Field field, int number) {
+    private static void write(Object[] rowIndex, int index, TypedField field, int number) {
       if (field.type() == Long.class || field.type() == long.class) {
         rowIndex[index] = (long) number;
       } else if (field.type() == Integer.class || field.type() == int.class) {

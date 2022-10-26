@@ -5,7 +5,7 @@ import com.clickhouse.jdbc.ClickHouseConnection;
 import com.clickhouse.jdbc.ClickHouseDataSource;
 import com.clickhouse.jdbc.ClickHouseStatement;
 import me.paulbares.ClickHouseDatastore;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
 import java.io.FileNotFoundException;
@@ -26,14 +26,14 @@ public class ClickHouseTransactionManager implements TransactionManager {
     this.clickHouseDataSource = clickHouseDataSource;
   }
 
-  public void dropAndCreateInMemoryTable(String table, List<Field> fields) {
+  public void dropAndCreateInMemoryTable(String table, List<TypedField> fields) {
     dropAndCreateInMemoryTable(this.clickHouseDataSource, table, fields, true);
   }
 
-  public static void dropAndCreateInMemoryTable(ClickHouseDataSource clickHouseDataSource, String table, List<Field> fields, boolean cjMode) {
-    List<Field> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
+  public static void dropAndCreateInMemoryTable(ClickHouseDataSource clickHouseDataSource, String table, List<TypedField> fields, boolean cjMode) {
+    List<TypedField> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
             .ofAll(fields)
-            .newWith(new Field(SCENARIO_FIELD_NAME, String.class))
+            .newWith(new TypedField(SCENARIO_FIELD_NAME, String.class))
             .castToList() : fields;
 
     try (ClickHouseConnection conn = clickHouseDataSource.getConnection();
@@ -43,7 +43,7 @@ public class ClickHouseTransactionManager implements TransactionManager {
       sb.append("(");
       int size = list.size();
       for (int i = 0; i < size; i++) {
-        Field field = list.get(i);
+        TypedField field = list.get(i);
         sb.append(field.name()).append(" Nullable(").append(classToClickHouseType(field.type())).append(')');
         if (i < size - 1) {
           sb.append(", ");
@@ -79,7 +79,7 @@ public class ClickHouseTransactionManager implements TransactionManager {
   }
 
   private void ensureScenarioColumnIsPresent(String store) {
-    List<Field> fields = ClickHouseDatastore.getFields(this.clickHouseDataSource, store);
+    List<TypedField> fields = ClickHouseDatastore.getFields(this.clickHouseDataSource, store);
     boolean found = fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
     if (!found) {
       throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));

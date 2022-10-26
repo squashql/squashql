@@ -7,7 +7,7 @@ import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -42,12 +42,12 @@ public abstract class ATestQueryColumnSets {
 
   @BeforeAll
   void setup() {
-    Field ean = new Field("ean", String.class);
-    Field category = new Field("category", String.class);
-    Field sales = new Field("sales", double.class);
-    Field qty = new Field("quantity", long.class);
-    Field year = new Field("year_sales", int.class);
-    Field quarter = new Field("quarter_sales", int.class);
+    TypedField ean = new TypedField("ean", String.class);
+    TypedField category = new TypedField("category", String.class);
+    TypedField sales = new TypedField("sales", double.class);
+    TypedField qty = new TypedField("quantity", long.class);
+    TypedField year = new TypedField("year_sales", int.class);
+    TypedField quarter = new TypedField("quarter_sales", int.class);
 
     this.datastore = createDatastore();
     this.queryEngine = createQueryEngine(this.datastore);
@@ -105,7 +105,7 @@ public abstract class ATestQueryColumnSets {
     ));
   }
 
-  protected void beforeLoad(List<Field> fields) {
+  protected void beforeLoad(List<TypedField> fields) {
   }
 
   @Test
@@ -191,7 +191,7 @@ public abstract class ATestQueryColumnSets {
             List.of("group1", MAIN_SCENARIO_NAME, 2023, base),
             List.of("group1", "up", 2023, up));
     Assertions
-            .assertThat(table.headers().stream().map(Field::name))
+            .assertThat(table.headers().stream().map(TypedField::name))
             .containsExactlyInAnyOrder("year_sales", groupOfScenario, SCENARIO_FIELD_NAME, "sum(sales)");
   }
 
@@ -234,7 +234,7 @@ public abstract class ATestQueryColumnSets {
             List.of("group1", MAIN_SCENARIO_NAME, 2023, 0d, base),
             List.of("group1", "up", 2023, 0d, up));
     Assertions
-            .assertThat(table.headers().stream().map(Field::name))
+            .assertThat(table.headers().stream().map(TypedField::name))
             .containsExactlyInAnyOrder(groupOfScenario, SCENARIO_FIELD_NAME, "year_sales", "salesYearComp", "sum(sales)");
   }
 
@@ -277,7 +277,7 @@ public abstract class ATestQueryColumnSets {
             List.of("group1", MAIN_SCENARIO_NAME, 2023, 0d, base),
             List.of("group1", "up", 2023, up - base, up));
     Assertions
-            .assertThat(table.headers().stream().map(Field::name))
+            .assertThat(table.headers().stream().map(TypedField::name))
             .containsExactlyInAnyOrder(groupOfScenario, SCENARIO_FIELD_NAME, "year_sales", "salesYearComp", "sum(sales)");
   }
 
@@ -325,7 +325,7 @@ public abstract class ATestQueryColumnSets {
             List.of("group1", MAIN_SCENARIO_NAME, 2023, 0d, 0d, base),
             List.of("group1", "up", 2023, 0d, up - base, up));
     Assertions
-            .assertThat(table.headers().stream().map(Field::name))
+            .assertThat(table.headers().stream().map(TypedField::name))
             .containsExactlyInAnyOrder(groupOfScenario, SCENARIO_FIELD_NAME, "year_sales", "salesYearComp", "salesGroupComp", "sum(sales)");
   }
 }

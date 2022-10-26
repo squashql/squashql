@@ -2,7 +2,7 @@ package me.paulbares.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ public interface ColumnSet {
   List<String> getColumnsForPrefetching();
 
   @JsonIgnore
-  List<Field> getNewColumns();
+  List<TypedField> getNewColumns();
 
   @JsonIgnore
   ColumnSetKey getColumnSetKey();

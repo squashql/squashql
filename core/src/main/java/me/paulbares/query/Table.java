@@ -1,7 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.dictionary.ObjectArrayDictionary;
-import me.paulbares.store.Field;
+import me.paulbares.store.TypedField;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,9 +11,9 @@ public interface Table extends Iterable<List<Object>> {
 
   ObjectArrayDictionary pointDictionary();
 
-  List<Field> headers();
+  List<TypedField> headers();
 
-  void addAggregates(Field field, Measure measure, List<Object> values);
+  void addAggregates(TypedField field, Measure measure, List<Object> values);
 
   default List<Object> getColumn(int columnIndex) {
     List<Object> elements = new ArrayList<>();
@@ -35,7 +35,7 @@ public interface Table extends Iterable<List<Object>> {
     return getColumn(measureIndices()[index]);
   }
 
-  default Field getField(Measure measure) {
+  default TypedField getField(Measure measure) {
     int index = measures().indexOf(measure);
     if (index < 0) {
       throw new IllegalArgumentException("no aggregate values for " + measure);
@@ -43,7 +43,7 @@ public interface Table extends Iterable<List<Object>> {
     return headers().get(measureIndices()[index]);
   }
 
-  default Field getField(String column) {
+  default TypedField getField(String column) {
     return headers().get(columnIndex(column));
   }
 
@@ -55,7 +55,7 @@ public interface Table extends Iterable<List<Object>> {
 
   default int columnIndex(String column) {
     int index = -1, i = 0;
-    for (Field header : headers()) {
+    for (TypedField header : headers()) {
       if (header.name().equals(column)) {
         index = i;
         break;
@@ -68,9 +68,9 @@ public interface Table extends Iterable<List<Object>> {
     return index;
   }
 
-  default int index(Field field) {
+  default int index(TypedField field) {
     int index = -1, i = 0;
-    for (Field header : headers()) {
+    for (TypedField header : headers()) {
       if (header.equals(field)) {
         index = i;
         break;

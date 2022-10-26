@@ -1,7 +1,7 @@
 export const PACKAGE = "me.paulbares.query."
 
 export {
-  QueryDto, Table, JoinType, JoinMapping,
+  QueryDto, Table, Field, JoinType, JoinMapping,
 } from './queryDto'
 
 export {
