@@ -1,15 +1,13 @@
 import {
   BucketColumnSet,
-  ComparisonMethod,
-  ComparisonMeasureReferencePosition,
   ColumnSetKey,
+  ComparisonMeasureReferencePosition,
+  ComparisonMethod,
   eq,
-  ParentComparisonMeasure,
+  from,
   Querier,
-  Query,
   sum,
   sumIf,
-  Table
 } from "aitm-js-query"
 
 const querier = new Querier("http://localhost:8080");
@@ -17,38 +15,35 @@ const assets = "https://raw.githubusercontent.com/paulbares/aitm-assets/main/met
 
 const toString = (a: any): string => JSON.stringify(a, null, 1)
 
-// querier.getMetadata(assets).then(r => {
-//   console.log(`Store: ${toString(r.stores)}`);
-//   console.log(`Measures: ${toString(r.measures)}`)
-//   console.log(`Agg Func: ${r.aggregationFunctions}`)
-// })
+querier.getMetadata(assets).then(r => {
+  console.log(`Store: ${toString(r.stores)}`);
+  console.log(`Measures: ${toString(r.measures)}`)
+  console.log(`Agg Func: ${r.aggregationFunctions}`)
+})
 
-const table = new Table("saas")
-const q = new Query()
-        .onTable(table)
-;
-
-const amount = sum("amount.sum", "Amount");
-q.withMeasure(amount)
-
-// q.withColumn("scenario encrypted")
-
+const amount = sum("amount_sum", "Amount");
+const sales = sumIf("sales", "Amount", "IncomeExpense", eq("Revenue"));
 const groups = {
   "ABCD": ["A", "B", "C", "D"],
   "BD": ["B", "D"],
   "CDA": ["C", "D", "A"],
 }
-q.withBucketColumnSet(new BucketColumnSet("group", "scenario encrypted", new Map(Object.entries(groups))));
 
-const refScenario = {"scenario encrypted": "s-1", "group": "g"}
+const bucketColumnSet = new BucketColumnSet("group", "Scenario", new Map(Object.entries(groups)))
+const refScenario = {"Scenario": "s-1", "group": "g"}
 const amountComparison = new ComparisonMeasureReferencePosition("amount compar. with prev. scenario",
         ComparisonMethod.ABSOLUTE_DIFFERENCE,
         amount,
         ColumnSetKey.BUCKET,
         new Map(Object.entries(refScenario)));
-q.withMeasure(amountComparison);
 
-// const sales = sumIf("sales", "Amount", "Income/Expense", eq("Revenue"));
+const q = from("ProjectionScenario")
+        .select(
+                [],
+                [bucketColumnSet],
+                [amount, amountComparison, sales])
+        .build();
+
 
 // q.withMeasure(sales)
 // const pop = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, sales, ["Month", "Year"]);

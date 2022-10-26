@@ -30,3 +30,7 @@ export {
 export {
   Querier, QueryResult, MetadataResult, StoreMetadata, MetadataItem, SimpleTable
 } from './querier'
+
+export {
+  from, fromSubQuery
+} from './query'
