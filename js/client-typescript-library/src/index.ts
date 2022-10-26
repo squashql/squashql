@@ -44,7 +44,6 @@ const q = from("ProjectionScenario")
                 [amount, amountComparison, sales])
         .build();
 
-
 // q.withMeasure(sales)
 // const pop = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, sales, ["Month", "Year"]);
 
