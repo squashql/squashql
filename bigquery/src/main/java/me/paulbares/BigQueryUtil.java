@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public final class BigQueryUtil {
 
@@ -21,7 +22,8 @@ public final class BigQueryUtil {
       case STRING -> String.class;
       case BYTES -> byte.class;
       case DATE -> LocalDate.class;
-      default -> throw new IllegalArgumentException("Unsupported data type " + dataType);
+      case DATETIME -> LocalDateTime.class;
+      default -> Object.class;
     };
   }
 
