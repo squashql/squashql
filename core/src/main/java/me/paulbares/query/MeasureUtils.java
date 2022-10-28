@@ -3,6 +3,7 @@ package me.paulbares.query;
 import lombok.NoArgsConstructor;
 import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.dto.ConditionDto;
+import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 
@@ -84,13 +85,16 @@ public final class MeasureUtils {
 
   public static QueryExecutor.QueryScope getReadScopeComparisonMeasureReferencePosition(
           QueryDto query,
+          ComparisonMeasureReferencePosition cm,
           QueryExecutor.QueryScope queryScope) {
     Map<String, ConditionDto> newConditions = new HashMap<>(queryScope.conditions());
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.PERIOD))
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(newConditions::remove));
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(newConditions::remove));
-
+    if (cm.period != null) {
+      PeriodColumnSetDto.getColumnsForPrefetching(cm.period).forEach(newConditions::remove);
+    }
     return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), newConditions);
   }
 

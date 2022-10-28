@@ -55,7 +55,6 @@ public class TestMeasures {
             "Growth",
             ComparisonMethod.DIVIDE,
             sales,
-            ColumnSetKey.PERIOD,
             Map.of("Year", "y-1"));
     Measure kpi = plus("KPI", ebidtaRatio, growth);
 
@@ -66,7 +65,6 @@ public class TestMeasures {
             "KPI comp. with prev. scenario",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             kpi,
-            ColumnSetKey.BUCKET,
             referencePosition);
 
     ParentComparisonMeasure parentComparisonMeasure = new ParentComparisonMeasure("parent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));

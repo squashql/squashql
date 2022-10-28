@@ -2,7 +2,6 @@ package me.paulbares.query;
 
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.dto.BucketColumnSetDto;
-import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.store.Field;
 import org.eclipse.collections.api.map.primitive.MutableIntIntMap;
 import org.eclipse.collections.impl.map.mutable.primitive.MutableIntIntMapFactoryImpl;
@@ -16,7 +15,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static me.paulbares.query.ColumnSetKey.BUCKET;
-import static me.paulbares.query.ColumnSetKey.PERIOD;
 
 public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeKey, QueryExecutor.ExecutionContext>, MeasureVisitor<Void> {
 
@@ -59,16 +57,26 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
 
   @Override
   public Void visit(ComparisonMeasureReferencePosition cm) {
-    Map<ColumnSetKey, Function<ColumnSet, AComparisonExecutor>> m = Map.of(
-            BUCKET, cs -> new BucketComparisonExecutor((BucketColumnSetDto) cs),
-            PERIOD, cs -> new PeriodComparisonExecutor((PeriodColumnSetDto) cs));
-    ColumnSet cs = this.executionContext.query().columnSets.get(cm.columnSetKey);
-    if (cs == null) {
-      throw new IllegalArgumentException(String.format("columnSet %s is not specified in the query but is used in a comparison measure: %s", cm.columnSetKey, cm));
+    Map<ColumnSetKey, Function<ColumnSet, AComparisonExecutor>> m = Map.of(BUCKET, cs -> new BucketComparisonExecutor((BucketColumnSetDto) cs));
+    AComparisonExecutor executor = null;
+    if (cm.columnSetKey != null) {
+      //FIXME might get rid column set key
+      ColumnSet cs = this.executionContext.query().columnSets.get(cm.columnSetKey);
+      if (cs == null) {
+        throw new IllegalArgumentException(String.format("columnSet %s is not specified in the query but is used in a comparison measure: %s", cm.columnSetKey, cm));
+      }
+      executor = m.get(cm.columnSetKey).apply(cs);
+    } else {
+      for (String field : cm.period.getFields()) {
+        if (!this.executionContext.query().columns.contains(field)) {
+          // TODO test
+          throw new IllegalArgumentException(String.format("%s is not specified in the query but is used in a comparison measure: %s", field, cm));
+        }
+      }
+      executor = new PeriodComparisonExecutor(cm);
     }
-    AComparisonExecutor executor = m.get(cm.columnSetKey).apply(cs);
     if (executor != null) {
-      QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.executionContext.query(), this.executionContext.queryScope());
+      QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.executionContext.query(), cm, this.executionContext.queryScope());
       Table readFromTable = this.executionContext.tableByScope().get(readScope); // Table where to read the aggregates
       executeComparator(cm, this.executionContext.writeToTable(), readFromTable, executor);
     }

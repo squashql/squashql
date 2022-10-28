@@ -209,7 +209,6 @@ public abstract class ATestQueryColumnSets {
             "salesYearComp",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
-            ColumnSetKey.PERIOD,
             Map.of("year_sales", "y-1"));
 
     var query = new QueryDto()
@@ -252,7 +251,6 @@ public abstract class ATestQueryColumnSets {
             "salesYearComp",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
-            ColumnSetKey.BUCKET,
             Map.of(SCENARIO_FIELD_NAME, "s-1", groupOfScenario, "g"));
 
     var query = new QueryDto()
@@ -293,7 +291,6 @@ public abstract class ATestQueryColumnSets {
             "salesGroupComp",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
-            ColumnSetKey.BUCKET,
             Map.of(SCENARIO_FIELD_NAME, "s-1", groupOfScenario, "g"));
 
     PeriodColumnSetDto periodCS = new PeriodColumnSetDto(new Period.Year("year_sales"));
@@ -301,7 +298,6 @@ public abstract class ATestQueryColumnSets {
             "salesYearComp",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
-            ColumnSetKey.PERIOD,
             Map.of("year_sales", "y-1"));
 
     var query = new QueryDto()

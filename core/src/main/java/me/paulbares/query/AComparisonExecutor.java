@@ -23,8 +23,6 @@ public abstract class AComparisonExecutor {
 
   protected abstract BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn);
 
-  public abstract ColumnSet getColumnSet();
-
   public List<Object> compare(
           ComparisonMeasureReferencePosition cm,
           Table writeToTable,

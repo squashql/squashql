@@ -94,7 +94,6 @@ public abstract class ATestBucketComparison {
             "priceDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
-            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
@@ -104,7 +103,6 @@ public abstract class ATestBucketComparison {
             "quantityDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
-            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
@@ -149,7 +147,6 @@ public abstract class ATestBucketComparison {
             "priceDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
-            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, "s-1",
                     this.groupOfScenario, "g"
@@ -159,7 +156,6 @@ public abstract class ATestBucketComparison {
             "quantityDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
-            ColumnSetKey.BUCKET,
             Map.of(SCENARIO_FIELD_NAME, "s-1", this.groupOfScenario, "g"));
 
     var query = new QueryDto()
@@ -192,7 +188,6 @@ public abstract class ATestBucketComparison {
             "priceDiff",
             RELATIVE_DIFFERENCE,
             price,
-            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
@@ -202,7 +197,6 @@ public abstract class ATestBucketComparison {
             "quantityDiff",
             RELATIVE_DIFFERENCE,
             quantity,
-            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"

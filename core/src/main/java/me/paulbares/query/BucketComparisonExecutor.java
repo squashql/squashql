@@ -21,11 +21,6 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
   }
 
   @Override
-  public ColumnSet getColumnSet() {
-    return this.cSet;
-  }
-
-  @Override
   protected BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
     return new ShiftProcedure(this.cSet, cm.referencePosition, indexByColumn);
   }

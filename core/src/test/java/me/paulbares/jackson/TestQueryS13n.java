@@ -89,7 +89,6 @@ public class TestQueryS13n {
             "priceDiff",
             ABSOLUTE_DIFFERENCE,
             price,
-            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
                     groupOfScenario, "g"
@@ -113,7 +112,6 @@ public class TestQueryS13n {
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            ColumnSetKey.PERIOD,
             Map.of("year_sales", "y-1"));
 
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
