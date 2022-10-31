@@ -4,7 +4,6 @@ import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.Period;
-import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
@@ -162,8 +161,6 @@ public abstract class ATestQueryColumnSets {
 
   @Test
   void testBucketAndPeriodColumnSetsNoComparison() {
-    Period.Year period = new Period.Year("year_sales");
-    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", AggregationFunction.SUM);
     String groupOfScenario = "Group of scenario";
     BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
@@ -173,7 +170,6 @@ public abstract class ATestQueryColumnSets {
     var query = new QueryDto()
             .table(this.storeName)
             .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
-            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(sales);
 
     double base = 120d, up = 160d, down = 80d;
@@ -198,7 +194,6 @@ public abstract class ATestQueryColumnSets {
   @Test
   void testBucketAndPeriodColumnSetsComparisonPeriod() {
     Period.Year period = new Period.Year("year_sales");
-    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", AggregationFunction.SUM);
     String groupOfScenario = "Group of scenario";
     BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
@@ -209,12 +204,12 @@ public abstract class ATestQueryColumnSets {
             "salesYearComp",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
-            Map.of("year_sales", "y-1"));
+            Map.of("year_sales", "y-1"),
+            period);
 
     var query = new QueryDto()
             .table(this.storeName)
             .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
-            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(salesYearComp)
             .withMeasure(sales);
 
@@ -240,7 +235,6 @@ public abstract class ATestQueryColumnSets {
   @Test
   void testBucketAndPeriodColumnSetsComparisonBucket() {
     Period.Year period = new Period.Year("year_sales");
-    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", AggregationFunction.SUM);
     String groupOfScenario = "Group of scenario";
     BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
@@ -256,7 +250,6 @@ public abstract class ATestQueryColumnSets {
     var query = new QueryDto()
             .table(this.storeName)
             .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
-            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(salesYearComp)
             .withMeasure(sales);
 
@@ -293,17 +286,17 @@ public abstract class ATestQueryColumnSets {
             sales,
             Map.of(SCENARIO_FIELD_NAME, "s-1", groupOfScenario, "g"));
 
-    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(new Period.Year("year_sales"));
+    Period.Year year_sales = new Period.Year("year_sales");
     ComparisonMeasureReferencePosition salesYearComp = new ComparisonMeasureReferencePosition(
             "salesYearComp",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sales,
-            Map.of("year_sales", "y-1"));
+            Map.of("year_sales", "y-1"),
+            year_sales);
 
     var query = new QueryDto()
             .table(this.storeName)
             .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
-            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(salesYearComp)
             .withMeasure(salesGroupComp)
             .withMeasure(sales);

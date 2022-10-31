@@ -44,14 +44,14 @@ public class TestJavascriptLibrary {
     q.withMeasure(new ComparisonMeasureReferencePosition("comp bucket",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
-            ColumnSetKey.BUCKET,
             Map.of("scenario", "s-1", "group", "g")));
 
+    Period.Month month = new Period.Month("mois", "annee");
     q.withMeasure(new ComparisonMeasureReferencePosition("growth",
             ComparisonMethod.DIVIDE,
             price,
-            ColumnSetKey.PERIOD,
-            Map.of("Annee", "y-1", "Mois", "m")));
+            Map.of("Annee", "y-1", "Mois", "m"),
+            month));
 
     q.withMeasure(new ParentComparisonMeasure("parent",
             ComparisonMethod.DIVIDE,
@@ -72,7 +72,6 @@ public class TestJavascriptLibrary {
             .withNewBucket("a", List.of("a1", "a2"))
             .withNewBucket("b", List.of("b1", "b2"));
     q.withColumnSet(ColumnSetKey.BUCKET, columnSet);
-    q.withColumnSet(ColumnSetKey.PERIOD, new PeriodColumnSetDto(new Period.Month("mois", "annee")));
 
     QueryDto subQuery = new QueryDto()
             .table(table)
@@ -102,7 +101,6 @@ public class TestJavascriptLibrary {
     BucketColumnSetDto bucketColumnSet = new BucketColumnSetDto("group", "scenario")
             .withNewBucket("a", List.of("a1", "a2"))
             .withNewBucket("b", List.of("b1", "b2"));
-    PeriodColumnSetDto periodColumnSet = new PeriodColumnSetDto(new Period.Month("mois", "annee"));
 
     QueryDto q = Query.from(table.name)
             .innerJoin(refTable.name)
@@ -111,7 +109,7 @@ public class TestJavascriptLibrary {
             .where("f2", gt(659))
             .where("f3", eq(123))
             .select(List.of("a", "b"),
-                    List.of(bucketColumnSet, periodColumnSet),
+                    List.of(bucketColumnSet),
                     List.of(sum("sum", "f1"), avg("sum", "f1")))
             .orderBy("f4", OrderKeywordDto.ASC)
             .build();

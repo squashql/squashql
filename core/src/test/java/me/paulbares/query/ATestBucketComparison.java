@@ -12,7 +12,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,14 +34,6 @@ public abstract class ATestBucketComparison {
   protected abstract Datastore createDatastore();
 
   protected abstract TransactionManager createTransactionManager();
-
-  protected Map<String, List<String>> groups = new LinkedHashMap<>();
-
-  {
-    this.groups.put("group1", List.of("base", "s1"));
-    this.groups.put("group2", List.of("base", "s2"));
-    this.groups.put("group3", List.of("base", "s1", "s2"));
-  }
 
   protected String groupOfScenario = "Group of scenario";
   protected BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, SCENARIO_FIELD_NAME)

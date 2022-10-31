@@ -204,7 +204,6 @@ public class QueryControllerTest {
             "aggregatedMeasureDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             aggregatedMeasure,
-            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, "s-1",
                     "group", "g"
@@ -213,7 +212,6 @@ public class QueryControllerTest {
             "indicePrixDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             indicePrix,
-            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, "s-1",
                     "group", "g"

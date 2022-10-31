@@ -82,7 +82,6 @@ public class HttpClientQuerierTest {
             "capdvDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             aggregatedMeasure,
-            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
                     "group", "g"

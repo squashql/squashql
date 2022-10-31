@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 public interface HasCondition {
-  
+
   default HasSelect select(List<String> columns, List<Measure> measures) {
     return select(columns, Collections.emptyList(), measures);
   }
@@ -17,4 +17,12 @@ public interface HasCondition {
   }
 
   HasSelect select(List<String> columns, List<ColumnSet> columnSets, List<Measure> measures);
+
+//  HasSelect addExplodeColumn(String newColumnName, String fromColumn, Map<Object, List<Object>> values);
+//  HasSelect join(VirtualTable table, String from, String to);
+//
+//  class VirtualTable {
+//    List<List<Object>> rows;
+//    List<String> columnNames;
+//  }
 }

@@ -108,19 +108,17 @@ public class TestQueryS13n {
   @Test
   void testRoundTripPeriodComparisonQuery() {
     AggregatedMeasure sales = new AggregatedMeasure("s", "sales", "sum");
+    Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            Map.of("year_sales", "y-1"));
-
-    Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
-    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
+            Map.of("year_sales", "y-1"),
+            period);
 
     var query = new QueryDto()
             .table("products")
             .withColumn(SCENARIO_FIELD_NAME)
-            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(m)
             .withMeasure(sales);
 

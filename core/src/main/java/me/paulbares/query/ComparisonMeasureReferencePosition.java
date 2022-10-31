@@ -47,11 +47,6 @@ public class ComparisonMeasureReferencePosition implements Measure, ComparisonMe
   }
 
   @Override
-  public ColumnSetKey getColumnSetKey() {
-    return this.columnSetKey;
-  }
-
-  @Override
   public Measure getMeasure() {
     return this.measure;
   }
