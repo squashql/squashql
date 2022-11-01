@@ -92,7 +92,8 @@ public class TestQueryS13n {
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
                     groupOfScenario, "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
 
     var query = new QueryDto()
             .table("products")

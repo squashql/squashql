@@ -27,23 +27,31 @@ public class ComparisonMeasureReferencePosition implements Measure, ComparisonMe
   public ComparisonMeasureReferencePosition(@NonNull String alias,
                                             @NonNull ComparisonMethod comparisonMethod,
                                             @NonNull Measure measure,
-                                            @NonNull Map<String, String> referencePosition) {
-    this.alias = alias;
-    this.comparisonMethod = comparisonMethod;
-    this.measure = measure;
-    this.referencePosition = referencePosition;
+                                            @NonNull Map<String, String> referencePosition,
+                                            @NonNull Period period) {
+    this(alias, comparisonMethod, measure, referencePosition, period, null);
   }
 
   public ComparisonMeasureReferencePosition(@NonNull String alias,
                                             @NonNull ComparisonMethod comparisonMethod,
                                             @NonNull Measure measure,
                                             @NonNull Map<String, String> referencePosition,
-                                            @NonNull Period period) {
+                                            @NonNull ColumnSetKey columnSetKey) {
+    this(alias, comparisonMethod, measure, referencePosition, null, columnSetKey);
+  }
+
+  private ComparisonMeasureReferencePosition(@NonNull String alias,
+                                             @NonNull ComparisonMethod comparisonMethod,
+                                             @NonNull Measure measure,
+                                             @NonNull Map<String, String> referencePosition,
+                                             Period period,
+                                             ColumnSetKey columnSetKey) {
     this.alias = alias;
     this.comparisonMethod = comparisonMethod;
     this.measure = measure;
     this.referencePosition = referencePosition;
     this.period = period;
+    this.columnSetKey = columnSetKey;
   }
 
   @Override

@@ -88,7 +88,8 @@ public abstract class ATestBucketComparison {
             Map.of(
                     SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
     ComparisonMeasureReferencePosition quantityComp = new ComparisonMeasureReferencePosition(
             "quantityDiff",
@@ -97,7 +98,8 @@ public abstract class ATestBucketComparison {
             Map.of(
                     SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
 
     var query = Query
             .from(this.storeName)
@@ -141,13 +143,15 @@ public abstract class ATestBucketComparison {
             Map.of(
                     SCENARIO_FIELD_NAME, "s-1",
                     this.groupOfScenario, "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
     ComparisonMeasureReferencePosition quantityComp = new ComparisonMeasureReferencePosition(
             "quantityDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
-            Map.of(SCENARIO_FIELD_NAME, "s-1", this.groupOfScenario, "g"));
+            Map.of(SCENARIO_FIELD_NAME, "s-1", this.groupOfScenario, "g"),
+            ColumnSetKey.BUCKET);
 
     var query = new QueryDto()
             .table(this.storeName)
@@ -182,7 +186,8 @@ public abstract class ATestBucketComparison {
             Map.of(
                     SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
     ComparisonMeasureReferencePosition quantityComp = new ComparisonMeasureReferencePosition(
             "quantityDiff",
@@ -191,7 +196,8 @@ public abstract class ATestBucketComparison {
             Map.of(
                     SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
 
     var query = new QueryDto()
             .table(this.storeName)

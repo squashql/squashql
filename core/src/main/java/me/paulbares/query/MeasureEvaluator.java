@@ -58,15 +58,14 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
   @Override
   public Void visit(ComparisonMeasureReferencePosition cm) {
     Map<ColumnSetKey, Function<ColumnSet, AComparisonExecutor>> m = Map.of(BUCKET, cs -> new BucketComparisonExecutor((BucketColumnSetDto) cs));
-    AComparisonExecutor executor = null;
-    if (cm.columnSetKey != null) {
-      //FIXME might get rid column set key
+    AComparisonExecutor executor;
+    if (cm.columnSetKey == BUCKET) {
       ColumnSet cs = this.executionContext.query().columnSets.get(cm.columnSetKey);
       if (cs == null) {
         throw new IllegalArgumentException(String.format("columnSet %s is not specified in the query but is used in a comparison measure: %s", cm.columnSetKey, cm));
       }
-      executor = m.get(cm.columnSetKey).apply(cs);
-    } else {
+      executor = new BucketComparisonExecutor((BucketColumnSetDto) cs);
+    } else if (cm.period != null) {
       for (String field : cm.period.getFields()) {
         if (!this.executionContext.query().columns.contains(field)) {
           // TODO test
@@ -74,7 +73,10 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
         }
       }
       executor = new PeriodComparisonExecutor(cm);
+    } else {
+      throw new IllegalArgumentException(String.format("Comparison measure not correctly defined (%s). It should have a period or columnSetKey parameter", cm));
     }
+
     if (executor != null) {
       QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.executionContext.query(), cm, this.executionContext.queryScope());
       Table readFromTable = this.executionContext.tableByScope().get(readScope); // Table where to read the aggregates

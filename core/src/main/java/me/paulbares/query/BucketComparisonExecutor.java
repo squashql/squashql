@@ -29,7 +29,6 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
 
     final List<Pair<String, Object>> transformationByColumn;
     final ObjectIntMap<String> indexByColumn;
-
     final Map<String, List<String>> valuesByBucket = new LinkedHashMap<>();
 
     ShiftProcedure(BucketColumnSetDto cSet, Map<String, String> referencePosition, ObjectIntMap<String> indexByColumn) {
