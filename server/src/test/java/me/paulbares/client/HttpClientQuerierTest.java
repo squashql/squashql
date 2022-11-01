@@ -85,7 +85,8 @@ public class HttpClientQuerierTest {
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
                     "group", "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
     var query = new QueryDto()
             .table("our_prices")
             .withColumnSet(ColumnSetKey.BUCKET, bucketCS)

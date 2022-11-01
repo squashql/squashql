@@ -207,7 +207,8 @@ public class QueryControllerTest {
             Map.of(
                     SCENARIO_FIELD_NAME, "s-1",
                     "group", "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
     ComparisonMeasureReferencePosition indicePrixDiff = new ComparisonMeasureReferencePosition(
             "indicePrixDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
@@ -215,7 +216,8 @@ public class QueryControllerTest {
             Map.of(
                     SCENARIO_FIELD_NAME, "s-1",
                     "group", "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
 
     var query = new QueryDto()
             .table(createTableDto())
