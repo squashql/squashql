@@ -44,7 +44,8 @@ public class TestJavascriptLibrary {
     q.withMeasure(new ComparisonMeasureReferencePosition("comp bucket",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
-            Map.of("scenario", "s-1", "group", "g")));
+            Map.of("scenario", "s-1", "group", "g"),
+            ColumnSetKey.BUCKET));
 
     Period.Month month = new Period.Month("mois", "annee");
     q.withMeasure(new ComparisonMeasureReferencePosition("growth",

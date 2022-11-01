@@ -56,7 +56,8 @@ public class TestSaasQuery {
             "KPI comp. with prev. scenario",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             kpi,
-            Map.of("scenario_encrypted", "s-1", "group", "g"));
+            Map.of("scenario_encrypted", "s-1", "group", "g"),
+            ColumnSetKey.BUCKET);
     query.withMeasure(kpiComp);
 
     BigQueryEngine engine = new BigQueryEngine(new BigQueryDatastore(BigQueryUtil.createCredentials(this.credendialsPath), this.projectId, this.datasetName));

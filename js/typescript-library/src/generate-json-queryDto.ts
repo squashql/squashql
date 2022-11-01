@@ -3,16 +3,16 @@ import {
   AggregatedMeasure,
   BinaryOperationMeasure,
   BinaryOperator,
-  ComparisonMeasureReferencePosition,
   ParentComparisonMeasure,
   ComparisonMethod,
+  comparisonMeasureWithPeriod, comparisonMeasureWithBucket,
   count,
   ExpressionMeasure, sum, integer, decimal,
 } from "./measures"
 import {_in, and, eq, gt, lt, or, isNull, isNotNull} from "./conditions"
 import * as fs from "fs"
 import {OrderKeyword} from "./order";
-import {BucketColumnSet, ColumnSetKey, Month, PeriodColumnSet} from "./columnsets";
+import {BucketColumnSet, ColumnSetKey, Month} from "./columnsets";
 
 export function generateFromQueryDto() {
   const table = new Table("myTable")
@@ -37,15 +37,14 @@ export function generateFromQueryDto() {
   q.withMeasure(integer(123))
   q.withMeasure(decimal(1.23))
 
-// Comparisons
-  q.withMeasure(new ComparisonMeasureReferencePosition("comp bucket", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, ColumnSetKey.BUCKET, new Map(Object.entries({
+  q.withMeasure(comparisonMeasureWithBucket("comp bucket", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, new Map(Object.entries({
     "group": "g",
     "scenario": "s-1"
   }))))
-  q.withMeasure(new ComparisonMeasureReferencePosition("growth", ComparisonMethod.DIVIDE, price, ColumnSetKey.PERIOD, new Map(Object.entries({
+  q.withMeasure(comparisonMeasureWithPeriod("growth", ComparisonMethod.DIVIDE, price, new Map(Object.entries({
     "Annee": "y-1",
     "Mois": "m"
-  }))))
+  })), new Month("mois", "annee")))
 
   q.withMeasure(new ParentComparisonMeasure("parent", ComparisonMethod.DIVIDE, price, ["Mois", "Annee"]))
 
@@ -64,7 +63,6 @@ export function generateFromQueryDto() {
     "b": ["b1", "b2"]
   }))
   q.withBucketColumnSet(new BucketColumnSet("group", "scenario", values))
-  q.withPeriodColumnSet(new PeriodColumnSet(new Month("mois", "annee")))
 
   // SubQuery - Note this is not valid because a table has been set above, but we are just testing
   // the json here.

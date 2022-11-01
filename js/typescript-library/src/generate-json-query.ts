@@ -1,7 +1,7 @@
 import {from} from "./query";
 import {eq, gt} from "./conditions";
-import {BucketColumnSet, Month, PeriodColumnSet} from "./columnsets";
-import {avg, sum} from "./measures";
+import {BucketColumnSet, Month} from "./columnsets";
+import {avg, comparisonMeasureWithPeriod, ComparisonMethod, sum} from "./measures";
 import {OrderKeyword} from "./order";
 import * as fs from "fs"
 
@@ -11,8 +11,6 @@ export function generateFromQuery() {
     "b": ["b1", "b2"]
   }))
   const bucketColumnSet = new BucketColumnSet("group", "scenario", values)
-  const periodColumnSet = new PeriodColumnSet(new Month("mois", "annee"));
-
   const q = from("myTable")
           .innerJoin("refTable")
           .on("myTable", "id", "refTable", "id")
@@ -20,7 +18,7 @@ export function generateFromQuery() {
           .where("f2", gt(659))
           .where("f3", eq(123))
           .select(["a", "b"],
-                  [bucketColumnSet, periodColumnSet],
+                  [bucketColumnSet],
                   [sum("sum", "f1"), avg("sum", "f1")])
           .orderBy("f4", OrderKeyword.ASC)
           .build()

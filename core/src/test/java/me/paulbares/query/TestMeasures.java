@@ -3,6 +3,7 @@ package me.paulbares.query;
 import me.paulbares.query.QueryExecutor.QueryScope;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.dto.ConditionDto;
+import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
@@ -55,7 +56,8 @@ public class TestMeasures {
             "Growth",
             ComparisonMethod.DIVIDE,
             sales,
-            Map.of("Year", "y-1"));
+            Map.of("Year", "y-1"),
+            new Period.Year("Year"));
     Measure kpi = plus("KPI", ebidtaRatio, growth);
 
     Map<String, String> referencePosition = new LinkedHashMap<>();
@@ -65,7 +67,8 @@ public class TestMeasures {
             "KPI comp. with prev. scenario",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             kpi,
-            referencePosition);
+            referencePosition,
+            ColumnSetKey.BUCKET);
 
     ParentComparisonMeasure parentComparisonMeasure = new ParentComparisonMeasure("parent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
 
