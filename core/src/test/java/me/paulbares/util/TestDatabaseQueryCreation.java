@@ -4,7 +4,7 @@ import me.paulbares.query.*;
 import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -14,7 +14,7 @@ import java.util.function.Function;
 
 public class TestDatabaseQueryCreation {
 
-  private final Function<String, TypedField> fieldSupplier = Mockito.mock(Function.class);
+  private final Function<String, Field> fieldSupplier = Mockito.mock(Function.class);
 
   @Test
   void testNoTable() {

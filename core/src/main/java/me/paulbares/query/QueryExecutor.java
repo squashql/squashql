@@ -14,7 +14,7 @@ import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.*;
 import me.paulbares.query.monitoring.QueryWatch;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import me.paulbares.util.Queries;
 
 import java.util.*;
@@ -67,7 +67,7 @@ public class QueryExecutor {
     queryWatch.stop(QueryWatch.PREPARE_RESOLVE_MEASURES);
 
     queryWatch.start(QueryWatch.EXECUTE_PREFETCH_PLAN);
-    Function<String, TypedField> fieldSupplier = this.queryEngine.getFieldSupplier();
+    Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
     QueryScope queryScope = createQueryScope(query, fieldSupplier);
     Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> graph = computeDependencyGraph(query, queryScope, fieldSupplier);
     // Compute what needs to be prefetched
@@ -157,7 +157,7 @@ public class QueryExecutor {
   private static Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> computeDependencyGraph(
           QueryDto query,
           QueryScope queryScope,
-          Function<String, TypedField> fieldSupplier) {
+          Function<String, Field> fieldSupplier) {
     MeasurePrefetcherVisitor visitor = new MeasurePrefetcherVisitor(query, queryScope, fieldSupplier);
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
       Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(visitor);
@@ -174,16 +174,16 @@ public class QueryExecutor {
     return builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList());
   }
 
-  public static QueryScope createQueryScope(QueryDto query, Function<String, TypedField> fieldSupplier) {
+  public static QueryScope createQueryScope(QueryDto query, Function<String, Field> fieldSupplier) {
     // If column set, it changes the scope
-    List<TypedField> columns = Stream.concat(
+    List<Field> columns = Stream.concat(
             query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
             query.columns.stream()).map(fieldSupplier).toList();
     return new QueryScope(query.table, query.subQuery, columns, query.conditions);
   }
 
-  private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(QueryScope queryScope, DatabaseQuery prefetchQuery, Function<String, TypedField> fieldSupplier) {
-    Set<TypedField> fields = prefetchQuery.select.stream().map(fieldSupplier).collect(Collectors.toSet());
+  private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(QueryScope queryScope, DatabaseQuery prefetchQuery, Function<String, Field> fieldSupplier) {
+    Set<Field> fields = prefetchQuery.select.stream().map(fieldSupplier).collect(Collectors.toSet());
     if (queryScope.tableDto != null) {
       return new TableScope(queryScope.tableDto, fields, queryScope.conditions);
     } else {
@@ -193,11 +193,11 @@ public class QueryExecutor {
 
   private ColumnarTable buildFinalResult(QueryDto query, Table prefetchResult) {
     List<String> finalColumns = new ArrayList<>();
-    query.columnSets.values().forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(TypedField::name).toList()));
+    query.columnSets.values().forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
     query.columns.forEach(finalColumns::add);
 
     // Once complete, construct the final result with columns in correct order.
-    List<TypedField> fields = new ArrayList<>();
+    List<Field> fields = new ArrayList<>();
     List<List<Object>> values = new ArrayList<>();
     for (String finalColumn : finalColumns) {
       fields.add(prefetchResult.getField(finalColumn));
@@ -218,7 +218,7 @@ public class QueryExecutor {
 
   public record QueryScope(TableDto tableDto,
                            QueryDto subQuery,
-                           List<TypedField> columns,
+                           List<Field> columns,
                            Map<String, ConditionDto> conditions) {
   }
 
@@ -272,16 +272,16 @@ public class QueryExecutor {
     }
   }
 
-  public static Function<String, TypedField> withFallback(Function<String, TypedField> fieldProvider, Class<?> fallbackType) {
+  public static Function<String, Field> withFallback(Function<String, Field> fieldProvider, Class<?> fallbackType) {
     return fieldName -> {
-      TypedField f;
+      Field f;
       try {
         f = fieldProvider.apply(fieldName);
       } catch (Exception e) {
         // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
         // contains only "raw" fields, it will throw an exception.
         log.info("Cannot find field " + fieldName + " with default field provider, fallback to default type: " + fallbackType.getSimpleName());
-        f = new TypedField(fieldName, Number.class);
+        f = new Field(fieldName, Number.class);
       }
       return f;
     };

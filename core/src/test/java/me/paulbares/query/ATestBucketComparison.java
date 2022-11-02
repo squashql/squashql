@@ -5,7 +5,7 @@ import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -52,12 +52,12 @@ public abstract class ATestBucketComparison {
 
   @BeforeAll
   void setup() {
-    TypedField ean = new TypedField("ean", String.class);
-    TypedField category = new TypedField("category", String.class);
-    TypedField price = new TypedField("price", double.class);
-    TypedField qty = new TypedField("quantity", int.class);
+    Field ean = new Field("ean", String.class);
+    Field category = new Field("category", String.class);
+    Field price = new Field("price", double.class);
+    Field qty = new Field("quantity", int.class);
 
-    List<TypedField> fields = List.of(ean, category, price, qty);
+    List<Field> fields = List.of(ean, category, price, qty);
     this.datastore = createDatastore();
     QueryEngine queryEngine = createQueryEngine(this.datastore);
     this.executor = new QueryExecutor(queryEngine);
@@ -84,7 +84,7 @@ public abstract class ATestBucketComparison {
     ));
   }
 
-  protected void beforeLoad(List<TypedField> fields) {
+  protected void beforeLoad(List<Field> fields) {
   }
 
   @Test
@@ -116,7 +116,7 @@ public abstract class ATestBucketComparison {
             .build();
 
     Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.headers().stream().map(TypedField::name)).containsExactly(
+    Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
             this.groupOfScenario, SCENARIO_FIELD_NAME,
             "priceDiff", "p",
             "quantityDiff", "q");
@@ -171,7 +171,7 @@ public abstract class ATestBucketComparison {
             .withMeasure(quantity);
 
     Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.headers().stream().map(TypedField::name)).containsExactly(
+    Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
             this.groupOfScenario, SCENARIO_FIELD_NAME,
             "priceDiff", "p",
             "quantityDiff", "q");
@@ -217,7 +217,7 @@ public abstract class ATestBucketComparison {
             .withMeasure(quantity);
 
     Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.headers().stream().map(TypedField::name)).containsExactly(
+    Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
             this.groupOfScenario, SCENARIO_FIELD_NAME,
             "priceDiff", "p",
             "quantityDiff", "q");
@@ -245,7 +245,7 @@ public abstract class ATestBucketComparison {
             .withMeasure(CountMeasure.INSTANCE);
 
     Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.headers().stream().map(TypedField::name))
+    Assertions.assertThat(dataset.headers().stream().map(Field::name))
             .containsExactly(this.groupOfScenario, SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
     Assertions.assertThat(dataset).containsExactly(
             List.of("B", "s1", 3l),

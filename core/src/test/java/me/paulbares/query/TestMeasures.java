@@ -4,7 +4,7 @@ import me.paulbares.query.QueryExecutor.QueryScope;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.TableDto;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.util.TriFunction;
 import org.junit.jupiter.api.Test;
@@ -83,58 +83,58 @@ public class TestMeasures {
 
   @Test
   void testParentComparisonQueryScope() {
-    TypedField continent = new TypedField("continent", String.class);
-    TypedField country = new TypedField("country", String.class);
-    TypedField city = new TypedField("city", String.class);
-    TypedField other = new TypedField("other", String.class);
+    Field continent = new Field("continent", String.class);
+    Field country = new Field("country", String.class);
+    Field city = new Field("city", String.class);
+    Field other = new Field("other", String.class);
 
-    Map<String, List<TypedField>> collect = List.of(continent, country, city, other).stream().collect(Collectors.groupingBy(TypedField::name));
-    Function<String, TypedField> fieldSupplier = name -> collect.get(name).iterator().next();
+    Map<String, List<Field>> collect = List.of(continent, country, city, other).stream().collect(Collectors.groupingBy(Field::name));
+    Function<String, Field> fieldSupplier = name -> collect.get(name).iterator().next();
 
-    BiFunction<List<TypedField>, List<TypedField>, QueryScope> parentScopeProvider = (queryScopeColumns, pcmAncestors) -> {
+    BiFunction<List<Field>, List<Field>, QueryScope> parentScopeProvider = (queryScopeColumns, pcmAncestors) -> {
       QueryScope queryScope = new QueryScope(new TableDto("myTable"), null, queryScopeColumns, Collections.emptyMap());
-      return MeasureUtils.getParentScopeWithClearedConditions(queryScope, new ParentComparisonMeasure("pcm", ComparisonMethod.DIVIDE, Functions.sum("sum", "whatever"), pcmAncestors.stream().map(TypedField::name).toList()), fieldSupplier);
+      return MeasureUtils.getParentScopeWithClearedConditions(queryScope, new ParentComparisonMeasure("pcm", ComparisonMethod.DIVIDE, Functions.sum("sum", "whatever"), pcmAncestors.stream().map(Field::name).toList()), fieldSupplier);
     };
 
     {
-      Set<TypedField> queryFields = Set.of(continent, country, city);
-      List<TypedField> ancestors = List.of(city, country, continent);
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(city, country, continent);
       QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
       Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, country);
     }
     {
-      Set<TypedField> queryFields = Set.of(continent, country, city);
-      List<TypedField> ancestors = List.of(city, country);
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(city, country);
       QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
       Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, country);
     }
     {
-      Set<TypedField> queryFields = Set.of(continent, country);
-      List<TypedField> ancestors = List.of(city, country, continent);
+      Set<Field> queryFields = Set.of(continent, country);
+      List<Field> ancestors = List.of(city, country, continent);
       QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
       Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent);
     }
     {
-      Set<TypedField> queryFields = Set.of(continent, country, city);
-      List<TypedField> ancestors = List.of(city, continent);
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(city, continent);
       QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
       Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, country);
     }
     {
-      Set<TypedField> queryFields = Set.of(continent, country, city);
-      List<TypedField> ancestors = List.of(other, country, continent);
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(other, country, continent);
       QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
       Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, city);
     }
     {
-      Set<TypedField> queryFields = Set.of(continent, country, city);
-      List<TypedField> ancestors = List.of(country, continent);
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(country, continent);
       QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
       Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, city);
     }
     {
-      Set<TypedField> queryFields = Set.of(continent, country, other);
-      List<TypedField> ancestors = List.of(country, continent);
+      Set<Field> queryFields = Set.of(continent, country, other);
+      List<Field> ancestors = List.of(country, continent);
       QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors);
       Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(other, continent);
     }
@@ -142,25 +142,25 @@ public class TestMeasures {
 
   @Test
   void testParentComparisonQueryScopeWithCondition() {
-    TypedField continent = new TypedField("continent", String.class);
-    TypedField country = new TypedField("country", String.class);
-    TypedField city = new TypedField("city", String.class);
-    TypedField other = new TypedField("other", String.class);
+    Field continent = new Field("continent", String.class);
+    Field country = new Field("country", String.class);
+    Field city = new Field("city", String.class);
+    Field other = new Field("other", String.class);
 
-    Map<String, List<TypedField>> collect = List.of(continent, country, city, other).stream().collect(Collectors.groupingBy(TypedField::name));
-    Function<String, TypedField> fieldSupplier = name -> collect.get(name).iterator().next();
+    Map<String, List<Field>> collect = List.of(continent, country, city, other).stream().collect(Collectors.groupingBy(Field::name));
+    Function<String, Field> fieldSupplier = name -> collect.get(name).iterator().next();
 
-    TriFunction<List<TypedField>, List<TypedField>, Map<String, ConditionDto>, QueryScope> parentScopeProvider = (queryScopeColumns, pcmAncestors, conditions) -> {
+    TriFunction<List<Field>, List<Field>, Map<String, ConditionDto>, QueryScope> parentScopeProvider = (queryScopeColumns, pcmAncestors, conditions) -> {
       QueryScope queryScope = new QueryScope(new TableDto("myTable"),
               null,
               queryScopeColumns,
               conditions);
-      return MeasureUtils.getParentScopeWithClearedConditions(queryScope, new ParentComparisonMeasure("pcm", ComparisonMethod.DIVIDE, Functions.sum("sum", "whatever"), pcmAncestors.stream().map(TypedField::name).toList()), fieldSupplier);
+      return MeasureUtils.getParentScopeWithClearedConditions(queryScope, new ParentComparisonMeasure("pcm", ComparisonMethod.DIVIDE, Functions.sum("sum", "whatever"), pcmAncestors.stream().map(Field::name).toList()), fieldSupplier);
     };
 
     {
-      Set<TypedField> queryFields = Set.of(continent, country, city);
-      List<TypedField> ancestors = List.of(city, country, continent);
+      Set<Field> queryFields = Set.of(continent, country, city);
+      List<Field> ancestors = List.of(city, country, continent);
       QueryScope parentScope = parentScopeProvider.apply(queryFields.stream().toList(), ancestors, Map.of("city", eq("paris"), "other", eq("value")));
       Assertions.assertThat(parentScope.columns()).containsExactlyInAnyOrder(continent, country);
       Assertions.assertThat(parentScope.conditions()).isEqualTo(Map.of("other", eq("value")));

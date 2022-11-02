@@ -4,7 +4,7 @@ import me.paulbares.query.builder.Query;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.*;
@@ -36,11 +36,11 @@ public abstract class ATestParentComparisonWithOtherColumn {
 
   @BeforeAll
   void setup() {
-    TypedField city = new TypedField("city", String.class);
-    TypedField country = new TypedField("country", String.class);
-    TypedField continent = new TypedField("continent", String.class);
-    TypedField spendingCategory = new TypedField("spending_category", String.class);
-    TypedField amount = new TypedField("amount", double.class);
+    Field city = new Field("city", String.class);
+    Field country = new Field("country", String.class);
+    Field continent = new Field("continent", String.class);
+    Field spendingCategory = new Field("spending_category", String.class);
+    Field amount = new Field("amount", double.class);
 
     this.datastore = createDatastore();
     this.queryEngine = createQueryEngine(this.datastore);
@@ -62,7 +62,7 @@ public abstract class ATestParentComparisonWithOtherColumn {
     ));
   }
 
-  protected void beforeLoading(List<TypedField> fields) {
+  protected void beforeLoading(List<Field> fields) {
   }
 
   @Test

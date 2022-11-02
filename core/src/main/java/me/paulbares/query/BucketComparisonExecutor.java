@@ -1,7 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.dto.BucketColumnSetDto;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -26,11 +26,11 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
   }
 
   @Override
-  protected BiPredicate<Object[], TypedField[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
+  protected BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
     return new ShiftProcedure(this.cSet, cm.referencePosition, indexByColumn);
   }
 
-  static class ShiftProcedure implements BiPredicate<Object[], TypedField[]> {
+  static class ShiftProcedure implements BiPredicate<Object[], Field[]> {
 
     final List<Pair<String, Object>> transformationByColumn;
     final ObjectIntMap<String> indexByColumn;
@@ -49,7 +49,7 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
     }
 
     @Override
-    public boolean test(Object[] row, TypedField[] fields) {
+    public boolean test(Object[] row, Field[] fields) {
       Object bucketTransformation = this.transformationByColumn.get(0).getTwo();
       int bucketIndex = this.indexByColumn.getIfAbsent(this.transformationByColumn.get(0).getOne(), -1);
       if (bucketTransformation != null) {

@@ -5,7 +5,7 @@ import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.dto.JoinDto;
 import me.paulbares.query.dto.JoinMappingDto;
 import me.paulbares.query.dto.TableDto;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -21,10 +21,10 @@ public class TestSQLTranslator {
 
   private static final String BASE_STORE_NAME = "baseStore";
 
-  private static final Function<String, TypedField> fieldProvider = s -> switch (s) {
-    case "pnl" -> new TypedField(s, double.class);
-    case "delta" -> new TypedField(s, Double.class);
-    case "type", SCENARIO_FIELD_NAME -> new TypedField(s, String.class);
+  private static final Function<String, Field> fieldProvider = s -> switch (s) {
+    case "pnl" -> new Field(s, double.class);
+    case "delta" -> new Field(s, Double.class);
+    case "type", SCENARIO_FIELD_NAME -> new Field(s, String.class);
     default -> throw new RuntimeException("not supported " + s);
   };
 

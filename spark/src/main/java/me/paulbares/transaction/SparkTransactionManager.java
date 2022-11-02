@@ -2,7 +2,7 @@ package me.paulbares.transaction;
 
 import me.paulbares.SparkDatastore;
 import me.paulbares.SparkUtil;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.types.StructType;
@@ -21,18 +21,18 @@ public class SparkTransactionManager implements TransactionManager {
     this.spark = spark;
   }
 
-  public void createTemporaryTable(String table, List<TypedField> fields) {
+  public void createTemporaryTable(String table, List<Field> fields) {
     createTemporaryTable(this.spark, table, fields, true);
   }
 
-  public void createTemporaryTable(String table, List<TypedField> fields, boolean cjMode) {
+  public void createTemporaryTable(String table, List<Field> fields, boolean cjMode) {
     createTemporaryTable(this.spark, table, fields, cjMode);
   }
 
-  public static void createTemporaryTable(SparkSession spark, String table, List<TypedField> fields, boolean cjMode) {
-    ImmutableList<TypedField> all = ImmutableListFactoryImpl.INSTANCE.ofAll(fields);
+  public static void createTemporaryTable(SparkSession spark, String table, List<Field> fields, boolean cjMode) {
+    ImmutableList<Field> all = ImmutableListFactoryImpl.INSTANCE.ofAll(fields);
     if (cjMode) {
-      all = all.newWith(new TypedField(SCENARIO_FIELD_NAME, String.class));
+      all = all.newWith(new Field(SCENARIO_FIELD_NAME, String.class));
     }
     StructType schema = SparkUtil.createSchema(all.castToList());
     spark.conf().set("spark.sql.caseSensitive", String.valueOf(true)); // without it, table names are lowercase.
@@ -80,7 +80,7 @@ public class SparkTransactionManager implements TransactionManager {
   }
 
   private boolean scenarioColumnIsPresent(String store) {
-    List<TypedField> fields = SparkDatastore.getFields(this.spark, store);
+    List<Field> fields = SparkDatastore.getFields(this.spark, store);
     return fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
   }
 

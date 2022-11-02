@@ -2,7 +2,7 @@ package me.paulbares.query.database;
 
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.*;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 
 import java.util.ArrayList;
@@ -19,17 +19,17 @@ public class SQLTranslator {
 
   private static final DefaultQueryRewriter DEFAULT_QUERY_REWRITER = new DefaultQueryRewriter();
 
-  public static String translate(DatabaseQuery query, Function<String, TypedField> fieldProvider) {
+  public static String translate(DatabaseQuery query, Function<String, Field> fieldProvider) {
     return translate(query, null, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));
   }
 
-  public static String translate(DatabaseQuery query, Totals totals, Function<String, TypedField> fieldProvider) {
+  public static String translate(DatabaseQuery query, Totals totals, Function<String, Field> fieldProvider) {
     return translate(query, totals, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));
   }
 
   public static String translate(DatabaseQuery query,
                                  Totals totals,
-                                 Function<String, TypedField> fieldProvider,
+                                 Function<String, Field> fieldProvider,
                                  QueryRewriter queryRewriter,
                                  BiFunction<QueryRewriter, String, String> tableTransformer) {
     List<String> selects = new ArrayList<>();
@@ -88,7 +88,7 @@ public class SQLTranslator {
     }
   }
 
-  protected static void addConditions(StringBuilder statement, DatabaseQuery query, Function<String, TypedField> fieldProvider) {
+  protected static void addConditions(StringBuilder statement, DatabaseQuery query, Function<String, Field> fieldProvider) {
     Map<String, ConditionDto> conditionByField = query.conditions;
 
     if (!conditionByField.isEmpty()) {
@@ -127,7 +127,7 @@ public class SQLTranslator {
     }
   }
 
-  public static String toSql(TypedField field, ConditionDto dto) {
+  public static String toSql(Field field, ConditionDto dto) {
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
       Function<Object, String> sqlMapper;
       if (Number.class.isAssignableFrom(field.type())

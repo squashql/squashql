@@ -6,7 +6,7 @@ import lombok.NonNull;
 import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.query.database.SqlUtils;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 
 import java.util.function.Function;
 
@@ -24,7 +24,7 @@ public class ExpressionMeasure implements Measure {
   }
 
   @Override
-  public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
+  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     return withAlias ? SqlUtils.appendAlias(this.expression, queryRewriter, this.alias, this) : this.expression;
   }
 

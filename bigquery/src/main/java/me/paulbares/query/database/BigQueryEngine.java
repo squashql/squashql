@@ -6,7 +6,7 @@ import me.paulbares.BigQueryUtil;
 import me.paulbares.query.ColumnarTable;
 import me.paulbares.query.Measure;
 import me.paulbares.query.Table;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import org.eclipse.collections.api.tuple.Pair;
 
 import java.util.List;
@@ -28,9 +28,9 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     try {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
       Schema schema = tableResult.getSchema();
-      Pair<List<TypedField>, List<List<Object>>> result = AQueryEngine.transform(
+      Pair<List<Field>, List<List<Object>>> result = AQueryEngine.transform(
               schema.getFields(),
-              f -> new TypedField(f.getName(), BigQueryUtil.bigQueryTypeToClass(f.getType())),
+              f -> new Field(f.getName(), BigQueryUtil.bigQueryTypeToClass(f.getType())),
               tableResult.iterateAll().iterator(),
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i)
       );

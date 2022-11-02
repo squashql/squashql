@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 
 import java.util.function.Function;
 
@@ -26,7 +26,7 @@ public abstract class ConstantMeasure<T> implements Measure {
   }
 
   @Override
-  public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
+  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     throw new IllegalStateException();
   }
 

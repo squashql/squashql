@@ -8,7 +8,7 @@ import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.OrderKeywordDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -42,11 +42,11 @@ public abstract class ATestQueryExecutor {
 
   @BeforeAll
   void setup() {
-    TypedField ean = new TypedField("ean", String.class);
-    TypedField category = new TypedField("category", String.class);
-    TypedField subcategory = new TypedField("subcategory", String.class);
-    TypedField price = new TypedField("price", double.class);
-    TypedField qty = new TypedField("quantity", int.class);
+    Field ean = new Field("ean", String.class);
+    Field category = new Field("category", String.class);
+    Field subcategory = new Field("subcategory", String.class);
+    Field price = new Field("price", double.class);
+    Field qty = new Field("quantity", int.class);
 
     this.datastore = createDatastore();
     QueryEngine queryEngine = createQueryEngine(this.datastore);
@@ -77,7 +77,7 @@ public abstract class ATestQueryExecutor {
     ));
   }
 
-  protected void beforeLoad(List<TypedField> fields) {
+  protected void beforeLoad(List<Field> fields) {
   }
 
   @Test
@@ -104,7 +104,7 @@ public abstract class ATestQueryExecutor {
             List.of(MAIN_SCENARIO_NAME, 3l),
             List.of("s1", 3l),
             List.of("s2", 3l));
-    Assertions.assertThat(result.headers().stream().map(TypedField::name))
+    Assertions.assertThat(result.headers().stream().map(Field::name))
             .containsExactly(SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
   }
 
@@ -236,7 +236,7 @@ public abstract class ATestQueryExecutor {
             List.of(MAIN_SCENARIO_NAME, 30l, 30l),
             List.of("s1", 30l, 30l),
             List.of("s2", 30l, 30l));
-    Assertions.assertThat(result.headers().stream().map(TypedField::name))
+    Assertions.assertThat(result.headers().stream().map(Field::name))
             .containsExactly(SCENARIO_FIELD_NAME, "quantity if food or drink", "quantity filtered");
   }
 
@@ -316,7 +316,7 @@ public abstract class ATestQueryExecutor {
             .withMeasure(decimal);
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactly(List.of(4650d, 4650d, 9900l, 9900d, 100l, 100d));
-    Assertions.assertThat(result.headers().stream().map(TypedField::name).toList())
+    Assertions.assertThat(result.headers().stream().map(Field::name).toList())
             .containsExactly("a1", "a2", "b1", "b2", "constant(100)", "constant(100.0)");
   }
 }

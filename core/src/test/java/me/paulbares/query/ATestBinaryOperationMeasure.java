@@ -5,7 +5,7 @@ import me.paulbares.query.context.Repository;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -37,10 +37,10 @@ public abstract class ATestBinaryOperationMeasure {
 
   @BeforeAll
   void setup() {
-    TypedField ean = new TypedField("ean", String.class);
-    TypedField category = new TypedField("category", String.class);
-    TypedField sales = new TypedField("sales", double.class);
-    TypedField qty = new TypedField("quantity", long.class);
+    Field ean = new Field("ean", String.class);
+    Field category = new Field("category", String.class);
+    Field sales = new Field("sales", double.class);
+    Field qty = new Field("quantity", long.class);
 
     this.datastore = createDatastore();
     this.queryEngine = createQueryEngine(this.datastore);
@@ -55,7 +55,7 @@ public abstract class ATestBinaryOperationMeasure {
     ));
   }
 
-  protected void beforeLoad(List<TypedField> fields) {
+  protected void beforeLoad(List<Field> fields) {
   }
 
   /**
@@ -79,7 +79,7 @@ public abstract class ATestBinaryOperationMeasure {
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV + salesV, salesV + qtyV, qtyV + qtyV));
     Assertions
-            .assertThat(table.headers().stream().map(TypedField::name))
+            .assertThat(table.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "plus1", "plus2", "plus3");
   }
 
@@ -102,7 +102,7 @@ public abstract class ATestBinaryOperationMeasure {
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV + salesV, salesV + qtyV, qtyV + qtyV));
     Assertions
-            .assertThat(table.headers().stream().map(TypedField::name))
+            .assertThat(table.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder("sum(sales)", "quantity", "plus1", "plus2", "plus3");
   }
 
@@ -127,7 +127,7 @@ public abstract class ATestBinaryOperationMeasure {
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV - salesV, salesV - qtyV, qtyV - qtyV));
     Assertions
-            .assertThat(table.headers().stream().map(TypedField::name))
+            .assertThat(table.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "minus1", "minus2", "minus3");
   }
 
@@ -152,7 +152,7 @@ public abstract class ATestBinaryOperationMeasure {
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV * salesV, salesV * qtyV, qtyV * qtyV));
     Assertions
-            .assertThat(table.headers().stream().map(TypedField::name))
+            .assertThat(table.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "multiply1", "multiply2", "multiply3");
   }
 
@@ -177,7 +177,7 @@ public abstract class ATestBinaryOperationMeasure {
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV / salesV, salesV / qtyV, (double) qtyV / qtyV));
     Assertions
-            .assertThat(table.headers().stream().map(TypedField::name))
+            .assertThat(table.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "divide1", "divide2", "divide3");
   }
 }

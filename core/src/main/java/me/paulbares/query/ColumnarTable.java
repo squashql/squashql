@@ -2,14 +2,14 @@ package me.paulbares.query;
 
 import com.google.common.base.Suppliers;
 import me.paulbares.query.dictionary.ObjectArrayDictionary;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 
 import java.util.*;
 import java.util.function.Supplier;
 
 public class ColumnarTable implements Table {
 
-  protected final List<TypedField> headers;
+  protected final List<Field> headers;
   protected final List<Measure> measures;
   protected final int[] columnsIndices;
   protected int[] measureIndices;
@@ -17,7 +17,7 @@ public class ColumnarTable implements Table {
   protected final Supplier<ObjectArrayDictionary> pointDictionary;
   protected final List<List<Object>> values;
 
-  public ColumnarTable(List<TypedField> headers,
+  public ColumnarTable(List<Field> headers,
                        List<Measure> measures,
                        int[] measureIndices,
                        int[] columnsIndices,
@@ -46,7 +46,7 @@ public class ColumnarTable implements Table {
   }
 
   @Override
-  public void addAggregates(TypedField field, Measure measure, List<Object> values) {
+  public void addAggregates(Field field, Measure measure, List<Object> values) {
     this.headers.add(field);
     this.measures.add(measure);
     this.measureIndices = Arrays.copyOf(this.measureIndices, this.measureIndices.length + 1);
@@ -85,7 +85,7 @@ public class ColumnarTable implements Table {
   }
 
   @Override
-  public List<TypedField> headers() {
+  public List<Field> headers() {
     return this.headers;
   }
 
@@ -96,7 +96,7 @@ public class ColumnarTable implements Table {
 
   @Override
   public String toString() {
-    return TableUtils.toString(this.headers, this, f -> ((TypedField) f).name(), String::valueOf);
+    return TableUtils.toString(this.headers, this, f -> ((Field) f).name(), String::valueOf);
   }
 
   @Override

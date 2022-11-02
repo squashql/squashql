@@ -1,6 +1,6 @@
 package me.paulbares;
 
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
@@ -48,9 +48,9 @@ public final class SparkUtil {
     return type;
   }
 
-  public static StructType createSchema(List<TypedField> fields) {
+  public static StructType createSchema(List<Field> fields) {
     StructType schema = new StructType();
-    for (TypedField field : fields) {
+    for (Field field : fields) {
       schema = schema.add(field.name(), classToDatatype(field.type()));
     }
     return schema;

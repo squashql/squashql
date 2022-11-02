@@ -3,7 +3,7 @@ package me.paulbares.query;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.MetadataItem;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import me.paulbares.util.MultipleColumnsSorter;
 import me.paulbares.util.Queries;
 
@@ -91,7 +91,7 @@ public class TableUtils {
   public static List<MetadataItem> buildTableMetadata(Table t) {
     List<MetadataItem> metadata = new ArrayList<>();
     int index = 0;
-    for (TypedField field : t.headers()) {
+    for (Field field : t.headers()) {
       if (t.isMeasure(index)) {
         int i = Arrays.binarySearch(t.measureIndices(), index);
         Measure measure = t.measures().get(i);
@@ -115,7 +115,7 @@ public class TableUtils {
     List<Comparator<?>> comparators = new ArrayList<>();
 
     boolean hasComparatorOnMeasure = false;
-    List<TypedField> headers = table.headers;
+    List<Field> headers = table.headers;
     for (int i = 0; i < headers.size(); i++) {
       if (table.isMeasure(i)) {
         hasComparatorOnMeasure |= comparatorByColumnName.containsKey(headers.get(i).name());

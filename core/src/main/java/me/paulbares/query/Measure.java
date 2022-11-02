@@ -2,7 +2,7 @@ package me.paulbares.query;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import me.paulbares.query.database.QueryRewriter;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 
 import java.util.function.Function;
 
@@ -12,7 +12,7 @@ import java.util.function.Function;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public interface Measure {
 
-  String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias);
+  String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias);
 
   String alias();
 

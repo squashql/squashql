@@ -1,7 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.dto.CacheStatsDto;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 
 import java.util.Set;
 import java.util.function.Function;
@@ -14,7 +14,7 @@ public class EmptyQueryCache implements QueryCache {
   }
 
   @Override
-  public ColumnarTable createRawResult(PrefetchQueryScope scope, Function<String, TypedField> fieldSupplier) {
+  public ColumnarTable createRawResult(PrefetchQueryScope scope, Function<String, Field> fieldSupplier) {
     throw new IllegalStateException();
   }
 

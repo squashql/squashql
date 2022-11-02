@@ -1,7 +1,7 @@
 package me.paulbares.query.database;
 
 import me.paulbares.store.Datastore;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 
 import java.util.List;
@@ -16,12 +16,12 @@ public abstract class ADeltaQueryEngine<T extends Datastore> extends AQueryEngin
   }
 
   @Override
-  protected Function<String, TypedField> createFieldSupplier() {
-    Function<String, TypedField> sup = super.createFieldSupplier();
+  protected Function<String, Field> createFieldSupplier() {
+    Function<String, Field> sup = super.createFieldSupplier();
     // Since there is no scenario column, we have to modify the supplier.
     return f -> {
       if (f.equals(TransactionManager.SCENARIO_FIELD_NAME)) {
-        return new TypedField(TransactionManager.SCENARIO_FIELD_NAME, String.class);
+        return new Field(TransactionManager.SCENARIO_FIELD_NAME, String.class);
       } else {
         return sup.apply(f);
       }

@@ -9,7 +9,7 @@ import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.database.SqlUtils;
 import me.paulbares.query.dto.ConditionDto;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 
 import java.util.function.Function;
 
@@ -41,10 +41,10 @@ public class AggregatedMeasure implements Measure {
   }
 
   @Override
-  public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
+  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     String sql;
     if (this.conditionDto != null) {
-      TypedField f = QueryExecutor.withFallback(fieldProvider, Number.class).apply(this.conditionField);
+      Field f = QueryExecutor.withFallback(fieldProvider, Number.class).apply(this.conditionField);
       String conditionSt = SQLTranslator.toSql(f, this.conditionDto);
       sql = this.aggregationFunction + "(case when " + conditionSt + " then " + this.field + " end)";
     } else {

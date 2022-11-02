@@ -3,7 +3,7 @@ package me.paulbares.query.database;
 import me.paulbares.SparkDatastore;
 import me.paulbares.query.ColumnarTable;
 import me.paulbares.query.Table;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -29,9 +29,9 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
 
   static Table getResults(String sql, SparkSession sparkSession, DatabaseQuery query) {
     Dataset<Row> ds = sparkSession.sql(sql);
-    Pair<List<TypedField>, List<List<Object>>> result = transform(
+    Pair<List<Field>, List<List<Object>>> result = transform(
             Arrays.stream(ds.schema().fields()).toList(),
-            f -> new TypedField(f.name(), datatypeToClass(f.dataType())),
+            f -> new Field(f.name(), datatypeToClass(f.dataType())),
             ds.toLocalIterator(),
             (i, r) -> r.get(i));
     return new ColumnarTable(

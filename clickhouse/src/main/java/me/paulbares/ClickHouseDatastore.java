@@ -7,7 +7,7 @@ import com.clickhouse.jdbc.ClickHouseDataSource;
 import com.clickhouse.jdbc.ClickHouseStatement;
 import com.google.common.base.Suppliers;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import me.paulbares.store.Store;
 
 import java.sql.DatabaseMetaData;
@@ -76,17 +76,17 @@ public class ClickHouseDatastore implements Datastore {
     }
   }
 
-  public static List<TypedField> getFields(ClickHouseDataSource dataSource, String table) {
+  public static List<Field> getFields(ClickHouseDataSource dataSource, String table) {
     try {
       DatabaseMetaData metaData = dataSource.getConnection().getMetaData();
       ResultSet columns = metaData.getColumns(null, (String) ClickHouseDefaults.DATABASE.getDefaultValue(), table, null);
 
-      List<TypedField> fields = new ArrayList<>();
+      List<Field> fields = new ArrayList<>();
       while (columns.next()) {
         String columnName = (String) columns.getObject("COLUMN_NAME");
         String typeName = (String) columns.getObject("TYPE_NAME");
         ClickHouseColumn column = ClickHouseColumn.of("", typeName);
-        fields.add(new TypedField(columnName, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())));
+        fields.add(new Field(columnName, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())));
       }
 
       return fields;

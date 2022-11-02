@@ -1,7 +1,7 @@
 package me.paulbares.util;
 
 import me.paulbares.query.ColumnarTable;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -59,10 +59,10 @@ public class TestMultipleColumnsSorter {
 
   // To easily check the result.
   private void print(List<Object> c1, List<Object> c2, List<Object> c3, int[] sort) {
-    List<TypedField> headers = Arrays.asList(
-            new TypedField("c1", String.class),
-            new TypedField("c2", String.class),
-            new TypedField("c3", String.class));
+    List<Field> headers = Arrays.asList(
+            new Field("c1", String.class),
+            new Field("c2", String.class),
+            new Field("c3", String.class));
     new ColumnarTable(headers, Collections.emptyList(), new int[0], new int[0], List.of(c1, c2, c3))
             .show();
 

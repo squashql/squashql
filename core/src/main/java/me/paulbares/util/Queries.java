@@ -3,7 +3,7 @@ package me.paulbares.util;
 import me.paulbares.query.*;
 import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.dto.*;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 
 import java.util.*;
 
@@ -48,7 +48,7 @@ public final class Queries {
 
   public static DatabaseQuery queryScopeToDatabaseQuery(QueryExecutor.QueryScope queryScope) {
     Set<String> selects = new HashSet<>();
-    queryScope.columns().stream().map(TypedField::name).forEach(selects::add);
+    queryScope.columns().stream().map(Field::name).forEach(selects::add);
     DatabaseQuery prefetchQuery = new DatabaseQuery();
     if (queryScope.tableDto() != null) {
       prefetchQuery.table(queryScope.tableDto());

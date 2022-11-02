@@ -1,7 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.dto.BucketColumnSetDto;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
@@ -22,11 +22,11 @@ public class BucketerExecutor {
     }
 
     MutableIntSet indexColsInPrefetch = new IntHashSet();
-    List<TypedField> newColumns = bucketColumnSetDto.getNewColumns();
-    List<TypedField> finalHeaders = new ArrayList<>(table.headers());
+    List<Field> newColumns = bucketColumnSetDto.getNewColumns();
+    List<Field> finalHeaders = new ArrayList<>(table.headers());
     MutableIntList columnIndices = new IntArrayList(table.columnIndices());
     for (int i = 0; i < newColumns.size(); i++) {
-      TypedField field = newColumns.get(i);
+      Field field = newColumns.get(i);
       if (!bucketColumnSetDto.getColumnsForPrefetching().contains(field.name())) {
         indexColsInPrefetch.add(i);
       }

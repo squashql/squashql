@@ -4,7 +4,7 @@ import me.paulbares.query.builder.Query;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -37,16 +37,16 @@ public abstract class ATestSubQuery {
   @BeforeAll
   void setup() {
     // See https://mariadb.com/kb/en/subqueries-in-a-from-clause/
-    TypedField studentName = new TypedField("studentName", String.class);
-    TypedField test = new TypedField("test", String.class);
-    TypedField score = new TypedField("score", int.class);
+    Field studentName = new Field("studentName", String.class);
+    Field test = new Field("test", String.class);
+    Field score = new Field("score", int.class);
 
     // See https://www.geeksforgeeks.org/sql-sub-queries-clause/
-    TypedField professorName = new TypedField("professorName", String.class);
-    TypedField department = new TypedField("department", String.class);
-    TypedField salary = new TypedField("salary", int.class);
-    TypedField budget = new TypedField("budget", int.class);
-    TypedField departmentName = new TypedField("departmentName", String.class);
+    Field professorName = new Field("professorName", String.class);
+    Field department = new Field("department", String.class);
+    Field salary = new Field("salary", int.class);
+    Field budget = new Field("budget", int.class);
+    Field departmentName = new Field("departmentName", String.class);
 
     this.datastore = createDatastore();
     QueryEngine queryEngine = createQueryEngine(this.datastore);
@@ -89,7 +89,7 @@ public abstract class ATestSubQuery {
     ));
   }
 
-  protected void beforeLoad(Map<String, List<TypedField>> fieldsByStore) {
+  protected void beforeLoad(Map<String, List<Field>> fieldsByStore) {
   }
 
   @Test

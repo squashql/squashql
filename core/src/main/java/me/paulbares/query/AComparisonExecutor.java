@@ -1,7 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.comp.BinaryOperations;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import org.eclipse.collections.api.map.primitive.IntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableIntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
@@ -21,7 +21,7 @@ public abstract class AComparisonExecutor {
 
   public static final String REF_POS_FIRST = "first";
 
-  protected abstract BiPredicate<Object[], TypedField[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn);
+  protected abstract BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn);
 
   public abstract ColumnSet getColumnSet();
 
@@ -35,10 +35,10 @@ public abstract class AComparisonExecutor {
       int index = Arrays.binarySearch(readFromTable.columnIndices(), columnIndex);
       indexByColumn.put(entry.getKey(), index);
     });
-    BiPredicate<Object[], TypedField[]> procedure = createShiftProcedure(cm, indexByColumn);
+    BiPredicate<Object[], Field[]> procedure = createShiftProcedure(cm, indexByColumn);
 
     Object[] buffer = new Object[readFromTable.columnIndices().length];
-    TypedField[] fields = new TypedField[readFromTable.columnIndices().length];
+    Field[] fields = new Field[readFromTable.columnIndices().length];
     List<Object> result = new ArrayList<>((int) writeToTable.count());
     List<Object> readAggregateValues = readFromTable.getAggregateValues(cm.measure);
     List<Object> writeAggregateValues = writeToTable.getAggregateValues(cm.measure);
@@ -72,7 +72,7 @@ public abstract class AComparisonExecutor {
   public IntIntMap buildMapping(Table writeToTable, Table readFromTable) {
     MutableIntIntMap mapping = new IntIntHashMap();
     for (int columnIndex : readFromTable.columnIndices()) {
-      TypedField field = readFromTable.headers().get(columnIndex);
+      Field field = readFromTable.headers().get(columnIndex);
       int index = writeToTable.index(field);
       mapping.put(columnIndex, index);
     }

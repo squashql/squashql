@@ -7,7 +7,7 @@ import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import com.github.benmanes.caffeine.cache.stats.ConcurrentStatsCounter;
 import com.github.benmanes.caffeine.cache.stats.StatsCounter;
 import me.paulbares.query.dto.CacheStatsDto;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -45,14 +45,14 @@ public class CaffeineQueryCache implements QueryCache {
   }
 
   @Override
-  public ColumnarTable createRawResult(PrefetchQueryScope scope, Function<String, TypedField> fieldSupplier) {
-    Set<TypedField> columns = scope.columns();
-    List<TypedField> headers = new ArrayList<>(columns.stream().map(c -> fieldSupplier.apply(c.name())).toList());
-    headers.add(new TypedField(CountMeasure.ALIAS, long.class));
+  public ColumnarTable createRawResult(PrefetchQueryScope scope, Function<String, Field> fieldSupplier) {
+    Set<Field> columns = scope.columns();
+    List<Field> headers = new ArrayList<>(columns.stream().map(c -> fieldSupplier.apply(c.name())).toList());
+    headers.add(new Field(CountMeasure.ALIAS, long.class));
 
     List<List<Object>> values = new ArrayList<>();
     Table table = this.results.getIfPresent(scope);
-    for (TypedField f : columns) {
+    for (Field f : columns) {
       values.add(table.getColumnValues(f.name()));
     }
     values.add(table.getAggregateValues(CountMeasure.INSTANCE));
@@ -84,7 +84,7 @@ public class CaffeineQueryCache implements QueryCache {
       if (cache.measures().indexOf(measure) < 0) {
         // Not in the previousResult, add it.
         List<Object> aggregateValues = result.getAggregateValues(measure);
-        TypedField field = result.getField(measure);
+        Field field = result.getField(measure);
         cache.addAggregates(field, measure, aggregateValues);
         this.measureCounter.recordMisses(1);
       }
@@ -99,7 +99,7 @@ public class CaffeineQueryCache implements QueryCache {
     Table cacheResult = this.results.getIfPresent(scope);
     for (Measure measure : measures) {
       List<Object> aggregateValues = cacheResult.getAggregateValues(measure);
-      TypedField field = cacheResult.getField(measure);
+      Field field = cacheResult.getField(measure);
       result.addAggregates(field, measure, aggregateValues);
       this.measureCounter.recordHits(1);
     }

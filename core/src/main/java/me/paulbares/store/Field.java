@@ -1,4 +1,4 @@
 package me.paulbares.store;
 
-public record TypedField(String name, Class<?> type) {
+public record Field(String name, Class<?> type) {
 }

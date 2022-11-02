@@ -5,7 +5,7 @@ import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.*;
@@ -42,15 +42,15 @@ public abstract class ATestPeriodComparison {
 
   @BeforeAll
   void setup() {
-    TypedField ean = new TypedField("ean", String.class);
-    TypedField category = new TypedField("category", String.class);
-    TypedField sales = new TypedField("sales", double.class);
-    TypedField qty = new TypedField("quantity", long.class);
-    TypedField year = new TypedField("year_sales", long.class); // Use long to make sure we support also long as type
-    TypedField semester = new TypedField("semester_sales", int.class);
-    TypedField quarter = new TypedField("quarter_sales", int.class);
-    TypedField month = new TypedField("month_sales", int.class);
-    TypedField date = new TypedField("date_sales", LocalDate.class);
+    Field ean = new Field("ean", String.class);
+    Field category = new Field("category", String.class);
+    Field sales = new Field("sales", double.class);
+    Field qty = new Field("quantity", long.class);
+    Field year = new Field("year_sales", long.class); // Use long to make sure we support also long as type
+    Field semester = new Field("semester_sales", int.class);
+    Field quarter = new Field("quarter_sales", int.class);
+    Field month = new Field("month_sales", int.class);
+    Field date = new Field("date_sales", LocalDate.class);
 
     this.datastore = createDatastore();
     this.queryEngine = createQueryEngine(this.datastore);
@@ -94,7 +94,7 @@ public abstract class ATestPeriodComparison {
     ));
   }
 
-  protected void beforeLoad(List<TypedField> fields) {
+  protected void beforeLoad(List<Field> fields) {
   }
 
   @Test
@@ -129,7 +129,7 @@ public abstract class ATestPeriodComparison {
             Arrays.asList(2023l, 2, 0d, 80d),
             Arrays.asList(2023l, 3, 0d, 85d),
             Arrays.asList(2023l, 4, 0d, 35d));
-    Assertions.assertThat(finalTable.headers().stream().map(TypedField::name))
+    Assertions.assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(period.year(), period.quarter(), "myMeasure", "sum(sales)");
 
     // Add a condition and make sure condition is cleared during prefetching.
@@ -191,7 +191,7 @@ public abstract class ATestPeriodComparison {
             Arrays.asList(2023l, 3, "base", 5d, 85d),
             Arrays.asList(2023l, 4, "base", -50d, 35d));
     Assertions
-            .assertThat(finalTable.headers().stream().map(TypedField::name))
+            .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.quarter(), "myMeasure", "sum(sales)");
   }
 
@@ -220,7 +220,7 @@ public abstract class ATestPeriodComparison {
             Arrays.asList(2022l, "base", null, 300d),
             Arrays.asList(2023l, "base", 0d, 300d));
     Assertions
-            .assertThat(finalTable.headers().stream().map(TypedField::name))
+            .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), "myMeasure", "sum(sales)");
   }
 
@@ -251,7 +251,7 @@ public abstract class ATestPeriodComparison {
             Arrays.asList(2023l, 1, "base", 60d, 180d),
             Arrays.asList(2023l, 2, "base", -60d, 120d));
     Assertions
-            .assertThat(finalTable.headers().stream().map(TypedField::name))
+            .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.semester(), "myMeasure", "sum(sales)");
   }
 
@@ -291,7 +291,7 @@ public abstract class ATestPeriodComparison {
             Arrays.asList(2023l, 1, "base", -25d, 15d),
             Arrays.asList(2023l, 2, "base", 15d, 30d));
     Assertions
-            .assertThat(finalTable.headers().stream().map(TypedField::name))
+            .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.month(), "myMeasure", "sum(sales)");
   }
 }

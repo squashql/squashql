@@ -7,7 +7,7 @@ import me.paulbares.ClickHouseUtil;
 import me.paulbares.query.ColumnarTable;
 import me.paulbares.query.QueryExecutor;
 import me.paulbares.query.Table;
-import me.paulbares.store.TypedField;
+import me.paulbares.store.Field;
 import org.eclipse.collections.api.tuple.Pair;
 
 import java.util.List;
@@ -39,8 +39,8 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
                  .query(sql)
                  .execute()
                  .get()) {
-      Pair<List<TypedField>, List<List<Object>>> result = transform(response.getColumns(),
-              c -> new TypedField(c.getColumnName(), ClickHouseUtil.clickHouseTypeToClass(c.getDataType())),
+      Pair<List<Field>, List<List<Object>>> result = transform(response.getColumns(),
+              c -> new Field(c.getColumnName(), ClickHouseUtil.clickHouseTypeToClass(c.getDataType())),
               response.records().iterator(),
               (i, r) -> r.getValue(i).asObject());
       return new ColumnarTable(
