@@ -2,14 +2,14 @@ import {
   JoinMapping,
   JoinType,
   Querier,
+  Query,
   Table,
   ExpressionMeasure,
   multiply,
   min,
   avg,
   eq,
-  _in,
-  from, fromSubQuery
+  _in
 } from "aitm-js-query"
 
 const querier = new Querier("http://localhost:8080");
@@ -22,6 +22,7 @@ const toString = (a: any): string => JSON.stringify(a, null, 1)
 //   console.log(`Agg Func: ${r.aggregationFunctions}`)
 // })
 
+const subQuery = new Query()
 const recommandation = new Table("recommandation");
 const current_selling_prices = new Table("current_selling_prices");
 const competitor_catchment_area = new Table("competitor_catchment_area");

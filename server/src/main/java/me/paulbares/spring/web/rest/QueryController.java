@@ -7,7 +7,6 @@ import me.paulbares.query.dto.*;
 import me.paulbares.query.monitoring.QueryWatch;
 import me.paulbares.store.Field;
 import me.paulbares.store.Store;
-import me.paulbares.util.TableTSCodeGenerator;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
