@@ -3,12 +3,19 @@ package me.paulbares.query;
 import me.paulbares.BigQueryDatastore;
 import me.paulbares.BigQueryUtil;
 import me.paulbares.query.database.BigQueryEngine;
-import me.paulbares.query.dto.*;
+import me.paulbares.query.dto.CacheStatsDto;
+import me.paulbares.query.dto.JoinMappingDto;
+import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.TableDto;
 import me.paulbares.query.monitoring.QueryWatch;
+import me.paulbares.store.Datastore;
+import me.paulbares.store.Store;
+import me.paulbares.util.TableTSCodeGenerator;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static me.paulbares.query.Functions.*;
 import static me.paulbares.query.dto.JoinType.INNER;
@@ -135,5 +142,12 @@ public class TestOptiprix {
     execute.show();
     System.out.println(queryWatch);
     System.out.println(csBuilder);
+  }
+
+  @Test
+  void test3() {
+    Datastore datastore = new BigQueryDatastore(BigQueryUtil.createCredentials(this.credendialsPath), this.projectId, this.datasetName);
+    Map<String, Store> stringStoreMap = datastore.storesByName();
+    System.out.println(TableTSCodeGenerator.fileContent(datastore));
   }
 }

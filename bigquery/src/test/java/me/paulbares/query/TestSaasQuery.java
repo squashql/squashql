@@ -15,7 +15,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
-import static me.paulbares.query.Functions.*;
+import static me.paulbares.query.Functions.plus;
 
 public class TestSaasQuery {
 
