@@ -144,7 +144,7 @@ const query = fromSubQuery(subQuery)
 Example: Return the average total for all students
 
 ```sql
-SELECT AVG(score_sum) AS result FROM (SELECT SUM(score) AS score_sum FROM student GROUP BY name) AS t;
+SELECT AVG(score_sum) AS result FROM (SELECT SUM(score) AS score_sum FROM student GROUP BY name);
 ```
 (from [https://mariadb.com/kb/en/subqueries-in-a-from-clause/](https://mariadb.com/kb/en/subqueries-in-a-from-clause/))
 
