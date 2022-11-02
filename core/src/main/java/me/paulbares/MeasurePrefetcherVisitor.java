@@ -44,7 +44,7 @@ public class MeasurePrefetcherVisitor implements MeasureVisitor<Map<QueryExecuto
 
   @Override
   public Map<QueryExecutor.QueryScope, Set<Measure>> visit(ComparisonMeasureReferencePosition measure) {
-    QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.query, this.originalQueryScope);
+    QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.query, measure, this.originalQueryScope);
     Map<QueryExecutor.QueryScope, Set<Measure>> result = new HashMap<>(Map.of(this.originalQueryScope, Set.of(measure.measure)));
     result.put(readScope, Set.of(measure.measure));
     return result;

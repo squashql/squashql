@@ -6,7 +6,6 @@ import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.database.BigQueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.Period;
-import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
-import static me.paulbares.query.Functions.*;
+import static me.paulbares.query.Functions.plus;
 
 public class TestSaasQuery {
 
@@ -32,9 +31,8 @@ public class TestSaasQuery {
             "group",
             "scenario_encrypted");
     bucketColumnSetDto.values = Map.of("group1", List.of("A", "B", "C", "D"), "group2", List.of("A", "D"));
-    PeriodColumnSetDto periodColumnSetDto = new PeriodColumnSetDto(new Period.Year("Year"));
+    Period.Year year = new Period.Year("Year");
 
-    query.withColumnSet(ColumnSetKey.PERIOD, periodColumnSetDto);
     query.withColumnSet(ColumnSetKey.BUCKET, bucketColumnSetDto);
 
     AggregatedMeasure amount = new AggregatedMeasure("Amount", "Amount", AggregationFunction.SUM);
@@ -48,8 +46,8 @@ public class TestSaasQuery {
             "Growth",
             ComparisonMethod.DIVIDE,
             sales,
-            ColumnSetKey.PERIOD,
-            Map.of("Year", "y-1"));
+            Map.of("Year", "y-1"),
+            year);
     query.withMeasure(growth);
     Measure kpi = plus("KPI", ebidtaRatio, growth);
     query.withMeasure(kpi);
@@ -58,8 +56,8 @@ public class TestSaasQuery {
             "KPI comp. with prev. scenario",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             kpi,
-            ColumnSetKey.BUCKET,
-            Map.of("scenario_encrypted", "s-1", "group", "g"));
+            Map.of("scenario_encrypted", "s-1", "group", "g"),
+            ColumnSetKey.BUCKET);
     query.withMeasure(kpiComp);
 
     BigQueryEngine engine = new BigQueryEngine(new BigQueryDatastore(BigQueryUtil.createCredentials(this.credendialsPath), this.projectId, this.datasetName));

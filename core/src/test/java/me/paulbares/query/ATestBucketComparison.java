@@ -12,7 +12,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,14 +34,6 @@ public abstract class ATestBucketComparison {
   protected abstract Datastore createDatastore();
 
   protected abstract TransactionManager createTransactionManager();
-
-  protected Map<String, List<String>> groups = new LinkedHashMap<>();
-
-  {
-    this.groups.put("group1", List.of("base", "s1"));
-    this.groups.put("group2", List.of("base", "s2"));
-    this.groups.put("group3", List.of("base", "s1", "s2"));
-  }
 
   protected String groupOfScenario = "Group of scenario";
   protected BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, SCENARIO_FIELD_NAME)
@@ -94,21 +85,21 @@ public abstract class ATestBucketComparison {
             "priceDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
-            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
     ComparisonMeasureReferencePosition quantityComp = new ComparisonMeasureReferencePosition(
             "quantityDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
-            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
 
     var query = Query
             .from(this.storeName)
@@ -149,18 +140,18 @@ public abstract class ATestBucketComparison {
             "priceDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
-            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, "s-1",
                     this.groupOfScenario, "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
     ComparisonMeasureReferencePosition quantityComp = new ComparisonMeasureReferencePosition(
             "quantityDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
-            ColumnSetKey.BUCKET,
-            Map.of(SCENARIO_FIELD_NAME, "s-1", this.groupOfScenario, "g"));
+            Map.of(SCENARIO_FIELD_NAME, "s-1", this.groupOfScenario, "g"),
+            ColumnSetKey.BUCKET);
 
     var query = new QueryDto()
             .table(this.storeName)
@@ -192,21 +183,21 @@ public abstract class ATestBucketComparison {
             "priceDiff",
             RELATIVE_DIFFERENCE,
             price,
-            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
     ComparisonMeasureReferencePosition quantityComp = new ComparisonMeasureReferencePosition(
             "quantityDiff",
             RELATIVE_DIFFERENCE,
             quantity,
-            ColumnSetKey.BUCKET,
             Map.of(
                     SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
                     this.groupOfScenario, "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
 
     var query = new QueryDto()
             .table(this.storeName)

@@ -1,6 +1,5 @@
 package me.paulbares.query.builder;
 
-import me.paulbares.query.ColumnSet;
 import me.paulbares.query.ColumnSetKey;
 import me.paulbares.query.Functions;
 import me.paulbares.query.Measure;
@@ -16,19 +15,19 @@ public class TestQuery {
 
   @Test
   void testSimple() {
-    ColumnSet year = new PeriodColumnSetDto(new Period.Year("Year"));
+    BucketColumnSetDto columnSet = new BucketColumnSetDto();
     Measure sum = sum("sum", "f2");
 
     QueryDto build = Query
             .from("saas")
-            .select(List.of("col1", "col2"), List.of(year), List.of(sum))
+            .select(List.of("col1", "col2"), List.of(columnSet), List.of(sum))
             .build();
 
     QueryDto q = new QueryDto()
             .table("saas")
             .withColumn("col1")
             .withColumn("col2")
-            .withColumnSet(ColumnSetKey.PERIOD, year)
+            .withColumnSet(ColumnSetKey.BUCKET, columnSet)
             .withMeasure(sum);
 
     Assertions.assertThat(build).isEqualTo(q);
@@ -37,7 +36,7 @@ public class TestQuery {
     build = Query
             .from("saas")
             .where("f1", Functions.eq("A"))
-            .select(List.of("col1", "col2"), List.of(year), List.of(sum))
+            .select(List.of("col1", "col2"), List.of(columnSet), List.of(sum))
             .build();
 
     Assertions.assertThat(build).isEqualTo(q.withCondition("f1", Functions.eq("A")));
@@ -47,7 +46,7 @@ public class TestQuery {
             .from("saas")
             .where("f1", Functions.eq("A"))
             .where("f2", Functions.eq("B"))
-            .select(List.of("col1", "col2"), List.of(year), List.of(sum))
+            .select(List.of("col1", "col2"), List.of(columnSet), List.of(sum))
             .build();
 
     Assertions.assertThat(build).isEqualTo(q.withCondition("f2", Functions.eq("B")));
@@ -55,7 +54,7 @@ public class TestQuery {
     // with limit
     build = Query
             .from("saas")
-            .select(List.of("col1", "col2"), List.of(year), List.of(sum))
+            .select(List.of("col1", "col2"), List.of(columnSet), List.of(sum))
             .limit(100)
             .build();
 
@@ -63,7 +62,7 @@ public class TestQuery {
             .table("saas")
             .withColumn("col1")
             .withColumn("col2")
-            .withColumnSet(ColumnSetKey.PERIOD, year)
+            .withColumnSet(ColumnSetKey.BUCKET, columnSet)
             .withMeasure(sum)
             .withLimit(100);
 

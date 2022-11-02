@@ -3,6 +3,7 @@ package me.paulbares.query;
 import me.paulbares.query.QueryExecutor.QueryScope;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.dto.ConditionDto;
+import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
@@ -56,8 +57,8 @@ public class TestMeasures {
             "Growth",
             ComparisonMethod.DIVIDE,
             sales,
-            ColumnSetKey.PERIOD,
-            Map.of("Year", "y-1"));
+            Map.of("Year", "y-1"),
+            new Period.Year("Year"));
     Measure kpi = plus("KPI", ebidtaRatio, growth);
 
     Map<String, String> referencePosition = new LinkedHashMap<>();
@@ -67,17 +68,17 @@ public class TestMeasures {
             "KPI comp. with prev. scenario",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             kpi,
-            ColumnSetKey.BUCKET,
-            referencePosition);
+            referencePosition,
+            ColumnSetKey.BUCKET);
 
     ParentComparisonMeasure parentComparisonMeasure = new ParentComparisonMeasure("parent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
 
     Assertions.assertThat(MeasureUtils.createExpression(amount)).isEqualTo("sum(Amount)");
     Assertions.assertThat(MeasureUtils.createExpression(sales)).isEqualTo("sumIf(Amount, `Income/Expense` = 'Revenue')");
     Assertions.assertThat(MeasureUtils.createExpression(ebidtaRatio)).isEqualTo("sum(Amount) / sales");
-    Assertions.assertThat(MeasureUtils.createExpression(growth)).isEqualTo("sales(current period) / sales(reference period), reference = {Year=y-1}");
+    Assertions.assertThat(MeasureUtils.createExpression(growth)).isEqualTo("sales(current) / sales(reference), reference = {Year=y-1}");
     Assertions.assertThat(MeasureUtils.createExpression(kpi)).isEqualTo("EBITDA % + Growth");
-    Assertions.assertThat(MeasureUtils.createExpression(kpiComp)).isEqualTo("KPI(current bucket) - KPI(reference bucket), reference = {scenario encrypted=s-1, group=g}");
+    Assertions.assertThat(MeasureUtils.createExpression(kpiComp)).isEqualTo("KPI(current) - KPI(reference), reference = {scenario encrypted=s-1, group=g}");
     Assertions.assertThat(MeasureUtils.createExpression(parentComparisonMeasure)).isEqualTo("sum(Amount) / sum(Amount)(parent), ancestors = [city, country, continent]");
   }
 
