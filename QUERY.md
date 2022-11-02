@@ -129,26 +129,24 @@ A subquery can be nested in the `FROM` clause. Start by using `fromSubQuery` ins
 
 ```typescript
 import {
-  from, sum, avg, 
+  from, fromSubQuery, sum, avg, 
 } from "aitm-js-query"
 
-const subQuery = from("DEPARTMENT")
-        .select([], [], [avg("averageBudget", "BUDGET")])
-        .build();
+const subQuery = from("student")
+        .select(["name"], [], [sum("score_sum", "score")])
+        .build()
 
-const q = fromSubQuery(subQuery)
-        .where("averageBudget", lt(new Field("SALARY")))
-        .select(["Instructor.ID", "Instructor.NAME", "Instructor.DEPARTMENT", "Instructor.SALARY"], [], [])
+const query = fromSubQuery(subQuery)
+        .select([], [], [avg("result", "score_sum")])
+        .build()
 ```
 
-Example: Find all professors whose salary is greater than the average budget of all the departments.
+Example: Return the average total for all students
 
 ```sql
-SELECT Instructor.ID, Instructor.NAME, Instructor.DEPARTMENT, Instructor.SALARY FROM
-(SELECT avg(BUDGET) AS averageBudget FROM DEPARTMENT) AS BUDGET 
-WHERE Instructor.SALARY > BUDGET.averageBudget;
+SELECT AVG(score_sum) AS result FROM (SELECT SUM(score) AS score_sum FROM student GROUP BY name) AS t;
 ```
-(from [https://www.geeksforgeeks.org/sql-sub-queries-clause/](https://www.geeksforgeeks.org/sql-sub-queries-clause/))
+(from [https://mariadb.com/kb/en/subqueries-in-a-from-clause/](https://mariadb.com/kb/en/subqueries-in-a-from-clause/))
 
 ## Measures
 
