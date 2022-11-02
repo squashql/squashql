@@ -8,11 +8,10 @@ import me.paulbares.store.Field;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 public interface QueryCache {
 
-  ColumnarTable createRawResult(PrefetchQueryScope scope, Function<String, Field> fieldSupplier);
+  ColumnarTable createRawResult(PrefetchQueryScope scope);
 
   boolean contains(Measure measure, PrefetchQueryScope scope);
 

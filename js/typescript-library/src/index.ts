@@ -1,7 +1,7 @@
 export const PACKAGE = "me.paulbares.query."
 
 export {
-  QueryDto, Table, Field, JoinType, JoinMapping,
+  QueryDto, Table, JoinType, JoinMapping,
 } from './queryDto'
 
 export {
@@ -9,9 +9,10 @@ export {
 } from './order'
 
 export {
-  Measure, AggregatedMeasure, ExpressionMeasure, ComparisonMeasureReferencePosition, ParentComparisonMeasure,
+  Measure, AggregatedMeasure, ExpressionMeasure, ParentComparisonMeasure,
   sum, min, max, avg, sumIf, countIf, plus, minus, multiply, divide,
   integer, decimal,
+  comparisonMeasureWithPeriod, comparisonMeasureWithBucket,
   count,
   ComparisonMethod,
 } from './measures'
@@ -23,7 +24,7 @@ export {
 } from './conditions'
 
 export {
-  ColumnSet, ColumnSetKey, PeriodColumnSet, BucketColumnSet,
+  ColumnSet, BucketColumnSet,
   Period, Month, Year, Quarter, Semester,
 } from './columnsets'
 

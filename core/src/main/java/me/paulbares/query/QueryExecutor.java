@@ -111,7 +111,7 @@ public class QueryExecutor {
         result = this.queryEngine.execute(prefetchQuery);
       } else {
         // Create an empty result that will be populated by the query cache
-        result = queryCache.createRawResult(prefetchQueryScope, fieldSupplier);
+        result = queryCache.createRawResult(prefetchQueryScope);
       }
 
       queryCache.contributeToResult(result, cached, prefetchQueryScope);

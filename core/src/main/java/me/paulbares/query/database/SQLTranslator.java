@@ -49,7 +49,7 @@ public class SQLTranslator {
     if (query.subQuery != null) {
       statement.append("(");
       statement.append(translate(query.subQuery, totals, fieldProvider, queryRewriter, tableTransformer));
-      statement.append(") as __temp_table__, " + query.subQuery.table.name); // FIXME
+      statement.append(") as __temp_table__, " + query.subQuery.table.name);
     } else {
       statement.append(tableTransformer.apply(queryRewriter, query.table.name));
       addJoins(statement, query.table, queryRewriter);

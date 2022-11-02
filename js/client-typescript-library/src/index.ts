@@ -1,13 +1,12 @@
 import {
   BucketColumnSet,
-  ColumnSetKey,
-  ComparisonMeasureReferencePosition,
   ComparisonMethod,
   eq,
-  from, fromSubQuery,
+  from,
   Querier,
   sum,
-  sumIf, _in, isNull, avg, Field, lt
+  sumIf,
+  comparisonMeasureWithPeriod, comparisonMeasureWithBucket
 } from "aitm-js-query"
 
 const querier = new Querier("http://localhost:8080");
@@ -31,20 +30,17 @@ const groups = {
 
 const bucketColumnSet = new BucketColumnSet("group", "Scenario", new Map(Object.entries(groups)))
 const refScenario = {"Scenario": "s-1", "group": "g"}
-const amountComparison = new ComparisonMeasureReferencePosition("amount compar. with prev. scenario",
+const amountComparison = comparisonMeasureWithBucket("amount compar. with prev. scenario",
         ComparisonMethod.ABSOLUTE_DIFFERENCE,
         amount,
-        ColumnSetKey.BUCKET,
         new Map(Object.entries(refScenario)));
 
-const subQuery = from("DEPATMENT")
-        .select([], [], [avg("averageBudget", "BUDGET")])
+const q = from("ProjectionScenario")
+        .select(
+                [],
+                [bucketColumnSet],
+                [amount, amountComparison, sales])
         .build();
-
-const q = fromSubQuery(subQuery)
-        .where("averageBudget", lt(new Field("SALARY")))
-        .select(["Instructor.ID", "Instructor.NAME", "Instructor.DEPARTMENT", "Instructor.SALARY"], [], [])
-        .build()
 
 // q.withMeasure(sales)
 // const pop = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, sales, ["Month", "Year"]);

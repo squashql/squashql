@@ -1,8 +1,11 @@
 import {Measure} from "./measures";
 import {Condition} from "./conditions";
 import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order";
-import {BucketColumnSet, ColumnSet, ColumnSetKey, PeriodColumnSet} from "./columnsets";
+import {BucketColumnSet, ColumnSet, ColumnSetKey} from "./columnsets";
 
+/**
+ * @deprecated Use Query object instead.
+ */
 export class QueryDto {
   columns: Array<string>
   columnSets: Map<string, ColumnSet>
@@ -46,11 +49,6 @@ export class QueryDto {
     return this
   }
 
-  withPeriodColumnSet(columSet: PeriodColumnSet): QueryDto {
-    this.columnSets.set(ColumnSetKey.PERIOD, columSet)
-    return this
-  }
-
   withMeasure(measure: Measure): QueryDto {
     this.measures.push(measure)
     return this
@@ -77,11 +75,6 @@ export class QueryDto {
       "orders": Object.fromEntries(this.orders),
       "limit": this.limit
     }
-  }
-}
-
-export class Field {
-  constructor(public name: string) {
   }
 }
 

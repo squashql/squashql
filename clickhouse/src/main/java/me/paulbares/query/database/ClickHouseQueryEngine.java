@@ -22,7 +22,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
 
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
-    String sql = SQLTranslator.translate(query, null, QueryExecutor.withFallback(this.fieldSupplier, String.class));// FIXME
+    String sql = SQLTranslator.translate(query, null, QueryExecutor.withFallback(this.fieldSupplier, String.class));
     return getResults(sql, this.datastore.dataSource, query);
   }
 
