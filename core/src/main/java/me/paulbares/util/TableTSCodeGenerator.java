@@ -2,7 +2,10 @@ package me.paulbares.util;
 
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
+import me.paulbares.store.Store;
 
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,16 +30,27 @@ public class TableTSCodeGenerator {
     start = end + 1;
     end = fieldName.length();
 
-    if (start != end) {
+    if (start != end && (start > 0 || shouldStartWithUpperCase)) {
       sb.append(fieldName.substring(start, start + 1).toUpperCase());
       sb.append(fieldName, start + 1, end);
+    } else {
+      sb.append(fieldName, start, end);
     }
+//    if (start != end) {
+//      if (shouldStartWithUpperCase) {
+//        sb.append(fieldName.substring(start, start + 1).toUpperCase());
+//        sb.append(fieldName, start + 1, end);
+//      } else {
+//        sb.append(fieldName, start, end);
+//      }
+//    }
     return sb.toString();
   }
 
-  public static String fileContent(Datastore datastore) {
+  public static String getFileContent(Datastore datastore) {
     StringBuilder sb = new StringBuilder();
-    datastore.storesByName().forEach((name, store) -> {
+    Map<String, Store> storesByName = new TreeMap<>(datastore.storesByName()); // order by store name
+    storesByName.forEach((name, store) -> {
       sb.append("export class ").append(transformName(name, true)).append("Table {").append(System.lineSeparator());
       for (Field field : store.fields()) {
         sb.append("\t readonly ")

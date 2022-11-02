@@ -22,7 +22,6 @@ const toString = (a: any): string => JSON.stringify(a, null, 1)
 //   console.log(`Agg Func: ${r.aggregationFunctions}`)
 // })
 
-const subQuery = from()
 const recommandation = new Table("recommandation");
 const current_selling_prices = new Table("current_selling_prices");
 const competitor_catchment_area = new Table("competitor_catchment_area");
