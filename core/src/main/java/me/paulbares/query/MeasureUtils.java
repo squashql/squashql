@@ -7,6 +7,7 @@ import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.TypedField;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
@@ -59,9 +60,9 @@ public final class MeasureUtils {
     }
   }
 
-  public static QueryExecutor.QueryScope getParentScopeWithClearedConditions(QueryExecutor.QueryScope queryScope, ParentComparisonMeasure pcm) {
+  public static QueryExecutor.QueryScope getParentScopeWithClearedConditions(QueryExecutor.QueryScope queryScope, ParentComparisonMeasure pcm, Function<String, TypedField> fieldSupplier) {
     int lowestColumnIndex = -1;
-    Set<String> cols = queryScope.columns().stream().map(Field::name).collect(Collectors.toSet());
+    Set<String> cols = queryScope.columns().stream().map(TypedField::name).collect(Collectors.toSet());
     for (int i = 0; i < pcm.ancestors.size(); i++) {
       String ancestor = pcm.ancestors.get(i);
       if (cols.contains(ancestor)) {
@@ -75,8 +76,8 @@ public final class MeasureUtils {
       newConditions.remove(ancestor);
     }
 
-    List<Field> copy = new ArrayList<>(queryScope.columns());
-    List<Field> toRemove = pcm.ancestors.subList(0, lowestColumnIndex + 1).stream().map(Field::new).toList();
+    List<TypedField> copy = new ArrayList<>(queryScope.columns());
+    List<TypedField> toRemove = pcm.ancestors.subList(0, lowestColumnIndex + 1).stream().map(fieldSupplier).toList();
     copy.removeAll(toRemove);
     return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), copy, newConditions);
   }

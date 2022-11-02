@@ -24,16 +24,16 @@ public interface QueryCache {
 
   CacheStatsDto stats();
 
-  record TableScope(TableDto tableDto, Set<Field> columns, Map<String, ConditionDto> conditions) implements PrefetchQueryScope {
+  record TableScope(TableDto tableDto, Set<TypedField> columns, Map<String, ConditionDto> conditions) implements PrefetchQueryScope {
   }
 
-  record SubQueryScope(QueryDto subQueryDto, Set<Field> columns, Map<String, ConditionDto> conditions) implements PrefetchQueryScope {
+  record SubQueryScope(QueryDto subQueryDto, Set<TypedField> columns, Map<String, ConditionDto> conditions) implements PrefetchQueryScope {
   }
 
   /**
    * Marker interface.
    */
   interface PrefetchQueryScope {
-    Set<Field> columns();
+    Set<TypedField> columns();
   }
 }

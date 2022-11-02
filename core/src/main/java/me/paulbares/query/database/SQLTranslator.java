@@ -1,6 +1,5 @@
 package me.paulbares.query.database;
 
-import me.paulbares.query.Field;
 import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.*;
 import me.paulbares.store.TypedField;
@@ -131,9 +130,7 @@ public class SQLTranslator {
   public static String toSql(TypedField field, ConditionDto dto) {
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
       Function<Object, String> sqlMapper;
-      if (dto instanceof SingleValueConditionDto svc && svc.value instanceof Field vf) {
-        sqlMapper = s -> escape(vf.name());
-      } else if (Number.class.isAssignableFrom(field.type())
+      if (Number.class.isAssignableFrom(field.type())
               || field.type().equals(double.class)
               || field.type().equals(int.class)
               || field.type().equals(long.class)

@@ -167,12 +167,6 @@ public class TestSQLTranslator {
   }
 
   @Test
-  void testConditionsWithOtherField() {
-    Assertions.assertThat(SQLTranslator.toSql(new TypedField("pnl.sum", double.class), eq(new Field("pnl.avg"))))
-            .isEqualTo("`pnl.sum` = `pnl.avg`");
-  }
-
-  @Test
   void testSelectFromSelect() {
     // Kind of leaf agg. !!!
     TableDto a = new TableDto("a");

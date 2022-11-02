@@ -68,8 +68,8 @@ public class QueryExecutor {
 
     queryWatch.start(QueryWatch.EXECUTE_PREFETCH_PLAN);
     Function<String, TypedField> fieldSupplier = this.queryEngine.getFieldSupplier();
-    QueryScope queryScope = createQueryScope(query);
-    Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> graph = computeDependencyGraph(query, queryScope);
+    QueryScope queryScope = createQueryScope(query, fieldSupplier);
+    Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> graph = computeDependencyGraph(query, queryScope, fieldSupplier);
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
     Map<QueryScope, Set<Measure>> measuresByQueryScope = new HashMap<>();
@@ -86,7 +86,7 @@ public class QueryExecutor {
     for (QueryScope scope : prefetchQueryByQueryScope.keySet()) {
       DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
       Set<Measure> measures = measuresByQueryScope.get(scope);
-      QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(scope, prefetchQuery);
+      QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(scope, prefetchQuery, fieldSupplier);
       QueryCache queryCache = getQueryCache((QueryCacheContextValue) query.context.getOrDefault(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE)));
 
       // Finish to prepare the query
@@ -111,7 +111,7 @@ public class QueryExecutor {
         result = this.queryEngine.execute(prefetchQuery);
       } else {
         // Create an empty result that will be populated by the query cache
-        result = queryCache.createRawResult(prefetchQueryScope, QueryExecutor.withFallback(fieldSupplier, String.class));
+        result = queryCache.createRawResult(prefetchQueryScope, fieldSupplier);
       }
 
       queryCache.contributeToResult(result, cached, prefetchQueryScope);
@@ -156,8 +156,9 @@ public class QueryExecutor {
 
   private static Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> computeDependencyGraph(
           QueryDto query,
-          QueryScope queryScope) {
-    MeasurePrefetcherVisitor visitor = new MeasurePrefetcherVisitor(query, queryScope);
+          QueryScope queryScope,
+          Function<String, TypedField> fieldSupplier) {
+    MeasurePrefetcherVisitor visitor = new MeasurePrefetcherVisitor(query, queryScope, fieldSupplier);
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
       Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(visitor);
       Set<QueryPlanNodeKey> set = new HashSet<>();
@@ -173,16 +174,16 @@ public class QueryExecutor {
     return builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList());
   }
 
-  public static QueryScope createQueryScope(QueryDto query) {
+  public static QueryScope createQueryScope(QueryDto query, Function<String, TypedField> fieldSupplier) {
     // If column set, it changes the scope
-    List<Field> columns = Stream.concat(
+    List<TypedField> columns = Stream.concat(
             query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
-            query.columns.stream()).map(Field::new).toList();
+            query.columns.stream()).map(fieldSupplier).toList();
     return new QueryScope(query.table, query.subQuery, columns, query.conditions);
   }
 
-  private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(QueryScope queryScope, DatabaseQuery prefetchQuery) {
-    Set<Field> fields = prefetchQuery.select.stream().map(Field::new).collect(Collectors.toSet());
+  private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(QueryScope queryScope, DatabaseQuery prefetchQuery, Function<String, TypedField> fieldSupplier) {
+    Set<TypedField> fields = prefetchQuery.select.stream().map(fieldSupplier).collect(Collectors.toSet());
     if (queryScope.tableDto != null) {
       return new TableScope(queryScope.tableDto, fields, queryScope.conditions);
     } else {
@@ -217,7 +218,7 @@ public class QueryExecutor {
 
   public record QueryScope(TableDto tableDto,
                            QueryDto subQuery,
-                           List<Field> columns,
+                           List<TypedField> columns,
                            Map<String, ConditionDto> conditions) {
   }
 

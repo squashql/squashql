@@ -132,7 +132,7 @@ import {
   from, sum, avg, 
 } from "aitm-js-query"
 
-const subQuery = from("DEPATMENT")
+const subQuery = from("DEPARTMENT")
         .select([], [], [avg("averageBudget", "BUDGET")])
         .build();
 

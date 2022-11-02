@@ -9,8 +9,9 @@ import me.paulbares.transaction.SparkTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 
 import java.util.List;
+import java.util.Map;
 
-public class TestSparkQueryExecutor extends ATestQueryExecutor {
+public class TestSparkSubQuery extends ATestSubQuery {
 
   @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {
@@ -29,8 +30,8 @@ public class TestSparkQueryExecutor extends ATestQueryExecutor {
   }
 
   @Override
-  protected void beforeLoad(List<TypedField> fields) {
+  protected void beforeLoad(Map<String, List<TypedField>> fieldsByStore) {
     SparkTransactionManager tm = (SparkTransactionManager) this.tm;
-    tm.createTemporaryTable(this.storeName, fields);
+    fieldsByStore.forEach((store, fields) -> tm.createTemporaryTable(store, fields));
   }
 }

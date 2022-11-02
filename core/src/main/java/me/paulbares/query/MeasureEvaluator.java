@@ -84,7 +84,7 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
   @Override
   public Void visit(ParentComparisonMeasure pcm) {
     Table whereToWrite = this.executionContext.writeToTable();
-    QueryExecutor.QueryScope parentScope = MeasureUtils.getParentScopeWithClearedConditions(this.executionContext.queryScope(), pcm);
+    QueryExecutor.QueryScope parentScope = MeasureUtils.getParentScopeWithClearedConditions(this.executionContext.queryScope(), pcm, this.fieldSupplier);
     Table whereToRead = this.executionContext.tableByScope().get(parentScope);
     List<Object> aggregateValues = whereToWrite.getAggregateValues(pcm.measure);
     List<Object> parentAggregateValues = whereToRead.getAggregateValues(pcm.measure);
