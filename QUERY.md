@@ -155,6 +155,8 @@ SELECT AVG(score_sum) AS result FROM (SELECT SUM(score) AS score_sum FROM studen
 A Measure represents aggregated values and is usually numeric. Measure can be splin into two categories:
 - Basic measure
 - Calculated measure
+  - Elementary operations: addition, subtraction, multiplication and division
+  - Complex operations: comparison
 
 ### Basic measure
 
@@ -190,6 +192,8 @@ Unlike a basic measure, a calculated measure is computed by AITM (not the databa
 database before applying the defined calculation. 
 It is defined as the combination of other measures that can be either basic or not.
 
+#### Elementary: addition, subtraction, multiplication and division
+
 ```typescript
 import {
   sum,
@@ -216,6 +220,10 @@ const b = sum("bSum", "b")
 const ratio = divide("ratio", a, b);
 const percent = multiply("percent", ratio, decimal(100)) 
 ```
+
+#### Complex: comparison
+
+TODO
 
 ## ColumnSets
 
