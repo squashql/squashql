@@ -73,6 +73,8 @@ const q = from("myTable")
 SELECT col1, col2, sum(col3) as alias1, sum(col4) as alias2 FROM myTable WHERE col1 IN ('a', 'b') AND col2='c' GROUP BY col1, col2
 ```
 
+Condition operators available: `eq, neq, lt, le, gt, ge, _in, isNull, isNotNull, and, or`.
+
 ## Joining Tables
 
 Tables can be joined with other tables by using `innerJoin` and `leftOuterJoin` immediately followed by `on` operator (equivalent to `ON` clause in SQL)
@@ -150,7 +152,70 @@ SELECT AVG(score_sum) AS result FROM (SELECT SUM(score) AS score_sum FROM studen
 
 ## Measures
 
-TODO 
+A Measure represents aggregated values and is usually numeric. Measure can be splin into two categories:
+- Basic measure
+- Calculated measure
+
+### Basic measure
+
+A basic measure **is computed by the underlying database** by applying an aggregation function over a list of field values
+such as avg, count, sum, min, max...
+
+A condition can be applied on aggregate function by using `sumIf` for instance.
+
+```typescript
+import {
+  sum,
+  avg,      
+  sumIf,
+  eq,
+} from "aitm-js-query"
+
+const amountSum = sum("sum_amount", "amount")
+const amountAvg = avg("avg_amount", "amount")
+const sales = sumIf("sales", "amount", "IncomeExpense", eq("Revenue"));
+
+const query = from("myTable")
+        .select([], [], [amountSum, amountAvg, sales])
+        .build()
+```
+
+```sql
+SELECT SUM(amount) AS sum_amount, AVG(amount) AS avg_amount, SUM(CASE WHEN IncomeExpense = 'Revenue' THEN amount 0 END) AS sales  FROM myTable;
+```
+
+### Calculated measure
+
+Unlike a basic measure, a calculated measure is computed by AITM (not the database) by fetching all the required values from the underlying 
+database before applying the defined calculation. 
+It is defined as the combination of other measures that can be either basic or not.
+
+```typescript
+import {
+  sum,
+  multiply, divide, plus, minus
+} from "aitm-js-query"
+
+const aSum = sum("aSum", "a")
+const square = multiply("square", aSum, aSum);
+const twoTimes = plus("twoTimes", aSum, aSum);
+const zero = minus("zero", aSum, aSum);
+const one = divide("one", aSum, aSum);
+```
+
+Constant measures can be defined with `decimal` or `integer` operators:
+
+```typescript
+import {
+  sum,
+  decimal
+} from "aitm-js-query"
+
+const a = sum("aSum", "a")
+const b = sum("bSum", "b")
+const ratio = divide("ratio", a, b);
+const percent = multiply("percent", ratio, decimal(100)) 
+```
 
 ## ColumnSets
 
