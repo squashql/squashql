@@ -37,26 +37,16 @@ public abstract class ATestSubQuery {
   @BeforeAll
   void setup() {
     // See https://mariadb.com/kb/en/subqueries-in-a-from-clause/
-    Field studentName = new Field("studentName", String.class);
+    Field studentName = new Field("name", String.class);
     Field test = new Field("test", String.class);
     Field score = new Field("score", int.class);
-
-    // See https://www.geeksforgeeks.org/sql-sub-queries-clause/
-    Field professorName = new Field("professorName", String.class);
-    Field department = new Field("department", String.class);
-    Field salary = new Field("salary", int.class);
-    Field budget = new Field("budget", int.class);
-    Field departmentName = new Field("departmentName", String.class);
 
     this.datastore = createDatastore();
     QueryEngine queryEngine = createQueryEngine(this.datastore);
     this.queryExecutor = new QueryExecutor(queryEngine);
     this.tm = createTransactionManager();
 
-    beforeLoad(
-            Map.of("student", List.of(studentName, test, score),
-                    "professor", List.of(professorName, department, salary),
-                    "department", List.of(departmentName, budget)));
+    beforeLoad(Map.of("student", List.of(studentName, test, score)));
     load();
   }
 
@@ -69,24 +59,6 @@ public abstract class ATestSubQuery {
             new Object[]{"Tatiana", "sql", 87},
             new Object[]{"Tatiana", "java", 83}
     ));
-
-    this.tm.load(MAIN_SCENARIO_NAME, "professor", List.of(
-            new Object[]{"Smith", "Computer Science", 95_000},
-            new Object[]{"Bill", "Electrical", 55_000},
-            new Object[]{"Sam", "Humanities", 44_000},
-            new Object[]{"Erik", "Mechanical", 80_000},
-            new Object[]{"Melisa", "Information Technology", 65_000},
-            new Object[]{"Jena", "Civil", 50_000}
-    ));
-
-    this.tm.load(MAIN_SCENARIO_NAME, "department", List.of(
-            new Object[]{"Computer Science", 100_000},
-            new Object[]{"Electrical", 80_000},
-            new Object[]{"Humanities", 50_000},
-            new Object[]{"Mechanical", 40_000},
-            new Object[]{"Information Technology", 90_000},
-            new Object[]{"Civil", 60_000}
-    ));
   }
 
   protected void beforeLoad(Map<String, List<Field>> fieldsByStore) {
@@ -95,11 +67,11 @@ public abstract class ATestSubQuery {
   @Test
   void testSubQuery() {
     QueryDto subQuery = Query.from("student")
-            .select(List.of("studentName"), List.of(sum("score.sum", "score")))
+            .select(List.of("name"), List.of(sum("score_sum", "score")))
             .build();
     // See https://mariadb.com/kb/en/subqueries-in-a-from-clause/
     QueryDto queryDto = Query.from(subQuery)
-            .select(Collections.emptyList(), List.of(avg("avg", "score.sum")))
+            .select(Collections.emptyList(), List.of(avg("avg", "score_sum")))
             .build();
     Table result = this.queryExecutor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(130.66666666666666d));
@@ -108,7 +80,7 @@ public abstract class ATestSubQuery {
   @Test
   void testSubQueryAggIfWithConditionOnSubQueryField() {
     QueryDto subQuery = Query.from("student")
-            .select(List.of("studentName"), List.of(sum("score_sum", "score")))
+            .select(List.of("name"), List.of(sum("score_sum", "score")))
             .build();
 
     // Take into account only score.sum >= 100
