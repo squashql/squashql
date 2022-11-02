@@ -68,7 +68,6 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
     } else if (cm.period != null) {
       for (String field : cm.period.getFields()) {
         if (!this.executionContext.query().columns.contains(field)) {
-          // TODO test
           throw new IllegalArgumentException(String.format("%s is not specified in the query but is used in a comparison measure: %s", field, cm));
         }
       }

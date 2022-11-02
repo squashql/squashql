@@ -3,7 +3,7 @@ package me.paulbares.query;
 import lombok.NoArgsConstructor;
 import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.dto.ConditionDto;
-import me.paulbares.query.dto.PeriodColumnSetDto;
+import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 
@@ -83,13 +83,26 @@ public final class MeasureUtils {
     Map<String, ConditionDto> newConditions = new HashMap<>(queryScope.conditions());
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(newConditions::remove));
-    if (cm.period != null) {
-      PeriodColumnSetDto.getColumnsForPrefetching(cm.period).forEach(newConditions::remove);
-    }
+    Optional.ofNullable(cm.period)
+            .ifPresent(p -> getColumnsForPrefetching(p).forEach(newConditions::remove));
     return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), newConditions);
   }
 
   public static boolean isPrimitive(Measure m) {
     return m instanceof AggregatedMeasure || m instanceof ExpressionMeasure;
+  }
+
+  public static List<String> getColumnsForPrefetching(Period period) {
+    if (period instanceof Period.Quarter q) {
+      return List.of(q.year(), q.quarter());
+    } else if (period instanceof Period.Year y) {
+      return List.of(y.year());
+    } else if (period instanceof Period.Month m) {
+      return List.of(m.year(), m.month());
+    } else if (period instanceof Period.Semester s) {
+      return List.of(s.year(), s.semester());
+    } else {
+      throw new RuntimeException(period + " not supported yet");
+    }
   }
 }

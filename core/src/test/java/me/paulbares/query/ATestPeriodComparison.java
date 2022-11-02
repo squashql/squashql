@@ -266,4 +266,23 @@ public abstract class ATestPeriodComparison {
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.month(), "myMeasure", "sum(sales)");
   }
+
+  @Test
+  void testPeriodIsMissingFromQuery() {
+    Period.Year period = new Period.Year("year_sales");
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
+    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
+            "myMeasure",
+            ABSOLUTE_DIFFERENCE,
+            sales,
+            Map.of("year_sales", "y-1"),
+            period);
+
+    var query = Query.from(this.storeName)
+            .select(List.of(SCENARIO_FIELD_NAME), List.of(m))
+            .build();
+    Assertions.assertThatThrownBy(() -> this.executor.execute(query))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("year_sales is not specified in the query but is used in a comparison measure");
+  }
 }
