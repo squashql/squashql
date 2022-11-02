@@ -19,7 +19,7 @@ public class TableTSCodeGenerator {
     while (matcher.find()) {
       start = end + 1;
       end = matcher.start();
-      if (start != end && (start > 0 || shouldStartWithUpperCase)) {
+      if (start != end) {
         sb.append(fieldName.substring(start, start + 1).toUpperCase());
         sb.append(fieldName, start + 1, end);
       } else {
@@ -30,21 +30,14 @@ public class TableTSCodeGenerator {
     start = end + 1;
     end = fieldName.length();
 
-    if (start != end && (start > 0 || shouldStartWithUpperCase)) {
+    if (start != end) {
       sb.append(fieldName.substring(start, start + 1).toUpperCase());
       sb.append(fieldName, start + 1, end);
     } else {
       sb.append(fieldName, start, end);
     }
-//    if (start != end) {
-//      if (shouldStartWithUpperCase) {
-//        sb.append(fieldName.substring(start, start + 1).toUpperCase());
-//        sb.append(fieldName, start + 1, end);
-//      } else {
-//        sb.append(fieldName, start, end);
-//      }
-//    }
-    return sb.toString();
+
+    return (shouldStartWithUpperCase ? sb.substring(0, 1).toUpperCase() : sb.substring(0, 1).toLowerCase()) + sb.substring(1);
   }
 
   public static String getFileContent(Datastore datastore) {
