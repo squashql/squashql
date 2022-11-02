@@ -58,14 +58,4 @@ public class TableTSCodeGenerator {
     });
     return sb.toString();
   }
-
-  public static void main(String[] args) {
-    System.out.println(transformName("hello.world_zob", false));
-    System.out.println(transformName("hello.world_zob", false));
-    System.out.println(transformName("helloWorldZob", false));
-    System.out.println(transformName(".hello.WorldZob", false));
-    System.out.println(transformName(".hello.WorldZob", true));
-    System.out.println(transformName("helloWorldZob.", false));
-    System.out.println(transformName("helloWorldZob.", true));
-  }
 }
