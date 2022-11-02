@@ -3,8 +3,13 @@ package me.paulbares.query;
 import me.paulbares.BigQueryDatastore;
 import me.paulbares.BigQueryUtil;
 import me.paulbares.query.database.BigQueryEngine;
-import me.paulbares.query.dto.*;
+import me.paulbares.query.dto.CacheStatsDto;
+import me.paulbares.query.dto.JoinMappingDto;
+import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.TableDto;
 import me.paulbares.query.monitoring.QueryWatch;
+import me.paulbares.store.Datastore;
+import me.paulbares.util.TableTSCodeGenerator;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -135,5 +140,12 @@ public class TestOptiprix {
     execute.show();
     System.out.println(queryWatch);
     System.out.println(csBuilder);
+  }
+
+  @Test
+  @Disabled
+  void testTSGeneration() {
+    Datastore datastore = new BigQueryDatastore(BigQueryUtil.createCredentials(this.credendialsPath), this.projectId, this.datasetName);
+    System.out.println(TableTSCodeGenerator.getFileContent(datastore));
   }
 }
