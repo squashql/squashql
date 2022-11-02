@@ -182,7 +182,7 @@ public class TestSQLTranslator {
             .withMeasure(sum("sum GT", "mean"))
             .condition("type", eq("myType"));
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select `c3`, sum(`mean`) as `sum GT` from (select `c1`, `c3`, avg(`c2`) as `mean` from a group by `c1`, `c3`) as __temp_table__, a where `type` = 'myType' group by `c3`");
+            .isEqualTo("select `c3`, sum(`mean`) as `sum GT` from (select `c1`, `c3`, avg(`c2`) as `mean` from a group by `c1`, `c3`) where `type` = 'myType' group by `c3`");
   }
 
   @Test
