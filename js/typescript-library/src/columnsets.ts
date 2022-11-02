@@ -7,38 +7,21 @@ export interface ColumnSet {
 
 export enum ColumnSetKey {
   BUCKET = "BUCKET",
-  PERIOD = "PERIOD",
-  PARENT = "PARENT",
 }
 
 export class BucketColumnSet implements ColumnSet {
   readonly class: string = PACKAGE + "dto.BucketColumnSetDto"
   readonly key: ColumnSetKey = ColumnSetKey.BUCKET
 
-  constructor(private name: string, private field: string, private values: Map<string, Array<string>>) {
+  constructor(private columnName: string, private field: string, private values: Map<string, Array<string>>) {
   }
 
   toJSON() {
     return {
       "@class": this.class,
-      "name": this.name,
+      "name": this.columnName,
       "field": this.field,
       "values": Object.fromEntries(this.values),
-    }
-  }
-}
-
-export class PeriodColumnSet implements ColumnSet {
-  readonly class: string = PACKAGE + "dto.PeriodColumnSetDto"
-  readonly key: ColumnSetKey = ColumnSetKey.PERIOD
-
-  constructor(private period: Period) {
-  }
-
-  toJSON() {
-    return {
-      "@class": this.class,
-      "period": this.period,
     }
   }
 }

@@ -1,4 +1,4 @@
-import {PACKAGE} from "./index"
+import {PACKAGE, Period} from "./index"
 import {Condition} from "./conditions"
 import {ColumnSetKey} from "./columnsets"
 
@@ -98,7 +98,7 @@ class CountMeasure extends AggregatedMeasure {
 
 export const count = CountMeasure.instance;
 
-export class ComparisonMeasureReferencePosition implements Measure {
+class ComparisonMeasureReferencePosition implements Measure {
   readonly class: string = PACKAGE + "ComparisonMeasureReferencePosition"
   readonly alias: string
   readonly expression?: string
@@ -106,8 +106,9 @@ export class ComparisonMeasureReferencePosition implements Measure {
   constructor(alias: string,
               private comparisonMethod: ComparisonMethod,
               private measure: Measure,
-              private columnSetKey: ColumnSetKey,
-              private referencePosition: Map<string, string>) {
+              private referencePosition: Map<string, string>,
+              private columnSetKey?: ColumnSetKey,
+              private period?: Period) {
     this.alias = alias
   }
 
@@ -118,6 +119,7 @@ export class ComparisonMeasureReferencePosition implements Measure {
       "comparisonMethod": this.comparisonMethod,
       "measure": this.measure,
       "columnSetKey": this.columnSetKey,
+      "period": this.period,
       "referencePosition": Object.fromEntries(this.referencePosition),
     }
   }
@@ -127,7 +129,6 @@ export class ParentComparisonMeasure implements Measure {
   readonly class: string = PACKAGE + "ParentComparisonMeasure"
   readonly alias: string
   readonly expression?: string
-  readonly columnSetKey: ColumnSetKey = ColumnSetKey.PARENT
 
   constructor(alias: string,
               private comparisonMethod: ComparisonMethod,
@@ -142,7 +143,6 @@ export class ParentComparisonMeasure implements Measure {
       "alias": this.alias,
       "comparisonMethod": this.comparisonMethod,
       "measure": this.measure,
-      "columnSetKey": this.columnSetKey,
       "ancestors": this.ancestors,
     }
   }
@@ -232,4 +232,19 @@ export function integer(value: Number): Measure {
 
 export function decimal(value: Number): Measure {
   return new DoubleConstantMeasure(value);
+}
+
+export function comparisonMeasureWithPeriod(alias: string,
+                                            comparisonMethod: ComparisonMethod,
+                                            measure: Measure,
+                                            referencePosition: Map<string, string>,
+                                            period: Period): Measure {
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, undefined, period)
+}
+
+export function comparisonMeasureWithBucket(alias: string,
+                                            comparisonMethod: ComparisonMethod,
+                                            measure: Measure,
+                                            referencePosition: Map<string, string>): Measure {
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, ColumnSetKey.BUCKET)
 }
