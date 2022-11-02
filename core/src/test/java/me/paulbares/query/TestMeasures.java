@@ -15,7 +15,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static me.paulbares.query.Functions.*;
+import static me.paulbares.query.Functions.eq;
+import static me.paulbares.query.Functions.plus;
 
 public class TestMeasures {
 

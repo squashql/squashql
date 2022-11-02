@@ -1,5 +1,6 @@
 package me.paulbares.query.database;
 
+import me.paulbares.query.CountMeasure;
 import me.paulbares.query.Table;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
@@ -32,6 +33,10 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
             return field;
           }
         }
+      }
+
+      if(fieldName.equals(CountMeasure.INSTANCE.alias())) {
+        return new Field(CountMeasure.INSTANCE.alias(), long.class);
       }
       throw new IllegalArgumentException("Cannot find field with name " + fieldName);
     };

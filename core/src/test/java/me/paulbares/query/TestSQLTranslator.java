@@ -148,15 +148,15 @@ public class TestSQLTranslator {
   }
 
   @Test
-  void testConditions() {
+  void testConditionsWithValue() {
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(SCENARIO_FIELD_NAME)
             .withSelect("type")
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
             .condition(SCENARIO_FIELD_NAME, and(eq("base"), eq("s1"), eq("s2")))
+            .condition("delta", ge(123d))
             .condition("type", or(eq("A"), eq("B")))
             .condition("pnl", lt(10d))
-            .condition("delta", ge(123d))
             .table(BASE_STORE_NAME);
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum` from " + BASE_STORE_NAME
