@@ -10,7 +10,10 @@ import me.paulbares.query.Measure;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.TableDto;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @ToString
 @EqualsAndHashCode

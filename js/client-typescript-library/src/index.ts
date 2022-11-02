@@ -1,13 +1,14 @@
 import {
   BucketColumnSet,
-  ColumnSetKey,
-  ComparisonMeasureReferencePosition,
   ComparisonMethod,
   eq,
   from,
   Querier,
   sum,
   sumIf,
+  multiply, divide, plus, minus,
+  decimal, integer,
+  comparisonMeasureWithPeriod, comparisonMeasureWithBucket
 } from "aitm-js-query"
 
 const querier = new Querier("http://localhost:8080");
@@ -22,6 +23,7 @@ querier.getMetadata(assets).then(r => {
 })
 
 const amount = sum("amount_sum", "Amount");
+multiply("percent", amount, decimal(100))
 const sales = sumIf("sales", "Amount", "IncomeExpense", eq("Revenue"));
 const groups = {
   "ABCD": ["A", "B", "C", "D"],
@@ -31,10 +33,9 @@ const groups = {
 
 const bucketColumnSet = new BucketColumnSet("group", "Scenario", new Map(Object.entries(groups)))
 const refScenario = {"Scenario": "s-1", "group": "g"}
-const amountComparison = new ComparisonMeasureReferencePosition("amount compar. with prev. scenario",
+const amountComparison = comparisonMeasureWithBucket("amount compar. with prev. scenario",
         ComparisonMethod.ABSOLUTE_DIFFERENCE,
         amount,
-        ColumnSetKey.BUCKET,
         new Map(Object.entries(refScenario)));
 
 const q = from("ProjectionScenario")
@@ -44,6 +45,8 @@ const q = from("ProjectionScenario")
                 [amount, amountComparison, sales])
         .build();
 
+sum("f1", "f1")
+const square = multiply("", f1Sum, f1Sum);
 // q.withMeasure(sales)
 // const pop = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, sales, ["Month", "Year"]);
 

@@ -13,11 +13,12 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 
 import java.util.List;
+import java.util.Map;
 
 import static me.paulbares.query.TestUtils.createClickHouseContainer;
 import static me.paulbares.query.TestUtils.jdbcUrl;
 
-public class TestClickHouseQueryColumnSets extends ATestQueryColumnSets {
+public class TestClickHouseSubQuery extends ATestSubQuery {
 
   @Container
   public GenericContainer container = createClickHouseContainer();
@@ -35,9 +36,9 @@ public class TestClickHouseQueryColumnSets extends ATestQueryColumnSets {
   }
 
   @Override
-  protected void beforeLoad(List<Field> fields) {
+  protected void beforeLoad(Map<String, List<Field>> fieldsByStore) {
     ClickHouseTransactionManager tm = (ClickHouseTransactionManager) this.tm;
-    tm.dropAndCreateInMemoryTable(this.storeName, fields);
+    fieldsByStore.forEach((store, fields) -> tm.dropAndCreateInMemoryTable(store, fields));
   }
 
   @Override

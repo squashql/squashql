@@ -3,6 +3,7 @@ package me.paulbares.query;
 import lombok.NoArgsConstructor;
 import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.dto.ConditionDto;
+import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 
@@ -25,20 +26,13 @@ public final class MeasureUtils {
       return quoteExpression(bom.leftOperand) + " " + bom.operator.infix + " " + quoteExpression(bom.rightOperand);
     } else if (m instanceof ComparisonMeasure cm) {
       String alias = cm.getMeasure().alias();
-      return switch (cm.getColumnSetKey()) {
-        case BUCKET -> {
-          String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current bucket)", alias + "(reference bucket)");
-          yield formula + ", reference = " + ((ComparisonMeasureReferencePosition) cm).referencePosition;
-        }
-        case PERIOD -> {
-          String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current period)", alias + "(reference period)");
-          yield formula + ", reference = " + ((ComparisonMeasureReferencePosition) cm).referencePosition;
-        }
-        case PARENT -> {
-          String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
-          yield formula + ", ancestors = " + ((ParentComparisonMeasure) cm).ancestors;
-        }
-      };
+      if (cm instanceof ParentComparisonMeasure) {
+        String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
+        return formula + ", ancestors = " + ((ParentComparisonMeasure) cm).ancestors;
+      } else {
+        String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current)", alias + "(reference)");
+        return formula + ", reference = " + ((ComparisonMeasureReferencePosition) cm).referencePosition;
+      }
     } else if (m instanceof ExpressionMeasure em) {
       return em.expression;
     } else if (m instanceof ConstantMeasure cm) {
@@ -84,17 +78,31 @@ public final class MeasureUtils {
 
   public static QueryExecutor.QueryScope getReadScopeComparisonMeasureReferencePosition(
           QueryDto query,
+          ComparisonMeasureReferencePosition cm,
           QueryExecutor.QueryScope queryScope) {
     Map<String, ConditionDto> newConditions = new HashMap<>(queryScope.conditions());
-    Optional.ofNullable(query.columnSets.get(ColumnSetKey.PERIOD))
-            .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(newConditions::remove));
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(newConditions::remove));
-
+    Optional.ofNullable(cm.period)
+            .ifPresent(p -> getColumnsForPrefetching(p).forEach(newConditions::remove));
     return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), newConditions);
   }
 
   public static boolean isPrimitive(Measure m) {
     return m instanceof AggregatedMeasure || m instanceof ExpressionMeasure;
+  }
+
+  public static List<String> getColumnsForPrefetching(Period period) {
+    if (period instanceof Period.Quarter q) {
+      return List.of(q.year(), q.quarter());
+    } else if (period instanceof Period.Year y) {
+      return List.of(y.year());
+    } else if (period instanceof Period.Month m) {
+      return List.of(m.year(), m.month());
+    } else if (period instanceof Period.Semester s) {
+      return List.of(s.year(), s.semester());
+    } else {
+      throw new RuntimeException(period + " not supported yet");
+    }
   }
 }

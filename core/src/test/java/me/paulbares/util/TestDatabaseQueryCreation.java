@@ -2,8 +2,7 @@ package me.paulbares.util;
 
 import me.paulbares.query.*;
 import me.paulbares.query.context.ContextValue;
-import me.paulbares.query.dto.Period;
-import me.paulbares.query.dto.PeriodColumnSetDto;
+import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
@@ -38,7 +37,7 @@ public class TestDatabaseQueryCreation {
   @Test
   void testColumnSetInSubQuery() {
     QueryDto subQuery = new QueryDto().table("table")
-            .withColumnSet(ColumnSetKey.PERIOD, new PeriodColumnSetDto(new Period.Year("year")));
+            .withColumnSet(ColumnSetKey.BUCKET, new BucketColumnSetDto("a", "b"));
     QueryDto queryDto = new QueryDto().table(subQuery);
 
     Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier)))
@@ -60,7 +59,7 @@ public class TestDatabaseQueryCreation {
   @Test
   void testUnsupportedMeasureInSubQuery() {
     QueryDto subQuery = new QueryDto().table("table")
-            .withMeasure(new ComparisonMeasureReferencePosition("alias", ComparisonMethod.DIVIDE, Mockito.mock(Measure.class), ColumnSetKey.PERIOD, Collections.emptyMap()));
+            .withMeasure(new ComparisonMeasureReferencePosition("alias", ComparisonMethod.DIVIDE, Mockito.mock(Measure.class), Collections.emptyMap(), ColumnSetKey.BUCKET));
     QueryDto queryDto = new QueryDto().table(subQuery);
 
     Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier)))

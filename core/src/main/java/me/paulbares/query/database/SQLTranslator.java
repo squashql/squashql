@@ -6,7 +6,6 @@ import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -89,21 +88,8 @@ public class SQLTranslator {
     }
   }
 
-  private static Map<String, ConditionDto> extractConditions(DatabaseQuery query) {
-    Map<String, ConditionDto> conditionByField = new HashMap<>();
-    query.conditions.forEach((field, condition) -> {
-      ConditionDto old = conditionByField.get(field);
-      if (old != null) {
-        throw new IllegalArgumentException(String.format("A condition for field %s already exists %s", field, old));
-      }
-      conditionByField.put(field, condition);
-    });
-
-    return conditionByField;
-  }
-
   protected static void addConditions(StringBuilder statement, DatabaseQuery query, Function<String, Field> fieldProvider) {
-    Map<String, ConditionDto> conditionByField = extractConditions(query);
+    Map<String, ConditionDto> conditionByField = query.conditions;
 
     if (!conditionByField.isEmpty()) {
       String andConditions = conditionByField.entrySet()

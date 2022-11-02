@@ -15,11 +15,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import java.util.Collections;
 import java.util.List;
 
-import static me.paulbares.query.Functions.sum;
-import static me.paulbares.query.agg.AggregationFunction.AVG;
+import static me.paulbares.query.Functions.*;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -300,33 +298,6 @@ public abstract class ATestQueryExecutor {
             List.of("cloth", 30d),
             List.of("food", 9d),
             List.of("drink", 7.5d));
-  }
-
-  @Test
-  void testSubQuery() {
-    QueryDto subQuery = Query.from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("ca", "price")))// ca per scenario
-            .build();
-
-    QueryDto queryDto = Query.from(subQuery)
-            .select(Collections.emptyList(), List.of(Functions.avg("mean", "ca")))// avg of ca
-            .build();
-    Table result = this.queryExecutor.execute(queryDto);
-    Assertions.assertThat(result).containsExactly(List.of(15.5d));
-  }
-
-  @Test
-  void testSubQueryAggIfWithConditionOnSubQueryField() {
-    QueryDto subQuery = new QueryDto()
-            .table(this.storeName)
-            .withColumn("scenario")
-            .withMeasure(sum("ca", "price")); // ca per scenario
-
-    QueryDto queryDto = new QueryDto()
-            .table(subQuery)
-            .withMeasure(new AggregatedMeasure("myFinalMeasure", "ca", AVG, "ca", Functions.ge(15.0)));
-    Table result = this.queryExecutor.execute(queryDto);
-    Assertions.assertThat(result).containsExactly(List.of((15. + 17.) / 2)); // avg of ca >= 15
   }
 
   @Test

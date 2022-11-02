@@ -1,9 +1,8 @@
 package me.paulbares.query;
 
+import me.paulbares.query.builder.Query;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.Period;
-import me.paulbares.query.dto.PeriodColumnSetDto;
-import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
@@ -106,18 +105,12 @@ public abstract class ATestPeriodComparison {
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            ColumnSetKey.PERIOD,
-            Map.of(
-                    "quarter_sales", "q",
-                    "year_sales", "y-1"
-            ));
-    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
+            Map.of("quarter_sales", "q", "year_sales", "y-1"),
+            period);
 
-    var query = new QueryDto()
-            .table(this.storeName)
-            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
-            .withMeasure(m)
-            .withMeasure(sales);
+    var query = Query.from(this.storeName)
+            .select(List.of("year_sales", "quarter_sales"), List.of(m, sales))
+            .build();
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
@@ -133,12 +126,10 @@ public abstract class ATestPeriodComparison {
             .containsExactlyInAnyOrder(period.year(), period.quarter(), "myMeasure", "sum(sales)");
 
     // Add a condition and make sure condition is cleared during prefetching.s
-    query = new QueryDto()
-            .table(this.storeName)
-            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
-            .withCondition("year_sales", eq(2023l))
-            .withMeasure(m);
-
+    query = Query.from(this.storeName)
+            .where("year_sales", eq(2023l))
+            .select(List.of("year_sales", "quarter_sales"), List.of(m))
+            .build();
     finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2023l, 1, 0d),
@@ -146,11 +137,10 @@ public abstract class ATestPeriodComparison {
             Arrays.asList(2023l, 3, 0d),
             Arrays.asList(2023l, 4, 0d));
 
-    query = new QueryDto()
-            .table(this.storeName)
-            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
-            .withCondition("quarter_sales", eq(1))
-            .withMeasure(m);
+    query = Query.from(this.storeName)
+            .where("quarter_sales", eq(1))
+            .select(List.of("year_sales", "quarter_sales"), List.of(m))
+            .build();
     finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2022l, 1, null),
@@ -166,19 +156,15 @@ public abstract class ATestPeriodComparison {
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            ColumnSetKey.PERIOD,
             Map.of(
                     "quarter_sales", "q-1",
                     "year_sales", "y"
-            ));
-    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
+            ),
+            period);
 
-    var query = new QueryDto()
-            .table(this.storeName)
-            .withColumn(SCENARIO_FIELD_NAME)
-            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
-            .withMeasure(m)
-            .withMeasure(sales);
+    var query = Query.from(this.storeName)
+            .select(List.of("year_sales", "quarter_sales", SCENARIO_FIELD_NAME), List.of(m, sales))
+            .build();
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
@@ -204,17 +190,12 @@ public abstract class ATestPeriodComparison {
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            ColumnSetKey.PERIOD,
-            Map.of("year_sales", "y-1"));
-    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
+            Map.of("year_sales", "y-1"),
+            period);
 
-    var query = new QueryDto()
-            .table(this.storeName)
-            .withColumn(SCENARIO_FIELD_NAME)
-            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
-            .withMeasure(m)
-            .withMeasure(sales);
-
+    var query = Query.from(this.storeName)
+            .select(List.of("year_sales", SCENARIO_FIELD_NAME), List.of(m, sales))
+            .build();
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2022l, "base", null, 300d),
@@ -233,16 +214,12 @@ public abstract class ATestPeriodComparison {
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            ColumnSetKey.PERIOD,
-            Map.of(period.semester(), "s-1", period.year(), "y"));
-    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
+            Map.of(period.semester(), "s-1", period.year(), "y"),
+            period);
 
-    var query = new QueryDto()
-            .table(this.storeName)
-            .withColumn(SCENARIO_FIELD_NAME)
-            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
-            .withMeasure(m)
-            .withMeasure(sales);
+    var query = Query.from(this.storeName)
+            .select(List.of("year_sales", "semester_sales", SCENARIO_FIELD_NAME), List.of(m, sales))
+            .build();
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
@@ -274,16 +251,11 @@ public abstract class ATestPeriodComparison {
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            ColumnSetKey.PERIOD,
-            Map.of(period.month(), "m-1", period.year(), "y"));
-    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
-
-    var query = new QueryDto()
-            .table(this.storeName)
-            .withColumn(SCENARIO_FIELD_NAME)
-            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
-            .withMeasure(m)
-            .withMeasure(sales);
+            Map.of(period.month(), "m-1", period.year(), "y"),
+            period);
+    var query = Query.from(this.storeName)
+            .select(List.of("year_sales", "month_sales", SCENARIO_FIELD_NAME), List.of(m, sales))
+            .build();
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
@@ -293,5 +265,24 @@ public abstract class ATestPeriodComparison {
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.month(), "myMeasure", "sum(sales)");
+  }
+
+  @Test
+  void testPeriodIsMissingFromQuery() {
+    Period.Year period = new Period.Year("year_sales");
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
+    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
+            "myMeasure",
+            ABSOLUTE_DIFFERENCE,
+            sales,
+            Map.of("year_sales", "y-1"),
+            period);
+
+    var query = Query.from(this.storeName)
+            .select(List.of(SCENARIO_FIELD_NAME), List.of(m))
+            .build();
+    Assertions.assertThatThrownBy(() -> this.executor.execute(query))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("year_sales is not specified in the query but is used in a comparison measure");
   }
 }

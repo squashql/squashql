@@ -5,8 +5,6 @@ package me.paulbares.query;
  */
 public interface ComparisonMeasure {
 
-  ColumnSetKey getColumnSetKey();
-
   ComparisonMethod getComparisonMethod();
 
   Measure getMeasure();

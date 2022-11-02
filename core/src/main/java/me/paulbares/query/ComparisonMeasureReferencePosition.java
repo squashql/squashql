@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
+import me.paulbares.query.dto.Period;
 import me.paulbares.store.Field;
 
 import java.util.Map;
@@ -21,22 +22,36 @@ public class ComparisonMeasureReferencePosition implements Measure, ComparisonMe
   public Measure measure;
   public ColumnSetKey columnSetKey;
   public Map<String, String> referencePosition;
+  public Period period;
 
   public ComparisonMeasureReferencePosition(@NonNull String alias,
                                             @NonNull ComparisonMethod comparisonMethod,
                                             @NonNull Measure measure,
-                                            @NonNull ColumnSetKey columnSetKey,
-                                            @NonNull Map<String, String> referencePosition) {
-    this.alias = alias;
-    this.comparisonMethod = comparisonMethod;
-    this.columnSetKey = columnSetKey;
-    this.measure = measure;
-    this.referencePosition = referencePosition;
+                                            @NonNull Map<String, String> referencePosition,
+                                            @NonNull Period period) {
+    this(alias, comparisonMethod, measure, referencePosition, period, null);
   }
 
-  @Override
-  public ColumnSetKey getColumnSetKey() {
-    return this.columnSetKey;
+  public ComparisonMeasureReferencePosition(@NonNull String alias,
+                                            @NonNull ComparisonMethod comparisonMethod,
+                                            @NonNull Measure measure,
+                                            @NonNull Map<String, String> referencePosition,
+                                            @NonNull ColumnSetKey columnSetKey) {
+    this(alias, comparisonMethod, measure, referencePosition, null, columnSetKey);
+  }
+
+  private ComparisonMeasureReferencePosition(@NonNull String alias,
+                                             @NonNull ComparisonMethod comparisonMethod,
+                                             @NonNull Measure measure,
+                                             @NonNull Map<String, String> referencePosition,
+                                             Period period,
+                                             ColumnSetKey columnSetKey) {
+    this.alias = alias;
+    this.comparisonMethod = comparisonMethod;
+    this.measure = measure;
+    this.referencePosition = referencePosition;
+    this.period = period;
+    this.columnSetKey = columnSetKey;
   }
 
   @Override

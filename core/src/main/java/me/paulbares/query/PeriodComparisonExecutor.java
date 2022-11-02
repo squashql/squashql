@@ -1,7 +1,6 @@
 package me.paulbares.query;
 
 import me.paulbares.query.dto.Period;
-import me.paulbares.query.dto.PeriodColumnSetDto;
 import me.paulbares.store.Field;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
@@ -13,30 +12,41 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiPredicate;
 
+import static me.paulbares.query.PeriodUnit.*;
+
 public class PeriodComparisonExecutor extends AComparisonExecutor {
 
-  final PeriodColumnSetDto cSet;
+  final ComparisonMeasureReferencePosition cmrp;
 
-  public PeriodComparisonExecutor(PeriodColumnSetDto cSet) {
-    this.cSet = cSet;
+  public PeriodComparisonExecutor(ComparisonMeasureReferencePosition cmrp) {
+    this.cmrp = cmrp;
   }
 
-  @Override
-  public ColumnSet getColumnSet() {
-    return this.cSet;
+  public Map<String, PeriodUnit> mapping(Period period) {
+    if (period instanceof Period.Quarter q) {
+      return Map.of(q.quarter(), QUARTER, q.year(), YEAR);
+    } else if (period instanceof Period.Year y) {
+      return Map.of(y.year(), YEAR);
+    } else if (period instanceof Period.Month m) {
+      return Map.of(m.month(), MONTH, m.year(), YEAR);
+    } else if (period instanceof Period.Semester s) {
+      return Map.of(s.semester(), SEMESTER, s.year(), YEAR);
+    } else {
+      throw new RuntimeException(period + " not supported yet");
+    }
   }
 
   @Override
   protected BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
     Map<PeriodUnit, String> referencePosition = new HashMap<>();
-    Map<String, PeriodUnit> mapping = this.cSet.mapping();
+    Map<String, PeriodUnit> mapping = mapping(this.cmrp.period);
     MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
     for (Map.Entry<String, String> entry : cm.referencePosition.entrySet()) {
       PeriodUnit pu = mapping.get(entry.getKey());
       referencePosition.put(pu, entry.getValue());
       indexByPeriodUnit.put(pu, indexByColumn.getIfAbsent(entry.getKey(), -1));
     }
-    return new ShiftProcedure(this.cSet.period, referencePosition, indexByPeriodUnit);
+    return new ShiftProcedure(this.cmrp.period, referencePosition, indexByPeriodUnit);
   }
 
   static class ShiftProcedure implements BiPredicate<Object[], Field[]> {

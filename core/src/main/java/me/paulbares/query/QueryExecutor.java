@@ -69,7 +69,7 @@ public class QueryExecutor {
     queryWatch.start(QueryWatch.EXECUTE_PREFETCH_PLAN);
     Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
     QueryScope queryScope = createQueryScope(query, fieldSupplier);
-    Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> graph = computeDependencyGraph(query, fieldSupplier, queryScope);
+    Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> graph = computeDependencyGraph(query, queryScope, fieldSupplier);
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
     Map<QueryScope, Set<Measure>> measuresByQueryScope = new HashMap<>();
@@ -155,7 +155,9 @@ public class QueryExecutor {
   }
 
   private static Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> computeDependencyGraph(
-          QueryDto query, Function fieldSupplier, QueryScope queryScope) {
+          QueryDto query,
+          QueryScope queryScope,
+          Function<String, Field> fieldSupplier) {
     MeasurePrefetcherVisitor visitor = new MeasurePrefetcherVisitor(query, queryScope, fieldSupplier);
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
       Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(visitor);
@@ -268,5 +270,20 @@ public class QueryExecutor {
       resolveMeasureDependencies(repo, supplier, bom.leftOperand);
       resolveMeasureDependencies(repo, supplier, bom.rightOperand);
     }
+  }
+
+  public static Function<String, Field> withFallback(Function<String, Field> fieldProvider, Class<?> fallbackType) {
+    return fieldName -> {
+      Field f;
+      try {
+        f = fieldProvider.apply(fieldName);
+      } catch (Exception e) {
+        // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
+        // contains only "raw" fields, it will throw an exception.
+        log.info("Cannot find field " + fieldName + " with default field provider, fallback to default type: " + fallbackType.getSimpleName());
+        f = new Field(fieldName, Number.class);
+      }
+      return f;
+    };
   }
 }
