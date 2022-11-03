@@ -9,7 +9,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TableTSCodeGenerator {
+public class SchemaTypeScriptCodeGenerator {
 
   public static String transformName(String fieldName, boolean shouldStartWithUpperCase) {
     Pattern compile = Pattern.compile("[^A-Za-z0-9]");
@@ -43,19 +43,24 @@ public class TableTSCodeGenerator {
   public static String getFileContent(Datastore datastore) {
     StringBuilder sb = new StringBuilder();
     Map<String, Store> storesByName = new TreeMap<>(datastore.storesByName()); // order by store name
-    storesByName.forEach((name, store) -> {
-      sb.append("export class ").append(transformName(name, true)).append("Table {").append(System.lineSeparator());
+    storesByName.forEach((storeName, store) -> {
+      sb.append("export class ").append(transformName(storeName, true)).append("Table {").append(System.lineSeparator());
+      addAttribute(sb, "tableName", storeName);
       for (Field field : store.fields()) {
-        sb.append("\t readonly ")
-                .append(transformName(field.name(), false))
-                .append(": string = ")
-                .append('"')
-                .append(field.name())
-                .append('"')
-                .append(System.lineSeparator());
+        addAttribute(sb, transformName(field.name(), false), field.name());
       }
       sb.append('}').append(System.lineSeparator());
     });
     return sb.toString();
+  }
+
+  private static void addAttribute(StringBuilder sb, String attributeName, String attributeValue) {
+    sb.append("\t readonly ")
+            .append(attributeName)
+            .append(": string = ")
+            .append('"')
+            .append(attributeValue)
+            .append('"')
+            .append(System.lineSeparator());
   }
 }

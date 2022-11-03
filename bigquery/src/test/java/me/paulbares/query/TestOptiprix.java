@@ -9,7 +9,7 @@ import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.query.monitoring.QueryWatch;
 import me.paulbares.store.Datastore;
-import me.paulbares.util.TableTSCodeGenerator;
+import me.paulbares.util.SchemaTypeScriptCodeGenerator;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -144,8 +144,8 @@ public class TestOptiprix {
 
   @Test
   @Disabled
-  void testTSGeneration() {
+  void testTypescriptGeneration() {
     Datastore datastore = new BigQueryDatastore(BigQueryUtil.createCredentials(this.credendialsPath), this.projectId, this.datasetName);
-    System.out.println(TableTSCodeGenerator.getFileContent(datastore));
+    System.out.println(SchemaTypeScriptCodeGenerator.getFileContent(datastore));
   }
 }
