@@ -223,7 +223,51 @@ const percent = multiply("percent", ratio, decimal(100))
 
 #### Complex: comparison
 
-TODO
+Comparison between "time" period like year, semester, quarter, month. 
+
+Example:
+
+```
++------+----------+---------+-------------+-------+
+| year | semester |    name |        test | score |
++------+----------+---------+-------------+-------+
+| 2022 |        1 |    Paul |     english |    73 |
+| 2022 |        1 |    Paul | mathematics |    75 |
+| 2022 |        1 | Tatiana |     english |    83 |
+| 2022 |        1 | Tatiana | mathematics |    87 |
+| 2022 |        2 |    Paul |     english |    70 |
+| 2022 |        2 |    Paul | mathematics |    58 |
+| 2022 |        2 | Tatiana |     english |    65 |
+| 2022 |        2 | Tatiana | mathematics |    65 |
+| 2023 |        1 |    Paul |     english |    82 |
+| 2023 |        1 |    Paul | mathematics |    70 |
+| 2023 |        1 | Tatiana |     english |    96 |
+| 2023 |        1 | Tatiana | mathematics |    52 |
+| 2023 |        2 |    Paul |     english |    89 |
+| 2023 |        2 |    Paul | mathematics |    45 |
+| 2023 |        2 | Tatiana |     english |    63 |
+| 2023 |        2 | Tatiana | mathematics |    14 |
++------+----------+---------+-------------+-------+
+```
+
+Compare with previous semester
+```typescript
+
+```
+```
++------+----------+---------+-----------+----------------------------+
+| year | semester |    name | score_sum | compare with previous year |
++------+----------+---------+-----------+----------------------------+
+| 2022 |        1 |    Paul |       148 |                       null |
+| 2022 |        1 | Tatiana |       170 |                       null |
+| 2022 |        2 |    Paul |       128 |                        -20 |
+| 2022 |        2 | Tatiana |       130 |                        -40 |
+| 2023 |        1 |    Paul |       152 |                         24 |
+| 2023 |        1 | Tatiana |       148 |                         18 |
+| 2023 |        2 |    Paul |       134 |                        -18 |
+| 2023 |        2 | Tatiana |        77 |                        -71 |
++------+----------+---------+-----------+----------------------------+
+```
 
 ## ColumnSets
 

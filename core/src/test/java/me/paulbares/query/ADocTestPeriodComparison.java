@@ -1,0 +1,99 @@
+package me.paulbares.query;
+
+import me.paulbares.query.builder.Query;
+import me.paulbares.query.database.QueryEngine;
+import me.paulbares.query.dto.Period;
+import me.paulbares.query.dto.QueryDto;
+import me.paulbares.store.Datastore;
+import me.paulbares.store.Field;
+import me.paulbares.transaction.TransactionManager;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+
+import java.util.List;
+import java.util.Map;
+
+import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public abstract class ADocTestPeriodComparison {
+
+  protected Datastore datastore;
+
+  protected QueryExecutor queryExecutor;
+
+  protected TransactionManager tm;
+
+  protected abstract QueryEngine createQueryEngine(Datastore datastore);
+
+  protected abstract Datastore createDatastore();
+
+  protected abstract TransactionManager createTransactionManager();
+
+  @BeforeAll
+  void setup() {
+    // See https://mariadb.com/kb/en/subqueries-in-a-from-clause/
+    Field studentName = new Field("name", String.class);
+    Field test = new Field("test", String.class);
+    Field score = new Field("score", int.class);
+    Field semester = new Field("semester", int.class);
+    Field year = new Field("year", int.class);
+
+    this.datastore = createDatastore();
+    QueryEngine queryEngine = createQueryEngine(this.datastore);
+    this.queryExecutor = new QueryExecutor(queryEngine);
+    this.tm = createTransactionManager();
+
+    beforeLoad(Map.of("student", List.of(studentName, test, score, year, semester)));
+    load();
+  }
+
+  protected void load() {
+    this.tm.load(MAIN_SCENARIO_NAME, "student", List.of(
+            // 2022 - s1
+            new Object[]{"Paul", "mathematics", 75, 2022, 1},
+            new Object[]{"Paul", "english", 73, 2022, 1},
+            new Object[]{"Tatiana", "mathematics", 87, 2022, 1},
+            new Object[]{"Tatiana", "english", 83, 2022, 1},
+
+            // 2022 - s2
+            new Object[]{"Paul", "mathematics", 58, 2022, 2},
+            new Object[]{"Paul", "english", 70, 2022, 2},
+            new Object[]{"Tatiana", "mathematics", 65, 2022, 2},
+            new Object[]{"Tatiana", "english", 65, 2022, 2} ,
+
+            // 2023 - s1
+            new Object[]{"Paul", "mathematics", 70, 2023, 1},
+            new Object[]{"Paul", "english", 82, 2023, 1},
+            new Object[]{"Tatiana", "mathematics", 52, 2023, 1},
+            new Object[]{"Tatiana", "english", 96, 2023, 1},
+
+            // 2023 - s2
+            new Object[]{"Paul", "mathematics", 45, 2023, 2},
+            new Object[]{"Paul", "english", 89, 2023, 2},
+            new Object[]{"Tatiana", "mathematics", 14, 2023, 2},
+            new Object[]{"Tatiana", "english", 63, 2023, 2}
+    ));
+  }
+
+  protected void beforeLoad(Map<String, List<Field>> fieldsByStore) {
+  }
+
+  @Test
+  void test() {
+    Measure sum = Functions.sum("score_sum", "score");
+    Measure comp = new ComparisonMeasureReferencePosition(
+            "compare with previous year",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            sum,
+            Map.of("semester", "s-1", "year", "y"), // FIXME add better message when "year" is missing. or handle it better.
+            new Period.Semester("semester", "year"));
+
+    QueryDto queryDto = Query.from("student")
+            .select(List.of("year", "semester", "name"), List.of(sum, comp))
+            .build();
+    Table result = this.queryExecutor.execute(queryDto);
+    result.show();
+  }
+}
