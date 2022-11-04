@@ -1,8 +1,8 @@
 export const PACKAGE = "me.paulbares.query."
 
 export {
-  QueryDto, Table, JoinType, JoinMapping,
-} from './queryDto'
+  Query, Table, JoinType, JoinMapping,
+} from './query'
 
 export {
   OrderKeyword,
@@ -34,4 +34,4 @@ export {
 
 export {
   from, fromSubQuery
-} from './query'
+} from './queryBuilder'
