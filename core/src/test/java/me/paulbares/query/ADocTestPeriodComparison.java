@@ -93,7 +93,7 @@ public abstract class ADocTestPeriodComparison {
             "compare with previous semester",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sum,
-            Map.of("semester", "s-1", "year", "y"), // FIXME add better message when "year" is missing. or handle it better.
+            Map.of("semester", "s-1"),
             new Period.Semester("semester", "year"));
 
     QueryDto queryDto = Query.from("student")

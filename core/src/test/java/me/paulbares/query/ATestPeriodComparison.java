@@ -156,10 +156,7 @@ public abstract class ATestPeriodComparison {
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            Map.of(
-                    "quarter_sales", "q-1",
-                    "year_sales", "y"
-            ),
+            Map.of("quarter_sales", "q-1"), // Test here we can omit "year" in the ref. map.
             period);
 
     var query = Query.from(this.storeName)

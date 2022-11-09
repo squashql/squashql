@@ -39,14 +39,20 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
   @Override
   protected BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
     Map<PeriodUnit, String> referencePosition = new HashMap<>();
-    Map<String, PeriodUnit> mapping = mapping(this.cmrp.period);
+    Period period = this.cmrp.period;
+    Map<String, PeriodUnit> mapping = mapping(period);
     MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
     for (Map.Entry<String, String> entry : cm.referencePosition.entrySet()) {
       PeriodUnit pu = mapping.get(entry.getKey());
       referencePosition.put(pu, entry.getValue());
       indexByPeriodUnit.put(pu, indexByColumn.getIfAbsent(entry.getKey(), -1));
     }
-    return new ShiftProcedure(this.cmrp.period, referencePosition, indexByPeriodUnit);
+    for (Map.Entry<String, PeriodUnit> entry : mapping.entrySet()) {
+      PeriodUnit pu = mapping.get(entry.getKey());
+      referencePosition.putIfAbsent(pu, "c"); // constant for missing ref.
+      indexByPeriodUnit.put(pu, indexByColumn.getIfAbsent(entry.getKey(), -1));
+    }
+    return new ShiftProcedure(period, referencePosition, indexByPeriodUnit);
   }
 
   static class ShiftProcedure implements BiPredicate<Object[], Field[]> {
@@ -74,10 +80,11 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
 
     @Override
     public boolean test(Object[] row, Field[] fields) {
-      int yearIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.YEAR, -1);
-      int semesterIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.SEMESTER, -1);
-      int quarterIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.QUARTER, -1);
-      int monthIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.MONTH, -1);
+      int unknown = -1;
+      int yearIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.YEAR, unknown);
+      int semesterIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.SEMESTER, unknown);
+      int quarterIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.QUARTER, unknown);
+      int monthIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.MONTH, unknown);
       Object yearTransformation = this.transformationByPeriodUnit.get(PeriodUnit.YEAR);
       Object semesterTransformation = this.transformationByPeriodUnit.get(PeriodUnit.SEMESTER);
       Object quarterTransformation = this.transformationByPeriodUnit.get(PeriodUnit.QUARTER);
