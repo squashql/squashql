@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import static me.paulbares.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
-import static me.paulbares.query.QueryBuilder.*;
+import static me.paulbares.query.Functions.*;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -27,7 +27,7 @@ public class TestQueryS13n {
             .withColumn("ean")
             .aggregatedMeasure("p", "price", "sum")
             .aggregatedMeasure("q", "quantity", "sum")
-            .aggregatedMeasure("priceAlias", "price", "sum", "category", QueryBuilder.eq("food"))
+            .aggregatedMeasure("priceAlias", "price", "sum", "category", Functions.eq("food"))
             .expressionMeasure("alias1", "firstMyExpression")
             .expressionMeasure("alias2", "secondMyExpression")
             .withMeasure(new BinaryOperationMeasure("plus1",
@@ -44,11 +44,11 @@ public class TestQueryS13n {
 
   @Test
   void testRoundTripWithJoinsAndConditions() {
-    QueryDto query = query();
+    QueryDto query = new QueryDto();
 
     // Table
-    var orders = table("orders");
-    var orderDetails = table("orderDetails");
+    var orders = new TableDto("orders");
+    var orderDetails = new TableDto("orderDetails");
 
     // Join
     orders.innerJoin(orderDetails, "orderDetailsId", "orderDetailsId");
@@ -85,14 +85,15 @@ public class TestQueryS13n {
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
 
     AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
-    ComparisonMeasureReferencePosition priceComp = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition priceComp =new ComparisonMeasureReferencePosition(
             "priceDiff",
             ABSOLUTE_DIFFERENCE,
             price,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
                     groupOfScenario, "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
 
     var query = new QueryDto()
             .table("products")
@@ -108,19 +109,17 @@ public class TestQueryS13n {
   @Test
   void testRoundTripPeriodComparisonQuery() {
     AggregatedMeasure sales = new AggregatedMeasure("s", "sales", "sum");
-    ComparisonMeasureReferencePosition m = QueryBuilder.periodComparison(
+    Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
+    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            Map.of("year_sales", "y-1"));
-
-    Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
-    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
+            Map.of("year_sales", "y-1"),
+            period);
 
     var query = new QueryDto()
             .table("products")
             .withColumn(SCENARIO_FIELD_NAME)
-            .withColumnSet(ColumnSetKey.PERIOD, periodCS)
             .withMeasure(m)
             .withMeasure(sales);
 

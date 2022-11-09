@@ -90,7 +90,7 @@
             <configuration>
               <target>
                 <copy todir="${basedir}/../../server/src/test/resources/">
-                  <fileset dir="${basedir}" includes="query.json"/>
+                  <fileset dir="${basedir}" includes="build-from-querydto.json,build-from-query.json"/>
                 </copy>
               </target>
             </configuration>

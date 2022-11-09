@@ -33,11 +33,6 @@ public class ParentComparisonMeasure implements Measure, ComparisonMeasure {
   }
 
   @Override
-  public ColumnSetKey getColumnSetKey() {
-    return ColumnSetKey.PARENT;
-  }
-
-  @Override
   public Measure getMeasure() {
     return this.measure;
   }

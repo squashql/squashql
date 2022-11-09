@@ -5,6 +5,7 @@ import com.clickhouse.jdbc.ClickHouseDataSource;
 import me.paulbares.ClickHouseDatastore;
 import me.paulbares.ClickHouseUtil;
 import me.paulbares.query.ColumnarTable;
+import me.paulbares.query.QueryExecutor;
 import me.paulbares.query.Table;
 import me.paulbares.store.Field;
 import org.eclipse.collections.api.tuple.Pair;
@@ -21,7 +22,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
 
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
-    String sql = SQLTranslator.translate(query, query.totals, this.fieldSupplier);
+    String sql = SQLTranslator.translate(query, query.totals, QueryExecutor.withFallback(this.fieldSupplier, String.class));
     return getResults(sql, this.datastore.dataSource, query);
   }
 
@@ -45,8 +46,8 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
       return new ColumnarTable(
               result.getOne(),
               query.measures,
-              IntStream.range(query.coordinates.size(), query.coordinates.size() + query.measures.size()).toArray(),
-              IntStream.range(0, query.coordinates.size()).toArray(),
+              IntStream.range(query.select.size(), query.select.size() + query.measures.size()).toArray(),
+              IntStream.range(0, query.select.size()).toArray(),
               result.getTwo());
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);

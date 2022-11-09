@@ -3,6 +3,8 @@ package me.paulbares.query;
 import me.paulbares.SparkDatastore;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.database.SparkQueryEngine;
+import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.SparkTransactionManager;
 import me.paulbares.transaction.TransactionManager;
@@ -116,14 +118,13 @@ public class TestITM {
 
   @Test
   void test() {
-    var our = QueryBuilder.table("our_prices");
-    var their = QueryBuilder.table("their_prices");
-    var our_to_their = QueryBuilder.table("our_stores_their_stores");
+    var our = new TableDto("our_prices");
+    var their = new TableDto("their_prices");
+    var our_to_their = new TableDto("our_stores_their_stores");
     our.innerJoin(our_to_their, "pdv", "our_store");
     our_to_their.innerJoin(their, "their_store", "competitor_concurrent_pdv");
 
-    var query = QueryBuilder
-            .query()
+    var query = new QueryDto()
             .table(our)
             .withColumn(TransactionManager.SCENARIO_FIELD_NAME)
             .withColumn("ean")

@@ -21,11 +21,6 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
   }
 
   @Override
-  public ColumnSet getColumnSet() {
-    return this.cSet;
-  }
-
-  @Override
   protected BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
     return new ShiftProcedure(this.cSet, cm.referencePosition, indexByColumn);
   }
@@ -34,7 +29,6 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
 
     final List<Pair<String, Object>> transformationByColumn;
     final ObjectIntMap<String> indexByColumn;
-
     final Map<String, List<String>> valuesByBucket = new LinkedHashMap<>();
 
     ShiftProcedure(BucketColumnSetDto cSet, Map<String, String> referencePosition, ObjectIntMap<String> indexByColumn) {

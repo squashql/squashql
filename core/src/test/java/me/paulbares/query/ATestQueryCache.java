@@ -1,11 +1,11 @@
 package me.paulbares.query;
 
 import me.paulbares.query.agg.AggregationFunction;
+import me.paulbares.query.builder.Query;
 import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.CacheStatsDto;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
-import static me.paulbares.query.QueryBuilder.*;
+import static me.paulbares.query.Functions.*;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -148,17 +148,17 @@ public abstract class ATestQueryCache {
             List.of("food", 3d));
     assertCacheStats(0, 2);
 
-    query.withCondition("category", QueryBuilder.eq("drink"));
+    query.withCondition("category", Functions.eq("drink"));
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("drink", 2d));
     assertCacheStats(0, 4);
 
-    query.withCondition("category", QueryBuilder.eq("drink"));
+    query.withCondition("category", Functions.eq("drink"));
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("drink", 2d));
     assertCacheStats(2, 4);
 
-    query.withCondition("category", QueryBuilder.in("food", "cloth"));
+    query.withCondition("category", Functions.in("food", "cloth"));
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("cloth", 10d),
@@ -168,13 +168,12 @@ public abstract class ATestQueryCache {
 
   @Test
   void testQueryWithJoin() {
-    TableDto table = QueryBuilder.table(this.storeName);
-    table.innerJoin(QueryBuilder.table("competitor"), "ean", "comp_ean");
-
-    QueryDto query = new QueryDto()
-            .table(table)
-            .withColumn("category")
-            .aggregatedMeasure("ps", "price", AggregationFunction.SUM);
+    QueryDto query = Query
+            .from(this.storeName)
+            .innerJoin("competitor")
+            .on(this.storeName, "ean", "competitor", "comp_ean")
+            .select(List.of("category"), List.of(sum("ps", "price")))
+            .build();
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("drink", 4d), // value are doubled because of the join
@@ -183,10 +182,10 @@ public abstract class ATestQueryCache {
     assertCacheStats(0, 2);
 
     // Same query but wo. join. Should not hit the cache
-    query = new QueryDto()
-            .table(this.storeName)
-            .withColumn("category")
-            .aggregatedMeasure("ps", "price", AggregationFunction.SUM);
+    query = Query
+            .from(this.storeName)
+            .select(List.of("category"), List.of(sum("ps", "price")))
+            .build();
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("drink", 2d),
@@ -318,7 +317,7 @@ public abstract class ATestQueryCache {
     assertCacheStats(cache.stats(), 0, 4);
 
     // Scope 3, should evict an entry in the cache
-    executor.execute(querySupplier.get().withCondition("category", QueryBuilder.eq("drink")));
+    executor.execute(querySupplier.get().withCondition("category", Functions.eq("drink")));
     latch.await(60, TimeUnit.SECONDS);
     CacheStatsDto stats = cache.stats();
     assertCacheStats(stats, 0, 6);

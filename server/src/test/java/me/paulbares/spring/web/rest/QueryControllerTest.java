@@ -39,9 +39,9 @@ public class QueryControllerTest {
   private Environment env;
 
   private TableDto createTableDto() {
-    var our = QueryBuilder.table("our_prices");
-    var their = QueryBuilder.table("their_prices");
-    var our_to_their = QueryBuilder.table("our_stores_their_stores");
+    var our = new TableDto("our_prices");
+    var their = new TableDto("their_prices");
+    var our_to_their = new TableDto("our_stores_their_stores");
     our.innerJoin(our_to_their, "pdv", "our_store");
     our_to_their.innerJoin(their, "their_store", "competitor_concurrent_pdv");
     return our;
@@ -200,22 +200,24 @@ public class QueryControllerTest {
               "indice_prix",
               "sum(capdv) / sum(competitor_price * quantity)");
     }
-    ComparisonMeasureReferencePosition aggregatedMeasureDiff = QueryBuilder.bucketComparison(
+    ComparisonMeasureReferencePosition aggregatedMeasureDiff = new ComparisonMeasureReferencePosition(
             "aggregatedMeasureDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             aggregatedMeasure,
             Map.of(
                     SCENARIO_FIELD_NAME, "s-1",
                     "group", "g"
-            ));
-    ComparisonMeasureReferencePosition indicePrixDiff = QueryBuilder.bucketComparison(
+            ),
+            ColumnSetKey.BUCKET);
+    ComparisonMeasureReferencePosition indicePrixDiff = new ComparisonMeasureReferencePosition(
             "indicePrixDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             indicePrix,
             Map.of(
                     SCENARIO_FIELD_NAME, "s-1",
                     "group", "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
 
     var query = new QueryDto()
             .table(createTableDto())

@@ -6,7 +6,6 @@ import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -38,7 +37,7 @@ public class SQLTranslator {
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
 
-    query.coordinates.forEach((field, values) -> groupBy.add(escape(field)));
+    query.select.forEach(field -> groupBy.add(escape(field)));
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true)));
 
 //    groupBy.forEach(selects::add); // coord first, then aggregates
@@ -93,29 +92,8 @@ public class SQLTranslator {
     }
   }
 
-  private static Map<String, ConditionDto> extractConditions(DatabaseQuery query) {
-    Map<String, ConditionDto> conditionByField = new HashMap<>();
-    query.coordinates.forEach((field, values) -> {
-      if (values != null && values.size() == 1) {
-        conditionByField.put(field, new SingleValueConditionDto(ConditionType.EQ, values.get(0)));
-      } else if (values != null && values.size() > 1) {
-        conditionByField.put(field, new InConditionDto(values));
-      }
-    });
-
-    query.conditions.forEach((field, condition) -> {
-      ConditionDto old = conditionByField.get(field);
-      if (old != null) {
-        throw new IllegalArgumentException(String.format("A condition for field %s already exists %s", field, old));
-      }
-      conditionByField.put(field, condition);
-    });
-
-    return conditionByField;
-  }
-
   protected static void addConditions(StringBuilder statement, DatabaseQuery query, Function<String, Field> fieldProvider) {
-    Map<String, ConditionDto> conditionByField = extractConditions(query);
+    Map<String, ConditionDto> conditionByField = query.conditions;
 
     if (!conditionByField.isEmpty()) {
       String andConditions = conditionByField.entrySet()
@@ -132,7 +110,7 @@ public class SQLTranslator {
     for (JoinDto join : tableQuery.joins) {
       statement
               .append(" ")
-              .append(join.type)
+              .append(join.type.name().toLowerCase())
               .append(" join ")
               .append(queryRewriter.tableName(join.table.name))
               .append(" on ");

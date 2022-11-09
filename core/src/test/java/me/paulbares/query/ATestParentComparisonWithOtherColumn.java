@@ -1,5 +1,6 @@
 package me.paulbares.query;
 
+import me.paulbares.query.builder.Query;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
@@ -66,17 +67,12 @@ public abstract class ATestParentComparisonWithOtherColumn {
 
   @Test
   void testSimple() {
-    Measure amount = QueryBuilder.sum("amount", "amount");
-    QueryDto query = QueryBuilder.query()
-            .table(this.storeName)
-            .withColumn("continent")
-            .withColumn("country")
-            .withColumn("city")
-            .withMeasure(amount);
-
-    ParentComparisonMeasure pOp = QueryBuilder.parentComparison("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
-
-    query.withMeasure(pOp);
+    Measure amount = Functions.sum("amount", "amount");
+    ParentComparisonMeasure pOp = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("continent", "country", "city"), List.of(amount, pOp))
+            .build();
 
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -87,17 +83,12 @@ public abstract class ATestParentComparisonWithOtherColumn {
 
   @Test
   void testSkipMiddleAncestors() {
-    Measure amount = QueryBuilder.sum("amount", "amount");
-    QueryDto query = QueryBuilder.query()
-            .table(this.storeName)
-            .withColumn("continent")
-            .withColumn("country")
-            .withColumn("city")
-            .withMeasure(amount);
-
-    ParentComparisonMeasure pOp = QueryBuilder.parentComparison("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "continent"));
-
-    query.withMeasure(pOp);
+    Measure amount = Functions.sum("amount", "amount");
+    ParentComparisonMeasure pOp = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "continent"));
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("continent", "country", "city"), List.of(amount, pOp))
+            .build();
 
     Table result = this.executor.execute(query);
     // Note: contrary to what you might expect, the result here is the same than having List.of("city", "country","continent")
@@ -110,18 +101,12 @@ public abstract class ATestParentComparisonWithOtherColumn {
 
   @Test
   void testCrossjoinWithOtherColumn() {
-    Measure amount = QueryBuilder.sum("amount", "amount");
-    QueryDto query = QueryBuilder.query()
-            .table(this.storeName)
-            .withColumn("spending_category")
-            .withColumn("continent")
-            .withColumn("country")
-            .withColumn("city")
-            .withMeasure(amount);
-
-    ParentComparisonMeasure pOp = QueryBuilder.parentComparison("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
-
-    query.withMeasure(pOp);
+    Measure amount = Functions.sum("amount", "amount");
+    ParentComparisonMeasure pOp = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("spending_category", "continent", "country", "city"), List.of(amount, pOp))
+            .build();
 
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -138,16 +123,12 @@ public abstract class ATestParentComparisonWithOtherColumn {
 
   @Test
   void testCrossjoinWithOtherColumnAndMissingAncestorsInQuery() {
-    Measure amount = QueryBuilder.sum("amount", "amount");
-    QueryDto query = QueryBuilder.query()
-            .table(this.storeName)
-            .withColumn("spending_category")
-            .withColumn("city")
-            .withMeasure(amount);
-
-    ParentComparisonMeasure pOp = QueryBuilder.parentComparison("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
-
-    query.withMeasure(pOp);
+    Measure amount = Functions.sum("amount", "amount");
+    ParentComparisonMeasure pOp = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("spending_category", "city"), List.of(amount, pOp))
+            .build();
 
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(

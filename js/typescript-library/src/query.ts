@@ -1,7 +1,7 @@
 import {Measure} from "./measures";
 import {Condition} from "./conditions";
 import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order";
-import {BucketColumnSet, ColumnSet, ColumnSetKey, PeriodColumnSet} from "./columnsets";
+import {BucketColumnSet, ColumnSet, ColumnSetKey} from "./columnsets";
 
 export class Query {
   columns: Array<string>
@@ -11,6 +11,7 @@ export class Query {
   conditions: Map<string, Condition>
   orders: Map<string, Order>
   subQuery: Query
+  limit: number = -1
 
   constructor() {
     this.columns = []
@@ -45,11 +46,6 @@ export class Query {
     return this
   }
 
-  withPeriodColumnSet(columSet: PeriodColumnSet): Query {
-    this.columnSets.set(ColumnSetKey.PERIOD, columSet)
-    return this
-  }
-
   withMeasure(measure: Measure): Query {
     this.measures.push(measure)
     return this
@@ -74,6 +70,7 @@ export class Query {
       "measures": this.measures,
       "conditions": Object.fromEntries(this.conditions),
       "orders": Object.fromEntries(this.orders),
+      "limit": this.limit
     }
   }
 }
@@ -98,8 +95,8 @@ export class Table {
 }
 
 export enum JoinType {
-  INNER = "inner",
-  LEFT = "left",
+  INNER = "INNER",
+  LEFT = "LEFT",
 }
 
 class Join {

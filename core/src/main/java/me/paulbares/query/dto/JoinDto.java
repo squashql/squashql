@@ -13,14 +13,14 @@ import java.util.List;
 public class JoinDto {
 
   public TableDto table;
-  public String type; // inner|left
+  public JoinType type; // inner|left
   public List<JoinMappingDto> mappings;
 
-  public JoinDto(TableDto table, String type, JoinMappingDto mapping) {
+  public JoinDto(TableDto table, JoinType type, JoinMappingDto mapping) {
     this(table, type, Collections.singletonList(mapping));
   }
 
-  public JoinDto(TableDto table, String type, List<JoinMappingDto> mappings) {
+  public JoinDto(TableDto table, JoinType type, List<JoinMappingDto> mappings) {
     this.table = table;
     this.type = type;
     this.mappings = mappings;

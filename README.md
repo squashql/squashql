@@ -46,7 +46,7 @@ $JAVA_HOME/bin/jshell --class-path target/http-client-0.1-SNAPSHOT.jar
 
 ```jshelllanguage
 import me.paulbares.client.http.*
-import static me.paulbares.query.QueryBuilder.*
+import static me.paulbares.query.Functions.*
 
 var querier = new HttpClientQuerier("http://localhost:8080")
 

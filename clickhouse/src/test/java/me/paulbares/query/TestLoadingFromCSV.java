@@ -2,6 +2,7 @@ package me.paulbares.query;
 
 import me.paulbares.ClickHouseDatastore;
 import me.paulbares.query.database.ClickHouseQueryEngine;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.ClickHouseTransactionManager;
 import org.assertj.core.api.Assertions;
@@ -66,11 +67,11 @@ public class TestLoadingFromCSV {
 
     ClickHouseQueryEngine engine = new ClickHouseQueryEngine(datastore);
     Table table = new QueryExecutor(engine)
-            .execute(QueryBuilder.query()
+            .execute(new QueryDto()
                     .table(storeName)
                     .withColumn(SCENARIO_FIELD_NAME)
                     .aggregatedMeasure("count", "*", "count"));
-    Assertions.assertThat(table).containsExactlyInAnyOrder(Arrays.asList(null, 91L)); // empty string because no scenario in
+    Assertions.assertThat(table).containsExactlyInAnyOrder(Arrays.asList(null, 91L));
     // csv file
   }
 }

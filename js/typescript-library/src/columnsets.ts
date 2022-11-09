@@ -2,40 +2,26 @@ import {PACKAGE} from "./index";
 
 export interface ColumnSet {
   readonly class: string
+  readonly key: string
 }
 
 export enum ColumnSetKey {
   BUCKET = "BUCKET",
-  PERIOD = "PERIOD",
-  PARENT = "PARENT",
 }
 
-export class BucketColumnSet {
-  class: string = PACKAGE + "dto.BucketColumnSetDto"
+export class BucketColumnSet implements ColumnSet {
+  readonly class: string = PACKAGE + "dto.BucketColumnSetDto"
+  readonly key: ColumnSetKey = ColumnSetKey.BUCKET
 
-  constructor(private name: string, private field: string, private values: Map<string, Array<string>>) {
+  constructor(private columnName: string, private field: string, private values: Map<string, Array<string>>) {
   }
 
   toJSON() {
     return {
       "@class": this.class,
-      "name": this.name,
+      "name": this.columnName,
       "field": this.field,
       "values": Object.fromEntries(this.values),
-    }
-  }
-}
-
-export class PeriodColumnSet {
-  class: string = PACKAGE + "dto.PeriodColumnSetDto"
-
-  constructor(private period: Period) {
-  }
-
-  toJSON() {
-    return {
-      "@class": this.class,
-      "period": this.period,
     }
   }
 }
@@ -45,7 +31,7 @@ export interface Period {
 }
 
 export class Month implements Period {
-  class: string = PACKAGE + "dto.Period$Month"
+  readonly class: string = PACKAGE + "dto.Period$Month"
 
   constructor(private month: string, private year: string) {
   }
@@ -60,7 +46,7 @@ export class Month implements Period {
 }
 
 export class Quarter implements Period {
-  class: string = PACKAGE + "dto.Period$Quarter"
+  readonly class: string = PACKAGE + "dto.Period$Quarter"
 
   constructor(private quarter: string, private year: string) {
   }
@@ -75,7 +61,7 @@ export class Quarter implements Period {
 }
 
 export class Semester implements Period {
-  class: string = PACKAGE + "dto.Period$Semester"
+  readonly class: string = PACKAGE + "dto.Period$Semester"
 
   constructor(private semester: string, private year: string) {
   }
@@ -90,7 +76,7 @@ export class Semester implements Period {
 }
 
 export class Year implements Period {
-  class: string = PACKAGE + "dto.Period$Year"
+  readonly class: string = PACKAGE + "dto.Period$Year"
 
   constructor(private year: string) {
   }
@@ -102,4 +88,3 @@ export class Year implements Period {
     }
   }
 }
-

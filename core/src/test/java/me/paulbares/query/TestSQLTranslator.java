@@ -12,7 +12,9 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.function.Function;
 
-import static me.paulbares.query.QueryBuilder.*;
+import static me.paulbares.query.Functions.*;
+import static me.paulbares.query.dto.JoinType.INNER;
+import static me.paulbares.query.dto.JoinType.LEFT;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 public class TestSQLTranslator {
@@ -42,8 +44,8 @@ public class TestSQLTranslator {
   @Test
   void testGroupBy() {
     DatabaseQuery query = new DatabaseQuery()
-            .wildcardCoordinate(SCENARIO_FIELD_NAME)
-            .wildcardCoordinate("type")
+            .withSelect(SCENARIO_FIELD_NAME)
+            .withSelect("type")
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
             .aggregatedMeasure("delta.sum", "delta", "sum")
             .aggregatedMeasure("pnl.avg", "pnl", "avg")
@@ -52,36 +54,6 @@ public class TestSQLTranslator {
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg` from " + BASE_STORE_NAME + " group by " +
                     "`scenario`, `type`");
-  }
-
-  @Test
-  void testSingleConditionSingleField() {
-    DatabaseQuery query = new DatabaseQuery()
-            .coordinate(SCENARIO_FIELD_NAME, "Base")
-            .wildcardCoordinate("type")
-            .aggregatedMeasure("pnl.sum", "pnl", "sum")
-            .aggregatedMeasure("delta.sum", "delta", "sum")
-            .aggregatedMeasure("pnl.avg", "pnl", "avg")
-            .table(BASE_STORE_NAME);
-
-    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg` from "
-                    + BASE_STORE_NAME + " where " + "`scenario` = 'Base' group by `scenario`, `type`");
-  }
-
-  @Test
-  void testConditionsSeveralField() {
-    DatabaseQuery query = new DatabaseQuery()
-            .coordinate(SCENARIO_FIELD_NAME, "Base")
-            .coordinates("type", "A", "B")
-            .aggregatedMeasure("pnl.sum", "pnl", "sum")
-            .aggregatedMeasure("delta.sum", "delta", "sum")
-            .aggregatedMeasure("pnl.avg", "pnl", "avg")
-            .table(BASE_STORE_NAME);
-
-    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg` from "
-                    + BASE_STORE_NAME + " where `scenario` = 'Base' and `type` in ('A', 'B') group by `scenario`, `type`");
   }
 
   @Test
@@ -98,11 +70,11 @@ public class TestSQLTranslator {
   @Test
   void testWithTotalsTop() {
     DatabaseQuery query = new DatabaseQuery()
-            .wildcardCoordinate(SCENARIO_FIELD_NAME)
+            .withSelect(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
-    Assertions.assertThat(SQLTranslator.translate(query, QueryBuilder.TOP, fieldProvider))
+    Assertions.assertThat(SQLTranslator.translate(query, Functions.TOP, fieldProvider))
             .isEqualTo("select `scenario`, sum(`price`) as `pnl.sum` from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
                     "order by case when `scenario` is null or `scenario` = '' then 0 else 1 end, `scenario`  asc");
   }
@@ -110,11 +82,11 @@ public class TestSQLTranslator {
   @Test
   void testWithTotalsBottom() {
     DatabaseQuery query = new DatabaseQuery()
-            .wildcardCoordinate(SCENARIO_FIELD_NAME)
+            .withSelect(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
-    Assertions.assertThat(SQLTranslator.translate(query, QueryBuilder.BOTTOM, fieldProvider))
+    Assertions.assertThat(SQLTranslator.translate(query, Functions.BOTTOM, fieldProvider))
             .isEqualTo("select `scenario`, sum(`price`) as `pnl.sum` from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
                     "order by case when `scenario` is null or `scenario` = '' then 1 else 0 end, `scenario`  asc");
   }
@@ -133,11 +105,11 @@ public class TestSQLTranslator {
             new JoinMappingDto(table1.name, "table1_field_2", table4.name, "table4_id_1"),
             new JoinMappingDto(table1.name, "table1_field_3", table4.name, "table4_id_2"));
 
-    baseStore.joins.add(new JoinDto(table1, "inner", mappingBaseToTable1));
-    baseStore.joins.add(new JoinDto(table2, "left", mappingBaseToTable2));
+    baseStore.joins.add(new JoinDto(table1, INNER, mappingBaseToTable1));
+    baseStore.joins.add(new JoinDto(table2, LEFT, mappingBaseToTable2));
 
-    table1.joins.add(new JoinDto(table4, "inner", mappingTable1ToTable4));
-    table2.joins.add(new JoinDto(table3, "inner", mappingTable2ToTable3));
+    table1.joins.add(new JoinDto(table4, INNER, mappingTable1ToTable4));
+    table2.joins.add(new JoinDto(table3, INNER, mappingTable2ToTable3));
 
     DatabaseQuery query = new DatabaseQuery()
             .table(baseStore)
@@ -163,10 +135,10 @@ public class TestSQLTranslator {
             new JoinMappingDto(c.name, "c_other_id", b.name, "b_other_id"),
             new JoinMappingDto(c.name, "c_f", a.name, "a_f"));
 
-    a.join(b, "inner", jAToB);
-    a.join(c, "left", jCToAB);
+    a.join(b, INNER, jAToB);
+    a.join(c, LEFT, jCToAB);
 
-    DatabaseQuery query = new DatabaseQuery().table(a).wildcardCoordinate("c.y");
+    DatabaseQuery query = new DatabaseQuery().table(a).withSelect("c.y");
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select `c.y` from A " +
@@ -176,15 +148,15 @@ public class TestSQLTranslator {
   }
 
   @Test
-  void testConditions() {
+  void testConditionsWithValue() {
     DatabaseQuery query = new DatabaseQuery()
-            .wildcardCoordinate(SCENARIO_FIELD_NAME)
-            .wildcardCoordinate("type")
+            .withSelect(SCENARIO_FIELD_NAME)
+            .withSelect("type")
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
             .condition(SCENARIO_FIELD_NAME, and(eq("base"), eq("s1"), eq("s2")))
+            .condition("delta", ge(123d))
             .condition("type", or(eq("A"), eq("B")))
             .condition("pnl", lt(10d))
-            .condition("delta", ge(123d))
             .table(BASE_STORE_NAME);
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum` from " + BASE_STORE_NAME
@@ -200,13 +172,13 @@ public class TestSQLTranslator {
     TableDto a = new TableDto("a");
     DatabaseQuery subQuery = new DatabaseQuery()
             .table(a)
-            .wildcardCoordinate("c1")
-            .wildcardCoordinate("c3")
+            .withSelect("c1")
+            .withSelect("c3")
             .withMeasure(avg("mean", "c2"));
 
     DatabaseQuery query = new DatabaseQuery()
             .subQuery(subQuery)
-            .wildcardCoordinate("c3") // c3 needs to be in the subquery
+            .withSelect("c3") // c3 needs to be in the subquery
             .withMeasure(sum("sum GT", "mean"))
             .condition("type", eq("myType"));
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))

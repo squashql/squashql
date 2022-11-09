@@ -17,4 +17,7 @@ public interface ColumnSet {
 
   @JsonIgnore
   List<Field> getNewColumns();
+
+  @JsonIgnore
+  ColumnSetKey getColumnSetKey();
 }

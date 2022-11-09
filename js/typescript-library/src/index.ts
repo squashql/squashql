@@ -9,9 +9,10 @@ export {
 } from './order'
 
 export {
-  Measure, AggregatedMeasure, ExpressionMeasure, ComparisonMeasureReferencePosition, ParentComparisonMeasure,
+  Measure, AggregatedMeasure, ExpressionMeasure, ParentComparisonMeasure,
   sum, min, max, avg, sumIf, countIf, plus, minus, multiply, divide,
   integer, decimal,
+  comparisonMeasureWithPeriod, comparisonMeasureWithBucket,
   count,
   ComparisonMethod,
 } from './measures'
@@ -23,10 +24,14 @@ export {
 } from './conditions'
 
 export {
-  ColumnSet, ColumnSetKey, PeriodColumnSet, BucketColumnSet,
+  ColumnSet, BucketColumnSet,
   Period, Month, Year, Quarter, Semester,
 } from './columnsets'
 
 export {
   Querier, QueryResult, MetadataResult, StoreMetadata, MetadataItem, SimpleTable
 } from './querier'
+
+export {
+  from, fromSubQuery
+} from './queryBuilder'
