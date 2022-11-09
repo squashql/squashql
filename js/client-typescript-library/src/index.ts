@@ -30,8 +30,8 @@ const q = from("student")
         .select(["year", "semester", "name"], [], [scoreSum, comparisonScore])
         .build();
 
-// querier.execute0(q).then(r => {
-//   console.log(r);
-//   // console.log(`Metadata result: ${toString(r.metadata)}`);
-//   // console.log(`Table: ${toString(r.table)}`);
-// })
+querier.execute0(q).then(r => {
+  console.log(r);
+  // console.log(`Metadata result: ${toString(r.metadata)}`);
+  // console.log(`Table: ${toString(r.table)}`);
+})

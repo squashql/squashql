@@ -1,4 +1,4 @@
-import {JoinMapping, JoinType, QueryDto, Table} from "./queryDto"
+import {JoinMapping, JoinType, Query, Table} from "./query"
 import {
   AggregatedMeasure,
   BinaryOperationMeasure,
@@ -20,7 +20,7 @@ export function generateFromQueryDto() {
   table.innerJoin(refTable, "fromField", "toField")
   table.join(new Table("a"), JoinType.LEFT, [new JoinMapping("a", "a_id", "myTable", "id")])
 
-  const q = new QueryDto()
+  const q = new Query()
   q.onTable(table)
           .withColumn("a")
           .withColumn("b")
@@ -67,7 +67,7 @@ export function generateFromQueryDto() {
   // SubQuery - Note this is not valid because a table has been set above, but we are just testing
   // the json here.
 
-  const subQ = new QueryDto()
+  const subQ = new Query()
   subQ.onTable(table)
           .withColumn("aa")
           .withMeasure(sum("sum_aa", "f"))

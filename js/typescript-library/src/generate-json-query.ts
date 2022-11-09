@@ -1,4 +1,4 @@
-import {from} from "./query";
+import {from} from "./queryBuilder";
 import {eq, gt} from "./conditions";
 import {BucketColumnSet, Month} from "./columnsets";
 import {avg, comparisonMeasureWithPeriod, ComparisonMethod, sum} from "./measures";
