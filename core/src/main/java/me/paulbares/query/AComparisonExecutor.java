@@ -28,11 +28,10 @@ public abstract class AComparisonExecutor {
           Table writeToTable,
           Table readFromTable) {
     MutableObjectIntMap<String> indexByColumn = new ObjectIntHashMap<>();
-    cm.referencePosition.entrySet().forEach(entry -> {
-      int columnIndex = readFromTable.columnIndex(entry.getKey());
+    for (int columnIndex : readFromTable.columnIndices()) {
       int index = Arrays.binarySearch(readFromTable.columnIndices(), columnIndex);
-      indexByColumn.put(entry.getKey(), index);
-    });
+      indexByColumn.put(readFromTable.headers().get(columnIndex).name(), index);
+    }
     BiPredicate<Object[], Field[]> procedure = createShiftProcedure(cm, indexByColumn);
 
     Object[] buffer = new Object[readFromTable.columnIndices().length];
