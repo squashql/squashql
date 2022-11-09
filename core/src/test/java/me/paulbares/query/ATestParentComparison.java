@@ -1,6 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.builder.Query;
+import me.paulbares.query.context.Totals;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
@@ -12,8 +13,7 @@ import org.junit.jupiter.api.*;
 import java.util.Arrays;
 import java.util.List;
 
-import static me.paulbares.query.Functions.eq;
-import static me.paulbares.query.Functions.in;
+import static me.paulbares.query.Functions.*;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -51,14 +51,14 @@ public abstract class ATestParentComparison {
     beforeLoading(List.of(city, country, continent, population));
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
-            new Object[]{"paris", "france", "eu", 2},
+            new Object[]{"paris", "france", "eu", 2d},
             new Object[]{"lyon", "france", "eu", 0.5},
-            new Object[]{"london", "uk", "eu", 9},
-            new Object[]{"nyc", "usa", "am", 8},
-            new Object[]{"chicago", "usa", "am", 3},
-            new Object[]{"toronto", "canada", "am", 3},
-            new Object[]{"montreal", "canada", "am", 2},
-            new Object[]{"otawa", "canada", "am", 1}
+            new Object[]{"london", "uk", "eu", 9d},
+            new Object[]{"nyc", "usa", "am", 8d},
+            new Object[]{"chicago", "usa", "am", 3d},
+            new Object[]{"toronto", "canada", "am", 3d},
+            new Object[]{"montreal", "canada", "am", 2d},
+            new Object[]{"otawa", "canada", "am", 1d}
     ));
   }
 
@@ -68,7 +68,7 @@ public abstract class ATestParentComparison {
   @Test
   void testSimple() {
     Measure pop = Functions.sum("population", "population");
-    ParentComparisonMeasure pOp = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of("continent", "country", "city"), List.of(pop, pOp))
@@ -105,7 +105,7 @@ public abstract class ATestParentComparison {
   @Test
   void testClearFilter() {
     Measure pop = Functions.sum("population", "population");
-    ParentComparisonMeasure pOp = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
             .where("city", in("montreal", "toronto"))
@@ -144,7 +144,7 @@ public abstract class ATestParentComparison {
   @Test
   void testWithMissingAncestor() {
     Measure pop = Functions.sum("population", "population");
-    ParentComparisonMeasure pOp = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("country", "continent"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of("continent", "country", "city"), List.of(pop, pOp))
@@ -166,7 +166,7 @@ public abstract class ATestParentComparison {
   @Test
   void testWithCalculatedMeasure() {
     Measure pop = Functions.multiply("double", Functions.sum("population", "population"), Functions.integer(2));
-    ParentComparisonMeasure pOp = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of("continent", "country", "city"), List.of(pop, pOp))
@@ -175,5 +175,20 @@ public abstract class ATestParentComparison {
     Assertions.assertThatThrownBy(() -> this.executor.execute(query))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("primitive measure");
+  }
+
+  @Test
+  void testSimpleWithTotals() {
+    Measure pop = Functions.sum("population", "population");
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("continent", "country", "city"), List.of(pop, pOp))
+            .build();
+
+    query.context(Totals.KEY, TOP);
+    Table result = this.executor.execute(query);
+    result.show();
+    Assertions.fail("todo");
   }
 }

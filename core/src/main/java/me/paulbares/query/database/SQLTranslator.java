@@ -1,6 +1,5 @@
 package me.paulbares.query.database;
 
-import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.*;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
@@ -18,18 +17,15 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 public class SQLTranslator {
 
+  public static final String TOTAL_CELL = "___total___";
+
   private static final DefaultQueryRewriter DEFAULT_QUERY_REWRITER = new DefaultQueryRewriter();
 
   public static String translate(DatabaseQuery query, Function<String, Field> fieldProvider) {
-    return translate(query, null, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));
-  }
-
-  public static String translate(DatabaseQuery query, Totals totals, Function<String, Field> fieldProvider) {
-    return translate(query, totals, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));
+    return translate(query, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));
   }
 
   public static String translate(DatabaseQuery query,
-                                 Totals totals,
                                  Function<String, Field> fieldProvider,
                                  QueryRewriter queryRewriter,
                                  BiFunction<QueryRewriter, String, String> tableTransformer) {
@@ -45,49 +41,69 @@ public class SQLTranslator {
 
     StringBuilder statement = new StringBuilder();
     statement.append("select ");
-    Function<String, String> f = s -> String.format("COALESCE(%s, 'All %s') AS %s", s, s, s);
+    Function<String, String> f = s -> String.format("COALESCE(%s, '%s') AS %s", s, TOTAL_CELL, s);
 //    statement.append(selects.stream().collect(Collectors.joining(", ")));
     statement.append(Stream.concat(groupBy.stream().map(f::apply), aggregates.stream()).collect(Collectors.joining(", ")));
 //    statement.append(aggregates.stream().collect(Collectors.joining(", ")));
     statement.append(" from ");
     if (query.subQuery != null) {
       statement.append("(");
-      statement.append(translate(query.subQuery, totals, fieldProvider, queryRewriter, tableTransformer));
+      statement.append(translate(query.subQuery, fieldProvider, queryRewriter, tableTransformer));
       statement.append(")");
     } else {
       statement.append(tableTransformer.apply(queryRewriter, query.table.name));
       addJoins(statement, query.table, queryRewriter);
     }
     addConditions(statement, query, fieldProvider);
-    addGroupBy(totals, groupBy, statement);
+    addGroupByAndRollUp(groupBy, query.rollUp.stream().map(SqlUtils::escape).toList(), statement);
     return statement.toString();
   }
 
-  private static void addGroupBy(Totals totals, List<String> groupBy, StringBuilder statement) {
+  private static void addGroupByAndRollUp(List<String> groupBy, List<String> rollUp, StringBuilder statement) {
     if (!groupBy.isEmpty()) {
       statement.append(" group by ");
-      if (totals != null) {
-        statement.append("rollup(");
-      }
-      statement.append(groupBy.stream().collect(Collectors.joining(", ")));
+      boolean hasRollUp = rollUp != null && !rollUp.isEmpty();
+      List<String> groupByOnly = new ArrayList<>();
+      List<String> rollUpOnly = new ArrayList<>();
 
-      if (totals != null) {
-        statement.append(") order by ");
-        String order = " asc"; // default for now
-        // https://stackoverflow.com/a/7862601
-        // to move totals and subtotals at the top or at the bottom and keep normal order for other rows.
-        String position = totals.position == null ? Totals.POSITION_TOP : totals.position; // default top
-        // Note: with Spark, values of totals are set to null but for Clickhouse, they are set to '' for string type,
-        // 0 for integer... this is why there is the following case condition (for clickhouse, only string type is
-        // handled
-        // for the moment).
-        String orderBy = "case when %s is null or %s = '' then %d else %d end, %s %s";
-        int first = position.equals(Totals.POSITION_TOP) ? 0 : 1;
-        int second = first ^ 1;
-        String orderByStatement = groupBy.stream()
-                .map(g -> orderBy.formatted(g, g, first, second, g, order))
-                .collect(Collectors.joining(", "));
-        statement.append(orderByStatement);
+      for (String s : groupBy) {
+        if (hasRollUp && rollUp.contains(s)) {
+          rollUpOnly.add(s);
+        } else {
+          groupByOnly.add(s);
+        }
+      }
+
+      statement.append(groupByOnly.stream().collect(Collectors.joining(", ")));
+
+      if (hasRollUp) {
+        if (!groupByOnly.isEmpty()) {
+          statement.append(" ,");
+        }
+        statement.append(" rollup(");
+      }
+
+      statement.append(rollUpOnly.stream().collect(Collectors.joining(", ")));
+
+      if (hasRollUp) {
+        statement.append(") ");
+        // Deactivate order for now
+        //        statement.append(") order by ");
+        //        String order = " asc"; // default for now
+        //        // https://stackoverflow.com/a/7862601
+        //        // to move totals and subtotals at the top or at the bottom and keep normal order for other rows.
+        //        String position = totals.position == null ? Totals.POSITION_TOP : totals.position; // default top
+        //        // Note: with Spark, values of totals are set to null but for Clickhouse, they are set to '' for string type,
+        //        // 0 for integer... this is why there is the following case condition (for clickhouse, only string type is
+        //        // handled
+        //        // for the moment).
+        //        String orderBy = "case when %s is null or %s = '' then %d else %d end, %s %s";
+        //        int first = position.equals(Totals.POSITION_TOP) ? 0 : 1;
+        //        int second = first ^ 1;
+        //        String orderByStatement = groupBy.stream()
+        //                .map(g -> orderBy.formatted(g, g, first, second, g, order))
+        //                .collect(Collectors.joining(", "));
+        //        statement.append(orderByStatement);
       }
     }
   }

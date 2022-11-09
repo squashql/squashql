@@ -1,6 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.builder.Query;
+import me.paulbares.query.context.Totals;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import static me.paulbares.query.ComparisonMethod.RELATIVE_DIFFERENCE;
+import static me.paulbares.query.Functions.TOP;
 import static me.paulbares.query.Functions.eq;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
@@ -247,5 +249,25 @@ public abstract class ATestBucketComparison {
             List.of("C", MAIN_SCENARIO_NAME, 3l),
             List.of("C", "s2", 3l),
             List.of("C", "s1", 3l));
+  }
+
+  @Test
+  void testTotal() {
+    // The following order should be respected even if columns are ordered by default.
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, SCENARIO_FIELD_NAME)
+            .withNewBucket("B", List.of("s1", MAIN_SCENARIO_NAME))
+            .withNewBucket("A", List.of("s2", MAIN_SCENARIO_NAME, "s1"))
+            .withNewBucket("C", List.of(MAIN_SCENARIO_NAME, "s2", "s1"));
+
+    var query = new QueryDto()
+            .table(this.storeName)
+            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
+            .withMeasure(CountMeasure.INSTANCE);
+
+    query.context(Totals.KEY, TOP);
+
+    Table dataset = this.executor.execute(query);
+    dataset.show();
+    Assertions.fail("todo");
   }
 }

@@ -23,7 +23,7 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
 
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
-    String sql = SQLTranslator.translate(query, query.totals, this.fieldSupplier);
+    String sql = SQLTranslator.translate(query, this.fieldSupplier);
     return getResults(sql, this.datastore.spark, query);
   }
 

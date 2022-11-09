@@ -7,7 +7,6 @@ import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ExpressionMeasure;
 import me.paulbares.query.Measure;
-import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.TableDto;
 
@@ -26,10 +25,15 @@ public class DatabaseQuery {
   public List<String> select = new ArrayList<>();
   public Map<String, ConditionDto> conditions = new LinkedHashMap<>();
   public List<Measure> measures = new ArrayList<>();
-  public Totals totals;
+  public List<String> rollUp = new ArrayList<>();
 
   public DatabaseQuery withSelect(String field) {
     this.select.add(field);
+    return this;
+  }
+
+  public DatabaseQuery withRollUp(String field) {
+    this.rollUp.add(field);
     return this;
   }
 

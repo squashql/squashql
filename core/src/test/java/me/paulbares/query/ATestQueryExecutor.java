@@ -99,9 +99,10 @@ public abstract class ATestQueryExecutor {
     QueryDto query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
+            .withColumn("category")
             .aggregatedMeasure("p", "price", "sum")
             .aggregatedMeasure("q", "quantity", "sum");
-    query.context(Totals.KEY, QueryBuilder.TOP);
+    query.context(Totals.KEY, TOP);
     Table result = this.queryExecutor.execute(query);
     result.show();
     Assertions.fail("todo");

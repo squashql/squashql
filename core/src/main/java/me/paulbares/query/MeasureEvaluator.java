@@ -3,13 +3,10 @@ package me.paulbares.query;
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.store.Field;
-import org.eclipse.collections.api.map.primitive.MutableIntIntMap;
-import org.eclipse.collections.impl.map.mutable.primitive.MutableIntIntMapFactoryImpl;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -57,7 +54,6 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
 
   @Override
   public Void visit(ComparisonMeasureReferencePosition cm) {
-    Map<ColumnSetKey, Function<ColumnSet, AComparisonExecutor>> m = Map.of(BUCKET, cs -> new BucketComparisonExecutor((BucketColumnSetDto) cs));
     AComparisonExecutor executor;
     if (cm.columnSetKey == BUCKET) {
       ColumnSet cs = this.executionContext.query().columnSets.get(cm.columnSetKey);
@@ -72,12 +68,15 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
         }
       }
       executor = new PeriodComparisonExecutor(cm);
+    } else if (cm.ancestors != null) {
+      executor = new ParentComparisonExecutor(cm);
     } else {
       throw new IllegalArgumentException(String.format("Comparison measure not correctly defined (%s). It should have a period or columnSetKey parameter", cm));
     }
 
     if (executor != null) {
-      QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.executionContext.query(), cm, this.executionContext.queryScope());
+      QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(
+              this.executionContext.query(), cm, this.executionContext.queryScope(), this.fieldSupplier);
       Table readFromTable = this.executionContext.tableByScope().get(readScope); // Table where to read the aggregates
       executeComparator(cm, this.executionContext.writeToTable(), readFromTable, executor);
     }
@@ -90,49 +89,63 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
     writeToTable.addAggregates(field, cm, agg);
   }
 
-  @Override
-  public Void visit(ParentComparisonMeasure pcm) {
-    Table whereToWrite = this.executionContext.writeToTable();
-    QueryExecutor.QueryScope parentScope = MeasureUtils.getParentScopeWithClearedConditions(this.executionContext.queryScope(), pcm, this.fieldSupplier);
-    Table whereToRead = this.executionContext.tableByScope().get(parentScope);
-    List<Object> aggregateValues = whereToWrite.getAggregateValues(pcm.measure);
-    List<Object> parentAggregateValues = whereToRead.getAggregateValues(pcm.measure);
-    List<Object> result = new ArrayList<>((int) whereToWrite.count());
-    BiFunction<Number, Number, Number> divide = BinaryOperations.createComparisonBiFunction(ComparisonMethod.DIVIDE, double.class);
+//  @Override
+//  public Void visit(ParentComparisonMeasure pcm) {
+//    ParentComparisonExecutor executor = new ParentComparisonExecutor(pcm);
+//    QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.executionContext.query(), cm, this.executionContext.queryScope());
+//    Table readFromTable = this.executionContext.tableByScope().get(readScope); // Table where to read the aggregates
+//    Table readFromTable = this.executionContext.writeToTable(); // FIXME should be the same than above
+//    ComparisonMeasureReferencePosition cm = new ComparisonMeasureReferencePosition(pcm.alias, pcm.comparisonMethod, pcm.measure, true);
+//    executeComparator(cm, this.executionContext.writeToTable(), readFromTable, executor);
+//    List<Object> agg = executor.compare(cm, this.executionContext.writeToTable(), readFromTable);
+//    Field field = new Field(cm.alias(), BinaryOperations.getComparisonOutputType(pcm.comparisonMethod, this.executionContext.writeToTable().getField(pcm.measure).type()));
+//    this.executionContext.writeToTable().addAggregates(field, pcm, agg);
+//    return null;
+//  }
 
-    MutableIntIntMap mapping = MutableIntIntMapFactoryImpl.INSTANCE.empty();
-    for (int index : whereToRead.columnIndices()) {
-      Field field = whereToRead.headers().get(index);
-      int indexWhereToWrite = whereToWrite.index(field);
-      mapping.put(index, indexWhereToWrite);
-    }
-
-    int[] rowIndex = new int[1];
-    whereToWrite.forEach(row -> {
-      // Start - Shift operation
-      Object[] parentRow = new Object[parentScope.columns().size()];
-      for (int columnIndex : whereToRead.columnIndices()) {
-        int index = mapping.getIfAbsent(columnIndex, -1);
-        parentRow[columnIndex] = row.get(index);
-      }
-      // End - Shift operation
-
-      int position = whereToRead.pointDictionary().getPosition(parentRow);
-      if (position != -1) {
-        Object referenceValue = parentAggregateValues.get(position);
-        Object currentValue = aggregateValues.get(rowIndex[0]);
-        Object div = divide.apply((Number) currentValue, (Number) referenceValue);
-        result.add(div);
-      } else {
-        result.add(null); // nothing to compare with
-      }
-      rowIndex[0]++;
-    });
-
-    Field field = new Field(pcm.alias(), double.class);
-    whereToWrite.addAggregates(field, pcm, result);
-    return null;
-  }
+  //  @Override
+//  public Void visit(ParentComparisonMeasure pcm) {
+//    Table whereToWrite = this.executionContext.writeToTable();
+//    QueryExecutor.QueryScope parentScope = MeasureUtils.getParentScopeWithClearedConditions(this.executionContext.queryScope(), pcm, this.fieldSupplier);
+//    Table whereToRead = this.executionContext.tableByScope().get(parentScope);
+//    List<Object> aggregateValues = whereToWrite.getAggregateValues(pcm.measure);
+//    List<Object> parentAggregateValues = whereToRead.getAggregateValues(pcm.measure);
+//    List<Object> result = new ArrayList<>((int) whereToWrite.count());
+//    BiFunction<Number, Number, Number> divide = BinaryOperations.createComparisonBiFunction(ComparisonMethod.DIVIDE, double.class);
+//
+//    MutableIntIntMap mapping = MutableIntIntMapFactoryImpl.INSTANCE.empty();
+//    for (int index : whereToRead.columnIndices()) {
+//      Field field = whereToRead.headers().get(index);
+//      int indexWhereToWrite = whereToWrite.index(field);
+//      mapping.put(index, indexWhereToWrite);
+//    }
+//
+//    int[] rowIndex = new int[1];
+//    whereToWrite.forEach(row -> {
+//      // Start - Shift operation
+//      Object[] parentRow = new Object[parentScope.columns().size()];
+//      for (int columnIndex : whereToRead.columnIndices()) {
+//        int index = mapping.getIfAbsent(columnIndex, -1);
+//        parentRow[columnIndex] = row.get(index);
+//      }
+//      // End - Shift operation
+//
+//      int position = whereToRead.pointDictionary().getPosition(parentRow);
+//      if (position != -1) {
+//        Object referenceValue = parentAggregateValues.get(position);
+//        Object currentValue = aggregateValues.get(rowIndex[0]);
+//        Object div = divide.apply((Number) currentValue, (Number) referenceValue);
+//        result.add(div);
+//      } else {
+//        result.add(null); // nothing to compare with
+//      }
+//      rowIndex[0]++;
+//    });
+//
+//    Field field = new Field(pcm.alias(), double.class);
+//    whereToWrite.addAggregates(field, pcm, result);
+//    return null;
+//  }
 
   @Override
   public Void visit(LongConstantMeasure measure) {

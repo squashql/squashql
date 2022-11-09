@@ -23,7 +23,7 @@ public interface QueryCache {
 
   CacheStatsDto stats();
 
-  record TableScope(TableDto tableDto, Set<Field> columns, Map<String, ConditionDto> conditions) implements PrefetchQueryScope {
+  record TableScope(TableDto tableDto, Set<Field> columns, Map<String, ConditionDto> conditions, Set<Field> rollUpColumns) implements PrefetchQueryScope {
   }
 
   record SubQueryScope(QueryDto subQueryDto, Set<Field> columns, Map<String, ConditionDto> conditions) implements PrefetchQueryScope {

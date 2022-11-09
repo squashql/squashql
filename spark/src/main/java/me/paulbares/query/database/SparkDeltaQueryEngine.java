@@ -24,7 +24,6 @@ public class SparkDeltaQueryEngine extends ADeltaQueryEngine<SparkDatastore> {
       }
     };
     String sql = SQLTranslator.translate(query,
-            null,
             this.fieldSupplier,
             DefaultQueryRewriter.INSTANCE,
             tableTransformer);

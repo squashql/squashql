@@ -43,22 +43,27 @@ public class MeasurePrefetcherVisitor implements MeasureVisitor<Map<QueryExecuto
   }
 
   @Override
-  public Map<QueryExecutor.QueryScope, Set<Measure>> visit(ComparisonMeasureReferencePosition measure) {
-    QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.query, measure, this.originalQueryScope);
-    Map<QueryExecutor.QueryScope, Set<Measure>> result = new HashMap<>(Map.of(this.originalQueryScope, Set.of(measure.measure)));
-    result.put(readScope, Set.of(measure.measure));
+  public Map<QueryExecutor.QueryScope, Set<Measure>> visit(ComparisonMeasureReferencePosition cmrp) {
+    if (cmrp.ancestors != null && !MeasureUtils.isPrimitive(cmrp.measure)) {
+      // Not support for the moment
+      // Only for parent because it uses rollup during the prefetch so subtotals are computed by the database, not AITM.
+      throw new IllegalArgumentException("Only a primitive measure can be used in a parent comparison measure");
+    }
+    QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.query, cmrp, this.originalQueryScope, this.fieldSupplier);
+    Map<QueryExecutor.QueryScope, Set<Measure>> result = new HashMap<>(Map.of(this.originalQueryScope, Set.of(cmrp.measure)));
+    result.put(readScope, Set.of(cmrp.measure));
     return result;
   }
 
-  @Override
-  public Map<QueryExecutor.QueryScope, Set<Measure>> visit(ParentComparisonMeasure measure) {
-    if (!MeasureUtils.isPrimitive(measure.measure)) {
-      // Not support for the moment
-      throw new IllegalArgumentException("Only a primitive measure can be used in a parent comparison measure");
-    }
-    QueryExecutor.QueryScope parentScope = MeasureUtils.getParentScopeWithClearedConditions(this.originalQueryScope, measure, this.fieldSupplier);
-    return Map.of(parentScope, Set.of(measure.measure), this.originalQueryScope, Set.of(measure.measure));
-  }
+//  @Override
+//  public Map<QueryExecutor.QueryScope, Set<Measure>> visit(ParentComparisonMeasure measure) {
+//    if (!MeasureUtils.isPrimitive(measure.measure)) {
+//      // Not support for the moment
+//      throw new IllegalArgumentException("Only a primitive measure can be used in a parent comparison measure");
+//    }
+//    QueryExecutor.QueryScope parentScope = MeasureUtils.getParentScopeWithClearedConditions(this.originalQueryScope, measure, this.fieldSupplier);
+//    return Map.of(parentScope, Set.of(measure.measure), this.originalQueryScope, Set.of(measure.measure));
+//  }
 
   @Override
   public Map<QueryExecutor.QueryScope, Set<Measure>> visit(LongConstantMeasure measure) {

@@ -8,6 +8,7 @@ import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.query.dto.Period;
 import me.paulbares.store.Field;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -23,13 +24,14 @@ public class ComparisonMeasureReferencePosition implements Measure, ComparisonMe
   public ColumnSetKey columnSetKey;
   public Map<String, String> referencePosition;
   public Period period;
+  public List<String> ancestors;
 
   public ComparisonMeasureReferencePosition(@NonNull String alias,
                                             @NonNull ComparisonMethod comparisonMethod,
                                             @NonNull Measure measure,
                                             @NonNull Map<String, String> referencePosition,
                                             @NonNull Period period) {
-    this(alias, comparisonMethod, measure, referencePosition, period, null);
+    this(alias, comparisonMethod, measure, referencePosition, period, null, null);
   }
 
   public ComparisonMeasureReferencePosition(@NonNull String alias,
@@ -37,21 +39,30 @@ public class ComparisonMeasureReferencePosition implements Measure, ComparisonMe
                                             @NonNull Measure measure,
                                             @NonNull Map<String, String> referencePosition,
                                             @NonNull ColumnSetKey columnSetKey) {
-    this(alias, comparisonMethod, measure, referencePosition, null, columnSetKey);
+    this(alias, comparisonMethod, measure, referencePosition, null, columnSetKey, null);
+  }
+
+  public ComparisonMeasureReferencePosition(@NonNull String alias,
+                                            @NonNull ComparisonMethod comparisonMethod,
+                                            @NonNull Measure measure,
+                                            @NonNull List<String> ancestors) {
+    this(alias, comparisonMethod, measure, null, null, null, ancestors);
   }
 
   private ComparisonMeasureReferencePosition(@NonNull String alias,
                                              @NonNull ComparisonMethod comparisonMethod,
                                              @NonNull Measure measure,
-                                             @NonNull Map<String, String> referencePosition,
+                                             Map<String, String> referencePosition,
                                              Period period,
-                                             ColumnSetKey columnSetKey) {
+                                             ColumnSetKey columnSetKey,
+                                             List<String> ancestors) {
     this.alias = alias;
     this.comparisonMethod = comparisonMethod;
     this.measure = measure;
     this.referencePosition = referencePosition;
     this.period = period;
     this.columnSetKey = columnSetKey;
+    this.ancestors = ancestors;
   }
 
   @Override

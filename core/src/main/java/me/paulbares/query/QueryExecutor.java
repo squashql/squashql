@@ -10,7 +10,6 @@ import me.paulbares.query.QueryCache.TableScope;
 import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.context.Repository;
-import me.paulbares.query.context.Totals;
 import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.*;
@@ -109,7 +108,7 @@ public class QueryExecutor {
           notCached.add(CountMeasure.INSTANCE);
         }
         notCached.forEach(prefetchQuery::withMeasure);
-        prefetchQuery.totals = (Totals) query.context.get(Totals.KEY);
+//        prefetchQuery.totals = (Totals) query.context.get(Totals.KEY); // FIXME no need on each prefetchQuery. Only the one for the query scope.
         result = this.queryEngine.execute(prefetchQuery);
       } else {
         // Create an empty result that will be populated by the query cache
@@ -144,6 +143,8 @@ public class QueryExecutor {
 
     ColumnarTable columnarTable = buildFinalResult(query, result);
     Table sortedTable = TableUtils.order(columnarTable, query);
+
+    // TODO rewrite the sortedTable to change ___total___ to a better value (e.g Grand Total, Subtotal...)
 
     queryWatch.stop(QueryWatch.ORDER);
     queryWatch.stop(QueryWatch.GLOBAL);
@@ -181,13 +182,14 @@ public class QueryExecutor {
     List<Field> columns = Stream.concat(
             query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
             query.columns.stream()).map(fieldSupplier).toList();
-    return new QueryScope(query.table, query.subQuery, columns, query.conditions);
+    List<Field> rollUpColumns = query.rollUpColumns.stream().map(fieldSupplier).toList();
+    return new QueryScope(query.table, query.subQuery, columns, query.conditions, rollUpColumns);
   }
 
   private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(QueryScope queryScope, DatabaseQuery prefetchQuery, Function<String, Field> fieldSupplier) {
     Set<Field> fields = prefetchQuery.select.stream().map(fieldSupplier).collect(Collectors.toSet());
     if (queryScope.tableDto != null) {
-      return new TableScope(queryScope.tableDto, fields, queryScope.conditions);
+      return new TableScope(queryScope.tableDto, fields, queryScope.conditions, new HashSet<>(queryScope.rollUpColumns));
     } else {
       return new SubQueryScope(queryScope.subQuery, fields, queryScope.conditions);
     }
@@ -221,7 +223,8 @@ public class QueryExecutor {
   public record QueryScope(TableDto tableDto,
                            QueryDto subQuery,
                            List<Field> columns,
-                           Map<String, ConditionDto> conditions) {
+                           Map<String, ConditionDto> conditions,
+                           List<Field> rollUpColumns) {
   }
 
   public record QueryPlanNodeKey(QueryScope queryScope, Measure measure) {

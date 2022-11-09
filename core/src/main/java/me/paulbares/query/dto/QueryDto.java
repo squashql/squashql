@@ -19,6 +19,7 @@ public class QueryDto {
   public QueryDto subQuery;
 
   public List<String> columns = new ArrayList<>();
+  public List<String> rollUpColumns = new ArrayList<>();
 
   public Map<ColumnSetKey, ColumnSet> columnSets = new LinkedHashMap<>();
 
@@ -34,6 +35,11 @@ public class QueryDto {
 
   public QueryDto withColumn(String column) {
     this.columns.add(column);
+    return this;
+  }
+
+  public QueryDto withRollUp(String column) {
+    this.rollUpColumns.add(column);
     return this;
   }
 

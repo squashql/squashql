@@ -71,10 +71,11 @@ public class TestSQLTranslator {
   void testWithTotalsTop() {
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(SCENARIO_FIELD_NAME)
+            .withRollUp(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
-    Assertions.assertThat(SQLTranslator.translate(query, Functions.TOP, fieldProvider))
+    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select `scenario`, sum(`price`) as `pnl.sum` from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
                     "order by case when `scenario` is null or `scenario` = '' then 0 else 1 end, `scenario`  asc");
   }
@@ -83,10 +84,11 @@ public class TestSQLTranslator {
   void testWithTotalsBottom() {
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(SCENARIO_FIELD_NAME)
+            .withRollUp(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
-    Assertions.assertThat(SQLTranslator.translate(query, Functions.BOTTOM, fieldProvider))
+    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select `scenario`, sum(`price`) as `pnl.sum` from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
                     "order by case when `scenario` is null or `scenario` = '' then 1 else 0 end, `scenario`  asc");
   }
