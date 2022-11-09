@@ -1,52 +1,57 @@
 import {
-  BucketColumnSet,
   ComparisonMethod,
-  eq,
   from,
-  Querier,
   sum,
-  sumIf,
-  multiply, divide, plus, minus,
-  decimal, integer,
-  comparisonMeasureWithPeriod, comparisonMeasureWithBucket
+  Semester,
+  comparisonMeasureWithPeriod,
 } from "aitm-js-query"
 
-const querier = new Querier("http://localhost:8080");
-const assets = "https://raw.githubusercontent.com/paulbares/aitm-assets/main/metrics.json";
+// const querier = new Querier("http://localhost:8080");
+// const assets = "https://raw.githubusercontent.com/paulbares/aitm-assets/main/metrics.json";
 
-const toString = (a: any): string => JSON.stringify(a, null, 1)
+// const toString = (a: any): string => JSON.stringify(a, null, 1)
+//
+// querier.getMetadata(assets).then(r => {
+//   console.log(`Store: ${toString(r.stores)}`);
+//   console.log(`Measures: ${toString(r.measures)}`)
+//   console.log(`Agg Func: ${r.aggregationFunctions}`)
+// })
 
-querier.getMetadata(assets).then(r => {
-  console.log(`Store: ${toString(r.stores)}`);
-  console.log(`Measures: ${toString(r.measures)}`)
-  console.log(`Agg Func: ${r.aggregationFunctions}`)
-})
+// const amount = sum("amount_sum", "Amount");
+// multiply("percent", amount, decimal(100))
+// const sales = sumIf("sales", "Amount", "IncomeExpense", eq("Revenue"));
+// const groups = {
+//   "ABCD": ["A", "B", "C", "D"],
+//   "BD": ["B", "D"],
+//   "CDA": ["C", "D", "A"],
+// }
 
-const amount = sum("amount_sum", "Amount");
-multiply("percent", amount, decimal(100))
-const sales = sumIf("sales", "Amount", "IncomeExpense", eq("Revenue"));
-const groups = {
-  "ABCD": ["A", "B", "C", "D"],
-  "BD": ["B", "D"],
-  "CDA": ["C", "D", "A"],
-}
+// const bucketColumnSet = new BucketColumnSet("group", "Scenario", new Map(Object.entries(groups)))
+// const refScenario = {"Scenario": "s-1", "group": "g"}
+// const amountComparison = comparisonMeasureWithBucket("amount compar. with prev. scenario",
+//         ComparisonMethod.ABSOLUTE_DIFFERENCE,
+//         amount,
+//         new Map(Object.entries(refScenario)));
+//
+// const q = from("ProjectionScenario")
+//         .select(
+//                 [],
+//                 [bucketColumnSet],
+//                 [amount, amountComparison, sales])
+//         .build();
 
-const bucketColumnSet = new BucketColumnSet("group", "Scenario", new Map(Object.entries(groups)))
-const refScenario = {"Scenario": "s-1", "group": "g"}
-const amountComparison = comparisonMeasureWithBucket("amount compar. with prev. scenario",
+const scoreSum = sum("score_sum", "score");
+const comparisonScore = comparisonMeasureWithPeriod(
+        "compare with previous year",
         ComparisonMethod.ABSOLUTE_DIFFERENCE,
-        amount,
-        new Map(Object.entries(refScenario)));
+        scoreSum,
+        new Map(Object.entries({"semester": "s-1", "year": "y"})),
+        new Semester("semester", "year"));
 
-const q = from("ProjectionScenario")
-        .select(
-                [],
-                [bucketColumnSet],
-                [amount, amountComparison, sales])
+const query = from("student")
+        .select(["year", "semester", "name"], [], [scoreSum, comparisonScore])
         .build();
 
-sum("f1", "f1")
-const square = multiply("", f1Sum, f1Sum);
 // q.withMeasure(sales)
 // const pop = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, sales, ["Month", "Year"]);
 
@@ -69,9 +74,9 @@ const square = multiply("", f1Sum, f1Sum);
 //         ColumnSetKey.BUCKET,
 //         new Map(Object.entries(refScenario)));
 // q.withMeasure(kpiComp);
-
-querier.execute0(q).then(r => {
-  console.log(r);
-  // console.log(`Metadata result: ${toString(r.metadata)}`);
-  // console.log(`Table: ${toString(r.table)}`);
-})
+//
+// querier.execute0(q).then(r => {
+//   console.log(r);
+//   // console.log(`Metadata result: ${toString(r.metadata)}`);
+//   // console.log(`Table: ${toString(r.table)}`);
+// })

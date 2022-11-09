@@ -186,6 +186,19 @@ const query = from("myTable")
 SELECT SUM(amount) AS sum_amount, AVG(amount) AS avg_amount, SUM(CASE WHEN IncomeExpense = 'Revenue' THEN amount 0 END) AS sales  FROM myTable;
 ```
 
+### Constant measure
+
+Used to define measure with a constant value in order to combine it with other measures. See below.
+
+```typescript
+import {
+  decimal, integer
+} from "aitm-js-query"
+
+const oneHundredDecimal = decimal(100)
+const oneHundredInteger = integer(100)
+```
+
 ### Calculated measure
 
 Unlike a basic measure, a calculated measure is computed by AITM (not the database) by fetching all the required values from the underlying 
@@ -250,23 +263,93 @@ Example:
 +------+----------+---------+-------------+-------+
 ```
 
-Compare with previous semester
+Compare sum of score of each student with previous semester
 ```typescript
+import {
+  ComparisonMethod,
+  from,
+  sum,
+  Semester,
+  comparisonMeasureWithPeriod,
+} from "aitm-js-query"
 
+const scoreSum = sum("score_sum", "score");
+const comparisonScore = comparisonMeasureWithPeriod(
+        "compare with previous year",
+        ComparisonMethod.ABSOLUTE_DIFFERENCE,
+        scoreSum,
+        new Map(Object.entries({"semester": "s-1", "year": "y"})),
+        new Semester("semester", "year"));
+
+const query = from("student")
+        .select(["year", "semester", "name"], [], [scoreSum, comparisonScore])
+        .build();
 ```
 ```
-+------+----------+---------+-----------+----------------------------+
-| year | semester |    name | score_sum | compare with previous year |
-+------+----------+---------+-----------+----------------------------+
-| 2022 |        1 |    Paul |       148 |                       null |
-| 2022 |        1 | Tatiana |       170 |                       null |
-| 2022 |        2 |    Paul |       128 |                        -20 |
-| 2022 |        2 | Tatiana |       130 |                        -40 |
-| 2023 |        1 |    Paul |       152 |                         24 |
-| 2023 |        1 | Tatiana |       148 |                         18 |
-| 2023 |        2 |    Paul |       134 |                        -18 |
-| 2023 |        2 | Tatiana |        77 |                        -71 |
-+------+----------+---------+-----------+----------------------------+
++------+----------+---------+-----------+--------------------------------+
+| year | semester |    name | score_sum | compare with previous semester |
++------+----------+---------+-----------+--------------------------------+
+| 2022 |        1 |    Paul |       148 |                           null |
+| 2022 |        1 | Tatiana |       170 |                           null |
+| 2022 |        2 |    Paul |       128 |                            -20 |
+| 2022 |        2 | Tatiana |       130 |                            -40 |
+| 2023 |        1 |    Paul |       152 |                             24 |
+| 2023 |        1 | Tatiana |       148 |                             18 |
+| 2023 |        2 |    Paul |       134 |                            -18 |
+| 2023 |        2 | Tatiana |        77 |                            -71 |
++------+----------+---------+-----------+--------------------------------+
+```
+
+`comparisonMeasureWithPeriod` method is used to create a special measure built to compare values of an underlying measure
+(third argument) with other values of the same measure. In this example, we want to compute the "absolute" difference
+(hence `ComparisonMethod.ABSOLUTE_DIFFERENCE`) of score_sum for a given semester with score_sum of the previous semester
+(relatively to the semester of a given row). 
+
+To indicate "previous semester", a "translation" or "shift" operator is passed to the 
+comparison function: `{"semester": "s-1", "year": "y"}`. `"semester": "s-1"` means 'take the current semester value and remove 1'. 
+The `Semester` object is meant to make AITM understand the measure is working with a **time period** so that it knows that 
+the previous semester value of the 1st semester of 2023 is the 2nd semester of 2022.
+
+Similarly to `Semester`, one can use `Year`, `Quarter`, `Month` to work with a different time period. The arguments passed to build a time period object are 
+the name of the table columns necessary to unambiguously deduce from their values the time period it refers to. For `Semester`, 
+the required information is year (should be an integer) and semester (also an integer) to know which half-year term it refers
+to.
+
+Note: The columns used to build a time period object need to be added to the query in the select.  
+
+```typescript
+import {
+  ComparisonMethod,
+  from,
+  sum,
+  multiply,
+  decimal,
+  Year,
+  comparisonMeasureWithPeriod,
+} from "aitm-js-query"
+
+const scoreSum = sum("score_sum", "score");
+const comparisonScore = comparisonMeasureWithPeriod(
+        "compare with previous year",
+        ComparisonMethod.RELATIVE_DIFFERENCE,
+        scoreSum,
+        new Map(Object.entries({"year": "y-1"})),
+        new Year("year"));
+
+const query = from("student")
+        .select(["year", "name"], [], [scoreSum, multiply("progression in %", comparisonScore, decimal(100))])
+        .build();
+```
+Result:
+```
++------+---------+-----------+--------------------+
+| year |    name | score_sum |   progression in % |
++------+---------+-----------+--------------------+
+| 2022 |    Paul |       276 |               null |
+| 2022 | Tatiana |       300 |               null |
+| 2023 |    Paul |       286 | 3.6231884057971016 |
+| 2023 | Tatiana |       225 |              -25.0 |
++------+---------+-----------+--------------------+
 ```
 
 ## ColumnSets

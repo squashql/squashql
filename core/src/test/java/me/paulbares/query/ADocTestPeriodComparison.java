@@ -8,6 +8,7 @@ import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -16,7 +17,12 @@ import java.util.Map;
 
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
+/**
+ * This test class is used to verify and print tables for the documentation. Nothing is asserted in those tests this is
+ * why it is @{@link Disabled}.
+ */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Disabled
 public abstract class ADocTestPeriodComparison {
 
   protected Datastore datastore;
@@ -61,7 +67,7 @@ public abstract class ADocTestPeriodComparison {
             new Object[]{"Paul", "mathematics", 58, 2022, 2},
             new Object[]{"Paul", "english", 70, 2022, 2},
             new Object[]{"Tatiana", "mathematics", 65, 2022, 2},
-            new Object[]{"Tatiana", "english", 65, 2022, 2} ,
+            new Object[]{"Tatiana", "english", 65, 2022, 2},
 
             // 2023 - s1
             new Object[]{"Paul", "mathematics", 70, 2023, 1},
@@ -81,10 +87,10 @@ public abstract class ADocTestPeriodComparison {
   }
 
   @Test
-  void test() {
+  void testSemester() {
     Measure sum = Functions.sum("score_sum", "score");
     Measure comp = new ComparisonMeasureReferencePosition(
-            "compare with previous year",
+            "compare with previous semester",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             sum,
             Map.of("semester", "s-1", "year", "y"), // FIXME add better message when "year" is missing. or handle it better.
@@ -92,6 +98,23 @@ public abstract class ADocTestPeriodComparison {
 
     QueryDto queryDto = Query.from("student")
             .select(List.of("year", "semester", "name"), List.of(sum, comp))
+            .build();
+    Table result = this.queryExecutor.execute(queryDto);
+    result.show();
+  }
+
+  @Test
+  void testYear() {
+    Measure sum = Functions.sum("score_sum", "score");
+    Measure comp = new ComparisonMeasureReferencePosition(
+            "compare with previous year",
+            ComparisonMethod.RELATIVE_DIFFERENCE,
+            sum,
+            Map.of("year", "y-1"),
+            new Period.Year( "year"));
+
+    QueryDto queryDto = Query.from("student")
+            .select(List.of("year", "name"), List.of(sum, Functions.multiply("progression in %", comp, Functions.decimal(100))))
             .build();
     Table result = this.queryExecutor.execute(queryDto);
     result.show();
