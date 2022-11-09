@@ -50,7 +50,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     for (Map.Entry<String, PeriodUnit> entry : mapping.entrySet()) {
       PeriodUnit pu = mapping.get(entry.getKey());
       referencePosition.putIfAbsent(pu, "c"); // constant for missing ref.
-      indexByPeriodUnit.put(pu, indexByColumn.getIfAbsent(entry.getKey(), -1));
+      indexByPeriodUnit.getIfAbsentPut(pu, indexByColumn.getIfAbsent(entry.getKey(), -1));
     }
     return new ShiftProcedure(period, referencePosition, indexByPeriodUnit);
   }

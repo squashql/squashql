@@ -9,6 +9,7 @@ import me.paulbares.transaction.ClickHouseTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 
@@ -18,6 +19,11 @@ import java.util.Map;
 import static me.paulbares.query.TestUtils.createClickHouseContainer;
 import static me.paulbares.query.TestUtils.jdbcUrl;
 
+/**
+ * This test class is used to verify and print tables for the documentation. Nothing is asserted in those tests this is
+ * why it is @{@link Disabled}.
+ */
+@Disabled
 public class TestDocClickHousePeriodComparison extends ADocTestPeriodComparison {
 
   @Container
