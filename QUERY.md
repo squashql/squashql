@@ -169,20 +169,26 @@ FROM (SELECT SUM(score) AS score_sum FROM student GROUP BY name);
 
 ## Measures
 
-A Measure represents aggregated values and is usually numeric. Measure can be splin into two categories:
+A Measure represents aggregated values and is usually numeric. Measure can be split into two categories depending on 
+where the calculation is performed.
 
 - Basic measure
+  - Aggregate measure
+  - Expression measure
 - Calculated measure
   - Elementary operations: addition, subtraction, multiplication and division
+  - Constant
   - Complex operations: comparison
 
 ### Basic measure
 
-A basic measure **is computed by the underlying database** by applying an aggregation function over a list of field
-values
-such as avg, count, sum, min, max...
+A basic measure **is always computed by the underlying database**.
 
-A condition can be applied on aggregate function by using `sumIf` for instance.
+#### Aggregate measure
+
+An aggregate measure is computed by applying an aggregation function over a list of field values such as avg, count, sum, min, max...
+
+Aggregation can also be applied to only the rows matching a [condition](#filtering) with `sumIf`, `countIf`...
 
 ```typescript
 import {
@@ -208,24 +214,22 @@ SELECT SUM(amount)                                                AS sum_amount,
 FROM myTable;
 ```
 
-### Constant measure
+#### Expression measure
 
-Used to define measure with a constant value in order to combine it with other measures. See below.
+An expression measure is a measure that accepts a raw sql expression as argument.
 
 ```typescript
 import {
-  decimal, integer
+  ExpressionMeasure,
 } from "aitm-js-query"
 
-const oneHundredDecimal = decimal(100)
-const oneHundredInteger = integer(100)
+const expression = new ExpressionMeasure("myMeasure", "sum(price * quantity)")
 ```
 
 ### Calculated measure
 
 Unlike a basic measure, a calculated measure is computed by AITM (not the database) by fetching all the required values
-from the underlying
-database before applying the defined calculation.
+from the underlying database before applying the defined calculation.
 It is defined as the combination of other measures that can be either basic or not.
 
 #### Elementary: addition, subtraction, multiplication and division
@@ -255,6 +259,19 @@ const a = sum("aSum", "a")
 const b = sum("bSum", "b")
 const ratio = divide("ratio", a, b);
 const percent = multiply("percent", ratio, decimal(100)) 
+```
+
+#### Constant measure
+
+Used to define measure with a constant value in order to combine it with other measures. See below.
+
+```typescript
+import {
+  decimal, integer
+} from "aitm-js-query"
+
+const oneHundredDecimal = decimal(100)
+const oneHundredInteger = integer(100)
 ```
 
 #### Complex: comparison
