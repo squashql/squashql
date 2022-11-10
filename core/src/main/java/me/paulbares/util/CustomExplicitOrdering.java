@@ -45,7 +45,7 @@ public class CustomExplicitOrdering implements Comparator<Object>, Serializable 
     } else if (rankRight >= 0) {
       return 1;
     } else {
-      Comparator comparator = Comparator.naturalOrder();
+      Comparator comparator = Comparator.nullsLast(Comparator.naturalOrder());
       return comparator.compare(left, right);
     }
   }
