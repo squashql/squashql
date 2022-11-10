@@ -8,13 +8,13 @@ import java.util.List;
 
 public interface HasCondition {
 
-  default HasSelect select(List<String> columns, List<Measure> measures) {
+  default CanAddRollup select(List<String> columns, List<Measure> measures) {
     return select(columns, Collections.emptyList(), measures);
   }
 
-  default HasSelect select_(List<ColumnSet> columnSets, List<Measure> measures) {
+  default CanAddRollup select_(List<ColumnSet> columnSets, List<Measure> measures) {
     return select(Collections.emptyList(), columnSets, measures);
   }
 
-  HasSelect select(List<String> columns, List<ColumnSet> columnSets, List<Measure> measures);
+  CanAddRollup select(List<String> columns, List<ColumnSet> columnSets, List<Measure> measures);
 }
