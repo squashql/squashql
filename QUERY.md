@@ -220,10 +220,17 @@ An expression measure is a measure that accepts a raw sql expression as argument
 
 ```typescript
 import {
-  ExpressionMeasure,
+  ExpressionMeasure
 } from "aitm-js-query"
 
 const expression = new ExpressionMeasure("myMeasure", "sum(price * quantity)")
+const query = from("myTable")
+        .select([], [], [expression])
+        .build()
+```
+
+```sql
+SELECT SUM(price * quantity) AS myMeasure FROM myTable;
 ```
 
 ### Calculated measure
