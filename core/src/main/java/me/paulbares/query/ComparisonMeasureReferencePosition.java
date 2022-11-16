@@ -15,7 +15,7 @@ import java.util.function.Function;
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
-public class ComparisonMeasureReferencePosition implements Measure, ComparisonMeasure {
+public class ComparisonMeasureReferencePosition implements Measure {
 
   public String alias;
   public String expression;
@@ -65,12 +65,10 @@ public class ComparisonMeasureReferencePosition implements Measure, ComparisonMe
     this.ancestors = ancestors;
   }
 
-  @Override
   public Measure getMeasure() {
     return this.measure;
   }
 
-  @Override
   public ComparisonMethod getComparisonMethod() {
     return this.comparisonMethod;
   }

@@ -23,14 +23,14 @@ public final class MeasureUtils {
       }
     } else if (m instanceof BinaryOperationMeasure bom) {
       return quoteExpression(bom.leftOperand) + " " + bom.operator.infix + " " + quoteExpression(bom.rightOperand);
-    } else if (m instanceof ComparisonMeasure cm) {
+    } else if (m instanceof ComparisonMeasureReferencePosition cm) {
       String alias = cm.getMeasure().alias();
-      if (cm instanceof ComparisonMeasureReferencePosition pcm && pcm.ancestors != null) {
+      if (cm.ancestors != null) {
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
-        return formula + ", ancestors = " + pcm.ancestors;
+        return formula + ", ancestors = " + cm.ancestors;
       } else {
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current)", alias + "(reference)");
-        return formula + ", reference = " + ((ComparisonMeasureReferencePosition) cm).referencePosition;
+        return formula + ", reference = " + cm.referencePosition;
       }
     } else if (m instanceof ExpressionMeasure em) {
       return em.expression;
