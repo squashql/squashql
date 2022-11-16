@@ -54,7 +54,6 @@ public class SQLTranslator {
     return statement.toString();
   }
 
-  // https://github.com/ClickHouse/ClickHouse/issues/322#issuecomment-615087004
   private static void addGroupByAndRollup(List<String> groupBy, List<String> rollup, boolean supportPartialRollup, StringBuilder statement) {
     if (groupBy.isEmpty()) {
       return;

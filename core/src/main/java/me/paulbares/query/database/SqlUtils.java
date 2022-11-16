@@ -17,7 +17,10 @@ public class SqlUtils {
     return sql + " as " + queryRewriter.measureAlias(escape(alias), measure);
   }
 
-  public static String extractGroupingField(String str) {
+  /**
+   * See {@link SQLTranslator#groupingAlias(String)}.
+   */
+  public static String extractFieldFromGroupingAlias(String str) {
     Matcher matcher = GROUPING_PATTERN.matcher(str);
     if (matcher.find()) {
       return matcher.group(1);
