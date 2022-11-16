@@ -20,7 +20,8 @@ import java.util.List;
 
 import static me.paulbares.query.Functions.eq;
 import static me.paulbares.query.Functions.sum;
-import static me.paulbares.query.database.SQLTranslator.TOTAL_CELL;
+import static me.paulbares.query.database.QueryEngine.GRAND_TOTAL;
+import static me.paulbares.query.database.QueryEngine.TOTAL;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -106,8 +107,8 @@ public abstract class ATestQueryExecutor {
             .build();
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactly(
-            List.of(TOTAL_CELL, TOTAL_CELL, 15d, 33l),
-            List.of(MAIN_SCENARIO_NAME, TOTAL_CELL, 15d, 33l),
+            Arrays.asList(GRAND_TOTAL, null, 15d, 33l),
+            List.of(MAIN_SCENARIO_NAME, TOTAL, 15d, 33l),
             List.of(MAIN_SCENARIO_NAME, "cloth", 10d, 3l),
             List.of(MAIN_SCENARIO_NAME, "drink", 2d, 10l),
             List.of(MAIN_SCENARIO_NAME, "food", 3d, 20l));
@@ -126,7 +127,7 @@ public abstract class ATestQueryExecutor {
             .build();
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactly(
-            List.of(TOTAL_CELL, 99l),
+            List.of(GRAND_TOTAL, 99l),
             List.of("biscuit", 60l),
             Arrays.asList(null, 39l));
   }
@@ -140,15 +141,15 @@ public abstract class ATestQueryExecutor {
             .build();
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactly(
-            List.of(MAIN_SCENARIO_NAME, TOTAL_CELL, 33l),
+            List.of(MAIN_SCENARIO_NAME, TOTAL, 33l),
             List.of(MAIN_SCENARIO_NAME, "cloth", 3l),
             List.of(MAIN_SCENARIO_NAME, "drink", 10l),
             List.of(MAIN_SCENARIO_NAME, "food", 20l),
-            List.of("s1", TOTAL_CELL, 33l),
+            List.of("s1", TOTAL, 33l),
             List.of("s1", "cloth", 3l),
             List.of("s1", "drink", 10l),
             List.of("s1", "food", 20l),
-            List.of("s2", TOTAL_CELL, 33l),
+            List.of("s2", TOTAL, 33l),
             List.of("s2", "cloth", 3l),
             List.of("s2", "drink", 10l),
             List.of("s2", "food", 20l));
@@ -160,9 +161,9 @@ public abstract class ATestQueryExecutor {
             .build();
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactly(
-            List.of(TOTAL_CELL, "cloth", 9l),
-            List.of(TOTAL_CELL, "drink", 30l),
-            List.of(TOTAL_CELL, "food", 60l),
+            List.of(TOTAL, "cloth", 9l),
+            List.of(TOTAL, "drink", 30l),
+            List.of(TOTAL, "food", 60l),
             List.of(MAIN_SCENARIO_NAME, "cloth", 3l),
             List.of(MAIN_SCENARIO_NAME, "drink", 10l),
             List.of(MAIN_SCENARIO_NAME, "food", 20l),
@@ -184,12 +185,12 @@ public abstract class ATestQueryExecutor {
             .build();
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList("s1", TOTAL_CELL, TOTAL_CELL, 33l),
-            Arrays.asList("s1", "cloth", TOTAL_CELL, 3l),
+            Arrays.asList("s1", TOTAL, TOTAL, 33l),
+            Arrays.asList("s1", "cloth", TOTAL, 3l),
             Arrays.asList("s1", "cloth", null, 3l),
-            Arrays.asList("s1", "drink", TOTAL_CELL, 10l),
+            Arrays.asList("s1", "drink", TOTAL, 10l),
             Arrays.asList("s1", "drink", null, 10l),
-            Arrays.asList("s1", "food", TOTAL_CELL, 20l),
+            Arrays.asList("s1", "food", TOTAL, 20l),
             Arrays.asList("s1", "food", "biscuit", 20l));
 
     query = Query
@@ -200,8 +201,8 @@ public abstract class ATestQueryExecutor {
             .build();
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList("s1", TOTAL_CELL, "biscuit", 20l),
-            Arrays.asList("s1", TOTAL_CELL, null, 13l),
+            Arrays.asList("s1", TOTAL, "biscuit", 20l),
+            Arrays.asList("s1", TOTAL, null, 13l),
             Arrays.asList("s1", "cloth", null, 3l),
             Arrays.asList("s1", "drink", null, 10l),
             Arrays.asList("s1", "food", "biscuit", 20l));

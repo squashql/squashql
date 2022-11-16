@@ -14,7 +14,8 @@ import java.util.List;
 
 import static me.paulbares.query.Functions.eq;
 import static me.paulbares.query.Functions.in;
-import static me.paulbares.query.database.SQLTranslator.TOTAL_CELL;
+import static me.paulbares.query.database.QueryEngine.GRAND_TOTAL;
+import static me.paulbares.query.database.QueryEngine.TOTAL;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -191,20 +192,20 @@ public abstract class ATestParentComparison {
 
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList(TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, 28.5d, 1d),
-            Arrays.asList("am", TOTAL_CELL, TOTAL_CELL, 17d, 0.5964912280701754d),
-            Arrays.asList("am", "canada", TOTAL_CELL, 6d, 0.35294117647058826d),
+            Arrays.asList(GRAND_TOTAL, null, null, 28.5d, 1d),
+            Arrays.asList("am", TOTAL, null, 17d, 0.5964912280701754d),
+            Arrays.asList("am", "canada", TOTAL, 6d, 0.35294117647058826d),
             Arrays.asList("am", "canada", "montreal", 2d, .3333333333333333),
             Arrays.asList("am", "canada", "otawa", 1d, .16666666666666666),
             Arrays.asList("am", "canada", "toronto", 3d, 0.5),
-            Arrays.asList("am", "usa", TOTAL_CELL, 11d, 0.6470588235294118d),
+            Arrays.asList("am", "usa", TOTAL, 11d, 0.6470588235294118d),
             Arrays.asList("am", "usa", "chicago", 3d, .2727272727272727),
             Arrays.asList("am", "usa", "nyc", 8d, .7272727272727273),
-            Arrays.asList("eu", TOTAL_CELL, TOTAL_CELL, 11.5d, 0.40350877192982454d),
-            Arrays.asList("eu", "france", TOTAL_CELL, 2.5, 0.21739130434782608),
+            Arrays.asList("eu", TOTAL, null, 11.5d, 0.40350877192982454d),
+            Arrays.asList("eu", "france", TOTAL, 2.5, 0.21739130434782608),
             Arrays.asList("eu", "france", "lyon", 0.5, 0.2),
             Arrays.asList("eu", "france", "paris", 2d, 0.8),
-            Arrays.asList("eu", "uk", TOTAL_CELL, 9d, 0.782608695652174),
+            Arrays.asList("eu", "uk", TOTAL, 9d, 0.782608695652174),
             Arrays.asList("eu", "uk", "london", 9d, 1d));
   }
 }
