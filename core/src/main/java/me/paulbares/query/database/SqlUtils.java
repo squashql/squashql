@@ -24,9 +24,4 @@ public class SqlUtils {
     }
     return null;
   }
-
-  // FIXME to delete
-  public static void main(String[] args) {
-    System.out.println(extractGroupingField(SQLTranslator.groupingAlias("toto")));
-  }
 }

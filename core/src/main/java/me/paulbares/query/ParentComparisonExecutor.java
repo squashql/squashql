@@ -36,9 +36,7 @@ public class ParentComparisonExecutor extends AComparisonExecutor {
         // Is it expressed ?
         if (this.indexByColumn.containsKey(ancestor)) {
           int index = this.indexByColumn.get(ancestor);
-          if (row[index].equals(SQLTranslator.TOTAL_CELL)) {
-            continue;
-          } else {
+          if (!row[index].equals(SQLTranslator.TOTAL_CELL)) {
             row[index] = SQLTranslator.TOTAL_CELL;
             break;
           }

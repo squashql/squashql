@@ -7,7 +7,7 @@ import me.paulbares.query.dto.*;
 import java.util.Arrays;
 import java.util.List;
 
-public class Query implements HasCondition, HasSelect, HasJoin, HasStartedBuildingTable, HasOrderBy, CanAddRollup {
+public class Query implements HasCondition, HasSelectAndRollup, HasJoin, HasStartedBuildingTable, HasOrderBy, CanAddRollup {
 
   private final QueryDto queryDto = new QueryDto();
 
@@ -78,19 +78,19 @@ public class Query implements HasCondition, HasSelect, HasJoin, HasStartedBuildi
   }
 
   @Override
-  public HasSelect orderBy(String column, OrderKeywordDto orderKeywordDto) {
+  public HasSelectAndRollup orderBy(String column, OrderKeywordDto orderKeywordDto) {
     this.queryDto.orderBy(column, orderKeywordDto);
     return this;
   }
 
   @Override
-  public HasSelect orderBy(String column, List<?> firstElements) {
+  public HasSelectAndRollup orderBy(String column, List<?> firstElements) {
     this.queryDto.orderBy(column, firstElements);
     return this;
   }
 
   @Override
-  public HasSelect rollup(String... columns) {
+  public HasSelectAndRollup rollup(String... columns) {
     Arrays.stream(columns).forEach(this.queryDto::withRollUp);
     return this;
   }

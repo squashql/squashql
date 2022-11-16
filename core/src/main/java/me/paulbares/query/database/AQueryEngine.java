@@ -72,21 +72,49 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     return postProcessDataset(aggregates, query);
   }
 
-  protected Table postProcessDataset(Table initialTable, DatabaseQuery query) {
+  /**
+   * Changes the content of the input table to remove columns corresponding to grouping() (columns that help to identify
+   * rows containing totals) and write {@link SQLTranslator#TOTAL_CELL} in the corresponding cells. The modifications
+   * happen in-place i.e in the input table columns directly.
+   * <pre>
+   *   Input:
+   *   +----------+----------+---------------------------+---------------------------+------+----------------------+----+
+   *   | scenario | category | ___grouping___scenario___ | ___grouping___category___ |    p | _contributors_count_ |  q |
+   *   +----------+----------+---------------------------+---------------------------+------+----------------------+----+
+   *   |     base |    drink |                         0 |                         0 |  2.0 |                    1 | 10 |
+   *   |     base |     food |                         0 |                         0 |  3.0 |                    1 | 20 |
+   *   |     base |    cloth |                         0 |                         0 | 10.0 |                    1 |  3 |
+   *   |     null |     null |                         1 |                         1 | 15.0 |                    3 | 33 |
+   *   |     base |     null |                         0 |                         1 | 15.0 |                    3 | 33 |
+   *   +----------+----------+---------------------------+---------------------------+------+----------------------+----+
+   *   Output:
+   *   +-------------+-------------+------+----------------------+----+
+   *   |    scenario |    category |    p | _contributors_count_ |  q |
+   *   +-------------+-------------+------+----------------------+----+
+   *   |        base |       drink |  2.0 |                    1 | 10 |
+   *   |        base |        food |  3.0 |                    1 | 20 |
+   *   |        base |       cloth | 10.0 |                    1 |  3 |
+   *   | ___total___ | ___total___ | 15.0 |                    3 | 33 |
+   *   |        base | ___total___ | 15.0 |                    3 | 33 |
+   *   +-------------+-------------+------+----------------------+----+
+   * </pre>
+   */
+  protected Table postProcessDataset(Table input, DatabaseQuery query) {
     if (!query.rollUp.isEmpty()) {
       List<Field> newFields = new ArrayList<>();
       List<List<Object>> newValues = new ArrayList<>();
-      for (int i = 0; i < initialTable.headers().size(); i++) {
-        Field header = initialTable.headers().get(i);
-        List<Object> columnValues = initialTable.getColumn(i);
+      for (int i = 0; i < input.headers().size(); i++) {
+        Field header = input.headers().get(i);
+        List<Object> columnValues = input.getColumn(i);
         if (i < query.select.size() || i >= query.select.size() + query.rollUp.size()) {
           newFields.add(header);
           newValues.add(columnValues);
         } else {
           String baseName = Objects.requireNonNull(SqlUtils.extractGroupingField(header.name()));
-          List<Object> baseColumnValues = initialTable.getColumnValues(baseName);
+          List<Object> baseColumnValues = input.getColumnValues(baseName);
           for (int rowIndex = 0; rowIndex < columnValues.size(); rowIndex++) {
-            if (((Number) columnValues.get(rowIndex)).longValue() == 1) {  // It is a total
+            if (((Number) columnValues.get(rowIndex)).longValue() == 1) {
+              // It is a total if == 1. It is cast as Number because the type is Byte with Spark, Long with ClickHouse...
               baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
             }
           }
@@ -95,12 +123,12 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
       return new ColumnarTable(
               newFields,
-              initialTable.measures(),
+              input.measures(),
               IntStream.range(query.select.size(), query.select.size() + query.measures.size()).toArray(),
               IntStream.range(0, query.select.size()).toArray(),
               newValues);
     } else {
-      return initialTable;
+      return input;
     }
   }
 

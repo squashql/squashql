@@ -22,7 +22,6 @@ public class SQLTranslator {
     return translate(query, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));
   }
 
-  // FIXME CLICKHOUSE see https://github.com/ClickHouse/ClickHouse/issues/8045 for null instead of ""
   public static String translate(DatabaseQuery query,
                                  Function<String, Field> fieldProvider,
                                  QueryRewriter queryRewriter,
@@ -57,49 +56,50 @@ public class SQLTranslator {
 
   // https://github.com/ClickHouse/ClickHouse/issues/322#issuecomment-615087004
   private static void addGroupByAndRollUp(List<String> groupBy, List<String> rollUp, boolean supportPartialRollup, StringBuilder statement) {
-    if (!groupBy.isEmpty()) {
-      boolean isPartialRollup = !Set.copyOf(groupBy).equals(Set.copyOf(rollUp));
-      statement.append(" group by ");
-      boolean hasRollUp = rollUp != null && !rollUp.isEmpty();
-      List<String> groupByOnly = new ArrayList<>();
-      List<String> rollUpOnly = new ArrayList<>();
+    if (groupBy.isEmpty()) {
+      return;
+    }
 
-      for (String s : groupBy) {
-        if (hasRollUp && rollUp.contains(s)) {
-          rollUpOnly.add(s);
-        } else {
-          groupByOnly.add(s);
-        }
+    statement.append(" group by ");
+
+    boolean isPartialRollup = !Set.copyOf(groupBy).equals(Set.copyOf(rollUp));
+    boolean hasRollUp = rollUp != null && !rollUp.isEmpty();
+    List<String> groupByOnly = new ArrayList<>();
+    List<String> rollUpOnly = new ArrayList<>();
+
+    for (String s : groupBy) {
+      if (hasRollUp && rollUp.contains(s)) {
+        rollUpOnly.add(s);
+      } else {
+        groupByOnly.add(s);
+      }
+    }
+
+    if (hasRollUp && isPartialRollup && !supportPartialRollup) {
+      List<String> groupingSets = new ArrayList<>();
+      groupingSets.add(groupBy.stream().collect(Collectors.joining(", ", "(", ")")));
+      List<String> toRemove = new ArrayList<>();
+      Collections.reverse(rollUpOnly);
+      // The equivalent of group by scenario, rollup(category, subcategory) is:
+      // (scenario, category, subcategory), (scenario, category), (scenario)
+      for (String r : rollUpOnly) {
+        toRemove.add(r);
+        List<String> copy = new ArrayList<>(groupBy);
+        copy.removeAll(toRemove);
+        groupingSets.add(copy.stream().collect(Collectors.joining(", ", "(", ")")));
       }
 
-      if (hasRollUp && isPartialRollup && !supportPartialRollup) {
-        List<String> groupingSets = new ArrayList<>();
-        groupingSets.add(groupBy.stream().collect(Collectors.joining(", ", "(", ")")));
-        List<String> toRemove = new ArrayList<>();
-        Collections.reverse(rollUpOnly);
-        // The equivalent of group by scenario, rollup(category, subcategory) is:
-        // (scenario, category, subcategory), (scenario, category), (scenario)
-        for (String r : rollUpOnly) {
-          toRemove.add(r);
-          List<String> copy = new ArrayList<>(groupBy);
-          copy.removeAll(toRemove);
-          groupingSets.add(copy.stream().collect(Collectors.joining(", ", "(", ")")));
-        }
+      statement
+              .append("grouping sets ")
+              .append(groupingSets.stream().collect(Collectors.joining(", ", "(", ")")));
+    } else {
+      statement.append(groupByOnly.stream().collect(Collectors.joining(", ")));
 
-        statement
-                .append("grouping sets ")
-                .append(groupingSets.stream().collect(Collectors.joining(", ", "(", ")")));
-      } else {
-        statement.append(groupByOnly.stream().collect(Collectors.joining(", ")));
-
-        if (hasRollUp) {
-          if (!groupByOnly.isEmpty()) {
-            statement.append(", ");
-          }
-          statement.append("rollup(");
-          statement.append(rollUpOnly.stream().collect(Collectors.joining(", ")));
-          statement.append(")");
+      if (hasRollUp) {
+        if (!groupByOnly.isEmpty()) {
+          statement.append(", ");
         }
+        statement.append(rollUpOnly.stream().collect(Collectors.joining(", ", "rollup(", ")")));
       }
     }
   }

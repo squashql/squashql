@@ -55,16 +55,6 @@ public class MeasurePrefetcherVisitor implements MeasureVisitor<Map<QueryExecuto
     return result;
   }
 
-//  @Override
-//  public Map<QueryExecutor.QueryScope, Set<Measure>> visit(ParentComparisonMeasure measure) {
-//    if (!MeasureUtils.isPrimitive(measure.measure)) {
-//      // Not support for the moment
-//      throw new IllegalArgumentException("Only a primitive measure can be used in a parent comparison measure");
-//    }
-//    QueryExecutor.QueryScope parentScope = MeasureUtils.getParentScopeWithClearedConditions(this.originalQueryScope, measure, this.fieldSupplier);
-//    return Map.of(parentScope, Set.of(measure.measure), this.originalQueryScope, Set.of(measure.measure));
-//  }
-
   @Override
   public Map<QueryExecutor.QueryScope, Set<Measure>> visit(LongConstantMeasure measure) {
     return Collections.emptyMap();

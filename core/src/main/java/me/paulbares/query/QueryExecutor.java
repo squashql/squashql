@@ -68,7 +68,7 @@ public class QueryExecutor {
 
     queryWatch.start(QueryWatch.EXECUTE_PREFETCH_PLAN);
     Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
-    QueryScope queryScope = createQueryScope(query, fieldSupplier); // FIXME should we take into account CV Total for Scope?
+    QueryScope queryScope = createQueryScope(query, fieldSupplier);
     Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> graph = computeDependencyGraph(query, queryScope, fieldSupplier);
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
@@ -108,7 +108,6 @@ public class QueryExecutor {
           notCached.add(CountMeasure.INSTANCE);
         }
         notCached.forEach(prefetchQuery::withMeasure);
-//        prefetchQuery.totals = (Totals) query.context.get(Totals.KEY); // FIXME no need on each prefetchQuery. Only the one for the query scope.
         result = this.queryEngine.execute(prefetchQuery);
       } else {
         // Create an empty result that will be populated by the query cache
