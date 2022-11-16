@@ -76,5 +76,10 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
               .replace("(", "_")
               .replace(")", "_");
     }
+
+    @Override
+    public boolean doesSupportPartialRollup() {
+      return true;
+    }
   }
 }

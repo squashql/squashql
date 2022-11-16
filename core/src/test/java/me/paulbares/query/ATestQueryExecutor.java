@@ -132,7 +132,7 @@ public abstract class ATestQueryExecutor {
   }
 
   @Test
-  void testQueryWildcardPartialRollup() {
+  void testQueryWildcardPartialRollupWithTwoColumns() {
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("q", "quantity")))
@@ -172,6 +172,39 @@ public abstract class ATestQueryExecutor {
             List.of("s2", "cloth", 3l),
             List.of("s2", "drink", 10l),
             List.of("s2", "food", 20l));
+  }
+
+  @Test
+  void testQueryWildcardPartialRollupWithThreeColumns() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(SCENARIO_FIELD_NAME, eq("s1")) // filter to reduce output table size
+            .select(List.of(SCENARIO_FIELD_NAME, "category", "subcategory"), List.of(sum("q", "quantity")))
+            .rollup("category", "subcategory")
+            .build();
+    Table result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList("s1", TOTAL_CELL, TOTAL_CELL, 33l),
+            Arrays.asList("s1", "cloth", TOTAL_CELL, 3l),
+            Arrays.asList("s1", "cloth", null, 3l),
+            Arrays.asList("s1", "drink", TOTAL_CELL, 10l),
+            Arrays.asList("s1", "drink", null, 10l),
+            Arrays.asList("s1", "food", TOTAL_CELL, 20l),
+            Arrays.asList("s1", "food", "biscuit", 20l));
+
+    query = Query
+            .from(this.storeName)
+            .where(SCENARIO_FIELD_NAME, eq("s1")) // filter to reduce output table size
+            .select(List.of(SCENARIO_FIELD_NAME, "category", "subcategory"), List.of(sum("q", "quantity")))
+            .rollup("category") // Only total for category
+            .build();
+    result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList("s1", TOTAL_CELL, "biscuit", 20l),
+            Arrays.asList("s1", TOTAL_CELL, null, 13l),
+            Arrays.asList("s1", "cloth", null, 3l),
+            Arrays.asList("s1", "drink", null, 10l),
+            Arrays.asList("s1", "food", "biscuit", 20l));
   }
 
   @Test

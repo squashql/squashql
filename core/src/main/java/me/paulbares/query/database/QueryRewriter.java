@@ -11,4 +11,6 @@ public interface QueryRewriter {
   default String measureAlias(String alias, Measure measure) {
     return alias;
   }
+
+  boolean doesSupportPartialRollup();
 }

@@ -44,7 +44,6 @@ public class ParentComparisonExecutor extends AComparisonExecutor {
           }
         }
       }
-
       return true;
     }
   }

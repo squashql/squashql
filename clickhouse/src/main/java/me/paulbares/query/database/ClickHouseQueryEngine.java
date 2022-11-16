@@ -16,13 +16,19 @@ import java.util.stream.IntStream;
 
 public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
 
+  protected final QueryRewriter rewriter;
+
   public ClickHouseQueryEngine(ClickHouseDatastore datastore) {
     super(datastore);
+    this.rewriter = new ClickHouseQueryRewriter();
   }
 
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
-    String sql = SQLTranslator.translate(query, QueryExecutor.withFallback(this.fieldSupplier, String.class));
+    String sql = SQLTranslator.translate(query,
+            QueryExecutor.withFallback(this.fieldSupplier, String.class),
+            this.rewriter,
+            (qr, name) -> qr.tableName(name));
     return getResults(sql, this.datastore.dataSource, query);
   }
 
@@ -52,6 +58,15 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
       return table;
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  static class ClickHouseQueryRewriter implements QueryRewriter {
+    @Override
+    public boolean doesSupportPartialRollup() {
+      // Not supported as of now: https://github.com/ClickHouse/ClickHouse/issues/322#issuecomment-615087004
+      // Tested with version https://github.com/ClickHouse/ClickHouse/tree/v22.10.2.11-stable
+      return false;
     }
   }
 }

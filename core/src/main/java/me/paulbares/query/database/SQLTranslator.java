@@ -4,9 +4,7 @@ import me.paulbares.query.dto.*;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -53,12 +51,14 @@ public class SQLTranslator {
       addJoins(statement, query.table, queryRewriter);
     }
     addConditions(statement, query, fieldProvider);
-    addGroupByAndRollUp(groupBy, query.rollUp.stream().map(SqlUtils::escape).toList(), statement);
+    addGroupByAndRollUp(groupBy, query.rollUp.stream().map(SqlUtils::escape).toList(), queryRewriter.doesSupportPartialRollup(), statement);
     return statement.toString();
   }
 
-  private static void addGroupByAndRollUp(List<String> groupBy, List<String> rollUp, StringBuilder statement) {
+  // https://github.com/ClickHouse/ClickHouse/issues/322#issuecomment-615087004
+  private static void addGroupByAndRollUp(List<String> groupBy, List<String> rollUp, boolean supportPartialRollup, StringBuilder statement) {
     if (!groupBy.isEmpty()) {
+      boolean isPartialRollup = !Set.copyOf(groupBy).equals(Set.copyOf(rollUp));
       statement.append(" group by ");
       boolean hasRollUp = rollUp != null && !rollUp.isEmpty();
       List<String> groupByOnly = new ArrayList<>();
@@ -72,36 +72,34 @@ public class SQLTranslator {
         }
       }
 
-      statement.append(groupByOnly.stream().collect(Collectors.joining(", ")));
-
-      if (hasRollUp) {
-        if (!groupByOnly.isEmpty()) {
-          statement.append(", ");
+      if (hasRollUp && isPartialRollup && !supportPartialRollup) {
+        List<String> groupingSets = new ArrayList<>();
+        groupingSets.add(groupBy.stream().collect(Collectors.joining(", ", "(", ")")));
+        List<String> toRemove = new ArrayList<>();
+        Collections.reverse(rollUpOnly);
+        // The equivalent of group by scenario, rollup(category, subcategory) is:
+        // (scenario, category, subcategory), (scenario, category), (scenario)
+        for (String r : rollUpOnly) {
+          toRemove.add(r);
+          List<String> copy = new ArrayList<>(groupBy);
+          copy.removeAll(toRemove);
+          groupingSets.add(copy.stream().collect(Collectors.joining(", ", "(", ")")));
         }
-        statement.append("rollup(");
-      }
 
-      statement.append(rollUpOnly.stream().collect(Collectors.joining(", ")));
+        statement
+                .append("grouping sets ")
+                .append(groupingSets.stream().collect(Collectors.joining(", ", "(", ")")));
+      } else {
+        statement.append(groupByOnly.stream().collect(Collectors.joining(", ")));
 
-      if (hasRollUp) {
-        statement.append(")");
-        // Deactivate order for now
-        //        statement.append(") order by ");
-        //        String order = " asc"; // default for now
-        //        // https://stackoverflow.com/a/7862601
-        //        // to move totals and subtotals at the top or at the bottom and keep normal order for other rows.
-        //        String position = totals.position == null ? Totals.POSITION_TOP : totals.position; // default top
-        //        // Note: with Spark, values of totals are set to null but for Clickhouse, they are set to '' for string type,
-        //        // 0 for integer... this is why there is the following case condition (for clickhouse, only string type is
-        //        // handled
-        //        // for the moment).
-        //        String orderBy = "case when %s is null or %s = '' then %d else %d end, %s %s";
-        //        int first = position.equals(Totals.POSITION_TOP) ? 0 : 1;
-        //        int second = first ^ 1;
-        //        String orderByStatement = groupBy.stream()
-        //                .map(g -> orderBy.formatted(g, g, first, second, g, order))
-        //                .collect(Collectors.joining(", "));
-        //        statement.append(orderByStatement);
+        if (hasRollUp) {
+          if (!groupByOnly.isEmpty()) {
+            statement.append(", ");
+          }
+          statement.append("rollup(");
+          statement.append(rollUpOnly.stream().collect(Collectors.joining(", ")));
+          statement.append(")");
+        }
       }
     }
   }
