@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static me.paulbares.query.database.SqlUtils.escape;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
@@ -30,25 +29,20 @@ public class SQLTranslator {
                                  Function<String, Field> fieldProvider,
                                  QueryRewriter queryRewriter,
                                  BiFunction<QueryRewriter, String, String> tableTransformer) {
-//    List<String> selects = new ArrayList<>();
+    List<String> selects = new ArrayList<>();
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
 
     query.select.forEach(field -> groupBy.add(escape(field)));
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true)));
 
-//    groupBy.forEach(selects::add); // coord first, then aggregates
-//    aggregates.forEach(selects::add);
+    groupBy.forEach(selects::add); // coord first, then aggregates
+    query.rollUp.forEach(field -> selects.add(String.format("grouping(%s) as %s", escape(field), groupingAlias(field)))); // use grouping to identify totals
+    aggregates.forEach(selects::add);
 
     StringBuilder statement = new StringBuilder();
     statement.append("select ");
-//    Function<String, String> f = s -> String.format("COALESCE(%s, '%s') AS %s", s, TOTAL_CELL, s);
-    Function<String, String> f = Function.identity();
-//    statement.append(selects.stream().collect(Collectors.joining(", ")));
-    statement.append(
-            Stream.concat(Stream.concat(groupBy.stream().map(f::apply), groupBy.stream().map(s -> String.format("GROUPING(%s)", s))),
-                    aggregates.stream()).collect(Collectors.joining(", ")));
-//    statement.append(aggregates.stream().collect(Collectors.joining(", ")));
+    statement.append(selects.stream().collect(Collectors.joining(", ")));
     statement.append(" from ");
     if (query.subQuery != null) {
       statement.append("(");
@@ -82,15 +76,15 @@ public class SQLTranslator {
 
       if (hasRollUp) {
         if (!groupByOnly.isEmpty()) {
-          statement.append(" ,");
+          statement.append(", ");
         }
-        statement.append(" rollup(");
+        statement.append("rollup(");
       }
 
       statement.append(rollUpOnly.stream().collect(Collectors.joining(", ")));
 
       if (hasRollUp) {
-        statement.append(") ");
+        statement.append(")");
         // Deactivate order for now
         //        statement.append(") order by ");
         //        String order = " asc"; // default for now
@@ -251,5 +245,13 @@ public class SQLTranslator {
       virtualTable += "\nUNION ALL\n" + vtScenario;
     }
     return virtualTable;
+  }
+
+  /**
+   * Returns the name of the column used for grouping(). If it is modified, please modify also
+   * {@link SqlUtils#GROUPING_PATTERN}.
+   */
+  public static String groupingAlias(String field) {
+    return String.format(escape("___grouping___%s___"), field);
   }
 }

@@ -68,29 +68,32 @@ public class TestSQLTranslator {
   }
 
   @Test
-  void testWithTotalsTop() {
+  void testWithFullRollup() {
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(SCENARIO_FIELD_NAME)
+            .withSelect("type")
             .withRollUp(SCENARIO_FIELD_NAME)
+            .withRollUp("type")
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select `scenario`, sum(`price`) as `pnl.sum` from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
-                    "order by case when `scenario` is null or `scenario` = '' then 0 else 1 end, `scenario`  asc");
+            .isEqualTo("select `scenario`, `type`, grouping(`scenario`) as `___grouping___scenario___`, grouping(`type`) as `___grouping___type___`, sum(`price`) as `pnl.sum`" +
+                    " from baseStore group by rollup(`scenario`, `type`)");
   }
 
   @Test
-  void testWithTotalsBottom() {
+  void testWithPartialRollup() {
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(SCENARIO_FIELD_NAME)
+            .withSelect("type")
             .withRollUp(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select `scenario`, sum(`price`) as `pnl.sum` from " + BASE_STORE_NAME + " group by rollup(`scenario`) " +
-                    "order by case when `scenario` is null or `scenario` = '' then 1 else 0 end, `scenario`  asc");
+            .isEqualTo("select `scenario`, `type`, grouping(`scenario`) as `___grouping___scenario___`, sum(`price`) as `pnl.sum`" +
+                    " from baseStore group by `type`, rollup(`scenario`)");
   }
 
   @Test

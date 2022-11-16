@@ -1,5 +1,6 @@
 package me.paulbares.query.database;
 
+import me.paulbares.query.ColumnarTable;
 import me.paulbares.query.CountMeasure;
 import me.paulbares.query.Table;
 import me.paulbares.store.Datastore;
@@ -11,8 +12,10 @@ import org.eclipse.collections.impl.tuple.Tuples;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T> {
 
@@ -35,7 +38,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
         }
       }
 
-      if(fieldName.equals(CountMeasure.INSTANCE.alias())) {
+      if (fieldName.equals(CountMeasure.INSTANCE.alias())) {
         return new Field(CountMeasure.INSTANCE.alias(), long.class);
       }
       throw new IllegalArgumentException("Cannot find field with name " + fieldName);
@@ -70,7 +73,35 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   }
 
   protected Table postProcessDataset(Table initialTable, DatabaseQuery query) {
-    return initialTable;
+    if (!query.rollUp.isEmpty()) {
+      List<Field> newFields = new ArrayList<>();
+      List<List<Object>> newValues = new ArrayList<>();
+      for (int i = 0; i < initialTable.headers().size(); i++) {
+        Field header = initialTable.headers().get(i);
+        List<Object> columnValues = initialTable.getColumn(i);
+        if (i < query.select.size() || i >= query.select.size() + query.rollUp.size()) {
+          newFields.add(header);
+          newValues.add(columnValues);
+        } else {
+          String baseName = Objects.requireNonNull(SqlUtils.extractGroupingField(header.name()));
+          List<Object> baseColumnValues = initialTable.getColumnValues(baseName);
+          for (int rowIndex = 0; rowIndex < columnValues.size(); rowIndex++) {
+            if (((Number) columnValues.get(rowIndex)).longValue() == 1) {  // It is a total
+              baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
+            }
+          }
+        }
+      }
+
+      return new ColumnarTable(
+              newFields,
+              initialTable.measures(),
+              IntStream.range(query.select.size(), query.select.size() + query.measures.size()).toArray(),
+              IntStream.range(0, query.select.size()).toArray(),
+              newValues);
+    } else {
+      return initialTable;
+    }
   }
 
   public static <Column, Record> Pair<List<Field>, List<List<Object>>> transform(

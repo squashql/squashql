@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static me.paulbares.query.Functions.eq;
@@ -112,15 +113,22 @@ public abstract class ATestQueryExecutor {
             List.of(MAIN_SCENARIO_NAME, "food", 3d, 20l));
   }
 
+  /**
+   * subcategory is null for some rows. The engine needs to be capable of distinguish null values that are returned by
+   * ROLLUP from standard null values.
+   */
   @Test
-  void testQueryWildcardWithFullRollup2222() {
+  void testQueryWildcardWithFullRollupWithNullValues() {
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of("subcategory"), List.of(sum("q", "quantity")))
             .rollup("subcategory")
             .build();
     Table result = this.queryExecutor.execute(query);
-    result.show();
+    Assertions.assertThat(result).containsExactly(
+            List.of(TOTAL_CELL, 99l),
+            List.of("biscuit", 60l),
+            Arrays.asList(null, 39l));
   }
 
   @Test

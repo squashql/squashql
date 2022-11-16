@@ -43,12 +43,13 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
               c -> new Field(c.getColumnName(), ClickHouseUtil.clickHouseTypeToClass(c.getDataType())),
               response.records().iterator(),
               (i, r) -> r.getValue(i).asObject());
-      return new ColumnarTable(
+      ColumnarTable table = new ColumnarTable(
               result.getOne(),
               query.measures,
               IntStream.range(query.select.size(), query.select.size() + query.measures.size()).toArray(),
               IntStream.range(0, query.select.size()).toArray(),
               result.getTwo());
+      return table;
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);
     }
