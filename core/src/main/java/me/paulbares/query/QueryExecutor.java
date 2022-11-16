@@ -20,7 +20,6 @@ import me.paulbares.util.Queries;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static me.paulbares.query.ColumnSetKey.BUCKET;
@@ -140,8 +139,11 @@ public class QueryExecutor {
 
     queryWatch.start(QueryWatch.ORDER);
 
-    ColumnarTable columnarTable = buildFinalResult(query, result);
-    Table sortedTable = TableUtils.order(columnarTable, query);
+    result = TableUtils.selectAndOrderColumns((ColumnarTable) result, query);
+    result = TableUtils.replaceTotalCellValues((ColumnarTable) result, query);
+    result = TableUtils.orderRows((ColumnarTable) result, query);
+
+    // TODO rewrite the sortedTable to change ___total___ to a better value (e.g Grand Total, Subtotal...)
 
     queryWatch.stop(QueryWatch.ORDER);
     queryWatch.stop(QueryWatch.GLOBAL);
@@ -151,7 +153,7 @@ public class QueryExecutor {
             .hitCount(stats.hitCount)
             .evictionCount(stats.evictionCount)
             .missCount(stats.missCount);
-    return sortedTable;
+    return result;
   }
 
   private static Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> computeDependencyGraph(
@@ -179,47 +181,24 @@ public class QueryExecutor {
     List<Field> columns = Stream.concat(
             query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
             query.columns.stream()).map(fieldSupplier).toList();
-    return new QueryScope(query.table, query.subQuery, columns, query.conditions);
+    List<Field> rollupColumns = query.rollupColumns.stream().map(fieldSupplier).toList();
+    return new QueryScope(query.table, query.subQuery, columns, query.conditions, rollupColumns);
   }
 
   private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(QueryScope queryScope, DatabaseQuery prefetchQuery, Function<String, Field> fieldSupplier) {
     Set<Field> fields = prefetchQuery.select.stream().map(fieldSupplier).collect(Collectors.toSet());
     if (queryScope.tableDto != null) {
-      return new TableScope(queryScope.tableDto, fields, queryScope.conditions);
+      return new TableScope(queryScope.tableDto, fields, queryScope.conditions, new HashSet<>(queryScope.rollupColumns));
     } else {
       return new SubQueryScope(queryScope.subQuery, fields, queryScope.conditions);
     }
   }
 
-  private ColumnarTable buildFinalResult(QueryDto query, Table prefetchResult) {
-    List<String> finalColumns = new ArrayList<>();
-    query.columnSets.values().forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
-    query.columns.forEach(finalColumns::add);
-
-    // Once complete, construct the final result with columns in correct order.
-    List<Field> fields = new ArrayList<>();
-    List<List<Object>> values = new ArrayList<>();
-    for (String finalColumn : finalColumns) {
-      fields.add(prefetchResult.getField(finalColumn));
-      values.add(Objects.requireNonNull(prefetchResult.getColumnValues(finalColumn)));
-    }
-
-    for (Measure measure : query.measures) {
-      fields.add(prefetchResult.getField(measure));
-      values.add(Objects.requireNonNull(prefetchResult.getAggregateValues(measure)));
-    }
-
-    return new ColumnarTable(fields,
-            query.measures,
-            IntStream.range(finalColumns.size(), fields.size()).toArray(),
-            IntStream.range(0, finalColumns.size()).toArray(),
-            values);
-  }
-
   public record QueryScope(TableDto tableDto,
                            QueryDto subQuery,
                            List<Field> columns,
-                           Map<String, ConditionDto> conditions) {
+                           Map<String, ConditionDto> conditions,
+                           List<Field> rollupColumns) {
   }
 
   public record QueryPlanNodeKey(QueryScope queryScope, Measure measure) {

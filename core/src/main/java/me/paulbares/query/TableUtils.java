@@ -1,5 +1,7 @@
 package me.paulbares.query;
 
+import me.paulbares.query.database.QueryEngine;
+import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.MetadataItem;
 import me.paulbares.query.dto.QueryDto;
@@ -9,6 +11,7 @@ import me.paulbares.util.Queries;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class TableUtils {
@@ -109,7 +112,36 @@ public class TableUtils {
     return metadata;
   }
 
-  public static Table order(ColumnarTable table, QueryDto queryDto) {
+
+  /**
+   * Selects and reorder the columns to match the selection and order in the query.
+   */
+  public static ColumnarTable selectAndOrderColumns(ColumnarTable table, QueryDto queryDto) {
+    List<String> finalColumns = new ArrayList<>();
+    queryDto.columnSets.values().forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
+    queryDto.columns.forEach(finalColumns::add);
+
+    // Once complete, construct the final result with columns in correct order.
+    List<Field> fields = new ArrayList<>();
+    List<List<Object>> values = new ArrayList<>();
+    for (String finalColumn : finalColumns) {
+      fields.add(table.getField(finalColumn));
+      values.add(Objects.requireNonNull(table.getColumnValues(finalColumn)));
+    }
+
+    for (Measure measure : queryDto.measures) {
+      fields.add(table.getField(measure));
+      values.add(Objects.requireNonNull(table.getAggregateValues(measure)));
+    }
+
+    return new ColumnarTable(fields,
+            queryDto.measures,
+            IntStream.range(finalColumns.size(), fields.size()).toArray(),
+            IntStream.range(0, finalColumns.size()).toArray(),
+            values);
+  }
+
+  public static Table orderRows(ColumnarTable table, QueryDto queryDto) {
     Map<String, Comparator<?>> comparatorByColumnName = Queries.getComparators(queryDto);
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
@@ -162,5 +194,37 @@ public class TableUtils {
       ordered.set(i, list.get(order[i]));
     }
     return ordered;
+  }
+
+  /**
+   * Replaces cell values containing {@link SQLTranslator#TOTAL_CELL} with {@link QueryEngine#GRAND_TOTAL} or
+   * {@link QueryEngine#TOTAL}.
+   */
+  public static Table replaceTotalCellValues(ColumnarTable table, QueryDto queryDto) {
+    if (queryDto.rollupColumns.isEmpty()) {
+      return table;
+    }
+
+    for (int rowIndex = 0; rowIndex < table.count(); rowIndex++) {
+      boolean grandTotal = true;
+      String total = QueryEngine.TOTAL;
+      for (int i = 0; i < table.columnsIndices.length; i++) {
+        boolean isTotalCell = SQLTranslator.TOTAL_CELL.equals(table.getColumn(i).get(rowIndex));
+        if (isTotalCell) {
+          table.getColumn(i).set(rowIndex, total);
+          total = null; // First totalCell, TOTAL is written, null for the others.
+        }
+        grandTotal &= isTotalCell;
+      }
+
+      if (grandTotal) {
+        table.getColumn(0).set(rowIndex, QueryEngine.GRAND_TOTAL);
+        for (int i = 1; i < table.columnsIndices.length; i++) {
+          table.getColumn(i).set(rowIndex, null);
+        }
+      }
+    }
+
+    return table;
   }
 }

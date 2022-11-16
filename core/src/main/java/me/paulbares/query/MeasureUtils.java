@@ -9,7 +9,6 @@ import me.paulbares.store.Field;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public final class MeasureUtils {
@@ -24,14 +23,14 @@ public final class MeasureUtils {
       }
     } else if (m instanceof BinaryOperationMeasure bom) {
       return quoteExpression(bom.leftOperand) + " " + bom.operator.infix + " " + quoteExpression(bom.rightOperand);
-    } else if (m instanceof ComparisonMeasure cm) {
+    } else if (m instanceof ComparisonMeasureReferencePosition cm) {
       String alias = cm.getMeasure().alias();
-      if (cm instanceof ParentComparisonMeasure) {
+      if (cm.ancestors != null) {
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
-        return formula + ", ancestors = " + ((ParentComparisonMeasure) cm).ancestors;
+        return formula + ", ancestors = " + cm.ancestors;
       } else {
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current)", alias + "(reference)");
-        return formula + ", reference = " + ((ComparisonMeasureReferencePosition) cm).referencePosition;
+        return formula + ", reference = " + cm.referencePosition;
       }
     } else if (m instanceof ExpressionMeasure em) {
       return em.expression;
@@ -54,38 +53,27 @@ public final class MeasureUtils {
     }
   }
 
-  public static QueryExecutor.QueryScope getParentScopeWithClearedConditions(QueryExecutor.QueryScope queryScope, ParentComparisonMeasure pcm, Function<String, Field> fieldSupplier) {
-    int lowestColumnIndex = -1;
-    Set<String> cols = queryScope.columns().stream().map(Field::name).collect(Collectors.toSet());
-    for (int i = 0; i < pcm.ancestors.size(); i++) {
-      String ancestor = pcm.ancestors.get(i);
-      if (cols.contains(ancestor)) {
-        lowestColumnIndex = i;
-        break;
-      }
-    }
-
-    Map<String, ConditionDto> newConditions = new HashMap<>(queryScope.conditions());
-    for (String ancestor : pcm.ancestors) {
-      newConditions.remove(ancestor);
-    }
-
-    List<Field> copy = new ArrayList<>(queryScope.columns());
-    List<Field> toRemove = pcm.ancestors.subList(0, lowestColumnIndex + 1).stream().map(fieldSupplier).toList();
-    copy.removeAll(toRemove);
-    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), copy, newConditions);
-  }
-
   public static QueryExecutor.QueryScope getReadScopeComparisonMeasureReferencePosition(
           QueryDto query,
           ComparisonMeasureReferencePosition cm,
-          QueryExecutor.QueryScope queryScope) {
+          QueryExecutor.QueryScope queryScope,
+          Function<String, Field> fieldSupplier) {
     Map<String, ConditionDto> newConditions = new HashMap<>(queryScope.conditions());
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(newConditions::remove));
     Optional.ofNullable(cm.period)
             .ifPresent(p -> getColumnsForPrefetching(p).forEach(newConditions::remove));
-    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), newConditions);
+    List<Field> rollupColumns = new ArrayList<>(queryScope.rollupColumns());
+    Optional.ofNullable(cm.ancestors)
+            .ifPresent(p -> {
+              p.forEach(newConditions::remove);
+              p.forEach(c -> {
+                if (query.columns.contains(c)) {
+                  rollupColumns.add(fieldSupplier.apply(c));
+                }
+              });
+            });
+    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), newConditions, rollupColumns);
   }
 
   public static boolean isPrimitive(Measure m) {

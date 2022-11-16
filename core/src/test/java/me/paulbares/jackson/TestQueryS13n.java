@@ -3,7 +3,6 @@ package me.paulbares.jackson;
 import me.paulbares.query.*;
 import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.Repository;
-import me.paulbares.query.context.Totals;
 import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.dto.*;
 import org.assertj.core.api.Assertions;
@@ -34,8 +33,7 @@ public class TestQueryS13n {
                     BinaryOperator.PLUS,
                     new AggregatedMeasure("p", "price", "sum"),
                     new AggregatedMeasure("p", "price", "sum")))
-            .context(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.NOT_USE))
-            .context(Totals.KEY, BOTTOM);
+            .context(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.NOT_USE));
 
     String serialize = query.json();
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
@@ -176,10 +174,6 @@ public class TestQueryS13n {
   void testContextValues() {
     ContextValue cv = new Repository("url");
     ContextValue deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(cv), ContextValue.class);
-    Assertions.assertThat(deserialize).isEqualTo(cv);
-
-    cv = new Totals(Totals.KEY);
-    deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(cv), ContextValue.class);
     Assertions.assertThat(deserialize).isEqualTo(cv);
 
     cv = new QueryCacheContextValue(QueryCacheContextValue.Action.USE);

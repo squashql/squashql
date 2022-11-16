@@ -15,9 +15,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import java.util.Arrays;
 import java.util.List;
 
-import static me.paulbares.query.Functions.*;
+import static me.paulbares.query.Functions.eq;
+import static me.paulbares.query.Functions.sum;
+import static me.paulbares.query.database.QueryEngine.GRAND_TOTAL;
+import static me.paulbares.query.database.QueryEngine.TOTAL;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -87,10 +91,121 @@ public abstract class ATestQueryExecutor {
             .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
     Table result = this.queryExecutor.execute(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(
+    Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, 15.0d, 33l),
             List.of("s1", 17.0d, 33l),
             List.of("s2", 14.5d, 33l));
+  }
+
+  @Test
+  void testQueryWildcardWithFullRollup() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
+            .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("p", "price"), sum("q", "quantity")))
+            .rollup(SCENARIO_FIELD_NAME, "category")
+            .build();
+    Table result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList(GRAND_TOTAL, null, 15d, 33l),
+            List.of(MAIN_SCENARIO_NAME, TOTAL, 15d, 33l),
+            List.of(MAIN_SCENARIO_NAME, "cloth", 10d, 3l),
+            List.of(MAIN_SCENARIO_NAME, "drink", 2d, 10l),
+            List.of(MAIN_SCENARIO_NAME, "food", 3d, 20l));
+  }
+
+  /**
+   * subcategory is null for some rows. The engine needs to be capable of distinguish null values that are returned by
+   * ROLLUP from standard null values.
+   */
+  @Test
+  void testQueryWildcardWithFullRollupWithNullValues() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("subcategory"), List.of(sum("q", "quantity")))
+            .rollup("subcategory")
+            .build();
+    Table result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of(GRAND_TOTAL, 99l),
+            List.of("biscuit", 60l),
+            Arrays.asList(null, 39l));
+  }
+
+  @Test
+  void testQueryWildcardPartialRollupWithTwoColumns() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("q", "quantity")))
+            .rollup("category") // We don't care here about total on scenario
+            .build();
+    Table result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of(MAIN_SCENARIO_NAME, TOTAL, 33l),
+            List.of(MAIN_SCENARIO_NAME, "cloth", 3l),
+            List.of(MAIN_SCENARIO_NAME, "drink", 10l),
+            List.of(MAIN_SCENARIO_NAME, "food", 20l),
+            List.of("s1", TOTAL, 33l),
+            List.of("s1", "cloth", 3l),
+            List.of("s1", "drink", 10l),
+            List.of("s1", "food", 20l),
+            List.of("s2", TOTAL, 33l),
+            List.of("s2", "cloth", 3l),
+            List.of("s2", "drink", 10l),
+            List.of("s2", "food", 20l));
+
+    query = Query
+            .from(this.storeName)
+            .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("q", "quantity")))
+            .rollup(SCENARIO_FIELD_NAME) // try with another column
+            .build();
+    result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of(TOTAL, "cloth", 9l),
+            List.of(TOTAL, "drink", 30l),
+            List.of(TOTAL, "food", 60l),
+            List.of(MAIN_SCENARIO_NAME, "cloth", 3l),
+            List.of(MAIN_SCENARIO_NAME, "drink", 10l),
+            List.of(MAIN_SCENARIO_NAME, "food", 20l),
+            List.of("s1", "cloth", 3l),
+            List.of("s1", "drink", 10l),
+            List.of("s1", "food", 20l),
+            List.of("s2", "cloth", 3l),
+            List.of("s2", "drink", 10l),
+            List.of("s2", "food", 20l));
+  }
+
+  @Test
+  void testQueryWildcardPartialRollupWithThreeColumns() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(SCENARIO_FIELD_NAME, eq("s1")) // filter to reduce output table size
+            .select(List.of(SCENARIO_FIELD_NAME, "category", "subcategory"), List.of(sum("q", "quantity")))
+            .rollup("category", "subcategory")
+            .build();
+    Table result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList("s1", TOTAL, null, 33l),
+            Arrays.asList("s1", "cloth", TOTAL, 3l),
+            Arrays.asList("s1", "cloth", null, 3l),
+            Arrays.asList("s1", "drink", TOTAL, 10l),
+            Arrays.asList("s1", "drink", null, 10l),
+            Arrays.asList("s1", "food", TOTAL, 20l),
+            Arrays.asList("s1", "food", "biscuit", 20l));
+
+    query = Query
+            .from(this.storeName)
+            .where(SCENARIO_FIELD_NAME, eq("s1")) // filter to reduce output table size
+            .select(List.of(SCENARIO_FIELD_NAME, "category", "subcategory"), List.of(sum("q", "quantity")))
+            .rollup("category") // Only total for category
+            .build();
+    result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList("s1", TOTAL, "biscuit", 20l),
+            Arrays.asList("s1", TOTAL, null, 13l),
+            Arrays.asList("s1", "cloth", null, 3l),
+            Arrays.asList("s1", "drink", null, 10l),
+            Arrays.asList("s1", "food", "biscuit", 20l));
   }
 
   @Test
@@ -100,7 +215,7 @@ public abstract class ATestQueryExecutor {
             .select(List.of(SCENARIO_FIELD_NAME), List.of(CountMeasure.INSTANCE))
             .build();
     Table result = this.queryExecutor.execute(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(
+    Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, 3l),
             List.of("s1", 3l),
             List.of("s2", 3l));
@@ -126,7 +241,7 @@ public abstract class ATestQueryExecutor {
     QueryDto query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .withCondition(SCENARIO_FIELD_NAME, Functions.eq("s1"))
+            .withCondition(SCENARIO_FIELD_NAME, eq("s1"))
             .aggregatedMeasure("p", "price", "sum")
             .aggregatedMeasure("q", "quantity", "sum");
     Table table = this.queryExecutor.execute(query);
@@ -140,8 +255,8 @@ public abstract class ATestQueryExecutor {
             .withColumn("category")
             .withColumn("ean")
             .aggregatedMeasure("q", "quantity", "sum")
-            .withCondition(SCENARIO_FIELD_NAME, Functions.eq(MAIN_SCENARIO_NAME))
-            .withCondition("ean", Functions.eq("bottle"))
+            .withCondition(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME))
+            .withCondition("ean", eq("bottle"))
             .withCondition("category", Functions.in("cloth", "drink"));
 
     Table table = this.queryExecutor.execute(query);
@@ -222,7 +337,7 @@ public abstract class ATestQueryExecutor {
    */
   @Test
   void testSumIf() {
-    ConditionDto or = Functions.eq("food").or(Functions.eq("drink"));
+    ConditionDto or = eq("food").or(eq("drink"));
 
     QueryDto query = new QueryDto()
             .table(this.storeName)

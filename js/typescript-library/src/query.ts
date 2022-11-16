@@ -5,6 +5,7 @@ import {BucketColumnSet, ColumnSet, ColumnSetKey} from "./columnsets";
 
 export class Query {
   columns: Array<string>
+  rollupColumns: Array<string>
   columnSets: Map<string, ColumnSet>
   measures: Array<Measure>
   table: Table
@@ -15,6 +16,7 @@ export class Query {
 
   constructor() {
     this.columns = []
+    this.rollupColumns = []
     this.measures = []
     this.conditions = new Map<string, Condition>()
     this.orders = new Map<string, Order>()
@@ -38,6 +40,11 @@ export class Query {
 
   withColumn(colum: string): Query {
     this.columns.push(colum)
+    return this
+  }
+
+  withRollupColumn(colum: string): Query {
+    this.rollupColumns.push(colum)
     return this
   }
 
@@ -66,6 +73,7 @@ export class Query {
       "table": this.table,
       "subQuery": this.subQuery,
       "columns": this.columns,
+      "rollupColumns": this.rollupColumns,
       "columnSets": Object.fromEntries(this.columnSets),
       "measures": this.measures,
       "conditions": Object.fromEntries(this.conditions),

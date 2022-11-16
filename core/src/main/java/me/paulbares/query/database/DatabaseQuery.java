@@ -25,9 +25,15 @@ public class DatabaseQuery {
   public List<String> select = new ArrayList<>();
   public Map<String, ConditionDto> conditions = new LinkedHashMap<>();
   public List<Measure> measures = new ArrayList<>();
+  public List<String> rollup = new ArrayList<>();
 
   public DatabaseQuery withSelect(String field) {
     this.select.add(field);
+    return this;
+  }
+
+  public DatabaseQuery withRollup(String field) {
+    this.rollup.add(field);
     return this;
   }
 

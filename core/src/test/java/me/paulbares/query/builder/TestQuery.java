@@ -235,4 +235,25 @@ public class TestQuery {
 
     Assertions.assertThat(build).isEqualTo(q);
   }
+
+  @Test
+  void testRollup() {
+    Measure sum = sum("sum", "f2");
+    QueryDto build = Query
+            .from("saas")
+            .select(List.of("col1", "col2"), List.of(sum))
+            .rollup("col1")
+            .orderBy("col1", OrderKeywordDto.ASC)
+            .build();
+
+    QueryDto q = new QueryDto()
+            .table("saas")
+            .withColumn("col1")
+            .withColumn("col2")
+            .withRollup("col1")
+            .orderBy("col1", OrderKeywordDto.ASC)
+            .withMeasure(sum);
+
+    Assertions.assertThat(build).isEqualTo(q);
+  }
 }

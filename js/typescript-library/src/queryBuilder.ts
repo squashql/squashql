@@ -5,9 +5,9 @@ import {Condition} from "./conditions";
 import {OrderKeyword} from "./order";
 
 interface CanAddOrderBy {
-  orderBy(column: string, order: OrderKeyword): HasSelect
+  orderBy(column: string, order: OrderKeyword): HasSelectAndRollup
 
-  orderByFirstElements(column: string, firstElements: Array<any>): HasSelect
+  orderByFirstElements(column: string, firstElements: Array<any>): HasSelectAndRollup
 }
 
 interface CanBeBuildQuery {
@@ -26,7 +26,7 @@ interface HasCondition {
    * added to select are automatically added to the groupBy clause of the query: aggregated results are then grouped by
    * the columns and columnSets indicated.
    */
-  select(columns: string[], columnSets: ColumnSet[], measures: Measure[]): HasSelect
+  select(columns: string[], columnSets: ColumnSet[], measures: Measure[]): CanAddRollup
 }
 
 type HasJoin = HasTable & HasStartedBuildingJoin & CanStartBuildingJoin
@@ -35,7 +35,7 @@ interface HasOrderBy extends CanBeBuildQuery {
   limit(limit: number): CanBeBuildQuery;
 }
 
-type HasSelect = HasOrderBy & CanAddOrderBy
+type HasSelectAndRollup = HasOrderBy & CanAddOrderBy
 
 interface HasStartedBuildingJoin {
   on(fromTable: string, from: string, toTable: string, to: string): HasJoin
@@ -45,6 +45,10 @@ type HasStartedBuildingTable = HasTable & CanStartBuildingJoin
 
 interface HasTable extends HasCondition {
   where(field: string, condition: Condition): HasTable
+}
+
+interface CanAddRollup extends HasOrderBy, CanAddOrderBy {
+  rollup(columns: string[]): HasSelectAndRollup
 }
 
 export function from(tableName: string): HasStartedBuildingTable {
@@ -59,7 +63,7 @@ export function fromSubQuery(subQuery: Query): HasStartedBuildingTable {
   return queryBuilder
 }
 
-class QueryBuilder implements HasCondition, HasSelect, HasJoin, HasStartedBuildingTable, HasOrderBy {
+class QueryBuilder implements HasCondition, HasSelectAndRollup, HasJoin, HasStartedBuildingTable, HasOrderBy, CanAddRollup {
   readonly queryDto: Query = new Query()
   private currentJoinTableBuilder: JoinTableBuilder = null;
 
@@ -90,11 +94,16 @@ class QueryBuilder implements HasCondition, HasSelect, HasJoin, HasStartedBuildi
     }
   }
 
-  select(columns: string[], columnSets: ColumnSet[], measures: Measure[]): HasSelect {
+  select(columns: string[], columnSets: ColumnSet[], measures: Measure[]): CanAddRollup {
     this.addJoinToQueryDto()
     columns.forEach(c => this.queryDto.withColumn(c))
     columnSets.forEach(cs => this.queryDto.columnSets.set(cs.key, cs))
     measures.forEach(m => this.queryDto.withMeasure(m))
+    return this
+  }
+
+  rollup(columns: string[]): HasSelectAndRollup {
+    columns.forEach(c => this.queryDto.withRollupColumn(c))
     return this
   }
 
@@ -113,12 +122,12 @@ class QueryBuilder implements HasCondition, HasSelect, HasJoin, HasStartedBuildi
     return undefined
   }
 
-  orderBy(column: string, order: OrderKeyword): HasSelect {
+  orderBy(column: string, order: OrderKeyword): HasSelectAndRollup {
     this.queryDto.orderBy(column, order)
     return this
   }
 
-  orderByFirstElements(column: string, firstElements: Array<any>): HasSelect {
+  orderByFirstElements(column: string, firstElements: Array<any>): HasSelectAndRollup {
     this.queryDto.orderByFirstElements(column, firstElements)
     return this
   }

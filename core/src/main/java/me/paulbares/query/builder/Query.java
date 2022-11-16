@@ -4,9 +4,10 @@ import me.paulbares.query.ColumnSet;
 import me.paulbares.query.Measure;
 import me.paulbares.query.dto.*;
 
+import java.util.Arrays;
 import java.util.List;
 
-public class Query implements HasCondition, HasSelect, HasJoin, HasStartedBuildingTable, HasOrderBy {
+public class Query implements HasCondition, HasSelectAndRollup, HasJoin, HasStartedBuildingTable, HasOrderBy, CanAddRollup {
 
   private final QueryDto queryDto = new QueryDto();
 
@@ -62,7 +63,7 @@ public class Query implements HasCondition, HasSelect, HasJoin, HasStartedBuildi
   }
 
   @Override
-  public HasSelect select(List<String> columns, List<ColumnSet> columnSets, List<Measure> measures) {
+  public CanAddRollup select(List<String> columns, List<ColumnSet> columnSets, List<Measure> measures) {
     addJoinToQueryDto();
     columns.forEach(this.queryDto::withColumn);
     columnSets.forEach(cs -> this.queryDto.withColumnSet(cs.getColumnSetKey(), cs));
@@ -77,14 +78,20 @@ public class Query implements HasCondition, HasSelect, HasJoin, HasStartedBuildi
   }
 
   @Override
-  public HasSelect orderBy(String column, OrderKeywordDto orderKeywordDto) {
+  public HasSelectAndRollup orderBy(String column, OrderKeywordDto orderKeywordDto) {
     this.queryDto.orderBy(column, orderKeywordDto);
     return this;
   }
 
   @Override
-  public HasSelect orderBy(String column, List<?> firstElements) {
+  public HasSelectAndRollup orderBy(String column, List<?> firstElements) {
     this.queryDto.orderBy(column, firstElements);
+    return this;
+  }
+
+  @Override
+  public HasSelectAndRollup rollup(String... columns) {
+    Arrays.stream(columns).forEach(this.queryDto::withRollup);
     return this;
   }
 

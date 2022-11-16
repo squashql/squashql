@@ -24,9 +24,8 @@ public class ClickHouseDeltaQueryEngine extends ADeltaQueryEngine<ClickHouseData
       }
     };
     String sql = SQLTranslator.translate(query,
-            null,
             this.fieldSupplier,
-            DefaultQueryRewriter.INSTANCE,
+            new ClickHouseQueryEngine.ClickHouseQueryRewriter(),
             tableTransformer);
     return getResults(sql, this.datastore.dataSource, query);
   }

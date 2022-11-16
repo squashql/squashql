@@ -230,10 +230,38 @@ public abstract class ATestBucketComparison {
             .withNewBucket("A", List.of("s2", MAIN_SCENARIO_NAME, "s1"))
             .withNewBucket("C", List.of(MAIN_SCENARIO_NAME, "s2", "s1"));
 
-    var query = new QueryDto()
-            .table(this.storeName)
-            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
-            .withMeasure(CountMeasure.INSTANCE);
+    var query = Query
+            .from(this.storeName)
+            .select_(List.of(bucketCS), List.of(CountMeasure.INSTANCE))
+            .build();
+
+    Table dataset = this.executor.execute(query);
+    Assertions.assertThat(dataset.headers().stream().map(Field::name))
+            .containsExactly(this.groupOfScenario, SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
+    Assertions.assertThat(dataset).containsExactly(
+            List.of("B", "s1", 3l),
+            List.of("B", MAIN_SCENARIO_NAME, 3l),
+            List.of("A", "s2", 3l),
+            List.of("A", MAIN_SCENARIO_NAME, 3l),
+            List.of("A", "s1", 3l),
+            List.of("C", MAIN_SCENARIO_NAME, 3l),
+            List.of("C", "s2", 3l),
+            List.of("C", "s1", 3l));
+  }
+
+  @Test
+  void testTotal() {
+    // The following order should be respected even if columns are ordered by default.
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, SCENARIO_FIELD_NAME)
+            .withNewBucket("B", List.of("s1", MAIN_SCENARIO_NAME))
+            .withNewBucket("A", List.of("s2", MAIN_SCENARIO_NAME, "s1"))
+            .withNewBucket("C", List.of(MAIN_SCENARIO_NAME, "s2", "s1"));
+
+    var query = Query
+            .from(this.storeName)
+            .select_(List.of(bucketCS), List.of(CountMeasure.INSTANCE))
+            .rollup(List.of(SCENARIO_FIELD_NAME)) // should not affect the comparison engine
+            .build();
 
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name))

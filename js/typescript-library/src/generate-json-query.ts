@@ -20,6 +20,7 @@ export function generateFromQuery() {
           .select(["a", "b"],
                   [bucketColumnSet],
                   [sum("sum", "f1"), avg("sum", "f1")])
+          .rollup(["a", "b"])
           .orderBy("f4", OrderKeyword.ASC)
           .build()
 

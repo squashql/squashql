@@ -50,15 +50,15 @@ public abstract class ATestParentComparisonWithOtherColumn {
     beforeLoading(List.of(city, country, continent, spendingCategory, amount));
 
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
-            new Object[]{"paris", "france", "eu", "car", 1},
-            new Object[]{"paris", "france", "eu", "home", 2},
-            new Object[]{"paris", "france", "eu", "hobbies", 1},
-            new Object[]{"lyon", "france", "eu", "car", 0.1},
-            new Object[]{"lyon", "france", "eu", "home", 2},
-            new Object[]{"lyon", "france", "eu", "hobbies", 1},
-            new Object[]{"london", "uk", "eu", "car", 2},
-            new Object[]{"london", "uk", "eu", "home", 2},
-            new Object[]{"london", "uk", "eu", "hobbies", 5}
+            new Object[]{"paris", "france", "eu", "car", 1d},
+            new Object[]{"paris", "france", "eu", "home", 2d},
+            new Object[]{"paris", "france", "eu", "hobbies", 1d},
+            new Object[]{"lyon", "france", "eu", "car", 0.1d},
+            new Object[]{"lyon", "france", "eu", "home", 2d},
+            new Object[]{"lyon", "france", "eu", "hobbies", 1d},
+            new Object[]{"london", "uk", "eu", "car", 2d},
+            new Object[]{"london", "uk", "eu", "home", 2d},
+            new Object[]{"london", "uk", "eu", "hobbies", 5d}
     ));
   }
 
@@ -68,7 +68,7 @@ public abstract class ATestParentComparisonWithOtherColumn {
   @Test
   void testSimple() {
     Measure amount = Functions.sum("amount", "amount");
-    ParentComparisonMeasure pOp = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of("continent", "country", "city"), List.of(amount, pOp))
@@ -84,7 +84,7 @@ public abstract class ATestParentComparisonWithOtherColumn {
   @Test
   void testSkipMiddleAncestors() {
     Measure amount = Functions.sum("amount", "amount");
-    ParentComparisonMeasure pOp = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "continent"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "continent"));
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of("continent", "country", "city"), List.of(amount, pOp))
@@ -102,7 +102,7 @@ public abstract class ATestParentComparisonWithOtherColumn {
   @Test
   void testCrossjoinWithOtherColumn() {
     Measure amount = Functions.sum("amount", "amount");
-    ParentComparisonMeasure pOp = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of("spending_category", "continent", "country", "city"), List.of(amount, pOp))
@@ -124,7 +124,7 @@ public abstract class ATestParentComparisonWithOtherColumn {
   @Test
   void testCrossjoinWithOtherColumnAndMissingAncestorsInQuery() {
     Measure amount = Functions.sum("amount", "amount");
-    ParentComparisonMeasure pOp = new ParentComparisonMeasure("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of("spending_category", "city"), List.of(amount, pOp))

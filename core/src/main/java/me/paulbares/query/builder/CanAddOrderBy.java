@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface CanAddOrderBy {
 
-  HasSelect orderBy(String column, OrderKeywordDto orderKeywordDto);
+  HasSelectAndRollup orderBy(String column, OrderKeywordDto orderKeywordDto);
 
-  HasSelect orderBy(String column, List<?> firstElements);
+  HasSelectAndRollup orderBy(String column, List<?> firstElements);
 }

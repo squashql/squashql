@@ -54,7 +54,7 @@ public class TestJavascriptLibrary {
             Map.of("Annee", "y-1", "Mois", "m"),
             month));
 
-    q.withMeasure(new ParentComparisonMeasure("parent",
+    q.withMeasure(new ComparisonMeasureReferencePosition("parent",
             ComparisonMethod.DIVIDE,
             price,
             List.of("Mois", "Annee")));
@@ -85,6 +85,7 @@ public class TestJavascriptLibrary {
     QueryDto qjs = JacksonUtil.deserialize(FileUtils.readFileToString(file, "UTF-8"), QueryDto.class);
     Assertions.assertThat(q.columnSets).isEqualTo(qjs.columnSets);
     Assertions.assertThat(q.columns).isEqualTo(qjs.columns);
+    Assertions.assertThat(q.rollupColumns).isEqualTo(qjs.rollupColumns);
     Assertions.assertThat(q.context).isEqualTo(qjs.context);
     Assertions.assertThat(q.orders).isEqualTo(qjs.orders);
     Assertions.assertThat(q.measures).isEqualTo(qjs.measures);
@@ -112,6 +113,7 @@ public class TestJavascriptLibrary {
             .select(List.of("a", "b"),
                     List.of(bucketColumnSet),
                     List.of(sum("sum", "f1"), avg("sum", "f1")))
+            .rollup("a", "b")
             .orderBy("f4", OrderKeywordDto.ASC)
             .build();
 
@@ -120,6 +122,7 @@ public class TestJavascriptLibrary {
     QueryDto qjs = JacksonUtil.deserialize(FileUtils.readFileToString(file, "UTF-8"), QueryDto.class);
     Assertions.assertThat(q.columnSets).isEqualTo(qjs.columnSets);
     Assertions.assertThat(q.columns).isEqualTo(qjs.columns);
+    Assertions.assertThat(q.rollupColumns).isEqualTo(qjs.rollupColumns);
     Assertions.assertThat(q.context).isEqualTo(qjs.context);
     Assertions.assertThat(q.orders).isEqualTo(qjs.orders);
     Assertions.assertThat(q.measures).isEqualTo(qjs.measures);

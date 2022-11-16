@@ -1,13 +1,10 @@
 package me.paulbares.query.database;
 
-import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.*;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -17,18 +14,15 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 public class SQLTranslator {
 
+  public static final String TOTAL_CELL = "___total___";
+
   private static final DefaultQueryRewriter DEFAULT_QUERY_REWRITER = new DefaultQueryRewriter();
 
   public static String translate(DatabaseQuery query, Function<String, Field> fieldProvider) {
-    return translate(query, null, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));
-  }
-
-  public static String translate(DatabaseQuery query, Totals totals, Function<String, Field> fieldProvider) {
-    return translate(query, totals, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));
+    return translate(query, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));
   }
 
   public static String translate(DatabaseQuery query,
-                                 Totals totals,
                                  Function<String, Field> fieldProvider,
                                  QueryRewriter queryRewriter,
                                  BiFunction<QueryRewriter, String, String> tableTransformer) {
@@ -40,6 +34,7 @@ public class SQLTranslator {
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true)));
 
     groupBy.forEach(selects::add); // coord first, then aggregates
+    query.rollup.forEach(field -> selects.add(String.format("grouping(%s) as %s", escape(field), groupingAlias(field)))); // use grouping to identify totals
     aggregates.forEach(selects::add);
 
     StringBuilder statement = new StringBuilder();
@@ -48,42 +43,62 @@ public class SQLTranslator {
     statement.append(" from ");
     if (query.subQuery != null) {
       statement.append("(");
-      statement.append(translate(query.subQuery, totals, fieldProvider, queryRewriter, tableTransformer));
+      statement.append(translate(query.subQuery, fieldProvider, queryRewriter, tableTransformer));
       statement.append(")");
     } else {
       statement.append(tableTransformer.apply(queryRewriter, query.table.name));
       addJoins(statement, query.table, queryRewriter);
     }
     addConditions(statement, query, fieldProvider);
-    addGroupBy(totals, groupBy, statement);
+    addGroupByAndRollup(groupBy, query.rollup.stream().map(SqlUtils::escape).toList(), queryRewriter.doesSupportPartialRollup(), statement);
     return statement.toString();
   }
 
-  private static void addGroupBy(Totals totals, List<String> groupBy, StringBuilder statement) {
-    if (!groupBy.isEmpty()) {
-      statement.append(" group by ");
-      if (totals != null) {
-        statement.append("rollup(");
-      }
-      statement.append(groupBy.stream().collect(Collectors.joining(", ")));
+  private static void addGroupByAndRollup(List<String> groupBy, List<String> rollup, boolean supportPartialRollup, StringBuilder statement) {
+    if (groupBy.isEmpty()) {
+      return;
+    }
 
-      if (totals != null) {
-        statement.append(") order by ");
-        String order = " asc"; // default for now
-        // https://stackoverflow.com/a/7862601
-        // to move totals and subtotals at the top or at the bottom and keep normal order for other rows.
-        String position = totals.position == null ? Totals.POSITION_TOP : totals.position; // default top
-        // Note: with Spark, values of totals are set to null but for Clickhouse, they are set to '' for string type,
-        // 0 for integer... this is why there is the following case condition (for clickhouse, only string type is
-        // handled
-        // for the moment).
-        String orderBy = "case when %s is null or %s = '' then %d else %d end, %s %s";
-        int first = position.equals(Totals.POSITION_TOP) ? 0 : 1;
-        int second = first ^ 1;
-        String orderByStatement = groupBy.stream()
-                .map(g -> orderBy.formatted(g, g, first, second, g, order))
-                .collect(Collectors.joining(", "));
-        statement.append(orderByStatement);
+    statement.append(" group by ");
+
+    boolean isPartialRollup = !Set.copyOf(groupBy).equals(Set.copyOf(rollup));
+    boolean hasRollup = rollup != null && !rollup.isEmpty();
+    List<String> groupByOnly = new ArrayList<>();
+    List<String> rollupOnly = new ArrayList<>();
+
+    for (String s : groupBy) {
+      if (hasRollup && rollup.contains(s)) {
+        rollupOnly.add(s);
+      } else {
+        groupByOnly.add(s);
+      }
+    }
+
+    if (hasRollup && isPartialRollup && !supportPartialRollup) {
+      List<String> groupingSets = new ArrayList<>();
+      groupingSets.add(groupBy.stream().collect(Collectors.joining(", ", "(", ")")));
+      List<String> toRemove = new ArrayList<>();
+      Collections.reverse(rollupOnly);
+      // The equivalent of group by scenario, rollup(category, subcategory) is:
+      // (scenario, category, subcategory), (scenario, category), (scenario)
+      for (String r : rollupOnly) {
+        toRemove.add(r);
+        List<String> copy = new ArrayList<>(groupBy);
+        copy.removeAll(toRemove);
+        groupingSets.add(copy.stream().collect(Collectors.joining(", ", "(", ")")));
+      }
+
+      statement
+              .append("grouping sets ")
+              .append(groupingSets.stream().collect(Collectors.joining(", ", "(", ")")));
+    } else {
+      statement.append(groupByOnly.stream().collect(Collectors.joining(", ")));
+
+      if (hasRollup) {
+        if (!groupByOnly.isEmpty()) {
+          statement.append(", ");
+        }
+        statement.append(rollupOnly.stream().collect(Collectors.joining(", ", "rollup(", ")")));
       }
     }
   }
@@ -163,8 +178,8 @@ public class SQLTranslator {
       String first = toSql(field, logical.one);
       String second = toSql(field, logical.two);
       String typeString = switch (dto.type()) {
-        case AND -> " and "; // TODO unloop consecutive and
-        case OR -> " or "; // TODO unloop consecutive and
+        case AND -> " and "; // TODO unnest nested and (and (and (and...))) = (and and and)
+        case OR -> " or "; // TODO unnest nested or
         default -> throw new IllegalStateException("Incorrect type " + logical.type);
       };
       return first + typeString + second;
@@ -227,5 +242,13 @@ public class SQLTranslator {
       virtualTable += "\nUNION ALL\n" + vtScenario;
     }
     return virtualTable;
+  }
+
+  /**
+   * Returns the name of the column used for grouping(). If it is modified, please modify also
+   * {@link SqlUtils#GROUPING_PATTERN}.
+   */
+  public static String groupingAlias(String field) {
+    return String.format(escape("___grouping___%s___"), field);
   }
 }

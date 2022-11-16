@@ -10,8 +10,6 @@ public interface MeasureVisitor<R> {
 
   R visit(ComparisonMeasureReferencePosition measure);
 
-  R visit(ParentComparisonMeasure measure);
-
   R visit(LongConstantMeasure measure);
 
   R visit(DoubleConstantMeasure measure);

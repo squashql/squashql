@@ -1,19 +1,13 @@
 package me.paulbares.query;
 
 import me.paulbares.query.agg.AggregationFunction;
-import me.paulbares.query.context.Totals;
 import me.paulbares.query.dto.*;
 
 import static me.paulbares.query.BinaryOperator.*;
-import static me.paulbares.query.context.Totals.POSITION_BOTTOM;
-import static me.paulbares.query.context.Totals.POSITION_TOP;
 import static me.paulbares.query.dto.ConditionType.AND;
 import static me.paulbares.query.dto.ConditionType.OR;
 
 public class Functions {
-
-  public static final Totals TOP = new Totals(POSITION_TOP);
-  public static final Totals BOTTOM = new Totals(POSITION_BOTTOM);
 
   public static ConditionDto and(ConditionDto first, ConditionDto second, ConditionDto... others) {
     return merge(AND, first, second, others);
