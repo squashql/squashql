@@ -130,7 +130,7 @@ public class TableUtils {
       if (queryComp != null || (isColumn && !hasComparatorOnMeasure)) {
         args.add(table.getColumnValues(headerName));
         // Always order table. If not defined, use natural order comp.
-        comparators.add(queryComp == null ? Comparator.naturalOrder() : queryComp);
+        comparators.add(queryComp == null ? Comparator.nullsLast(Comparator.naturalOrder()) : queryComp);
       }
     }
 
