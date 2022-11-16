@@ -25,6 +25,7 @@ public class SQLTranslator {
     return translate(query, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));
   }
 
+  // FIXME CLICKHOUSE see https://github.com/ClickHouse/ClickHouse/issues/8045 for null instead of ""
   public static String translate(DatabaseQuery query,
                                  Function<String, Field> fieldProvider,
                                  QueryRewriter queryRewriter,
@@ -41,9 +42,12 @@ public class SQLTranslator {
 
     StringBuilder statement = new StringBuilder();
     statement.append("select ");
-    Function<String, String> f = s -> String.format("COALESCE(%s, '%s') AS %s", s, TOTAL_CELL, s);
+//    Function<String, String> f = s -> String.format("COALESCE(%s, '%s') AS %s", s, TOTAL_CELL, s);
+    Function<String, String> f = Function.identity();
 //    statement.append(selects.stream().collect(Collectors.joining(", ")));
-    statement.append(Stream.concat(groupBy.stream().map(f::apply), aggregates.stream()).collect(Collectors.joining(", ")));
+    statement.append(
+            Stream.concat(Stream.concat(groupBy.stream().map(f::apply), groupBy.stream().map(s -> String.format("GROUPING(%s)", s))),
+                    aggregates.stream()).collect(Collectors.joining(", ")));
 //    statement.append(aggregates.stream().collect(Collectors.joining(", ")));
     statement.append(" from ");
     if (query.subQuery != null) {
@@ -183,8 +187,8 @@ public class SQLTranslator {
       String first = toSql(field, logical.one);
       String second = toSql(field, logical.two);
       String typeString = switch (dto.type()) {
-        case AND -> " and "; // TODO unloop consecutive and
-        case OR -> " or "; // TODO unloop consecutive and
+        case AND -> " and "; // TODO unnest nested and (and (and (and...))) = (and and and)
+        case OR -> " or "; // TODO unnest nested or
         default -> throw new IllegalStateException("Incorrect type " + logical.type);
       };
       return first + typeString + second;

@@ -1,7 +1,6 @@
 package me.paulbares.query;
 
 import me.paulbares.query.builder.Query;
-import me.paulbares.query.context.Totals;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
@@ -17,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 
 import static me.paulbares.query.ComparisonMethod.RELATIVE_DIFFERENCE;
-import static me.paulbares.query.Functions.TOP;
 import static me.paulbares.query.Functions.eq;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
@@ -232,10 +230,10 @@ public abstract class ATestBucketComparison {
             .withNewBucket("A", List.of("s2", MAIN_SCENARIO_NAME, "s1"))
             .withNewBucket("C", List.of(MAIN_SCENARIO_NAME, "s2", "s1"));
 
-    var query = new QueryDto()
-            .table(this.storeName)
-            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
-            .withMeasure(CountMeasure.INSTANCE);
+    var query = Query
+            .from(this.storeName)
+            .select_(List.of(bucketCS), List.of(CountMeasure.INSTANCE))
+            .build();
 
     Table dataset = this.executor.execute(query);
     Assertions.assertThat(dataset.headers().stream().map(Field::name))
@@ -259,15 +257,23 @@ public abstract class ATestBucketComparison {
             .withNewBucket("A", List.of("s2", MAIN_SCENARIO_NAME, "s1"))
             .withNewBucket("C", List.of(MAIN_SCENARIO_NAME, "s2", "s1"));
 
-    var query = new QueryDto()
-            .table(this.storeName)
-            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
-            .withMeasure(CountMeasure.INSTANCE);
-
-    query.context(Totals.KEY, TOP);
+    var query = Query
+            .from(this.storeName)
+            .select_(List.of(bucketCS), List.of(CountMeasure.INSTANCE))
+            .rollup(List.of(SCENARIO_FIELD_NAME)) // should not affect the comparison engine
+            .build();
 
     Table dataset = this.executor.execute(query);
-    dataset.show();
-    Assertions.fail("todo");
+    Assertions.assertThat(dataset.headers().stream().map(Field::name))
+            .containsExactly(this.groupOfScenario, SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
+    Assertions.assertThat(dataset).containsExactly(
+            List.of("B", "s1", 3l),
+            List.of("B", MAIN_SCENARIO_NAME, 3l),
+            List.of("A", "s2", 3l),
+            List.of("A", MAIN_SCENARIO_NAME, 3l),
+            List.of("A", "s1", 3l),
+            List.of("C", MAIN_SCENARIO_NAME, 3l),
+            List.of("C", "s2", 3l),
+            List.of("C", "s1", 3l));
   }
 }

@@ -3,7 +3,6 @@ package me.paulbares.query;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.builder.Query;
 import me.paulbares.query.context.Repository;
-import me.paulbares.query.context.Totals;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.OrderKeywordDto;
@@ -18,7 +17,9 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.util.List;
 
-import static me.paulbares.query.Functions.*;
+import static me.paulbares.query.Functions.eq;
+import static me.paulbares.query.Functions.sum;
+import static me.paulbares.query.database.SQLTranslator.TOTAL_CELL;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -88,25 +89,81 @@ public abstract class ATestQueryExecutor {
             .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
     Table result = this.queryExecutor.execute(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(
+    Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, 15.0d, 33l),
             List.of("s1", 17.0d, 33l),
             List.of("s2", 14.5d, 33l));
   }
 
   @Test
-  void testQueryWildcardWithTotal() {
-    QueryDto query = new QueryDto()
-            .table(this.storeName)
-            .withColumn(SCENARIO_FIELD_NAME)
-            .withColumn("category")
-            .aggregatedMeasure("p", "price", "sum")
-            .aggregatedMeasure("q", "quantity", "sum");
-    query.context(Totals.KEY, TOP);
+  void testQueryWildcardWithFullRollup() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
+            .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("p", "price"), sum("q", "quantity")))
+            .rollup(SCENARIO_FIELD_NAME, "category")
+            .build();
+    Table result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of(TOTAL_CELL, TOTAL_CELL, 15d, 33l),
+            List.of(MAIN_SCENARIO_NAME, TOTAL_CELL, 15d, 33l),
+            List.of(MAIN_SCENARIO_NAME, "cloth", 10d, 3l),
+            List.of(MAIN_SCENARIO_NAME, "drink", 2d, 10l),
+            List.of(MAIN_SCENARIO_NAME, "food", 3d, 20l));
+  }
+
+  @Test
+  void testQueryWildcardWithFullRollup2222() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("subcategory"), List.of(sum("q", "quantity")))
+            .rollup("subcategory")
+            .build();
     Table result = this.queryExecutor.execute(query);
     result.show();
-    Assertions.fail("todo");
-    // see https://github.com/ClickHouse/ClickHouse/issues/8045 for null instead of ""
+  }
+
+  @Test
+  void testQueryWildcardPartialRollup() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("q", "quantity")))
+            .rollup("category") // We don't care here about total on scenario
+            .build();
+    Table result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of(MAIN_SCENARIO_NAME, TOTAL_CELL, 33l),
+            List.of(MAIN_SCENARIO_NAME, "cloth", 3l),
+            List.of(MAIN_SCENARIO_NAME, "drink", 10l),
+            List.of(MAIN_SCENARIO_NAME, "food", 20l),
+            List.of("s1", TOTAL_CELL, 33l),
+            List.of("s1", "cloth", 3l),
+            List.of("s1", "drink", 10l),
+            List.of("s1", "food", 20l),
+            List.of("s2", TOTAL_CELL, 33l),
+            List.of("s2", "cloth", 3l),
+            List.of("s2", "drink", 10l),
+            List.of("s2", "food", 20l));
+
+    query = Query
+            .from(this.storeName)
+            .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("q", "quantity")))
+            .rollup(SCENARIO_FIELD_NAME) // try with another column
+            .build();
+    result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of(TOTAL_CELL, "cloth", 9l),
+            List.of(TOTAL_CELL, "drink", 30l),
+            List.of(TOTAL_CELL, "food", 60l),
+            List.of(MAIN_SCENARIO_NAME, "cloth", 3l),
+            List.of(MAIN_SCENARIO_NAME, "drink", 10l),
+            List.of(MAIN_SCENARIO_NAME, "food", 20l),
+            List.of("s1", "cloth", 3l),
+            List.of("s1", "drink", 10l),
+            List.of("s1", "food", 20l),
+            List.of("s2", "cloth", 3l),
+            List.of("s2", "drink", 10l),
+            List.of("s2", "food", 20l));
   }
 
   @Test
@@ -116,7 +173,7 @@ public abstract class ATestQueryExecutor {
             .select(List.of(SCENARIO_FIELD_NAME), List.of(CountMeasure.INSTANCE))
             .build();
     Table result = this.queryExecutor.execute(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(
+    Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, 3l),
             List.of("s1", 3l),
             List.of("s2", 3l));
@@ -142,7 +199,7 @@ public abstract class ATestQueryExecutor {
     QueryDto query = new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .withCondition(SCENARIO_FIELD_NAME, Functions.eq("s1"))
+            .withCondition(SCENARIO_FIELD_NAME, eq("s1"))
             .aggregatedMeasure("p", "price", "sum")
             .aggregatedMeasure("q", "quantity", "sum");
     Table table = this.queryExecutor.execute(query);
@@ -156,8 +213,8 @@ public abstract class ATestQueryExecutor {
             .withColumn("category")
             .withColumn("ean")
             .aggregatedMeasure("q", "quantity", "sum")
-            .withCondition(SCENARIO_FIELD_NAME, Functions.eq(MAIN_SCENARIO_NAME))
-            .withCondition("ean", Functions.eq("bottle"))
+            .withCondition(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME))
+            .withCondition("ean", eq("bottle"))
             .withCondition("category", Functions.in("cloth", "drink"));
 
     Table table = this.queryExecutor.execute(query);
@@ -238,7 +295,7 @@ public abstract class ATestQueryExecutor {
    */
   @Test
   void testSumIf() {
-    ConditionDto or = Functions.eq("food").or(Functions.eq("drink"));
+    ConditionDto or = eq("food").or(eq("drink"));
 
     QueryDto query = new QueryDto()
             .table(this.storeName)
