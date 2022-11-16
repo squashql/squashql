@@ -185,7 +185,7 @@ public abstract class ATestQueryExecutor {
             .build();
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList("s1", TOTAL, TOTAL, 33l),
+            Arrays.asList("s1", TOTAL, null, 33l),
             Arrays.asList("s1", "cloth", TOTAL, 3l),
             Arrays.asList("s1", "cloth", null, 3l),
             Arrays.asList("s1", "drink", TOTAL, 10l),
