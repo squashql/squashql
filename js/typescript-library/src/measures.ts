@@ -108,7 +108,8 @@ class ComparisonMeasureReferencePosition implements Measure {
               private measure: Measure,
               private referencePosition: Map<string, string>,
               private columnSetKey?: ColumnSetKey,
-              private period?: Period) {
+              private period?: Period,
+              private ancestors?: Array<string>) {
     this.alias = alias
   }
 
@@ -120,29 +121,7 @@ class ComparisonMeasureReferencePosition implements Measure {
       "measure": this.measure,
       "columnSetKey": this.columnSetKey,
       "period": this.period,
-      "referencePosition": Object.fromEntries(this.referencePosition),
-    }
-  }
-}
-
-export class ParentComparisonMeasure implements Measure {
-  readonly class: string = PACKAGE + "ParentComparisonMeasure"
-  readonly alias: string
-  readonly expression?: string
-
-  constructor(alias: string,
-              private comparisonMethod: ComparisonMethod,
-              private measure: Measure,
-              private ancestors: Array<string>) {
-    this.alias = alias
-  }
-
-  toJSON() {
-    return {
-      "@class": this.class,
-      "alias": this.alias,
-      "comparisonMethod": this.comparisonMethod,
-      "measure": this.measure,
+      "referencePosition": this.referencePosition ? Object.fromEntries(this.referencePosition) : undefined,
       "ancestors": this.ancestors,
     }
   }
@@ -247,4 +226,11 @@ export function comparisonMeasureWithBucket(alias: string,
                                             measure: Measure,
                                             referencePosition: Map<string, string>): Measure {
   return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, ColumnSetKey.BUCKET)
+}
+
+export function comparisonMeasureWithParent(alias: string,
+                                            comparisonMethod: ComparisonMethod,
+                                            measure: Measure,
+                                            ancestors: Array<string>): Measure {
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, undefined, undefined, undefined, ancestors)
 }

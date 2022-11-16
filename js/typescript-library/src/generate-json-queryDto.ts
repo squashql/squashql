@@ -3,9 +3,8 @@ import {
   AggregatedMeasure,
   BinaryOperationMeasure,
   BinaryOperator,
-  ParentComparisonMeasure,
   ComparisonMethod,
-  comparisonMeasureWithPeriod, comparisonMeasureWithBucket,
+  comparisonMeasureWithPeriod, comparisonMeasureWithBucket, comparisonMeasureWithParent,
   count,
   ExpressionMeasure, sum, integer, decimal,
 } from "./measures"
@@ -45,8 +44,7 @@ export function generateFromQueryDto() {
     "Annee": "y-1",
     "Mois": "m"
   })), new Month("mois", "annee")))
-
-  q.withMeasure(new ParentComparisonMeasure("parent", ComparisonMethod.DIVIDE, price, ["Mois", "Annee"]))
+  q.withMeasure(comparisonMeasureWithParent("parent", ComparisonMethod.DIVIDE, price, ["Mois", "Annee"]))
 
   const queryCondition = or(and(eq("a"), eq("b")), lt(5));
   q.withCondition("f1", queryCondition)
