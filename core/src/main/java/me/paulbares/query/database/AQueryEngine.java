@@ -100,13 +100,13 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
    * </pre>
    */
   protected Table postProcessDataset(Table input, DatabaseQuery query) {
-    if (!query.rollUp.isEmpty()) {
+    if (!query.rollup.isEmpty()) {
       List<Field> newFields = new ArrayList<>();
       List<List<Object>> newValues = new ArrayList<>();
       for (int i = 0; i < input.headers().size(); i++) {
         Field header = input.headers().get(i);
         List<Object> columnValues = input.getColumn(i);
-        if (i < query.select.size() || i >= query.select.size() + query.rollUp.size()) {
+        if (i < query.select.size() || i >= query.select.size() + query.rollup.size()) {
           newFields.add(header);
           newValues.add(columnValues);
         } else {

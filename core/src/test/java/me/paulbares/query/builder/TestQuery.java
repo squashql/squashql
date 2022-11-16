@@ -250,7 +250,7 @@ public class TestQuery {
             .table("saas")
             .withColumn("col1")
             .withColumn("col2")
-            .withRollUp("col1")
+            .withRollup("col1")
             .orderBy("col1", OrderKeywordDto.ASC)
             .withMeasure(sum);
 

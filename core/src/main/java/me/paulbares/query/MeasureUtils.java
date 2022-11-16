@@ -63,17 +63,17 @@ public final class MeasureUtils {
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(newConditions::remove));
     Optional.ofNullable(cm.period)
             .ifPresent(p -> getColumnsForPrefetching(p).forEach(newConditions::remove));
-    List<Field> rollUpColumns = new ArrayList<>(queryScope.rollUpColumns());
+    List<Field> rollupColumns = new ArrayList<>(queryScope.rollupColumns());
     Optional.ofNullable(cm.ancestors)
             .ifPresent(p -> {
               p.forEach(newConditions::remove);
               p.forEach(c -> {
                 if (query.columns.contains(c)) {
-                  rollUpColumns.add(fieldSupplier.apply(c));
+                  rollupColumns.add(fieldSupplier.apply(c));
                 }
               });
             });
-    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), newConditions, rollUpColumns);
+    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), newConditions, rollupColumns);
   }
 
   public static boolean isPrimitive(Measure m) {

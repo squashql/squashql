@@ -34,7 +34,7 @@ public class SQLTranslator {
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true)));
 
     groupBy.forEach(selects::add); // coord first, then aggregates
-    query.rollUp.forEach(field -> selects.add(String.format("grouping(%s) as %s", escape(field), groupingAlias(field)))); // use grouping to identify totals
+    query.rollup.forEach(field -> selects.add(String.format("grouping(%s) as %s", escape(field), groupingAlias(field)))); // use grouping to identify totals
     aggregates.forEach(selects::add);
 
     StringBuilder statement = new StringBuilder();
@@ -50,39 +50,39 @@ public class SQLTranslator {
       addJoins(statement, query.table, queryRewriter);
     }
     addConditions(statement, query, fieldProvider);
-    addGroupByAndRollUp(groupBy, query.rollUp.stream().map(SqlUtils::escape).toList(), queryRewriter.doesSupportPartialRollup(), statement);
+    addGroupByAndRollup(groupBy, query.rollup.stream().map(SqlUtils::escape).toList(), queryRewriter.doesSupportPartialRollup(), statement);
     return statement.toString();
   }
 
   // https://github.com/ClickHouse/ClickHouse/issues/322#issuecomment-615087004
-  private static void addGroupByAndRollUp(List<String> groupBy, List<String> rollUp, boolean supportPartialRollup, StringBuilder statement) {
+  private static void addGroupByAndRollup(List<String> groupBy, List<String> rollup, boolean supportPartialRollup, StringBuilder statement) {
     if (groupBy.isEmpty()) {
       return;
     }
 
     statement.append(" group by ");
 
-    boolean isPartialRollup = !Set.copyOf(groupBy).equals(Set.copyOf(rollUp));
-    boolean hasRollUp = rollUp != null && !rollUp.isEmpty();
+    boolean isPartialRollup = !Set.copyOf(groupBy).equals(Set.copyOf(rollup));
+    boolean hasRollup = rollup != null && !rollup.isEmpty();
     List<String> groupByOnly = new ArrayList<>();
-    List<String> rollUpOnly = new ArrayList<>();
+    List<String> rollupOnly = new ArrayList<>();
 
     for (String s : groupBy) {
-      if (hasRollUp && rollUp.contains(s)) {
-        rollUpOnly.add(s);
+      if (hasRollup && rollup.contains(s)) {
+        rollupOnly.add(s);
       } else {
         groupByOnly.add(s);
       }
     }
 
-    if (hasRollUp && isPartialRollup && !supportPartialRollup) {
+    if (hasRollup && isPartialRollup && !supportPartialRollup) {
       List<String> groupingSets = new ArrayList<>();
       groupingSets.add(groupBy.stream().collect(Collectors.joining(", ", "(", ")")));
       List<String> toRemove = new ArrayList<>();
-      Collections.reverse(rollUpOnly);
+      Collections.reverse(rollupOnly);
       // The equivalent of group by scenario, rollup(category, subcategory) is:
       // (scenario, category, subcategory), (scenario, category), (scenario)
-      for (String r : rollUpOnly) {
+      for (String r : rollupOnly) {
         toRemove.add(r);
         List<String> copy = new ArrayList<>(groupBy);
         copy.removeAll(toRemove);
@@ -95,11 +95,11 @@ public class SQLTranslator {
     } else {
       statement.append(groupByOnly.stream().collect(Collectors.joining(", ")));
 
-      if (hasRollUp) {
+      if (hasRollup) {
         if (!groupByOnly.isEmpty()) {
           statement.append(", ");
         }
-        statement.append(rollUpOnly.stream().collect(Collectors.joining(", ", "rollup(", ")")));
+        statement.append(rollupOnly.stream().collect(Collectors.joining(", ", "rollup(", ")")));
       }
     }
   }

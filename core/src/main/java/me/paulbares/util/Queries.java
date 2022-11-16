@@ -59,7 +59,7 @@ public final class Queries {
     }
     prefetchQuery.conditions = queryScope.conditions();
     selects.forEach(prefetchQuery::withSelect);
-    Optional.ofNullable(queryScope.rollUpColumns()).ifPresent(r -> r.stream().map(Field::name).forEach(prefetchQuery::withRollUp));
+    Optional.ofNullable(queryScope.rollupColumns()).ifPresent(r -> r.stream().map(Field::name).forEach(prefetchQuery::withRollup));
     return prefetchQuery;
   }
 

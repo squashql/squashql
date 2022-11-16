@@ -72,8 +72,8 @@ public class TestSQLTranslator {
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(SCENARIO_FIELD_NAME)
             .withSelect("type")
-            .withRollUp(SCENARIO_FIELD_NAME)
-            .withRollUp("type")
+            .withRollup(SCENARIO_FIELD_NAME)
+            .withRollup("type")
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
@@ -87,7 +87,7 @@ public class TestSQLTranslator {
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(SCENARIO_FIELD_NAME)
             .withSelect("type")
-            .withRollUp(SCENARIO_FIELD_NAME)
+            .withRollup(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 

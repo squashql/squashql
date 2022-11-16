@@ -91,7 +91,7 @@ public class Query implements HasCondition, HasSelectAndRollup, HasJoin, HasStar
 
   @Override
   public HasSelectAndRollup rollup(String... columns) {
-    Arrays.stream(columns).forEach(this.queryDto::withRollUp);
+    Arrays.stream(columns).forEach(this.queryDto::withRollup);
     return this;
   }
 
