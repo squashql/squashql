@@ -20,8 +20,8 @@ public class TestMultipleColumnsSorter {
     List<Object> c3 = List.of(1, 2, 3, 2, 2, 4, 3, 5, 0);
 
     int[] sort = MultipleColumnsSorter.sort(
-            AitmArrays.asList(c1, c2, c3),
-            AitmArrays.asList(naturalOrder(), naturalOrder(), naturalOrder()),
+            Arrays.asList(c1, c2, c3),
+            Arrays.asList(naturalOrder(), naturalOrder(), naturalOrder()),
             new int[0]);
     Assertions.assertThat(sort).containsExactly(8, 0, 4, 2, 1, 6, 5, 3, 7);
   }
@@ -33,8 +33,8 @@ public class TestMultipleColumnsSorter {
     List<Object> c3 = List.of(1, 2, 3, 2, 2, 4, 3, 5, 0);
 
     int[] sort = MultipleColumnsSorter.sort(
-            AitmArrays.asList(c1, c2, c3),
-            AitmArrays.asList(naturalOrder().reversed(), naturalOrder().reversed(), naturalOrder().reversed()),
+            Arrays.asList(c1, c2, c3),
+            Arrays.asList(naturalOrder().reversed(), naturalOrder().reversed(), naturalOrder().reversed()),
             new int[0]);
     Assertions.assertThat(sort).containsExactly(7, 3, 5, 6, 1, 2, 4, 0, 8);
   }
@@ -53,28 +53,28 @@ public class TestMultipleColumnsSorter {
     var o1 = new CustomExplicitOrdering(List.of("b", "a", "c"));
     var o2 = DependentExplicitOrdering.create(comp);
     int[] sort = MultipleColumnsSorter.sort(
-            AitmArrays.asList(c1, c2, c3),
-            AitmArrays.asList(o1, o2, naturalOrder()),
+            Arrays.asList(c1, c2, c3),
+            Arrays.asList(o1, o2, naturalOrder()),
             new int[]{-1, 0, -1});
     Assertions.assertThat(sort).containsExactly(3, 2, 1, 0, 5, 6, 4);
   }
 
   @Test
   void testWithNulls() {
-    List<Object> c1 = AitmArrays.asList(null, "a", "b", "a", "b");
+    List<Object> c1 = Arrays.asList(null, "a", "b", "a", "b");
     List<Object> c2 = List.of(1, 2, 3, 1, 2);
 
     // Null is handled with special comparator
     int[] sort = MultipleColumnsSorter.sort(
-            AitmArrays.asList(c1, c2),
-            AitmArrays.asList(nullsLast(naturalOrder()), nullsLast(naturalOrder())),
+            Arrays.asList(c1, c2),
+            Arrays.asList(nullsLast(naturalOrder()), nullsLast(naturalOrder())),
             new int[0]);
     Assertions.assertThat(sort).containsExactly(3, 1, 4, 2, 0);
   }
 
   // To easily check the result.
   private void print(List<Object> c1, List<Object> c2, List<Object> c3, int[] sort) {
-    List<Field> headers = AitmArrays.asList(
+    List<Field> headers = Arrays.asList(
             new Field("c1", String.class),
             new Field("c2", String.class),
             new Field("c3", String.class));
@@ -87,7 +87,7 @@ public class TestMultipleColumnsSorter {
   }
 
   private void print(List<Object> c1, List<Object> c2, int[] sort) {
-    List<Field> headers = AitmArrays.asList(
+    List<Field> headers = Arrays.asList(
             new Field("c1", String.class),
             new Field("c2", String.class));
     new ColumnarTable(headers, Collections.emptyList(), new int[0], new int[0], List.of(c1, c2))
