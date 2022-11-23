@@ -38,7 +38,7 @@ public enum ConditionType {
    */
   GE,
   /**
-   * Static condition, true only.
+   * Like.
    */
   LIKE,
   /**
