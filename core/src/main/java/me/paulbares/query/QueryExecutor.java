@@ -197,7 +197,7 @@ public class QueryExecutor {
   public record QueryScope(TableDto tableDto,
                            QueryDto subQuery,
                            List<Field> columns,
-                           Map<String, ConditionDto> conditions,
+                           List<CriterionDto> conditions,
                            List<Field> rollupColumns) {
   }
 

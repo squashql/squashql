@@ -8,6 +8,7 @@ import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ExpressionMeasure;
 import me.paulbares.query.Measure;
 import me.paulbares.query.dto.ConditionDto;
+import me.paulbares.query.dto.CriterionDto;
 import me.paulbares.query.dto.TableDto;
 
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class DatabaseQuery {
   public TableDto table;
   public DatabaseQuery subQuery;
   public List<String> select = new ArrayList<>();
-  public Map<String, ConditionDto> conditions = new LinkedHashMap<>();
+  public List<CriterionDto> conditions = new ArrayList<>();
   public List<Measure> measures = new ArrayList<>();
   public List<String> rollup = new ArrayList<>();
 
