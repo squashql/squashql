@@ -64,6 +64,28 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     };
   }
 
+  @Override
+  public List<String> supportedAggregationFunctions() {
+    // https://cloud.google.com/bigquery/docs/reference/standard-sql/statistical_aggregate_functions#covar_samp
+    // https://cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions
+    return List.of(
+            "any_value",
+            "avg",
+            "corr",
+            "count",
+            "covar_pop",
+            "covar_samp",
+            "min",
+            "max",
+            "stddev_pop",
+            "stddev_samp",
+            "sum",
+            "var_pop",
+            "var_samp",
+            "variance"
+    );
+  }
+
   class BigQueryQueryRewriter implements QueryRewriter {
     @Override
     public String tableName(String table) {

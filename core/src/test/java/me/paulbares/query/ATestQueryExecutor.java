@@ -1,7 +1,6 @@
 package me.paulbares.query;
 
 import me.paulbares.query.builder.Query;
-import me.paulbares.query.context.Repository;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.OrderKeywordDto;
@@ -25,8 +24,6 @@ import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestQueryExecutor {
-
-  public static final String REPO_URL = "https://raw.githubusercontent.com/paulbares/aitm-assets/main/metrics-test.json";
 
   protected Datastore datastore;
 
@@ -305,36 +302,6 @@ public abstract class ATestQueryExecutor {
             List.of(MAIN_SCENARIO_NAME),
             List.of("s1"),
             List.of("s2"));
-  }
-
-  @Test
-  void testQueryWithRepository() {
-    QueryDto query = new QueryDto()
-            .table(this.storeName)
-            .withColumn(SCENARIO_FIELD_NAME)
-            .unresolvedExpressionMeasure("price")
-            .unresolvedExpressionMeasure("quantity")
-            .context(Repository.KEY, new Repository(REPO_URL));
-
-    Table table = this.queryExecutor.execute(query);
-    Assertions.assertThat(table).containsExactlyInAnyOrder(
-            List.of(MAIN_SCENARIO_NAME, 15.0d, 33l),
-            List.of("s1", 17.0d, 33l),
-            List.of("s2", 14.5d, 33l));
-  }
-
-  @Test
-  void testQueryWithRepositoryMeasureDoesNotExist() {
-    String notexistingmeasure = "notexistingmeasure";
-    QueryDto query = new QueryDto()
-            .table(this.storeName)
-            .withColumn(SCENARIO_FIELD_NAME)
-            .unresolvedExpressionMeasure("price")
-            .unresolvedExpressionMeasure(notexistingmeasure)
-            .context(Repository.KEY, new Repository(REPO_URL));
-
-    Assertions.assertThatThrownBy(() -> this.queryExecutor.execute(query))
-            .hasMessageContaining("Cannot find expression with alias " + notexistingmeasure);
   }
 
   /**

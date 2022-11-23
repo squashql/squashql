@@ -17,6 +17,25 @@ import static me.paulbares.SparkUtil.datatypeToClass;
 
 public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
 
+  /**
+   * https://spark.apache.org/docs/latest/sql-ref-functions-builtin.html
+   */
+  public static final List<String> SUPPORTED_AGGREGATION_FUNCTIONS = List.of(
+          "any",
+          "avg",
+          "corr",
+          "count",
+          "covar_pop",
+          "covar_samp",
+          "min",
+          "max",
+          "stddev_pop",
+          "stddev_samp",
+          "sum",
+          "var_pop",
+          "var_samp",
+          "variance");
+
   public SparkQueryEngine(SparkDatastore datastore) {
     super(datastore);
   }
@@ -40,5 +59,10 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
             IntStream.range(query.select.size(), query.select.size() + query.measures.size()).toArray(),
             IntStream.range(0, query.select.size()).toArray(),
             result.getTwo());
+  }
+
+  @Override
+  public List<String> supportedAggregationFunctions() {
+    return SUPPORTED_AGGREGATION_FUNCTIONS;
   }
 }

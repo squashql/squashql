@@ -13,6 +13,4 @@ public interface MeasureVisitor<R> {
   R visit(LongConstantMeasure measure);
 
   R visit(DoubleConstantMeasure measure);
-
-  R visit(UnresolvedExpressionMeasure measure);
 }

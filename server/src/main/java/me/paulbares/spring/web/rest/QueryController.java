@@ -20,24 +20,10 @@ import java.util.stream.Collectors;
 public class QueryController {
 
   public static final String HTTP_HEADER_API_KEY = "x-api-key";
-
   public static final String MAPPING_QUERY = "/query";
   public static final String MAPPING_QUERY_BEAUTIFY = "/query-beautify";
   public static final String MAPPING_METADATA = "/metadata";
   public static final String MAPPING_EXPRESSION = "/expression";
-
-  // FIXME the list should be defined elsewhere
-  public static final List<String> SUPPORTED_AGG_FUNCS = List.of(
-          "sum",
-          "min",
-          "max",
-          "avg",
-          "var_samp",
-          "var_pop",
-          "stddev_samp",
-          "stddev_pop",
-          "count");
-
   protected final QueryEngine queryEngine;
   protected final QueryExecutor queryExecutor;
   protected final String apiKey;
@@ -77,16 +63,14 @@ public class QueryController {
   }
 
   @GetMapping(MAPPING_METADATA)
-  public ResponseEntity<MetadataResultDto> getMetadata(@RequestHeader(HTTP_HEADER_API_KEY) String apiKey,
-                                                       @RequestParam(name = "repo-url", required = false) String repo_url) throws IllegalAccessException {
+  public ResponseEntity<MetadataResultDto> getMetadata(@RequestHeader(HTTP_HEADER_API_KEY) String apiKey) throws IllegalAccessException {
     checkApiKey(apiKey);
     List<MetadataResultDto.StoreMetadata> stores = new ArrayList<>();
     for (Store store : this.queryEngine.datastore().storesByName().values()) {
       List<MetadataItem> items = store.fields().stream().map(f -> new MetadataItem(f.name(), f.name(), f.type())).toList();
       stores.add(new MetadataResultDto.StoreMetadata(store.name(), items));
     }
-
-    return ResponseEntity.ok(new MetadataResultDto(stores, SUPPORTED_AGG_FUNCS, getExpressions(repo_url)));
+    return ResponseEntity.ok(new MetadataResultDto(stores, this.queryEngine.supportedAggregationFunctions(), Collections.emptyList()));
   }
 
   @PostMapping(MAPPING_EXPRESSION)
@@ -101,14 +85,9 @@ public class QueryController {
     return ResponseEntity.ok(res);
   }
 
-  private List<Measure> getExpressions(String url) {
-    if (url != null && !url.isEmpty()) {
-      return new ArrayList<>(ExpressionResolver.get(url).values());
-    } else {
-      return Collections.emptyList();
-    }
-  }
-
+  /**
+   * FIXME temp. solution until we setup authentication
+   */
   private void checkApiKey(String httpHeaderApiKey) throws IllegalAccessException {
     if (!this.apiKey.equals(httpHeaderApiKey)) {
       throw new IllegalAccessException();

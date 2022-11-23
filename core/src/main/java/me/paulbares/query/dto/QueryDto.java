@@ -64,11 +64,6 @@ public class QueryDto {
     return this;
   }
 
-  public QueryDto unresolvedExpressionMeasure(String alias) {
-    withMeasure(new UnresolvedExpressionMeasure(alias));
-    return this;
-  }
-
   public QueryDto withMeasure(Measure m) {
     this.measures.add(m);
     return this;

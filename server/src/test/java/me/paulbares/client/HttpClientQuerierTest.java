@@ -3,6 +3,7 @@ package me.paulbares.client;
 import me.paulbares.AitmApplication;
 import me.paulbares.client.http.HttpClientQuerier;
 import me.paulbares.query.*;
+import me.paulbares.query.builder.Query;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.*;
 import me.paulbares.spring.dataset.DatasetTestConfig;
@@ -42,7 +43,7 @@ public class HttpClientQuerierTest {
     String url = "http://127.0.0.1:" + this.port;
 
     var querier = new HttpClientQuerier(url);
-    QueryControllerTest.assertMetadataResult(querier.metadata(), false);
+    QueryControllerTest.assertMetadataResult(querier.metadata());
   }
 
   @Test
@@ -77,7 +78,7 @@ public class HttpClientQuerierTest {
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
 
-    AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("capdv", "capdv", "sum");
+    Measure aggregatedMeasure = Functions.sum("capdv", "capdv");
     ComparisonMeasureReferencePosition capdvDiff = new ComparisonMeasureReferencePosition(
             "capdvDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
@@ -87,11 +88,10 @@ public class HttpClientQuerierTest {
                     "group", "g"
             ),
             ColumnSetKey.BUCKET);
-    var query = new QueryDto()
-            .table("our_prices")
-            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
-            .withMeasure(capdvDiff)
-            .withMeasure(aggregatedMeasure);
+    var query = Query
+            .from("our_prices")
+            .select_(List.of(bucketCS), List.of(capdvDiff, aggregatedMeasure))
+            .build();
 
     QueryResultDto response = querier.run(query);
     SimpleTableDto table = response.table;
@@ -113,12 +113,11 @@ public class HttpClientQuerierTest {
   @Test
   void testRunQueryWithCondition() {
     // Note. The CJ will make null appear in rows. We want to make sure null values are correctly handled.
-    QueryDto query = new QueryDto()
-            .table("our_prices")
-            .withColumn(SCENARIO_FIELD_NAME)
-            .withColumn("pdv")
-            .withCondition(SCENARIO_FIELD_NAME, Functions.eq(MAIN_SCENARIO_NAME))
-            .aggregatedMeasure("ps", "price", "sum");
+    QueryDto query = Query
+            .from("our_prices")
+            .where(SCENARIO_FIELD_NAME, Functions.eq(MAIN_SCENARIO_NAME))
+            .select(List.of(SCENARIO_FIELD_NAME, "pdv"), List.of(Functions.sum("ps", "price")))
+            .build();
 
     String url = "http://127.0.0.1:" + this.port;
 

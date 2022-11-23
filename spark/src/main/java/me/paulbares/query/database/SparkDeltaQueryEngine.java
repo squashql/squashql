@@ -29,4 +29,9 @@ public class SparkDeltaQueryEngine extends ADeltaQueryEngine<SparkDatastore> {
             tableTransformer);
     return getResults(sql, this.datastore.spark, query);
   }
+
+  @Override
+  public List<String> supportedAggregationFunctions() {
+    return SparkQueryEngine.SUPPORTED_AGGREGATION_FUNCTIONS;
+  }
 }
