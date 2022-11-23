@@ -25,8 +25,6 @@ import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestQueryExecutor {
 
-  public static final String REPO_URL = "https://raw.githubusercontent.com/paulbares/aitm-assets/main/metrics-test.json";
-
   protected Datastore datastore;
 
   protected QueryExecutor queryExecutor;
