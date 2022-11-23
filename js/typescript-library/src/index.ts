@@ -19,7 +19,7 @@ export {
 
 export {
   Condition,
-  eq, neq, lt, le, gt, ge, _in, isNull, isNotNull,
+  eq, neq, lt, le, gt, ge, _in, like, isNull, isNotNull,
   and, or
 } from './conditions'
 

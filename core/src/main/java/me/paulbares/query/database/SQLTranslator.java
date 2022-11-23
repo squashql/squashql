@@ -172,6 +172,7 @@ public class SQLTranslator {
         case LE -> escape + " <= " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
         case GT -> escape + " > " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
         case GE -> escape + " >= " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
+        case LIKE -> escape + " like " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
         default -> throw new IllegalStateException("Unexpected value: " + dto.type());
       };
     } else if (dto instanceof LogicalConditionDto logical) {

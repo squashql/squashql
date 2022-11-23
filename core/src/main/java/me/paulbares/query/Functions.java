@@ -63,6 +63,10 @@ public class Functions {
     return new SingleValueConditionDto(ConditionType.GE, value);
   }
 
+  public static ConditionDto like(String value) {
+    return new SingleValueConditionDto(ConditionType.LIKE, value);
+  }
+
   public static Measure divide(String alias, Measure a, Measure b) {
     return new BinaryOperationMeasure(alias, DIVIDE, a, b);
   }
@@ -85,6 +89,10 @@ public class Functions {
 
   public static Measure sum(String alias, String field) {
     return new AggregatedMeasure(alias, field, AggregationFunction.SUM);
+  }
+
+  public static Measure sumIf(String alias, String field, String conditionField, ConditionDto conditionDto) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.SUM, conditionField, conditionDto);
   }
 
   public static Measure avg(String alias, String field) {
