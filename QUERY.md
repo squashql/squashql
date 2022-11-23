@@ -55,7 +55,7 @@ GROUP BY col1, col2
 
 ## Filtering
 
-Queries can be filtered by using condition operators `_in, eq, neq, and, or, lt, le, gt, ge, isNull, isNotNull`
+Queries can be filtered by using condition operators `_in, eq, neq, and, or, lt, le, gt, ge, like, isNull, isNotNull`
 
 ```typescript
 import {
