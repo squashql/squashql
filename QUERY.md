@@ -55,7 +55,7 @@ GROUP BY col1, col2
 
 ## Filtering
 
-Queries can be filtered by using condition operators `_in, eq, neq, and, or, lt, le, gt, ge, isNull, isNotNull`
+Queries can be filtered by using condition operators `_in, eq, neq, and, or, lt, le, gt, ge, like, isNull, isNotNull`
 
 ```typescript
 import {
@@ -90,6 +90,10 @@ equivalent to `ON` clause in SQL)
 ### Single join / Single join condition
 
 ```typescript
+import {
+  from
+} from "aitm-js-query"
+
 const q = from("myTable")
         .innerJoin("refTable")
         .on("myTable", "id", "refTable", "id")
@@ -106,6 +110,10 @@ FROM myTable
 ### Single join / Multiple join condition
 
 ```typescript
+import {
+  from
+} from "aitm-js-query"
+
 const q = from("myTable")
         .innerJoin("refTable")
         .on("myTable", "id1", "refTable", "id1")
@@ -123,6 +131,10 @@ FROM myTable
 ### Multiple join
 
 ```typescript
+import {
+  from
+} from "aitm-js-query"
+
 const q = from("myTable")
         .innerJoin("refTable")
         .on("myTable", "id", "refTable", "id")
@@ -138,6 +150,55 @@ SELECT myTable.col, refTable.col
 FROM myTable
        INNER JOIN refTable ON myTable.id = refTable.id
        LEFT OUTER JOIN otherTable ON myTable.id = otherTable.key1 AND refTable.id = otherTable.key2
+```
+
+## Rollup
+
+> The `ROLLUP` option allows you to include extra rows that represent the subtotals, which are commonly referred to as super-aggregate rows,
+> along with the grand total row. By using the `ROLLUP` option, you can use a single query to generate multiple grouping sets.
+(source https://www.sqltutorial.org/sql-rollup/)
+
+```typescript
+import {
+  from, sum
+} from "aitm-js-query"
+
+const query = from("populationTable")
+        .select(["continent", "country", "city"], [], [sum("pop", "population")])
+        .rollup(["continent", "country", "city"])
+        .build();
+```
+
+```sql
+SELECT continent,
+       country,
+       city,
+       sum(population) as population
+FROM populationTable
+GROUP BY ROLLUP (continent, country, city);
+```
+
+Example
+```
++-------------+---------+----------+------------+
+|   continent | country |     city |        pop |
++-------------+---------+----------+------------+
+| Grand Total |    null |     null |       28.5 |
+|          am |   Total |     null |       17.0 |
+|          am |  canada |    Total |        6.0 |
+|          am |  canada | montreal |        2.0 |
+|          am |  canada |    otawa |        1.0 |
+|          am |  canada |  toronto |        3.0 |
+|          am |     usa |    Total |       11.0 |
+|          am |     usa |  chicago |        3.0 |
+|          am |     usa |      nyc |        8.0 |
+|          eu |   Total |     null |       11.5 |
+|          eu |  france |    Total |        2.5 |
+|          eu |  france |     lyon |        0.5 |
+|          eu |  france |    paris |        2.0 |
+|          eu |      uk |    Total |        9.0 |
+|          eu |      uk |   london |        9.0 |
++-------------+---------+----------+------------+
 ```
 
 ## Subqueries in FROM Clause (also known as inner or nested queries)
@@ -283,10 +344,11 @@ const oneHundredInteger = integer(100)
 
 #### Complex: comparison
 
+##### Time-series comparison
+
 Comparison between "time" period like year, semester, quarter, month.
 
-Example:
-
+Example: Compare sum of score of each student with previous semester given this dataset
 ```
 +------+----------+---------+-------------+-------+
 | year | semester |    name |        test | score |
@@ -310,8 +372,6 @@ Example:
 +------+----------+---------+-------------+-------+
 ```
 
-Compare sum of score of each student with previous semester
-
 ```typescript
 import {
   ComparisonMethod,
@@ -334,6 +394,7 @@ const query = from("student")
         .build();
 ```
 
+Result
 ```
 +------+----------+---------+-----------+--------------------------------+
 | year | semester |    name | score_sum | compare with previous semester |
@@ -396,8 +457,7 @@ const query = from("student")
         .build();
 ```
 
-Result:
-
+Result
 ```
 +------+---------+-----------+--------------------+
 | year |    name | score_sum |   progression in % |
@@ -408,6 +468,84 @@ Result:
 | 2023 | Tatiana |       225 |              -25.0 |
 +------+---------+-----------+--------------------+
 ```
+
+##### Hierarchical / Parent-Child comparison
+
+AITM introduces the concept of organizing hierarchically several columns in order to compare aggregates and sub-aggregates
+compute at different levels of the lineage.
+
+Example: compute the ratio of population of a city to its country and of a country to its continent. 
+```
++-------------+---------+----------+------------+
+|   continent | country |     city |        pop |
++-------------+---------+----------+------------+
+| Grand Total |    null |     null |       28.5 |
+|          am |   Total |     null |       17.0 |
+|          am |  canada |    Total |        6.0 |
+|          am |  canada | montreal |        2.0 |
+|          am |  canada |    otawa |        1.0 |
+|          am |  canada |  toronto |        3.0 |
+|          am |     usa |    Total |       11.0 |
+|          am |     usa |  chicago |        3.0 |
+|          am |     usa |      nyc |        8.0 |
+|          eu |   Total |     null |       11.5 |
+|          eu |  france |    Total |        2.5 |
+|          eu |  france |     lyon |        0.5 |
+|          eu |  france |    paris |        2.0 |
+|          eu |      uk |    Total |        9.0 |
+|          eu |      uk |   london |        9.0 |
++-------------+---------+----------+------------+
+```
+
+```typescript
+import {
+  ComparisonMethod,
+  from,
+  sum,
+  comparisonMeasureWithParent,
+} from "aitm-js-query"
+
+const pop = sum("pop", "population")
+const ancestors = ["city", "country", "continent"]
+const ratio = comparisonMeasureWithParent("ratio", ComparisonMethod.DIVIDE, pop, ancestors)
+const query = from("populationTable")
+        .select(["continent", "country", "city"], [], [pop, ratio])
+        .rollup(["continent", "country", "city"])
+        .build();
+```
+
+`comparisonMeasureWithParent` method is used to create a special measure built to compare values of an underlying
+measure (third argument) with the parent values of the same measure. Parenthood is indicated with the array of `ancestors`
+(fourth argument) which contains column names in "lineage order". 
+
+Note the columns used to define the ancestors need to be passed to the select method but not necessary to the rollup method. 
+
+Result
+```
++-------------+---------+----------+------------+---------------------+
+|   continent | country |     city |        pop |               ratio |
++-------------+---------+----------+------------+---------------------+
+| Grand Total |    null |     null |       28.5 |                 1.0 |
+|          am |   Total |     null |       17.0 |  0.5964912280701754 |
+|          am |  canada |    Total |        6.0 | 0.35294117647058826 |
+|          am |  canada | montreal |        2.0 |  0.3333333333333333 |
+|          am |  canada |    otawa |        1.0 | 0.16666666666666666 |
+|          am |  canada |  toronto |        3.0 |                 0.5 |
+|          am |     usa |    Total |       11.0 |  0.6470588235294118 |
+|          am |     usa |  chicago |        3.0 |  0.2727272727272727 |
+|          am |     usa |      nyc |        8.0 |  0.7272727272727273 |
+|          eu |   Total |     null |       11.5 | 0.40350877192982454 |
+|          eu |  france |    Total |        2.5 | 0.21739130434782608 |
+|          eu |  france |     lyon |        0.5 |                 0.2 |
+|          eu |  france |    paris |        2.0 |                 0.8 |
+|          eu |      uk |    Total |        9.0 |   0.782608695652174 |
+|          eu |      uk |   london |        9.0 |                 1.0 |
++-------------+---------+----------+------------+---------------------+
+```
+
+##### Dynamic comparison
+
+TODO
 
 ## ColumnSets
 

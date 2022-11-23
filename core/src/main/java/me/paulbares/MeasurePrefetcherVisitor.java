@@ -64,9 +64,4 @@ public class MeasurePrefetcherVisitor implements MeasureVisitor<Map<QueryExecuto
   public Map<QueryExecutor.QueryScope, Set<Measure>> visit(DoubleConstantMeasure measure) {
     return Collections.emptyMap();
   }
-
-  @Override
-  public Map<QueryExecutor.QueryScope, Set<Measure>> visit(UnresolvedExpressionMeasure measure) {
-    throw new IllegalStateException();
-  }
 }

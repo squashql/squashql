@@ -2,7 +2,6 @@ package me.paulbares.jackson;
 
 import me.paulbares.query.*;
 import me.paulbares.query.context.ContextValue;
-import me.paulbares.query.context.Repository;
 import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.dto.*;
 import org.assertj.core.api.Assertions;
@@ -83,7 +82,7 @@ public class TestQueryS13n {
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
 
     AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
-    ComparisonMeasureReferencePosition priceComp =new ComparisonMeasureReferencePosition(
+    ComparisonMeasureReferencePosition priceComp = new ComparisonMeasureReferencePosition(
             "priceDiff",
             ABSOLUTE_DIFFERENCE,
             price,
@@ -172,12 +171,8 @@ public class TestQueryS13n {
 
   @Test
   void testContextValues() {
-    ContextValue cv = new Repository("url");
+    ContextValue cv = new QueryCacheContextValue(QueryCacheContextValue.Action.USE);
     ContextValue deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(cv), ContextValue.class);
-    Assertions.assertThat(deserialize).isEqualTo(cv);
-
-    cv = new QueryCacheContextValue(QueryCacheContextValue.Action.USE);
-    deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(cv), ContextValue.class);
     Assertions.assertThat(deserialize).isEqualTo(cv);
   }
 }

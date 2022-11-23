@@ -59,7 +59,7 @@ public class TestJavascriptLibrary {
             price,
             List.of("Mois", "Annee")));
 
-    var queryCondition = or(and(eq("a"), eq("b")), lt(5));
+    var queryCondition = or(and(eq("a"), eq("b")), lt(5), like("a%"));
     q.withCondition("f1", queryCondition);
     q.withCondition("f2", gt(659));
     q.withCondition("f3", in(0, 1, 2));

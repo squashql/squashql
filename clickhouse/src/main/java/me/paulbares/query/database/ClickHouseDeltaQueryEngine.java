@@ -5,6 +5,7 @@ import me.paulbares.query.Table;
 
 import java.util.List;
 
+import static me.paulbares.query.database.ClickHouseQueryEngine.SUPPORTED_AGGREGATION_FUNCTIONS;
 import static me.paulbares.query.database.ClickHouseQueryEngine.getResults;
 import static me.paulbares.query.database.SQLTranslator.virtualTableStatementWhereNotIn;
 
@@ -28,5 +29,10 @@ public class ClickHouseDeltaQueryEngine extends ADeltaQueryEngine<ClickHouseData
             new ClickHouseQueryEngine.ClickHouseQueryRewriter(),
             tableTransformer);
     return getResults(sql, this.datastore.dataSource, query);
+  }
+
+  @Override
+  public List<String> supportedAggregationFunctions() {
+    return SUPPORTED_AGGREGATION_FUNCTIONS;
   }
 }
