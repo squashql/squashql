@@ -89,7 +89,7 @@ public class TestJavascriptLibrary {
     Assertions.assertThat(q.context).isEqualTo(qjs.context);
     Assertions.assertThat(q.orders).isEqualTo(qjs.orders);
     Assertions.assertThat(q.measures).isEqualTo(qjs.measures);
-    Assertions.assertThat(q.conditions).isEqualTo(qjs.conditions);
+    Assertions.assertThat(q.criteriaDto).isEqualTo(qjs.criteriaDto);
     Assertions.assertThat(q.table).isEqualTo(qjs.table);
     Assertions.assertThat(q.subQuery).isEqualTo(qjs.subQuery);
     Assertions.assertThat(q).isEqualTo(qjs);
@@ -126,7 +126,7 @@ public class TestJavascriptLibrary {
     Assertions.assertThat(q.context).isEqualTo(qjs.context);
     Assertions.assertThat(q.orders).isEqualTo(qjs.orders);
     Assertions.assertThat(q.measures).isEqualTo(qjs.measures);
-    Assertions.assertThat(q.conditions).isEqualTo(qjs.conditions);
+    Assertions.assertThat(q.criteriaDto).isEqualTo(qjs.criteriaDto);
     Assertions.assertThat(q.table).isEqualTo(qjs.table);
     Assertions.assertThat(q.subQuery).isEqualTo(qjs.subQuery);
     Assertions.assertThat(q).isEqualTo(qjs);

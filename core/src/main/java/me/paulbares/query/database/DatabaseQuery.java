@@ -8,13 +8,13 @@ import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ExpressionMeasure;
 import me.paulbares.query.Measure;
 import me.paulbares.query.dto.ConditionDto;
-import me.paulbares.query.dto.CriterionDto;
+import me.paulbares.query.dto.CriteriaDto;
 import me.paulbares.query.dto.TableDto;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
+
+import static me.paulbares.query.dto.ConditionType.AND;
 
 @ToString
 @EqualsAndHashCode
@@ -24,7 +24,7 @@ public class DatabaseQuery {
   public TableDto table;
   public DatabaseQuery subQuery;
   public List<String> select = new ArrayList<>();
-  public List<CriterionDto> conditions = new ArrayList<>();
+  public CriteriaDto criteriaDto = new CriteriaDto(AND, new ArrayList<>());
   public List<Measure> measures = new ArrayList<>();
   public List<String> rollup = new ArrayList<>();
 
@@ -69,7 +69,7 @@ public class DatabaseQuery {
   }
 
   public DatabaseQuery condition(String field, ConditionDto conditionDto) {
-    this.conditions.put(field, conditionDto);
+    this.criteriaDto.children.add(new CriteriaDto(field, conditionDto));
     return this;
   }
 

@@ -269,12 +269,14 @@ public abstract class ATestQueryExecutor {
     Table table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactly(List.of("cookie", 3l));
 
-    query.withCondition("subcategory", Functions.isNull());
+    query = Query.from(this.storeName)
+            .where("subcategory", Functions.isNull())
+            .select(List.of("ean"), List.of(CountMeasure.INSTANCE))
+            .build();
     table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactly(
             List.of("bottle", 3l),
-            List.of("shirt", 3l)
-    );
+            List.of("shirt", 3l));
   }
 
   @Test

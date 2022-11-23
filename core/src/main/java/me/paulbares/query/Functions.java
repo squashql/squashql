@@ -13,20 +13,20 @@ import static me.paulbares.query.dto.ConditionType.OR;
 
 public class Functions {
 
-  public static CriterionDto criterion(String field, ConditionDto conditionDto) {
-    return new CriterionDto(field, conditionDto);
+  public static CriteriaDto criterion(String field, ConditionDto conditionDto) {
+    return new CriteriaDto(field, conditionDto);
   }
 
-  public static CriterionDto all(CriterionDto... criteria) {
+  public static CriteriaDto all(CriteriaDto... criteria) {
     return buildCriterionDto(AND, criteria);
   }
 
-  public static CriterionDto any(CriterionDto... criteria) {
+  public static CriteriaDto any(CriteriaDto... criteria) {
     return buildCriterionDto(OR, criteria);
   }
 
-  public static CriterionDto buildCriterionDto(ConditionType conditionType, CriterionDto... criteria) {
-    return new CriterionDto(conditionType, List.of(criteria));
+  public static CriteriaDto buildCriterionDto(ConditionType conditionType, CriteriaDto... criteria) {
+    return new CriteriaDto(conditionType, List.of(criteria));
   }
 
   public static ConditionDto and(ConditionDto first, ConditionDto second, ConditionDto... others) {
@@ -128,11 +128,13 @@ public class Functions {
   }
 
   public static void main(String[] args) {
-    CriterionDto c1 = criterion("f1", eq("A"));
-    CriterionDto c2 = criterion("f1", neq("B"));
-    CriterionDto c3 = criterion("f2", isNotNull());
-    CriterionDto c1Andc2 = all(c1, c2);
-    CriterionDto any = any(c1Andc2, c3);// (f1 = A AND f1<>B) OR f2 <> NULL
+    // FIXME
+    eq("A").and(eq("B"));
+    CriteriaDto c1 = criterion("f1", eq("A"));
+    CriteriaDto c2 = criterion("f1", neq("B"));
+    CriteriaDto c3 = criterion("f2", isNotNull());
+    CriteriaDto c1Andc2 = all(c1, c2);
+    CriteriaDto any = any(c1Andc2, c3);// (f1 = A AND f1<>B) OR f2 <> NULL
     System.out.println(SQLTranslator.toSql(s -> new Field(s, String.class), any));
   }
 }

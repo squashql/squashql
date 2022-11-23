@@ -63,6 +63,13 @@ public class Query implements HasCondition, HasSelectAndRollup, HasJoin, HasStar
   }
 
   @Override
+  public HasCondition where(CriteriaDto criteriaDto) {
+    addJoinToQueryDto();
+    this.queryDto.criteriaDto = criteriaDto;
+    return this;
+  }
+
+  @Override
   public CanAddRollup select(List<String> columns, List<ColumnSet> columnSets, List<Measure> measures) {
     addJoinToQueryDto();
     columns.forEach(this.queryDto::withColumn);

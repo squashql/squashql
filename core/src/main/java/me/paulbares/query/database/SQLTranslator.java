@@ -104,7 +104,7 @@ public class SQLTranslator {
   }
 
   protected static void addConditions(StringBuilder statement, DatabaseQuery query, Function<String, Field> fieldProvider) {
-    List<CriterionDto> conditions = query.conditions;
+    List<CriteriaDto> conditions = query.criteriaDto.children;
 
     if (!conditions.isEmpty()) {
       String andConditions = conditions
@@ -196,21 +196,21 @@ public class SQLTranslator {
     }
   }
 
-  public static String toSql(Function<String, Field> fieldProvider, CriterionDto criterionDto) {
-    List<CriterionDto> conditions = criterionDto.criterionDtos;
+  public static String toSql(Function<String, Field> fieldProvider, CriteriaDto criteriaDto) {
+    List<CriteriaDto> conditions = criteriaDto.children;
     if (conditions == null) {
-      return toSql(fieldProvider.apply(criterionDto.field), criterionDto.conditionDto);
+      return toSql(fieldProvider.apply(criteriaDto.field), criteriaDto.conditionDto);
     } else {
-      String sep = switch (criterionDto.conditionType) {
+      String sep = switch (criteriaDto.conditionType) {
         case AND -> " and ";
         case OR -> " or ";
-        default -> throw new IllegalStateException("Unexpected value: " + criterionDto.conditionType);
+        default -> throw new IllegalStateException("Unexpected value: " + criteriaDto.conditionType);
       };
       StringBuilder sb = new StringBuilder();
       sb.append('(');
-      Iterator<CriterionDto> iterator = conditions.iterator();
+      Iterator<CriteriaDto> iterator = conditions.iterator();
       while (iterator.hasNext()) {
-        CriterionDto criterion = iterator.next();
+        CriteriaDto criterion = iterator.next();
         sb.append(toSql(fieldProvider, criterion));
         if (iterator.hasNext()) {
           sb.append(sep);
