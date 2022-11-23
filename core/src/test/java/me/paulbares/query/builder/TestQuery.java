@@ -1,7 +1,6 @@
 package me.paulbares.query.builder;
 
 import me.paulbares.query.ColumnSetKey;
-import me.paulbares.query.Functions;
 import me.paulbares.query.Measure;
 import me.paulbares.query.dto.*;
 import org.assertj.core.api.Assertions;
@@ -9,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static me.paulbares.query.Functions.sum;
+import static me.paulbares.query.Functions.*;
 
 public class TestQuery {
 
@@ -35,21 +34,23 @@ public class TestQuery {
     // Only one condition
     build = Query
             .from("saas")
-            .where("f1", Functions.eq("A"))
+            .where("f1", eq("A"))
             .select(List.of("col1", "col2"), List.of(columnSet), List.of(sum))
             .build();
 
-    Assertions.assertThat(build).isEqualTo(q.withCondition("f1", Functions.eq("A")));
+    Assertions.assertThat(build).isEqualTo(q.withCondition("f1", eq("A")));
 
     // Multiple conditions
+    CriteriaDto any = any(criterion("f3", eq("C")), criterion("f3", isNull()));
     build = Query
             .from("saas")
-            .where("f1", Functions.eq("A"))
-            .where("f2", Functions.eq("B"))
+            .where("f1", eq("A"))
+            .where("f2", eq("B"))
+            .where(any)
             .select(List.of("col1", "col2"), List.of(columnSet), List.of(sum))
             .build();
 
-    Assertions.assertThat(build).isEqualTo(q.withCondition("f2", Functions.eq("B")));
+    Assertions.assertThat(build).isEqualTo(q.withCondition("f2", eq("B")).withCriteria(any));
 
     // with limit
     build = Query
@@ -129,7 +130,7 @@ public class TestQuery {
               .withColumn("col1")
               .withColumn("col2")
               .withMeasure(sum)
-              .withCondition("f1", Functions.eq("A"));
+              .withCondition("f1", eq("A"));
 
       saas.join(other, JoinType.INNER, new JoinMappingDto(other.name, "id", saas.name, "id"));
 
@@ -138,7 +139,7 @@ public class TestQuery {
               .from("saas")
               .innerJoin("other")
               .on(other.name, "id", saas.name, "id")
-              .where("f1", Functions.eq("A"))
+              .where("f1", eq("A"))
               .select(List.of("col1", "col2"), List.of(sum))
               .build();
 

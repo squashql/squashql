@@ -222,7 +222,7 @@ public abstract class ATestQueryExecutor {
   void testQuerySeveralCoordinates() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, Functions.in("s1", "s2"))
+            .where(SCENARIO_FIELD_NAME, in("s1", "s2"))
             .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
     Table table = this.queryExecutor.execute(query);
@@ -248,7 +248,7 @@ public abstract class ATestQueryExecutor {
             .from(this.storeName)
             .where(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME))
             .where("ean", eq("bottle"))
-            .where("category", Functions.in("cloth", "drink"))
+            .where("category", in("cloth", "drink"))
             .select(List.of("category", "ean"), List.of(sum("q", "quantity")))
             .build();
 
@@ -334,7 +334,7 @@ public abstract class ATestQueryExecutor {
   void testOrderByColumn() {
     QueryDto query = Query
             .from(this.storeName)
-            .where("category", Functions.in("cloth", "drink"))
+            .where("category", in("cloth", "drink"))
             .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(CountMeasure.INSTANCE))
             .build();
     Table result = this.queryExecutor.execute(query);

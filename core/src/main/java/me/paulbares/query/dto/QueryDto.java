@@ -96,6 +96,11 @@ public class QueryDto {
     return this;
   }
 
+  public QueryDto withCriteria(CriteriaDto criteriaDto) {
+    this.criteriaDto.children.add(criteriaDto);
+    return this;
+  }
+
   public QueryDto orderBy(String column, OrderKeywordDto orderKeywordDto) {
     this.orders.put(column, new SimpleOrderDto(orderKeywordDto));
     return this;
