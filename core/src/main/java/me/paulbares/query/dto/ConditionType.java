@@ -40,6 +40,10 @@ public enum ConditionType {
   /**
    * Static condition, true only.
    */
+  LIKE,
+  /**
+   * Static condition, true only.
+   */
   TRUE,
   /**
    * Static condition, false only.

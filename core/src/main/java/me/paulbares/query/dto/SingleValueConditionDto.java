@@ -17,7 +17,7 @@ public final class SingleValueConditionDto implements ConditionDto {
 
   public Object value;
 
-  private static final EnumSet<ConditionType> supportedTypes = EnumSet.of(LT, LE, GT, GE, EQ, NEQ);
+  private static final EnumSet<ConditionType> supportedTypes = EnumSet.of(LT, LE, GT, GE, EQ, NEQ, LIKE);
 
   public SingleValueConditionDto(ConditionType type, Object value) {
     if (!supportedTypes.contains(type)) {

@@ -13,6 +13,7 @@ enum ConditionType {
   GT = "GT",
   GE = "GE",
   IN = "IN",
+  LIKE = "LIKE",
   AND = "AND",
   OR = "OR",
   NULL = "NULL",
@@ -125,4 +126,8 @@ export function gt(value: any): Condition {
 
 export function ge(value: any): Condition {
   return new SingleValueCondition(ConditionType.GE, value)
+}
+
+export function like(value: string): Condition {
+  return new SingleValueCondition(ConditionType.LIKE, value)
 }

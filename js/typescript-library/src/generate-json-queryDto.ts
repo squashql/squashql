@@ -8,7 +8,7 @@ import {
   count,
   ExpressionMeasure, sum, integer, decimal,
 } from "./measures"
-import {_in, and, eq, gt, lt, or, isNull, isNotNull} from "./conditions"
+import {_in, and, eq, gt, lt, or, isNull, isNotNull, like} from "./conditions"
 import * as fs from "fs"
 import {OrderKeyword} from "./order";
 import {BucketColumnSet, ColumnSetKey, Month} from "./columnsets";
@@ -46,7 +46,7 @@ export function generateFromQueryDto() {
   })), new Month("mois", "annee")))
   q.withMeasure(comparisonMeasureWithParent("parent", ComparisonMethod.DIVIDE, price, ["Mois", "Annee"]))
 
-  const queryCondition = or(and(eq("a"), eq("b")), lt(5));
+  const queryCondition = or(or(and(eq("a"), eq("b")), lt(5)), like("a%"))
   q.withCondition("f1", queryCondition)
   q.withCondition("f2", gt(659))
   q.withCondition("f3", _in([0, 1, 2]))
