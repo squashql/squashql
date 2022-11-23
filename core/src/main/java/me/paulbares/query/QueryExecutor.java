@@ -1,15 +1,11 @@
 package me.paulbares.query;
 
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.graph.Graph;
 import lombok.extern.slf4j.Slf4j;
 import me.paulbares.MeasurePrefetcherVisitor;
 import me.paulbares.query.QueryCache.SubQueryScope;
 import me.paulbares.query.QueryCache.TableScope;
-import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.QueryCacheContextValue;
-import me.paulbares.query.context.Repository;
 import me.paulbares.query.database.DatabaseQuery;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.*;
@@ -143,8 +139,6 @@ public class QueryExecutor {
     result = TableUtils.replaceTotalCellValues((ColumnarTable) result, query);
     result = TableUtils.orderRows((ColumnarTable) result, query);
 
-    // TODO rewrite the sortedTable to change ___total___ to a better value (e.g Grand Total, Subtotal...)
-
     queryWatch.stop(QueryWatch.ORDER);
     queryWatch.stop(QueryWatch.GLOBAL);
 
@@ -211,44 +205,8 @@ public class QueryExecutor {
                                  QueryWatch queryWatch) {
   }
 
-
   protected static void resolveMeasures(QueryDto queryDto) {
-    ContextValue repo = queryDto.context.get(Repository.KEY);
-    Supplier<Map<String, ExpressionMeasure>> supplier = Suppliers.memoize(() -> ExpressionResolver.get(((Repository) repo).url));
-    List<Measure> newMeasures = new ArrayList<>();
-    for (Measure measure : queryDto.measures) {
-      newMeasures.add(resolveExpressionMeasure(repo, supplier, measure));
-    }
-    queryDto.measures = newMeasures;
-  }
-
-  private static Measure resolveExpressionMeasure(ContextValue repo, Supplier<Map<String, ExpressionMeasure>> supplier, Measure measure) {
-    if (measure instanceof UnresolvedExpressionMeasure) {
-      if (repo == null) {
-        throw new IllegalStateException(Repository.class.getSimpleName() + " context is missing in the query");
-      }
-      String alias = ((UnresolvedExpressionMeasure) measure).alias;
-      ExpressionMeasure expressionMeasure = supplier.get().get(alias);
-      if (expressionMeasure == null) {
-        throw new IllegalArgumentException("Cannot find expression with alias " + alias);
-      }
-      return expressionMeasure;
-    } else {
-      resolveMeasureDependencies(repo, supplier, measure);
-      return measure;
-    }
-  }
-
-  private static void resolveMeasureDependencies(ContextValue repo, Supplier<Map<String, ExpressionMeasure>> supplier, Measure measure) {
-    if (measure instanceof ComparisonMeasureReferencePosition cm) {
-      cm.measure = resolveExpressionMeasure(repo, supplier, cm.measure);
-      resolveMeasureDependencies(repo, supplier, cm.measure);
-    } else if (measure instanceof BinaryOperationMeasure bom) {
-      bom.leftOperand = resolveExpressionMeasure(repo, supplier, bom.leftOperand);
-      bom.rightOperand = resolveExpressionMeasure(repo, supplier, bom.rightOperand);
-      resolveMeasureDependencies(repo, supplier, bom.leftOperand);
-      resolveMeasureDependencies(repo, supplier, bom.rightOperand);
-    }
+    // Deactivate for now.
   }
 
   public static Function<String, Field> withFallback(Function<String, Field> fieldProvider, Class<?> fallbackType) {

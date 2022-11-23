@@ -16,6 +16,24 @@ import java.util.stream.IntStream;
 
 public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
 
+  /**
+   * https://clickhouse.com/docs/en/sql-reference/aggregate-functions/reference/
+   * NOTE there is more but only a subset is proposed here.
+   */
+  public static final List<String> SUPPORTED_AGGREGATION_FUNCTIONS = List.of(
+          "count",
+          "min",
+          "max",
+          "sum",
+          "avg",
+          "any",
+          "stddevPop",
+          "stddevSamp",
+          "varPop",
+          "varSamp",
+          "covarPop",
+          "covarSamp");
+
   protected final QueryRewriter rewriter;
 
   public ClickHouseQueryEngine(ClickHouseDatastore datastore) {
@@ -58,6 +76,11 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  @Override
+  public List<String> supportedAggregationFunctions() {
+    return SUPPORTED_AGGREGATION_FUNCTIONS;
   }
 
   static class ClickHouseQueryRewriter implements QueryRewriter {

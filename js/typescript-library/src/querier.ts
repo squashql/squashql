@@ -10,17 +10,13 @@ export class Querier {
     this.axiosInstance = axios.create({
       baseURL: url,
       timeout: 30_000,
-      headers: {'x-api-key': 'c3981f51-e9e8-47e1-aa81-7c26e05c98d9'}
+      headers: {'x-api-key': 'c3981f51-e9e8-47e1-aa81-7c26e05c98d9'} // FIXME to remove
     });
   }
 
-  async getMetadata(repoUrl?: string): Promise<MetadataResult> {
+  async getMetadata(): Promise<MetadataResult> {
     return this.axiosInstance
-            .get("/metadata", {
-              params: {
-                "repo-url": repoUrl
-              }
-            })
+            .get("/metadata")
             .then(r => r.data)
   }
 
