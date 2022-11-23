@@ -2,9 +2,9 @@ package me.paulbares.query;
 
 import me.paulbares.query.dictionary.ObjectArrayDictionary;
 import me.paulbares.store.Field;
+import me.paulbares.util.AitmArrays;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public interface Table extends Iterable<List<Object>> {
@@ -84,7 +84,7 @@ public interface Table extends Iterable<List<Object>> {
   }
 
   default boolean isMeasure(int index) {
-    return Arrays.binarySearch(measureIndices(), index) >= 0;
+    return AitmArrays.search(measureIndices(), index) >= 0;
   }
 
   /**

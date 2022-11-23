@@ -6,6 +6,7 @@ import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.MetadataItem;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
+import me.paulbares.util.AitmArrays;
 import me.paulbares.util.MultipleColumnsSorter;
 import me.paulbares.util.Queries;
 
@@ -96,7 +97,7 @@ public class TableUtils {
     int index = 0;
     for (Field field : t.headers()) {
       if (t.isMeasure(index)) {
-        int i = Arrays.binarySearch(t.measureIndices(), index);
+        int i = AitmArrays.search(t.measureIndices(), index);
         Measure measure = t.measures().get(i);
         String expression = measure.expression();
         if (expression == null) {
@@ -155,7 +156,7 @@ public class TableUtils {
     }
 
     for (int i = 0; i < headers.size(); i++) {
-      boolean isColumn = Arrays.binarySearch(table.columnsIndices, i) >= 0;
+      boolean isColumn = AitmArrays.search(table.columnsIndices, i) >= 0;
       String headerName = headers.get(i).name();
       Comparator<?> queryComp = comparatorByColumnName.get(headerName);
       // Order a column even if not explicitly asked in the query only if no comparator on any measure
