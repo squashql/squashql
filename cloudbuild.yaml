@@ -5,8 +5,8 @@ steps:
     args:
     - '-c'
     - |
-      mvn -pl :aitm-server -am clean install -DskipTests -Pspring-boot \
-      && mvn -pl :aitm-server -Pgcloud-cdg -DskipTests package appengine:stage
+      mvn -pl :aitm-sandbox -am clean install -DskipTests -Pspring-boot \
+      && mvn -pl :aitm-sandbox -Pgcloud-cdg -DskipTests package appengine:stage
   - id: 'Deploy to app engine'
     name: 'gcr.io/cloud-builders/gcloud'
-    args: [ 'app', 'deploy', 'server/target/appengine-staging/app.yaml' ]
+    args: [ 'app', 'deploy', 'sandbox/target/appengine-staging/app.yaml' ]

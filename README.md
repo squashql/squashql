@@ -9,12 +9,12 @@ In order to build the server, you will need:
 - Install prerequisites (see above)
 - Build the project
 ```
-mvn -pl :aitm-server -am clean install -DskipTests -Pspring-boot
+mvn -pl :aitm-sandbox -am clean install -DskipTests -Pspring-boot
 ```
 - Launch the project with the following command. Replace `/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java` 
 by your java path if necessary. 
 ```
-/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -Ddataset.path=saas.csv -jar server/target/aitm-server-0.1-SNAPSHOT.jar
+/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -Ddataset.path=saas.csv -jar sandbox/target/aitm-sandbox-0.1-SNAPSHOT.jar
 ```
 Do not forget to change the path to the file in the above command: `-Ddataset.path=/Users/paul/Downloads/saas.csv`
 
@@ -26,12 +26,12 @@ You need to generate a key for your project. Go to [https://cloud.google.com/big
 
 ### Optiprix
 ```
-$JAVA_HOME/bin/java -Dspring.profiles.active=optiprix -Dbigquery.credentials.path=/Users/paul/dev/aitmindiceprix-686299293f2f.json -jar server/target/aitm-server-0.1-SNAPSHOT.jar
+$JAVA_HOME/bin/java -Dspring.profiles.active=optiprix -Dbigquery.credentials.path=/Users/paul/dev/aitmindiceprix-686299293f2f.json -jar sandbox/target/aitm-sandbox-0.1-SNAPSHOT.jar
 ```
 
 ### CDG
 ```
-$JAVA_HOME/bin/java -Dspring.profiles.active=cdg -Dbigquery.credentials.path=/path/to/your/key.json -jar server/target/aitm-server-0.1-SNAPSHOT.jar
+$JAVA_HOME/bin/java -Dspring.profiles.active=cdg -Dbigquery.credentials.path=/path/to/your/key.json -jar sandbox/target/aitm-sandbox-0.1-SNAPSHOT.jar
 ```
 
 ## JShell
@@ -93,8 +93,8 @@ gcloud app logs tail -s default
 ### Deploy from local machine
 
 ```
-mvn -pl :aitm-server -am clean install -DskipTests -Pspring-boot \
-&& mvn -pl :aitm-server -Pgcloud-cdg -DskipTests package appengine:deploy
+mvn -pl :aitm-sandbox -am clean install -DskipTests -Pspring-boot \
+&& mvn -pl :aitm-sandbox -Pgcloud-cdg -DskipTests package appengine:deploy
 ```
 
 ### Deploy from CloudBuild

@@ -42,6 +42,7 @@
     <module>server</module>
     <module>java-client</module>
     <module>js/typescript-library</module>
+    <module>sandbox</module>
   </modules>
 
   <dependencyManagement>
