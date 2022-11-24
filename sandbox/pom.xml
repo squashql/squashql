@@ -11,14 +11,14 @@
   </parent>
 
   <groupId>me.paulbares</groupId>
-  <artifactId>aitm-server</artifactId>
+  <artifactId>aitm-sandbox</artifactId>
   <version>0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <dependencies>
     <dependency>
       <groupId>me.paulbares</groupId>
-      <artifactId>aitm-core</artifactId>
+      <artifactId>aitm-server</artifactId>
       <version>0.1-SNAPSHOT</version>
     </dependency>
     <dependency>
@@ -26,18 +26,10 @@
       <artifactId>aitm-java-client</artifactId>
       <version>0.1-SNAPSHOT</version>
     </dependency>
-
-    <dependency>
-      <groupId>me.paulbares</groupId>
-      <artifactId>aitm-js</artifactId>
-      <version>0.1-SNAPSHOT</version>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>me.paulbares</groupId>
       <artifactId>aitm-spark</artifactId>
       <version>0.1-SNAPSHOT</version>
-      <scope>test</scope>
       <exclusions>
         <exclusion>
           <artifactId>slf4j-log4j12</artifactId>
@@ -45,11 +37,16 @@
         </exclusion>
       </exclusions>
     </dependency>
-<!--    <dependency>-->
-<!--      <groupId>org.springframework.boot</groupId>-->
-<!--      <artifactId>spring-boot-starter</artifactId>-->
-<!--      <version>${spring-boot.version}</version>-->
-<!--    </dependency>-->
+    <dependency>
+      <groupId>me.paulbares</groupId>
+      <artifactId>aitm-bigquery</artifactId>
+      <version>0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter</artifactId>
+      <version>${spring-boot.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>

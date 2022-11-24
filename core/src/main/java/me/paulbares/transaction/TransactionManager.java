@@ -1,7 +1,5 @@
 package me.paulbares.transaction;
 
-import me.paulbares.store.Datastore;
-
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,7 +15,7 @@ public interface TransactionManager {
   void loadCsv(String scenario, String store, String path, String delimiter, boolean header);
 
   static String scenarioStoreName(String store, String scenario) {
-    if (scenario.equals(Datastore.MAIN_SCENARIO_NAME)) {
+    if (scenario.equals(MAIN_SCENARIO_NAME)) {
       return store;
     } else {
       return "__" + store + "_scenario_" + scenario + "__";

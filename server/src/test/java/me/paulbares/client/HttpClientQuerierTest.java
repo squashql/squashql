@@ -1,11 +1,11 @@
 package me.paulbares.client;
 
-import me.paulbares.AitmApplication;
 import me.paulbares.client.http.HttpClientQuerier;
 import me.paulbares.query.*;
 import me.paulbares.query.builder.Query;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.*;
+import me.paulbares.spring.AitmApplication;
 import me.paulbares.spring.dataset.DatasetTestConfig;
 import me.paulbares.spring.web.rest.QueryControllerTest;
 import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;

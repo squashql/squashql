@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Monaco editor</title>
+  <link rel="stylesheet" data-name="vs/editor/editor.main"
+        href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.20.0/min/vs/editor/editor.main.min.css">
+</head>
+<body>
+<button id="submit" style="margin-bottom: 5px;">Generate typescript classes</button>
+<div id="container" style="height:600px;"></div>
+<div id="diff_container" style="height:600px;"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs/loader.min.js"></script>
+<script>
+  // Code snippet from https://stackoverflow.com/questions/63179813/how-to-run-the-monaco-editor-from-a-cdn-like-cdnjs
+  // require is provided by loader.min.js.
+  require.config({paths: {'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.26.1/min/vs'}});
+  document.getElementById('submit').addEventListener('click', function () {
+    // Get the value from the editor
+    fetch('http://localhost:8080/ts')
+            .then((response) => response.text())
+            .then((data) => {
+              require(["vs/editor/editor.main"], () => {
+                var originalModel = monaco.editor.createModel(data, 'typescript')
+                var modifiedModel = monaco.editor.createModel("paste your old code here", 'typescript')
+                var diffEditor = monaco.editor.createDiffEditor(document.getElementById('container'));
+                diffEditor.setModel({
+                  original: originalModel,
+                  modified: modifiedModel
+                });
+                diffEditor.updateOptions({
+                  theme: 'vs-dark'
+                });
+              });
+            });
+  });
+</script>
+</body>
+</html>
