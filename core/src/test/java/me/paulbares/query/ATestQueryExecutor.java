@@ -383,6 +383,26 @@ public abstract class ATestQueryExecutor {
   }
 
   @Test
+  void testOrderByColumnWithNullValues() {
+    // Without explicit ordering
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("subcategory"), List.of())
+            .build();
+    Table result = this.queryExecutor.execute(query);
+    result.show();
+
+    // With explicit ordering
+    query = Query
+            .from(this.storeName)
+            .select(List.of("subcategory"), List.of())
+            .orderBy("subcategory", OrderKeywordDto.ASC)
+            .build();
+    result = this.queryExecutor.execute(query);
+    result.show();
+  }
+
+  @Test
   void testOrderByMeasure() {
     QueryDto query = Query
             .from(this.storeName)
