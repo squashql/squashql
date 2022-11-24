@@ -42,7 +42,7 @@ public class AggregatedMeasure implements Measure {
   public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     String sql;
     if (this.criteria != null) {
-      String conditionSt = SQLTranslator.toSql(fieldProvider, this.criteria);
+      String conditionSt = SQLTranslator.toSql(QueryExecutor.withFallback(fieldProvider, Number.class), this.criteria);
       sql = this.aggregationFunction + "(case when " + conditionSt + " then " + this.field + " end)";
     } else {
       sql = this.aggregationFunction + "(" + (this.field.equals("*") ? this.field : escape(this.field)) + ")";
