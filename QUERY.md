@@ -81,8 +81,8 @@ const q = from("myTable")
 ```sql
 SELECT col1, col2, sum(col3) as alias1, sum(col4) as alias2
 FROM myTable
-WHERE col1 IN ('a', 'b')
-  AND col2 = 'c'
+WHERE ( col1 IN ('a', 'b')
+  AND col2 = 'c' )
 GROUP BY col1, col2
 ```
 
