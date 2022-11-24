@@ -9,6 +9,8 @@ import me.paulbares.query.context.ContextValue;
 
 import java.util.*;
 
+import static me.paulbares.query.dto.ConditionType.AND;
+
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
@@ -26,7 +28,7 @@ public class QueryDto {
 
   public List<Measure> measures = new ArrayList<>();
 
-  public Map<String, ConditionDto> conditions = new HashMap<>();
+  public CriteriaDto criteriaDto = new CriteriaDto(AND, new ArrayList<>());
 
   public Map<String, OrderDto> orders = new HashMap<>();
 
@@ -54,8 +56,8 @@ public class QueryDto {
     return this;
   }
 
-  public QueryDto aggregatedMeasure(String alias, String field, String agg, String conditionField, ConditionDto conditionDto) {
-    withMeasure(new AggregatedMeasure(alias, field, agg, conditionField, conditionDto));
+  public QueryDto aggregatedMeasure(String alias, String field, String agg, CriteriaDto criteriaDto) {
+    withMeasure(new AggregatedMeasure(alias, field, agg, criteriaDto));
     return this;
   }
 
@@ -90,7 +92,12 @@ public class QueryDto {
   }
 
   public QueryDto withCondition(String field, ConditionDto conditionDto) {
-    this.conditions.put(field, conditionDto);
+    this.criteriaDto.children.add(new CriteriaDto(field, conditionDto));
+    return this;
+  }
+
+  public QueryDto withCriteria(CriteriaDto criteriaDto) {
+    this.criteriaDto.children.add(criteriaDto);
     return this;
   }
 

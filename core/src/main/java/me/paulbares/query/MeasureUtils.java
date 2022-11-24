@@ -2,12 +2,16 @@ package me.paulbares.query;
 
 import lombok.NoArgsConstructor;
 import me.paulbares.query.database.SQLTranslator;
-import me.paulbares.query.dto.ConditionDto;
+import me.paulbares.query.dto.CriteriaDto;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 @NoArgsConstructor
@@ -15,8 +19,8 @@ public final class MeasureUtils {
 
   public static String createExpression(Measure m) {
     if (m instanceof AggregatedMeasure a) {
-      if (a.conditionDto != null) {
-        String conditionSt = SQLTranslator.toSql(new Field(a.conditionField, String.class), a.conditionDto);
+      if (a.criteria != null) {
+        String conditionSt = SQLTranslator.toSql(f -> new Field(f, String.class), a.criteria);
         return a.aggregationFunction + "If(" + a.field + ", " + conditionSt + ")";
       } else {
         return a.aggregationFunction + "(" + a.field + ")";
@@ -58,22 +62,46 @@ public final class MeasureUtils {
           ComparisonMeasureReferencePosition cm,
           QueryExecutor.QueryScope queryScope,
           Function<String, Field> fieldSupplier) {
-    Map<String, ConditionDto> newConditions = new HashMap<>(queryScope.conditions());
+    CriteriaDto copy = CriteriaDto.deepCopy(queryScope.criteriaDto());
+    Consumer<String> criteriaRemover = field -> removeCriteriaOnField(field, copy);
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
-            .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(newConditions::remove));
+            .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(criteriaRemover::accept));
     Optional.ofNullable(cm.period)
-            .ifPresent(p -> getColumnsForPrefetching(p).forEach(newConditions::remove));
+            .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover::accept));
     List<Field> rollupColumns = new ArrayList<>(queryScope.rollupColumns());
     Optional.ofNullable(cm.ancestors)
             .ifPresent(p -> {
-              p.forEach(newConditions::remove);
+              p.forEach(criteriaRemover::accept);
               p.forEach(c -> {
                 if (query.columns.contains(c)) {
                   rollupColumns.add(fieldSupplier.apply(c));
                 }
               });
             });
-    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), newConditions, rollupColumns);
+    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), copy, rollupColumns);
+  }
+
+  private static CriteriaDto removeCriteriaOnField(String field, CriteriaDto root) {
+    if (root.isCriterion()) {
+      return CriteriaDto.NO_CRITERIA;
+    } else {
+      removeCriteriaOnField(field, root.children);
+      return root;
+    }
+  }
+
+  private static void removeCriteriaOnField(String field, List<CriteriaDto> children) {
+    Iterator<CriteriaDto> iterator = children.iterator();
+    while (iterator.hasNext()) {
+      CriteriaDto criteriaDto = iterator.next();
+      if (criteriaDto.isCriterion()) {
+        if (criteriaDto.field.equals(field)) {
+          iterator.remove();
+        }
+      } else {
+        removeCriteriaOnField(field, criteriaDto.children);
+      }
+    }
   }
 
   public static boolean isPrimitive(Measure m) {

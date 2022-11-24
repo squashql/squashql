@@ -104,12 +104,12 @@ public class SQLTranslator {
   }
 
   protected static void addConditions(StringBuilder statement, DatabaseQuery query, Function<String, Field> fieldProvider) {
-    Map<String, ConditionDto> conditionByField = query.conditions;
+    List<CriteriaDto> conditions = query.criteriaDto.children;
 
-    if (!conditionByField.isEmpty()) {
-      String andConditions = conditionByField.entrySet()
+    if (!conditions.isEmpty()) {
+      String andConditions = conditions
               .stream()
-              .map(e -> toSql(fieldProvider.apply(e.getKey()), e.getValue()))
+              .map(c -> toSql(fieldProvider, c))
               .collect(Collectors.joining(" and "));
       statement
               .append(" where ")
@@ -193,6 +193,31 @@ public class SQLTranslator {
       };
     } else {
       throw new RuntimeException("Not supported condition " + dto);
+    }
+  }
+
+  public static String toSql(Function<String, Field> fieldProvider, CriteriaDto criteriaDto) {
+    List<CriteriaDto> conditions = criteriaDto.children;
+    if (conditions == null) {
+      return toSql(fieldProvider.apply(criteriaDto.field), criteriaDto.condition);
+    } else {
+      String sep = switch (criteriaDto.conditionType) {
+        case AND -> " and ";
+        case OR -> " or ";
+        default -> throw new IllegalStateException("Unexpected value: " + criteriaDto.conditionType);
+      };
+      StringBuilder sb = new StringBuilder();
+      sb.append('(');
+      Iterator<CriteriaDto> iterator = conditions.iterator();
+      while (iterator.hasNext()) {
+        CriteriaDto criterion = iterator.next();
+        sb.append(toSql(fieldProvider, criterion));
+        if (iterator.hasNext()) {
+          sb.append(sep);
+        }
+      }
+      sb.append(')');
+      return sb.toString();
     }
   }
 

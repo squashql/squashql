@@ -9,8 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static me.paulbares.query.Functions.eq;
-import static me.paulbares.query.Functions.plus;
+import static me.paulbares.query.Functions.*;
 
 public class TestMeasures {
 
@@ -28,7 +27,7 @@ public class TestMeasures {
   void testExpressions() {
     Measure agg1 = new AggregatedMeasure("ps", "price", "sum");
     Measure agg2 = new AggregatedMeasure("qs", "quantity", "sum");
-    Measure agg3 = new AggregatedMeasure("qs", "quantity", "sum", "category", eq("drink"));
+    Measure agg3 = new AggregatedMeasure("qs", "quantity", "sum", criterion("category", eq("drink")));
     Measure plus = new BinaryOperationMeasure("plus", BinaryOperator.PLUS, agg1, agg2);
     Measure divide = new BinaryOperationMeasure("divide", BinaryOperator.DIVIDE, agg1, plus);
     Measure constant = new DoubleConstantMeasure(100d);
@@ -44,7 +43,7 @@ public class TestMeasures {
     Assertions.assertThat(MeasureUtils.createExpression(divide)).isEqualTo("ps / plus");
 
     AggregatedMeasure amount = new AggregatedMeasure("sum(Amount)", "Amount", AggregationFunction.SUM);
-    AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, "Income/Expense", eq("Revenue"));
+    AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, criterion("Income/Expense", eq("Revenue")));
     Measure ebidtaRatio = Functions.divide("EBITDA %", amount, sales);
 
     ComparisonMeasureReferencePosition growth = new ComparisonMeasureReferencePosition(

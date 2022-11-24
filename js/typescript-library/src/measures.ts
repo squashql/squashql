@@ -1,5 +1,5 @@
 import {PACKAGE, Period} from "./index"
-import {Condition} from "./conditions"
+import {Condition, Criteria} from "./conditions"
 import {ColumnSetKey} from "./columnsets"
 
 export interface Measure {
@@ -14,15 +14,13 @@ export class AggregatedMeasure implements Measure {
   readonly aggregationFunction: string
   readonly alias: string
   readonly expression?: string
-  readonly conditionField?: string
-  readonly condition?: Condition
+  readonly criteria?: Criteria
 
-  constructor(alias: string, field: string, aggregationFunction: string, conditionField?: string, condition?: Condition) {
+  constructor(alias: string, field: string, aggregationFunction: string, criterion?: Criteria) {
     this.alias = alias
     this.field = field
     this.aggregationFunction = aggregationFunction
-    this.conditionField = conditionField
-    this.condition = condition
+    this.criteria = criterion
   }
 
   toJSON() {
@@ -32,8 +30,7 @@ export class AggregatedMeasure implements Measure {
       "aggregationFunction": this.aggregationFunction,
       "alias": this.alias,
       "expression": this.expression,
-      "conditionField": this.conditionField,
-      "conditionDto": this.condition,
+      "criteria": this.criteria,
     }
   }
 }
@@ -181,12 +178,12 @@ export function avg(alias: string, field: string): Measure {
   return new AggregatedMeasure(alias, field, "avg")
 }
 
-export function sumIf(alias: string, field: string, conditionField: string, condition: Condition): Measure {
-  return new AggregatedMeasure(alias, field, "sum", conditionField, condition)
+export function sumIf(alias: string, field: string, criterion: Criteria): Measure {
+  return new AggregatedMeasure(alias, field, "sum", criterion)
 }
 
-export function countIf(alias: string, field: string, conditionField: string, condition: Condition): Measure {
-  return new AggregatedMeasure(alias, field, "count", conditionField, condition)
+export function countIf(alias: string, field: string, criterion?: Criteria): Measure {
+  return new AggregatedMeasure(alias, field, "count", criterion)
 }
 
 export function plus(alias: string, measure1: Measure, measure2: Measure): Measure {

@@ -31,7 +31,7 @@ public class TestJavascriptLibrary {
 
     var price = new AggregatedMeasure("price.sum", "price", "sum");
     q.withMeasure(price);
-    var priceFood = new AggregatedMeasure("alias", "price", "sum", "category", eq("food"));
+    var priceFood = new AggregatedMeasure("alias", "price", "sum", criterion("category", eq("food")));
     q.withMeasure(priceFood);
     var plus = new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood);
     q.withMeasure(plus);
@@ -89,7 +89,7 @@ public class TestJavascriptLibrary {
     Assertions.assertThat(q.context).isEqualTo(qjs.context);
     Assertions.assertThat(q.orders).isEqualTo(qjs.orders);
     Assertions.assertThat(q.measures).isEqualTo(qjs.measures);
-    Assertions.assertThat(q.conditions).isEqualTo(qjs.conditions);
+    Assertions.assertThat(q.criteriaDto).isEqualTo(qjs.criteriaDto);
     Assertions.assertThat(q.table).isEqualTo(qjs.table);
     Assertions.assertThat(q.subQuery).isEqualTo(qjs.subQuery);
     Assertions.assertThat(q).isEqualTo(qjs);
@@ -126,7 +126,7 @@ public class TestJavascriptLibrary {
     Assertions.assertThat(q.context).isEqualTo(qjs.context);
     Assertions.assertThat(q.orders).isEqualTo(qjs.orders);
     Assertions.assertThat(q.measures).isEqualTo(qjs.measures);
-    Assertions.assertThat(q.conditions).isEqualTo(qjs.conditions);
+    Assertions.assertThat(q.criteriaDto).isEqualTo(qjs.criteriaDto);
     Assertions.assertThat(q.table).isEqualTo(qjs.table);
     Assertions.assertThat(q.subQuery).isEqualTo(qjs.subQuery);
     Assertions.assertThat(q).isEqualTo(qjs);

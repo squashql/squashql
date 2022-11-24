@@ -176,22 +176,22 @@ public class QueryExecutor {
             query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
             query.columns.stream()).map(fieldSupplier).toList();
     List<Field> rollupColumns = query.rollupColumns.stream().map(fieldSupplier).toList();
-    return new QueryScope(query.table, query.subQuery, columns, query.conditions, rollupColumns);
+    return new QueryScope(query.table, query.subQuery, columns, query.criteriaDto, rollupColumns);
   }
 
   private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(QueryScope queryScope, DatabaseQuery prefetchQuery, Function<String, Field> fieldSupplier) {
     Set<Field> fields = prefetchQuery.select.stream().map(fieldSupplier).collect(Collectors.toSet());
     if (queryScope.tableDto != null) {
-      return new TableScope(queryScope.tableDto, fields, queryScope.conditions, new HashSet<>(queryScope.rollupColumns));
+      return new TableScope(queryScope.tableDto, fields, queryScope.criteriaDto, new HashSet<>(queryScope.rollupColumns));
     } else {
-      return new SubQueryScope(queryScope.subQuery, fields, queryScope.conditions);
+      return new SubQueryScope(queryScope.subQuery, fields, queryScope.criteriaDto);
     }
   }
 
   public record QueryScope(TableDto tableDto,
                            QueryDto subQuery,
                            List<Field> columns,
-                           Map<String, ConditionDto> conditions,
+                           CriteriaDto criteriaDto,
                            List<Field> rollupColumns) {
   }
 

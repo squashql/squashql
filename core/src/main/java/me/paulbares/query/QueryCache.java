@@ -1,12 +1,11 @@
 package me.paulbares.query;
 
 import me.paulbares.query.dto.CacheStatsDto;
-import me.paulbares.query.dto.ConditionDto;
+import me.paulbares.query.dto.CriteriaDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Field;
 
-import java.util.Map;
 import java.util.Set;
 
 public interface QueryCache {
@@ -23,10 +22,10 @@ public interface QueryCache {
 
   CacheStatsDto stats();
 
-  record TableScope(TableDto tableDto, Set<Field> columns, Map<String, ConditionDto> conditions, Set<Field> rollupColumns) implements PrefetchQueryScope {
+  record TableScope(TableDto tableDto, Set<Field> columns, CriteriaDto criteriaDto, Set<Field> rollupColumns) implements PrefetchQueryScope {
   }
 
-  record SubQueryScope(QueryDto subQueryDto, Set<Field> columns, Map<String, ConditionDto> conditions) implements PrefetchQueryScope {
+  record SubQueryScope(QueryDto subQueryDto, Set<Field> columns, CriteriaDto criteriaDto) implements PrefetchQueryScope {
   }
 
   /**

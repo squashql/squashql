@@ -25,7 +25,7 @@ public class TestQueryS13n {
             .withColumn("ean")
             .aggregatedMeasure("p", "price", "sum")
             .aggregatedMeasure("q", "quantity", "sum")
-            .aggregatedMeasure("priceAlias", "price", "sum", "category", Functions.eq("food"))
+            .aggregatedMeasure("priceAlias", "price", "sum", Functions.criterion("category", Functions.eq("food")))
             .expressionMeasure("alias1", "firstMyExpression")
             .expressionMeasure("alias2", "secondMyExpression")
             .withMeasure(new BinaryOperationMeasure("plus1",

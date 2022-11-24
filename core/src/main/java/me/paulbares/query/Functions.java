@@ -3,11 +3,29 @@ package me.paulbares.query;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.dto.*;
 
+import java.util.List;
+
 import static me.paulbares.query.BinaryOperator.*;
 import static me.paulbares.query.dto.ConditionType.AND;
 import static me.paulbares.query.dto.ConditionType.OR;
 
 public class Functions {
+
+  public static CriteriaDto criterion(String field, ConditionDto conditionDto) {
+    return new CriteriaDto(field, conditionDto);
+  }
+
+  public static CriteriaDto all(CriteriaDto... criteria) {
+    return buildCriteria(AND, criteria);
+  }
+
+  public static CriteriaDto any(CriteriaDto... criteria) {
+    return buildCriteria(OR, criteria);
+  }
+
+  public static CriteriaDto buildCriteria(ConditionType conditionType, CriteriaDto... criteria) {
+    return new CriteriaDto(conditionType, List.of(criteria));
+  }
 
   public static ConditionDto and(ConditionDto first, ConditionDto second, ConditionDto... others) {
     return merge(AND, first, second, others);
@@ -91,8 +109,8 @@ public class Functions {
     return new AggregatedMeasure(alias, field, AggregationFunction.SUM);
   }
 
-  public static Measure sumIf(String alias, String field, String conditionField, ConditionDto conditionDto) {
-    return new AggregatedMeasure(alias, field, AggregationFunction.SUM, conditionField, conditionDto);
+  public static Measure sumIf(String alias, String field, CriteriaDto criteriaDto) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.SUM, criteriaDto);
   }
 
   public static Measure avg(String alias, String field) {

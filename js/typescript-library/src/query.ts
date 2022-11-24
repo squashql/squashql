@@ -1,5 +1,5 @@
 import {Measure} from "./measures";
-import {Condition} from "./conditions";
+import {all, Condition, Criteria} from "./conditions";
 import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order";
 import {BucketColumnSet, ColumnSet, ColumnSetKey} from "./columnsets";
 
@@ -9,7 +9,7 @@ export class Query {
   columnSets: Map<string, ColumnSet>
   measures: Array<Measure>
   table: Table
-  conditions: Map<string, Condition>
+  criteria: Criteria
   orders: Map<string, Order>
   subQuery: Query
   limit: number = -1
@@ -18,7 +18,7 @@ export class Query {
     this.columns = []
     this.rollupColumns = []
     this.measures = []
-    this.conditions = new Map<string, Condition>()
+    this.criteria = undefined
     this.orders = new Map<string, Order>()
     this.columnSets = new Map<string, ColumnSet>()
   }
@@ -33,8 +33,8 @@ export class Query {
     return this
   }
 
-  withCondition(field: string, condition: Condition): Query {
-    this.conditions.set(field, condition);
+  withCriteria(criterion: Criteria): Query {
+    this.criteria = criterion
     return this;
   }
 
@@ -76,7 +76,7 @@ export class Query {
       "rollupColumns": this.rollupColumns,
       "columnSets": Object.fromEntries(this.columnSets),
       "measures": this.measures,
-      "conditions": Object.fromEntries(this.conditions),
+      "criteriaDto": this.criteria,
       "orders": Object.fromEntries(this.orders),
       "limit": this.limit
     }

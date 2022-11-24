@@ -88,11 +88,10 @@ public abstract class ATestQueryCache {
 
   @Test
   void testQuerySameColumns() {
-    QueryDto query = new QueryDto()
-            .table(this.storeName)
-            .withColumn(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("ps", "price", AggregationFunction.SUM)
-            .aggregatedMeasure("qs", "quantity", AggregationFunction.SUM);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("ps", "price"), sum("qs", "quantity")))
+            .build();
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
     assertCacheStats(0, 3);
@@ -103,10 +102,10 @@ public abstract class ATestQueryCache {
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
 
     // New query but same columns, same measure
-    query = new QueryDto()
-            .table(this.storeName)
-            .withColumn(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("qs", "quantity", AggregationFunction.SUM);
+    query = Query
+            .from(this.storeName)
+            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("qs", "quantity")))
+            .build();
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 33l));
     assertCacheStats(5, 3);
@@ -114,18 +113,19 @@ public abstract class ATestQueryCache {
 
   @Test
   void testQueryDifferentColumns() {
-    QueryDto query = new QueryDto()
-            .table(this.storeName)
-            .withColumn(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("ps", "price", AggregationFunction.SUM);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("ps", "price")))
+            .build();
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d));
     assertCacheStats(0, 2);
 
     // remove column, no column.
-    query = new QueryDto()
-            .table(this.storeName)
-            .aggregatedMeasure("ps", "price", AggregationFunction.SUM);
+    query = Query
+            .from(this.storeName)
+            .select(List.of(), List.of(sum("ps", "price")))
+            .build();
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15.0d));
     assertCacheStats(0, 4);
@@ -137,10 +137,10 @@ public abstract class ATestQueryCache {
 
   @Test
   void testQueryDifferentConditions() {
-    QueryDto query = new QueryDto()
-            .table(this.storeName)
-            .withColumn("category")
-            .aggregatedMeasure("ps", "price", AggregationFunction.SUM);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("category"), List.of(sum("ps", "price")))
+            .build();
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("drink", 2d),
@@ -148,17 +148,24 @@ public abstract class ATestQueryCache {
             List.of("food", 3d));
     assertCacheStats(0, 2);
 
-    query.withCondition("category", Functions.eq("drink"));
+    query = Query
+            .from(this.storeName)
+            .where("category", eq("drink"))
+            .select(List.of("category"), List.of(sum("ps", "price")))
+            .build();
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("drink", 2d));
     assertCacheStats(0, 4);
 
-    query.withCondition("category", Functions.eq("drink"));
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("drink", 2d));
     assertCacheStats(2, 4);
 
-    query.withCondition("category", Functions.in("food", "cloth"));
+    query = Query
+            .from(this.storeName)
+            .where("category", in("food", "cloth"))
+            .select(List.of("category"), List.of(sum("ps", "price")))
+            .build();
     result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("cloth", 10d),
@@ -201,47 +208,50 @@ public abstract class ATestQueryCache {
     Measure avg_ca = avg("mean_ca", "ca");
     Measure min = min("ca", "price");
 
-    QueryDto firstSubQuery = new QueryDto()
-            .table(this.storeName)
-            .withColumn("category")
-            .withMeasure(ca); // ca per scenario
+    QueryDto firstSubQuery = Query
+            .from(this.storeName)
+            .select(List.of("category"), List.of(ca)) // ca per category
+            .build();
 
-    QueryDto queryDto = new QueryDto()
-            .table(firstSubQuery)
-            .withMeasure(avg_ca);// avg of ca
+    QueryDto queryDto = Query
+            .from(firstSubQuery)
+            .select(List.of(), List.of(avg_ca)) // avg of ca
+            .build();
     Table result = this.queryExecutor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(5d));
     assertCacheStats(0, 2);
 
     // Change the sub query
-    QueryDto secondSubQuery = new QueryDto()
-            .table(this.storeName)
-            .withColumn("category")
-            .withMeasure(min); // change agg function
-    queryDto = new QueryDto()
-            .table(secondSubQuery)
-            .withMeasure(avg_ca);// avg of ca
+    QueryDto secondSubQuery = Query
+            .from(this.storeName)
+            .select(List.of("category"), List.of(min)) // change agg function
+            .build();
+    queryDto = Query
+            .from(secondSubQuery)
+            .select(List.of(), List.of(avg_ca)) // avg of ca
+            .build();
     result = this.queryExecutor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(5d));
     assertCacheStats(0, 4);
 
     // Change again the sub query
-    secondSubQuery = new QueryDto()
-            .table(this.storeName)
-            .withColumn("ean") // change here
-            .withMeasure(min);
-    queryDto = new QueryDto()
-            .table(secondSubQuery)
-            .withMeasure(avg_ca);// avg of ca
+    secondSubQuery = Query
+            .from(this.storeName)
+            .select(List.of("ean"), List.of(min)) // change here
+            .build();
+    queryDto = Query
+            .from(secondSubQuery)
+            .select(List.of(), List.of(avg_ca)) // avg of ca
+            .build();
     result = this.queryExecutor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(5d));
     assertCacheStats(0, 6);
 
     // Hit the cache
-    queryDto = new QueryDto()
-            .table(firstSubQuery) // same first sub-query
-            .withMeasure(avg_ca)
-            .withMeasure(sum_ca);// ask for another measure
+    queryDto = Query
+            .from(firstSubQuery) // same first sub-query
+            .select(List.of(), List.of(avg_ca, sum_ca)) // ask for another measure
+            .build();
     result = this.queryExecutor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(5d, 15d));
     assertCacheStats(2, 7); // avg_ca and count hit the cache
@@ -249,16 +259,15 @@ public abstract class ATestQueryCache {
 
   @Test
   void testQueryWithSubQueryAndColumnsAndConditions() {
-    QueryDto firstSubQuery = new QueryDto()
-            .table(this.storeName)
-            .withColumn("category")
-            .withColumn("ean")
-            .withMeasure(sum("ca", "price")); // ca per scenario
+    QueryDto firstSubQuery = Query
+            .from(this.storeName)
+            .select(List.of("category", "ean"), List.of(sum("ca", "price"))) // ca per scenario
+            .build();
 
-    QueryDto queryDto = new QueryDto()
-            .table(firstSubQuery)
-            .withColumn("ean") // ean needs to be in the subquery to make it work!
-            .withMeasure(avg("mean", "ca"));// avg of ca
+    QueryDto queryDto = Query
+            .from(firstSubQuery)
+            .select(List.of("ean"), List.of(avg("mean", "ca"))) // ean needs to be in the subquery to make it work!
+            .build();
     Table result = this.queryExecutor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(
             List.of("bottle", 2d),
@@ -268,9 +277,10 @@ public abstract class ATestQueryCache {
 
   @Test
   void testUseCacheContextValue() {
-    QueryDto query = new QueryDto()
-            .table(this.storeName)
-            .aggregatedMeasure("ps", "price", AggregationFunction.SUM);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(), List.of(sum("ps", "price")))
+            .build();
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15d));
     assertCacheStats(0, 2);

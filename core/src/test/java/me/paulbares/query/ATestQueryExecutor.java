@@ -3,6 +3,7 @@ package me.paulbares.query;
 import me.paulbares.query.builder.Query;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.ConditionDto;
+import me.paulbares.query.dto.CriteriaDto;
 import me.paulbares.query.dto.OrderKeywordDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
@@ -222,7 +223,7 @@ public abstract class ATestQueryExecutor {
   void testQuerySeveralCoordinates() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, Functions.in("s1", "s2"))
+            .where(SCENARIO_FIELD_NAME, in("s1", "s2"))
             .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
     Table table = this.queryExecutor.execute(query);
@@ -248,7 +249,7 @@ public abstract class ATestQueryExecutor {
             .from(this.storeName)
             .where(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME))
             .where("ean", eq("bottle"))
-            .where("category", Functions.in("cloth", "drink"))
+            .where("category", in("cloth", "drink"))
             .select(List.of("category", "ean"), List.of(sum("q", "quantity")))
             .build();
 
@@ -269,12 +270,14 @@ public abstract class ATestQueryExecutor {
     Table table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactly(List.of("cookie", 3l));
 
-    query.withCondition("subcategory", Functions.isNull());
+    query = Query.from(this.storeName)
+            .where("subcategory", Functions.isNull())
+            .select(List.of("ean"), List.of(CountMeasure.INSTANCE))
+            .build();
     table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactly(
             List.of("bottle", 3l),
-            List.of("shirt", 3l)
-    );
+            List.of("shirt", 3l));
   }
 
   @Test
@@ -317,7 +320,7 @@ public abstract class ATestQueryExecutor {
             .from(this.storeName)
             .select(List.of(SCENARIO_FIELD_NAME),
                     List.of(new ExpressionMeasure("quantity if food or drink", "sum(case when category = 'food' OR category = 'drink' then quantity end)"),
-                            Functions.sumIf("quantity filtered", "quantity", "category", or)))
+                            sumIf("quantity filtered", "quantity", criterion("category", or))))
             .build();
     Table result = this.queryExecutor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
@@ -326,13 +329,26 @@ public abstract class ATestQueryExecutor {
             List.of("s2", 30l, 30l));
     Assertions.assertThat(result.headers().stream().map(Field::name))
             .containsExactly(SCENARIO_FIELD_NAME, "quantity if food or drink", "quantity filtered");
+
+    // Mutliple fields
+    CriteriaDto category = criterion("category", or);
+    query = Query
+            .from(this.storeName)
+            .select(List.of(SCENARIO_FIELD_NAME),
+                    List.of(sumIf("quantity filtered", "quantity", Functions.all(category, criterion("subcategory", eq("biscuit"))))))
+            .build();
+    result = this.queryExecutor.execute(query);
+    Assertions.assertThat(result).containsExactlyInAnyOrder(
+            List.of(MAIN_SCENARIO_NAME, 20l),
+            List.of("s1", 20l),
+            List.of("s2", 20l));
   }
 
   @Test
   void testOrderByColumn() {
     QueryDto query = Query
             .from(this.storeName)
-            .where("category", Functions.in("cloth", "drink"))
+            .where("category", in("cloth", "drink"))
             .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(CountMeasure.INSTANCE))
             .build();
     Table result = this.queryExecutor.execute(query);

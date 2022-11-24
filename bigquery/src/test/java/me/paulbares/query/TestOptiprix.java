@@ -122,8 +122,7 @@ public class TestOptiprix {
             "Baisse_moyenne_des_prix_en_baisse_EUR",
             "Variation_de_prix_EUR",
             "avg",
-            "Variation_de_prix_EUR",
-            lt(0)
+            criterion("Variation_de_prix_EUR", lt(0))
     );
 
     BigQueryDatastore datastore = new BigQueryDatastore(BigQueryUtil.createCredentials(this.credendialsPath), this.projectId, this.datasetName);
