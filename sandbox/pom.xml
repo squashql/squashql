@@ -85,23 +85,6 @@
     </dependency>
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>${maven-jar-plugin.version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>test-jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
-
   <profiles>
     <profile>
       <id>gcloud-cdg</id>
@@ -146,7 +129,7 @@
             <artifactId>spring-boot-maven-plugin</artifactId>
             <version>${spring-boot.version}</version>
             <configuration>
-              <mainClass>me.paulbares.AitmApplication</mainClass>
+              <mainClass>me.paulbares.AitmSandboxApplication</mainClass>
               <jvmArguments>
                 --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
               </jvmArguments>

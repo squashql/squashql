@@ -26,7 +26,7 @@
               </execution>
             </executions>
             <configuration>
-              <mainClass>me.paulbares.AitmApplication</mainClass>
+              <mainClass>me.paulbares.AitmSandboxApplication</mainClass>
               <jvmArguments>--add-opens=java.base/sun.nio.ch=ALL-UNNAMED</jvmArguments>
             </configuration>
           </plugin>
