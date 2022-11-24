@@ -263,11 +263,12 @@ import {
   avg,
   sumIf,
   eq,
+  criterion,      
 } from "aitm-js-query"
 
 const amountSum = sum("sum_amount", "amount")
 const amountAvg = avg("avg_amount", "amount")
-const sales = sumIf("sales", "amount", "IncomeExpense", eq("Revenue"));
+const sales = sumIf("sales", "amount", criterion("IncomeExpense", eq("Revenue")))
 
 const query = from("myTable")
         .select([], [], [amountSum, amountAvg, sales])
@@ -315,10 +316,10 @@ import {
 } from "aitm-js-query"
 
 const aSum = sum("aSum", "a")
-const square = multiply("square", aSum, aSum);
-const twoTimes = plus("twoTimes", aSum, aSum);
-const zero = minus("zero", aSum, aSum);
-const one = divide("one", aSum, aSum);
+const square = multiply("square", aSum, aSum)
+const twoTimes = plus("twoTimes", aSum, aSum)
+const zero = minus("zero", aSum, aSum)
+const one = divide("one", aSum, aSum)
 ```
 
 Constant measures can be defined with `decimal` or `integer` operators:
@@ -331,7 +332,7 @@ import {
 
 const a = sum("aSum", "a")
 const b = sum("bSum", "b")
-const ratio = divide("ratio", a, b);
+const ratio = divide("ratio", a, b)
 const percent = multiply("percent", ratio, decimal(100)) 
 ```
 
@@ -387,17 +388,17 @@ import {
   comparisonMeasureWithPeriod,
 } from "aitm-js-query"
 
-const scoreSum = sum("score_sum", "score");
+const scoreSum = sum("score_sum", "score")
 const comparisonScore = comparisonMeasureWithPeriod(
         "compare with previous year",
         ComparisonMethod.ABSOLUTE_DIFFERENCE,
         scoreSum,
         new Map(Object.entries({"semester": "s-1"})),
-        new Semester("semester", "year"));
+        new Semester("semester", "year"))
 
 const query = from("student")
         .select(["year", "semester", "name"], [], [scoreSum, comparisonScore])
-        .build();
+        .build()
 ```
 
 Result
@@ -450,17 +451,17 @@ import {
   comparisonMeasureWithPeriod,
 } from "aitm-js-query"
 
-const scoreSum = sum("score_sum", "score");
+const scoreSum = sum("score_sum", "score")
 const comparisonScore = comparisonMeasureWithPeriod(
         "compare with previous year",
         ComparisonMethod.RELATIVE_DIFFERENCE,
         scoreSum,
         new Map(Object.entries({"year": "y-1"})),
-        new Year("year"));
+        new Year("year"))
 
 const query = from("student")
         .select(["year", "name"], [], [scoreSum, multiply("progression in %", comparisonScore, decimal(100))])
-        .build();
+        .build()
 ```
 
 Result
@@ -517,7 +518,7 @@ const ratio = comparisonMeasureWithParent("ratio", ComparisonMethod.DIVIDE, pop,
 const query = from("populationTable")
         .select(["continent", "country", "city"], [], [pop, ratio])
         .rollup(["continent", "country", "city"])
-        .build();
+        .build()
 ```
 
 `comparisonMeasureWithParent` method is used to create a special measure built to compare values of an underlying
