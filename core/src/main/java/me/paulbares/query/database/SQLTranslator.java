@@ -199,7 +199,7 @@ public class SQLTranslator {
   public static String toSql(Function<String, Field> fieldProvider, CriteriaDto criteriaDto) {
     List<CriteriaDto> conditions = criteriaDto.children;
     if (conditions == null) {
-      return toSql(fieldProvider.apply(criteriaDto.field), criteriaDto.conditionDto);
+      return toSql(fieldProvider.apply(criteriaDto.field), criteriaDto.condition);
     } else {
       String sep = switch (criteriaDto.conditionType) {
         case AND -> " and ";

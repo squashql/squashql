@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
+import static me.paulbares.query.Functions.criterion;
 import static me.paulbares.query.Functions.plus;
 
 public class TestSaasQuery {
@@ -36,7 +37,7 @@ public class TestSaasQuery {
     query.withColumnSet(ColumnSetKey.BUCKET, bucketColumnSetDto);
 
     AggregatedMeasure amount = new AggregatedMeasure("Amount", "Amount", AggregationFunction.SUM);
-    AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, "Income_Expense", Functions.eq("Revenue"));
+    AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, criterion("Income_Expense", Functions.eq("Revenue")));
     query.withMeasure(amount);
     query.withMeasure(sales);
     Measure ebidtaRatio = Functions.divide("EBITDA %", amount, sales);

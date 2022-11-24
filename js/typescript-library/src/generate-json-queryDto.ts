@@ -8,10 +8,10 @@ import {
   count,
   ExpressionMeasure, sum, integer, decimal,
 } from "./measures"
-import {_in, and, eq, gt, lt, or, isNull, isNotNull, like} from "./conditions"
+import {_in, and, eq, gt, lt, or, isNull, isNotNull, like, criterion, all} from "./conditions"
 import * as fs from "fs"
 import {OrderKeyword} from "./order";
-import {BucketColumnSet, ColumnSetKey, Month} from "./columnsets";
+import {BucketColumnSet, Month} from "./columnsets";
 
 export function generateFromQueryDto() {
   const table = new Table("myTable")
@@ -26,7 +26,7 @@ export function generateFromQueryDto() {
 
   const price = new AggregatedMeasure("price.sum", "price", "sum")
   q.withMeasure(price)
-  const priceFood = new AggregatedMeasure("alias", "price", "sum", "category", eq("food"))
+  const priceFood = new AggregatedMeasure("alias", "price", "sum", criterion("category", eq("food")))
   q.withMeasure(priceFood)
   const plus = new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood)
   q.withMeasure(plus)
@@ -47,11 +47,13 @@ export function generateFromQueryDto() {
   q.withMeasure(comparisonMeasureWithParent("parent", ComparisonMethod.DIVIDE, price, ["Mois", "Annee"]))
 
   const queryCondition = or(or(and(eq("a"), eq("b")), lt(5)), like("a%"))
-  q.withCondition("f1", queryCondition)
-  q.withCondition("f2", gt(659))
-  q.withCondition("f3", _in([0, 1, 2]))
-  q.withCondition("f4", isNull())
-  q.withCondition("f5", isNotNull())
+  q.withCriteria(all([
+    criterion("f1", queryCondition),
+    criterion("f2", gt(659)),
+    criterion("f3", _in([0, 1, 2])),
+    criterion("f4", isNull()),
+    criterion("f5", isNotNull())
+  ]))
 
   q.orderBy("a", OrderKeyword.ASC)
   q.orderByFirstElements("b", ["1", "l", "p"])

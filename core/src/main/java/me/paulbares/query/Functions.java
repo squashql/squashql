@@ -111,8 +111,8 @@ public class Functions {
     return new AggregatedMeasure(alias, field, AggregationFunction.SUM);
   }
 
-  public static Measure sumIf(String alias, String field, String conditionField, ConditionDto conditionDto) {
-    return new AggregatedMeasure(alias, field, AggregationFunction.SUM, conditionField, conditionDto);
+  public static Measure sumIf(String alias, String field, CriteriaDto criteriaDto) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.SUM, criteriaDto);
   }
 
   public static Measure avg(String alias, String field) {

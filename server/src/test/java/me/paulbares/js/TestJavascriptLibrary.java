@@ -31,7 +31,7 @@ public class TestJavascriptLibrary {
 
     var price = new AggregatedMeasure("price.sum", "price", "sum");
     q.withMeasure(price);
-    var priceFood = new AggregatedMeasure("alias", "price", "sum", "category", eq("food"));
+    var priceFood = new AggregatedMeasure("alias", "price", "sum", criterion("category", eq("food")));
     q.withMeasure(priceFood);
     var plus = new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood);
     q.withMeasure(plus);

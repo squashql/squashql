@@ -1,5 +1,5 @@
 import {from} from "./queryBuilder";
-import {eq, gt} from "./conditions";
+import {all, criterion, eq, gt} from "./conditions";
 import {BucketColumnSet, Month} from "./columnsets";
 import {avg, comparisonMeasureWithPeriod, ComparisonMethod, sum} from "./measures";
 import {OrderKeyword} from "./order";
@@ -15,8 +15,7 @@ export function generateFromQuery() {
           .innerJoin("refTable")
           .on("myTable", "id", "refTable", "id")
           .on("myTable", "a", "refTable", "a")
-          .where("f2", gt(659))
-          .where("f3", eq(123))
+          .where(all([criterion("f2", gt(659)), criterion("f3", eq(123))]))
           .select(["a", "b"],
                   [bucketColumnSet],
                   [sum("sum", "f1"), avg("sum", "f1")])

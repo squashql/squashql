@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.database.SqlUtils;
-import me.paulbares.query.dto.ConditionDto;
+import me.paulbares.query.dto.CriteriaDto;
 import me.paulbares.store.Field;
 
 import java.util.function.Function;
@@ -25,27 +25,24 @@ public class AggregatedMeasure implements Measure {
   public String expression;
   public String field;
   public String aggregationFunction;
-  public String conditionField;
-  public ConditionDto conditionDto;
+  public CriteriaDto criteria;
 
   public AggregatedMeasure(@NonNull String alias, @NonNull String field, @NonNull String aggregationFunction) {
-    this(alias, field, aggregationFunction, null, null);
+    this(alias, field, aggregationFunction, null);
   }
 
-  public AggregatedMeasure(@NonNull String alias, @NonNull String field, @NonNull String aggregationFunction, String conditionField, ConditionDto conditionDto) {
+  public AggregatedMeasure(@NonNull String alias, @NonNull String field, @NonNull String aggregationFunction, CriteriaDto criteria) {
     this.alias = alias;
     this.field = field;
     this.aggregationFunction = aggregationFunction;
-    this.conditionField = conditionField;
-    this.conditionDto = conditionDto;
+    this.criteria = criteria;
   }
 
   @Override
   public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     String sql;
-    if (this.conditionDto != null) {
-      Field f = QueryExecutor.withFallback(fieldProvider, Number.class).apply(this.conditionField);
-      String conditionSt = SQLTranslator.toSql(f, this.conditionDto);
+    if (this.criteria != null) {
+      String conditionSt = SQLTranslator.toSql(fieldProvider, this.criteria);
       sql = this.aggregationFunction + "(case when " + conditionSt + " then " + this.field + " end)";
     } else {
       sql = this.aggregationFunction + "(" + (this.field.equals("*") ? this.field : escape(this.field)) + ")";

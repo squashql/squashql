@@ -19,13 +19,13 @@ public class CriteriaDto {
   public static final CriteriaDto NO_CRITERIA = new CriteriaDto(AND, Collections.emptyList());
 
   public String field;
-  public ConditionDto conditionDto;
-  public List<CriteriaDto> children;
+  public ConditionDto condition;
   public ConditionType conditionType;
+  public List<CriteriaDto> children;
 
-  public CriteriaDto(String field, ConditionDto conditionDto) {
+  public CriteriaDto(String field, ConditionDto condition) {
     this.field = field;
-    this.conditionDto = conditionDto;
+    this.condition = condition;
   }
 
   public CriteriaDto(ConditionType conditionType, List<CriteriaDto> criteriaDtos) {
@@ -35,7 +35,7 @@ public class CriteriaDto {
 
   public static CriteriaDto deepCopy(CriteriaDto criteriaDto) {
     if (criteriaDto.field != null) {
-      return new CriteriaDto(criteriaDto.field, criteriaDto.conditionDto);
+      return new CriteriaDto(criteriaDto.field, criteriaDto.condition);
     } else {
       List<CriteriaDto> list = new ArrayList<>(criteriaDto.children.size());
       for (CriteriaDto dto : criteriaDto.children) {

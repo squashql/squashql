@@ -84,6 +84,27 @@ class LogicalCondition implements Condition {
   }
 }
 
+export class Criteria {
+
+  constructor(private field: string,
+              private condition: Condition,
+              private conditionType: ConditionType,
+              public children: Criteria[]) {
+  }
+}
+
+export function criterion(field: string, condition: Condition): Criteria {
+  return new Criteria(field, condition, undefined, undefined)
+}
+
+export function all(criteria: Criteria[]) {
+  return new Criteria(undefined, undefined, ConditionType.AND, criteria)
+}
+
+export function any(criteria: Criteria[]) {
+  return new Criteria(undefined, undefined, ConditionType.OR, criteria)
+}
+
 export function and(left: Condition, right: Condition): Condition {
   return new LogicalCondition(ConditionType.AND, left, right)
 }

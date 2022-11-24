@@ -1,7 +1,7 @@
 import {Measure} from "./measures";
 import {ColumnSet} from "./columnsets";
 import {JoinMapping, JoinType, Query, Table} from "./query";
-import {Condition} from "./conditions";
+import {Condition, Criteria} from "./conditions";
 import {OrderKeyword} from "./order";
 
 interface CanAddOrderBy {
@@ -44,7 +44,7 @@ interface HasStartedBuildingJoin {
 type HasStartedBuildingTable = HasTable & CanStartBuildingJoin
 
 interface HasTable extends HasCondition {
-  where(field: string, condition: Condition): HasTable
+  where(criterion: Criteria): HasCondition 
 }
 
 interface CanAddRollup extends HasOrderBy, CanAddOrderBy {
@@ -107,9 +107,9 @@ class QueryBuilder implements HasCondition, HasSelectAndRollup, HasJoin, HasStar
     return this
   }
 
-  where(field: string, condition: Condition): HasTable {
+  where(criterion: Criteria): HasTable {
     this.addJoinToQueryDto()
-    this.queryDto.withCondition(field, condition)
+    this.queryDto.withCriteria(criterion)
     return this
   }
 
