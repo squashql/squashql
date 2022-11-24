@@ -55,16 +55,22 @@ GROUP BY col1, col2
 
 ## Filtering
 
-Queries can be filtered by using condition operators `_in, eq, neq, and, or, lt, le, gt, ge, like, isNull, isNotNull`
+Queries can be filtered by using Criteria class. A Criteria instance can contain a condition on a single field and can be build as so:
+```typescript
+import { criterion } from "aitm-js-query"
+const criteria = criterion("col2", eq("c"));
+```
+List of available condition operators `_in, eq, neq, and, or, lt, le, gt, ge, like, isNull, isNotNull`
+
+Several criteria can be chained with AND or OR by using the methods any and all
 
 ```typescript
 import {
-  from, sum, avg, _in, eq
+  from, sum, avg, _in, eq, criterion, all
 } from "aitm-js-query"
 
 const q = from("myTable")
-        .where("col1", _in(["a", "b"]))
-        .where("col2", eq("c"))
+        .where(all([criterion("col1", _in(["a", "b"])), criterion("col2", eq("c"))]))
         .select(
                 ["col1", "col2"],
                 [],

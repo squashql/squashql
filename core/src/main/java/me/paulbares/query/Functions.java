@@ -1,9 +1,7 @@
 package me.paulbares.query;
 
 import me.paulbares.query.agg.AggregationFunction;
-import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.dto.*;
-import me.paulbares.store.Field;
 
 import java.util.List;
 
@@ -18,14 +16,14 @@ public class Functions {
   }
 
   public static CriteriaDto all(CriteriaDto... criteria) {
-    return buildCriterionDto(AND, criteria);
+    return buildCriteria(AND, criteria);
   }
 
   public static CriteriaDto any(CriteriaDto... criteria) {
-    return buildCriterionDto(OR, criteria);
+    return buildCriteria(OR, criteria);
   }
 
-  public static CriteriaDto buildCriterionDto(ConditionType conditionType, CriteriaDto... criteria) {
+  public static CriteriaDto buildCriteria(ConditionType conditionType, CriteriaDto... criteria) {
     return new CriteriaDto(conditionType, List.of(criteria));
   }
 
@@ -125,16 +123,5 @@ public class Functions {
 
   public static Measure decimal(double value) {
     return new DoubleConstantMeasure(value);
-  }
-
-  public static void main(String[] args) {
-    // FIXME
-    eq("A").and(eq("B"));
-    CriteriaDto c1 = criterion("f1", eq("A"));
-    CriteriaDto c2 = criterion("f1", neq("B"));
-    CriteriaDto c3 = criterion("f2", isNotNull());
-    CriteriaDto c1Andc2 = all(c1, c2);
-    CriteriaDto any = any(c1Andc2, c3);// (f1 = A AND f1<>B) OR f2 <> NULL
-    System.out.println(SQLTranslator.toSql(s -> new Field(s, String.class), any));
   }
 }
