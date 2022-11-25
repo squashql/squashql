@@ -106,7 +106,7 @@ public class SQLTranslator {
   protected static void addConditions(StringBuilder statement, DatabaseQuery query, Function<String, Field> fieldProvider) {
     List<CriteriaDto> conditions = query.criteriaDto.children;
 
-    if (!conditions.isEmpty()) {
+    if (conditions != null && !conditions.isEmpty()) {
       String andConditions = conditions
               .stream()
               .map(c -> toSql(fieldProvider, c))
