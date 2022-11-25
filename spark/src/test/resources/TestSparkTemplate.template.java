@@ -1,5 +1,3 @@
-package me.paulbares.query;
-
 import me.paulbares.SparkDatastore;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.database.SparkQueryEngine;
@@ -7,7 +5,7 @@ import me.paulbares.store.Datastore;
 import me.paulbares.transaction.SparkTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 
-public class TestSparkBinaryOperationMeasure extends ATestBinaryOperationMeasure {
+public class TestSpark$parentTestClass extends $parentTestClass {
 
   @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {
