@@ -104,16 +104,10 @@ public class SQLTranslator {
   }
 
   protected static void addConditions(StringBuilder statement, DatabaseQuery query, Function<String, Field> fieldProvider) {
-    List<CriteriaDto> conditions = query.criteriaDto.children;
-
-    if (conditions != null && !conditions.isEmpty()) {
-      String andConditions = conditions
-              .stream()
-              .map(c -> toSql(fieldProvider, c))
-              .collect(Collectors.joining(" and "));
+    if (query.criteriaDto != null) {
       statement
               .append(" where ")
-              .append(andConditions);
+              .append(toSql(fieldProvider, query.criteriaDto));
     }
   }
 
@@ -197,8 +191,7 @@ public class SQLTranslator {
   }
 
   public static String toSql(Function<String, Field> fieldProvider, CriteriaDto criteriaDto) {
-    List<CriteriaDto> conditions = criteriaDto.children;
-    if (conditions == null) {
+    if (criteriaDto.isCriterion()) {
       return toSql(fieldProvider.apply(criteriaDto.field), criteriaDto.condition);
     } else {
       String sep = switch (criteriaDto.conditionType) {
@@ -208,7 +201,7 @@ public class SQLTranslator {
       };
       StringBuilder sb = new StringBuilder();
       sb.append('(');
-      Iterator<CriteriaDto> iterator = conditions.iterator();
+      Iterator<CriteriaDto> iterator = criteriaDto.children.iterator();
       while (iterator.hasNext()) {
         CriteriaDto criterion = iterator.next();
         sb.append(toSql(fieldProvider, criterion));

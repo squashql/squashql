@@ -65,7 +65,7 @@ public class Query implements HasCondition, HasSelectAndRollup, HasJoin, HasStar
   @Override
   public HasTable where(CriteriaDto criteriaDto) {
     addJoinToQueryDto();
-    this.queryDto.criteriaDto.children.add(criteriaDto);
+    this.queryDto.withCriteria(criteriaDto);
     return this;
   }
 

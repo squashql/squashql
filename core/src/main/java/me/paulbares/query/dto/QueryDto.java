@@ -97,7 +97,7 @@ public class QueryDto {
   }
 
   public QueryDto withCriteria(CriteriaDto criteriaDto) {
-    this.criteriaDto.children.add(criteriaDto);
+    this.criteriaDto = criteriaDto;
     return this;
   }
 
