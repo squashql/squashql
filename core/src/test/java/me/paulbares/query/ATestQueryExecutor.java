@@ -257,7 +257,15 @@ public abstract class ATestQueryExecutor {
     Table table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("drink", "bottle", 10l));
 
-    query.withCondition("quantity", Functions.gt(10));
+    query = Query
+            .from(this.storeName)
+            .where(Functions.all(
+                    criterion("ean", eq("bottle")),
+                    criterion(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)),
+                    criterion("category", in("cloth", "drink")),
+                    criterion("quantity", Functions.gt(10))))
+            .select(List.of("category", "ean"), List.of(sum("q", "quantity")))
+            .build();
     table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).isEmpty();
   }

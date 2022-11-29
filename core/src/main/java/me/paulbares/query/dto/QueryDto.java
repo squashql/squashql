@@ -28,7 +28,7 @@ public class QueryDto {
 
   public List<Measure> measures = new ArrayList<>();
 
-  public CriteriaDto criteriaDto = new CriteriaDto(AND, new ArrayList<>());
+  public CriteriaDto criteriaDto = null;
 
   public Map<String, OrderDto> orders = new HashMap<>();
 
@@ -92,6 +92,9 @@ public class QueryDto {
   }
 
   public QueryDto withCondition(String field, ConditionDto conditionDto) {
+    if (this.criteriaDto == null) {
+      this.criteriaDto = new CriteriaDto(AND, new ArrayList<>());
+    }
     this.criteriaDto.children.add(new CriteriaDto(field, conditionDto));
     return this;
   }
