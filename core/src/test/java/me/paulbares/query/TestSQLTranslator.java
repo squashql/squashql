@@ -158,15 +158,16 @@ public class TestSQLTranslator {
             .withSelect(SCENARIO_FIELD_NAME)
             .withSelect("type")
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
-            .condition(SCENARIO_FIELD_NAME, and(eq("base"), eq("s1"), eq("s2")))
-            .condition("delta", ge(123d))
-            .condition("type", or(eq("A"), eq("B")))
-            .condition("pnl", lt(10d))
+            .criteria(all(
+                    criterion(SCENARIO_FIELD_NAME, and(eq("base"), eq("s1"), eq("s2"))),
+                    criterion("delta", ge(123d)),
+                    criterion("type", or(eq("A"), eq("B"))),
+                    criterion("pnl", lt(10d))))
             .table(BASE_STORE_NAME);
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum` from " + BASE_STORE_NAME
-                    + " where `scenario` = 'base' and `scenario` = 's1' and `scenario` = 's2'"
-                    + " and `delta` >= 123.0 and `type` = 'A' or `type` = 'B' and `pnl` < 10.0"
+                    + " where (`scenario` = 'base' and `scenario` = 's1' and `scenario` = 's2'"
+                    + " and `delta` >= 123.0 and `type` = 'A' or `type` = 'B' and `pnl` < 10.0)"
                     + " group by `scenario`, `type`"
             );
   }
@@ -185,7 +186,7 @@ public class TestSQLTranslator {
             .subQuery(subQuery)
             .withSelect("c3") // c3 needs to be in the subquery
             .withMeasure(sum("sum GT", "mean"))
-            .condition("type", eq("myType"));
+            .criteria(criterion("type", eq("myType")));
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select `c3`, sum(`mean`) as `sum GT` from (select `c1`, `c3`, avg(`c2`) as `mean` from a group by `c1`, `c3`) where `type` = 'myType' group by `c3`");
   }

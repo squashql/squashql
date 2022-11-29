@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -62,8 +63,8 @@ public final class MeasureUtils {
           ComparisonMeasureReferencePosition cm,
           QueryExecutor.QueryScope queryScope,
           Function<String, Field> fieldSupplier) {
-    CriteriaDto copy = CriteriaDto.deepCopy(queryScope.criteriaDto());
-    Consumer<String> criteriaRemover = field -> removeCriteriaOnField(field, copy);
+    AtomicReference<CriteriaDto> copy = new AtomicReference<>(queryScope.criteriaDto() == null ? null : CriteriaDto.deepCopy(queryScope.criteriaDto()));
+    Consumer<String> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(criteriaRemover::accept));
     Optional.ofNullable(cm.period)
@@ -78,12 +79,14 @@ public final class MeasureUtils {
                 }
               });
             });
-    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), copy, rollupColumns);
+    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), copy.get(), rollupColumns);
   }
 
   private static CriteriaDto removeCriteriaOnField(String field, CriteriaDto root) {
-    if (root.isCriterion()) {
-      return CriteriaDto.NO_CRITERIA;
+    if (root == null) {
+      return null;
+    } else if (root.isCriterion()) {
+      return root.field.equals(field) ? null : root;
     } else {
       removeCriteriaOnField(field, root.children);
       return root;

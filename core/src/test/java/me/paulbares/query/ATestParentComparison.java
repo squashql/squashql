@@ -12,8 +12,7 @@ import org.junit.jupiter.api.*;
 import java.util.Arrays;
 import java.util.List;
 
-import static me.paulbares.query.Functions.eq;
-import static me.paulbares.query.Functions.in;
+import static me.paulbares.query.Functions.*;
 import static me.paulbares.query.database.QueryEngine.GRAND_TOTAL;
 import static me.paulbares.query.database.QueryEngine.TOTAL;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
@@ -110,7 +109,7 @@ public abstract class ATestParentComparison {
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
-            .where("city", in("montreal", "toronto"))
+            .where(criterion("city", in("montreal", "toronto")))
             .select(List.of("continent", "country", "city"), List.of(pOp))
             .build(); // query only parent
 
@@ -121,7 +120,7 @@ public abstract class ATestParentComparison {
 
     query = Query
             .from(this.storeName)
-            .where("country", eq("canada"))
+            .where(criterion("country", eq("canada")))
             .select(List.of("continent", "country", "city"), List.of(pOp))
             .build(); // query only parent
 
@@ -133,7 +132,7 @@ public abstract class ATestParentComparison {
 
     query = Query
             .from(this.storeName)
-            .where("continent", eq("eu"))
+            .where(criterion("continent", eq("eu")))
             .select(List.of("continent", "country", "city"), List.of(pOp))
             .build(); // query only parent
     result = this.executor.execute(query);
