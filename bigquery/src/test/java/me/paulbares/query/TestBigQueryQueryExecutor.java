@@ -15,12 +15,12 @@ import static me.paulbares.query.BigQueryTestUtil.PROJECT_ID;
 
 public class TestBigQueryQueryExecutor extends ATestQueryExecutor {
 
-  String datasetName = TestBigQueryQueryExecutor.class.getSimpleName();
+  String datasetName = "testdataset";
 
   @Override
   protected void beforeLoading(List<Field> fields) {
     BigQueryTransactionManager tm = (BigQueryTransactionManager) this.tm;
-    BigQueryTestUtil.createDatasetIfDoesNotExist(tm.getBigQuery(), datasetName);
+    BigQueryTestUtil.createDatasetIfDoesNotExist(tm.getBigQuery(), this.datasetName);
     tm.dropAndCreateInMemoryTable(this.storeName, fields);
   }
 

@@ -3,12 +3,11 @@ package me.paulbares.query;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.DatasetInfo;
-import me.paulbares.BigQueryDatastore;
 
 public class BigQueryTestUtil {
 
-  public static final String CREDENTIALS = "/Users/paul/dev/canvas-landing-355413-eb118aab8b19.json";
-  public static final String PROJECT_ID = "canvas-landing-355413";
+  public static final String CREDENTIALS = "/Users/paul/dev/unittests-370209-0eb082b518e1.json";
+  public static final String PROJECT_ID = "unittests-370209";
 
   public static void createDatasetIfDoesNotExist(BigQuery bigquery, String datasetName) {
     DatasetInfo datasetInfo = DatasetInfo.newBuilder(datasetName).build();
