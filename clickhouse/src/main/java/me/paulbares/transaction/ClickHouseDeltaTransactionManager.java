@@ -7,17 +7,14 @@ import me.paulbares.store.Field;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static me.paulbares.transaction.TransactionManager.scenarioStoreName;
 
 public class ClickHouseDeltaTransactionManager extends ClickHouseTransactionManager {
 
-  private Set<String> storeAlreadyCreated = new HashSet<>();
+  private Map<String, List<Field>> fieldsByStore = new HashMap<>();
 
   public ClickHouseDeltaTransactionManager(ClickHouseDataSource clickHouseDataSource) {
     super(clickHouseDataSource);
@@ -26,7 +23,7 @@ public class ClickHouseDeltaTransactionManager extends ClickHouseTransactionMana
   @Override
   public void dropAndCreateInMemoryTable(String table, List<Field> fields) {
     ClickHouseTransactionManager.dropAndCreateInMemoryTable(this.clickHouseDataSource, table, fields, false);
-    this.storeAlreadyCreated.add(table);
+    this.fieldsByStore.put(table, fields);
   }
 
   @Override
@@ -53,9 +50,11 @@ public class ClickHouseDeltaTransactionManager extends ClickHouseTransactionMana
     String storeName = scenarioStoreName(store, scenario);
     Collection<String> tableNames = ClickHouseDatastore.getTableNames(this.clickHouseDataSource);
     boolean found = tableNames.stream().anyMatch(f -> f.equals(storeName));
-    if (this.storeAlreadyCreated.add(storeName) || !found) {
+    if (!this.fieldsByStore.containsKey(storeName) || !found) {
       // Create if not found
-      dropAndCreateInMemoryTable(storeName, ClickHouseDatastore.getFields(this.clickHouseDataSource, store));
+      List<Field> fields = this.fieldsByStore.get(store);
+      dropAndCreateInMemoryTable(storeName, Objects.requireNonNull(fields));
+      this.fieldsByStore.put(storeName, fields);
     }
   }
 
