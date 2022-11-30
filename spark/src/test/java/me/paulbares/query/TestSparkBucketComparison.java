@@ -4,12 +4,12 @@ import me.paulbares.SparkDatastore;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.database.SparkQueryEngine;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Field;
 import me.paulbares.transaction.SparkTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 
-import java.util.List;
-
+/**
+ * Do not edit this class, it has been generated automatically by {@link me.paulbares.template.SparkClassTemplateGenerator}.
+ */
 public class TestSparkBucketComparison extends ATestBucketComparison {
 
   @Override
@@ -30,11 +30,7 @@ public class TestSparkBucketComparison extends ATestBucketComparison {
 
   @Override
   protected void createTables() {
-
-  }
-
-//  @Override
-  protected void beforeLoad(List<Field> fields) {
-    ((SparkTransactionManager) tm).createTemporaryTable(storeName, fields);
+    SparkTransactionManager tm = (SparkTransactionManager) this.tm;
+    this.fieldsByStore.forEach((store, fields) -> tm.createTemporaryTable(store, fields));
   }
 }

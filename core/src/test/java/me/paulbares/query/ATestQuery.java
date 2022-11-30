@@ -29,6 +29,11 @@ public abstract class ATestQuery {
 
     createTables();
     loadData();
+    afterSetup();
+  }
+
+  protected void afterSetup() {
+
   }
 
   protected abstract QueryEngine createQueryEngine(Datastore datastore);

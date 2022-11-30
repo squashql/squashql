@@ -10,7 +10,7 @@ import me.paulbares.transaction.TransactionManager;
 /**
  * Do not edit this class, it has been generated automatically by {@link me.paulbares.template.SparkClassTemplateGenerator}.
  */
-public class TestSparkQueryExecutor extends ATestQueryExecutor {
+public class TestSparkPeriodComparison extends ATestPeriodComparison {
 
   @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {

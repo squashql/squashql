@@ -4,22 +4,17 @@ import me.paulbares.ClickHouseDatastore;
 import me.paulbares.query.database.ClickHouseQueryEngine;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Field;
 import me.paulbares.transaction.ClickHouseTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.testcontainers.containers.GenericContainer;
 
-import java.util.List;
-
-import static me.paulbares.query.TestUtils.createClickHouseContainer;
-import static me.paulbares.query.TestUtils.jdbcUrl;
-
+/**
+ * Do not edit this class, it has been generated automatically by {@link me.paulbares.template.ClickHouseClassTemplateGenerator}.
+ */
 public class TestClickHouseParentComparison extends ATestParentComparison {
 
-//  @Container
-  public GenericContainer container = createClickHouseContainer();
+  public org.testcontainers.containers.GenericContainer container = TestUtils.createClickHouseContainer();
 
   @BeforeAll
   @Override
@@ -34,9 +29,9 @@ public class TestClickHouseParentComparison extends ATestParentComparison {
   }
 
   @Override
-  protected void beforeLoading(List<Field> fields) {
+  protected void createTables() {
     ClickHouseTransactionManager tm = (ClickHouseTransactionManager) this.tm;
-    tm.dropAndCreateInMemoryTable(this.storeName, fields);
+    this.fieldsByStore.forEach((store, fields) -> tm.dropAndCreateInMemoryTable(store, fields));
   }
 
   @Override
@@ -46,7 +41,7 @@ public class TestClickHouseParentComparison extends ATestParentComparison {
 
   @Override
   protected Datastore createDatastore() {
-    return new ClickHouseDatastore(jdbcUrl.apply(this.container), null);
+    return new ClickHouseDatastore(TestUtils.jdbcUrl.apply(this.container), null);
   }
 
   @Override

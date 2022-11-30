@@ -1,54 +1,36 @@
 package me.paulbares.query;
 
+import me.paulbares.TestClass;
 import me.paulbares.query.builder.Query;
-import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
-import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
+@TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public abstract class ATestParentComparisonWithOtherColumn {
-
-  protected Datastore datastore;
-
-  protected QueryEngine queryEngine;
-
-  protected QueryExecutor executor;
-
-  protected TransactionManager tm;
+public abstract class ATestParentComparisonWithOtherColumn extends ATestQuery {
 
   protected String storeName = "myAwesomeStore";
 
-  protected abstract QueryEngine createQueryEngine(Datastore datastore);
-
-  protected abstract Datastore createDatastore();
-
-  protected abstract TransactionManager createTransactionManager();
-
-  @BeforeAll
-  void setup() {
+  @Override
+  protected Map<String, List<Field>> getFieldsByStore() {
     Field city = new Field("city", String.class);
     Field country = new Field("country", String.class);
     Field continent = new Field("continent", String.class);
     Field spendingCategory = new Field("spending_category", String.class);
     Field amount = new Field("amount", double.class);
+    return Map.of(this.storeName, List.of(city, country, continent, spendingCategory, amount));
+  }
 
-    this.datastore = createDatastore();
-    this.queryEngine = createQueryEngine(this.datastore);
-    this.executor = new QueryExecutor(this.queryEngine);
-    this.tm = createTransactionManager();
-
-    beforeLoading(List.of(city, country, continent, spendingCategory, amount));
-
+  @Override
+  protected void loadData() {
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"paris", "france", "eu", "car", 1d},
             new Object[]{"paris", "france", "eu", "home", 2d},
@@ -60,9 +42,6 @@ public abstract class ATestParentComparisonWithOtherColumn {
             new Object[]{"london", "uk", "eu", "home", 2d},
             new Object[]{"london", "uk", "eu", "hobbies", 5d}
     ));
-  }
-
-  protected void beforeLoading(List<Field> fields) {
   }
 
   @Test

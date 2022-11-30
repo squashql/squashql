@@ -9,6 +9,7 @@ import java.io.File;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -35,10 +36,12 @@ public class ClassTemplateGenerator {
     File rootTestClasses = new File(name.toLowerCase() + "/src/test/java/me/paulbares/query").getAbsoluteFile();
 
     String prefix = "Test" + name;
+    List<Path> classGenerated = new ArrayList<>();
     for (ClassPath.ClassInfo parentTestClass : parentTestClasses) {
       String classSuffix = parentTestClass.getSimpleName().replace("ATest", "");
       String fileName = prefix + classSuffix + ".java";
       Path path = Paths.get(rootTestClasses.getAbsolutePath(), fileName);
+      classGenerated.add(path);
       BufferedWriter writer = Files.newWriter(path.toFile(), UTF_8);
       for (String line : lines) {
         String l = line.replace("{{classSuffix}}", classSuffix);
@@ -48,5 +51,7 @@ public class ClassTemplateGenerator {
       }
       writer.flush();
     }
+    System.out.println("Class generated: ");
+    classGenerated.forEach(System.out::println);
   }
 }

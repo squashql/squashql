@@ -7,6 +7,9 @@ import me.paulbares.store.Datastore;
 import me.paulbares.transaction.SparkTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 
+/**
+ * Do not edit this class, it has been generated automatically by {@link me.paulbares.template.SparkClassTemplateGenerator}.
+ */
 public class TestSparkBinaryOperationMeasure extends ATestBinaryOperationMeasure {
 
   @Override

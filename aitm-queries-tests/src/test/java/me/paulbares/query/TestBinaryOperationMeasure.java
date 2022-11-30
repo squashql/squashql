@@ -15,7 +15,24 @@ import static me.paulbares.query.BinaryOperator.*;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+//@ExtendWith(TestBinaryOperationMeasure.CustomTestInstanceFactory.class)
+@TestConfigurers({ClickHouseTestConfigurer.class})
 public class TestBinaryOperationMeasure extends ATestQuery {
+
+//  public TestBinaryOperationMeasure(TestConfigurer configurer) {
+//    super(configurer);
+//  }
+//
+//  public static class CustomTestInstanceFactory implements TestInstanceFactory {
+//
+//    @Override
+//    public Object createTestInstance(TestInstanceFactoryContext factoryContext, ExtensionContext extensionContext) throws TestInstantiationException {
+//      Class<?> testClass = factoryContext.getTestClass();
+//      Optional<Object> outerInstance = factoryContext.getOuterInstance();
+//      extensionContext.
+//      return null;
+//    }
+//  }
 
   protected String storeName = "myAwesomeStore";
 

@@ -8,16 +8,13 @@ import me.paulbares.transaction.ClickHouseTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
 
-import static me.paulbares.query.TestUtils.createClickHouseContainer;
-import static me.paulbares.query.TestUtils.jdbcUrl;
-
+/**
+ * Do not edit this class, it has been generated automatically by {@link me.paulbares.template.ClickHouseClassTemplateGenerator}.
+ */
 public class TestClickHouseBinaryOperationMeasure extends ATestBinaryOperationMeasure {
 
-  @Container
-  public GenericContainer container = createClickHouseContainer();
+  public org.testcontainers.containers.GenericContainer container = TestUtils.createClickHouseContainer();
 
   @BeforeAll
   @Override
@@ -44,7 +41,7 @@ public class TestClickHouseBinaryOperationMeasure extends ATestBinaryOperationMe
 
   @Override
   protected Datastore createDatastore() {
-    return new ClickHouseDatastore(jdbcUrl.apply(this.container), null);
+    return new ClickHouseDatastore(TestUtils.jdbcUrl.apply(this.container), null);
   }
 
   @Override

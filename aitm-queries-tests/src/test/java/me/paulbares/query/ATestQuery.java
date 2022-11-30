@@ -13,21 +13,26 @@ public abstract class ATestQuery {
 
   protected TestConfigurer configurer;
   protected QueryExecutor executor;
-  protected Map<String, List<Field>> fieldsByStore;
+
+//  public ATestQuery(TestConfigurer configurer) {
+//    this.configurer = configurer;
+//  }
 
   @BeforeAll
   void setup() {
     this.executor = new QueryExecutor(this.configurer.createQueryEngine());
     TransactionManager tm = this.configurer.createTransactionManager();
-    this.fieldsByStore = getFieldsByStore();
-
-    createTables(tm);
+    this.configurer.createTables(tm, getFieldsByStore());
     loadData(tm);
   }
 
+  /**
+   * Defines the fields indexed by store name that will be used in the tests.
+   */
   protected abstract Map<String, List<Field>> getFieldsByStore();
 
-  protected abstract void createTables(TransactionManager transactionManager);
-
+  /**
+   * Loads data into the tables created above.
+   */
   protected abstract void loadData(TransactionManager transactionManager);
 }
