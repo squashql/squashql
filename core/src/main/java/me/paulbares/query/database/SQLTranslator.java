@@ -146,7 +146,8 @@ public class SQLTranslator {
               || field.type().equals(double.class)
               || field.type().equals(int.class)
               || field.type().equals(long.class)
-              || field.type().equals(float.class)) {
+              || field.type().equals(float.class)
+              || field.type().equals(boolean.class)) {
         // no quote
         sqlMapper = o -> String.valueOf(o);
       } else if (field.type().equals(String.class)) {

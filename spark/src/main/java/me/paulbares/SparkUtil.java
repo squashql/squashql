@@ -26,6 +26,8 @@ public final class SparkUtil {
       klass = long.class;
     } else if (type.equals(DataTypes.ByteType)) {
       klass = byte.class;
+    } else if (type.equals(DataTypes.BooleanType)) {
+      klass = boolean.class;
     } else {
       throw new IllegalArgumentException("Unsupported field type " + type);
     }
@@ -46,6 +48,8 @@ public final class SparkUtil {
       type = DataTypes.LongType;
     } else if (clazz.equals(Byte.class) || clazz.equals(byte.class)) {
       type = DataTypes.ByteType;
+    } else if (clazz.equals(Boolean.class) || clazz.equals(boolean.class)) {
+      type = DataTypes.BooleanType;
     } else {
       throw new IllegalArgumentException("Unsupported field type " + clazz);
     }
