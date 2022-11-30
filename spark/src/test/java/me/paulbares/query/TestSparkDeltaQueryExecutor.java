@@ -17,19 +17,19 @@ public class TestSparkDeltaQueryExecutor extends TestSparkQueryExecutor {
   @Override
   protected void load() {
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
-            new Object[]{"bottle", "drink", null, 2d, 10},
-            new Object[]{"cookie", "food", "biscuit", 3d, 20},
-            new Object[]{"shirt", "cloth", null, 10d, 3}
+            new Object[]{"bottle", "drink", null, 2d, 10, true},
+            new Object[]{"cookie", "food", "biscuit", 3d, 20, true},
+            new Object[]{"shirt", "cloth", null, 10d, 3, false}
     ));
 
     // Only the delta
     List<Object[]> es = new ArrayList<>();
-    es.add(new Object[]{"bottle", "drink", null, 4d, 10});
+    es.add(new Object[]{"bottle", "drink", null, 4d, 10, true});
     this.tm.load("s1", this.storeName, es);
 
     // Only the delta
     es.clear();
-    es.add(new Object[]{"bottle", "drink", null, 1.5d, 10});
+    es.add(new Object[]{"bottle", "drink", null, 1.5d, 10, true});
     this.tm.load("s2", this.storeName, es);
   }
 

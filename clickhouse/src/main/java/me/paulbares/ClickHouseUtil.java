@@ -23,6 +23,8 @@ public final class ClickHouseUtil {
       type = ClickHouseDataType.Int32.name();
     } else if (clazz.equals(Long.class) || clazz.equals(long.class)) {
       type = ClickHouseDataType.Int64.name();
+    } else if (clazz.equals(Boolean.class) || clazz.equals(boolean.class)) {
+      type = ClickHouseDataType.Bool.name();
     } else if (clazz.equals(LocalDate.class)) {
       type = ClickHouseDataType.Date.name();
     } else {
