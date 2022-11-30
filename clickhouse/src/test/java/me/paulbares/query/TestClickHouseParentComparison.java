@@ -10,7 +10,6 @@ import me.paulbares.transaction.TransactionManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
 
 import java.util.List;
 
@@ -19,7 +18,7 @@ import static me.paulbares.query.TestUtils.jdbcUrl;
 
 public class TestClickHouseParentComparison extends ATestParentComparison {
 
-  @Container
+//  @Container
   public GenericContainer container = createClickHouseContainer();
 
   @BeforeAll

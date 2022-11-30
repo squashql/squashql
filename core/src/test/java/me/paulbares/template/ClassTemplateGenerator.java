@@ -4,15 +4,18 @@ import com.google.common.io.Files;
 import com.google.common.reflect.ClassPath;
 import me.paulbares.TestClass;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class ClassTemplateGenerator {
 
-  public static void main(String[] args) throws Exception {
+  public static void generateTestClasses(String name) throws Exception {
     List<ClassPath.ClassInfo> parentTestClasses = ClassPath.from(ClassLoader.getSystemClassLoader())
             .getTopLevelClasses("me.paulbares.query")
             .stream()
@@ -26,15 +29,24 @@ public class ClassTemplateGenerator {
             })
             .toList();
 
-    URL resource = ClassTemplateGenerator.class.getClassLoader().getResource("templates/TestClickHouseTemplate.template.java");
+    URL resource = ClassTemplateGenerator.class.getClassLoader().getResource("templates/Test" + name + "Template.template.java");
     List<String> lines = Files.readLines(new File(resource.toURI()), UTF_8);
 
-    String prefix = "TestClickHouse";
+    File rootTestClasses = new File(name.toLowerCase() + "/src/test/java/me/paulbares/query").getAbsoluteFile();
+
+    String prefix = "Test" + name;
     for (ClassPath.ClassInfo parentTestClass : parentTestClasses) {
       String classSuffix = parentTestClass.getSimpleName().replace("ATest", "");
-      System.out.println();
+      String fileName = prefix + classSuffix + ".java";
+      Path path = Paths.get(rootTestClasses.getAbsolutePath(), fileName);
+      BufferedWriter writer = Files.newWriter(path.toFile(), UTF_8);
+      for (String line : lines) {
+        String l = line.replace("{{classSuffix}}", classSuffix);
+        l = l.replace("{{parentTestClass}}", parentTestClass.getSimpleName());
+        writer.write(l);
+        writer.newLine();
+      }
+      writer.flush();
     }
-
-    System.out.println();
   }
 }

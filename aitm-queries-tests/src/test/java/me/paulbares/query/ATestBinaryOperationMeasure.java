@@ -1,60 +1,39 @@
 package me.paulbares.query;
 
 import me.paulbares.query.agg.AggregationFunction;
-import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.util.List;
+import java.util.Map;
 
+import static me.paulbares.query.BinaryOperator.*;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestBinaryOperationMeasureCopy {
-
-  protected Datastore datastore;
-
-  protected QueryEngine queryEngine;
-
-  protected QueryExecutor executor;
-
-  protected TransactionManager tm;
+public class TestBinaryOperationMeasure extends ATestQuery {
 
   protected String storeName = "myAwesomeStore";
 
-  protected abstract QueryEngine createQueryEngine(Datastore datastore);
-
-  protected abstract Datastore createDatastore();
-
-  protected abstract TransactionManager createTransactionManager();
-
-  @BeforeAll
-  void setup() {
+  @Override
+  protected Map<String, List<Field>> getFieldsByStore() {
     Field ean = new Field("ean", String.class);
     Field category = new Field("category", String.class);
     Field sales = new Field("sales", double.class);
     Field qty = new Field("quantity", long.class);
+    return Map.of(this.storeName, List.of(ean, category, sales, qty));
+  }
 
-    this.datastore = createDatastore();
-    this.queryEngine = createQueryEngine(this.datastore);
-    this.executor = new QueryExecutor(this.queryEngine);
-    this.tm = createTransactionManager();
-
-    beforeLoad(List.of(ean, category, sales, qty));
-
-    this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
+  @Override
+  protected void loadData(TransactionManager tm) {
+    tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", 20d, 10l},
             new Object[]{"cookie", "food", 30d, 10l}
     ));
-  }
-
-  protected void beforeLoad(List<Field> fields) {
   }
 
   /**
@@ -69,9 +48,9 @@ public abstract class ATestBinaryOperationMeasureCopy {
             .table(this.storeName)
             .withMeasure(sales)
             .withMeasure(quantity)
-            .withMeasure(new BinaryOperationMeasure("plus1", BinaryOperator.PLUS, sales, sales))
-            .withMeasure(new BinaryOperationMeasure("plus2", BinaryOperator.PLUS, sales, quantity))
-            .withMeasure(new BinaryOperationMeasure("plus3", BinaryOperator.PLUS, quantity, quantity));
+            .withMeasure(new BinaryOperationMeasure("plus1", PLUS, sales, sales))
+            .withMeasure(new BinaryOperationMeasure("plus2", PLUS, sales, quantity))
+            .withMeasure(new BinaryOperationMeasure("plus3", PLUS, quantity, quantity));
 
     Table table = this.executor.execute(query);
     double salesV = 50d;
@@ -94,9 +73,9 @@ public abstract class ATestBinaryOperationMeasureCopy {
             .table(this.storeName)
             .withMeasure(sales)
             .withMeasure(quantity)
-            .withMeasure(new BinaryOperationMeasure("minus1", BinaryOperator.MINUS, sales, sales))
-            .withMeasure(new BinaryOperationMeasure("minus2", BinaryOperator.MINUS, sales, quantity))
-            .withMeasure(new BinaryOperationMeasure("minus3", BinaryOperator.MINUS, quantity, quantity));
+            .withMeasure(new BinaryOperationMeasure("minus1", MINUS, sales, sales))
+            .withMeasure(new BinaryOperationMeasure("minus2", MINUS, sales, quantity))
+            .withMeasure(new BinaryOperationMeasure("minus3", MINUS, quantity, quantity));
 
     Table table = this.executor.execute(query);
     double salesV = 50d;
@@ -119,9 +98,9 @@ public abstract class ATestBinaryOperationMeasureCopy {
             .table(this.storeName)
             .withMeasure(sales)
             .withMeasure(quantity)
-            .withMeasure(new BinaryOperationMeasure("multiply1", BinaryOperator.MULTIPLY, sales, sales))
-            .withMeasure(new BinaryOperationMeasure("multiply2", BinaryOperator.MULTIPLY, sales, quantity))
-            .withMeasure(new BinaryOperationMeasure("multiply3", BinaryOperator.MULTIPLY, quantity, quantity));
+            .withMeasure(new BinaryOperationMeasure("multiply1", MULTIPLY, sales, sales))
+            .withMeasure(new BinaryOperationMeasure("multiply2", MULTIPLY, sales, quantity))
+            .withMeasure(new BinaryOperationMeasure("multiply3", MULTIPLY, quantity, quantity));
 
     Table table = this.executor.execute(query);
     double salesV = 50d;
@@ -144,9 +123,9 @@ public abstract class ATestBinaryOperationMeasureCopy {
             .table(this.storeName)
             .withMeasure(sales)
             .withMeasure(quantity)
-            .withMeasure(new BinaryOperationMeasure("divide1", BinaryOperator.DIVIDE, sales, sales))
-            .withMeasure(new BinaryOperationMeasure("divide2", BinaryOperator.DIVIDE, sales, quantity))
-            .withMeasure(new BinaryOperationMeasure("divide3", BinaryOperator.DIVIDE, quantity, quantity));
+            .withMeasure(new BinaryOperationMeasure("divide1", DIVIDE, sales, sales))
+            .withMeasure(new BinaryOperationMeasure("divide2", DIVIDE, sales, quantity))
+            .withMeasure(new BinaryOperationMeasure("divide3", DIVIDE, quantity, quantity));
 
     Table table = this.executor.execute(query);
     double salesV = 50d;

@@ -43,6 +43,7 @@
     <module>java-client</module>
     <module>js/typescript-library</module>
     <module>sandbox</module>
+      <module>aitm-queries-tests</module>
   </modules>
 
   <dependencyManagement>
