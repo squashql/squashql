@@ -550,10 +550,144 @@ Result
 +-------------+---------+----------+------------+---------------------+
 ```
 
-##### Dynamic comparison
+##### Dynamic comparison - What-if - ColumnSet
 
-TODO
+This type of comparison is mainly used for what-if comparison but not limited to it. It involves the creation of a new
+"virtual" column called `ColumnSet` that only exists in AITM to create groups among which the comparisons are
+performed. Let's see a very simple example inspired from [https://www.causal.app/blog/everything-you-need-to-know-about-what-if-scenarios](https://www.causal.app/blog/everything-you-need-to-know-about-what-if-scenarios)
 
-## ColumnSets
+Our initial dataset looks like this
+```
++----------+-----------+------------+-------------+
+| scenario | saleprice | loavessold | pointofsale |
++----------+-----------+------------+-------------+
+|     base |       2.0 |         80 |           B |
+|     base |       2.0 |        100 |           A |
+|       s1 |       3.0 |         50 |           B |
+|       s1 |       3.0 |         74 |           A |
+|       s2 |       4.0 |         20 |           B |
+|       s2 |       4.0 |         55 |           A |
+|       s3 |       2.0 |        100 |           A |
+|       s3 |       3.0 |         50 |           B |
++----------+-----------+------------+-------------+
+```
 
-TODO 
+To compute the revenue
+```typescript
+import {ExpressionMeasure, from} from "aitm-js-query"
+
+const revenue = new ExpressionMeasure("revenue", "sum(saleprice * loavessold)")
+const query = from("myTable")
+        .select(["scenario"], [], [revenue])
+        .build();
+```
+
+Result
+```
++----------+---------+
+| scenario | revenue |
++----------+---------+
+|     base |   360.0 |
+|       s1 |   372.0 |
+|       s2 |   300.0 |
+|       s3 |   350.0 |
++----------+---------+
+```
+
+Let's say we want to compare each scenario s1, s2 and s3 with base plus each of these between them in the following order: s1 -> s2 -> s3.
+To do that, we start by creating those groups that we put in a dedicated object
+
+```typescript
+import {
+  BucketColumnSet
+} from "aitm-js-query"
+
+const groups = new Map(Object.entries({
+  "group1": ["base", "s1"],
+  "group2": ["base", "s2"],
+  "group3": ["base", "s3"],
+  "group4": ["s1", "s2", "s3"],
+}))
+const columnSet = new BucketColumnSet("group", "scenario", values);
+```
+
+The first argument of `BucketColumnSet` is the name of the new (virtual) column that will be created.
+The second argument is the name of the existing column whose values will be grouped together.
+The third argument is the defined groups to be used for the comparison. The orders of the keys (group1, group2....)
+and in the arrays are important.
+
+We can use the `BucketColumnSet` as follows
+```typescript
+import {BucketColumnSet, ExpressionMeasure, from} from "aitm-js-query"
+
+const values = new Map(Object.entries({
+  "group1": ["base", "s1"],
+  "group2": ["base", "s2"],
+  "group3": ["base", "s3"],
+  "group4": ["s1", "s2", "s3"],
+}))
+const columnSet = new BucketColumnSet("group", "scenario", values);
+const revenue = new ExpressionMeasure("revenue", "sum(saleprice * loavessold)")
+const query = from("myTable")
+        .select([], [columnSet], [revenue])
+        .build();
+```
+
+Result
+```
++--------+----------+---------+
+|  group | scenario | revenue |
++--------+----------+---------+
+| group1 |     base |   360.0 |
+| group1 |       s1 |   372.0 |
+| group2 |     base |   360.0 |
+| group2 |       s2 |   300.0 |
+| group3 |     base |   360.0 |
+| group3 |       s3 |   350.0 |
+| group4 |       s1 |   372.0 |
+| group4 |       s2 |   300.0 |
+| group4 |       s3 |   350.0 |
++--------+----------+---------+
+```
+
+Now to perform the comparison, use the built-in measure `comparisonMeasureWithBucket`
+```typescript
+import {BucketColumnSet, comparisonMeasureWithBucket, ComparisonMethod, ExpressionMeasure, from} from "aitm-js-query"
+
+const values = new Map(Object.entries({
+  "group1": ["base", "s1"],
+  "group2": ["base", "s2"],
+  "group3": ["base", "s3"],
+  "group4": ["s1", "s2", "s3"],
+}))
+const columnSet = new BucketColumnSet("group", "scenario", values);
+const revenue = new ExpressionMeasure("revenue", "sum(saleprice * loavessold)")
+const revenueComparison = comparisonMeasureWithBucket("revenueComparison",
+        ComparisonMethod.ABSOLUTE_DIFFERENCE,
+        revenue,
+        new Map(Object.entries({"scenario": "s-1"})),)
+const query = from("myTable")
+        .select([], [columnSet], [revenue, revenueComparison])
+        .build();
+```
+
+`{"scenario": "s-1"}` indicates that each value is to be compared with the one for the previous scenario (in the current group).
+This is why order in `values` is important.
+
+Result
+```
++--------+----------+---------+-------------------+
+|  group | scenario | revenue | revenueComparison |
++--------+----------+---------+-------------------+
+| group1 |     base |   360.0 |               0.0 |
+| group1 |       s1 |   372.0 |              12.0 |
+| group2 |     base |   360.0 |               0.0 |
+| group2 |       s2 |   300.0 |             -60.0 |
+| group3 |     base |   360.0 |               0.0 |
+| group3 |       s3 |   350.0 |             -10.0 |
+| group4 |     base |   360.0 |               0.0 |
+| group4 |       s1 |   372.0 |              12.0 |
+| group4 |       s2 |   300.0 |             -72.0 |
+| group4 |       s3 |   350.0 |              50.0 |
++--------+----------+---------+-------------------+
+```

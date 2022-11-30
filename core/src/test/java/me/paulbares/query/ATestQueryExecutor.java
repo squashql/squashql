@@ -247,16 +247,25 @@ public abstract class ATestQueryExecutor {
   void testConditions() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME))
-            .where("ean", eq("bottle"))
-            .where("category", in("cloth", "drink"))
+            .where(Functions.all(
+                    criterion("ean", eq("bottle")),
+                    criterion(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)),
+                    criterion("category", in("cloth", "drink"))))
             .select(List.of("category", "ean"), List.of(sum("q", "quantity")))
             .build();
 
     Table table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("drink", "bottle", 10l));
 
-    query.withCondition("quantity", Functions.gt(10));
+    query = Query
+            .from(this.storeName)
+            .where(Functions.all(
+                    criterion("ean", eq("bottle")),
+                    criterion(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)),
+                    criterion("category", in("cloth", "drink")),
+                    criterion("quantity", Functions.gt(10))))
+            .select(List.of("category", "ean"), List.of(sum("q", "quantity")))
+            .build();
     table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).isEmpty();
   }
@@ -264,14 +273,14 @@ public abstract class ATestQueryExecutor {
   @Test
   void testConditionsNullNotNull() {
     QueryDto query = Query.from(this.storeName)
-            .where("subcategory", Functions.isNotNull())
+            .where(Functions.criterion("subcategory", Functions.isNotNull()))
             .select(List.of("ean"), List.of(CountMeasure.INSTANCE))
             .build();
     Table table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactly(List.of("cookie", 3l));
 
     query = Query.from(this.storeName)
-            .where("subcategory", Functions.isNull())
+            .where(Functions.criterion("subcategory", Functions.isNull()))
             .select(List.of("ean"), List.of(CountMeasure.INSTANCE))
             .build();
     table = this.queryExecutor.execute(query);

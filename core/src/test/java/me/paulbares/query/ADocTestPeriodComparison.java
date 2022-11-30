@@ -39,7 +39,6 @@ public abstract class ADocTestPeriodComparison {
 
   @BeforeAll
   void setup() {
-    // See https://mariadb.com/kb/en/subqueries-in-a-from-clause/
     Field studentName = new Field("name", String.class);
     Field test = new Field("test", String.class);
     Field score = new Field("score", int.class);
