@@ -1,6 +1,9 @@
 package me.paulbares.query;
 
 import me.paulbares.ClickHouseDatastore;
+import me.paulbares.query.database.ClickHouseDeltaQueryEngine;
+import me.paulbares.query.database.QueryEngine;
+import me.paulbares.store.Datastore;
 import me.paulbares.transaction.ClickHouseDeltaTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 
@@ -14,6 +17,11 @@ public class TestClickHouseDeltaQueryExecutor extends TestClickHouseQueryExecuto
   @Override
   protected TransactionManager createTransactionManager() {
     return new ClickHouseDeltaTransactionManager(((ClickHouseDatastore) this.datastore).dataSource);
+  }
+
+  @Override
+  protected QueryEngine createQueryEngine(Datastore datastore) {
+    return new ClickHouseDeltaQueryEngine((ClickHouseDatastore) datastore);
   }
 
   @Override

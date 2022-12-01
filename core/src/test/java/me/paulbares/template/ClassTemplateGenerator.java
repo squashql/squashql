@@ -10,6 +10,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -23,7 +24,17 @@ public class ClassTemplateGenerator {
             .filter(c -> {
               try {
                 Class<?> klass = Class.forName(c.getName());
-                return klass.getAnnotation(TestClass.class) != null;
+                TestClass annotation = klass.getAnnotation(TestClass.class);
+                if (annotation != null) {
+                  String[] ignore = annotation.ignore();
+                  if (ignore == null) {
+                    return true;
+                  } else {
+                    return Arrays.stream(ignore).filter(i -> i.equals(name)).findAny().isEmpty();
+                  }
+                } else {
+                  return false;
+                }
               } catch (Throwable e) {
                 throw new RuntimeException(e);
               }

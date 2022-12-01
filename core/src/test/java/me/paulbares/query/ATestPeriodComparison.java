@@ -14,11 +14,12 @@ import java.util.List;
 import java.util.Map;
 
 import static me.paulbares.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
+import static me.paulbares.query.Functions.criterion;
 import static me.paulbares.query.Functions.eq;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
-@TestClass
+@TestClass(ignore = {"Spark"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public abstract class ATestPeriodComparison extends ATestQuery {
@@ -209,20 +210,8 @@ public abstract class ATestPeriodComparison extends ATestQuery {
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.semester(), "myMeasure", "sum(sales)");
   }
 
-  // Last because the data is changed
   @Test
-//  @Order(Integer.MAX_VALUE)
-  // FIXME
   void testCompareMonthCurrentWithPrevious() {
-    // Recreate table
-//    beforeLoad(this.datastore.storesByName().values().iterator().next().fields().stream().filter(f -> !f.name().equals(SCENARIO_FIELD_NAME)).toList());
-    // Reload data with fewer rows
-//    this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
-//            new Object[]{"bottle", "drink", 20d, 10, 2022, 2, 4, 12, LocalDate.of(2022, 12, 1)},
-//            new Object[]{"bottle", "drink", 20d, 10, 2022, 2, 4, 12, LocalDate.of(2022, 12, 3)},
-//            new Object[]{"bottle", "drink", 15d, 5, 2023, 1, 1, 1, LocalDate.of(2023, 1, 1)},
-//            new Object[]{"bottle", "drink", 30d, 5, 2023, 1, 1, 2, LocalDate.of(2023, 2, 1)}));
-
     Period.Month period = new Period.Month("month_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
@@ -232,14 +221,22 @@ public abstract class ATestPeriodComparison extends ATestQuery {
             Map.of(period.month(), "m-1", period.year(), "y"),
             period);
     var query = Query.from(this.storeName)
+            // Filter to limit the number of rows
+            .where(Functions.all(
+                    criterion("year_sales", Functions.in(2022, 2023)),
+                    criterion("month_sales", Functions.in(1, 2, 12))
+            ))
             .select(List.of("year_sales", "month_sales", SCENARIO_FIELD_NAME), List.of(m, sales))
             .build();
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022l, 12, "base", null, 40d),
-            Arrays.asList(2023l, 1, "base", -25d, 15d),
-            Arrays.asList(2023l, 2, "base", 15d, 30d));
+            Arrays.asList(2022l, 1, "base", null, 20d),
+            Arrays.asList(2022l, 2, "base", 40d, 60d),
+            Arrays.asList(2022l, 12, "base", -5d, 10d),
+            Arrays.asList(2023l, 1, "base", 10d, 20d),
+            Arrays.asList(2023l, 2, "base", 40d, 60d),
+            Arrays.asList(2023l, 12, "base", -5d, 10d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.month(), "myMeasure", "sum(sales)");
