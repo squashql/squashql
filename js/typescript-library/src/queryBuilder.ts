@@ -1,26 +1,26 @@
 import {Measure} from "./measures";
 import {ColumnSet} from "./columnsets";
 import {JoinMapping, JoinType, Query, Table} from "./query";
-import {Condition, Criteria} from "./conditions";
+import {Criteria} from "./conditions";
 import {OrderKeyword} from "./order";
 
-interface CanAddOrderBy {
+export interface CanAddOrderBy {
   orderBy(column: string, order: OrderKeyword): HasSelectAndRollup
 
   orderByFirstElements(column: string, firstElements: Array<any>): HasSelectAndRollup
 }
 
-interface CanBeBuildQuery {
+export interface CanBeBuildQuery {
   build(): Query
 }
 
-interface CanStartBuildingJoin {
+export interface CanStartBuildingJoin {
   leftOuterJoin(tableName: string): HasStartedBuildingJoin
 
   innerJoin(tableName: string): HasStartedBuildingJoin
 }
 
-interface HasCondition {
+export interface HasCondition {
   /**
    * Selects columns from a table to be displayed and the measures to compute. Note that the columns and columnSets
    * added to select are automatically added to the groupBy clause of the query: aggregated results are then grouped by
@@ -29,25 +29,25 @@ interface HasCondition {
   select(columns: string[], columnSets: ColumnSet[], measures: Measure[]): CanAddRollup
 }
 
-type HasJoin = HasTable & HasStartedBuildingJoin & CanStartBuildingJoin
+export type HasJoin = HasTable & HasStartedBuildingJoin & CanStartBuildingJoin
 
-interface HasOrderBy extends CanBeBuildQuery {
+export interface HasOrderBy extends CanBeBuildQuery {
   limit(limit: number): CanBeBuildQuery;
 }
 
-type HasSelectAndRollup = HasOrderBy & CanAddOrderBy
+export type HasSelectAndRollup = HasOrderBy & CanAddOrderBy
 
-interface HasStartedBuildingJoin {
+export interface HasStartedBuildingJoin {
   on(fromTable: string, from: string, toTable: string, to: string): HasJoin
 }
 
-type HasStartedBuildingTable = HasTable & CanStartBuildingJoin
+export type HasStartedBuildingTable = HasTable & CanStartBuildingJoin
 
-interface HasTable extends HasCondition {
-  where(criterion: Criteria): HasCondition 
+export interface HasTable extends HasCondition {
+  where(criterion: Criteria): HasCondition
 }
 
-interface CanAddRollup extends HasOrderBy, CanAddOrderBy {
+export interface CanAddRollup extends HasOrderBy, CanAddOrderBy {
   rollup(columns: string[]): HasSelectAndRollup
 }
 

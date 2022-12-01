@@ -34,5 +34,8 @@ export {
 } from './querier'
 
 export {
+  CanAddOrderBy, CanBeBuildQuery, CanStartBuildingJoin, HasCondition, HasJoin,
+  HasOrderBy, HasSelectAndRollup, HasStartedBuildingJoin, HasStartedBuildingTable,
+  HasTable, CanAddRollup,
   from, fromSubQuery
 } from './queryBuilder'

@@ -1,5 +1,5 @@
 import {Measure} from "./measures";
-import {all, Condition, Criteria} from "./conditions";
+import {Criteria} from "./conditions";
 import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order";
 import {BucketColumnSet, ColumnSet, ColumnSetKey} from "./columnsets";
 
