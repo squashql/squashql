@@ -1,14 +1,11 @@
 package me.paulbares.query;
 
+import me.paulbares.TestClass;
 import me.paulbares.query.builder.Query;
-import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
-import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -20,42 +17,30 @@ import static me.paulbares.query.Functions.eq;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
+@TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestBucketComparison {
-
-  protected QueryExecutor executor;
-  protected Datastore datastore;
-  protected TransactionManager tm;
+public abstract class ATestBucketComparison extends ABaseTestQuery {
 
   protected String storeName = "storeName";
 
-  protected abstract QueryEngine createQueryEngine(Datastore datastore);
-
-  protected abstract Datastore createDatastore();
-
-  protected abstract TransactionManager createTransactionManager();
-
   protected String groupOfScenario = "Group of scenario";
+
   protected BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, SCENARIO_FIELD_NAME)
           .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
           .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
           .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
 
-  @BeforeAll
-  void setup() {
+  @Override
+  protected Map<String, List<Field>> getFieldsByStore() {
     Field ean = new Field("ean", String.class);
     Field category = new Field("category", String.class);
     Field price = new Field("price", double.class);
     Field qty = new Field("quantity", int.class);
+    return Map.of(this.storeName, List.of(ean, category, price, qty));
+  }
 
-    List<Field> fields = List.of(ean, category, price, qty);
-    this.datastore = createDatastore();
-    QueryEngine queryEngine = createQueryEngine(this.datastore);
-    this.executor = new QueryExecutor(queryEngine);
-    this.tm = createTransactionManager();
-
-    beforeLoad(fields);
-
+  @Override
+  protected void loadData() {
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", 2d, 11},
             new Object[]{"cookie", "food", 3d, 20},
@@ -73,9 +58,6 @@ public abstract class ATestBucketComparison {
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
-  }
-
-  protected void beforeLoad(List<Field> fields) {
   }
 
   @Test

@@ -1,13 +1,10 @@
 package me.paulbares.query;
 
+import me.paulbares.TestClass;
 import me.paulbares.query.builder.Query;
-import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
-import me.paulbares.transaction.TransactionManager;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -23,44 +20,23 @@ import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
  * why it is @{@link Disabled}.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Disabled
-public abstract class ADocTestBucketComparison {
+@TestClass(ignore = {TestClass.Type.SPARK})
+public abstract class ATestDocBucketComparison extends ABaseTestQuery {
 
-  protected Datastore datastore;
-
-  protected QueryExecutor queryExecutor;
-
-  protected TransactionManager tm;
-
-  protected abstract QueryEngine createQueryEngine(Datastore datastore);
-
-  protected abstract Datastore createDatastore();
-
-  protected abstract TransactionManager createTransactionManager();
-
-  @BeforeAll
-  void setup() {
+  @Override
+  protected Map<String, List<Field>> getFieldsByStore() {
     Field salePrice = new Field("saleprice", double.class);
     Field loavesSold = new Field("loavessold", int.class);
     Field pos = new Field("pointofsale", String.class);
-
-    this.datastore = createDatastore();
-    QueryEngine queryEngine = createQueryEngine(this.datastore);
-    this.queryExecutor = new QueryExecutor(queryEngine);
-    this.tm = createTransactionManager();
-
-    beforeLoad(Map.of("store", List.of(salePrice, loavesSold, pos)));
-    load();
+    return Map.of("store", List.of(salePrice, loavesSold, pos));
   }
 
-  protected void load() {
+  @Override
+  protected void loadData() {
     this.tm.load(MAIN_SCENARIO_NAME, "store", List.of(new Object[]{2d, 100, "A"}, new Object[]{2d, 80, "B"}));
     this.tm.load("s1", "store", List.of(new Object[]{3d, 74, "A"}, new Object[]{3d, 50, "B"}));
     this.tm.load("s2", "store", List.of(new Object[]{4d, 55, "A"}, new Object[]{4d, 20, "B"}));
     this.tm.load("s3", "store", List.of(new Object[]{2d, 100, "A"}, new Object[]{3d, 50, "B"}));
-  }
-
-  protected void beforeLoad(Map<String, List<Field>> fieldsByStore) {
   }
 
   @Test
@@ -82,7 +58,7 @@ public abstract class ADocTestBucketComparison {
 //            .select(List.of(SCENARIO_FIELD_NAME, "saleprice", "loavessold", "pointofsale"),List.of(CountMeasure.INSTANCE, revenue))
             .select(List.of(), List.of(bucketCS), List.of(CountMeasure.INSTANCE, revenue, revenueComparison))
             .build();
-    Table result = this.queryExecutor.execute(queryDto);
+    Table result = this.executor.execute(queryDto);
     result.show();
   }
 }

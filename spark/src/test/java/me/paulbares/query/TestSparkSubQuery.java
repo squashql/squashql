@@ -4,13 +4,12 @@ import me.paulbares.SparkDatastore;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.database.SparkQueryEngine;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Field;
 import me.paulbares.transaction.SparkTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 
-import java.util.List;
-import java.util.Map;
-
+/**
+ * Do not edit this class, it has been generated automatically by {@link me.paulbares.template.SparkClassTemplateGenerator}.
+ */
 public class TestSparkSubQuery extends ATestSubQuery {
 
   @Override
@@ -30,8 +29,8 @@ public class TestSparkSubQuery extends ATestSubQuery {
   }
 
   @Override
-  protected void beforeLoad(Map<String, List<Field>> fieldsByStore) {
+  protected void createTables() {
     SparkTransactionManager tm = (SparkTransactionManager) this.tm;
-    fieldsByStore.forEach((store, fields) -> tm.createTemporaryTable(store, fields));
+    this.fieldsByStore.forEach((store, fields) -> tm.createTemporaryTable(store, fields));
   }
 }

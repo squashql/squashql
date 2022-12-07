@@ -4,30 +4,17 @@ import me.paulbares.ClickHouseDatastore;
 import me.paulbares.query.database.ClickHouseQueryEngine;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Field;
 import me.paulbares.transaction.ClickHouseTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
-
-import java.util.List;
-import java.util.Map;
-
-import static me.paulbares.query.TestUtils.createClickHouseContainer;
-import static me.paulbares.query.TestUtils.jdbcUrl;
 
 /**
- * This test class is used to verify and print tables for the documentation. Nothing is asserted in those tests this is
- * why it is @{@link Disabled}.
+ * Do not edit this class, it has been generated automatically by {@link me.paulbares.template.ClickHouseClassTemplateGenerator}.
  */
-@Disabled
-public class TestDocClickHousePeriodComparison extends ADocTestPeriodComparison {
+public class TestClickHouse{{classSuffix}} extends {{parentTestClass}} {
 
-  @Container
-  public GenericContainer container = createClickHouseContainer();
+  public org.testcontainers.containers.GenericContainer container = TestUtils.createClickHouseContainer();
 
   @BeforeAll
   @Override
@@ -42,9 +29,9 @@ public class TestDocClickHousePeriodComparison extends ADocTestPeriodComparison 
   }
 
   @Override
-  protected void beforeLoad(Map<String, List<Field>> fieldsByStore) {
+  protected void createTables() {
     ClickHouseTransactionManager tm = (ClickHouseTransactionManager) this.tm;
-    fieldsByStore.forEach((store, fields) -> tm.dropAndCreateInMemoryTable(store, fields));
+    this.fieldsByStore.forEach((store, fields) -> tm.dropAndCreateInMemoryTable(store, fields));
   }
 
   @Override
@@ -54,7 +41,7 @@ public class TestDocClickHousePeriodComparison extends ADocTestPeriodComparison 
 
   @Override
   protected Datastore createDatastore() {
-    return new ClickHouseDatastore(jdbcUrl.apply(this.container), null);
+    return new ClickHouseDatastore(TestUtils.jdbcUrl.apply(this.container), null);
   }
 
   @Override

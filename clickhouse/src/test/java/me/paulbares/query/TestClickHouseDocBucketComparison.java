@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 /**
  * Do not edit this class, it has been generated automatically by {@link me.paulbares.template.ClickHouseClassTemplateGenerator}.
  */
-public class TestClickHouseBinaryOperationMeasure extends ATestBinaryOperationMeasure {
+public class TestClickHouseDocBucketComparison extends ATestDocBucketComparison {
 
   public org.testcontainers.containers.GenericContainer container = TestUtils.createClickHouseContainer();
 
