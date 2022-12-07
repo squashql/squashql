@@ -13,7 +13,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(TYPE)
 public @interface TestClass {
 
-  Type[] ignore();
+  Type[] ignore() default {};
 
   enum Type {
     SPARK("Spark"),

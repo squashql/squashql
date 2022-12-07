@@ -19,7 +19,7 @@ public class ClassTemplateGenerator {
 
   public static void generateTestClasses(TestClass.Type testClassType) throws Exception {
     List<ClassPath.ClassInfo> parentTestClasses = ClassPath.from(ClassLoader.getSystemClassLoader())
-            .getTopLevelClasses("me.paulbares.query")
+            .getTopLevelClassesRecursive("me.paulbares.query")
             .stream()
             .filter(c -> {
               try {
@@ -27,7 +27,7 @@ public class ClassTemplateGenerator {
                 TestClass annotation = klass.getAnnotation(TestClass.class);
                 if (annotation != null) {
                   TestClass.Type[] ignore = annotation.ignore();
-                  if (ignore == null) {
+                  if (ignore == null || ignore.length == 0) {
                     return true;
                   } else {
                     return Arrays.stream(ignore).filter(i -> i == testClassType).findAny().isEmpty();

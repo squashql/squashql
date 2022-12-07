@@ -1,7 +1,6 @@
-package me.paulbares.doc;
+package me.paulbares.query;
 
 import me.paulbares.TestClass;
-import me.paulbares.query.*;
 import me.paulbares.query.builder.Query;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.QueryDto;
@@ -21,8 +20,7 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestClass(ignore = {TestClass.Type.SPARK})
-@Disabled
-public abstract class ADocTestPeriodComparison extends ABaseTestQuery {
+public abstract class ATestDocPeriodComparison extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<Field>> getFieldsByStore() {
