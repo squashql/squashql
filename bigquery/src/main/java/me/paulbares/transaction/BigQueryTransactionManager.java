@@ -18,7 +18,7 @@ import java.util.Map;
 public class BigQueryTransactionManager implements TransactionManager {
 
   // 1, 2, 4, 8, 16
-  private static final int MAX_SLEEPS = 5;
+  private static final int MAX_SLEEPS = 7;
 
   final BigQuery bigquery;
   final String datasetName;
@@ -45,6 +45,7 @@ public class BigQueryTransactionManager implements TransactionManager {
             .toList();
     // Table schema definition
     Schema schema = Schema.of(fieldList);
+    createTable(this.bigquery, schema, tableId);
     TableDefinition tableDefinition = StandardTableDefinition.of(schema);
     TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build();
 
@@ -52,15 +53,6 @@ public class BigQueryTransactionManager implements TransactionManager {
       this.bigquery.create(tableInfo);
     } catch (BigQueryException e) {
       if (e.getCode() == 409 && e.getReason().equals("duplicate")) {
-        // https://stackoverflow.com/questions/73544951/no-table-found-for-new-bigquery-table
-//        String sqlTableName = SqlUtils.escape(tableInfo.getTableId().getDataset() + "." + tableInfo.getTableId().getTable());
-//        QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder("DELETE FROM " + sqlTableName + " WHERE 1=1").build();
-//        try {
-//          TableResult tableResult = this.bigquery.query(queryConfig);
-//        } catch (InterruptedException ex) {
-//          throw new RuntimeException(ex);
-//        }
-
         this.bigquery.delete(tableId);
         this.bigquery.create(tableInfo);
       } else {
@@ -100,10 +92,14 @@ public class BigQueryTransactionManager implements TransactionManager {
     int attempt = 0;
     while (true) {
       // table creation is eventually consistent, try several time to insert it.
+      // https://stackoverflow.com/questions/73544951/no-table-found-for-new-bigquery-table
+      // Still issues even after this retry.
       try {
-        InsertAllResponse insert = table.insert(list);
-        if (insert.hasErrors()) {
-          insert.getInsertErrors().values().stream().forEach(System.out::println);
+        InsertAllResponse response = table.insert(list);
+        if (response.hasErrors()) {
+          for (Map.Entry<Long, List<BigQueryError>> entry : response.getInsertErrors().entrySet()) {
+            System.out.println("Response error: \n" + entry.getValue());
+          }
           throw new RuntimeException("error while inserting rows, see above");
         }
         return;

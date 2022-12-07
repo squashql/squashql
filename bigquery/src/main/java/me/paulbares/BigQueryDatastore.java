@@ -28,10 +28,12 @@ public class BigQueryDatastore implements Datastore {
     this.datasetName = datasetName;
     // Initialize client that will be used to send requests. This client only needs to be created
     // once, and can be reused for multiple requests.
-    this.bigquery = BigQueryOptions.newBuilder()
+    BigQueryOptions build = BigQueryOptions.newBuilder()
             .setProjectId(projectId)
             .setCredentials(credentials)
-            .build()
+            .build();
+    build.setThrowNotFound(true);
+    this.bigquery = build
             .getService();
 
     this.stores = Suppliers.memoize(
