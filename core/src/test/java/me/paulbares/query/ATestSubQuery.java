@@ -18,7 +18,7 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestSubQuery extends ATestQuery {
+public abstract class ATestSubQuery extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<Field>> getFieldsByStore() {

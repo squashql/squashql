@@ -25,7 +25,7 @@ import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestQueryCache extends ATestQuery {
+public abstract class ATestQueryCache extends ABaseTestQuery {
 
   protected String storeName = "myAwesomeStore";
 

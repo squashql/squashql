@@ -15,7 +15,7 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestBinaryOperationMeasure extends ATestQuery {
+public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
 
   protected String storeName = "myAwesomeStore";
 

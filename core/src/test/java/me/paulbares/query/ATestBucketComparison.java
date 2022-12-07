@@ -19,7 +19,7 @@ import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestBucketComparison extends ATestQuery {
+public abstract class ATestBucketComparison extends ABaseTestQuery {
 
   protected String storeName = "storeName";
 

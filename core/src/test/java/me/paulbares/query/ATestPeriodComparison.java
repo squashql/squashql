@@ -22,7 +22,7 @@ import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 @TestClass(ignore = {"Spark"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public abstract class ATestPeriodComparison extends ATestQuery {
+public abstract class ATestPeriodComparison extends ABaseTestQuery {
 
   protected String storeName = "myAwesomeStore";
 

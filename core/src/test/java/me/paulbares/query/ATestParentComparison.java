@@ -18,7 +18,7 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestParentComparison extends ATestQuery {
+public abstract class ATestParentComparison extends ABaseTestQuery {
 
   protected String storeName = "myAwesomeStore";
 

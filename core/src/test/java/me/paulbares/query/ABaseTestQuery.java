@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestQuery {
+public abstract class ABaseTestQuery {
 
   protected Datastore datastore;
   protected QueryEngine queryEngine;

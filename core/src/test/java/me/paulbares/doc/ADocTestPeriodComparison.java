@@ -1,13 +1,11 @@
-package me.paulbares.query;
+package me.paulbares.doc;
 
+import me.paulbares.TestClass;
+import me.paulbares.query.*;
 import me.paulbares.query.builder.Query;
-import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
-import me.paulbares.transaction.TransactionManager;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -22,39 +20,22 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
  * why it is @{@link Disabled}.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestClass(ignore = {"Spark"})
 @Disabled
-public abstract class ADocTestPeriodComparison {
+public abstract class ADocTestPeriodComparison extends ABaseTestQuery {
 
-  protected Datastore datastore;
-
-  protected QueryExecutor queryExecutor;
-
-  protected TransactionManager tm;
-
-  protected abstract QueryEngine createQueryEngine(Datastore datastore);
-
-  protected abstract Datastore createDatastore();
-
-  protected abstract TransactionManager createTransactionManager();
-
-  @BeforeAll
-  void setup() {
+  @Override
+  protected Map<String, List<Field>> getFieldsByStore() {
     Field studentName = new Field("name", String.class);
     Field test = new Field("test", String.class);
     Field score = new Field("score", int.class);
     Field semester = new Field("semester", int.class);
     Field year = new Field("year", int.class);
-
-    this.datastore = createDatastore();
-    QueryEngine queryEngine = createQueryEngine(this.datastore);
-    this.queryExecutor = new QueryExecutor(queryEngine);
-    this.tm = createTransactionManager();
-
-    beforeLoad(Map.of("student", List.of(studentName, test, score, year, semester)));
-    load();
+    return Map.of("student", List.of(studentName, test, score, year, semester));
   }
 
-  protected void load() {
+  @Override
+  protected void loadData() {
     this.tm.load(MAIN_SCENARIO_NAME, "student", List.of(
             // 2022 - s1
             new Object[]{"Paul", "mathematics", 75, 2022, 1},
@@ -82,9 +63,6 @@ public abstract class ADocTestPeriodComparison {
     ));
   }
 
-  protected void beforeLoad(Map<String, List<Field>> fieldsByStore) {
-  }
-
   @Test
   void testSemester() {
     Measure sum = Functions.sum("score_sum", "score");
@@ -98,7 +76,7 @@ public abstract class ADocTestPeriodComparison {
     QueryDto queryDto = Query.from("student")
             .select(List.of("year", "semester", "name"), List.of(sum, comp))
             .build();
-    Table result = this.queryExecutor.execute(queryDto);
+    Table result = this.executor.execute(queryDto);
     result.show();
   }
 
@@ -110,12 +88,12 @@ public abstract class ADocTestPeriodComparison {
             ComparisonMethod.RELATIVE_DIFFERENCE,
             sum,
             Map.of("year", "y-1"),
-            new Period.Year( "year"));
+            new Period.Year("year"));
 
     QueryDto queryDto = Query.from("student")
             .select(List.of("year", "name"), List.of(sum, Functions.multiply("progression in %", comp, Functions.decimal(100))))
             .build();
-    Table result = this.queryExecutor.execute(queryDto);
+    Table result = this.executor.execute(queryDto);
     result.show();
   }
 }

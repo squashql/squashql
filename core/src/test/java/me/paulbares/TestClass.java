@@ -6,6 +6,9 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+/**
+ * Annotation to put on abstract test classes for test class generation.
+ */
 @Retention(RUNTIME)
 @Target(TYPE)
 public @interface TestClass {
