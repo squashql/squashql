@@ -51,7 +51,7 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
     Pair<List<Field>, List<List<Object>>> result = transform(
             query,
             Arrays.stream(ds.schema().fields()).toList(),
-            (f, fieldName) -> new Field(fieldName, datatypeToClass(f.dataType())),
+            (column, name) -> new Field(name, datatypeToClass(column.dataType())),
             ds.toLocalIterator(),
             (i, r) -> r.get(i));
     return new ColumnarTable(

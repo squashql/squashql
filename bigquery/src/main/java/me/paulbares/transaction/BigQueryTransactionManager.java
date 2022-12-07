@@ -18,7 +18,7 @@ import java.util.Map;
 public class BigQueryTransactionManager implements TransactionManager {
 
   // 1, 2, 4, 8, 16
-  private static final int MAX_SLEEPS = 7;
+  private static final int MAX_SLEEPS = 5;
 
   final BigQuery bigquery;
   final String datasetName;
