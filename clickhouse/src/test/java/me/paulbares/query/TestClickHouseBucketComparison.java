@@ -4,22 +4,17 @@ import me.paulbares.ClickHouseDatastore;
 import me.paulbares.query.database.ClickHouseQueryEngine;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.store.Datastore;
-import me.paulbares.store.Field;
 import me.paulbares.transaction.ClickHouseTransactionManager;
 import me.paulbares.transaction.TransactionManager;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
 
-import java.util.List;
-
-import static me.paulbares.query.TestUtils.createClickHouseContainer;
-import static me.paulbares.query.TestUtils.jdbcUrl;
-
+/**
+ * Do not edit this class, it has been generated automatically by {@link me.paulbares.template.ClickHouseClassTemplateGenerator}.
+ */
 public class TestClickHouseBucketComparison extends ATestBucketComparison {
 
-  @Container
-  public GenericContainer container = createClickHouseContainer();
+  public org.testcontainers.containers.GenericContainer container = TestUtils.createClickHouseContainer();
 
   @BeforeAll
   @Override
@@ -28,10 +23,15 @@ public class TestClickHouseBucketComparison extends ATestBucketComparison {
     super.setup();
   }
 
+  @AfterAll
+  void tearDown() {
+    // we do not stop the container to be able to reuse it between tests.
+  }
+
   @Override
-  protected void beforeLoading(List<Field> fields) {
+  protected void createTables() {
     ClickHouseTransactionManager tm = (ClickHouseTransactionManager) this.tm;
-    tm.dropAndCreateInMemoryTable(this.storeName, fields);
+    this.fieldsByStore.forEach((store, fields) -> tm.dropAndCreateInMemoryTable(store, fields));
   }
 
   @Override
@@ -41,11 +41,11 @@ public class TestClickHouseBucketComparison extends ATestBucketComparison {
 
   @Override
   protected Datastore createDatastore() {
-    return new ClickHouseDatastore(jdbcUrl.apply(this.container), null);
+    return new ClickHouseDatastore(TestUtils.jdbcUrl.apply(this.container), null);
   }
 
   @Override
   protected TransactionManager createTransactionManager() {
-    return new ClickHouseTransactionManager(((ClickHouseDatastore) this.datastore).getDataSource());
+    return new ClickHouseTransactionManager(((ClickHouseDatastore) this.datastore).dataSource);
   }
 }

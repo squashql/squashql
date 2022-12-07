@@ -2,10 +2,9 @@ package me.paulbares.spring.web.rest;
 
 import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.*;
-import me.paulbares.query.context.Repository;
-import me.paulbares.query.dto.BucketColumnSetDto;
-import me.paulbares.query.dto.QueryDto;
-import me.paulbares.query.dto.TableDto;
+import me.paulbares.query.builder.Query;
+import me.paulbares.query.database.SparkQueryEngine;
+import me.paulbares.query.dto.*;
 import me.paulbares.spring.dataset.DatasetTestConfig;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -13,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import static me.paulbares.query.TableUtils.*;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,60 +30,35 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class QueryControllerTest {
 
-  private static final String REPO_URL = "https://raw.githubusercontent" +
-          ".com/paulbares/aitm-assets/main/metrics-controller-test.json";
-
   @Autowired
   private MockMvc mvc;
 
-  private TableDto createTableDto() {
-    var our = QueryBuilder.table("our_prices");
-    var their = QueryBuilder.table("their_prices");
-    var our_to_their = QueryBuilder.table("our_stores_their_stores");
-    our.innerJoin(our_to_their, "pdv", "our_store");
-    our_to_their.innerJoin(their, "their_store", "competitor_concurrent_pdv");
-    return our;
-  }
+  @Autowired
+  private Environment env;
 
   @Test
-  void testQueryWithoutRepo() throws Exception {
-    testQuery(false);
-  }
-
-  @Test
-  void testQueryWithRepo() throws Exception {
-    testQuery(true);
-  }
-
-  void testQuery(boolean withRepo) throws Exception {
-    var our = createTableDto();
-
-    var query = new QueryDto()
-            .table(our)
-            .withColumn(SCENARIO_FIELD_NAME)
-            .withColumn("ean")
-            .aggregatedMeasure("capdv", "sum");
-
-    if (withRepo) {
-      query
-              .unresolvedExpressionMeasure("capdv_concurrents")
-              .unresolvedExpressionMeasure("indice_prix")
-              .context(Repository.KEY, new Repository(REPO_URL));
-    } else {
-      query
-              .expressionMeasure("capdv_concurrents", "sum(competitor_price * quantity)")
-              .expressionMeasure("indice_prix", "sum(capdv) / sum(competitor_price * quantity)");
-    }
+  void testQuery() throws Exception {
+    var query = Query
+            .from("our_prices")
+            .innerJoin("our_stores_their_stores")
+            .on("our_prices", "pdv", "our_stores_their_stores", "our_store")
+            .innerJoin("their_prices")
+            .on("their_prices", "competitor_concurrent_pdv", "our_stores_their_stores", "their_store")
+            .select(List.of(SCENARIO_FIELD_NAME, "ean"), List.of(
+                    Functions.sum("capdv", "capdv"),
+                    new ExpressionMeasure("capdv_concurrents", "sum(competitor_price * quantity)"),
+                    new ExpressionMeasure("indice_prix", "sum(capdv) / sum(competitor_price * quantity)")))
+            .build();
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY)
+                    .header(QueryController.HTTP_HEADER_API_KEY, this.env.getRequiredProperty(QueryController.HTTP_HEADER_API_KEY))
                     .content(JacksonUtil.serialize(query))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
-              Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
-              Map<String, Object> table = JacksonUtil.mapper.readValue((String) queryResult.get("table"), Map.class);
-              Assertions.assertThat((List) table.get("rows")).containsExactlyInAnyOrder(
+              QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
+              Assertions.assertThat(queryResult.table.rows).containsExactlyInAnyOrder(
                       List.of("MN & MDD up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
                       List.of("MN & MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196),
 
@@ -100,139 +74,103 @@ public class QueryControllerTest {
                       List.of(MAIN_SCENARIO_NAME, "ITMella 250g", 100000d, 102000d, 0.9803921568627451d),
                       List.of(MAIN_SCENARIO_NAME, "Nutella 250g", 100000d, 102000d, 0.9803921568627451d));
 
-              Assertions.assertThat((List) table.get("columns")).containsExactly(
-                      SCENARIO_FIELD_NAME, "ean", "sum(capdv)", "capdv_concurrents", "indice_prix");
+              Assertions.assertThat(queryResult.table.columns).containsExactly(
+                      SCENARIO_FIELD_NAME, "ean", "capdv", "capdv_concurrents", "indice_prix");
 
-              Assertions.assertThat((List) queryResult.get("metadata")).containsExactly(
-                      Map.of(NAME_KEY, SCENARIO_FIELD_NAME, TYPE_KEY, "string"),
-                      Map.of(NAME_KEY, "ean", TYPE_KEY, "string"),
-                      Map.of(NAME_KEY, "sum(capdv)", TYPE_KEY, "double", EXPRESSION_KEY, "sum(capdv)"),
-                      Map.of(NAME_KEY, "capdv_concurrents", TYPE_KEY, "double", EXPRESSION_KEY, "sum(competitor_price * quantity)"),
-                      Map.of(NAME_KEY, "indice_prix", TYPE_KEY, "double", EXPRESSION_KEY, "sum(capdv) / sum(competitor_price * quantity)")
+              Assertions.assertThat(queryResult.metadata).containsExactly(
+                      new MetadataItem(SCENARIO_FIELD_NAME, SCENARIO_FIELD_NAME, String.class),
+                      new MetadataItem("ean", "ean", String.class),
+                      new MetadataItem("capdv", "sum(capdv)", double.class),
+                      new MetadataItem("capdv_concurrents", "sum(competitor_price * quantity)", double.class),
+                      new MetadataItem("indice_prix", "sum(capdv) / sum(competitor_price * quantity)", double.class)
               );
+
+              Assertions.assertThat(queryResult.debug.cache).isNotNull();
+              Assertions.assertThat(queryResult.debug.timings.total).isGreaterThan(0);
             });
   }
 
   @Test
   void testMetadata() throws Exception {
-    this.mvc.perform(MockMvcRequestBuilders.get(QueryController.MAPPING_METADATA))
-            .andExpect(result -> {
-              String contentAsString = result.getResponse().getContentAsString();
-              Map objects = JacksonUtil.mapper.readValue(contentAsString, Map.class);
-              assertMetadataResult(objects, false);
-            });
-  }
-
-  @Test
-  void testMetadataWithRepository() throws Exception {
     this.mvc.perform(MockMvcRequestBuilders.get(QueryController.MAPPING_METADATA)
-                    .param("repo-url", REPO_URL))
+                    .header(QueryController.HTTP_HEADER_API_KEY, this.env.getRequiredProperty(QueryController.HTTP_HEADER_API_KEY)))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
-              Map objects = JacksonUtil.mapper.readValue(contentAsString, Map.class);
-              assertMetadataResult(objects, true);
+              assertMetadataResult(JacksonUtil.mapper.readValue(contentAsString, MetadataResultDto.class));
             });
   }
 
+  public static void assertMetadataResult(MetadataResultDto metadataResultDto) {
+    Function<String, MetadataResultDto.StoreMetadata> f =
+            storeName -> (MetadataResultDto.StoreMetadata) metadataResultDto.stores.stream().filter(s -> s.name.equals(storeName)).findFirst().get();
 
-  public static void assertMetadataResult(Map objects, boolean withRepo) {
-    List<Map<String, Object>> storesArray = (List) objects.get(QueryController.METADATA_STORES_KEY);
-    Assertions.assertThat(storesArray).hasSize(3);
-
-    Function<String, List<Map<Object, Object>>> f =
-            storeName -> (List<Map<Object, Object>>) storesArray.stream().filter(s -> s.get("name").equals(storeName)).findFirst().get().get(QueryController.METADATA_FIELDS_KEY);
-
-    Assertions.assertThat(f.apply("our_prices")).containsExactlyInAnyOrder(
-            Map.of("name", "ean", "type", "string"),
-            Map.of("name", "pdv", "type", "string"),
-            Map.of("name", "price", "type", "double"),
-            Map.of("name", "quantity", "type", "int"),
-            Map.of("name", "capdv", "type", "double"),
-            Map.of("name", SCENARIO_FIELD_NAME, "type", "string")
+    Assertions.assertThat(f.apply("our_prices").fields).containsExactlyInAnyOrder(
+            new MetadataItem("ean", "ean", String.class),
+            new MetadataItem("pdv", "pdv", String.class),
+            new MetadataItem("price", "price", double.class),
+            new MetadataItem("quantity", "quantity", int.class),
+            new MetadataItem("capdv", "capdv", double.class),
+            new MetadataItem(SCENARIO_FIELD_NAME, SCENARIO_FIELD_NAME, String.class)
     );
 
-    Assertions.assertThat(f.apply("their_prices")).containsExactlyInAnyOrder(
-            Map.of("name", "competitor_ean", "type", "string"),
-            Map.of("name", "competitor_concurrent_pdv", "type", "string"),
-            Map.of("name", "competitor_brand", "type", "string"),
-            Map.of("name", "competitor_concurrent_ean", "type", "string"),
-            Map.of("name", "competitor_price", "type", "double")
+    Assertions.assertThat(f.apply("their_prices").fields).containsExactlyInAnyOrder(
+            new MetadataItem("competitor_ean", "competitor_ean", String.class),
+            new MetadataItem("competitor_concurrent_pdv", "competitor_concurrent_pdv", String.class),
+            new MetadataItem("competitor_brand", "competitor_brand", String.class),
+            new MetadataItem("competitor_concurrent_ean", "competitor_concurrent_ean", String.class),
+            new MetadataItem("competitor_price", "competitor_price", double.class)
     );
 
-    Assertions.assertThat(f.apply("our_stores_their_stores")).containsExactlyInAnyOrder(
-            Map.of("name", "our_store", "type", "string"),
-            Map.of("name", "their_store", "type", "string")
+    Assertions.assertThat(f.apply("our_stores_their_stores").fields).containsExactlyInAnyOrder(
+            new MetadataItem("our_store", "our_store", String.class),
+            new MetadataItem("their_store", "their_store", String.class)
     );
 
-    Assertions.assertThat((List) objects.get(QueryController.METADATA_AGG_FUNCS_KEY)).containsExactlyInAnyOrder(QueryController.SUPPORTED_AGG_FUNCS.toArray(new String[0]));
-    if (withRepo) {
-      Assertions.assertThat((List) objects.get(QueryController.METADATA_MEASURES_KEY)).containsExactlyInAnyOrder(
-              Map.of("alias", "indice_prix", "expression", "sum(capdv) / sum(competitor_price * quantity)"),
-              Map.of("alias", "capdv_concurrents", "expression", "sum(competitor_price * quantity)")
-      );
-    }
+    Assertions.assertThat(metadataResultDto.aggregationFunctions).containsExactlyInAnyOrder(SparkQueryEngine.SUPPORTED_AGGREGATION_FUNCTIONS.toArray(new String[0]));
   }
 
   @Test
-  void testScenarioGroupingQueryWithoutRepo() throws Exception {
-    testScenarioGroupingQuery(false);
-  }
-
-  @Test
-  void testScenarioGroupingQueryWithRepo() throws Exception {
-    testScenarioGroupingQuery(true);
-  }
-
-  private void testScenarioGroupingQuery(boolean withRepo) throws Exception {
+  void testScenarioGroupingQuery() throws Exception {
     BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", SCENARIO_FIELD_NAME)
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
 
-    AggregatedMeasure aggregatedMeasure = new AggregatedMeasure("capdv", "sum");
-    Measure indicePrix;
-    if (withRepo) {
-      indicePrix = new UnresolvedExpressionMeasure("indice_prix");
-    } else {
-      indicePrix = new ExpressionMeasure(
-              "indice_prix",
-              "sum(capdv) / sum(competitor_price * quantity)");
-    }
-    ComparisonMeasure aggregatedMeasureDiff = QueryBuilder.bucketComparison(
+    Measure aggregatedMeasure = Functions.sum("capdv", "capdv");
+    Measure indicePrix = new ExpressionMeasure(
+            "indice_prix",
+            "sum(capdv) / sum(competitor_price * quantity)");
+    ComparisonMeasureReferencePosition aggregatedMeasureDiff = new ComparisonMeasureReferencePosition(
             "aggregatedMeasureDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             aggregatedMeasure,
-            Map.of(
-                    SCENARIO_FIELD_NAME, "s-1",
-                    "group", "g"
-            ));
-    ComparisonMeasure indicePrixDiff = QueryBuilder.bucketComparison(
+            Map.of(SCENARIO_FIELD_NAME, "s-1", "group", "g"),
+            ColumnSetKey.BUCKET);
+    ComparisonMeasureReferencePosition indicePrixDiff = new ComparisonMeasureReferencePosition(
             "indicePrixDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             indicePrix,
-            Map.of(
-                    SCENARIO_FIELD_NAME, "s-1",
-                    "group", "g"
-            ));
+            Map.of(SCENARIO_FIELD_NAME, "s-1", "group", "g"),
+            ColumnSetKey.BUCKET);
 
-    var query = new QueryDto()
-            .table(createTableDto())
-            .withColumnSet(QueryDto.BUCKET, bucketCS)
-            .withMeasure(aggregatedMeasureDiff)
-            .withMeasure(indicePrixDiff);
-
-    if (withRepo) {
-      query.context(Repository.KEY, new Repository(REPO_URL));
-    }
+    var query = Query
+            .from("our_prices")
+            .innerJoin("our_stores_their_stores")
+            .on("our_prices", "pdv", "our_stores_their_stores", "our_store")
+            .innerJoin("their_prices")
+            .on("their_prices", "competitor_concurrent_pdv", "our_stores_their_stores", "their_store")
+            .select_(List.of(bucketCS), List.of(aggregatedMeasureDiff, indicePrixDiff))
+            .build();
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY)
+                    .header(QueryController.HTTP_HEADER_API_KEY, this.env.getRequiredProperty(QueryController.HTTP_HEADER_API_KEY))
                     .content(JacksonUtil.serialize(query))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
-              Map<String, Object> table = JacksonUtil.mapper.readValue((String) queryResult.get("table"), Map.class);
+              Map<String, Object> table = (Map<String, Object>) queryResult.get("table");
 
               double baseValue = 0.9803921568627451d;
               double mnValue = 1.0294117647058822d;

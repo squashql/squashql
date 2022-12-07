@@ -38,6 +38,10 @@ public enum ConditionType {
    */
   GE,
   /**
+   * Like.
+   */
+  LIKE,
+  /**
    * Static condition, true only.
    */
   TRUE,
@@ -45,4 +49,12 @@ public enum ConditionType {
    * Static condition, false only.
    */
   FALSE,
+  /**
+   * Is Null
+   */
+  NULL,
+  /**
+   * Is Not Null
+   */
+  NOT_NULL,
 }

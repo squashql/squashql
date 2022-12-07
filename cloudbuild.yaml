@@ -1,0 +1,12 @@
+steps:
+  - id: 'Stage app using mvn appengine plugin'
+    name: 'maven:3.8-eclipse-temurin-17'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      mvn -pl :aitm-sandbox -am clean install -DskipTests -Pspring-boot \
+      && mvn -pl :aitm-sandbox -Pgcloud-cdg -DskipTests package appengine:stage
+  - id: 'Deploy to app engine'
+    name: 'gcr.io/cloud-builders/gcloud'
+    args: [ 'app', 'deploy', 'sandbox/target/appengine-staging/app.yaml' ]

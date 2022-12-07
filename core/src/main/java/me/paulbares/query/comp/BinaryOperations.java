@@ -10,10 +10,17 @@ public class BinaryOperations {
 
   public static BiFunction<Number, Number, Number> createComparisonBiFunction(ComparisonMethod method, Class<?> dataType) {
     Class<? extends Number> outputDataType = getComparisonOutputType(method, dataType);
+    boolean isLong = outputDataType.equals(long.class) || outputDataType.equals(Long.class);
     return switch (method) {
-      case ABSOLUTE_DIFFERENCE ->
-              outputDataType.equals(long.class) ? (a, b) -> a.longValue() - b.longValue() : (a, b) -> a.doubleValue() - b.doubleValue();
-      case RELATIVE_DIFFERENCE -> (a, b) -> (a.doubleValue() - b.doubleValue()) / b.doubleValue();
+      case ABSOLUTE_DIFFERENCE -> isLong ? BinaryOperations::minusAsLong : BinaryOperations::minusAsDouble;
+      case RELATIVE_DIFFERENCE -> (a, b) -> {
+        Double diff = BinaryOperations.minusAsDouble(a, b);
+        if (diff == null || b == null) {
+          return null;
+        } else {
+          return (a.doubleValue() - b.doubleValue()) / b.doubleValue();
+        }
+      };
       case DIVIDE -> createBiFunction(BinaryOperator.DIVIDE, dataType, dataType);
     };
   }
@@ -29,25 +36,27 @@ public class BinaryOperations {
                                                                     Class<?> leftDataType,
                                                                     Class<?> rightDataType) {
     Class<? extends Number> outputDataType = getOutputType(binaryOperator, leftDataType, rightDataType);
+    final boolean isLong = outputDataType.equals(long.class) || outputDataType.equals(Long.class);
     return switch (binaryOperator) {
-      case PLUS ->
-              outputDataType.equals(long.class) ? BinaryOperations::plusAsLong : BinaryOperations::plusAsDouble;
-      case MINUS ->
-              outputDataType.equals(long.class) ? BinaryOperations::minusAsLong : BinaryOperations::minusAsDouble;
-      case MULTIPLY ->
-              outputDataType.equals(long.class) ? BinaryOperations::multiplyAsLong : BinaryOperations::multiplyAsDouble;
+      case PLUS -> isLong ? BinaryOperations::plusAsLong : BinaryOperations::plusAsDouble;
+      case MINUS -> isLong ? BinaryOperations::minusAsLong : BinaryOperations::minusAsDouble;
+      case MULTIPLY -> isLong ? BinaryOperations::multiplyAsLong : BinaryOperations::multiplyAsDouble;
       case DIVIDE -> BinaryOperations::divideAsDouble;
     };
   }
 
   public static Class<? extends Number> getOutputType(BinaryOperator binaryOperator, Class<?> leftDataType, Class<?> rightDataType) {
-    Class<? extends Number> outputDataType = Stream.of(double.class, float.class, long.class, int.class)
+    Class<? extends Number> outputDataType = Stream.of(
+                    double.class, Double.class,
+                    float.class, Float.class,
+                    long.class, Long.class,
+                    int.class, Integer.class)
             .filter(clazz -> clazz.equals(leftDataType) || clazz.equals(rightDataType))
             .findFirst()
             .orElseThrow(() -> new IllegalArgumentException(String.format("Types %s and %s are incompatible with the operator %s", leftDataType, rightDataType, binaryOperator)));
-    if (outputDataType.equals(float.class)) {
+    if (outputDataType.equals(float.class) || outputDataType.equals(Float.class)) {
       outputDataType = double.class;
-    } else if (outputDataType.equals(int.class)) {
+    } else if (outputDataType.equals(int.class) || outputDataType.equals(Integer.class)) {
       outputDataType = long.class;
     }
     return outputDataType;

@@ -1,7 +1,7 @@
 package me.paulbares.jackson;
 
 import me.paulbares.query.*;
-import me.paulbares.query.context.Totals;
+import me.paulbares.query.context.ContextValue;
 import me.paulbares.query.context.QueryCacheContextValue;
 import me.paulbares.query.dto.*;
 import org.assertj.core.api.Assertions;
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import static me.paulbares.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
-import static me.paulbares.query.QueryBuilder.*;
+import static me.paulbares.query.Functions.*;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -23,13 +23,16 @@ public class TestQueryS13n {
             .table("myTable")
             .withColumn(SCENARIO_FIELD_NAME)
             .withColumn("ean")
-            .aggregatedMeasure("price", "sum")
-            .aggregatedMeasure("quantity", "sum")
+            .aggregatedMeasure("p", "price", "sum")
+            .aggregatedMeasure("q", "quantity", "sum")
+            .aggregatedMeasure("priceAlias", "price", "sum", Functions.criterion("category", Functions.eq("food")))
             .expressionMeasure("alias1", "firstMyExpression")
             .expressionMeasure("alias2", "secondMyExpression")
-            .withMeasure(new BinaryOperationMeasure("plus1", BinaryOperator.PLUS, new AggregatedMeasure("price", "sum"), new AggregatedMeasure("price", "sum")))
-            .context(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.NOT_USE))
-            .context(Totals.KEY, BOTTOM);
+            .withMeasure(new BinaryOperationMeasure("plus1",
+                    BinaryOperator.PLUS,
+                    new AggregatedMeasure("p", "price", "sum"),
+                    new AggregatedMeasure("p", "price", "sum")))
+            .context(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.NOT_USE));
 
     String serialize = query.json();
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
@@ -38,11 +41,11 @@ public class TestQueryS13n {
 
   @Test
   void testRoundTripWithJoinsAndConditions() {
-    QueryDto query = query();
+    QueryDto query = new QueryDto();
 
     // Table
-    var orders = table("orders");
-    var orderDetails = table("orderDetails");
+    var orders = new TableDto("orders");
+    var orderDetails = new TableDto("orderDetails");
 
     // Join
     orders.innerJoin(orderDetails, "orderDetailsId", "orderDetailsId");
@@ -54,7 +57,7 @@ public class TestQueryS13n {
     query.withColumn("categoryName");
 
     // Measures
-    query.aggregatedMeasure("price", "sum");
+    query.aggregatedMeasure("p", "price", "sum");
     query.expressionMeasure("alias", "expression");
 
     // Conditions
@@ -78,19 +81,20 @@ public class TestQueryS13n {
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
 
-    AggregatedMeasure price = new AggregatedMeasure("price", "sum");
-    ComparisonMeasure priceComp = QueryBuilder.bucketComparison(
+    AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
+    ComparisonMeasureReferencePosition priceComp = new ComparisonMeasureReferencePosition(
             "priceDiff",
             ABSOLUTE_DIFFERENCE,
             price,
             Map.of(
                     SCENARIO_FIELD_NAME, "first",
                     groupOfScenario, "g"
-            ));
+            ),
+            ColumnSetKey.BUCKET);
 
     var query = new QueryDto()
             .table("products")
-            .withColumnSet(QueryDto.BUCKET, bucketCS)
+            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
             .withMeasure(priceComp)
             .withMeasure(price);
 
@@ -101,20 +105,18 @@ public class TestQueryS13n {
 
   @Test
   void testRoundTripPeriodComparisonQuery() {
-    AggregatedMeasure sales = new AggregatedMeasure("sales", "sum");
-    ComparisonMeasure m = QueryBuilder.periodComparison(
+    AggregatedMeasure sales = new AggregatedMeasure("s", "sales", "sum");
+    Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
+    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            Map.of("year_sales", "y-1"));
-
-    Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
-    PeriodColumnSetDto periodCS = new PeriodColumnSetDto(period);
+            Map.of("year_sales", "y-1"),
+            period);
 
     var query = new QueryDto()
             .table("products")
             .withColumn(SCENARIO_FIELD_NAME)
-            .withColumnSet(QueryDto.PERIOD, periodCS)
             .withMeasure(m)
             .withMeasure(sales);
 
@@ -127,7 +129,7 @@ public class TestQueryS13n {
   void testQueryWithComparator() {
     var query = new QueryDto()
             .table("products")
-            .withMeasure(new AggregatedMeasure("sales", "sum"));
+            .withMeasure(new AggregatedMeasure("s", "sales", "sum"));
 
     query.orderBy("X", List.of("a", "b", "c"));
     query.orderBy("Y", OrderKeywordDto.ASC);
@@ -135,5 +137,42 @@ public class TestQueryS13n {
     String serialize = query.json();
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
     Assertions.assertThat(deserialize).isEqualTo(query);
+  }
+
+  @Test
+  void testConditions() {
+    ConditionDto c1 = new SingleValueConditionDto(ConditionType.EQ, 5);
+    String serialize = JacksonUtil.serialize(c1);
+    ConditionDto deserialize = JacksonUtil.deserialize(serialize, ConditionDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(c1);
+
+    ConditionDto december = and(gt("1/12/1996"), lt("31/12/1996"));
+    ConditionDto october = and(ge("1/10/1996"), le("31/10/1996"));
+    ConditionDto c2 = or(december, october);
+    serialize = JacksonUtil.serialize(c2);
+    deserialize = JacksonUtil.deserialize(serialize, ConditionDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(c2);
+
+    ConditionDto c3 = in("paris", "london");
+    deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(c3), ConditionDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(c3);
+  }
+
+  @Test
+  void testOrders() {
+    OrderDto o = new ExplicitOrderDto(List.of("a", "b"));
+    OrderDto deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(o), OrderDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(o);
+
+    o = new SimpleOrderDto(OrderKeywordDto.DESC);
+    deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(o), OrderDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(o);
+  }
+
+  @Test
+  void testContextValues() {
+    ContextValue cv = new QueryCacheContextValue(QueryCacheContextValue.Action.USE);
+    ContextValue deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(cv), ContextValue.class);
+    Assertions.assertThat(deserialize).isEqualTo(cv);
   }
 }

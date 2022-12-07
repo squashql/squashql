@@ -1,68 +1,68 @@
 package me.paulbares.query.dto;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import me.paulbares.jackson.JacksonUtil;
-import me.paulbares.jackson.deserializer.ContextValueDeserializer;
-import me.paulbares.jackson.deserializer.OrderDtoDeserializer;
 import me.paulbares.query.*;
 import me.paulbares.query.context.ContextValue;
 
 import java.util.*;
 
-public class QueryDto {
+import static me.paulbares.query.dto.ConditionType.AND;
 
-  public static final String BUCKET = "bucket";
-  public static final String PERIOD = "period";
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor // For Jackson
+public class QueryDto {
 
   public TableDto table;
 
+  public QueryDto subQuery;
+
   public List<String> columns = new ArrayList<>();
 
-  public Map<String, ColumnSet> columnSets = new LinkedHashMap<>();
+  public List<String> rollupColumns = new ArrayList<>();
+
+  public Map<ColumnSetKey, ColumnSet> columnSets = new LinkedHashMap<>();
 
   public List<Measure> measures = new ArrayList<>();
 
-  public Map<String, ConditionDto> conditions = new HashMap<>();
+  public CriteriaDto criteriaDto = null;
 
-  @JsonDeserialize(contentUsing = OrderDtoDeserializer.class)
   public Map<String, OrderDto> orders = new HashMap<>();
 
-  @JsonDeserialize(contentUsing = ContextValueDeserializer.class)
   public Map<String, ContextValue> context = new HashMap<>();
 
-  /**
-   * For Jackson.
-   */
-  public QueryDto() {
-  }
+  public int limit = -1;
 
   public QueryDto withColumn(String column) {
     this.columns.add(column);
     return this;
   }
 
-  public QueryDto withColumnSet(String type, ColumnSet columnSet) {
-    this.columnSets.put(type, columnSet);
+  public QueryDto withRollup(String column) {
+    this.rollupColumns.add(column);
     return this;
   }
 
-  public QueryDto aggregatedMeasure(String field, String agg) {
-    withMeasure(new AggregatedMeasure(field, agg));
+  public QueryDto withColumnSet(ColumnSetKey columnSetKey, ColumnSet columnSet) {
+    this.columnSets.put(columnSetKey, columnSet);
     return this;
   }
 
-  public QueryDto aggregatedMeasure(String alias, String field, String agg, String conditionField, ConditionDto conditionDto) {
-    withMeasure(new AggregatedMeasure(alias, field, agg, conditionField, conditionDto));
+  public QueryDto aggregatedMeasure(String alias, String field, String agg) {
+    withMeasure(new AggregatedMeasure(alias, field, agg));
+    return this;
+  }
+
+  public QueryDto aggregatedMeasure(String alias, String field, String agg, CriteriaDto criteriaDto) {
+    withMeasure(new AggregatedMeasure(alias, field, agg, criteriaDto));
     return this;
   }
 
   public QueryDto expressionMeasure(String alias, String expression) {
     withMeasure(new ExpressionMeasure(alias, expression));
-    return this;
-  }
-
-  public QueryDto unresolvedExpressionMeasure(String alias) {
-    withMeasure(new UnresolvedExpressionMeasure(alias));
     return this;
   }
 
@@ -81,13 +81,26 @@ public class QueryDto {
     return this;
   }
 
+  public QueryDto table(QueryDto subQuery) {
+    this.subQuery = subQuery;
+    return this;
+  }
+
   public QueryDto table(String tableName) {
     table(new TableDto(tableName));
     return this;
   }
 
   public QueryDto withCondition(String field, ConditionDto conditionDto) {
-    this.conditions.put(field, conditionDto);
+    if (this.criteriaDto == null) {
+      this.criteriaDto = new CriteriaDto(AND, new ArrayList<>());
+    }
+    this.criteriaDto.children.add(new CriteriaDto(field, conditionDto));
+    return this;
+  }
+
+  public QueryDto withCriteria(CriteriaDto criteriaDto) {
+    this.criteriaDto = criteriaDto;
     return this;
   }
 
@@ -101,20 +114,12 @@ public class QueryDto {
     return this;
   }
 
+  public QueryDto withLimit(int limit) {
+    this.limit = limit;
+    return this;
+  }
+
   public String json() {
     return JacksonUtil.serialize(this);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    QueryDto queryDto = (QueryDto) o;
-    return Objects.equals(this.table, queryDto.table) && Objects.equals(this.columns, queryDto.columns) && Objects.equals(this.columnSets, queryDto.columnSets) && Objects.equals(this.measures, queryDto.measures) && Objects.equals(this.conditions, queryDto.conditions) && Objects.equals(this.orders, queryDto.orders) && Objects.equals(this.context, queryDto.context);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.table, this.columns, this.columnSets, this.measures, this.conditions, this.orders, this.context);
   }
 }

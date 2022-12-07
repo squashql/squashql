@@ -14,26 +14,16 @@ import java.util.stream.IntStream;
 
 public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
+  private final QueryRewriter queryRewriter;
+
   public BigQueryEngine(BigQueryDatastore datastore) {
     super(datastore);
+    this.queryRewriter = new BigQueryQueryRewriter();
   }
 
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
-    String sql = SQLTranslator.translate(query, null, this.fieldSupplier, new QueryRewriter() {
-      @Override
-      public String tableName(String table) {
-        return SqlUtils.escape(datastore.projectId + "." + datastore.datasetName + "." + table);
-      }
-
-      @Override
-      public String measureAlias(String alias, Measure measure) {
-        String a = alias.replace("(", "_");
-        a = a.replace(")", "_");
-        return a;
-      }
-    });
-
+    String sql = SQLTranslator.translate(query, this.fieldSupplier, this.queryRewriter, (qr, name) -> qr.tableName(name));
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(sql).build();
     try {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
@@ -47,8 +37,8 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       return new ColumnarTable(
               result.getOne(),
               query.measures,
-              IntStream.range(query.coordinates.size(), query.coordinates.size() + query.measures.size()).toArray(),
-              IntStream.range(0, query.coordinates.size()).toArray(),
+              IntStream.range(query.select.size(), query.select.size() + query.measures.size()).toArray(),
+              IntStream.range(0, query.select.size()).toArray(),
               result.getTwo());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
@@ -58,8 +48,12 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   /**
    * Gets the value with the correct type, otherwise everything is read as String.
    */
-  private Object getTypeValue(FieldValueList fieldValues, Schema schema, int index) {
+  public static Object getTypeValue(FieldValueList fieldValues, Schema schema, int index) {
     FieldValue fieldValue = fieldValues.get(index);
+    if (fieldValue.isNull()) {
+      // There is a check in BQ client when trying to access the value and throw if null.
+      return null;
+    }
     com.google.cloud.bigquery.Field field = schema.getFields().get(index);
     return switch (field.getType().getStandardType()) {
       case BOOL -> fieldValue.getBooleanValue();
@@ -68,5 +62,46 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       case BYTES -> fieldValue.getBytesValue();
       default -> fieldValue.getValue();
     };
+  }
+
+  @Override
+  public List<String> supportedAggregationFunctions() {
+    // https://cloud.google.com/bigquery/docs/reference/standard-sql/statistical_aggregate_functions#covar_samp
+    // https://cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions
+    return List.of(
+            "any_value",
+            "avg",
+            "corr",
+            "count",
+            "covar_pop",
+            "covar_samp",
+            "min",
+            "max",
+            "stddev_pop",
+            "stddev_samp",
+            "sum",
+            "var_pop",
+            "var_samp",
+            "variance"
+    );
+  }
+
+  class BigQueryQueryRewriter implements QueryRewriter {
+    @Override
+    public String tableName(String table) {
+      return SqlUtils.escape(datastore.projectId + "." + datastore.datasetName + "." + table);
+    }
+
+    @Override
+    public String measureAlias(String alias, Measure measure) {
+      return alias
+              .replace("(", "_")
+              .replace(")", "_");
+    }
+
+    @Override
+    public boolean doesSupportPartialRollup() {
+      return true;
+    }
   }
 }

@@ -1,5 +1,7 @@
 package me.paulbares.query;
 
+import me.paulbares.query.dto.CacheStatsDto;
+
 import java.util.Set;
 
 public class EmptyQueryCache implements QueryCache {
@@ -10,27 +12,31 @@ public class EmptyQueryCache implements QueryCache {
   }
 
   @Override
-  public ColumnarTable createRawResult(QueryScope scope) {
+  public ColumnarTable createRawResult(PrefetchQueryScope scope) {
     throw new IllegalStateException();
   }
 
   @Override
-  public boolean contains(Measure measure, QueryScope scope) {
+  public boolean contains(Measure measure, PrefetchQueryScope scope) {
     return false;
   }
 
   @Override
-  public void contributeToCache(Table result, Set<Measure> measures, QueryScope scope) {
+  public void contributeToCache(Table result, Set<Measure> measures, PrefetchQueryScope scope) {
     // NOOP
   }
 
   @Override
-  public void contributeToResult(Table result, Set<Measure> measures, QueryScope scope) {
+  public void contributeToResult(Table result, Set<Measure> measures, PrefetchQueryScope scope) {
     // NOOP
   }
 
   @Override
   public void clear() {
+  }
 
+  @Override
+  public CacheStatsDto stats() {
+    return new CacheStatsDto(-1, -1, -1);
   }
 }

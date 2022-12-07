@@ -1,59 +1,53 @@
 package me.paulbares.query;
 
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.query.database.SQLTranslator;
-import me.paulbares.query.dto.ConditionDto;
+import me.paulbares.query.database.SqlUtils;
+import me.paulbares.query.dto.CriteriaDto;
 import me.paulbares.store.Field;
 
-import java.util.Objects;
 import java.util.function.Function;
 
 import static me.paulbares.query.database.SqlUtils.escape;
 
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor // For Jackson
+@Slf4j
 public class AggregatedMeasure implements Measure {
 
   public String alias;
+  public String expression;
   public String field;
   public String aggregationFunction;
-  public String conditionField;
-  public ConditionDto conditionDto;
+  public CriteriaDto criteria;
 
-  /**
-   * For jackson.
-   */
-  public AggregatedMeasure() {
+  public AggregatedMeasure(@NonNull String alias, @NonNull String field, @NonNull String aggregationFunction) {
+    this(alias, field, aggregationFunction, null);
   }
 
-  public AggregatedMeasure(String field, String aggregationFunction) {
-    this(null, field, aggregationFunction, null, null);
-  }
-
-  public AggregatedMeasure(String alias, String field, String aggregationFunction) {
-    this(alias, field, aggregationFunction, null, null);
-  }
-
-  public AggregatedMeasure(String field, String aggregationFunction, String conditionField, ConditionDto conditionDto) {
-    this(null, field, aggregationFunction, conditionField, conditionDto);
-  }
-
-  public AggregatedMeasure(String alias, String field, String aggregationFunction, String conditionField, ConditionDto conditionDto) {
-    this.field = Objects.requireNonNull(field);
-    this.aggregationFunction = Objects.requireNonNull(aggregationFunction);
-    this.conditionField = conditionField;
-    this.conditionDto = conditionDto;
-    this.alias = alias == null ? expression() : alias;
+  public AggregatedMeasure(@NonNull String alias, @NonNull String field, @NonNull String aggregationFunction, CriteriaDto criteria) {
+    this.alias = alias;
+    this.field = field;
+    this.aggregationFunction = aggregationFunction;
+    this.criteria = criteria;
   }
 
   @Override
-  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter) {
+  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     String sql;
-    if (this.conditionDto != null) {
-      String conditionSt = SQLTranslator.toSql(fieldProvider.apply(this.conditionField), this.conditionDto);
+    if (this.criteria != null) {
+      String conditionSt = SQLTranslator.toSql(QueryExecutor.withFallback(fieldProvider, Number.class), this.criteria);
       sql = this.aggregationFunction + "(case when " + conditionSt + " then " + this.field + " end)";
     } else {
       sql = this.aggregationFunction + "(" + (this.field.equals("*") ? this.field : escape(this.field)) + ")";
     }
-    return sql + " as " + queryRewriter.measureAlias(escape(this.alias), this);
+    return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.alias, this) : sql;
   }
 
   @Override
@@ -63,36 +57,16 @@ public class AggregatedMeasure implements Measure {
 
   @Override
   public String expression() {
-    if (this.conditionDto != null) {
-      String conditionSt = SQLTranslator.toSql(new Field(this.conditionField, String.class), this.conditionDto);
-      return this.aggregationFunction + "If(" + this.field + ", " + conditionSt + ")";
-    } else {
-      return this.aggregationFunction + "(" + this.field + ")";
-    }
+    return this.expression;
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    AggregatedMeasure that = (AggregatedMeasure) o;
-    return Objects.equals(this.alias, that.alias) && Objects.equals(this.field, that.field) && Objects.equals(this.aggregationFunction, that.aggregationFunction) && Objects.equals(this.conditionField, that.conditionField) && Objects.equals(this.conditionDto, that.conditionDto);
+  public void setExpression(String expression) {
+    this.expression = expression;
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(this.alias, this.field, this.aggregationFunction, this.conditionField, this.conditionDto);
-  }
-
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() +
-            '{' +
-            "alias='" + alias + '\'' +
-            ", field='" + field + '\'' +
-            ", aggregationFunction='" + aggregationFunction + '\'' +
-            ", conditionField='" + conditionField + '\'' +
-            ", conditionDto=" + conditionDto +
-            '}';
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
   }
 }

@@ -1,9 +1,8 @@
 package me.paulbares.query;
 
+import me.paulbares.query.builder.Query;
 import me.paulbares.query.database.QueryEngine;
-import me.paulbares.query.dto.JoinMappingDto;
-import me.paulbares.query.database.DatabaseQuery;
-import me.paulbares.query.dto.TableDto;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Datastore;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
@@ -42,7 +41,7 @@ public abstract class ATestQueryExecutorWithJoins {
 
   protected TransactionManager tm;
 
-  protected QueryEngine queryEngine;
+  protected QueryExecutor queryExecutor;
 
   protected String orders = "orders";
   protected String orderDetails = "orderDetails";
@@ -59,7 +58,7 @@ public abstract class ATestQueryExecutorWithJoins {
   @BeforeAll
   void setup() {
     this.datastore = createDatastore();
-    this.queryEngine = createQueryEngine(this.datastore);
+    this.queryExecutor = new QueryExecutor(createQueryEngine(this.datastore));
     this.tm = createTransactionManager();
 
     this.tm.loadCsv(MAIN_SCENARIO_NAME, this.orders, pathFunction.apply("orders.csv").toString(), delimiter, header);
@@ -71,24 +70,20 @@ public abstract class ATestQueryExecutorWithJoins {
 
   @Test
   void testQuerySingleCoordinate() {
-    TableDto ordersTable = new TableDto(this.orders);
-    TableDto orderDetailsTable = new TableDto(this.orderDetails);
-    TableDto shippersTable = new TableDto(this.shippers);
-    TableDto productsTable = new TableDto(this.products);
-    TableDto categoriesTable = new TableDto(this.categories);
+    QueryDto queryDto = Query
+            .from(this.orders)
+            .innerJoin(this.orderDetails)
+            .on(this.orderDetails, "OrderID", this.orders, "OrderID")
+            .innerJoin(this.shippers)
+            .on(this.shippers, "ShipperID", this.orders, "ShipperID")
+            .innerJoin(this.products)
+            .on(this.products, "ProductID", this.orderDetails, "ProductID")
+            .innerJoin(this.categories)
+            .on(this.products, "CategoryID", this.categories, "CategoryID")
+            .select(List.of("CategoryName"), List.of(Functions.sum("Q", "Quantity"), CountMeasure.INSTANCE))
+            .build();
 
-    ordersTable.join(orderDetailsTable, "inner", new JoinMappingDto("OrderID", "OrderID"));
-    ordersTable.join(shippersTable, "inner", new JoinMappingDto("ShipperID", "ShipperID"));
-    orderDetailsTable.join(productsTable, "inner", new JoinMappingDto("ProductID", "ProductID"));
-    productsTable.join(categoriesTable, "inner", new JoinMappingDto("CategoryID", "CategoryID"));
-
-    DatabaseQuery query = new DatabaseQuery()
-            .table(ordersTable)
-            .wildcardCoordinate("CategoryName")
-            .aggregatedMeasure("Quantity", "sum")
-            .aggregatedMeasure("*", "count");
-
-    Table table = this.queryEngine.execute(query);
+    Table table = this.queryExecutor.execute(queryDto);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
             List.of("Dairy Products", 2601.0, 100L),
             List.of("Meat/Poultry", 1288.0, 50L),

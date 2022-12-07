@@ -2,8 +2,11 @@ package me.paulbares.query;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.google.common.cache.AbstractCache;
-import com.google.common.cache.CacheStats;
+import com.github.benmanes.caffeine.cache.RemovalListener;
+import com.github.benmanes.caffeine.cache.stats.CacheStats;
+import com.github.benmanes.caffeine.cache.stats.ConcurrentStatsCounter;
+import com.github.benmanes.caffeine.cache.stats.StatsCounter;
+import me.paulbares.query.dto.CacheStatsDto;
 import me.paulbares.store.Field;
 
 import java.time.Duration;
@@ -11,35 +14,48 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 public class CaffeineQueryCache implements QueryCache {
 
+  public static final int MAX_SIZE = 32;
+
+  private volatile StatsCounter scopeCounter = new ConcurrentStatsCounter();
+  private volatile StatsCounter measureCounter = new ConcurrentStatsCounter();
+
   /**
    * The cached results.
    */
-  private final Cache<QueryScope, Table> results = Caffeine.newBuilder()
-          .maximumSize(32)
-          .expireAfterWrite(Duration.ofMinutes(5))
-          .build();
+  private final Cache<PrefetchQueryScope, Table> results;
 
-  // Statistics
-  static final Supplier<AbstractCache.SimpleStatsCounter> CACHE_STATS_COUNTER = () -> new AbstractCache.SimpleStatsCounter();
-  private volatile AbstractCache.SimpleStatsCounter counter = CACHE_STATS_COUNTER.get();
+  public CaffeineQueryCache() {
+    this(MAX_SIZE, (a, b, c) -> {
+    });
+  }
+
+  public CaffeineQueryCache(int maxSize, RemovalListener<PrefetchQueryScope, Table> evictionListener) {
+    this.results = Caffeine.newBuilder()
+            .maximumSize(maxSize)
+            .expireAfterWrite(Duration.ofMinutes(5))
+            .recordStats(() -> this.scopeCounter)
+            // Use removalListener and not evictionListener because evictionListener is called before updating the stats
+            .removalListener(evictionListener)
+            .build();
+  }
 
   @Override
-  public ColumnarTable createRawResult(QueryScope scope) {
-    List<Field> headers = new ArrayList<>(scope.columns());
+  public ColumnarTable createRawResult(PrefetchQueryScope scope) {
+    Set<Field> columns = scope.columns();
+    List<Field> headers = new ArrayList<>(columns);
     headers.add(new Field(CountMeasure.ALIAS, long.class));
 
     List<List<Object>> values = new ArrayList<>();
     Table table = this.results.getIfPresent(scope);
-    for (Field f : scope.columns()) {
+    for (Field f : columns) {
       values.add(table.getColumnValues(f.name()));
     }
     values.add(table.getAggregateValues(CountMeasure.INSTANCE));
-    this.counter.recordHits(1);
     return new ColumnarTable(
             headers,
             Collections.singletonList(CountMeasure.INSTANCE),
@@ -49,7 +65,7 @@ public class CaffeineQueryCache implements QueryCache {
   }
 
   @Override
-  public boolean contains(Measure measure, QueryScope scope) {
+  public boolean contains(Measure measure, PrefetchQueryScope scope) {
     Table table = this.results.getIfPresent(scope);
     if (table != null) {
       return table.measures().indexOf(measure) >= 0;
@@ -58,9 +74,9 @@ public class CaffeineQueryCache implements QueryCache {
   }
 
   @Override
-  public void contributeToCache(Table result, Set<Measure> measures, QueryScope scope) {
+  public void contributeToCache(Table result, Set<Measure> measures, PrefetchQueryScope scope) {
     Table cache = this.results.get(scope, s -> {
-      this.counter.recordMisses(measures.size());
+      this.measureCounter.recordMisses(measures.size());
       return result;
     });
 
@@ -70,13 +86,13 @@ public class CaffeineQueryCache implements QueryCache {
         List<Object> aggregateValues = result.getAggregateValues(measure);
         Field field = result.getField(measure);
         cache.addAggregates(field, measure, aggregateValues);
-        this.counter.recordMisses(1);
+        this.measureCounter.recordMisses(1);
       }
     }
   }
 
   @Override
-  public void contributeToResult(Table result, Set<Measure> measures, QueryScope scope) {
+  public void contributeToResult(Table result, Set<Measure> measures, PrefetchQueryScope scope) {
     if (measures.isEmpty()) {
       return;
     }
@@ -85,17 +101,27 @@ public class CaffeineQueryCache implements QueryCache {
       List<Object> aggregateValues = cacheResult.getAggregateValues(measure);
       Field field = cacheResult.getField(measure);
       result.addAggregates(field, measure, aggregateValues);
-      this.counter.recordHits(1);
+      this.measureCounter.recordHits(1);
     }
   }
 
-  public CacheStats stats() {
-    return this.counter.snapshot();
+  public CacheStatsDto stats() {
+    CacheStats snapshot = this.measureCounter.snapshot();
+    CacheStats of = CacheStats.of(
+            snapshot.hitCount(),
+            snapshot.missCount(),
+            0,
+            0,
+            0,
+            this.scopeCounter.snapshot().evictionCount(),
+            0);
+    return new CacheStatsDto(of.hitCount(), of.missCount(), this.scopeCounter.snapshot().evictionCount());
   }
 
   @Override
   public void clear() {
     this.results.invalidateAll();
-    this.counter = CACHE_STATS_COUNTER.get();
+    this.measureCounter = new ConcurrentStatsCounter();
+    this.scopeCounter = new ConcurrentStatsCounter();
   }
 }

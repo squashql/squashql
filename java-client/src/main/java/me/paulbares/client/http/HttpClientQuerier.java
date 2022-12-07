@@ -1,0 +1,58 @@
+package me.paulbares.client.http;
+
+import feign.*;
+import feign.jackson.JacksonDecoder;
+import feign.jackson.JacksonEncoder;
+import me.paulbares.jackson.JacksonUtil;
+import me.paulbares.query.Measure;
+import me.paulbares.query.dto.MetadataResultDto;
+import me.paulbares.query.dto.QueryDto;
+import me.paulbares.query.dto.QueryResultDto;
+import okhttp3.OkHttpClient;
+
+import java.util.List;
+
+public class HttpClientQuerier {
+
+  private static final OkHttpClient client = new OkHttpClient();
+
+  private static final Feign.Builder builder = Feign.builder()
+          .requestInterceptor(template -> template.header("x-api-key", "c3981f51-e9e8-47e1-aa81-7c26e05c98d9"))
+          .client(new feign.okhttp.OkHttpClient(client))
+          .encoder(new JacksonEncoder(JacksonUtil.mapper))
+          .decoder(new JacksonDecoder(JacksonUtil.mapper));
+
+  public String url;
+
+  public HttpClientQuerier(String url) {
+    this.url = url;
+  }
+
+  public QueryResultDto run(QueryDto query) {
+    QueryApi target = builder.target(QueryApi.class, this.url);
+    return target.run(query);
+  }
+
+  public MetadataResultDto metadata() {
+    QueryApi target = builder.target(QueryApi.class, this.url);
+    return target.metadata();
+  }
+
+  public List<Measure> expression(List<Measure> measures) {
+    QueryApi target = builder.target(QueryApi.class, this.url);
+    return target.expression(measures);
+  }
+
+  interface QueryApi {
+    @RequestLine("POST /query")
+    @Headers("Content-Type: application/json")
+    QueryResultDto run(QueryDto query);
+
+    @RequestLine("GET /metadata")
+    MetadataResultDto metadata();
+
+    @RequestLine("POST /expression")
+    @Headers("Content-Type: application/json")
+    List<Measure> expression(List<Measure> measures);
+  }
+}

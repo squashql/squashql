@@ -1,13 +1,18 @@
 package me.paulbares.query;
 
+import me.paulbares.query.database.QueryEngine;
+import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.dto.BucketColumnSetDto;
+import me.paulbares.query.dto.MetadataItem;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
+import me.paulbares.util.AitmArrays;
 import me.paulbares.util.MultipleColumnsSorter;
 import me.paulbares.util.Queries;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class TableUtils {
@@ -22,7 +27,7 @@ public class TableUtils {
                                 Function<Object, String> rowElementPrinters) {
     /*
      * leftJustifiedRows - If true, it will add "-" as a flag to format string to
-     * make it left justified. Otherwise right justified.
+     * make it left justified. Otherwise, right justified.
      */
     boolean leftJustifiedRows = false;
 
@@ -87,25 +92,57 @@ public class TableUtils {
     return sb.toString();
   }
 
-  public static List<Map<String, Object>> buildTableMetadata(Table t) {
-    List<Map<String, Object>> metadata = new ArrayList<>();
-    for (Field field : t.headers()) {
-      Map<String, Object> fieldMetadata = new HashMap<>();
-      fieldMetadata.put(NAME_KEY, field.name());
-      fieldMetadata.put(TYPE_KEY, field.type().getSimpleName().toLowerCase());
-      metadata.add(fieldMetadata);
-    }
-
+  public static List<MetadataItem> buildTableMetadata(Table t) {
+    List<MetadataItem> metadata = new ArrayList<>();
     int index = 0;
-    for (int i : t.measureIndices()) {
-      Measure m = t.measures().get(index);
-      metadata.get(i).put(EXPRESSION_KEY, m.expression());
+    for (Field field : t.headers()) {
+      if (t.isMeasure(index)) {
+        int i = AitmArrays.search(t.measureIndices(), index);
+        Measure measure = t.measures().get(i);
+        String expression = measure.expression();
+        if (expression == null) {
+          measure.setExpression(MeasureUtils.createExpression(measure));
+        }
+        metadata.add(new MetadataItem(field.name(), measure.expression(), field.type()));
+      } else {
+        metadata.add(new MetadataItem(field.name(), field.name(), field.type()));
+      }
       index++;
     }
+
     return metadata;
   }
 
-  public static Table order(ColumnarTable table, QueryDto queryDto) {
+
+  /**
+   * Selects and reorder the columns to match the selection and order in the query.
+   */
+  public static ColumnarTable selectAndOrderColumns(ColumnarTable table, QueryDto queryDto) {
+    List<String> finalColumns = new ArrayList<>();
+    queryDto.columnSets.values().forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
+    queryDto.columns.forEach(finalColumns::add);
+
+    // Once complete, construct the final result with columns in correct order.
+    List<Field> fields = new ArrayList<>();
+    List<List<Object>> values = new ArrayList<>();
+    for (String finalColumn : finalColumns) {
+      fields.add(table.getField(finalColumn));
+      values.add(Objects.requireNonNull(table.getColumnValues(finalColumn)));
+    }
+
+    for (Measure measure : queryDto.measures) {
+      fields.add(table.getField(measure));
+      values.add(Objects.requireNonNull(table.getAggregateValues(measure)));
+    }
+
+    return new ColumnarTable(fields,
+            queryDto.measures,
+            IntStream.range(finalColumns.size(), fields.size()).toArray(),
+            IntStream.range(0, finalColumns.size()).toArray(),
+            values);
+  }
+
+  public static Table orderRows(ColumnarTable table, QueryDto queryDto) {
     Map<String, Comparator<?>> comparatorByColumnName = Queries.getComparators(queryDto);
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
@@ -113,21 +150,20 @@ public class TableUtils {
     boolean hasComparatorOnMeasure = false;
     List<Field> headers = table.headers;
     for (int i = 0; i < headers.size(); i++) {
-      boolean isMeasure = Arrays.binarySearch(table.measureIndices, i) >= 0;
-      if (isMeasure) {
+      if (table.isMeasure(i)) {
         hasComparatorOnMeasure |= comparatorByColumnName.containsKey(headers.get(i).name());
       }
     }
 
     for (int i = 0; i < headers.size(); i++) {
-      boolean isColumn = Arrays.binarySearch(table.columnsIndices, i) >= 0;
+      boolean isColumn = AitmArrays.search(table.columnsIndices, i) >= 0;
       String headerName = headers.get(i).name();
       Comparator<?> queryComp = comparatorByColumnName.get(headerName);
       // Order a column even if not explicitly asked in the query only if no comparator on any measure
       if (queryComp != null || (isColumn && !hasComparatorOnMeasure)) {
         args.add(table.getColumnValues(headerName));
         // Always order table. If not defined, use natural order comp.
-        comparators.add(queryComp == null ? Comparator.naturalOrder() : queryComp);
+        comparators.add(queryComp == null ? Comparator.nullsLast(Comparator.naturalOrder()) : queryComp);
       }
     }
 
@@ -137,7 +173,7 @@ public class TableUtils {
 
     int[] contextIndices = new int[args.size()];
     Arrays.fill(contextIndices, -1);
-    ColumnSet bucket = queryDto.columnSets.get(QueryDto.BUCKET);
+    ColumnSet bucket = queryDto.columnSets.get(ColumnSetKey.BUCKET);
     if (bucket != null) {
       BucketColumnSetDto cs = (BucketColumnSetDto) bucket;
       contextIndices[table.columnIndex(cs.field)] = table.columnIndex(cs.name);
@@ -159,5 +195,37 @@ public class TableUtils {
       ordered.set(i, list.get(order[i]));
     }
     return ordered;
+  }
+
+  /**
+   * Replaces cell values containing {@link SQLTranslator#TOTAL_CELL} with {@link QueryEngine#GRAND_TOTAL} or
+   * {@link QueryEngine#TOTAL}.
+   */
+  public static Table replaceTotalCellValues(ColumnarTable table, QueryDto queryDto) {
+    if (queryDto.rollupColumns.isEmpty()) {
+      return table;
+    }
+
+    for (int rowIndex = 0; rowIndex < table.count(); rowIndex++) {
+      boolean grandTotal = true;
+      String total = QueryEngine.TOTAL;
+      for (int i = 0; i < table.columnsIndices.length; i++) {
+        boolean isTotalCell = SQLTranslator.TOTAL_CELL.equals(table.getColumn(i).get(rowIndex));
+        if (isTotalCell) {
+          table.getColumn(i).set(rowIndex, total);
+          total = null; // First totalCell, TOTAL is written, null for the others.
+        }
+        grandTotal &= isTotalCell;
+      }
+
+      if (grandTotal) {
+        table.getColumn(0).set(rowIndex, QueryEngine.GRAND_TOTAL);
+        for (int i = 1; i < table.columnsIndices.length; i++) {
+          table.getColumn(i).set(rowIndex, null);
+        }
+      }
+    }
+
+    return table;
   }
 }

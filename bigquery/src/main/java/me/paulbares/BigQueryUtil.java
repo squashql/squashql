@@ -6,7 +6,9 @@ import com.google.cloud.bigquery.StandardSQLTypeName;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public final class BigQueryUtil {
 
@@ -20,7 +22,9 @@ public final class BigQueryUtil {
       case FLOAT64 -> double.class;
       case STRING -> String.class;
       case BYTES -> byte.class;
-      default -> throw new IllegalArgumentException("Unsupported data type " + dataType);
+      case DATE -> LocalDate.class;
+      case DATETIME -> LocalDateTime.class;
+      default -> Object.class;
     };
   }
 
@@ -44,7 +48,11 @@ public final class BigQueryUtil {
 
   public static ServiceAccountCredentials createCredentials(String path) {
     try {
-      return ServiceAccountCredentials.fromStream(new FileInputStream(path));
+      InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
+      if (resourceAsStream == null) {
+        resourceAsStream = new FileInputStream(path);
+      }
+      return ServiceAccountCredentials.fromStream(resourceAsStream);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

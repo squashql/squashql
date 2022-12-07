@@ -12,9 +12,13 @@ import java.util.function.Function;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public interface Measure {
 
-  String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter);
+  String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias);
 
   String alias();
 
   String expression();
+
+  void setExpression(String expression);
+
+  <R> R accept(MeasureVisitor<R> visitor);
 }

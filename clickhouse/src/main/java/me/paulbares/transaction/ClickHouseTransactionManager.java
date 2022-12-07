@@ -27,12 +27,16 @@ public class ClickHouseTransactionManager implements TransactionManager {
   }
 
   public void dropAndCreateInMemoryTable(String table, List<Field> fields) {
-    List<Field> list = ImmutableListFactoryImpl.INSTANCE
+    dropAndCreateInMemoryTable(this.clickHouseDataSource, table, fields, true);
+  }
+
+  public static void dropAndCreateInMemoryTable(ClickHouseDataSource clickHouseDataSource, String table, List<Field> fields, boolean cjMode) {
+    List<Field> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
             .ofAll(fields)
             .newWith(new Field(SCENARIO_FIELD_NAME, String.class))
-            .castToList();
+            .castToList() : fields;
 
-    try (ClickHouseConnection conn = this.clickHouseDataSource.getConnection();
+    try (ClickHouseConnection conn = clickHouseDataSource.getConnection();
          ClickHouseStatement stmt = conn.createStatement()) {
       stmt.execute("drop table if exists " + table);
       StringBuilder sb = new StringBuilder();
@@ -40,7 +44,7 @@ public class ClickHouseTransactionManager implements TransactionManager {
       int size = list.size();
       for (int i = 0; i < size; i++) {
         Field field = list.get(i);
-        sb.append(field.name()).append(' ').append(classToClickHouseType(field.type()));
+        sb.append(field.name()).append(" Nullable(").append(classToClickHouseType(field.type())).append(')');
         if (i < size - 1) {
           sb.append(", ");
         }

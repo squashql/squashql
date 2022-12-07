@@ -23,19 +23,8 @@
     </dependency>
     <dependency>
       <groupId>me.paulbares</groupId>
-      <artifactId>aitm-spark</artifactId>
+      <artifactId>aitm-java-client</artifactId>
       <version>0.1-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter</artifactId>
-      <version>${spring-boot.version}</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -43,6 +32,24 @@
       <version>${spring-boot.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>me.paulbares</groupId>
+      <artifactId>aitm-js</artifactId>
+      <version>0.1-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>me.paulbares</groupId>
+      <artifactId>aitm-spark</artifactId>
+      <version>0.1-SNAPSHOT</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
@@ -91,35 +98,4 @@
       </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <profile>
-      <id>spring-boot</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-maven-plugin</artifactId>
-            <version>${spring-boot.version}</version>
-            <configuration>
-              <mainClass>me.paulbares.AitmApplication</mainClass>
-              <jvmArguments>
-                --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
-              </jvmArguments>
-            </configuration>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>repackage</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>

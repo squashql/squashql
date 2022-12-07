@@ -1,0 +1,18 @@
+spring:
+  profiles:
+    active: spark
+x-api-key: c3981f51-e9e8-47e1-aa81-7c26e05c98d9
+---
+spring:
+  config:
+    activate:
+      on-profile: optiprix
+projectId: aitmindiceprix
+datasetName: optiprix
+---
+spring:
+  config:
+    activate:
+      on-profile: cdg
+projectId: controle-de-gestion-361212
+datasetName: Forecast

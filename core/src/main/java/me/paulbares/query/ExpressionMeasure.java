@@ -1,32 +1,31 @@
 package me.paulbares.query;
 
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.ToString;
 import me.paulbares.query.database.QueryRewriter;
+import me.paulbares.query.database.SqlUtils;
 import me.paulbares.store.Field;
 
-import java.util.Objects;
 import java.util.function.Function;
 
-import static me.paulbares.query.database.SqlUtils.escape;
-
+@ToString
+@EqualsAndHashCode
+@NoArgsConstructor // For Jackson
 public class ExpressionMeasure implements Measure {
 
   public String alias;
   public String expression;
 
-  /**
-   * For jackson.
-   */
-  public ExpressionMeasure() {
-  }
-
-  public ExpressionMeasure(String alias, String expression) {
-    this.alias = Objects.requireNonNull(alias);
-    this.expression = Objects.requireNonNull(expression);
+  public ExpressionMeasure(@NonNull String alias, @NonNull String expression) {
+    this.alias = alias;
+    this.expression = expression;
   }
 
   @Override
-  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter) {
-    return this.expression + " as " + escape(this.alias);
+  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
+    return withAlias ? SqlUtils.appendAlias(this.expression, queryRewriter, this.alias, this) : this.expression;
   }
 
   @Override
@@ -40,27 +39,12 @@ public class ExpressionMeasure implements Measure {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    ExpressionMeasure that = (ExpressionMeasure) o;
-    return alias.equals(that.alias) && expression.equals(that.expression);
+  public void setExpression(String expression) {
+    this.expression = expression;
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(alias, expression);
-  }
-
-  @Override
-  public String toString() {
-    return "ExpressionMeasure{" +
-            "alias='" + alias + '\'' +
-            ", expression='" + expression + '\'' +
-            '}';
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
   }
 }

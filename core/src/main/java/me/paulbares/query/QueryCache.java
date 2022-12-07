@@ -1,24 +1,37 @@
 package me.paulbares.query;
 
-import me.paulbares.query.dto.ConditionDto;
+import me.paulbares.query.dto.CacheStatsDto;
+import me.paulbares.query.dto.CriteriaDto;
+import me.paulbares.query.dto.QueryDto;
 import me.paulbares.query.dto.TableDto;
 import me.paulbares.store.Field;
 
-import java.util.Map;
 import java.util.Set;
 
 public interface QueryCache {
 
-  ColumnarTable createRawResult(QueryScope scope);
+  ColumnarTable createRawResult(PrefetchQueryScope scope);
 
-  boolean contains(Measure measure, QueryScope scope);
+  boolean contains(Measure measure, PrefetchQueryScope scope);
 
-  void contributeToCache(Table result, Set<Measure> measures, QueryScope scope);
+  void contributeToCache(Table result, Set<Measure> measures, PrefetchQueryScope scope);
 
-  void contributeToResult(Table result, Set<Measure> measures, QueryScope scope);
+  void contributeToResult(Table result, Set<Measure> measures, PrefetchQueryScope scope);
 
   void clear();
 
-  record QueryScope(TableDto tableDto, Set<Field> columns, Map<String, ConditionDto> conditions) {
+  CacheStatsDto stats();
+
+  record TableScope(TableDto tableDto, Set<Field> columns, CriteriaDto criteriaDto, Set<Field> rollupColumns) implements PrefetchQueryScope {
+  }
+
+  record SubQueryScope(QueryDto subQueryDto, Set<Field> columns, CriteriaDto criteriaDto) implements PrefetchQueryScope {
+  }
+
+  /**
+   * Marker interface.
+   */
+  interface PrefetchQueryScope {
+    Set<Field> columns();
   }
 }

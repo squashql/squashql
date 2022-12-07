@@ -1,5 +1,7 @@
 package me.paulbares.util;
 
+import lombok.EqualsAndHashCode;
+
 import java.io.Serializable;
 import java.util.*;
 
@@ -7,6 +9,7 @@ import java.util.*;
  * Similar to {@code com.google.common.collect.ExplicitOrdering} but do not throw a
  * {@code com.google.common.collect.Ordering.IncomparableValueException} when value is not in the given list.
  */
+@EqualsAndHashCode
 public class DependentExplicitOrdering implements Comparator<Object>, Serializable {
   final Map<Object, Comparator<Object>> comp;
 
@@ -34,18 +37,5 @@ public class DependentExplicitOrdering implements Comparator<Object>, Serializab
     Map<Object, Comparator<Object>> res = new HashMap<>();
     elements.forEach((k, v) -> res.put(k, new CustomExplicitOrdering(v)));
     return new DependentExplicitOrdering(res);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    DependentExplicitOrdering that = (DependentExplicitOrdering) o;
-    return Objects.equals(this.comp, that.comp);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.comp);
   }
 }

@@ -32,8 +32,6 @@ public class ExecutionPlan<N, Context> {
   }
 
   public void execute(Context context) {
-    this.processed.addAll(this.leaves);
-
     for (N node : this.roots) {
       executeRecursively(node, context);
     }
@@ -48,8 +46,13 @@ public class ExecutionPlan<N, Context> {
           executeRecursively(successor.node, context);
         }
       }
+      consumeAndMarkAsProcessed(node, context);
+    }
+  }
+
+  private void consumeAndMarkAsProcessed(N node, Context context) {
+    if(this.processed.add(node)) {
       this.consumer.accept(node, context);
-      this.processed.add(node);
     }
   }
 
