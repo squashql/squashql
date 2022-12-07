@@ -49,8 +49,9 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
   static Table getResults(String sql, SparkSession sparkSession, DatabaseQuery query) {
     Dataset<Row> ds = sparkSession.sql(sql);
     Pair<List<Field>, List<List<Object>>> result = transform(
+            query,
             Arrays.stream(ds.schema().fields()).toList(),
-            f -> new Field(f.name(), datatypeToClass(f.dataType())),
+            (f, fieldName) -> new Field(fieldName, datatypeToClass(f.dataType())),
             ds.toLocalIterator(),
             (i, r) -> r.get(i));
     return new ColumnarTable(

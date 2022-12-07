@@ -14,7 +14,7 @@ import static me.paulbares.query.BigQueryTestUtil.PROJECT_ID;
 /**
  * Do not edit this class, it has been generated automatically by {@link me.paulbares.template.BigQueryClassTemplateGenerator}.
  */
-public class TestBigQueryQueryExecutor extends ATestQueryExecutor {
+public class TestBigQueryBinaryOperationMeasure extends ATestBinaryOperationMeasure {
 
   @Override
   protected void createTables() {

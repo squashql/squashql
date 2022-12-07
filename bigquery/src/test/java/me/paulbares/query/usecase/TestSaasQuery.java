@@ -1,7 +1,8 @@
-package me.paulbares.query;
+package me.paulbares.query.usecase;
 
 import me.paulbares.BigQueryDatastore;
 import me.paulbares.BigQueryUtil;
+import me.paulbares.query.*;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.database.BigQueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;

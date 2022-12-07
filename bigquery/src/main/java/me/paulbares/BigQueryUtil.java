@@ -40,6 +40,8 @@ public final class BigQueryUtil {
       type = StandardSQLTypeName.INT64;
     } else if (clazz.equals(Long.class) || clazz.equals(long.class)) {
       type = StandardSQLTypeName.INT64;
+    } else if (clazz.equals(Boolean.class) || clazz.equals(boolean.class)) {
+      type = StandardSQLTypeName.BOOL;
     } else {
       throw new IllegalArgumentException("Unsupported field type " + clazz);
     }

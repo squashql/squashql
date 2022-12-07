@@ -1,8 +1,10 @@
 package me.paulbares.transaction;
 
 import com.google.cloud.bigquery.*;
+import lombok.extern.slf4j.Slf4j;
 import me.paulbares.BigQueryDatastore;
 import me.paulbares.BigQueryUtil;
+import me.paulbares.query.database.SqlUtils;
 import me.paulbares.store.Field;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
@@ -11,7 +13,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class BigQueryTransactionManager implements TransactionManager {
+
+  // 1, 2, 4, 8, 16
+  private static final int MAX_SLEEPS = 5;
 
   final BigQuery bigquery;
   final String datasetName;
@@ -45,8 +51,17 @@ public class BigQueryTransactionManager implements TransactionManager {
       this.bigquery.create(tableInfo);
     } catch (BigQueryException e) {
       if (e.getCode() == 409 && e.getReason().equals("duplicate")) {
-        this.bigquery.delete(tableId);
-        this.bigquery.create(tableInfo);
+        // https://stackoverflow.com/questions/73544951/no-table-found-for-new-bigquery-table
+        String sqlTableName = SqlUtils.escape(tableInfo.getTableId().getDataset() + "." + tableInfo.getTableId().getTable());
+        QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder("DELETE FROM " + sqlTableName + " WHERE 1=1").build();
+        try {
+          TableResult tableResult = this.bigquery.query(queryConfig);
+        } catch (InterruptedException ex) {
+          throw new RuntimeException(ex);
+        }
+//
+//        this.bigquery.delete(tableId);
+//        this.bigquery.create(tableInfo);
       } else {
         throw e;
       }
@@ -75,11 +90,35 @@ public class BigQueryTransactionManager implements TransactionManager {
 
     TableId tableId = TableId.of(this.datasetName, store);
     Table table = this.bigquery.getTable(tableId);
-    table.insert(list);
-    // FIXME issue with Free Tier
-    // com.google.cloud.bigquery.BigQueryException: Access Denied: BigQuery BigQuery: Streaming insert is not allowed in the free tier
-    // similar issue when trying sql inster queries:
-    // "message" : "Billing has not been enabled for this project. DML queries are not allowed in the free tier. Set up a billing account to remove this restriction.",
+
+    int sleepTime = 1;// Start at 1 s.
+    int attempt = 0;
+    while (true) {
+      // table creation is eventually consistent, try several time to insert it.
+      try {
+        table.insert(list);
+        return;
+      } catch (BigQueryException exception) {
+        if (exception.getCode() == 404 && exception.getReason().equals("notFound")) {
+          try {
+            Thread.sleep(sleepTime * 1000);
+          } catch (InterruptedException e) {
+            log.error("", e);
+            Thread.currentThread().interrupt();
+          }
+          if (attempt < MAX_SLEEPS) {
+            sleepTime <<= 1;
+            attempt++;
+            log.info("Table not found, retry " + attempt);
+          } else {
+            log.info("Table not found after " + MAX_SLEEPS + " attempts. Abort.");
+            throw exception;
+          }
+        } else {
+          throw exception;
+        }
+      }
+    }
   }
 
   private void ensureScenarioColumnIsPresent(String store) {

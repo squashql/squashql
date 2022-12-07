@@ -133,11 +133,19 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   }
 
   public static <Column, Record> Pair<List<Field>, List<List<Object>>> transform(
+          DatabaseQuery query,
           List<Column> columns,
-          Function<Column, Field> columnToField,
+          BiFunction<Column, String, Field> columnToField,
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue) {
-    List<Field> fields = columns.stream().map(columnToField::apply).toList();
+    List<String> fieldNames = new ArrayList<>();
+    query.select.forEach(fieldNames::add);
+    query.measures.forEach(m -> fieldNames.add(m.alias()));
+
+    List<Field> fields = new ArrayList<>();
+    for (int i = 0; i < columns.size(); i++) {
+      fields.add(columnToField.apply(columns.get(i), fieldNames.get(i)));
+    }
     List<List<Object>> values = new ArrayList<>();
     fields.forEach(f -> values.add(new ArrayList<>()));
     recordIterator.forEachRemaining(r -> {

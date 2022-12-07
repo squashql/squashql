@@ -4,7 +4,6 @@ import com.google.cloud.bigquery.*;
 import me.paulbares.BigQueryDatastore;
 import me.paulbares.BigQueryUtil;
 import me.paulbares.query.ColumnarTable;
-import me.paulbares.query.Measure;
 import me.paulbares.query.Table;
 import me.paulbares.store.Field;
 import org.eclipse.collections.api.tuple.Pair;
@@ -29,8 +28,9 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
       Schema schema = tableResult.getSchema();
       Pair<List<Field>, List<List<Object>>> result = AQueryEngine.transform(
+              query,
               schema.getFields(),
-              f -> new Field(f.getName(), BigQueryUtil.bigQueryTypeToClass(f.getType())),
+              (f, fieldName) -> new Field(fieldName, BigQueryUtil.bigQueryTypeToClass(f.getType())),
               tableResult.iterateAll().iterator(),
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i)
       );
@@ -89,15 +89,15 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   class BigQueryQueryRewriter implements QueryRewriter {
     @Override
     public String tableName(String table) {
-      return SqlUtils.escape(datastore.projectId + "." + datastore.datasetName + "." + table);
+      return SqlUtils.escape(BigQueryEngine.this.datastore.projectId + "." + BigQueryEngine.this.datastore.datasetName + "." + table);
     }
 
-    @Override
-    public String measureAlias(String alias, Measure measure) {
-      return alias
-              .replace("(", "_")
-              .replace(")", "_");
-    }
+//    @Override
+//    public String measureAlias(String alias, Measure measure) {
+//      return alias
+//              .replace("(", "_")
+//              .replace(")", "_");
+//    }
 
     @Override
     public boolean doesSupportPartialRollup() {

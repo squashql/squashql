@@ -33,7 +33,6 @@ public abstract class ABaseTestQuery {
   }
 
   protected void afterSetup() {
-
   }
 
   protected abstract QueryEngine createQueryEngine(Datastore datastore);

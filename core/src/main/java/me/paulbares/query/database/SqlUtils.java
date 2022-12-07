@@ -14,7 +14,8 @@ public class SqlUtils {
   }
 
   public static String appendAlias(String sql, QueryRewriter queryRewriter, String alias, Measure measure) {
-    return sql + " as " + queryRewriter.measureAlias(escape(alias), measure);
+//    return sql + " as " + queryRewriter.measureAlias(escape(alias), measure);
+    return sql;
   }
 
   /**

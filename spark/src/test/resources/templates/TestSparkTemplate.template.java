@@ -1,12 +1,5 @@
 package me.paulbares.query;
 
-import me.paulbares.SparkDatastore;
-import me.paulbares.query.database.QueryEngine;
-import me.paulbares.query.database.SparkQueryEngine;
-import me.paulbares.store.Datastore;
-import me.paulbares.transaction.SparkTransactionManager;
-import me.paulbares.transaction.TransactionManager;
-
 /**
  * Do not edit this class, it has been generated automatically by {@link me.paulbares.template.SparkClassTemplateGenerator}.
  */
