@@ -21,7 +21,7 @@ import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestBucketComparison extends ABaseTestQuery {
 
-  protected String storeName = "storeName";
+  protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   protected String groupOfScenario = "Group of scenario";
 

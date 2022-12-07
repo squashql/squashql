@@ -38,7 +38,7 @@ public class BinaryOperationMeasure implements Measure {
             .append(this.operator.infix)
             .append(this.rightOperand.sqlExpression(fp, qr, false))
             .toString();
-    return withAlias ? SqlUtils.appendAlias(sql, qr, this.alias, this) : sql;
+    return withAlias ? SqlUtils.appendAlias(sql, qr, this.alias) : sql;
   }
 
   @Override

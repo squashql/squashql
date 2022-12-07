@@ -4,13 +4,14 @@ import me.paulbares.ClickHouseDatastore;
 import me.paulbares.query.database.ClickHouseQueryEngine;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.store.Datastore;
+import me.paulbares.template.ClickHouseClassTemplateGenerator;
 import me.paulbares.transaction.ClickHouseTransactionManager;
 import me.paulbares.transaction.TransactionManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
 /**
- * Do not edit this class, it has been generated automatically by {@link me.paulbares.template.ClickHouseClassTemplateGenerator}.
+ * Do not edit this class, it has been generated automatically by {@link ClickHouseClassTemplateGenerator}.
  */
 public class TestClickHouseDocPeriodComparison extends ATestDocPeriodComparison {
 

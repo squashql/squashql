@@ -33,7 +33,6 @@ public abstract class ABaseTestQuery {
   }
 
   protected void afterSetup() {
-
   }
 
   protected abstract QueryEngine createQueryEngine(Datastore datastore);
@@ -47,4 +46,8 @@ public abstract class ABaseTestQuery {
   protected abstract void createTables();
 
   protected abstract void loadData();
+
+  protected Object translate(Object o) {
+    return o;
+  }
 }

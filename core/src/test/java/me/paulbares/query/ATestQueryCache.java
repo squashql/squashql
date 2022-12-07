@@ -27,7 +27,8 @@ import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestQueryCache extends ABaseTestQuery {
 
-  protected String storeName = "myAwesomeStore";
+  protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  protected String competitorStoreName = "competitor" + getClass().getSimpleName().toLowerCase();
 
   protected CaffeineQueryCache queryCache;
 
@@ -49,7 +50,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
 
     return Map.of(
             this.storeName, List.of(ean, category, price, qty),
-            "competitor", List.of(comp_ean, comp_name, comp_price)
+            this.competitorStoreName, List.of(comp_ean, comp_name, comp_price)
     );
   }
 
@@ -61,7 +62,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
 
-    this.tm.load(MAIN_SCENARIO_NAME, "competitor", List.of(
+    this.tm.load(MAIN_SCENARIO_NAME, this.competitorStoreName, List.of(
             new Object[]{"bottle", "A", 2d},
             new Object[]{"bottle", "B", 1d},
             new Object[]{"cookie", "A", 3d},
@@ -167,8 +168,8 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   void testQueryWithJoin() {
     QueryDto query = Query
             .from(this.storeName)
-            .innerJoin("competitor")
-            .on(this.storeName, "ean", "competitor", "comp_ean")
+            .innerJoin(competitorStoreName)
+            .on(this.storeName, "ean", this.competitorStoreName, "comp_ean")
             .select(List.of("category"), List.of(sum("ps", "price")))
             .build();
     Table result = this.executor.execute(query);

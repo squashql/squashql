@@ -1,7 +1,8 @@
-package me.paulbares.query;
+package me.paulbares.query.usecase;
 
 import me.paulbares.BigQueryDatastore;
 import me.paulbares.BigQueryUtil;
+import me.paulbares.query.*;
 import me.paulbares.query.agg.AggregationFunction;
 import me.paulbares.query.database.BigQueryEngine;
 import me.paulbares.query.dto.BucketColumnSetDto;
@@ -14,13 +15,12 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
+import static me.paulbares.query.BigQueryTestUtil.PROJECT_ID;
 import static me.paulbares.query.Functions.criterion;
 import static me.paulbares.query.Functions.plus;
 
 public class TestSaasQuery {
 
-  String credendialsPath = "/Users/paul/dev/canvas-landing-355413-eb118aab8b19.json"; // FIXME
-  String projectId = "canvas-landing-355413";
   String datasetName = "business_planning";
 
   @Test
@@ -61,7 +61,7 @@ public class TestSaasQuery {
             ColumnSetKey.BUCKET);
     query.withMeasure(kpiComp);
 
-    BigQueryEngine engine = new BigQueryEngine(new BigQueryDatastore(BigQueryUtil.createCredentials(this.credendialsPath), this.projectId, this.datasetName));
+    BigQueryEngine engine = new BigQueryEngine(new BigQueryDatastore(BigQueryUtil.createCredentials(BigQueryTestUtil.CREDENTIALS), PROJECT_ID, this.datasetName));
 
     QueryExecutor executor = new QueryExecutor(engine);
     execute(() -> {

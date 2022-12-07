@@ -1,7 +1,5 @@
 package me.paulbares.query.database;
 
-import me.paulbares.query.Measure;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -13,8 +11,8 @@ public class SqlUtils {
     return "`" + column + "`";
   }
 
-  public static String appendAlias(String sql, QueryRewriter queryRewriter, String alias, Measure measure) {
-    return sql + " as " + queryRewriter.measureAlias(escape(alias), measure);
+  public static String appendAlias(String sql, QueryRewriter queryRewriter, String alias) {
+    return sql + " as " + queryRewriter.measureAlias(escape(alias));
   }
 
   /**

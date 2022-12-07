@@ -25,7 +25,7 @@ import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
-  protected String storeName = "myAwesomeStore";
+  protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
   protected Map<String, List<Field>> getFieldsByStore() {
@@ -386,19 +386,24 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     // Without explicit ordering
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("subcategory"), List.of())
+            .select(List.of("subcategory"), List.of(CountMeasure.INSTANCE))
             .build();
     Table result = this.executor.execute(query);
-    result.show();
+    // Without explicit ordering, null comes last because of: Comparator.nullsLast(Comparator.naturalOrder())
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList("biscuit", 3l),
+            Arrays.asList(null, 6l));
 
     // With explicit ordering
     query = Query
             .from(this.storeName)
-            .select(List.of("subcategory"), List.of())
+            .select(List.of("subcategory"), List.of(CountMeasure.INSTANCE))
             .orderBy("subcategory", OrderKeywordDto.ASC)
             .build();
     result = this.executor.execute(query);
-    result.show();
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList("biscuit", 3l),
+            Arrays.asList(null, 6l));
   }
 
   @Test
