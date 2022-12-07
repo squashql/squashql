@@ -15,7 +15,7 @@ import static me.paulbares.query.BigQueryTestUtil.PROJECT_ID;
 
 public class TestBigQueryQueryExecutor extends ATestQueryExecutor {
 
-  String datasetName = "testdataset";
+  String datasetName = "datasetfortests";
 
   @Override
   protected void beforeLoading(List<Field> fields) {
