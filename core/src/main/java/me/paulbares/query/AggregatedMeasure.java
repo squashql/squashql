@@ -47,7 +47,7 @@ public class AggregatedMeasure implements Measure {
     } else {
       sql = this.aggregationFunction + "(" + (this.field.equals("*") ? this.field : escape(this.field)) + ")";
     }
-    return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.alias, this) : sql;
+    return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.alias) : sql;
   }
 
   @Override

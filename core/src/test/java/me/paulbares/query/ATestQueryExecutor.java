@@ -1,21 +1,19 @@
 package me.paulbares.query;
 
+import me.paulbares.TestClass;
 import me.paulbares.query.builder.Query;
-import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.ConditionDto;
 import me.paulbares.query.dto.CriteriaDto;
 import me.paulbares.query.dto.OrderKeywordDto;
 import me.paulbares.query.dto.QueryDto;
-import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
-import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static me.paulbares.query.Functions.*;
 import static me.paulbares.query.database.QueryEngine.GRAND_TOTAL;
@@ -23,42 +21,25 @@ import static me.paulbares.query.database.QueryEngine.TOTAL;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
+@TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestQueryExecutor {
+public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
-  protected Datastore datastore;
+  protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
-  protected QueryExecutor queryExecutor;
-
-  protected TransactionManager tm;
-
-  protected String storeName = "myAwesomeStore";
-
-  protected abstract QueryEngine createQueryEngine(Datastore datastore);
-
-  protected abstract Datastore createDatastore();
-
-  protected abstract TransactionManager createTransactionManager();
-
-  @BeforeAll
-  void setup() {
+  @Override
+  protected Map<String, List<Field>> getFieldsByStore() {
     Field ean = new Field("ean", String.class);
     Field category = new Field("category", String.class);
     Field subcategory = new Field("subcategory", String.class);
     Field price = new Field("price", double.class);
     Field qty = new Field("quantity", int.class);
     Field isFood = new Field("isFood", boolean.class);
-
-    this.datastore = createDatastore();
-    QueryEngine queryEngine = createQueryEngine(this.datastore);
-    this.queryExecutor = new QueryExecutor(queryEngine);
-    this.tm = createTransactionManager();
-
-    beforeLoad(List.of(ean, category, subcategory, price, qty, isFood));
-    load();
+    return Map.of(this.storeName, List.of(ean, category, subcategory, price, qty, isFood));
   }
 
-  protected void load() {
+  @Override
+  protected void loadData() {
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"bottle", "drink", null, 2d, 10, true},
             new Object[]{"cookie", "food", "biscuit", 3d, 20, true},
@@ -78,16 +59,13 @@ public abstract class ATestQueryExecutor {
     ));
   }
 
-  protected void beforeLoad(List<Field> fields) {
-  }
-
   @Test
   void testQueryWildcard() {
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
-    Table result = this.queryExecutor.execute(query);
+    Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, 15.0d, 33l),
             List.of("s1", 17.0d, 33l),
@@ -102,7 +80,7 @@ public abstract class ATestQueryExecutor {
             .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("p", "price"), sum("q", "quantity")))
             .rollup(SCENARIO_FIELD_NAME, "category")
             .build();
-    Table result = this.queryExecutor.execute(query);
+    Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList(GRAND_TOTAL, null, 15d, 33l),
             List.of(MAIN_SCENARIO_NAME, TOTAL, 15d, 33l),
@@ -122,7 +100,7 @@ public abstract class ATestQueryExecutor {
             .select(List.of("subcategory"), List.of(sum("q", "quantity")))
             .rollup("subcategory")
             .build();
-    Table result = this.queryExecutor.execute(query);
+    Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, 99l),
             List.of("biscuit", 60l),
@@ -136,7 +114,7 @@ public abstract class ATestQueryExecutor {
             .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("q", "quantity")))
             .rollup("category") // We don't care here about total on scenario
             .build();
-    Table result = this.queryExecutor.execute(query);
+    Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, TOTAL, 33l),
             List.of(MAIN_SCENARIO_NAME, "cloth", 3l),
@@ -156,7 +134,7 @@ public abstract class ATestQueryExecutor {
             .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("q", "quantity")))
             .rollup(SCENARIO_FIELD_NAME) // try with another column
             .build();
-    result = this.queryExecutor.execute(query);
+    result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             List.of(TOTAL, "cloth", 9l),
             List.of(TOTAL, "drink", 30l),
@@ -180,7 +158,7 @@ public abstract class ATestQueryExecutor {
             .select(List.of(SCENARIO_FIELD_NAME, "category", "subcategory"), List.of(sum("q", "quantity")))
             .rollup("category", "subcategory")
             .build();
-    Table result = this.queryExecutor.execute(query);
+    Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("s1", TOTAL, null, 33l),
             Arrays.asList("s1", "cloth", TOTAL, 3l),
@@ -196,7 +174,7 @@ public abstract class ATestQueryExecutor {
             .select(List.of(SCENARIO_FIELD_NAME, "category", "subcategory"), List.of(sum("q", "quantity")))
             .rollup("category") // Only total for category
             .build();
-    result = this.queryExecutor.execute(query);
+    result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("s1", TOTAL, "biscuit", 20l),
             Arrays.asList("s1", TOTAL, null, 13l),
@@ -211,7 +189,7 @@ public abstract class ATestQueryExecutor {
             .from(this.storeName)
             .select(List.of(SCENARIO_FIELD_NAME), List.of(CountMeasure.INSTANCE))
             .build();
-    Table result = this.queryExecutor.execute(query);
+    Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, 3l),
             List.of("s1", 3l),
@@ -227,7 +205,7 @@ public abstract class ATestQueryExecutor {
             .where(SCENARIO_FIELD_NAME, in("s1", "s2"))
             .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
-    Table table = this.queryExecutor.execute(query);
+    Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
             List.of("s1", 17.0d, 33l),
             List.of("s2", 14.5d, 33l));
@@ -240,7 +218,7 @@ public abstract class ATestQueryExecutor {
             .where(SCENARIO_FIELD_NAME, eq("s1"))
             .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
-    Table table = this.queryExecutor.execute(query);
+    Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("s1", 17.0d, 33l));
   }
 
@@ -255,7 +233,7 @@ public abstract class ATestQueryExecutor {
             .select(List.of("category", "ean"), List.of(sum("q", "quantity")))
             .build();
 
-    Table table = this.queryExecutor.execute(query);
+    Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("drink", "bottle", 10l));
 
     query = Query
@@ -267,7 +245,7 @@ public abstract class ATestQueryExecutor {
                     criterion("quantity", Functions.gt(10))))
             .select(List.of("category", "ean"), List.of(sum("q", "quantity")))
             .build();
-    table = this.queryExecutor.execute(query);
+    table = this.executor.execute(query);
     Assertions.assertThat(table).isEmpty();
   }
 
@@ -277,14 +255,14 @@ public abstract class ATestQueryExecutor {
             .where(Functions.criterion("subcategory", Functions.isNotNull()))
             .select(List.of("ean"), List.of(CountMeasure.INSTANCE))
             .build();
-    Table table = this.queryExecutor.execute(query);
+    Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(List.of("cookie", 3l));
 
     query = Query.from(this.storeName)
             .where(Functions.criterion("subcategory", Functions.isNull()))
             .select(List.of("ean"), List.of(CountMeasure.INSTANCE))
             .build();
-    table = this.queryExecutor.execute(query);
+    table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(
             List.of("bottle", 3l),
             List.of("shirt", 3l));
@@ -297,7 +275,7 @@ public abstract class ATestQueryExecutor {
             .where(SCENARIO_FIELD_NAME, Functions.like("s%")) // start with s
             .select(List.of(SCENARIO_FIELD_NAME), List.of())
             .build();
-    Table table = this.queryExecutor.execute(query);
+    Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(List.of("s1"), List.of("s2"));
   }
 
@@ -308,7 +286,7 @@ public abstract class ATestQueryExecutor {
             .where(criterion("isFood", eq(true)))
             .select(List.of("ean"), List.of())
             .build();
-    Table table = this.queryExecutor.execute(query);
+    Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(List.of("bottle"), List.of("cookie"));
   }
 
@@ -321,7 +299,7 @@ public abstract class ATestQueryExecutor {
             .from(this.storeName)
             .select(List.of(SCENARIO_FIELD_NAME), List.of())
             .build();
-    Table table = this.queryExecutor.execute(query);
+    Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(
             List.of(MAIN_SCENARIO_NAME),
             List.of("s1"),
@@ -343,7 +321,7 @@ public abstract class ATestQueryExecutor {
                     List.of(new ExpressionMeasure("quantity if food or drink", "sum(case when category = 'food' OR category = 'drink' then quantity end)"),
                             sumIf("quantity filtered", "quantity", criterion("category", or))))
             .build();
-    Table result = this.queryExecutor.execute(query);
+    Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of(MAIN_SCENARIO_NAME, 30l, 30l),
             List.of("s1", 30l, 30l),
@@ -358,7 +336,7 @@ public abstract class ATestQueryExecutor {
             .select(List.of(SCENARIO_FIELD_NAME),
                     List.of(sumIf("quantity filtered", "quantity", Functions.all(category, criterion("subcategory", eq("biscuit"))))))
             .build();
-    result = this.queryExecutor.execute(query);
+    result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of(MAIN_SCENARIO_NAME, 20l),
             List.of("s1", 20l),
@@ -372,7 +350,7 @@ public abstract class ATestQueryExecutor {
             .where("category", in("cloth", "drink"))
             .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(CountMeasure.INSTANCE))
             .build();
-    Table result = this.queryExecutor.execute(query);
+    Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, "cloth", 1l),
             List.of(MAIN_SCENARIO_NAME, "drink", 1l),
@@ -382,7 +360,7 @@ public abstract class ATestQueryExecutor {
             List.of("s2", "drink", 1l));
 
     query.orderBy("category", OrderKeywordDto.DESC);
-    result = this.queryExecutor.execute(query);
+    result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, "drink", 1l),
             List.of(MAIN_SCENARIO_NAME, "cloth", 1l),
@@ -393,7 +371,7 @@ public abstract class ATestQueryExecutor {
 
     List<String> elements = List.of("s2", MAIN_SCENARIO_NAME, "s1");
     query.orderBy(SCENARIO_FIELD_NAME, elements);
-    result = this.queryExecutor.execute(query);
+    result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             List.of("s2", "drink", 1l),
             List.of("s2", "cloth", 1l),
@@ -408,19 +386,24 @@ public abstract class ATestQueryExecutor {
     // Without explicit ordering
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("subcategory"), List.of())
+            .select(List.of("subcategory"), List.of(CountMeasure.INSTANCE))
             .build();
-    Table result = this.queryExecutor.execute(query);
-    result.show();
+    Table result = this.executor.execute(query);
+    // Without explicit ordering, null comes last because of: Comparator.nullsLast(Comparator.naturalOrder())
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList("biscuit", 3l),
+            Arrays.asList(null, 6l));
 
     // With explicit ordering
     query = Query
             .from(this.storeName)
-            .select(List.of("subcategory"), List.of())
+            .select(List.of("subcategory"), List.of(CountMeasure.INSTANCE))
             .orderBy("subcategory", OrderKeywordDto.ASC)
             .build();
-    result = this.queryExecutor.execute(query);
-    result.show();
+    result = this.executor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList("biscuit", 3l),
+            Arrays.asList(null, 6l));
   }
 
   @Test
@@ -429,7 +412,7 @@ public abstract class ATestQueryExecutor {
             .from(this.storeName)
             .select(List.of("category"), List.of(sum("p", "price")))
             .build();
-    Table result = this.queryExecutor.execute(query);
+    Table result = this.executor.execute(query);
     // Default order
     Assertions.assertThat(result).containsExactly(
             List.of("cloth", 30d),
@@ -437,7 +420,7 @@ public abstract class ATestQueryExecutor {
             List.of("food", 9d));
 
     query.orderBy(result.getField(sum("p", "price")).name(), OrderKeywordDto.DESC);
-    result = this.queryExecutor.execute(query);
+    result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             List.of("cloth", 30d),
             List.of("food", 9d),
@@ -460,7 +443,7 @@ public abstract class ATestQueryExecutor {
                     integer,
                     decimal))
             .build();
-    Table result = this.queryExecutor.execute(query);
+    Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(List.of(4650d, 4650d, 9900l, 9900d, 100l, 100d));
     Assertions.assertThat(result.headers().stream().map(Field::name).toList())
             .containsExactly("a1", "a2", "b1", "b2", "constant(100)", "constant(100.0)");

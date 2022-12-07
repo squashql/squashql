@@ -1,9 +1,8 @@
 package me.paulbares.query;
 
+import me.paulbares.TestClass;
 import me.paulbares.query.builder.Query;
-import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.Period;
-import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
@@ -15,32 +14,20 @@ import java.util.List;
 import java.util.Map;
 
 import static me.paulbares.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
+import static me.paulbares.query.Functions.criterion;
 import static me.paulbares.query.Functions.eq;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
+@TestClass(ignore = {TestClass.Type.SPARK})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public abstract class ATestPeriodComparison {
+public abstract class ATestPeriodComparison extends ABaseTestQuery {
 
-  protected Datastore datastore;
+  protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
-  protected QueryEngine queryEngine;
-
-  protected QueryExecutor executor;
-
-  protected TransactionManager tm;
-
-  protected String storeName = "myAwesomeStore";
-
-  protected abstract QueryEngine createQueryEngine(Datastore datastore);
-
-  protected abstract Datastore createDatastore();
-
-  protected abstract TransactionManager createTransactionManager();
-
-  @BeforeAll
-  void setup() {
+  @Override
+  protected Map<String, List<Field>> getFieldsByStore() {
     Field ean = new Field("ean", String.class);
     Field category = new Field("category", String.class);
     Field sales = new Field("sales", double.class);
@@ -50,14 +37,11 @@ public abstract class ATestPeriodComparison {
     Field quarter = new Field("quarter_sales", int.class);
     Field month = new Field("month_sales", int.class);
     Field date = new Field("date_sales", LocalDate.class);
+    return Map.of(this.storeName, List.of(ean, category, sales, qty, year, semester, quarter, month, date));
+  }
 
-    this.datastore = createDatastore();
-    this.queryEngine = createQueryEngine(this.datastore);
-    this.executor = new QueryExecutor(this.queryEngine);
-    this.tm = createTransactionManager();
-
-    beforeLoad(List.of(ean, category, sales, qty, year, semester, quarter, month, date));
-
+  @Override
+  protected void loadData() {
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             // 2022
             new Object[]{"bottle", "drink", 20d, 10, 2022, 1, 1, 1, LocalDate.of(2022, 1, 1)},
@@ -93,11 +77,7 @@ public abstract class ATestPeriodComparison {
     ));
   }
 
-  protected void beforeLoad(List<Field> fields) {
-  }
-
   @Test
-  @Order(1)
   void testCompareQuarterCurrentWithSamePreviousYear() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
@@ -114,14 +94,14 @@ public abstract class ATestPeriodComparison {
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022l, 1, null, 100d),
-            Arrays.asList(2022l, 2, null, 80d),
-            Arrays.asList(2022l, 3, null, 85d),
-            Arrays.asList(2022l, 4, null, 35d),
-            Arrays.asList(2023l, 1, 0d, 100d),
-            Arrays.asList(2023l, 2, 0d, 80d),
-            Arrays.asList(2023l, 3, 0d, 85d),
-            Arrays.asList(2023l, 4, 0d, 35d));
+            Arrays.asList(2022l, translate(1), null, 100d),
+            Arrays.asList(2022l, translate(2), null, 80d),
+            Arrays.asList(2022l, translate(3), null, 85d),
+            Arrays.asList(2022l, translate(4), null, 35d),
+            Arrays.asList(2023l, translate(1), 0d, 100d),
+            Arrays.asList(2023l, translate(2), 0d, 80d),
+            Arrays.asList(2023l, translate(3), 0d, 85d),
+            Arrays.asList(2023l, translate(4), 0d, 35d));
     Assertions.assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(period.year(), period.quarter(), "myMeasure", "sum(sales)");
 
@@ -132,10 +112,10 @@ public abstract class ATestPeriodComparison {
             .build();
     finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2023l, 1, 0d),
-            Arrays.asList(2023l, 2, 0d),
-            Arrays.asList(2023l, 3, 0d),
-            Arrays.asList(2023l, 4, 0d));
+            Arrays.asList(2023l, translate(1), 0d),
+            Arrays.asList(2023l, translate(2), 0d),
+            Arrays.asList(2023l, translate(3), 0d),
+            Arrays.asList(2023l, translate(4), 0d));
 
     query = Query.from(this.storeName)
             .where("quarter_sales", eq(1))
@@ -143,12 +123,11 @@ public abstract class ATestPeriodComparison {
             .build();
     finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022l, 1, null),
-            Arrays.asList(2023l, 1, 0d));
+            Arrays.asList(2022l, translate(1), null),
+            Arrays.asList(2023l, translate(1), 0d));
   }
 
   @Test
-  @Order(2)
   void testCompareQuarterCurrentWithPrevious() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
@@ -165,21 +144,20 @@ public abstract class ATestPeriodComparison {
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022l, 1, "base", null, 100d),
-            Arrays.asList(2022l, 2, "base", -20d, 80d),
-            Arrays.asList(2022l, 3, "base", 5d, 85d),
-            Arrays.asList(2022l, 4, "base", -50d, 35d),
-            Arrays.asList(2023l, 1, "base", 65d, 100d),
-            Arrays.asList(2023l, 2, "base", -20d, 80d),
-            Arrays.asList(2023l, 3, "base", 5d, 85d),
-            Arrays.asList(2023l, 4, "base", -50d, 35d));
+            Arrays.asList(2022l, translate(1), "base", null, 100d),
+            Arrays.asList(2022l, translate(2), "base", -20d, 80d),
+            Arrays.asList(2022l, translate(3), "base", 5d, 85d),
+            Arrays.asList(2022l, translate(4), "base", -50d, 35d),
+            Arrays.asList(2023l, translate(1), "base", 65d, 100d),
+            Arrays.asList(2023l, translate(2), "base", -20d, 80d),
+            Arrays.asList(2023l, translate(3), "base", 5d, 85d),
+            Arrays.asList(2023l, translate(4), "base", -50d, 35d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.quarter(), "myMeasure", "sum(sales)");
   }
 
   @Test
-  @Order(3)
   void testCompareYearCurrentWithPrevious() {
     Period.Year period = new Period.Year("year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
@@ -203,7 +181,6 @@ public abstract class ATestPeriodComparison {
   }
 
   @Test
-  @Order(4)
   void testCompareSemesterCurrentWithPrevious() {
     Period.Semester period = new Period.Semester("semester_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
@@ -220,28 +197,17 @@ public abstract class ATestPeriodComparison {
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022l, 1, "base", null, 180d),
-            Arrays.asList(2022l, 2, "base", -60d, 120d),
-            Arrays.asList(2023l, 1, "base", 60d, 180d),
-            Arrays.asList(2023l, 2, "base", -60d, 120d));
+            Arrays.asList(2022l, translate(1), "base", null, 180d),
+            Arrays.asList(2022l, translate(2), "base", -60d, 120d),
+            Arrays.asList(2023l, translate(1), "base", 60d, 180d),
+            Arrays.asList(2023l, translate(2), "base", -60d, 120d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.semester(), "myMeasure", "sum(sales)");
   }
 
-  // Last because the data is changed
   @Test
-  @Order(Integer.MAX_VALUE)
   void testCompareMonthCurrentWithPrevious() {
-    // Recreate table
-    beforeLoad(this.datastore.storesByName().values().iterator().next().fields().stream().filter(f -> !f.name().equals(SCENARIO_FIELD_NAME)).toList());
-    // Reload data with fewer rows
-    this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
-            new Object[]{"bottle", "drink", 20d, 10, 2022, 2, 4, 12, LocalDate.of(2022, 12, 1)},
-            new Object[]{"bottle", "drink", 20d, 10, 2022, 2, 4, 12, LocalDate.of(2022, 12, 3)},
-            new Object[]{"bottle", "drink", 15d, 5, 2023, 1, 1, 1, LocalDate.of(2023, 1, 1)},
-            new Object[]{"bottle", "drink", 30d, 5, 2023, 1, 1, 2, LocalDate.of(2023, 2, 1)}));
-
     Period.Month period = new Period.Month("month_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
@@ -251,14 +217,22 @@ public abstract class ATestPeriodComparison {
             Map.of(period.month(), "m-1", period.year(), "y"),
             period);
     var query = Query.from(this.storeName)
+            // Filter to limit the number of rows
+            .where(Functions.all(
+                    criterion("year_sales", Functions.in(2022, 2023)),
+                    criterion("month_sales", Functions.in(1, 2, 12))
+            ))
             .select(List.of("year_sales", "month_sales", SCENARIO_FIELD_NAME), List.of(m, sales))
             .build();
 
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            Arrays.asList(2022l, 12, "base", null, 40d),
-            Arrays.asList(2023l, 1, "base", -25d, 15d),
-            Arrays.asList(2023l, 2, "base", 15d, 30d));
+            Arrays.asList(2022l, translate(1), "base", null, 20d),
+            Arrays.asList(2022l, translate(2), "base", 40d, 60d),
+            Arrays.asList(2022l, translate(12), "base", -5d, 10d),
+            Arrays.asList(2023l, translate(1), "base", 10d, 20d),
+            Arrays.asList(2023l, translate(2), "base", 40d, 60d),
+            Arrays.asList(2023l, translate(12), "base", -5d, 10d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.month(), "myMeasure", "sum(sales)");
