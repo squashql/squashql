@@ -24,11 +24,12 @@ public class ClickHouseDeltaQueryEngine extends ADeltaQueryEngine<ClickHouseData
         return virtualTableStatementWhereNotIn(baseTableName, scenarios, keys, qr);
       }
     };
+    ClickHouseQueryEngine.ClickHouseQueryRewriter queryRewriter = new ClickHouseQueryEngine.ClickHouseQueryRewriter();
     String sql = SQLTranslator.translate(query,
             this.fieldSupplier,
-            new ClickHouseQueryEngine.ClickHouseQueryRewriter(),
+            queryRewriter,
             tableTransformer);
-    return getResults(sql, this.datastore.dataSource, query);
+    return getResults(sql, this.datastore.dataSource, query, queryRewriter);
   }
 
   @Override

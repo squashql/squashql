@@ -29,6 +29,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       Schema schema = tableResult.getSchema();
       Pair<List<Field>, List<List<Object>>> result = AQueryEngine.transform(
               query,
+              this.queryRewriter,
               schema.getFields(),
               (f, fieldName) -> new Field(fieldName, BigQueryUtil.bigQueryTypeToClass(f.getType())),
               tableResult.iterateAll().iterator(),
@@ -92,12 +93,19 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       return SqlUtils.escape(BigQueryEngine.this.datastore.projectId + "." + BigQueryEngine.this.datastore.datasetName + "." + table);
     }
 
-//    @Override
-//    public String measureAlias(String alias, Measure measure) {
-//      return alias
-//              .replace("(", "_")
-//              .replace(")", "_");
-//    }
+    /**
+     * See <a href="https://cloud.google.com/bigquery/docs/schemas#column_names">https://cloud.google.com/bigquery/docs/schemas#column_names</a>.
+     * A column name must contain only letters (a-z, A-Z), numbers (0-9), or underscores (_), and it must start with a
+     * letter or underscore. The maximum column name length is 300 characters.
+     * FIXME must used a regex instead to replace incorrect characters.
+     */
+    @Override
+    public String measureAlias(String alias) {
+      return alias
+              .replace("(", "_")
+              .replace(")", "_")
+              .replace(" ", "_");
+    }
 
     @Override
     public boolean doesSupportPartialRollup() {

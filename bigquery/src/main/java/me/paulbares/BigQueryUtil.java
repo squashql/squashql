@@ -37,11 +37,15 @@ public final class BigQueryUtil {
     } else if (clazz.equals(Float.class) || clazz.equals(float.class)) {
       type = StandardSQLTypeName.FLOAT64;
     } else if (clazz.equals(Integer.class) || clazz.equals(int.class)) {
-      type = StandardSQLTypeName.INT64;
+      type = StandardSQLTypeName.INT64; // there is no INT32 in bigquery
     } else if (clazz.equals(Long.class) || clazz.equals(long.class)) {
       type = StandardSQLTypeName.INT64;
     } else if (clazz.equals(Boolean.class) || clazz.equals(boolean.class)) {
       type = StandardSQLTypeName.BOOL;
+    } else if (clazz.equals(LocalDate.class)) {
+      type = StandardSQLTypeName.DATE;
+    } else if (clazz.equals(LocalDateTime.class)) {
+      type = StandardSQLTypeName.DATETIME;
     } else {
       throw new IllegalArgumentException("Unsupported field type " + clazz);
     }

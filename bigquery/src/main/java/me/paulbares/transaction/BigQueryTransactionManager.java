@@ -4,10 +4,11 @@ import com.google.cloud.bigquery.*;
 import lombok.extern.slf4j.Slf4j;
 import me.paulbares.BigQueryDatastore;
 import me.paulbares.BigQueryUtil;
-import me.paulbares.query.database.SqlUtils;
 import me.paulbares.store.Field;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,16 +53,16 @@ public class BigQueryTransactionManager implements TransactionManager {
     } catch (BigQueryException e) {
       if (e.getCode() == 409 && e.getReason().equals("duplicate")) {
         // https://stackoverflow.com/questions/73544951/no-table-found-for-new-bigquery-table
-        String sqlTableName = SqlUtils.escape(tableInfo.getTableId().getDataset() + "." + tableInfo.getTableId().getTable());
-        QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder("DELETE FROM " + sqlTableName + " WHERE 1=1").build();
-        try {
-          TableResult tableResult = this.bigquery.query(queryConfig);
-        } catch (InterruptedException ex) {
-          throw new RuntimeException(ex);
-        }
-//
-//        this.bigquery.delete(tableId);
-//        this.bigquery.create(tableInfo);
+//        String sqlTableName = SqlUtils.escape(tableInfo.getTableId().getDataset() + "." + tableInfo.getTableId().getTable());
+//        QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder("DELETE FROM " + sqlTableName + " WHERE 1=1").build();
+//        try {
+//          TableResult tableResult = this.bigquery.query(queryConfig);
+//        } catch (InterruptedException ex) {
+//          throw new RuntimeException(ex);
+//        }
+
+        this.bigquery.delete(tableId);
+        this.bigquery.create(tableInfo);
       } else {
         throw e;
       }
@@ -80,7 +81,11 @@ public class BigQueryTransactionManager implements TransactionManager {
       for (int i = 0; i < fields.size(); i++) {
         String name = fields.get(i).name();
         if (!name.equals(SCENARIO_FIELD_NAME)) {
-          m.put(name, tuple[i]);
+          Object o = tuple[i];
+          if (o != null && (o.getClass().equals(LocalDate.class) || o.getClass().equals(LocalDateTime.class))) {
+            o = o.toString();
+          }
+          m.put(name, o);
         } else {
           m.put(name, scenario);
         }
@@ -96,7 +101,11 @@ public class BigQueryTransactionManager implements TransactionManager {
     while (true) {
       // table creation is eventually consistent, try several time to insert it.
       try {
-        table.insert(list);
+        InsertAllResponse insert = table.insert(list);
+        if (insert.hasErrors()) {
+          insert.getInsertErrors().values().stream().forEach(System.out::println);
+          throw new RuntimeException("error while inserting rows, see above");
+        }
         return;
       } catch (BigQueryException exception) {
         if (exception.getCode() == 404 && exception.getReason().equals("notFound")) {

@@ -22,4 +22,19 @@ public class BigQueryTestUtil {
       }
     }
   }
+
+  /**
+   * See {@link me.paulbares.BigQueryUtil}.
+   */
+  public static Object translate(Object o) {
+    if (o == null) {
+      return null;
+    }
+
+    if (o.getClass().equals(int.class) || o.getClass().equals(Integer.class)) {
+      return ((Number) o).longValue();
+    } else {
+      return o;
+    }
+  }
 }

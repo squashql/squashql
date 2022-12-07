@@ -25,7 +25,7 @@ public class ExpressionMeasure implements Measure {
 
   @Override
   public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
-    return withAlias ? SqlUtils.appendAlias(this.expression, queryRewriter, this.alias, this) : this.expression;
+    return withAlias ? SqlUtils.appendAlias(this.expression, queryRewriter, this.alias) : this.expression;
   }
 
   @Override

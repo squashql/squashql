@@ -46,4 +46,8 @@ public abstract class ABaseTestQuery {
   protected abstract void createTables();
 
   protected abstract void loadData();
+
+  protected Object translate(Object o) {
+    return o;
+  }
 }

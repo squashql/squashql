@@ -47,10 +47,10 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
             QueryExecutor.withFallback(this.fieldSupplier, String.class),
             this.rewriter,
             (qr, name) -> qr.tableName(name));
-    return getResults(sql, this.datastore.dataSource, query);
+    return getResults(sql, this.datastore.dataSource, query, this.rewriter);
   }
 
-  static Table getResults(String sql, ClickHouseDataSource dataSource, DatabaseQuery query) {
+  static Table getResults(String sql, ClickHouseDataSource dataSource, DatabaseQuery query, QueryRewriter queryRewriter) {
     // connect to localhost, use default port of the preferred protocol
     ClickHouseNode server = ClickHouseNode.builder()
             .host(dataSource.getHost())
@@ -65,6 +65,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
                  .get()) {
       Pair<List<Field>, List<List<Object>>> result = transform(
               query,
+              queryRewriter,
               response.getColumns(),
               (c, fieldName) -> new Field(fieldName, ClickHouseUtil.clickHouseTypeToClass(c.getDataType())),
               response.records().iterator(),

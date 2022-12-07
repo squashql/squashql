@@ -50,6 +50,7 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
     Dataset<Row> ds = sparkSession.sql(sql);
     Pair<List<Field>, List<List<Object>>> result = transform(
             query,
+            DefaultQueryRewriter.INSTANCE,
             Arrays.stream(ds.schema().fields()).toList(),
             (f, fieldName) -> new Field(fieldName, datatypeToClass(f.dataType())),
             ds.toLocalIterator(),
