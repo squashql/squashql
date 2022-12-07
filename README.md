@@ -1,106 +1,56 @@
+## Overview
+
+AITM is an open-source SQL query engine specialized in what-if analysis, building multi-dimensional queries to help
+back- end developers make the most of any SQL database, and front-end developers easily configure their own metrics in
+the UI.
+
+- AITM is a middleware between different databases and multiple clients/front end.
+- It builds queries that were not possible in SQL and is compatible with several popular SQL databases.
+- It helps front-end developers run SQL queries in their own language in [TypeScript](https://www.typescriptlang.org/).
+
 ## Prerequisites
 
-In order to build the server, you will need:
-- [Java JDK](https://www.oracle.com/java/) >= 17
-- Latest stable [Apache Maven](http://maven.apache.org/)
+### Java
 
-## Run locally
+You need to have Java 17:
+
+- [JDK 17](https://openjdk.java.net/projects/jdk/17/)
+
+### Node.js and NPM
+
+If you need to build the TypeScript library locally, you need to have Node installed.
+
+- [Node.js](https://nodejs.org/)
+
+## Getting started
 
 - Install prerequisites (see above)
 - Build the project
+
 ```
 mvn -pl :aitm-sandbox -am clean install -DskipTests -Pspring-boot
 ```
-- Launch the project with the following command. Replace `/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java` 
-by your java path if necessary. 
+
+- Launch the project with the following command.
+
 ```
-/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -Ddataset.path=saas.csv -jar sandbox/target/aitm-sandbox-0.1-SNAPSHOT.jar
+java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -Ddataset.path=saas.csv -jar sandbox/target/aitm-sandbox-0.1-SNAPSHOT.jar
 ```
-Do not forget to change the path to the file in the above command: `-Ddataset.path=/Users/paul/Downloads/saas.csv`
 
 Server address is: `http://localhost:8080`
 
-## BigQuery
+## Testing
 
-You need to generate a key for your project. Go to [https://cloud.google.com/bigquery/docs/quickstarts/quickstart-client-libraries](https://cloud.google.com/bigquery/docs/quickstarts/quickstart-client-libraries)
+To run the tests you will need:
 
-### Optiprix
-```
-$JAVA_HOME/bin/java -Dspring.profiles.active=optiprix -Dbigquery.credentials.path=/Users/paul/dev/aitmindiceprix-686299293f2f.json -jar sandbox/target/aitm-sandbox-0.1-SNAPSHOT.jar
-```
+- [Docker](https://www.docker.com/). The `docker` service should be running when launching the tests with maven.
 
-### CDG
-```
-$JAVA_HOME/bin/java -Dspring.profiles.active=cdg -Dbigquery.credentials.path=/path/to/your/key.json -jar sandbox/target/aitm-sandbox-0.1-SNAPSHOT.jar
-```
-
-## JShell
-
-To interactively interact with the server and execute queries, one can use jshell. To do that, compile the module 
-`http-client` with the jshell profile:
+Run:
 
 ```
-mvn -pl :http-client -am clean install -DskipTests -Pjshell
-$JAVA_HOME/bin/jshell --class-path target/http-client-0.1-SNAPSHOT.jar
+mvn test
 ```
 
-```jshelllanguage
-import me.paulbares.client.http.*
-import static me.paulbares.query.Functions.*
+## Contributing
 
-var querier = new HttpClientQuerier("http://localhost:8080")
-
-querier.metadata()
-
-var query = query()
-var products = table("products")
-
-query.table(products)
-
-query.wildcardCoordinate("scenario").aggregatedMeasure("marge", "sum")
-
-querier.run(query)
-
-query.wildcardCoordinate("type-marque")
-
-query.context("totals", TOP)
-
-query.condition("type-marque", eq("MDD"))
-```
-
-## GCloud
-
-Check which account is used
-```
-gcloud auth list
-```
-
-Check the project
-```
-gcloud config list project
-```
-
-Deploy
-```
-mvn -Pgcloud-cdg -DskipTests package appengine:deploy
-```
-
-Read the logs
-```
-gcloud app logs tail -s default
-```
-
-### Deploy from local machine
-
-```
-mvn -pl :aitm-sandbox -am clean install -DskipTests -Pspring-boot \
-&& mvn -pl :aitm-sandbox -Pgcloud-cdg -DskipTests package appengine:deploy
-```
-
-### Deploy from CloudBuild
-
-Check the file cloudbuild.yaml in the root directory. The service account used by Cloud Build needs the following roles:
-- App Engine Admin
-- App Engine Deployer
-- Cloud Build Service Account
-- Service Account User 
+Before contributing to AITM, please read our [contributing guidelines](CONTRIBUTING.md).
