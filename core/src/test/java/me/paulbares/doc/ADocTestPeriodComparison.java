@@ -20,7 +20,7 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
  * why it is @{@link Disabled}.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestClass(ignore = {"Spark"})
+@TestClass(ignore = {TestClass.Type.SPARK})
 @Disabled
 public abstract class ADocTestPeriodComparison extends ABaseTestQuery {
 

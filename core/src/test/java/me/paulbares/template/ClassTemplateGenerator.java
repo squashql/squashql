@@ -17,7 +17,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class ClassTemplateGenerator {
 
-  public static void generateTestClasses(String name) throws Exception {
+  public static void generateTestClasses(TestClass.Type testClassType) throws Exception {
     List<ClassPath.ClassInfo> parentTestClasses = ClassPath.from(ClassLoader.getSystemClassLoader())
             .getTopLevelClasses("me.paulbares.query")
             .stream()
@@ -26,11 +26,11 @@ public class ClassTemplateGenerator {
                 Class<?> klass = Class.forName(c.getName());
                 TestClass annotation = klass.getAnnotation(TestClass.class);
                 if (annotation != null) {
-                  String[] ignore = annotation.ignore();
+                  TestClass.Type[] ignore = annotation.ignore();
                   if (ignore == null) {
                     return true;
                   } else {
-                    return Arrays.stream(ignore).filter(i -> i.equals(name)).findAny().isEmpty();
+                    return Arrays.stream(ignore).filter(i -> i == testClassType).findAny().isEmpty();
                   }
                 } else {
                   return false;
@@ -41,12 +41,12 @@ public class ClassTemplateGenerator {
             })
             .toList();
 
-    URL resource = ClassTemplateGenerator.class.getClassLoader().getResource("templates/Test" + name + "Template.template.java");
+    URL resource = ClassTemplateGenerator.class.getClassLoader().getResource("templates/Test" + testClassType.className + "Template.template.java");
     List<String> lines = Files.readLines(new File(resource.toURI()), UTF_8);
 
-    File rootTestClasses = new File(name.toLowerCase() + "/src/test/java/me/paulbares/query").getAbsoluteFile();
+    File rootTestClasses = new File(testClassType.className.toLowerCase() + "/src/test/java/me/paulbares/query").getAbsoluteFile();
 
-    String prefix = "Test" + name;
+    String prefix = "Test" + testClassType.className;
     List<Path> classGenerated = new ArrayList<>();
     for (ClassPath.ClassInfo parentTestClass : parentTestClasses) {
       String classSuffix = parentTestClass.getSimpleName().replace("ATest", "");

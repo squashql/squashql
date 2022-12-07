@@ -21,7 +21,7 @@ import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
  * why it is @{@link Disabled}.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestClass(ignore = {"Spark"})
+@TestClass(ignore = {TestClass.Type.SPARK})
 @Disabled
 public abstract class ADocTestBucketComparison extends ABaseTestQuery {
 

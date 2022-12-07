@@ -13,5 +13,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(TYPE)
 public @interface TestClass {
 
-  String[] ignore() default "";
+  Type[] ignore();
+
+  enum Type {
+    SPARK("Spark"),
+    CLICKHOUSE("ClickHouse");
+
+    public final String className;
+
+    Type(String className) {
+      this.className = className;
+    }
+  }
 }
