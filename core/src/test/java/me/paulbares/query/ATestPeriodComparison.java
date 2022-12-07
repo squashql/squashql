@@ -24,7 +24,7 @@ import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public abstract class ATestPeriodComparison extends ABaseTestQuery {
 
-  protected String storeName = "myAwesomeStore";
+  protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
   protected Map<String, List<Field>> getFieldsByStore() {

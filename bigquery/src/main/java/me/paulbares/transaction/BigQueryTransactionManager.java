@@ -45,7 +45,6 @@ public class BigQueryTransactionManager implements TransactionManager {
             .toList();
     // Table schema definition
     Schema schema = Schema.of(fieldList);
-    createTable(this.bigquery, schema, tableId);
     TableDefinition tableDefinition = StandardTableDefinition.of(schema);
     TableInfo tableInfo = TableInfo.newBuilder(tableId, tableDefinition).build();
 

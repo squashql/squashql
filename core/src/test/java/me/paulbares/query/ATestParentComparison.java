@@ -20,7 +20,7 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestParentComparison extends ABaseTestQuery {
 
-  protected String storeName = "myAwesomeStore";
+  protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
   protected Map<String, List<Field>> getFieldsByStore() {
