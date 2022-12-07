@@ -29,7 +29,6 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       Schema schema = tableResult.getSchema();
       Pair<List<Field>, List<List<Object>>> result = AQueryEngine.transform(
               query,
-              this.queryRewriter,
               schema.getFields(),
               (f, fieldName) -> new Field(fieldName, BigQueryUtil.bigQueryTypeToClass(f.getType())),
               tableResult.iterateAll().iterator(),

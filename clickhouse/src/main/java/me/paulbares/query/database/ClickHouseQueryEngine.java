@@ -65,7 +65,6 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
                  .get()) {
       Pair<List<Field>, List<List<Object>>> result = transform(
               query,
-              queryRewriter,
               response.getColumns(),
               (c, fieldName) -> new Field(fieldName, ClickHouseUtil.clickHouseTypeToClass(c.getDataType())),
               response.records().iterator(),

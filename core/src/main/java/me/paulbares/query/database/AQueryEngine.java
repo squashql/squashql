@@ -14,6 +14,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import static me.paulbares.query.database.SQLTranslator.groupingAlias;
+
 public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T> {
 
   public final T datastore;
@@ -131,19 +133,14 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   public static <Column, Record> Pair<List<Field>, List<List<Object>>> transform(
           DatabaseQuery query,
-          QueryRewriter queryRewriter, // FIXME needed?
           List<Column> columns,
           BiFunction<Column, String, Field> columnToField,
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue) {
     List<String> fieldNames = new ArrayList<>();
-    Map<String, String> zob = new HashMap<>();
     query.select.forEach(fieldNames::add);
-    query.measures.forEach(m -> {
-      fieldNames.add(m.alias());
-    });
-
-//    queryRewriter.measureAlias(escape(alias));
+    query.rollup.forEach(r -> fieldNames.add(groupingAlias(r)));
+    query.measures.forEach(m -> fieldNames.add(m.alias()));
 
     List<Field> fields = new ArrayList<>();
     for (int i = 0; i < columns.size(); i++) {
