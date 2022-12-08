@@ -3,8 +3,8 @@
 [logo]
 
 ![build](https://github.com/paulbares/aitm/actions/workflows/ci.yml/badge.svg?branch=main)
-![activity](https://img.shields.io/github/commit-activity/m/paulbares/aitm)
-
+![activity](https://img.shields.io/github/commit-activity/m/paulbares/aitm/main)
+![license](https://img.shields.io/github/license/paulbares/aitm)
 ---
 
 AITM is an open-source SQL query engine specialized in what-if analysis, building multi-dimensional queries to help
