@@ -4,14 +4,18 @@ import me.paulbares.SparkDatastore;
 import me.paulbares.query.Table;
 
 import java.util.List;
+import me.paulbares.query.database.SparkQueryEngine.SparkQueryRewriter;
 
 import static me.paulbares.query.database.SQLTranslator.virtualTableStatementWhereNotExists;
 import static me.paulbares.query.database.SparkQueryEngine.getResults;
 
 public class SparkDeltaQueryEngine extends ADeltaQueryEngine<SparkDatastore> {
 
+  private final QueryRewriter queryRewriter;
+
   public SparkDeltaQueryEngine(SparkDatastore datastore) {
     super(datastore);
+    this.queryRewriter = new SparkQueryRewriter();
   }
 
   @Override
@@ -25,7 +29,7 @@ public class SparkDeltaQueryEngine extends ADeltaQueryEngine<SparkDatastore> {
     };
     String sql = SQLTranslator.translate(query,
             this.fieldSupplier,
-            DefaultQueryRewriter.INSTANCE,
+            queryRewriter,
             tableTransformer);
     return getResults(sql, this.datastore.spark, query);
   }

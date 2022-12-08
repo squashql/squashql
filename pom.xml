@@ -39,6 +39,7 @@
     <module>bigquery</module>
     <module>clickhouse</module>
     <module>spark</module>
+    <module>snowflake</module>
     <module>server</module>
     <module>java-client</module>
     <module>js/typescript-library</module>

@@ -36,13 +36,16 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
           "var_samp",
           "variance");
 
+  private final QueryRewriter queryRewriter;
+
   public SparkQueryEngine(SparkDatastore datastore) {
     super(datastore);
+    this.queryRewriter = new SparkQueryRewriter();
   }
 
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
-    String sql = SQLTranslator.translate(query, this.fieldSupplier);
+    String sql = SQLTranslator.translate(query, this.fieldSupplier, queryRewriter, QueryRewriter::tableName);
     return getResults(sql, this.datastore.spark, query);
   }
 
@@ -61,6 +64,23 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
             IntStream.range(0, query.select.size()).toArray(),
             result.getTwo());
   }
+
+  static class SparkQueryRewriter implements QueryRewriter {
+    @Override
+    public String fieldName(String field) {
+      return SqlUtils.backtickEscape(field);
+    }
+    @Override
+    public String measureAlias(String alias) {
+      return SqlUtils.backtickEscape(alias);
+    }
+
+    @Override
+    public boolean doesSupportPartialRollup() {
+      return true;
+    }
+  }
+
 
   @Override
   public List<String> supportedAggregationFunctions() {

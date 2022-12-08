@@ -7,12 +7,16 @@ public class SqlUtils {
 
   static final Pattern GROUPING_PATTERN = Pattern.compile("___grouping___(.*)___");
 
-  public static String escape(String column) {
+  public static String backtickEscape(String column) {
     return "`" + column + "`";
   }
 
+  public static String doubleQuoteEscape(String column) {
+    return "\"" + column + "\"";
+  }
+
   public static String appendAlias(String sql, QueryRewriter queryRewriter, String alias) {
-    return sql + " as " + queryRewriter.measureAlias(escape(alias));
+    return sql + " as " + queryRewriter.measureAlias(alias);
   }
 
   /**
@@ -25,4 +29,5 @@ public class SqlUtils {
     }
     return null;
   }
+
 }

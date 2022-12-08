@@ -43,10 +43,8 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
 
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
-    String sql = SQLTranslator.translate(query,
-            QueryExecutor.withFallback(this.fieldSupplier, String.class),
-            this.rewriter,
-            (qr, name) -> qr.tableName(name));
+    String sql = SQLTranslator.translate(query, QueryExecutor.withFallback(this.fieldSupplier, String.class),
+            this.rewriter, QueryRewriter::tableName);
     return getResults(sql, this.datastore.dataSource, query);
   }
 
@@ -86,6 +84,17 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
   }
 
   static class ClickHouseQueryRewriter implements QueryRewriter {
+
+    @Override
+    public String fieldName(String field) {
+      return SqlUtils.backtickEscape(field);
+    }
+
+    @Override
+    public String measureAlias(String alias) {
+      return SqlUtils.backtickEscape(alias);
+    }
+
     @Override
     public boolean doesSupportPartialRollup() {
       // Not supported as of now: https://github.com/ClickHouse/ClickHouse/issues/322#issuecomment-615087004

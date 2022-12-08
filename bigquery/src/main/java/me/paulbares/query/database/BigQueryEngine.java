@@ -88,8 +88,13 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
   class BigQueryQueryRewriter implements QueryRewriter {
     @Override
+    public String fieldName(String field) {
+      return SqlUtils.backtickEscape(field);
+    }
+
+    @Override
     public String tableName(String table) {
-      return SqlUtils.escape(BigQueryEngine.this.datastore.projectId + "." + BigQueryEngine.this.datastore.datasetName + "." + table);
+      return SqlUtils.backtickEscape(BigQueryEngine.this.datastore.projectId + "." + BigQueryEngine.this.datastore.datasetName + "." + table);
     }
 
     /**
@@ -100,7 +105,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
      */
     @Override
     public String measureAlias(String alias) {
-      return alias
+      return SqlUtils.backtickEscape(alias)
               .replace("(", "_")
               .replace(")", "_")
               .replace(" ", "_");
