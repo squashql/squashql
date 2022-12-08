@@ -2,7 +2,8 @@
 
 [logo]
 
-![Build](https://github.com/paulbares/aitm/actions/workflows/ci.yml/badge.svg?branch=main)
+![build](https://github.com/paulbares/aitm/actions/workflows/ci.yml/badge.svg?branch=main)
+![activity](https://img.shields.io/github/commit-activity/m/paulbares/aitm)
 
 ---
 
