@@ -1,4 +1,10 @@
-## Overview
+# AITM 
+
+[logo]
+
+![Build](https://github.com/github/docs/actions/workflows/ci.yml/badge.svg?branch=main)
+
+---
 
 AITM is an open-source SQL query engine specialized in what-if analysis, building multi-dimensional queries to help
 back- end developers make the most of any SQL database, and front-end developers easily configure their own metrics in
