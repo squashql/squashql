@@ -2,7 +2,7 @@
 
 [logo]
 
-![Build](https://github.com/github/docs/actions/workflows/ci.yml/badge.svg?branch=main)
+![Build](https://github.com/paulbares/aitm/actions/workflows/ci.yml/badge.svg?branch=main)
 
 ---
 
