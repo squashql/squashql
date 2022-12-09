@@ -19,6 +19,35 @@ the UI.
 
 AITM is currently compatible with [Spark](https://spark.apache.org/), [ClickHouse](https://clickhouse.com/) and [BigQuery](https://cloud.google.com/bigquery/). 
 
+## API
+
+AITM exposes two http endpoints to interrogate your database.
+
+1. `GET  /metadata`: to retrieve the list of tables and fields available
+2. `POST /query`: to execute queries that accepts a json object representing the query to execute
+
+To use those endpoints, AITM provides a [TypeScript](https://www.typescriptlang.org/) library with all you need:
+
+```typescript
+import {count, from, Querier} from "aitm-js-query"
+
+const querier = new Querier("http://localhost:8080");
+
+querier.getMetadata().then(response => {
+  console.log(response)
+})
+
+const query = from("myTable")
+        .select(["col1"], [], [count])
+        .build()
+
+querier.execute(query).then(response => {
+  console.log(response)
+})
+```
+
+See [this page](./QUERY.md) to learn more about the API.
+
 ## Prerequisites
 
 ### Java
