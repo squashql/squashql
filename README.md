@@ -12,7 +12,7 @@ back-end developers make the most of any SQL database, and front-end developers 
 the UI.
 
 - AITM is a middleware between [different popular SQL databases](#compatibility) and multiple clients/front end
-- It builds queries that were not possible or cumbersome in SQL
+- It builds [queries that were not possible or cumbersome in SQL](./QUERY.md#complex-comparison)
 - It helps front-end developers run SQL queries in their own language in [TypeScript](https://www.typescriptlang.org/)
 
 ## Compatibility
