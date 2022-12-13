@@ -74,7 +74,7 @@ mvn -pl :aitm-sandbox -am clean install -DskipTests -Pspring-boot
 - Launch the project with the following command.
 
 ```
-java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -Ddataset.path=saas.csv -jar sandbox/target/aitm-sandbox-0.1-SNAPSHOT.jar
+java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -Ddataset.path=sandbox/src/main/resources/data/saas.csv -jar sandbox/target/aitm-sandbox-0.1-SNAPSHOT.jar
 ```
 
 Server address is: `http://localhost:8080`. Once the server is up and running, you can start [executing queries](./QUERY.md).  

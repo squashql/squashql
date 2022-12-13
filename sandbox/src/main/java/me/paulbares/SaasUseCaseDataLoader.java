@@ -10,7 +10,7 @@ import java.net.URISyntaxException;
  * <p>
  * The first dataset used.
  */
-public class SaaSUseCaseDataLoader {
+public class SaasUseCaseDataLoader {
 
   public static SparkDatastore createTestDatastoreWithData() {
     SparkDatastore datastore = new SparkDatastore();

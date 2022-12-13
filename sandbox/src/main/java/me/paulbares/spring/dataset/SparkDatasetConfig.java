@@ -1,6 +1,6 @@
 package me.paulbares.spring.dataset;
 
-import me.paulbares.SaaSUseCaseDataLoader;
+import me.paulbares.SaasUseCaseDataLoader;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.database.SparkQueryEngine;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -18,6 +18,6 @@ public class SparkDatasetConfig {
   @Bean
   @ConditionalOnMissingBean // This is for the tests. Tests can use another one if defined.
   public QueryEngine queryEngine() {
-    return new SparkQueryEngine(SaaSUseCaseDataLoader.createTestDatastoreWithData());
+    return new SparkQueryEngine(SaasUseCaseDataLoader.createTestDatastoreWithData());
   }
 }
