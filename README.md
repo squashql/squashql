@@ -17,7 +17,7 @@ the UI.
 
 ## Compatibility
 
-AITM is currently compatible with [Spark](https://spark.apache.org/), [ClickHouse](https://clickhouse.com/) and [BigQuery](https://cloud.google.com/bigquery/). 
+AITM is currently compatible with [Apache Spark](https://spark.apache.org/), [ClickHouse](https://clickhouse.com/) and [BigQuery](https://cloud.google.com/bigquery/). 
 
 ## API
 
