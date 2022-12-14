@@ -18,12 +18,12 @@
     <junit.version>5.9.1</junit.version>
     <junit-platform.version>1.9.1</junit-platform.version>
     <assertj.version>3.23.1</assertj.version>
-    <jackson.version>2.12.5</jackson.version>
+    <jackson.version>2.13.4</jackson.version>
     <spring-boot.version>2.6.1</spring-boot.version>
     <maven-jar-plugin.version>3.2.2</maven-jar-plugin.version>
     <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
     <eclipse.version>11.1.0</eclipse.version>
-    <feign.version>11.6</feign.version>
+    <feign.version>12.1</feign.version>
     <testcontainers.version>1.17.6</testcontainers.version>
     <guava.version>31.1-jre</guava.version>
     <caffeine.version>3.1.2</caffeine.version>

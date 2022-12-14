@@ -6,6 +6,7 @@ import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 import me.paulbares.transaction.ClickHouseTransactionManager;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -26,6 +27,7 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 @Testcontainers
+@Disabled
 public class TestLoadingFromCSV {
 
   @Container
@@ -54,7 +56,7 @@ public class TestLoadingFromCSV {
 
     String storeName = "myAwesomeStore";
     tm.dropAndCreateInMemoryTable(storeName, List.of(
-            new Field("CustomerID", int.class),
+            new Field("CustomerID", String.class),
             new Field("CustomerName", String.class),
             new Field("ContactName", String.class),
             new Field("Address", String.class),
