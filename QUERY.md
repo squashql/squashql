@@ -60,9 +60,8 @@ Queries can be filtered by using Criteria class. A Criteria instance can contain
 import { criterion } from "aitm-js-query"
 const criteria = criterion("col2", eq("c"));
 ```
-List of available condition operators `_in, eq, neq, and, or, lt, le, gt, ge, like, isNull, isNotNull`
 
-Several criteria can be chained with AND or OR by using the methods any and all
+Several criteria can be chained with AND or OR by using the methods `any` and `all`
 
 ```typescript
 import {
@@ -81,12 +80,12 @@ const q = from("myTable")
 ```sql
 SELECT col1, col2, sum(col3) as alias1, sum(col4) as alias2
 FROM myTable
-WHERE ( col1 IN ('a', 'b')
-  AND col2 = 'c' )
+WHERE (col1 IN ('a', 'b')
+  AND col2 = 'c')
 GROUP BY col1, col2
 ```
 
-Condition operators available: `eq, neq, lt, le, gt, ge, _in, isNull, isNotNull, and, or`.
+Condition operators available: `eq, neq, lt, le, gt, ge, _in, isNull, isNotNull, like, and, or`.
 
 ## Joining Tables
 

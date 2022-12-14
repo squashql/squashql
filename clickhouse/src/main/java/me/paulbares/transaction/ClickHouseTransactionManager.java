@@ -8,7 +8,6 @@ import me.paulbares.ClickHouseDatastore;
 import me.paulbares.store.Field;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
-import java.io.FileNotFoundException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
@@ -101,7 +100,7 @@ public class ClickHouseTransactionManager implements TransactionManager {
               ClickHouseCompression.LZ4,
               path);
       load.get();
-    } catch (FileNotFoundException | InterruptedException | ExecutionException e) {
+    } catch (InterruptedException | ExecutionException e) {
       throw new RuntimeException(e);
     }
   }

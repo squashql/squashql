@@ -21,7 +21,7 @@
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>libraries-bom</artifactId>
-        <version>25.4.0</version>
+        <version>${bigquery.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>

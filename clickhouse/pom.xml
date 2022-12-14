@@ -14,10 +14,6 @@
     <artifactId>aitm-clickhouse</artifactId>
     <version>0.1-SNAPSHOT</version>
 
-    <properties>
-        <clickhouse.version>0.3.2-patch5</clickhouse.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>me.paulbares</groupId>
