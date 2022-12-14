@@ -10,7 +10,7 @@ import {
   avg,
   eq,
   _in
-} from "aitm-js-query"
+} from "@aitm22/aitm-js-query"
 
 const querier = new Querier("http://localhost:8080");
 
@@ -62,8 +62,8 @@ subQuery.onTable(recommandation)
         .withMeasure(itmFinalComparableTurnover)
         .withMeasure(competitorComparableTurnover)
 
-subQuery.withCondition("rec_ean", eq(3346029200241))
-subQuery.withCondition("rec_store_id", _in([1037, 1088, 1117, 1147, 1149]))
+// subQuery.withCondition("rec_ean", eq(3346029200241))
+// subQuery.withCondition("rec_store_id", _in([1037, 1088, 1117, 1147, 1149]))
 
 subQuery
         .withColumn("rec_ean")

@@ -1,6 +1,6 @@
 {
   "name": "@aitm22/aitm-js-query",
-  "version": "1.0.0",
+  "version": "1.0.0-SNAPSHOT",
   "description": "AITM query builder/helper",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
