@@ -10,7 +10,7 @@ import {
   avg,
   eq,
   _in
-} from "aitm-js-query"
+} from "@aitm22/aitm-js-query"
 
 const querier = new Querier("https://controle-de-gestion-361212.uc.r.appspot.com");
 // const querier = new Querier("http://localhost:8080");

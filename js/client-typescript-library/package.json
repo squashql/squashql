@@ -11,5 +11,8 @@
   "devDependencies": {
     "@types/node": "^18.7.6",
     "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "@aitm22/aitm-js-query": "^1.0.0"
   }
 }
