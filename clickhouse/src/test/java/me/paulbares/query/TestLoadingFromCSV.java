@@ -24,10 +24,9 @@ import java.util.function.Function;
 import static me.paulbares.query.TestUtils.createClickHouseContainer;
 import static me.paulbares.query.TestUtils.jdbcUrl;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
-import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 @Testcontainers
-@Disabled
+@Disabled("not passing anymore since the migration from 0.3.2-patch5 to 0.3.2-patch11")
 public class TestLoadingFromCSV {
 
   @Container
@@ -55,8 +54,8 @@ public class TestLoadingFromCSV {
     ClickHouseTransactionManager tm = new ClickHouseTransactionManager(datastore.getDataSource());
 
     String storeName = "myAwesomeStore";
-    tm.dropAndCreateInMemoryTable(storeName, List.of(
-            new Field("CustomerID", String.class),
+    tm.dropAndCreateInMemoryTableWithoutScenarioColumn(storeName, List.of(
+            new Field("CustomerID", int.class),
             new Field("CustomerName", String.class),
             new Field("ContactName", String.class),
             new Field("Address", String.class),
@@ -71,7 +70,6 @@ public class TestLoadingFromCSV {
     Table table = new QueryExecutor(engine)
             .execute(new QueryDto()
                     .table(storeName)
-                    .withColumn(SCENARIO_FIELD_NAME)
                     .aggregatedMeasure("count", "*", "count"));
     Assertions.assertThat(table).containsExactlyInAnyOrder(Arrays.asList(null, 91L));
     // csv file

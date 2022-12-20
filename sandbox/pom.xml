@@ -12,24 +12,18 @@
 
   <groupId>me.paulbares</groupId>
   <artifactId>aitm-sandbox</artifactId>
-  <version>0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <dependencies>
     <dependency>
       <groupId>me.paulbares</groupId>
       <artifactId>aitm-server</artifactId>
-      <version>0.1-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>me.paulbares</groupId>
-      <artifactId>aitm-java-client</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>me.paulbares</groupId>
       <artifactId>aitm-spark</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>${project.version}</version>
       <exclusions>
         <exclusion>
           <artifactId>slf4j-log4j12</artifactId>
@@ -40,7 +34,7 @@
     <dependency>
       <groupId>me.paulbares</groupId>
       <artifactId>aitm-bigquery</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>

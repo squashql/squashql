@@ -12,7 +12,6 @@
 
   <groupId>me.paulbares</groupId>
   <artifactId>aitm-bigquery</artifactId>
-  <version>0.1-SNAPSHOT</version>
 
   <!--  Using libraries-bom to manage versions. -->
   <!-- See https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM -->
@@ -32,7 +31,7 @@
     <dependency>
       <groupId>me.paulbares</groupId>
       <artifactId>aitm-core</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.cloud</groupId>
@@ -47,7 +46,7 @@
     <dependency>
       <groupId>me.paulbares</groupId>
       <artifactId>aitm-core</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>${project.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

@@ -29,7 +29,14 @@ public class ClickHouseTransactionManager implements TransactionManager {
     dropAndCreateInMemoryTable(this.clickHouseDataSource, table, fields, true);
   }
 
-  public static void dropAndCreateInMemoryTable(ClickHouseDataSource clickHouseDataSource, String table, List<Field> fields, boolean cjMode) {
+  public void dropAndCreateInMemoryTableWithoutScenarioColumn(String table, List<Field> fields) {
+    dropAndCreateInMemoryTable(this.clickHouseDataSource, table, fields, false);
+  }
+
+  public static void dropAndCreateInMemoryTable(ClickHouseDataSource clickHouseDataSource,
+                                                String table,
+                                                List<Field> fields,
+                                                boolean cjMode) {
     List<Field> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
             .ofAll(fields)
             .newWith(new Field(SCENARIO_FIELD_NAME, String.class))
