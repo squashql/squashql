@@ -22,7 +22,7 @@ AITM is currently compatible with [Apache Spark](https://spark.apache.org/), [Cl
 ### Configuration
 
 To configure AITM for a given database you will have to first import the associated maven module and defined in your 
-java project a `QueryEngine` and `Datasatore` by picking the correct implementation. Then declare a bean that returns 
+java project a `QueryEngine` and `Datasatore` by picking the correct implementations. Then declare a bean that returns 
 the `QueryEngine` instance.
 
 #### Apache Spark
@@ -78,11 +78,11 @@ Java
 ServiceAccountCredentials credentials = ...; // to be defined
 String projectId = ...; // to be defined
 String datasetName = ...;// to be defined
-BigQueryDatastore ds = new BigQueryDatastore(ServiceAccountCredentials credentials, String projectId, String datasetName);
+BigQueryDatastore ds = new BigQueryDatastore(credentials, projectId, datasetName);
 BigQueryQueryEngine qe = new BigQueryQueryEngine(ds);
 ```
 
-See how to create a [credentials object](https://cloud.google.com/bigquery/docs/authentication/service-account-file)
+See how to create a [credentials object in BigQuery documentation](https://cloud.google.com/bigquery/docs/authentication/service-account-file)
 
 ## API
 
