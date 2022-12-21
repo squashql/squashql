@@ -19,6 +19,27 @@ the UI.
 
 AITM is currently compatible with [Apache Spark](https://spark.apache.org/), [ClickHouse](https://clickhouse.com/) and [BigQuery](https://cloud.google.com/bigquery/). 
 
+### Configuration
+
+To configure AITM for a given database you will have to first import the associated maven module and defined in your java project
+a `QueryEngine` and `Datasatore` by picking the correct implementation.
+
+#### Apache Spark
+
+Maven
+```xml
+<dependency>
+  <groupId>me.paulbares</groupId>
+  <artifactId>aitm-spark</artifactId>
+  <version>${aitm.version}</version>
+</dependency>
+```
+
+Java
+```java
+
+```
+
 ## API
 
 AITM exposes two http endpoints to interrogate your database.
