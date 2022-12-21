@@ -25,7 +25,7 @@ To connect AITM to your database you will first have to import the associated ma
 java project a `QueryEngine` and `Datasatore` by picking the correct implementations. Then declare a bean that returns 
 the `QueryEngine` instance.
 
-Find a ready-to-use example with Apache Sparlk and Spring Boot [here]().TODO
+Find a ready-to-use example with Apache Spark and Spring Boot [here](https://github.com/paulbares/aitm-sandbox).
 
 #### Apache Spark
 
