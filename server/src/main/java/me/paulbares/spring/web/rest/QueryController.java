@@ -19,24 +19,20 @@ import java.util.stream.Collectors;
 @RestController
 public class QueryController {
 
-  public static final String HTTP_HEADER_API_KEY = "x-api-key";
   public static final String MAPPING_QUERY = "/query";
   public static final String MAPPING_QUERY_BEAUTIFY = "/query-beautify";
   public static final String MAPPING_METADATA = "/metadata";
   public static final String MAPPING_EXPRESSION = "/expression";
   protected final QueryEngine queryEngine;
   protected final QueryExecutor queryExecutor;
-  protected final String apiKey;
 
   public QueryController(QueryEngine queryEngine, Environment environment) {
     this.queryEngine = queryEngine;
-    this.apiKey = environment.getRequiredProperty(HTTP_HEADER_API_KEY);
     this.queryExecutor = new QueryExecutor(this.queryEngine);
   }
 
   @PostMapping(MAPPING_QUERY)
-  public ResponseEntity<QueryResultDto> execute(@RequestHeader(HTTP_HEADER_API_KEY) String apiKey, @RequestBody QueryDto query) throws IllegalAccessException {
-    checkApiKey(apiKey);
+  public ResponseEntity<QueryResultDto> execute(@RequestBody QueryDto query) throws IllegalAccessException {
     QueryWatch queryWatch = new QueryWatch();
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
     Table table = this.queryExecutor.execute(query, queryWatch, csBuilder);
@@ -56,15 +52,13 @@ public class QueryController {
   }
 
   @PostMapping(MAPPING_QUERY_BEAUTIFY)
-  public ResponseEntity<String> executeBeautify(@RequestHeader(HTTP_HEADER_API_KEY) String apiKey, @RequestBody QueryDto query) throws IllegalAccessException {
-    checkApiKey(apiKey);
+  public ResponseEntity<String> executeBeautify(String apiKey, @RequestBody QueryDto query) throws IllegalAccessException {
     Table table = this.queryExecutor.execute(query);
     return ResponseEntity.ok(table.toString());
   }
 
   @GetMapping(MAPPING_METADATA)
-  public ResponseEntity<MetadataResultDto> getMetadata(@RequestHeader(HTTP_HEADER_API_KEY) String apiKey) throws IllegalAccessException {
-    checkApiKey(apiKey);
+  public ResponseEntity<MetadataResultDto> getMetadata(String apiKey) throws IllegalAccessException {
     List<MetadataResultDto.StoreMetadata> stores = new ArrayList<>();
     for (Store store : this.queryEngine.datastore().storesByName().values()) {
       List<MetadataItem> items = store.fields().stream().map(f -> new MetadataItem(f.name(), f.name(), f.type())).toList();
@@ -83,14 +77,5 @@ public class QueryController {
       }
     }
     return ResponseEntity.ok(res);
-  }
-
-  /**
-   * FIXME temp. solution until we setup authentication
-   */
-  private void checkApiKey(String httpHeaderApiKey) throws IllegalAccessException {
-    if (!this.apiKey.equals(httpHeaderApiKey)) {
-      throw new IllegalAccessException();
-    }
   }
 }

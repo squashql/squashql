@@ -98,22 +98,6 @@ jobs:
       - name: Run server tests
         run: mvn -pl :aitm-server --no-transfer-progress test
 
-  sandbox:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'maven'
-      - name: sandbox - Build with Maven
-        run: mvn -pl :aitm-sandbox -am clean install --no-transfer-progress -DskipTests
-      - name: Run sandbox tests
-        run: mvn -pl :aitm-sandbox --no-transfer-progress test
-
   java-client:
     runs-on: ubuntu-latest
     timeout-minutes: 10

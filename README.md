@@ -21,9 +21,11 @@ AITM is currently compatible with [Apache Spark](https://spark.apache.org/), [Cl
 
 ### Configuration
 
-To configure AITM for a given database you will have to first import the associated maven module and defined in your 
+To connect AITM to your database you will first have to import the associated maven module and defined in your 
 java project a `QueryEngine` and `Datasatore` by picking the correct implementations. Then declare a bean that returns 
 the `QueryEngine` instance.
+
+Find a ready-to-use example with Apache Spark and Spring Boot [here](https://github.com/paulbares/aitm-sandbox).
 
 #### Apache Spark
 
@@ -126,23 +128,6 @@ You need to have Java 17:
 If you need to build the TypeScript library locally, you need to have Node installed.
 
 - [Node.js](https://nodejs.org/)
-
-## Getting started
-
-- Install prerequisites (see above)
-- Build the project
-
-```
-mvn -pl :aitm-sandbox -am clean install -DskipTests -Pspring-boot
-```
-
-- Launch the project with the following command.
-
-```
-java --add-opens=java.base/sun.nio.ch=ALL-UNNAMED -Ddataset.path=sandbox/src/main/resources/data/saas.csv -jar sandbox/target/aitm-sandbox-0.1-SNAPSHOT.jar
-```
-
-Server address is: `http://localhost:8080`. Once the server is up and running, you can start [executing queries](./QUERY.md).  
 
 ## Testing
 
