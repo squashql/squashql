@@ -13,6 +13,6 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
-    "@aitm22/aitm-js-query": "^1.0.0"
+    "@aitm1/aitm-js": "^1.0.0-SNAPSHOT"
   }
 }

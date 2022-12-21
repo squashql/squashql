@@ -10,7 +10,7 @@ import {
   avg,
   eq,
   _in
-} from "@aitm22/aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const querier = new Querier("http://localhost:8080");
 

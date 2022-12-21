@@ -11,7 +11,7 @@ You can find for more details, API, and other docs on the GitHub page of [AITM](
 ### Installation
 
 ```bash
-npm i @aitm22/aitm-js-query
+npm i @aitm1/aitm-js
 ```
 
 ## License

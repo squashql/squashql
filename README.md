@@ -94,7 +94,7 @@ AITM exposes two http endpoints to interrogate your database.
 To use those endpoints, AITM provides a [TypeScript](https://www.typescriptlang.org/) library with all you need:
 
 ```typescript
-import {count, from, Querier} from "aitm-js-query"
+import {count, from, Querier} from "@aitm1/aitm-js"
 
 const querier = new Querier("http://localhost:8080");
 

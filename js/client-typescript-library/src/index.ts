@@ -5,7 +5,7 @@ import {
   Semester,
   comparisonMeasureWithParent,
   Querier,
-} from "@aitm22/aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const querier = new Querier("http://localhost:8080");
 const assets = "https://raw.githubusercontent.com/paulbares/aitm-assets/main/metrics.json";
