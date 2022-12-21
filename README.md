@@ -91,7 +91,7 @@ AITM exposes two http endpoints to interrogate your database.
 1. `GET  /metadata`: to retrieve the list of tables and fields available
 2. `POST /query`: to execute queries that accepts a json object representing the query to execute
 
-To use those endpoints, AITM provides a [TypeScript](https://www.typescriptlang.org/) library with all you need:
+To use those endpoints, AITM provides a [TypeScript](https://www.typescriptlang.org/) library with all you need available [here](https://www.npmjs.com/package/@aitm1/aitm-js):
 
 ```typescript
 import {count, from, Querier} from "@aitm1/aitm-js"
