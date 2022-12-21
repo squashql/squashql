@@ -26,7 +26,10 @@ import static me.paulbares.query.TestUtils.jdbcUrl;
 import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 @Testcontainers
-@Disabled("not passing anymore since the migration from 0.3.2-patch5 to 0.3.2-patch11")
+@Disabled("""
+        Not passing anymore since the migration from 0.3.2-patch5 to 0.3.2-patch11.
+        We are not using this feature so it is ok for the time being.
+        """)
 public class TestLoadingFromCSV {
 
   @Container
