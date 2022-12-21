@@ -1,5 +1,5 @@
 {
-  "name": "@aitm22/aitm-js-query",
+  "name": "@aitm1/aitm-js",
   "version": "1.0.0-SNAPSHOT",
   "description": "AITM query builder/helper",
   "main": "dist/index.js",
@@ -18,6 +18,6 @@
   "dependencies": {
     "axios": "^0.27.2"
   },
-  "author": "aitm22",
+  "author": "aitm1",
   "license": "Apache-2.0"
 }
