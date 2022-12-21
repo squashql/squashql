@@ -12,19 +12,18 @@
 
   <groupId>me.paulbares</groupId>
   <artifactId>aitm-server</artifactId>
-  <version>0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <dependencies>
     <dependency>
       <groupId>me.paulbares</groupId>
       <artifactId>aitm-core</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>me.paulbares</groupId>
       <artifactId>aitm-java-client</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -35,13 +34,13 @@
     <dependency>
       <groupId>me.paulbares</groupId>
       <artifactId>aitm-js</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>me.paulbares</groupId>
       <artifactId>aitm-spark</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>${project.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>

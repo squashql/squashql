@@ -15,23 +15,26 @@
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
     <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
-    <spark.version>3.2.1</spark.version>
-    <junit.version>5.7.2</junit.version>
-    <junit-platform.version>1.7.2</junit-platform.version>
-    <assertj.version>3.16.1</assertj.version>
-    <jackson.version>2.12.5</jackson.version>
+    <junit.version>5.9.1</junit.version>
+    <junit-platform.version>1.9.1</junit-platform.version>
+    <assertj.version>3.23.1</assertj.version>
+    <jackson.version>2.13.4</jackson.version>
     <spring-boot.version>2.6.1</spring-boot.version>
     <maven-jar-plugin.version>3.2.2</maven-jar-plugin.version>
     <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
-    <eclipse.version>11.0.0</eclipse.version>
-    <feign.version>11.6</feign.version>
-    <testcontainers.version>1.16.3</testcontainers.version>
+    <eclipse.version>11.1.0</eclipse.version>
+    <feign.version>12.1</feign.version>
+    <testcontainers.version>1.17.6</testcontainers.version>
     <guava.version>31.1-jre</guava.version>
-    <caffeine.version>3.1.1</caffeine.version>
-    <mockito.version>4.6.1</mockito.version>
+    <caffeine.version>3.1.2</caffeine.version>
+    <mockito.version>4.9.0</mockito.version>
     <lombok.version>1.18.24</lombok.version>
     <slf4j.version>1.7.36</slf4j.version>
     <logback.version>1.2.11</logback.version>
+
+    <clickhouse.version>0.3.2-patch11</clickhouse.version>
+    <spark.version>3.3.1</spark.version>
+    <bigquery.version>26.1.5</bigquery.version>
   </properties>
 
   <modules>
