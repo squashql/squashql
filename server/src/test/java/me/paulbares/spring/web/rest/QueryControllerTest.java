@@ -51,7 +51,6 @@ public class QueryControllerTest {
             .build();
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY)
-                    .header(QueryController.HTTP_HEADER_API_KEY, this.env.getRequiredProperty(QueryController.HTTP_HEADER_API_KEY))
                     .content(JacksonUtil.serialize(query))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -92,8 +91,7 @@ public class QueryControllerTest {
 
   @Test
   void testMetadata() throws Exception {
-    this.mvc.perform(MockMvcRequestBuilders.get(QueryController.MAPPING_METADATA)
-                    .header(QueryController.HTTP_HEADER_API_KEY, this.env.getRequiredProperty(QueryController.HTTP_HEADER_API_KEY)))
+    this.mvc.perform(MockMvcRequestBuilders.get(QueryController.MAPPING_METADATA))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               assertMetadataResult(JacksonUtil.mapper.readValue(contentAsString, MetadataResultDto.class));
@@ -163,7 +161,6 @@ public class QueryControllerTest {
             .build();
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY)
-                    .header(QueryController.HTTP_HEADER_API_KEY, this.env.getRequiredProperty(QueryController.HTTP_HEADER_API_KEY))
                     .content(JacksonUtil.serialize(query))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())

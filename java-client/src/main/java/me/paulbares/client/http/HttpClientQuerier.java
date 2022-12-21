@@ -17,7 +17,6 @@ public class HttpClientQuerier {
   private static final OkHttpClient client = new OkHttpClient();
 
   private static final Feign.Builder builder = Feign.builder()
-          .requestInterceptor(template -> template.header("x-api-key", "c3981f51-e9e8-47e1-aa81-7c26e05c98d9"))
           .client(new feign.okhttp.OkHttpClient(client))
           .encoder(new JacksonEncoder(JacksonUtil.mapper))
           .decoder(new JacksonDecoder(JacksonUtil.mapper));
