@@ -19,6 +19,71 @@ the UI.
 
 AITM is currently compatible with [Apache Spark](https://spark.apache.org/), [ClickHouse](https://clickhouse.com/) and [BigQuery](https://cloud.google.com/bigquery/). 
 
+### Configuration
+
+To configure AITM for a given database you will have to first import the associated maven module and defined in your 
+java project a `QueryEngine` and `Datasatore` by picking the correct implementations. Then declare a bean that returns 
+the `QueryEngine` instance.
+
+#### Apache Spark
+
+Maven
+```xml
+<dependency>
+  <groupId>me.paulbares</groupId>
+  <artifactId>aitm-spark</artifactId>
+  <version>${aitm.version}</version>
+</dependency>
+```
+
+Java
+```
+SparkSession sparkSession = ...;// to be defined
+SparkDatastore ds = new SparkDatastore(sparkSession);
+SparkQueryEngine qe = new SparkQueryEngine(ds);
+```
+
+#### ClickHouse
+
+Maven
+```xml
+<dependency>
+  <groupId>me.paulbares</groupId>
+  <artifactId>aitm-clickhouse</artifactId>
+  <version>${aitm.version}</version>
+</dependency>
+```
+
+Java
+```
+String jdbcUrl = ...; // to be defined
+String databaseName = ...;// to be defined
+ClickHouseDatastore ds = new ClickHouseDatastore(jdbcUrl, databaseName);
+ClickHouseQueryEngine qe = new ClickHouseQueryEngine(ds);
+```
+
+#### BigQuery
+
+Maven
+```xml
+<dependency>
+  <groupId>me.paulbares</groupId>
+  <artifactId>aitm-bigquery</artifactId>
+  <version>${aitm.version}</version>
+</dependency>
+```
+
+Java
+```
+ServiceAccountCredentials credentials = ...; // to be defined
+String projectId = ...; // to be defined
+String datasetName = ...;// to be defined
+BigQueryDatastore ds = new BigQueryDatastore(credentials, projectId, datasetName);
+BigQueryQueryEngine qe = new BigQueryQueryEngine(ds);
+```
+
+See how to create a [credentials object in BigQuery documentation](https://cloud.google.com/bigquery/docs/authentication/service-account-file)
+
 ## API
 
 AITM exposes two http endpoints to interrogate your database.
