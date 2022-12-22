@@ -1,5 +1,6 @@
 package me.paulbares;
 
+import java.math.BigDecimal;
 import java.sql.Types;
 
 public final class SnowflakeUtil {
@@ -11,14 +12,14 @@ public final class SnowflakeUtil {
     return switch (dataType) {
       case Types.CHAR, Types.NVARCHAR, Types.VARCHAR, Types.LONGVARCHAR -> String.class;
       case Types.NUMERIC, Types.DECIMAL -> java.math.BigDecimal.class;
-      case Types.BIT -> Boolean.class;
-      case Types.TINYINT -> Byte.class;
-      case Types.SMALLINT -> Short.class;
-      case Types.INTEGER -> Integer.class;
-      case Types.BIGINT -> Long.class;
-      case Types.REAL, Types.FLOAT -> Float.class;
-      case Types.DOUBLE -> Double.class;
-      case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> Byte[].class;
+      case Types.BOOLEAN, Types.BIT -> boolean.class;
+      case Types.TINYINT -> byte.class;
+      case Types.SMALLINT -> short.class;
+      case Types.INTEGER -> int.class;
+      case Types.BIGINT -> long.class;
+      case Types.REAL, Types.FLOAT -> float.class;
+      case Types.DOUBLE -> double.class;
+      case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> byte[].class;
       case Types.DATE -> java.sql.Date.class;
       case Types.TIME -> java.sql.Time.class;
       case Types.TIMESTAMP -> java.sql.Timestamp.class;
@@ -26,15 +27,44 @@ public final class SnowflakeUtil {
     };
   }
 
-//  public static ServiceAccountCredentials createCredentials(String path) {
-//    try {
-//      InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
-//      if (resourceAsStream == null) {
-//        resourceAsStream = new FileInputStream(path);
-//      }
-//      return ServiceAccountCredentials.fromStream(resourceAsStream);
-//    } catch (IOException e) {
-//      throw new RuntimeException(e);
-//    }
-//  }
+  public static String classToSqlType(Class<?> clazz) {
+    if (clazz.equals(String.class)) {
+      return "STRING";
+    }
+    if (clazz.equals(BigDecimal.class)) {
+      return "NUMBER";
+    }
+    if (clazz.equals(Byte.class) || clazz.equals(byte.class)) {
+      return "TINYINT";
+    }
+    if (clazz.equals(Short.class) || clazz.equals(short.class)) {
+      return "SMALLINT";
+    }
+    if (clazz.equals(Integer.class) || clazz.equals(int.class)) {
+      return "INTEGER";
+    }
+    if (clazz.equals(Long.class) || clazz.equals(long.class)) {
+      return "BIGINT";
+    }
+    if (clazz.equals(Float.class) || clazz.equals(float.class)) {
+      return "FLOAT";
+    }
+    if (clazz.equals(Double.class) || clazz.equals(double.class)) {
+      return "DOUBLE";
+    }
+    if (clazz.equals(Boolean.class) || clazz.equals(boolean.class)) {
+      return "BOOLEAN";
+    }
+    if (clazz.equals(java.sql.Date.class)) {
+      return "DATE";
+    }
+    if (clazz.equals(java.sql.Time.class)) {
+      return "TIME";
+    }
+    if (clazz.equals(java.sql.Timestamp.class)) {
+      return "TIMESTAMP";
+    }
+    throw new IllegalArgumentException("Unsupported field type " + clazz);
+  }
+
 }

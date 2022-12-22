@@ -6,7 +6,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.store.Store;
@@ -16,32 +15,27 @@ import java.util.function.Supplier;
 
 public class SnowflakeDatastore implements Datastore {
 
-  private final Statement snowflake;
+  private final String jdbcUrl;
+  private final Properties connectionProperties;
   public final Supplier<Map<String, Store>> stores;
 
-  public SnowflakeDatastore() throws SQLException {
+  public SnowflakeDatastore(String jdbcUrl, String username, String password, String warehouse, String database,
+          String schema) {
+    this.jdbcUrl = jdbcUrl;
     // build connection properties
     Properties properties = new Properties();
-    properties.put("user", ""); // replace "" with your user name
-    properties.put("password", ""); // replace "" with your password
-    properties.put("warehouse", ""); // replace "" with target warehouse name
-    properties.put("db", ""); // replace "" with target database name
-    properties.put("schema", ""); // replace "" with target schema name
-    // properties.put("tracing", "all"); // optional tracing property
+    properties.put("user", username);
+    properties.put("password", password);
+    properties.put("warehouse", warehouse);
+    properties.put("db", database);
+    properties.put("schema", schema);
+    this.connectionProperties = properties;
 
-    // Replace <account_identifier> with your account identifier. See
-    // https://docs.snowflake.com/en/user-guide/admin-account-identifier.html
-    // for details.
-    String connectStr = "jdbc:snowflake://<account_identifier>.snowflakecomputing.com";
-    Connection connection = DriverManager.getConnection(connectStr, properties);
-    this.snowflake = connection.createStatement();
-
-    DatabaseMetaData metadata = connection.getMetaData();
-    this.stores = Suppliers.memoize(() -> getStores(metadata));
+    this.stores = Suppliers.memoize(() -> getStores(database, schema));
   }
 
-  public Statement getSnowflake() {
-    return this.snowflake;
+  public Connection getConnection() throws SQLException {
+    return DriverManager.getConnection(this.jdbcUrl, this.connectionProperties);
   }
 
   @Override
@@ -49,10 +43,11 @@ public class SnowflakeDatastore implements Datastore {
     return this.stores.get();
   }
 
-  public static Map<String, Store> getStores(DatabaseMetaData metadata) {
-    try {
+  Map<String, Store> getStores(String database, String schema) {
+    try (Connection connection = getConnection()) {
+      DatabaseMetaData metadata = connection.getMetaData();
       Map<String, Store> stores = new HashMap<>();
-      ResultSet resultSet = metadata.getColumns("OPTIPRIX", "PUBLIC", "%", null);
+      ResultSet resultSet = metadata.getColumns(database, schema, "%", null);
       while (resultSet.next()) {
         String tableName = resultSet.getString("TABLE_NAME");
         String columnName = resultSet.getString("COLUMN_NAME");
@@ -70,4 +65,5 @@ public class SnowflakeDatastore implements Datastore {
       throw new RuntimeException(e);
     }
   }
+
 }

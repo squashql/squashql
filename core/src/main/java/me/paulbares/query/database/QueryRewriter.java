@@ -14,5 +14,13 @@ public interface QueryRewriter {
     return alias;
   }
 
+  default String rollup(String rollup) {
+    return rollup;
+  }
+
+  default String groupingAlias(String field) {
+    return String.format("___grouping___%s___", field);
+  }
+
   boolean doesSupportPartialRollup();
 }

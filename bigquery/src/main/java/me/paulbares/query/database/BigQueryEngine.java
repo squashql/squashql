@@ -32,7 +32,8 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
               schema.getFields(),
               (column, name) -> new Field(name, BigQueryUtil.bigQueryTypeToClass(column.getType())),
               tableResult.iterateAll().iterator(),
-              (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i)
+              (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i),
+              queryRewriter
       );
       return new ColumnarTable(
               result.getOne(),
@@ -109,6 +110,16 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
               .replace("(", "_")
               .replace(")", "_")
               .replace(" ", "_");
+    }
+
+    @Override
+    public String rollup(String rollup) {
+      return SqlUtils.backtickEscape(rollup);
+    }
+
+    @Override
+    public String groupingAlias(String field) {
+      return SqlUtils.backtickEscape(QueryRewriter.super.groupingAlias(field));
     }
 
     @Override

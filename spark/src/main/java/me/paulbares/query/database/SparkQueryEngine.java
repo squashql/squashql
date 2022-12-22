@@ -46,17 +46,18 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
     String sql = SQLTranslator.translate(query, this.fieldSupplier, queryRewriter, QueryRewriter::tableName);
-    return getResults(sql, this.datastore.spark, query);
+    return getResults(sql, this.datastore.spark, query, this.queryRewriter);
   }
 
-  static Table getResults(String sql, SparkSession sparkSession, DatabaseQuery query) {
+  static Table getResults(String sql, SparkSession sparkSession, DatabaseQuery query, QueryRewriter queryRewriter) {
     Dataset<Row> ds = sparkSession.sql(sql);
     Pair<List<Field>, List<List<Object>>> result = transform(
             query,
             Arrays.stream(ds.schema().fields()).toList(),
             (column, name) -> new Field(name, datatypeToClass(column.dataType())),
             ds.toLocalIterator(),
-            (i, r) -> r.get(i));
+            (i, r) -> r.get(i),
+            queryRewriter);
     return new ColumnarTable(
             result.getOne(),
             query.measures,
@@ -73,6 +74,16 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
     @Override
     public String measureAlias(String alias) {
       return SqlUtils.backtickEscape(alias);
+    }
+
+    @Override
+    public String rollup(String rollup) {
+      return SqlUtils.backtickEscape(rollup);
+    }
+
+    @Override
+    public String groupingAlias(String field) {
+      return SqlUtils.backtickEscape(QueryRewriter.super.groupingAlias(field));
     }
 
     @Override

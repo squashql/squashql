@@ -136,10 +136,11 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
           List<Column> columns,
           BiFunction<Column, String, Field> columnToField,
           Iterator<Record> recordIterator,
-          BiFunction<Integer, Record, Object> recordToFieldValue) {
+          BiFunction<Integer, Record, Object> recordToFieldValue,
+          QueryRewriter queryRewriter) {
     List<String> fieldNames = new ArrayList<>();
     query.select.forEach(fieldNames::add);
-    query.rollup.forEach(r -> fieldNames.add(groupingAlias(r)));
+    query.rollup.forEach(r -> fieldNames.add(queryRewriter.groupingAlias(r)));
     query.measures.forEach(m -> fieldNames.add(m.alias()));
 
     List<Field> fields = new ArrayList<>();

@@ -33,7 +33,7 @@ public class SQLTranslator {
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true)));
 
     groupBy.forEach(selects::add); // coord first, then aggregates
-    query.rollup.forEach(field -> selects.add(String.format("grouping(%s) as %s", queryRewriter.fieldName(field), groupingAlias(field)))); // use grouping to identify totals
+    query.rollup.forEach(field -> selects.add(String.format("grouping(%s) as %s", queryRewriter.fieldName(field), queryRewriter.groupingAlias(field)))); // use grouping to identify totals
     aggregates.forEach(selects::add);
 
     StringBuilder statement = new StringBuilder();
@@ -49,8 +49,7 @@ public class SQLTranslator {
       addJoins(statement, query.table, queryRewriter);
     }
     addConditions(statement, query, fieldProvider, queryRewriter);
-    // TODO remove escape from here
-    addGroupByAndRollup(groupBy, query.rollup.stream().map(SqlUtils::backtickEscape).toList(), queryRewriter.doesSupportPartialRollup(), statement);
+    addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.doesSupportPartialRollup(), statement);
     return statement.toString();
   }
 
@@ -270,8 +269,7 @@ public class SQLTranslator {
    * Returns the name of the column used for grouping(). If it is modified, please modify also
    * {@link SqlUtils#GROUPING_PATTERN}.
    */
-  public static String groupingAlias(String field) {
-    // TODO remove escape from here
-    return String.format(SqlUtils.backtickEscape("___grouping___%s___"), field);
+  public static String groupingAlias(String field, QueryRewriter queryRewriter) {
+    return String.format(queryRewriter.measureAlias("___grouping___%s___"), field);
   }
 }

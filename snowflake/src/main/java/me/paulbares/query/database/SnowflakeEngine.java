@@ -3,11 +3,11 @@ package me.paulbares.query.database;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import me.paulbares.SnowflakeDatastore;
 import me.paulbares.SnowflakeUtil;
 import me.paulbares.query.ColumnarTable;
-import me.paulbares.query.Measure;
 import me.paulbares.query.Table;
 import me.paulbares.store.Field;
 
@@ -15,6 +15,29 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 public class SnowflakeEngine extends AQueryEngine<SnowflakeDatastore> {
+
+  /**
+   * https://docs.snowflake.com/en/sql-reference/functions-aggregation.html
+   * NOTE there is more but only a subset is proposed here.
+   */
+  public static final List<String> SUPPORTED_AGGREGATION_FUNCTIONS = List.of(
+          "ANY_VALUE",
+          "AVG",
+          "CORR",
+          "COUNT",
+          "COUNT_IF",
+          "COVAR_POP",
+          "COVAR_SAMP",
+          "LISTAGG",
+          "MAX",
+          "MEDIAN",
+          "MIN",
+          "MODE",
+          "STDDEV_POP",
+          "STDDEV_SAMP",
+          "SUM",
+          "VAR_POP",
+          "VAR_SAMP");
 
   private final QueryRewriter queryRewriter;
 
@@ -26,9 +49,8 @@ public class SnowflakeEngine extends AQueryEngine<SnowflakeDatastore> {
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
     String sql = SQLTranslator.translate(query, this.fieldSupplier, queryRewriter, QueryRewriter::tableName);
-    System.out.println(sql);
-    try {
-      ResultSet tableResult = this.datastore.getSnowflake().executeQuery(sql);
+    try (Statement snowflakeStatement = this.datastore.getConnection().createStatement()) {
+      ResultSet tableResult = snowflakeStatement.executeQuery(sql);
 
       List<Field> headers = new ArrayList<>();
       ResultSetMetaData metadata = tableResult.getMetaData();
@@ -56,11 +78,15 @@ public class SnowflakeEngine extends AQueryEngine<SnowflakeDatastore> {
 
   @Override
   public List<String> supportedAggregationFunctions() {
-    // TODO : to define
-    return null;
+    return SUPPORTED_AGGREGATION_FUNCTIONS;
   }
 
   static class SnowflakeQueryRewriter implements QueryRewriter {
+
+    @Override
+    public String tableName(String table) {
+      return SqlUtils.doubleQuoteEscape(table);
+    }
 
     @Override
     public String fieldName(String field) {
@@ -68,8 +94,13 @@ public class SnowflakeEngine extends AQueryEngine<SnowflakeDatastore> {
     }
 
     @Override
-    public String measureAlias(String alias) {
-      return SqlUtils.doubleQuoteEscape(alias);
+    public String rollup(String rollup) {
+      return SqlUtils.doubleQuoteEscape(rollup);
+    }
+
+    @Override
+    public String groupingAlias(String field) {
+      return SqlUtils.doubleQuoteEscape(QueryRewriter.super.groupingAlias(field));
     }
 
     @Override

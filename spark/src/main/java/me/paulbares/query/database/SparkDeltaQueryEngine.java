@@ -31,7 +31,7 @@ public class SparkDeltaQueryEngine extends ADeltaQueryEngine<SparkDatastore> {
             this.fieldSupplier,
             queryRewriter,
             tableTransformer);
-    return getResults(sql, this.datastore.spark, query);
+    return getResults(sql, this.datastore.spark, query, queryRewriter);
   }
 
   @Override

@@ -30,7 +30,7 @@ public class ClickHouseDeltaQueryEngine extends ADeltaQueryEngine<ClickHouseData
             this.fieldSupplier,
             queryRewriter,
             tableTransformer);
-    return getResults(sql, this.datastore.dataSource, query);
+    return getResults(sql, this.datastore.dataSource, query, queryRewriter);
   }
 
   @Override
