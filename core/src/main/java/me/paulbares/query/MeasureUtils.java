@@ -21,7 +21,7 @@ public final class MeasureUtils {
   public static String createExpression(Measure m) {
     if (m instanceof AggregatedMeasure a) {
       if (a.criteria != null) {
-        String conditionSt = SQLTranslator.toSql(f -> new Field(f, String.class), a.criteria, null);
+        String conditionSt = SQLTranslator.toSql(f -> new Field(f, String.class), a.criteria, () -> false);
         return a.aggregationFunction + "If(" + a.field + ", " + conditionSt + ")";
       } else {
         return a.aggregationFunction + "(" + a.field + ")";
