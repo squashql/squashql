@@ -14,8 +14,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import static me.paulbares.query.database.SQLTranslator.groupingAlias;
-
 public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T> {
 
   public final T datastore;

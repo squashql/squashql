@@ -1,16 +1,16 @@
 package me.paulbares.query.database;
 
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
 import me.paulbares.SnowflakeDatastore;
 import me.paulbares.SnowflakeUtil;
 import me.paulbares.query.ColumnarTable;
 import me.paulbares.query.Table;
 import me.paulbares.store.Field;
 
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -48,7 +48,7 @@ public class SnowflakeEngine extends AQueryEngine<SnowflakeDatastore> {
 
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
-    String sql = SQLTranslator.translate(query, this.fieldSupplier, queryRewriter, QueryRewriter::tableName);
+    String sql = SQLTranslator.translate(query, this.fieldSupplier, this.queryRewriter, QueryRewriter::tableName);
     try (Statement snowflakeStatement = this.datastore.getConnection().createStatement()) {
       ResultSet tableResult = snowflakeStatement.executeQuery(sql);
 
@@ -62,9 +62,10 @@ public class SnowflakeEngine extends AQueryEngine<SnowflakeDatastore> {
       headers.forEach(field -> values.add(new ArrayList<>()));
       while (tableResult.next()) {
         for (int i = 0; i < headers.size(); i++) {
-          values.get(i).add(tableResult.getObject(1+i));
+          values.get(i).add(tableResult.getObject(1 + i));
         }
       }
+
       return new ColumnarTable(
               headers,
               query.measures,
@@ -107,7 +108,5 @@ public class SnowflakeEngine extends AQueryEngine<SnowflakeDatastore> {
     public boolean doesSupportPartialRollup() {
       return true;
     }
-
   }
-
 }

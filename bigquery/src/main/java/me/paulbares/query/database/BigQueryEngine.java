@@ -33,7 +33,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
               (column, name) -> new Field(name, BigQueryUtil.bigQueryTypeToClass(column.getType())),
               tableResult.iterateAll().iterator(),
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i),
-              queryRewriter
+              this.queryRewriter
       );
       return new ColumnarTable(
               result.getOne(),

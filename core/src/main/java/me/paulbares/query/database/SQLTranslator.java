@@ -264,12 +264,4 @@ public class SQLTranslator {
     }
     return virtualTable;
   }
-
-  /**
-   * Returns the name of the column used for grouping(). If it is modified, please modify also
-   * {@link SqlUtils#GROUPING_PATTERN}.
-   */
-  public static String groupingAlias(String field, QueryRewriter queryRewriter) {
-    return String.format(queryRewriter.measureAlias("___grouping___%s___"), field);
-  }
 }
