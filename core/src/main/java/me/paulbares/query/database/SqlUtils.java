@@ -12,7 +12,7 @@ public class SqlUtils {
   }
 
   public static String appendAlias(String sql, QueryRewriter queryRewriter, String alias) {
-    return sql + " as " + queryRewriter.measureAlias(escape(alias));
+    return sql + " as " + queryRewriter.measureAlias(alias);
   }
 
   /**

@@ -1,7 +1,9 @@
 package me.paulbares.query.database;
 
+import lombok.extern.slf4j.Slf4j;
 import me.paulbares.query.ColumnarTable;
 import me.paulbares.query.CountMeasure;
+import me.paulbares.query.QueryExecutor;
 import me.paulbares.query.Table;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
@@ -9,22 +11,29 @@ import me.paulbares.store.Store;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static me.paulbares.query.database.SQLTranslator.groupingAlias;
 
+@Slf4j
 public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T> {
 
   public final T datastore;
 
   public final Function<String, Field> fieldSupplier;
 
-  protected AQueryEngine(T datastore) {
+  protected final QueryRewriter queryRewriter;
+
+  protected AQueryEngine(T datastore, QueryRewriter queryRewriter) {
     this.datastore = datastore;
     this.fieldSupplier = createFieldSupplier();
+    this.queryRewriter = queryRewriter;
   }
 
   protected Function<String, Field> createFieldSupplier() {
@@ -54,7 +63,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     return this.datastore;
   }
 
-  protected abstract Table retrieveAggregates(DatabaseQuery query);
+  protected abstract Table retrieveAggregates(DatabaseQuery query, String sql);
 
   @Override
   public Table execute(DatabaseQuery query) {
@@ -67,14 +76,20 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
                 tableName, this.datastore.storesByName().values().stream().map(Store::name).toList()));
       }
     }
-    Table aggregates = retrieveAggregates(query);
+    String sql = createSqlStatement(query);
+    log.info(query + " translated into sql='" + sql + "'");
+    Table aggregates = retrieveAggregates(query, sql);
     return postProcessDataset(aggregates, query);
+  }
+
+  protected String createSqlStatement(DatabaseQuery query) {
+    return SQLTranslator.translate(query, QueryExecutor.withFallback(this.fieldSupplier, String.class), this.queryRewriter);
   }
 
   /**
    * Changes the content of the input table to remove columns corresponding to grouping() (columns that help to identify
    * rows containing totals) and write {@link SQLTranslator#TOTAL_CELL} in the corresponding cells. The modifications
-   * happen in-place i.e in the input table columns directly.
+   * happen in-place i.e. in the input table columns directly.
    * <pre>
    *   Input:
    *   +----------+----------+---------------------------+---------------------------+------+----------------------+----+
@@ -136,10 +151,13 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
           List<Column> columns,
           BiFunction<Column, String, Field> columnToField,
           Iterator<Record> recordIterator,
-          BiFunction<Integer, Record, Object> recordToFieldValue) {
+          BiFunction<Integer, Record, Object> recordToFieldValue,
+          QueryRewriter queryRewriter) {
     List<String> fieldNames = new ArrayList<>();
     query.select.forEach(fieldNames::add);
-    query.rollup.forEach(r -> fieldNames.add(groupingAlias(r)));
+    if (queryRewriter.doesSupportGroupingFunction()) {
+      query.rollup.forEach(r -> fieldNames.add(groupingAlias(r)));
+    }
     query.measures.forEach(m -> fieldNames.add(m.alias()));
 
     List<Field> fields = new ArrayList<>();

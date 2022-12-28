@@ -1,11 +1,9 @@
 package me.paulbares.query.database;
 
 import com.clickhouse.client.*;
-import com.clickhouse.jdbc.ClickHouseDataSource;
 import me.paulbares.ClickHouseDatastore;
 import me.paulbares.ClickHouseUtil;
 import me.paulbares.query.ColumnarTable;
-import me.paulbares.query.QueryExecutor;
 import me.paulbares.query.Table;
 import me.paulbares.store.Field;
 import org.eclipse.collections.api.tuple.Pair;
@@ -34,27 +32,15 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
           "covarPop",
           "covarSamp");
 
-  protected final QueryRewriter rewriter;
-
   public ClickHouseQueryEngine(ClickHouseDatastore datastore) {
-    super(datastore);
-    this.rewriter = new ClickHouseQueryRewriter();
+    super(datastore, new ClickHouseQueryRewriter());
   }
 
   @Override
-  protected Table retrieveAggregates(DatabaseQuery query) {
-    String sql = SQLTranslator.translate(query,
-            QueryExecutor.withFallback(this.fieldSupplier, String.class),
-            this.rewriter,
-            (qr, name) -> qr.tableName(name));
-    return getResults(sql, this.datastore.dataSource, query);
-  }
-
-  static Table getResults(String sql, ClickHouseDataSource dataSource, DatabaseQuery query) {
-    // connect to localhost, use default port of the preferred protocol
+  protected Table retrieveAggregates(DatabaseQuery query, String sql) {
     ClickHouseNode server = ClickHouseNode.builder()
-            .host(dataSource.getHost())
-            .port(ClickHouseProtocol.HTTP, dataSource.getPort())
+            .host(this.datastore.dataSource.getHost())
+            .port(ClickHouseProtocol.HTTP, this.datastore.dataSource.getPort())
             .build();
 
     try (ClickHouseClient client = ClickHouseClient.newInstance(ClickHouseProtocol.HTTP);
@@ -68,7 +54,8 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
               response.getColumns(),
               (column, name) -> new Field(name, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())),
               response.records().iterator(),
-              (i, r) -> r.getValue(i).asObject());
+              (i, r) -> r.getValue(i).asObject(),
+              this.queryRewriter);
       return new ColumnarTable(
               result.getOne(),
               query.measures,
@@ -86,11 +73,32 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
   }
 
   static class ClickHouseQueryRewriter implements QueryRewriter {
+
+    @Override
+    public String select(String select) {
+      return SqlUtils.escape(select);
+    }
+
+    @Override
+    public String rollup(String rollup) {
+      return SqlUtils.escape(rollup);
+    }
+
+    @Override
+    public String measureAlias(String alias) {
+      return SqlUtils.escape(alias);
+    }
+
     @Override
     public boolean doesSupportPartialRollup() {
       // Not supported as of now: https://github.com/ClickHouse/ClickHouse/issues/322#issuecomment-615087004
       // Tested with version https://github.com/ClickHouse/ClickHouse/tree/v22.10.2.11-stable
       return false;
+    }
+
+    @Override
+    public boolean doesSupportGroupingFunction() {
+      return true;
     }
   }
 }

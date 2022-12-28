@@ -16,14 +16,12 @@ import java.util.function.Supplier;
 
 public class BigQueryDatastore implements Datastore {
 
-  private final ServiceAccountCredentials credentials;
   private final BigQuery bigquery;
   public final Supplier<Map<String, Store>> stores;
   public final String projectId;
   public final String datasetName;
 
   public BigQueryDatastore(ServiceAccountCredentials credentials, String projectId, String datasetName) {
-    this.credentials = credentials;
     this.projectId = projectId;
     this.datasetName = datasetName;
     // Initialize client that will be used to send requests. This client only needs to be created
@@ -35,7 +33,6 @@ public class BigQueryDatastore implements Datastore {
     build.setThrowNotFound(true);
     this.bigquery = build
             .getService();
-
     this.stores = Suppliers.memoize(
             () -> getTableNames(this.bigquery, projectId, datasetName)
                     .stream()
