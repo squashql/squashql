@@ -15,7 +15,7 @@ public class SQLTranslator {
 
   public static final String TOTAL_CELL = "___total___";
 
-  private static final DefaultQueryRewriter DEFAULT_QUERY_REWRITER = new DefaultQueryRewriter();
+  private static final QueryRewriter DEFAULT_QUERY_REWRITER = () -> false;
 
   public static String translate(DatabaseQuery query, Function<String, Field> fieldProvider) {
     return translate(query, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));

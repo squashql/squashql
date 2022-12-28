@@ -11,7 +11,7 @@ import org.junit.jupiter.api.AfterAll;
 /**
  * Do not edit this class, it has been generated automatically by {@link me.paulbares.template.SnowflakeClassTemplateGenerator}.
  */
-public class TestSnowflakeQueryExecutor extends ATestQueryExecutor {
+public class TestSnowflakeDocBucketComparison extends ATestDocBucketComparison {
 
   @AfterAll
   void tearDown() {
