@@ -11,14 +11,13 @@ public final class SnowflakeUtil {
   public static Class<?> sqlTypeToClass(int dataType) {
     return switch (dataType) {
       case Types.CHAR, Types.NVARCHAR, Types.VARCHAR, Types.LONGVARCHAR -> String.class;
-      case Types.NUMERIC, Types.DECIMAL -> java.math.BigDecimal.class;
       case Types.BOOLEAN, Types.BIT -> boolean.class;
       case Types.TINYINT -> byte.class;
       case Types.SMALLINT -> short.class;
       case Types.INTEGER -> int.class;
       case Types.BIGINT -> long.class;
       case Types.REAL, Types.FLOAT -> float.class;
-      case Types.DOUBLE -> double.class;
+      case Types.DECIMAL, Types.DOUBLE -> double.class;
       case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> byte[].class;
       case Types.DATE -> java.sql.Date.class;
       case Types.TIME -> java.sql.Time.class;
@@ -30,9 +29,6 @@ public final class SnowflakeUtil {
   public static String classToSqlType(Class<?> clazz) {
     if (clazz.equals(String.class)) {
       return "STRING";
-    }
-    if (clazz.equals(BigDecimal.class)) {
-      return "NUMBER";
     }
     if (clazz.equals(Byte.class) || clazz.equals(byte.class)) {
       return "TINYINT";
@@ -55,10 +51,10 @@ public final class SnowflakeUtil {
     if (clazz.equals(Boolean.class) || clazz.equals(boolean.class)) {
       return "BOOLEAN";
     }
-    if (clazz.equals(java.sql.Date.class)) {
+    if (clazz.equals(java.sql.Date.class) || clazz.equals(java.time.LocalDate.class)) {
       return "DATE";
     }
-    if (clazz.equals(java.sql.Time.class)) {
+    if (clazz.equals(java.sql.Time.class) || clazz.equals(java.time.LocalDateTime.class)) {
       return "TIME";
     }
     if (clazz.equals(java.sql.Timestamp.class)) {

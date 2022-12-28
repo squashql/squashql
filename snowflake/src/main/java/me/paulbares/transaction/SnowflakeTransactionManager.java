@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.IntStream;
 import me.paulbares.SnowflakeDatastore;
@@ -67,7 +69,11 @@ public class SnowflakeTransactionManager implements TransactionManager {
             PreparedStatement stmt = conn.prepareStatement(pattern)) {
       for (Object[] tuple : tuples) {
         for (int i = 0; i < tuple.length; i++) {
-          stmt.setObject(i + 1, tuple[i]);
+          Object o = tuple[i];
+          if (o != null && (o.getClass().equals(LocalDate.class) || o.getClass().equals(LocalDateTime.class))) {
+            o = o.toString();
+          }
+          stmt.setObject(i + 1, o);
         }
         stmt.setObject(tuple.length + 1, scenario);
         stmt.addBatch();

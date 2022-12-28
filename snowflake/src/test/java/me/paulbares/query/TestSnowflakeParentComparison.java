@@ -2,7 +2,7 @@ package me.paulbares.query;
 
 import me.paulbares.SnowflakeDatastore;
 import me.paulbares.query.database.QueryEngine;
-import me.paulbares.query.database.SnowflakeEngine;
+import me.paulbares.query.database.SnowflakeQueryEngine;
 import me.paulbares.store.Datastore;
 import me.paulbares.transaction.SnowflakeTransactionManager;
 import me.paulbares.transaction.TransactionManager;
@@ -27,7 +27,7 @@ public class TestSnowflakeParentComparison extends ATestParentComparison {
 
   @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {
-    return new SnowflakeEngine((SnowflakeDatastore) datastore);
+    return new SnowflakeQueryEngine((SnowflakeDatastore) datastore);
   }
 
   @Override
@@ -45,5 +45,10 @@ public class TestSnowflakeParentComparison extends ATestParentComparison {
   @Override
   protected TransactionManager createTransactionManager() {
     return new SnowflakeTransactionManager((SnowflakeDatastore) this.datastore);
+  }
+
+  @Override
+  protected Object translate(Object o) {
+    return SnowflakeTestUtil.translate(o);
   }
 }

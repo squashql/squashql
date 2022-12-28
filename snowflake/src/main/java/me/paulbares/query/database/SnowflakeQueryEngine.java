@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
-public class SnowflakeEngine extends AQueryEngine<SnowflakeDatastore> {
+public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
 
   /**
    * https://docs.snowflake.com/en/sql-reference/functions-aggregation.html
@@ -41,7 +41,7 @@ public class SnowflakeEngine extends AQueryEngine<SnowflakeDatastore> {
 
   private final QueryRewriter queryRewriter;
 
-  public SnowflakeEngine(SnowflakeDatastore datastore) {
+  public SnowflakeQueryEngine(SnowflakeDatastore datastore) {
     super(datastore);
     this.queryRewriter = new SnowflakeQueryRewriter();
   }
@@ -49,6 +49,7 @@ public class SnowflakeEngine extends AQueryEngine<SnowflakeDatastore> {
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
     String sql = SQLTranslator.translate(query, this.fieldSupplier, this.queryRewriter, QueryRewriter::tableName);
+    System.out.println(sql);
     try (Statement snowflakeStatement = this.datastore.getConnection().createStatement()) {
       ResultSet tableResult = snowflakeStatement.executeQuery(sql);
 
@@ -92,6 +93,11 @@ public class SnowflakeEngine extends AQueryEngine<SnowflakeDatastore> {
     @Override
     public String fieldName(String field) {
       return SqlUtils.doubleQuoteEscape(field);
+    }
+
+    @Override
+    public String measureAlias(String alias) {
+      return SqlUtils.doubleQuoteEscape(alias);
     }
 
     @Override

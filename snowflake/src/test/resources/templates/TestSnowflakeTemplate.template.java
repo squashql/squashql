@@ -46,4 +46,9 @@ public class TestSnowflake{{classSuffix}} extends {{parentTestClass}} {
   protected TransactionManager createTransactionManager() {
     return new SnowflakeTransactionManager((SnowflakeDatastore) this.datastore);
   }
+
+  @Override
+  protected Object translate(Object o) {
+    return SnowflakeTestUtil.translate(o);
+  }
 }

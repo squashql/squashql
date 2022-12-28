@@ -124,9 +124,9 @@ public class SQLTranslator {
       for (int i = 0; i < join.mappings.size(); i++) {
         JoinMappingDto mapping = join.mappings.get(i);
         statement
-                .append(queryRewriter.tableName(mapping.fromTable)).append('.').append(mapping.from)
+                .append(queryRewriter.tableName(mapping.fromTable)).append('.').append(queryRewriter.fieldName(mapping.from))
                 .append(" = ")
-                .append(queryRewriter.tableName(mapping.toTable)).append('.').append(mapping.to);
+                .append(queryRewriter.tableName(mapping.toTable)).append('.').append(queryRewriter.fieldName(mapping.to));
         if (i < join.mappings.size() - 1) {
           statement.append(" and ");
         }
