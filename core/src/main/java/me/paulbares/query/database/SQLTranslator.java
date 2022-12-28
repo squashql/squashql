@@ -19,7 +19,7 @@ public class SQLTranslator {
   private static final DefaultQueryRewriter DEFAULT_QUERY_REWRITER = new DefaultQueryRewriter();
 
   public static String translate(DatabaseQuery query, Function<String, Field> fieldProvider) {
-    return translate(query, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));
+    return translate(query, fieldProvider, DEFAULT_QUERY_REWRITER, QueryRewriter::tableName);
   }
 
   public static String translate(DatabaseQuery query,
@@ -33,13 +33,13 @@ public class SQLTranslator {
     query.select.forEach(field -> groupBy.add(escape(field)));
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true)));
 
-    groupBy.forEach(selects::add); // coord first, then aggregates
+    selects.addAll(groupBy); // coord first, then aggregates
     query.rollup.forEach(field -> selects.add(String.format("grouping(%s) as %s", escape(field), groupingAlias(field)))); // use grouping to identify totals
-    aggregates.forEach(selects::add);
+    selects.addAll(aggregates);
 
     StringBuilder statement = new StringBuilder();
     statement.append("select ");
-    statement.append(selects.stream().collect(Collectors.joining(", ")));
+    statement.append(String.join(", ", selects));
     statement.append(" from ");
     if (query.subQuery != null) {
       statement.append("(");
@@ -62,7 +62,7 @@ public class SQLTranslator {
     statement.append(" group by ");
 
     boolean isPartialRollup = !Set.copyOf(groupBy).equals(Set.copyOf(rollup));
-    boolean hasRollup = rollup != null && !rollup.isEmpty();
+    boolean hasRollup = !rollup.isEmpty();
     List<String> groupByOnly = new ArrayList<>();
     List<String> rollupOnly = new ArrayList<>();
 
@@ -92,7 +92,7 @@ public class SQLTranslator {
               .append("grouping sets ")
               .append(groupingSets.stream().collect(Collectors.joining(", ", "(", ")")));
     } else {
-      statement.append(groupByOnly.stream().collect(Collectors.joining(", ")));
+      statement.append(String.join(", ", groupByOnly));
 
       if (hasRollup) {
         if (!groupByOnly.isEmpty()) {
@@ -149,7 +149,7 @@ public class SQLTranslator {
               || field.type().equals(float.class)
               || field.type().equals(boolean.class)) {
         // no quote
-        sqlMapper = o -> String.valueOf(o);
+        sqlMapper = String::valueOf;
       } else if (field.type().equals(String.class)) {
         // quote
         sqlMapper = s -> "'" + s + "'";

@@ -83,6 +83,21 @@ public class TestSQLTranslator {
   }
 
   @Test
+  void testWithFullRollupBigQuery() {
+    DatabaseQuery query = new DatabaseQuery()
+            .withSelect(SCENARIO_FIELD_NAME)
+            .withSelect("type")
+            .withRollup(SCENARIO_FIELD_NAME)
+            .withRollup("type")
+            .aggregatedMeasure("pnl.sum", "price", "sum")
+            .table(BASE_STORE_NAME);
+
+    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
+            .isEqualTo("select `scenario`, `type`, grouping(`scenario`) as `___grouping___scenario___`, grouping(`type`) as `___grouping___type___`, sum(`price`) as `pnl.sum`" +
+                    " from baseStore group by rollup(`scenario`, `type`)");
+  }
+
+  @Test
   void testWithPartialRollup() {
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(SCENARIO_FIELD_NAME)

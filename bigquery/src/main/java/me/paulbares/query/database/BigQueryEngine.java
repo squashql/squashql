@@ -108,7 +108,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
     @Override
     public boolean doesSupportPartialRollup() {
-      return true;
+      return false;
     }
   }
 }
