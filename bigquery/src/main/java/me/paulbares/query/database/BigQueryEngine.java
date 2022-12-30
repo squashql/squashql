@@ -93,7 +93,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
           newValues.add(newColumnValues);
         }
       } else {
-        newValues = IntStream.of(input.headers().size()).mapToObj(input::getColumn).toList();
+        newValues = ((ColumnarTable) input).getColumns();
       }
 
       return new ColumnarTable(
