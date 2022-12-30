@@ -1,5 +1,6 @@
 package me.paulbares.query.database;
 
+import com.google.common.collect.Ordering;
 import me.paulbares.query.dto.*;
 import me.paulbares.store.Field;
 
@@ -69,6 +70,10 @@ public class SQLTranslator {
         groupByOnly.add(s);
       }
     }
+
+    // Order in the rollup is important.
+    Ordering<String> explicit = Ordering.explicit(rollup);
+    rollupOnly.sort(explicit);
 
     if (hasRollup && isPartialRollup && !supportPartialRollup) {
       List<String> groupingSets = new ArrayList<>();

@@ -43,6 +43,43 @@ public class TestBigQueryEngine {
   }
 
   @Test
+  void testSqlGenerationWithPartialRollup() {
+    DatabaseQuery query = new DatabaseQuery()
+            .withSelect("col1")
+            .withSelect("col2")
+            .withSelect("col3")
+            .withRollup("col2")
+            .aggregatedMeasure("price.sum", "price", "sum")
+            .table("baseStore");
+
+    BigQueryDatastore datastore = new BigQueryDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
+    BigQueryEngine bqe = new BigQueryEngine(datastore);
+    String sqlStatement = bqe.createSqlStatement(query);
+    // The order in the rollup is important to fetch the right (sub)totals
+    Assertions.assertThat(sqlStatement)
+            .isEqualTo("select coalesce(`col1`, \"___null___\"), coalesce(`col2`, \"___null___\"), coalesce(`col3`, \"___null___\")," +
+                    " sum(`price`) as price.sum" +
+                    " from `myProjectId.myDatasetName.baseStore`" +
+                    " group by rollup(coalesce(`col1`, \"___null___\"), coalesce(`col3`, \"___null___\"), coalesce(`col2`, \"___null___\"))");
+
+    query = new DatabaseQuery()
+            .withSelect("col1")
+            .withSelect("col2")
+            .withSelect("col3")
+            .withRollup("col3")
+            .withRollup("col2")
+            .aggregatedMeasure("price.sum", "price", "sum")
+            .table("baseStore");
+    sqlStatement = bqe.createSqlStatement(query);
+    // The order in the rollup is important to fetch the right (sub)totals
+    Assertions.assertThat(sqlStatement)
+            .isEqualTo("select coalesce(`col1`, \"___null___\"), coalesce(`col2`, \"___null___\"), coalesce(`col3`, \"___null___\")," +
+                    " sum(`price`) as price.sum" +
+                    " from `myProjectId.myDatasetName.baseStore`" +
+                    " group by rollup(coalesce(`col1`, \"___null___\"), coalesce(`col3`, \"___null___\"), coalesce(`col2`, \"___null___\"))");
+  }
+
+  @Test
   void testPartialRollup() {
     String category = "category";
     String scenario = SCENARIO_FIELD_NAME;

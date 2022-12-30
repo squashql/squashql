@@ -42,7 +42,9 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       List<String> missingColumnsInRollup = new ArrayList<>(query.select);
       missingColumnsInRollup.removeAll(query.rollup);
       DatabaseQuery deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), DatabaseQuery.class);
-      missingColumnsInRollup.forEach(deepCopy.rollup::add);
+      // Missing columns needs to be added at the beginning to have the correct sub-totals
+      missingColumnsInRollup.addAll(query.rollup);
+      deepCopy.rollup = missingColumnsInRollup;
       String translate = SQLTranslator.translate(deepCopy, QueryExecutor.withFallback(this.fieldSupplier, String.class), newRewriter);
       return translate;
     }
@@ -55,15 +57,13 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       List<String> missingColumnsInRollup = new ArrayList<>(query.select);
       missingColumnsInRollup.removeAll(query.rollup);
 
-      List<List<Object>> newValues = new ArrayList<>(input.headers().size());
       MutableIntSet rowIndicesToRemove = new IntHashSet();
       for (int i = 0; i < input.headers().size(); i++) {
         Field header = input.headers().get(i);
         List<Object> columnValues = input.getColumn(i);
-        newValues.add(columnValues);
         if (i < query.select.size()) {
           List<Object> baseColumnValues = input.getColumnValues(header.name());
-          for (int rowIndex = 0; rowIndex < columnValues.size(); rowIndex++) {
+          for (int rowIndex = 0; rowIndex < input.count(); rowIndex++) {
             Object value = columnValues.get(rowIndex);
             if (value == null) {
               baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
@@ -79,7 +79,22 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
         }
       }
 
-      rowIndicesToRemove.forEach(index -> newValues.forEach(list -> list.remove(index)));
+      List<List<Object>> newValues;
+      if (!rowIndicesToRemove.isEmpty()) {
+        newValues = new ArrayList<>(input.headers().size());
+        for (int col = 0; col < input.headers().size(); col++) {
+          List<Object> columnValues = input.getColumn(col);
+          List<Object> newColumnValues = new ArrayList<>(columnValues.size() - rowIndicesToRemove.size());
+          for (int rowIndex = 0; rowIndex < input.count(); rowIndex++) {
+            if (!rowIndicesToRemove.contains(rowIndex)) {
+              newColumnValues.add(columnValues.get(rowIndex));
+            }
+          }
+          newValues.add(newColumnValues);
+        }
+      } else {
+        newValues = IntStream.of(input.headers().size()).mapToObj(input::getColumn).toList();
+      }
 
       return new ColumnarTable(
               input.headers(),
