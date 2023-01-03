@@ -18,7 +18,7 @@ The entry point of the library for building queries is `from`. A table must firs
 ```typescript
 import {
   from,
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 from("myTable")
 ```
@@ -34,7 +34,7 @@ the columns and columnSets indicated.
 ```typescript
 import {
   from, sum, avg
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const q = from("myTable")
         .select(
@@ -57,17 +57,16 @@ GROUP BY col1, col2
 
 Queries can be filtered by using Criteria class. A Criteria instance can contain a condition on a single field and can be build as so:
 ```typescript
-import { criterion } from "aitm-js-query"
+import { criterion } from "@aitm1/aitm-js"
 const criteria = criterion("col2", eq("c"));
 ```
-List of available condition operators `_in, eq, neq, and, or, lt, le, gt, ge, like, isNull, isNotNull`
 
-Several criteria can be chained with AND or OR by using the methods any and all
+Several criteria can be chained with AND or OR by using the methods `any` and `all`
 
 ```typescript
 import {
   from, sum, avg, _in, eq, criterion, all
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const q = from("myTable")
         .where(all([criterion("col1", _in(["a", "b"])), criterion("col2", eq("c"))]))
@@ -81,12 +80,12 @@ const q = from("myTable")
 ```sql
 SELECT col1, col2, sum(col3) as alias1, sum(col4) as alias2
 FROM myTable
-WHERE ( col1 IN ('a', 'b')
-  AND col2 = 'c' )
+WHERE (col1 IN ('a', 'b')
+  AND col2 = 'c')
 GROUP BY col1, col2
 ```
 
-Condition operators available: `eq, neq, lt, le, gt, ge, _in, isNull, isNotNull, and, or`.
+Condition operators available: `eq, neq, lt, le, gt, ge, _in, isNull, isNotNull, like, and, or`.
 
 ## Joining Tables
 
@@ -98,7 +97,7 @@ equivalent to `ON` clause in SQL)
 ```typescript
 import {
   from
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const q = from("myTable")
         .innerJoin("refTable")
@@ -118,7 +117,7 @@ FROM myTable
 ```typescript
 import {
   from
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const q = from("myTable")
         .innerJoin("refTable")
@@ -139,7 +138,7 @@ FROM myTable
 ```typescript
 import {
   from
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const q = from("myTable")
         .innerJoin("refTable")
@@ -167,7 +166,7 @@ FROM myTable
 ```typescript
 import {
   from, sum
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const query = from("populationTable")
         .select(["continent", "country", "city"], [], [sum("pop", "population")])
@@ -214,7 +213,7 @@ A subquery can be nested in the `FROM` clause. Start by using `fromSubQuery` ins
 ```typescript
 import {
   from, fromSubQuery, sum, avg,
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const subQuery = from("student")
         .select(["name"], [], [sum("score_sum", "score")])
@@ -264,7 +263,7 @@ import {
   sumIf,
   eq,
   criterion,      
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const amountSum = sum("sum_amount", "amount")
 const amountAvg = avg("avg_amount", "amount")
@@ -289,7 +288,7 @@ An expression measure is a measure that accepts a raw sql expression as argument
 ```typescript
 import {
   ExpressionMeasure
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const expression = new ExpressionMeasure("myMeasure", "sum(price * quantity)")
 const query = from("myTable")
@@ -313,7 +312,7 @@ It is defined as the combination of other measures that can be either basic or n
 import {
   sum,
   multiply, divide, plus, minus
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const aSum = sum("aSum", "a")
 const square = multiply("square", aSum, aSum)
@@ -328,7 +327,7 @@ Constant measures can be defined with `decimal` or `integer` operators:
 import {
   sum,
   decimal
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const a = sum("aSum", "a")
 const b = sum("bSum", "b")
@@ -343,7 +342,7 @@ Used to define measure with a constant value in order to combine it with other m
 ```typescript
 import {
   decimal, integer
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const oneHundredDecimal = decimal(100)
 const oneHundredInteger = integer(100)
@@ -386,7 +385,7 @@ import {
   sum,
   Semester,
   comparisonMeasureWithPeriod,
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const scoreSum = sum("score_sum", "score")
 const comparisonScore = comparisonMeasureWithPeriod(
@@ -449,7 +448,7 @@ import {
   decimal,
   Year,
   comparisonMeasureWithPeriod,
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const scoreSum = sum("score_sum", "score")
 const comparisonScore = comparisonMeasureWithPeriod(
@@ -510,7 +509,7 @@ import {
   from,
   sum,
   comparisonMeasureWithParent,
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const pop = sum("pop", "population")
 const ancestors = ["city", "country", "continent"]
@@ -574,7 +573,7 @@ Our initial dataset looks like this
 
 To compute the revenue
 ```typescript
-import {ExpressionMeasure, from} from "aitm-js-query"
+import {ExpressionMeasure, from} from "@aitm1/aitm-js"
 
 const revenue = new ExpressionMeasure("revenue", "sum(saleprice * loavessold)")
 const query = from("myTable")
@@ -600,7 +599,7 @@ To do that, we start by creating those groups that we put in a dedicated object
 ```typescript
 import {
   BucketColumnSet
-} from "aitm-js-query"
+} from "@aitm1/aitm-js"
 
 const groups = new Map(Object.entries({
   "group1": ["base", "s1"],
@@ -618,7 +617,7 @@ and in the arrays are important.
 
 We can use the `BucketColumnSet` as follows
 ```typescript
-import {BucketColumnSet, ExpressionMeasure, from} from "aitm-js-query"
+import {BucketColumnSet, ExpressionMeasure, from} from "@aitm1/aitm-js"
 
 const values = new Map(Object.entries({
   "group1": ["base", "s1"],
@@ -652,7 +651,7 @@ Result
 
 Now to perform the comparison, use the built-in measure `comparisonMeasureWithBucket`
 ```typescript
-import {BucketColumnSet, comparisonMeasureWithBucket, ComparisonMethod, ExpressionMeasure, from} from "aitm-js-query"
+import {BucketColumnSet, comparisonMeasureWithBucket, ComparisonMethod, ExpressionMeasure, from} from "@aitm1/aitm-js"
 
 const values = new Map(Object.entries({
   "group1": ["base", "s1"],

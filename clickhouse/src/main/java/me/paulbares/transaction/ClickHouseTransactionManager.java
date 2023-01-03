@@ -8,7 +8,6 @@ import me.paulbares.ClickHouseDatastore;
 import me.paulbares.store.Field;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
-import java.io.FileNotFoundException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
@@ -30,7 +29,14 @@ public class ClickHouseTransactionManager implements TransactionManager {
     dropAndCreateInMemoryTable(this.clickHouseDataSource, table, fields, true);
   }
 
-  public static void dropAndCreateInMemoryTable(ClickHouseDataSource clickHouseDataSource, String table, List<Field> fields, boolean cjMode) {
+  public void dropAndCreateInMemoryTableWithoutScenarioColumn(String table, List<Field> fields) {
+    dropAndCreateInMemoryTable(this.clickHouseDataSource, table, fields, false);
+  }
+
+  public static void dropAndCreateInMemoryTable(ClickHouseDataSource clickHouseDataSource,
+                                                String table,
+                                                List<Field> fields,
+                                                boolean cjMode) {
     List<Field> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
             .ofAll(fields)
             .newWith(new Field(SCENARIO_FIELD_NAME, String.class))
@@ -101,7 +107,7 @@ public class ClickHouseTransactionManager implements TransactionManager {
               ClickHouseCompression.LZ4,
               path);
       load.get();
-    } catch (FileNotFoundException | InterruptedException | ExecutionException e) {
+    } catch (InterruptedException | ExecutionException e) {
       throw new RuntimeException(e);
     }
   }

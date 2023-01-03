@@ -52,7 +52,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
     // connect to localhost, use default port of the preferred protocol
     ClickHouseNode server = ClickHouseNode.builder()
             .host(dataSource.getHost())
-            .port(dataSource.getPort())
+            .port(ClickHouseProtocol.HTTP, dataSource.getPort())
             .build();
 
     try (ClickHouseClient client = ClickHouseClient.newInstance(ClickHouseProtocol.HTTP);
