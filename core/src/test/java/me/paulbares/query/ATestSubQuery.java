@@ -32,12 +32,12 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
   @Override
   protected void loadData() {
     this.tm.load(MAIN_SCENARIO_NAME, "student", List.of(
-            new Object[]{"Paul", "sql", 75},
-            new Object[]{"Paul", "java", 73},
-            new Object[]{"Peter", "sql", 43},
-            new Object[]{"Peter", "java", 31},
-            new Object[]{"Tatiana", "sql", 87},
-            new Object[]{"Tatiana", "java", 83}
+            new Object[] {"Paul", "sql", 75},
+            new Object[] {"Paul", "java", 73},
+            new Object[] {"Peter", "sql", 43},
+            new Object[] {"Peter", "java", 31},
+            new Object[] {"Tatiana", "sql", 87},
+            new Object[] {"Tatiana", "java", 83}
     ));
   }
 
@@ -51,7 +51,19 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
             .select(Collections.emptyList(), List.of(avg("avg", "score_sum")))
             .build();
     Table result = this.executor.execute(queryDto);
-    Assertions.assertThat(result).containsExactly(List.of(130.66666666666666d));
+    Assertions.assertThat(result).usingElementComparator(
+                    (left, right) -> {
+                      if (left.size() == right.size()) {
+                        for (int i = 0; i < left.size(); i++) {
+                          if (Math.abs((Double) left.get(i) - (Double) right.get(i)) > 1E-6) {
+                            return (Double) left.get(i) < (Double) right.get(i) ? -1 : 1;
+                          }
+                        }
+                        return 0;
+                      }
+                      return left.size() < right.size() ? -1 : 1;
+                    })
+            .containsExactly(List.of(130.66666666666666d));
   }
 
   @Test

@@ -1,5 +1,6 @@
 package me.paulbares.query.database;
 
+import java.sql.Types;
 import me.paulbares.SnowflakeDatastore;
 import me.paulbares.SnowflakeUtil;
 import me.paulbares.query.ColumnarTable;
@@ -49,7 +50,6 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
     String sql = SQLTranslator.translate(query, this.fieldSupplier, this.queryRewriter, QueryRewriter::tableName);
-    System.out.println(sql);
     try (Statement snowflakeStatement = this.datastore.getConnection().createStatement()) {
       ResultSet tableResult = snowflakeStatement.executeQuery(sql);
 
@@ -63,7 +63,7 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
       headers.forEach(field -> values.add(new ArrayList<>()));
       while (tableResult.next()) {
         for (int i = 0; i < headers.size(); i++) {
-          values.get(i).add(tableResult.getObject(1 + i));
+          values.get(i).add(getTypeValue(tableResult, i));
         }
       }
 
@@ -76,6 +76,27 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  /**
+   * Gets the value with the correct type, otherwise everything is read as Object.
+   */
+  public static Object getTypeValue(ResultSet tableResult, int index) throws SQLException {
+    return switch (tableResult.getMetaData().getColumnType(1 + index)) {
+      case Types.CHAR, Types.NVARCHAR, Types.VARCHAR, Types.LONGVARCHAR -> tableResult.getString(1 + index);
+      case Types.BOOLEAN, Types.BIT -> tableResult.getBoolean(1 + index);
+      case Types.TINYINT -> tableResult.getByte(1 + index);
+      case Types.SMALLINT -> tableResult.getShort(1 + index);
+      case Types.INTEGER -> tableResult.getInt(1 + index);
+      case Types.BIGINT -> tableResult.getLong(1 + index);
+      case Types.REAL, Types.FLOAT -> tableResult.getFloat(1 + index);
+      case Types.DECIMAL, Types.DOUBLE -> tableResult.getDouble(1 + index);
+      case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> tableResult.getBytes(1 + index);
+      case Types.DATE -> tableResult.getDate(1 + index);
+      case Types.TIME -> tableResult.getTime(1 + index);
+      case Types.TIMESTAMP -> tableResult.getTimestamp(1 + index);
+      default -> tableResult.getObject(1 + index);
+    };
   }
 
   @Override
