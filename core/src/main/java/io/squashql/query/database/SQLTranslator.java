@@ -19,6 +19,13 @@ public class SQLTranslator {
   public static String translate(DatabaseQuery query,
                                  Function<String, Field> fieldProvider,
                                  QueryRewriter queryRewriter) {
+    return translate(query, fieldProvider, queryRewriter, queryRewriter);
+  }
+
+  public static String translate(DatabaseQuery query,
+                                 Function<String, Field> fieldProvider,
+                                 QueryRewriter queryRewriter,
+                                 QueryRewriter subQueryQueryRewriter) { // FIXME this is a quick dirty fix for mmo
     List<String> selects = new ArrayList<>();
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
@@ -38,7 +45,7 @@ public class SQLTranslator {
     statement.append(" from ");
     if (query.subQuery != null) {
       statement.append("(");
-      statement.append(translate(query.subQuery, fieldProvider, queryRewriter));
+      statement.append(translate(query.subQuery, fieldProvider, subQueryQueryRewriter));
       statement.append(")");
     } else {
       statement.append(queryRewriter.tableName(query.table.name));
