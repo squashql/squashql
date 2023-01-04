@@ -1,6 +1,6 @@
-package me.paulbares.query;
+package io.squashql.query;
 
-import me.paulbares.template.ClickHouseClassTemplateGenerator;
+import io.squashql.template.ClickHouseClassTemplateGenerator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 

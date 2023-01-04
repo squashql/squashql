@@ -1,21 +1,21 @@
-package me.paulbares.query;
+package io.squashql.query;
 
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableId;
-import me.paulbares.BigQueryDatastore;
-import me.paulbares.BigQueryUtil;
-import me.paulbares.query.database.BigQueryEngine;
-import me.paulbares.query.database.QueryEngine;
-import me.paulbares.store.Datastore;
-import me.paulbares.transaction.BigQueryTransactionManager;
-import me.paulbares.transaction.TransactionManager;
+import io.squashql.BigQueryDatastore;
+import io.squashql.BigQueryUtil;
+import io.squashql.query.database.BigQueryEngine;
+import io.squashql.query.database.QueryEngine;
+import io.squashql.store.Datastore;
+import io.squashql.transaction.BigQueryTransactionManager;
+import io.squashql.transaction.TransactionManager;
 import org.junit.jupiter.api.AfterAll;
 
-import static me.paulbares.query.BigQueryTestUtil.DATASET_NAME;
-import static me.paulbares.query.BigQueryTestUtil.PROJECT_ID;
+import static io.squashql.query.BigQueryTestUtil.DATASET_NAME;
+import static io.squashql.query.BigQueryTestUtil.PROJECT_ID;
 
 /**
- * Do not edit this class, it has been generated automatically by {@link me.paulbares.template.BigQueryClassTemplateGenerator}.
+ * Do not edit this class, it has been generated automatically by {@link io.squashql.template.BigQueryClassTemplateGenerator}.
  */
 public class TestBigQuery{{classSuffix}} extends {{parentTestClass}} {
 

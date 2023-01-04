@@ -1,4 +1,4 @@
-export const PACKAGE = "me.paulbares.query."
+export const PACKAGE = "io.squashql.query."
 
 export {
   Query, Table, JoinType, JoinMapping,

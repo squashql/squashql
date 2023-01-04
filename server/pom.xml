@@ -5,23 +5,23 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>me.paulbares</groupId>
+    <groupId>io.squashql</groupId>
     <artifactId>squashql-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
-  <groupId>me.paulbares</groupId>
+  <groupId>io.squashql</groupId>
   <artifactId>squashql-server</artifactId>
   <packaging>jar</packaging>
 
   <dependencies>
     <dependency>
-      <groupId>me.paulbares</groupId>
+      <groupId>io.squashql</groupId>
       <artifactId>squashql-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>me.paulbares</groupId>
+      <groupId>io.squashql</groupId>
       <artifactId>squashql-java-client</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -32,13 +32,13 @@
     </dependency>
 
     <dependency>
-      <groupId>me.paulbares</groupId>
+      <groupId>io.squashql</groupId>
       <artifactId>squashql-js</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>me.paulbares</groupId>
+      <groupId>io.squashql</groupId>
       <artifactId>squashql-spark</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>

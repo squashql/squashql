@@ -34,7 +34,7 @@ Find a ready-to-use example with Apache Spark and Spring Boot [here](https://git
 Maven
 ```xml
 <dependency>
-  <groupId>me.paulbares</groupId>
+  <groupId>io.squashql</groupId>
   <artifactId>squashql-spark</artifactId>
   <version>${squashql.version}</version>
 </dependency>
@@ -52,7 +52,7 @@ SparkQueryEngine qe = new SparkQueryEngine(ds);
 Maven
 ```xml
 <dependency>
-  <groupId>me.paulbares</groupId>
+  <groupId>io.squashql</groupId>
   <artifactId>squashql-clickhouse</artifactId>
   <version>${squashql.version}</version>
 </dependency>
@@ -71,7 +71,7 @@ ClickHouseQueryEngine qe = new ClickHouseQueryEngine(ds);
 Maven
 ```xml
 <dependency>
-  <groupId>me.paulbares</groupId>
+  <groupId>io.squashql</groupId>
   <artifactId>squashql-bigquery</artifactId>
   <version>${squashql.version}</version>
 </dependency>

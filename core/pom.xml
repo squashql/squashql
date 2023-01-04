@@ -5,12 +5,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>me.paulbares</groupId>
+    <groupId>io.squashql</groupId>
     <artifactId>squashql-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
-  <groupId>me.paulbares</groupId>
+  <groupId>io.squashql</groupId>
   <artifactId>squashql-core</artifactId>
 
   <dependencies>

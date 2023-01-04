@@ -6,17 +6,17 @@
 
   <parent>
     <artifactId>squashql-parent</artifactId>
-    <groupId>me.paulbares</groupId>
+    <groupId>io.squashql</groupId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
-  <groupId>me.paulbares</groupId>
+  <groupId>io.squashql</groupId>
   <artifactId>squashql-java-client</artifactId>
   <packaging>jar</packaging>
 
   <dependencies>
     <dependency>
-      <groupId>me.paulbares</groupId>
+      <groupId>io.squashql</groupId>
       <artifactId>squashql-core</artifactId>
       <version>${project.version}</version>
     </dependency>
