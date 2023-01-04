@@ -18,25 +18,6 @@ public class SnowflakeDatastore implements Datastore {
   private final Properties connectionProperties;
   public final Supplier<Map<String, Store>> stores;
 
-//  public SnowflakeDatastore(String jdbcUrl,
-//                            String username,
-//                            String password,
-//                            String warehouse,
-//                            String database,
-//                            String schema) {
-//    this.jdbcUrl = jdbcUrl;
-//    // build connection properties
-//    Properties properties = new Properties();
-//    properties.put("user", username);
-//    properties.put("password", password);
-//    properties.put("warehouse", warehouse);
-//    properties.put("db", database);
-//    properties.put("schema", schema);
-//    properties.put("role", "ACCOUNTADMIN");
-//    this.connectionProperties = properties;
-//    this.stores = Suppliers.memoize(() -> getStores(database, schema));
-//  }
-
   /**
    * Constructor.
    * @param jdbcUrl a database url of the form jdbc:subprotocol:subname
@@ -53,10 +34,6 @@ public class SnowflakeDatastore implements Datastore {
     properties.putAll(info);
     properties.put("db", database);
     properties.put("schema", schema);
-//    properties.put("user", username);
-//    properties.put("password", password);
-//    properties.put("warehouse", warehouse);
-//    properties.put("role", "ACCOUNTADMIN");
     this.connectionProperties = properties;
     this.stores = Suppliers.memoize(() -> getStores(database, schema));
   }
@@ -92,5 +69,4 @@ public class SnowflakeDatastore implements Datastore {
       throw new RuntimeException(e);
     }
   }
-
 }
