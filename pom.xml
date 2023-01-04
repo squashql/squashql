@@ -35,6 +35,7 @@
     <clickhouse.version>0.3.2-patch11</clickhouse.version>
     <spark.version>3.3.1</spark.version>
     <bigquery.version>26.1.5</bigquery.version>
+    <snowflake-jdbc.version>3.13.25</snowflake-jdbc.version>
   </properties>
 
   <modules>
@@ -42,6 +43,7 @@
     <module>bigquery</module>
     <module>clickhouse</module>
     <module>spark</module>
+    <module>snowflake</module>
     <module>server</module>
     <module>java-client</module>
     <module>js/typescript-library</module>

@@ -34,23 +34,21 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
           "covarPop",
           "covarSamp");
 
-  protected final QueryRewriter rewriter;
+  protected final QueryRewriter queryRewriter;
 
   public ClickHouseQueryEngine(ClickHouseDatastore datastore) {
     super(datastore);
-    this.rewriter = new ClickHouseQueryRewriter();
+    this.queryRewriter = new ClickHouseQueryRewriter();
   }
 
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
-    String sql = SQLTranslator.translate(query,
-            QueryExecutor.withFallback(this.fieldSupplier, String.class),
-            this.rewriter,
-            (qr, name) -> qr.tableName(name));
-    return getResults(sql, this.datastore.dataSource, query);
+    String sql = SQLTranslator.translate(query, QueryExecutor.withFallback(this.fieldSupplier, String.class),
+            this.queryRewriter, QueryRewriter::tableName);
+    return getResults(sql, this.datastore.dataSource, query, this.queryRewriter);
   }
 
-  static Table getResults(String sql, ClickHouseDataSource dataSource, DatabaseQuery query) {
+  static Table getResults(String sql, ClickHouseDataSource dataSource, DatabaseQuery query, QueryRewriter queryRewriter) {
     // connect to localhost, use default port of the preferred protocol
     ClickHouseNode server = ClickHouseNode.builder()
             .host(dataSource.getHost())
@@ -68,7 +66,8 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
               response.getColumns(),
               (column, name) -> new Field(name, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())),
               response.records().iterator(),
-              (i, r) -> r.getValue(i).asObject());
+              (i, r) -> r.getValue(i).asObject(),
+              queryRewriter);
       return new ColumnarTable(
               result.getOne(),
               query.measures,
@@ -86,6 +85,27 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
   }
 
   static class ClickHouseQueryRewriter implements QueryRewriter {
+
+    @Override
+    public String fieldName(String field) {
+      return SqlUtils.backtickEscape(field);
+    }
+
+    @Override
+    public String measureAlias(String alias) {
+      return SqlUtils.backtickEscape(alias);
+    }
+
+    @Override
+    public String rollup(String rollup) {
+      return SqlUtils.backtickEscape(rollup);
+    }
+
+    @Override
+    public String groupingAlias(String field) {
+      return SqlUtils.backtickEscape(QueryRewriter.super.groupingAlias(field));
+    }
+
     @Override
     public boolean doesSupportPartialRollup() {
       // Not supported as of now: https://github.com/ClickHouse/ClickHouse/issues/322#issuecomment-615087004

@@ -36,24 +36,28 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
           "var_samp",
           "variance");
 
+  private final QueryRewriter queryRewriter;
+
   public SparkQueryEngine(SparkDatastore datastore) {
     super(datastore);
+    this.queryRewriter = new SparkQueryRewriter();
   }
 
   @Override
   protected Table retrieveAggregates(DatabaseQuery query) {
-    String sql = SQLTranslator.translate(query, this.fieldSupplier);
-    return getResults(sql, this.datastore.spark, query);
+    String sql = SQLTranslator.translate(query, this.fieldSupplier, queryRewriter, QueryRewriter::tableName);
+    return getResults(sql, this.datastore.spark, query, this.queryRewriter);
   }
 
-  static Table getResults(String sql, SparkSession sparkSession, DatabaseQuery query) {
+  static Table getResults(String sql, SparkSession sparkSession, DatabaseQuery query, QueryRewriter queryRewriter) {
     Dataset<Row> ds = sparkSession.sql(sql);
     Pair<List<Field>, List<List<Object>>> result = transform(
             query,
             Arrays.stream(ds.schema().fields()).toList(),
             (column, name) -> new Field(name, datatypeToClass(column.dataType())),
             ds.toLocalIterator(),
-            (i, r) -> r.get(i));
+            (i, r) -> r.get(i),
+            queryRewriter);
     return new ColumnarTable(
             result.getOne(),
             query.measures,
@@ -61,6 +65,33 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
             IntStream.range(0, query.select.size()).toArray(),
             result.getTwo());
   }
+
+  static class SparkQueryRewriter implements QueryRewriter {
+    @Override
+    public String fieldName(String field) {
+      return SqlUtils.backtickEscape(field);
+    }
+    @Override
+    public String measureAlias(String alias) {
+      return SqlUtils.backtickEscape(alias);
+    }
+
+    @Override
+    public String rollup(String rollup) {
+      return SqlUtils.backtickEscape(rollup);
+    }
+
+    @Override
+    public String groupingAlias(String field) {
+      return SqlUtils.backtickEscape(QueryRewriter.super.groupingAlias(field));
+    }
+
+    @Override
+    public boolean doesSupportPartialRollup() {
+      return true;
+    }
+  }
+
 
   @Override
   public List<String> supportedAggregationFunctions() {

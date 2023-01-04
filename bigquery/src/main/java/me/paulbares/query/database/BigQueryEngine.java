@@ -32,7 +32,8 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
               schema.getFields(),
               (column, name) -> new Field(name, BigQueryUtil.bigQueryTypeToClass(column.getType())),
               tableResult.iterateAll().iterator(),
-              (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i)
+              (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i),
+              this.queryRewriter
       );
       return new ColumnarTable(
               result.getOne(),
@@ -88,8 +89,13 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
   class BigQueryQueryRewriter implements QueryRewriter {
     @Override
+    public String fieldName(String field) {
+      return SqlUtils.backtickEscape(field);
+    }
+
+    @Override
     public String tableName(String table) {
-      return SqlUtils.escape(BigQueryEngine.this.datastore.projectId + "." + BigQueryEngine.this.datastore.datasetName + "." + table);
+      return SqlUtils.backtickEscape(BigQueryEngine.this.datastore.projectId + "." + BigQueryEngine.this.datastore.datasetName + "." + table);
     }
 
     /**
@@ -100,10 +106,20 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
      */
     @Override
     public String measureAlias(String alias) {
-      return alias
+      return SqlUtils.backtickEscape(alias)
               .replace("(", "_")
               .replace(")", "_")
               .replace(" ", "_");
+    }
+
+    @Override
+    public String rollup(String rollup) {
+      return SqlUtils.backtickEscape(rollup);
+    }
+
+    @Override
+    public String groupingAlias(String field) {
+      return SqlUtils.backtickEscape(QueryRewriter.super.groupingAlias(field));
     }
 
     @Override

@@ -13,8 +13,6 @@ import me.paulbares.store.Field;
 
 import java.util.function.Function;
 
-import static me.paulbares.query.database.SqlUtils.escape;
-
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
@@ -42,10 +40,10 @@ public class AggregatedMeasure implements Measure {
   public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     String sql;
     if (this.criteria != null) {
-      String conditionSt = SQLTranslator.toSql(QueryExecutor.withFallback(fieldProvider, Number.class), this.criteria);
-      sql = this.aggregationFunction + "(case when " + conditionSt + " then " + this.field + " end)";
+      String conditionSt = SQLTranslator.toSql(QueryExecutor.withFallback(fieldProvider, Number.class), this.criteria, queryRewriter);
+      sql = this.aggregationFunction + "(case when " + conditionSt + " then " + queryRewriter.fieldName(this.field) + " end)";
     } else {
-      sql = this.aggregationFunction + "(" + (this.field.equals("*") ? this.field : escape(this.field)) + ")";
+      sql = this.aggregationFunction + "(" + (this.field.equals("*") ? this.field : queryRewriter.fieldName(this.field)) + ")";
     }
     return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.alias) : sql;
   }

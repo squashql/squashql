@@ -20,7 +20,8 @@ public class ClickHouseDeltaQueryEngine extends ADeltaQueryEngine<ClickHouseData
     List<String> keys = List.of("ean", "category"); // FIXME should not be hardcoded but in the query.
     var tableTransformer = new TableTransformer(this.datastore, keys) {
       @Override
-      protected String virtualTableStatement(String baseTableName, List<String> scenarios, List<String> columnKeys, QueryRewriter qr) {
+      protected String virtualTableStatement(String baseTableName, List<String> scenarios, List<String> columnKeys,
+              QueryRewriter qr) {
         return virtualTableStatementWhereNotIn(baseTableName, scenarios, keys, qr);
       }
     };
@@ -29,7 +30,7 @@ public class ClickHouseDeltaQueryEngine extends ADeltaQueryEngine<ClickHouseData
             this.fieldSupplier,
             queryRewriter,
             tableTransformer);
-    return getResults(sql, this.datastore.dataSource, query);
+    return getResults(sql, this.datastore.dataSource, query, queryRewriter);
   }
 
   @Override

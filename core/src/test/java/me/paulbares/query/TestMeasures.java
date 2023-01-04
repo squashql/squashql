@@ -34,7 +34,7 @@ public class TestMeasures {
 
     Assertions.assertThat(MeasureUtils.createExpression(agg1)).isEqualTo("sum(price)");
     Assertions.assertThat(MeasureUtils.createExpression(agg2)).isEqualTo("sum(quantity)");
-    Assertions.assertThat(MeasureUtils.createExpression(agg3)).isEqualTo("sumIf(quantity, `category` = 'drink')");
+    Assertions.assertThat(MeasureUtils.createExpression(agg3)).isEqualTo("sumIf(quantity, category = 'drink')");
     Assertions.assertThat(MeasureUtils.createExpression(plus)).isEqualTo("ps + qs");
     Assertions.assertThat(MeasureUtils.createExpression(divide)).isEqualTo("ps / plus");
     Assertions.assertThat(MeasureUtils.createExpression(constant)).isEqualTo("100.0");
@@ -67,7 +67,7 @@ public class TestMeasures {
     ComparisonMeasureReferencePosition parentComparisonMeasure = new ComparisonMeasureReferencePosition("parent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
 
     Assertions.assertThat(MeasureUtils.createExpression(amount)).isEqualTo("sum(Amount)");
-    Assertions.assertThat(MeasureUtils.createExpression(sales)).isEqualTo("sumIf(Amount, `Income/Expense` = 'Revenue')");
+    Assertions.assertThat(MeasureUtils.createExpression(sales)).isEqualTo("sumIf(Amount, Income/Expense = 'Revenue')");
     Assertions.assertThat(MeasureUtils.createExpression(ebidtaRatio)).isEqualTo("sum(Amount) / sales");
     Assertions.assertThat(MeasureUtils.createExpression(growth)).isEqualTo("sales(current) / sales(reference), reference = {Year=y-1}");
     Assertions.assertThat(MeasureUtils.createExpression(kpi)).isEqualTo("EBITDA % + Growth");

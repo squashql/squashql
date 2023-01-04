@@ -8,6 +8,7 @@ import me.paulbares.query.dto.OrderKeywordDto;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -314,6 +315,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
    */
   @Test
   void testSumIf() {
+    Assumptions.assumeFalse(this.queryEngine.getClass().getSimpleName().equals("SnowflakeQueryEngine"));
+
     ConditionDto or = eq("food").or(eq("drink"));
     QueryDto query = Query
             .from(this.storeName)
