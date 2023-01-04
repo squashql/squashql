@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Only the latest version of AITM is supported with security updates.
+Only the latest version of SquashQL is supported with security updates.
 
 ## Reporting a Vulnerability
 

@@ -2,7 +2,7 @@ package me.paulbares.query;
 
 import me.paulbares.query.comp.BinaryOperations;
 import me.paulbares.store.Field;
-import me.paulbares.util.AitmArrays;
+import me.paulbares.util.SquashQLArrays;
 import org.eclipse.collections.api.map.primitive.IntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableIntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
@@ -29,7 +29,7 @@ public abstract class AComparisonExecutor {
           Table readFromTable) {
     MutableObjectIntMap<String> indexByColumn = new ObjectIntHashMap<>();
     for (int columnIndex : readFromTable.columnIndices()) {
-      int index = AitmArrays.search(readFromTable.columnIndices(), columnIndex);
+      int index = SquashQLArrays.search(readFromTable.columnIndices(), columnIndex);
       indexByColumn.put(readFromTable.headers().get(columnIndex).name(), index);
     }
     BiPredicate<Object[], Field[]> procedure = createShiftProcedure(cm, indexByColumn);

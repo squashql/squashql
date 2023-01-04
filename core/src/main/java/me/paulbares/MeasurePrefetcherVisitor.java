@@ -46,7 +46,7 @@ public class MeasurePrefetcherVisitor implements MeasureVisitor<Map<QueryExecuto
   public Map<QueryExecutor.QueryScope, Set<Measure>> visit(ComparisonMeasureReferencePosition cmrp) {
     if (cmrp.ancestors != null && !MeasureUtils.isPrimitive(cmrp.measure)) {
       // Not support for the moment
-      // Only for parent because it uses rollup during the prefetch so subtotals are computed by the database, not AITM.
+      // Only for parent because it uses rollup during the prefetch so subtotals are computed by the database, not SquashQL.
       throw new IllegalArgumentException("Only a primitive measure can be used in a parent comparison measure");
     }
     QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.query, cmrp, this.originalQueryScope, this.fieldSupplier);

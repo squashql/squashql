@@ -6,17 +6,17 @@
 
   <parent>
     <groupId>me.paulbares</groupId>
-    <artifactId>aitm-parent</artifactId>
+    <artifactId>squashql-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
   <groupId>me.paulbares</groupId>
-  <artifactId>aitm-spark</artifactId>
+  <artifactId>squashql-spark</artifactId>
 
   <dependencies>
     <dependency>
       <groupId>me.paulbares</groupId>
-      <artifactId>aitm-core</artifactId>
+      <artifactId>squashql-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-core -->
@@ -40,7 +40,7 @@
     <!-- TEST -->
     <dependency>
       <groupId>me.paulbares</groupId>
-      <artifactId>aitm-core</artifactId>
+      <artifactId>squashql-core</artifactId>
       <version>${project.version}</version>
       <type>test-jar</type>
       <scope>test</scope>

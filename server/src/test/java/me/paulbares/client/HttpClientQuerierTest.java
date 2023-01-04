@@ -5,7 +5,7 @@ import me.paulbares.query.*;
 import me.paulbares.query.builder.Query;
 import me.paulbares.query.database.QueryEngine;
 import me.paulbares.query.dto.*;
-import me.paulbares.spring.AitmApplication;
+import me.paulbares.spring.SquashQLApplication;
 import me.paulbares.spring.dataset.DatasetTestConfig;
 import me.paulbares.spring.web.rest.QueryControllerTest;
 import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
@@ -23,7 +23,7 @@ import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 @SpringBootTest(
-        classes = AitmApplication.class,
+        classes = SquashQLApplication.class,
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = "spring.main.allow-bean-definition-overriding=true")
 @Import(DatasetTestConfig.class)

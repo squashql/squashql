@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>me.paulbares</groupId>
-  <artifactId>aitm-parent</artifactId>
+  <artifactId>squashql-parent</artifactId>
   <version>0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 

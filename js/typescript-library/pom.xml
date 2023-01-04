@@ -6,13 +6,13 @@
 
   <parent>
     <groupId>me.paulbares</groupId>
-    <artifactId>aitm-parent</artifactId>
+    <artifactId>squashql-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
   <groupId>me.paulbares</groupId>
-  <artifactId>aitm-js</artifactId>
+  <artifactId>squashql-js</artifactId>
 
   <properties>
     <node.version>v16.17.0</node.version>
@@ -22,7 +22,7 @@
   <dependencies>
     <dependency>
       <groupId>me.paulbares</groupId>
-      <artifactId>aitm-core</artifactId>
+      <artifactId>squashql-core</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

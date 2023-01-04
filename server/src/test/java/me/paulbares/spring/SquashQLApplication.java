@@ -9,10 +9,10 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @SpringBootApplication
-public class AitmApplication {
+public class SquashQLApplication {
 
   public static void main(String[] args) {
-    SpringApplication.run(AitmApplication.class, args);
+    SpringApplication.run(SquashQLApplication.class, args);
   }
 
   @Bean

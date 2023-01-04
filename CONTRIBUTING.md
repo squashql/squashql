@@ -74,4 +74,7 @@ For more information linking PRs to issues refer to the [GitHub Documentation](h
 
 ## Code of Conduct
 
-We encourage inclusive and professional interactions on our project. We welcome everyone to open an issue, improve the documentation, report bug or submit a pull request. By participating in this project, you agree to abide by the [AITM Code of Conduct](./CODE-OF-CONDUCT.md). If you feel there is a conduct issue related to this project, please raise it per the Code of Conduct process and we will address it.
+We encourage inclusive and professional interactions on our project. We welcome everyone to open an issue, improve the
+documentation, report bug or submit a pull request. By participating in this project, you agree to abide by
+the [SquashQL Code of Conduct](./CODE-OF-CONDUCT.md). If you feel there is a conduct issue related to this project, please
+raise it per the Code of Conduct process, and we will address it.

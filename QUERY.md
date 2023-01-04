@@ -1,12 +1,12 @@
 ## Summary
 
-AITM provides a simple interface in Typescript for building SQL-like queries specifically made for AITM. In each section, 
+SquashQL provides a simple interface in Typescript for building SQL-like queries specifically made for SquashQL. In each section, 
 a Typescript code snippet is shown along with a SQL query to fix ideas, but it does not mean that this will be the SQL 
 query executed because the generated SQL query might depend on the underlying database. 
 
 ### Goal
 
-Enable developers to quickly write queries understandable by AITM using a syntax closed to SQL with
+Enable developers to quickly write queries understandable by SquashQL using a syntax closed to SQL with
 some slight differences though
 
 ### Non-Goal
@@ -20,7 +20,7 @@ The entry point of the library for building queries is `from`. A table must firs
 ```typescript
 import {
   from,
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 from("myTable")
 ```
@@ -36,7 +36,7 @@ the columns and columnSets indicated.
 ```typescript
 import {
   from, sum, avg
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const q = from("myTable")
         .select(
@@ -59,7 +59,7 @@ GROUP BY col1, col2
 
 Queries can be filtered by using Criteria class. A Criteria instance can contain a condition on a single field and can be build as so:
 ```typescript
-import { criterion } from "@aitm1/aitm-js"
+import { criterion } from "@squashql/squashql-js"
 const criteria = criterion("col2", eq("c"));
 ```
 
@@ -68,7 +68,7 @@ Several criteria can be chained with AND or OR by using the methods `any` and `a
 ```typescript
 import {
   from, sum, avg, _in, eq, criterion, all
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const q = from("myTable")
         .where(all([criterion("col1", _in(["a", "b"])), criterion("col2", eq("c"))]))
@@ -99,7 +99,7 @@ equivalent to `ON` clause in SQL)
 ```typescript
 import {
   from
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const q = from("myTable")
         .innerJoin("refTable")
@@ -119,7 +119,7 @@ FROM myTable
 ```typescript
 import {
   from
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const q = from("myTable")
         .innerJoin("refTable")
@@ -140,7 +140,7 @@ FROM myTable
 ```typescript
 import {
   from
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const q = from("myTable")
         .innerJoin("refTable")
@@ -168,7 +168,7 @@ FROM myTable
 ```typescript
 import {
   from, sum
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const query = from("populationTable")
         .select(["continent", "country", "city"], [], [sum("pop", "population")])
@@ -215,7 +215,7 @@ Partial rollup reduces the number of subtotals by indicating which ones should b
 ```typescript
 import {
   from, sum
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const query = from("populationTable")
         .select(["continent", "country", "city"], [], [sum("pop", "population")])
@@ -263,7 +263,7 @@ A subquery can be nested in the `FROM` clause. Start by using `fromSubQuery` ins
 ```typescript
 import {
   from, fromSubQuery, sum, avg,
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const subQuery = from("student")
         .select(["name"], [], [sum("score_sum", "score")])
@@ -313,7 +313,7 @@ import {
   sumIf,
   eq,
   criterion,      
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const amountSum = sum("sum_amount", "amount")
 const amountAvg = avg("avg_amount", "amount")
@@ -338,7 +338,7 @@ An expression measure is a measure that accepts a raw sql expression as argument
 ```typescript
 import {
   ExpressionMeasure
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const expression = new ExpressionMeasure("myMeasure", "sum(price * quantity)")
 const query = from("myTable")
@@ -352,7 +352,7 @@ SELECT SUM(price * quantity) AS myMeasure FROM myTable;
 
 ### Calculated measure
 
-Unlike a basic measure, a calculated measure is computed by AITM (not the database) by fetching all the required values
+Unlike a basic measure, a calculated measure is computed by SquashQL (not the database) by fetching all the required values
 from the underlying database before applying the defined calculation.
 It is defined as the combination of other measures that can be either basic or not.
 
@@ -362,7 +362,7 @@ It is defined as the combination of other measures that can be either basic or n
 import {
   sum,
   multiply, divide, plus, minus
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const aSum = sum("aSum", "a")
 const square = multiply("square", aSum, aSum)
@@ -377,7 +377,7 @@ Constant measures can be defined with `decimal` or `integer` operators:
 import {
   sum,
   decimal
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const a = sum("aSum", "a")
 const b = sum("bSum", "b")
@@ -392,7 +392,7 @@ Used to define measure with a constant value in order to combine it with other m
 ```typescript
 import {
   decimal, integer
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const oneHundredDecimal = decimal(100)
 const oneHundredInteger = integer(100)
@@ -435,7 +435,7 @@ import {
   sum,
   Semester,
   comparisonMeasureWithPeriod,
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const scoreSum = sum("score_sum", "score")
 const comparisonScore = comparisonMeasureWithPeriod(
@@ -475,7 +475,7 @@ measure
 To indicate "previous semester", a "translation" or "shift" operator is passed to the
 comparison function: `{"semester": "s-1", "year": "y"}`. `"semester": "s-1"` means 'take the current semester value and
 remove 1'.
-The `Semester` object is meant to make AITM understand the measure is working with a **time period** so that it knows
+The `Semester` object is meant to make SquashQL understand the measure is working with a **time period** so that it knows
 that
 the previous semester value of the 1st semester of 2023 is the 2nd semester of 2022.
 
@@ -498,7 +498,7 @@ import {
   decimal,
   Year,
   comparisonMeasureWithPeriod,
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const scoreSum = sum("score_sum", "score")
 const comparisonScore = comparisonMeasureWithPeriod(
@@ -527,7 +527,7 @@ Result
 
 ##### Hierarchical / Parent-Child comparison
 
-AITM introduces the concept of organizing hierarchically several columns in order to compare aggregates and sub-aggregates
+SquashQL introduces the concept of organizing hierarchically several columns in order to compare aggregates and sub-aggregates
 compute at different levels of the lineage.
 
 Example: compute the ratio of population of a city to its country and of a country to its continent. 
@@ -559,7 +559,7 @@ import {
   from,
   sum,
   comparisonMeasureWithParent,
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const pop = sum("pop", "population")
 const ancestors = ["city", "country", "continent"]
@@ -602,7 +602,7 @@ Result
 ##### Dynamic comparison - What-if - ColumnSet
 
 This type of comparison is mainly used for what-if comparison but not limited to it. It involves the creation of a new
-"virtual" column called `ColumnSet` that only exists in AITM to create groups among which the comparisons are
+"virtual" column called `ColumnSet` that only exists in SquashQL to create groups among which the comparisons are
 performed. Let's see a very simple example inspired from [https://www.causal.app/blog/everything-you-need-to-know-about-what-if-scenarios](https://www.causal.app/blog/everything-you-need-to-know-about-what-if-scenarios)
 
 Our initial dataset looks like this
@@ -623,7 +623,7 @@ Our initial dataset looks like this
 
 To compute the revenue
 ```typescript
-import {ExpressionMeasure, from} from "@aitm1/aitm-js"
+import {ExpressionMeasure, from} from "@squashql/squashql-js"
 
 const revenue = new ExpressionMeasure("revenue", "sum(saleprice * loavessold)")
 const query = from("myTable")
@@ -649,7 +649,7 @@ To do that, we start by creating those groups that we put in a dedicated object
 ```typescript
 import {
   BucketColumnSet
-} from "@aitm1/aitm-js"
+} from "@squashql/squashql-js"
 
 const groups = new Map(Object.entries({
   "group1": ["base", "s1"],
@@ -667,7 +667,7 @@ and in the arrays are important.
 
 We can use the `BucketColumnSet` as follows
 ```typescript
-import {BucketColumnSet, ExpressionMeasure, from} from "@aitm1/aitm-js"
+import {BucketColumnSet, ExpressionMeasure, from} from "@squashql/squashql-js"
 
 const values = new Map(Object.entries({
   "group1": ["base", "s1"],
@@ -701,7 +701,7 @@ Result
 
 Now to perform the comparison, use the built-in measure `comparisonMeasureWithBucket`
 ```typescript
-import {BucketColumnSet, comparisonMeasureWithBucket, ComparisonMethod, ExpressionMeasure, from} from "@aitm1/aitm-js"
+import {BucketColumnSet, comparisonMeasureWithBucket, ComparisonMethod, ExpressionMeasure, from} from "@squashql/squashql-js"
 
 const values = new Map(Object.entries({
   "group1": ["base", "s1"],

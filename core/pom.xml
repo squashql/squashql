@@ -6,12 +6,12 @@
 
   <parent>
     <groupId>me.paulbares</groupId>
-    <artifactId>aitm-parent</artifactId>
+    <artifactId>squashql-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
   <groupId>me.paulbares</groupId>
-  <artifactId>aitm-core</artifactId>
+  <artifactId>squashql-core</artifactId>
 
   <dependencies>
     <dependency>

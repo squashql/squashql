@@ -1,7 +1,7 @@
 {
-  "name": "@aitm1/aitm-js",
+  "name": "@squashql/squashql-js",
   "version": "1.0.0-SNAPSHOT",
-  "description": "AITM query builder/helper",
+  "description": "SquashQL query builder/helper",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -18,6 +18,6 @@
   "dependencies": {
     "axios": "^0.27.2"
   },
-  "author": "aitm1",
+  "author": "SquashQL",
   "license": "Apache-2.0"
 }

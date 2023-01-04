@@ -6,17 +6,17 @@
 
   <parent>
     <groupId>me.paulbares</groupId>
-    <artifactId>aitm-parent</artifactId>
+    <artifactId>squashql-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
   <groupId>me.paulbares</groupId>
-  <artifactId>aitm-clickhouse</artifactId>
+  <artifactId>squashql-clickhouse</artifactId>
 
   <dependencies>
     <dependency>
       <groupId>me.paulbares</groupId>
-      <artifactId>aitm-core</artifactId>
+      <artifactId>squashql-core</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -41,14 +41,14 @@
 
     <dependency>
       <groupId>me.paulbares</groupId>
-      <artifactId>aitm-core</artifactId>
+      <artifactId>squashql-core</artifactId>
       <version>${project.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>me.paulbares</groupId>
-      <artifactId>aitm-spark</artifactId>
+      <artifactId>squashql-spark</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

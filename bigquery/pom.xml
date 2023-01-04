@@ -6,12 +6,12 @@
 
   <parent>
     <groupId>me.paulbares</groupId>
-    <artifactId>aitm-parent</artifactId>
+    <artifactId>squashql-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
   <groupId>me.paulbares</groupId>
-  <artifactId>aitm-bigquery</artifactId>
+  <artifactId>squashql-bigquery</artifactId>
 
   <!--  Using libraries-bom to manage versions. -->
   <!-- See https://github.com/GoogleCloudPlatform/cloud-opensource-java/wiki/The-Google-Cloud-Platform-Libraries-BOM -->
@@ -30,7 +30,7 @@
   <dependencies>
     <dependency>
       <groupId>me.paulbares</groupId>
-      <artifactId>aitm-core</artifactId>
+      <artifactId>squashql-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -45,7 +45,7 @@
 
     <dependency>
       <groupId>me.paulbares</groupId>
-      <artifactId>aitm-core</artifactId>
+      <artifactId>squashql-core</artifactId>
       <version>${project.version}</version>
       <type>test-jar</type>
       <scope>test</scope>

@@ -1,4 +1,4 @@
-# AITM 
+# SquashQL 
 
 [logo]
 
@@ -7,7 +7,7 @@
 ![license](https://img.shields.io/github/license/paulbares/aitm)
 ---
 
-AITM is an open-source SQL query engine specialized in what-if analysis, building multi-dimensional queries to help
+SquashQL is an open-source SQL query engine specialized in what-if analysis, building multi-dimensional queries to help
 back-end developers make the most of any SQL database, and front-end developers easily configure their own metrics in
 the UI.
 
@@ -19,11 +19,11 @@ the UI.
 
 ## Compatibility
 
-AITM is currently compatible with [Apache Spark](https://spark.apache.org/), [ClickHouse](https://clickhouse.com/) and [BigQuery](https://cloud.google.com/bigquery/). 
+SquashQL is currently compatible with [Apache Spark](https://spark.apache.org/), [ClickHouse](https://clickhouse.com/) and [BigQuery](https://cloud.google.com/bigquery/). 
 
 ### Configuration
 
-To connect AITM to your database you will first have to import the associated maven module and defined in your 
+To connect SquashQL to your database you will first have to import the associated maven module and defined in your 
 java project a `QueryEngine` and `Datasatore` by picking the correct implementations. Then declare a bean that returns 
 the `QueryEngine` instance.
 
@@ -35,8 +35,8 @@ Maven
 ```xml
 <dependency>
   <groupId>me.paulbares</groupId>
-  <artifactId>aitm-spark</artifactId>
-  <version>${aitm.version}</version>
+  <artifactId>squashql-spark</artifactId>
+  <version>${squashql.version}</version>
 </dependency>
 ```
 
@@ -53,8 +53,8 @@ Maven
 ```xml
 <dependency>
   <groupId>me.paulbares</groupId>
-  <artifactId>aitm-clickhouse</artifactId>
-  <version>${aitm.version}</version>
+  <artifactId>squashql-clickhouse</artifactId>
+  <version>${squashql.version}</version>
 </dependency>
 ```
 
@@ -72,8 +72,8 @@ Maven
 ```xml
 <dependency>
   <groupId>me.paulbares</groupId>
-  <artifactId>aitm-bigquery</artifactId>
-  <version>${aitm.version}</version>
+  <artifactId>squashql-bigquery</artifactId>
+  <version>${squashql.version}</version>
 </dependency>
 ```
 
@@ -90,15 +90,15 @@ See how to create a [credentials object in BigQuery documentation](https://cloud
 
 ## API
 
-AITM exposes two http endpoints to interrogate your database.
+SquashQL exposes two http endpoints to interrogate your database.
 
 1. `GET  /metadata`: to retrieve the list of tables and fields available
 2. `POST /query`: to execute queries that accepts a json object representing the query to execute
 
-To use those endpoints, AITM provides a [TypeScript](https://www.typescriptlang.org/) library with all you need available [here](https://www.npmjs.com/package/@aitm1/aitm-js):
+To use those endpoints, SquashQL provides a [TypeScript](https://www.typescriptlang.org/) library with all you need available [here](https://www.npmjs.com/package/@squashql/squashql-js):
 
 ```typescript
-import {count, from, Querier} from "@aitm1/aitm-js"
+import {count, from, Querier} from "@squashql/squashql-js"
 
 const querier = new Querier("http://localhost:8080");
 
@@ -145,4 +145,4 @@ mvn test
 
 ## Contributing
 
-Before contributing to AITM, please read our [contributing guidelines](CONTRIBUTING.md).
+Before contributing to SquashQL, please read our [contributing guidelines](CONTRIBUTING.md).

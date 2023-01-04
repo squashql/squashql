@@ -1,6 +1,6 @@
 package me.paulbares.util;
 
-public final class AitmArrays {
+public final class SquashQLArrays {
 
   /**
    * Searches the specified array of ints for the specified value.

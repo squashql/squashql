@@ -5,19 +5,19 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <artifactId>aitm-parent</artifactId>
+    <artifactId>squashql-parent</artifactId>
     <groupId>me.paulbares</groupId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
   <groupId>me.paulbares</groupId>
-  <artifactId>aitm-java-client</artifactId>
+  <artifactId>squashql-java-client</artifactId>
   <packaging>jar</packaging>
 
   <dependencies>
     <dependency>
       <groupId>me.paulbares</groupId>
-      <artifactId>aitm-core</artifactId>
+      <artifactId>squashql-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

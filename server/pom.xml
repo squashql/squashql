@@ -6,23 +6,23 @@
 
   <parent>
     <groupId>me.paulbares</groupId>
-    <artifactId>aitm-parent</artifactId>
+    <artifactId>squashql-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
   <groupId>me.paulbares</groupId>
-  <artifactId>aitm-server</artifactId>
+  <artifactId>squashql-server</artifactId>
   <packaging>jar</packaging>
 
   <dependencies>
     <dependency>
       <groupId>me.paulbares</groupId>
-      <artifactId>aitm-core</artifactId>
+      <artifactId>squashql-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>me.paulbares</groupId>
-      <artifactId>aitm-java-client</artifactId>
+      <artifactId>squashql-java-client</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -33,13 +33,13 @@
 
     <dependency>
       <groupId>me.paulbares</groupId>
-      <artifactId>aitm-js</artifactId>
+      <artifactId>squashql-js</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>me.paulbares</groupId>
-      <artifactId>aitm-spark</artifactId>
+      <artifactId>squashql-spark</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
       <exclusions>
