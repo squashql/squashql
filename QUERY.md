@@ -1,6 +1,8 @@
 ## Summary
 
-AITM provides a simple interface in Typescript for building SQL-like queries specifically made for AITM.
+AITM provides a simple interface in Typescript for building SQL-like queries specifically made for AITM. In each section, 
+a Typescript code snippet is shown along with a SQL query to fix ideas, but it does not mean that this will be the SQL 
+query executed because the generated SQL query might depend on the underlying database. 
 
 ### Goal
 
@@ -204,6 +206,54 @@ Example
 |          eu |      uk |    Total |        9.0 |
 |          eu |      uk |   london |        9.0 |
 +-------------+---------+----------+------------+
+```
+
+### Partial rollup
+
+Partial rollup reduces the number of subtotals by indicating which ones should be calculated.  
+
+```typescript
+import {
+  from, sum
+} from "@aitm1/aitm-js"
+
+const query = from("populationTable")
+        .select(["continent", "country", "city"], [], [sum("pop", "population")])
+        .rollup(["country", "city"])
+        .build();
+```
+
+In the example above, subtotals for 'continent' won't be calculated i.e. the grand total won't be calculated. 
+
+```sql
+SELECT continent,
+       country,
+       city,
+       sum(population) as population
+FROM populationTable
+GROUP BY continent, ROLLUP (country, city);
+```
+
+Example
+```
++-----------+---------+----------+------------+
+| continent | country |     city | population |
++-----------+---------+----------+------------+
+|        am |   Total |     null |       17.0 |
+|        am |  canada |    Total |        6.0 |
+|        am |  canada | montreal |        2.0 |
+|        am |  canada |    otawa |        1.0 |
+|        am |  canada |  toronto |        3.0 |
+|        am |     usa |    Total |       11.0 |
+|        am |     usa |  chicago |        3.0 |
+|        am |     usa |      nyc |        8.0 |
+|        eu |   Total |     null |       11.5 |
+|        eu |  france |    Total |        2.5 |
+|        eu |  france |     lyon |        0.5 |
+|        eu |  france |    paris |        2.0 |
+|        eu |      uk |    Total |        9.0 |
+|        eu |      uk |   london |        9.0 |
++-----------+---------+----------+------------+
 ```
 
 ## Subqueries in FROM Clause (also known as inner or nested queries)

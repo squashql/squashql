@@ -67,7 +67,7 @@ public final class MeasureUtils {
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(criteriaRemover::accept));
     Optional.ofNullable(cm.period)
             .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover::accept));
-    List<Field> rollupColumns = new ArrayList<>(queryScope.rollupColumns());
+    Set<Field> rollupColumns = new LinkedHashSet<>(queryScope.rollupColumns()); // order does matter
     Optional.ofNullable(cm.ancestors)
             .ifPresent(ancestors -> {
               ancestors.forEach(criteriaRemover::accept);
@@ -75,7 +75,7 @@ public final class MeasureUtils {
               Collections.reverse(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage order".
               rollupColumns.addAll(ancestorFields);
             });
-    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), copy.get(), rollupColumns);
+    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), copy.get(), new ArrayList<>(rollupColumns));
   }
 
   private static CriteriaDto removeCriteriaOnField(String field, CriteriaDto root) {
