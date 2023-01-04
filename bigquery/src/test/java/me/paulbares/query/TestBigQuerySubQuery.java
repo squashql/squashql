@@ -21,19 +21,7 @@ public class TestBigQuerySubQuery extends ATestSubQuery {
 
   @AfterAll
   void tearDown() {
-    this.fieldsByStore.forEach((store, fields) -> {
-      TableId tableId = TableId.of(DATASET_NAME, store);
-      BigQueryDatastore ds = (BigQueryDatastore) datastore;
-      Table table = ds.getBigquery().getTable(tableId);
-      boolean deleted = table.delete();
-      if (deleted) {
-        // the table was deleted
-        System.out.println("Table " + tableId + " successfully deleted");
-      } else {
-        // the table was not found
-        System.out.println("Table " + tableId + " could not be deleted");
-      }
-    });
+    this.fieldsByStore.forEach((store, fields) -> BigQueryTestUtil.deleteTable(((BigQueryDatastore) this.datastore).getBigquery(), store));
   }
 
   @Override
