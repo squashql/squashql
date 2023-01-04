@@ -11,9 +11,11 @@ AITM is an open-source SQL query engine specialized in what-if analysis, buildin
 back-end developers make the most of any SQL database, and front-end developers easily configure their own metrics in
 the UI.
 
-- AITM is a middleware between [different popular SQL databases](#compatibility) and multiple clients/front end
-- It builds [queries that were not possible or cumbersome in SQL](./QUERY.md#complex-comparison)
-- It helps front-end developers run SQL queries in their own language in [TypeScript](https://www.typescriptlang.org/)
+- AITM is a middleware between [a SQL database](#compatibility) and multiple clients/front end. Heavy computation is delegated to the underlying database. 
+- It makes [calculations that were not possible or cumbersome in SQL] easy to perform. See [comparison measures](./QUERY.md#complex-comparison)
+- It helps front-end developers build and run SQL queries in their own language in [TypeScript](https://www.typescriptlang.org/)
+
+![test6](https://user-images.githubusercontent.com/5783183/210366738-06007ce4-a46a-4b14-b01c-d58de933c5d9.gif)
 
 ## Compatibility
 
