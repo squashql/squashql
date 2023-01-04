@@ -155,7 +155,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
           QueryRewriter queryRewriter) {
     List<String> fieldNames = new ArrayList<>();
     query.select.forEach(fieldNames::add);
-    if (queryRewriter.doesSupportGroupingFunction()) {
+    if (queryRewriter.useGroupingFunction()) {
       query.rollup.forEach(r -> fieldNames.add(groupingAlias(r)));
     }
     query.measures.forEach(m -> fieldNames.add(m.alias()));

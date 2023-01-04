@@ -223,7 +223,7 @@ const query = from("populationTable")
         .build();
 ```
 
-In the example above, subtotals for 'continent' won't be calculated i.e. the grand total won't be calculated. 
+In the example above, subtotals for 'continent' won't be calculated i.e. the grand total in that case. 
 
 ```sql
 SELECT continent,

@@ -29,7 +29,7 @@ public class SQLTranslator {
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true)));
 
     selects.addAll(groupBy); // coord first, then aggregates
-    if (queryRewriter.doesSupportGroupingFunction()) {
+    if (queryRewriter.useGroupingFunction()) {
       query.rollup.forEach(field -> selects.add(String.format("grouping(%s) as %s", escape(field), groupingAlias(field)))); // use grouping to identify totals
     }
     selects.addAll(aggregates);
@@ -47,7 +47,7 @@ public class SQLTranslator {
       addJoins(statement, query.table, queryRewriter);
     }
     addConditions(statement, query, fieldProvider);
-    addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.doesSupportPartialRollup(), statement);
+    addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
     return statement.toString();
   }
 

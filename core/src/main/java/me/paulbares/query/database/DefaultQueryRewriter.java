@@ -23,12 +23,12 @@ public class DefaultQueryRewriter implements QueryRewriter {
   }
 
   @Override
-  public boolean doesSupportPartialRollup() {
+  public boolean usePartialRollupSyntax() {
     return true;
   }
 
   @Override
-  public boolean doesSupportGroupingFunction() {
+  public boolean useGroupingFunction() {
     return true;
   }
 }

@@ -90,14 +90,14 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
     }
 
     @Override
-    public boolean doesSupportPartialRollup() {
+    public boolean usePartialRollupSyntax() {
       // Not supported as of now: https://github.com/ClickHouse/ClickHouse/issues/322#issuecomment-615087004
       // Tested with version https://github.com/ClickHouse/ClickHouse/tree/v22.10.2.11-stable
       return false;
     }
 
     @Override
-    public boolean doesSupportGroupingFunction() {
+    public boolean useGroupingFunction() {
       return true;
     }
   }

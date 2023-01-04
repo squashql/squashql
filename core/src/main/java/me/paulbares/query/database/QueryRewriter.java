@@ -29,11 +29,31 @@ public interface QueryRewriter {
     return alias;
   }
 
-  boolean doesSupportPartialRollup();
+  /**
+   * Indicates if statement such as:
+   * <pre>
+   * {@code
+   * SELECT
+   *     warehouse, product, SUM(quantity)
+   * FROM
+   *     inventory
+   * GROUP BY warehouse, ROLLUP (product);
+   * }
+   * </pre> is supported by the query engine and so the syntax above can be used.
+   * <br>
+   * See examples of partial rollup here
+   * <a href="https://www.sqlservertutorial.net/sql-server-basics/sql-server-rollup/">
+   *  https://www.sqlservertutorial.net/sql-server-basics/sql-server-rollup/
+   * </a>.
+   */
+  boolean usePartialRollupSyntax();
 
   /**
+   * Indicates the grouping function can be used to identify extra rows added by rollup. <br>
    * See documentation
-   * <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/grouping-transact-sql?view=sql-server-ver16>https://learn.microsoft.com/en-us/sql/t-sql/functions/grouping-transact-sql?view=sql-server-ver16</a>.
+   * <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/grouping-transact-sql?view=sql-server-ver16">
+   *  https://learn.microsoft.com/en-us/sql/t-sql/functions/grouping-transact-sql?view=sql-server-ver16
+   * </a>.
    */
-  boolean doesSupportGroupingFunction();
+  boolean useGroupingFunction();
 }

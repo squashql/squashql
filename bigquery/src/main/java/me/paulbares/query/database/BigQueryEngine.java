@@ -217,13 +217,13 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     }
 
     @Override
-    public boolean doesSupportPartialRollup() {
+    public boolean usePartialRollupSyntax() {
       // Not supported https://issuetracker.google.com/issues/35905909
       return false;
     }
 
     @Override
-    public boolean doesSupportGroupingFunction() {
+    public boolean useGroupingFunction() {
       // Not supported https://issuetracker.google.com/issues/205238172
       return false;
     }
