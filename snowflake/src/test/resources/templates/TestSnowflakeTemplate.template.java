@@ -1,15 +1,15 @@
-package me.paulbares.query;
+package io.squashql.query;
 
-import me.paulbares.SnowflakeDatastore;
-import me.paulbares.query.database.QueryEngine;
-import me.paulbares.query.database.SnowflakeQueryEngine;
-import me.paulbares.store.Datastore;
-import me.paulbares.transaction.SnowflakeTransactionManager;
-import me.paulbares.transaction.TransactionManager;
+import io.squashql.SnowflakeDatastore;
+import io.squashql.query.database.QueryEngine;
+import io.squashql.query.database.SnowflakeQueryEngine;
+import io.squashql.store.Datastore;
+import io.squashql.transaction.SnowflakeTransactionManager;
+import io.squashql.transaction.TransactionManager;
 import org.junit.jupiter.api.AfterAll;
 
 /**
- * Do not edit this class, it has been generated automatically by {@link me.paulbares.template.SnowflakeClassTemplateGenerator}.
+ * Do not edit this class, it has been generated automatically by {@link io.squashql.template.SnowflakeClassTemplateGenerator}.
  */
 public class TestSnowflake{{classSuffix}} extends {{parentTestClass}} {
 

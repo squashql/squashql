@@ -1,4 +1,4 @@
-name: aitm ci
+name: squashql ci
 
 on:
   workflow_dispatch:
@@ -24,9 +24,9 @@ jobs:
           java-version: '17'
           cache: 'maven'
       - name: Build with Maven
-        run: mvn -pl :aitm-core -am clean install --no-transfer-progress -DskipTests
+        run: mvn -pl :squashql-core -am clean install --no-transfer-progress -DskipTests
       - name: Run core tests
-        run: mvn -pl :aitm-core --no-transfer-progress test
+        run: mvn -pl :squashql-core --no-transfer-progress test
 
   clickhouse:
     runs-on: ubuntu-latest
@@ -40,9 +40,9 @@ jobs:
           java-version: '17'
           cache: 'maven'
       - name: Build with Maven
-        run: mvn -pl :aitm-clickhouse -am clean install --no-transfer-progress -DskipTests
+        run: mvn -pl :squashql-clickhouse -am clean install --no-transfer-progress -DskipTests
       - name: Run clickhouse tests
-        run: mvn -pl :aitm-clickhouse --no-transfer-progress test
+        run: mvn -pl :squashql-clickhouse --no-transfer-progress test
         env:
           TESTCONTAINERS_REUSE_ENABLE: true
 
@@ -58,9 +58,9 @@ jobs:
           java-version: '17'
           cache: 'maven'
       - name: Build with Maven
-        run: mvn -pl :aitm-spark -am clean install --no-transfer-progress -DskipTests
+        run: mvn -pl :squashql-spark -am clean install --no-transfer-progress -DskipTests
       - name: Run spark tests
-        run: mvn -pl :aitm-spark --no-transfer-progress test
+        run: mvn -pl :squashql-spark --no-transfer-progress test
         env:
           TESTCONTAINERS_REUSE_ENABLE: true
 
@@ -76,7 +76,7 @@ jobs:
           java-version: '17'
           cache: 'maven'
       - name: Build with Maven
-        run: mvn -pl :aitm-bigquery -am clean install --no-transfer-progress -DskipTests
+        run: mvn -pl :squashql-bigquery -am clean install --no-transfer-progress -DskipTests
 
   snowflake:
     runs-on: ubuntu-latest
@@ -90,7 +90,7 @@ jobs:
           java-version: '17'
           cache: 'maven'
       - name: Build with Maven
-        run: mvn -pl :aitm-snowflake -am clean install --no-transfer-progress -DskipTests
+        run: mvn -pl :squashql-snowflake -am clean install --no-transfer-progress -DskipTests
 
   server:
     runs-on: ubuntu-latest
@@ -104,13 +104,13 @@ jobs:
           java-version: '17'
           cache: 'maven'
       - name: server - Build with Maven
-        run: mvn -pl :aitm-server -am clean install --no-transfer-progress -DskipTests
+        run: mvn -pl :squashql-server -am clean install --no-transfer-progress -DskipTests
       - name: js - Build with Maven
-        run: mvn -pl :aitm-js -am clean install --no-transfer-progress -DskipTests
+        run: mvn -pl :squashql-js -am clean install --no-transfer-progress -DskipTests
       - name: js - Package with Maven
-        run: mvn -pl :aitm-js package --no-transfer-progress
+        run: mvn -pl :squashql-js package --no-transfer-progress
       - name: Run server tests
-        run: mvn -pl :aitm-server --no-transfer-progress test
+        run: mvn -pl :squashql-server --no-transfer-progress test
 
   java-client:
     runs-on: ubuntu-latest
@@ -124,7 +124,7 @@ jobs:
           java-version: '17'
           cache: 'maven'
       - name: Build with Maven
-        run: mvn -pl :aitm-java-client -am clean install --no-transfer-progress -DskipTests
+        run: mvn -pl :squashql-java-client -am clean install --no-transfer-progress -DskipTests
       - name: Run http-client tests
-        run: mvn -pl :aitm-java-client --no-transfer-progress test
+        run: mvn -pl :squashql-java-client --no-transfer-progress test
 
