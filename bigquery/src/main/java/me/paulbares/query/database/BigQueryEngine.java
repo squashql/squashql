@@ -200,18 +200,23 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     }
 
     @Override
+    public String fieldName(String field) {
+      return SqlUtils.backtickEscape(field);
+    }
+
+    @Override
     public String tableName(String table) {
-      return SqlUtils.escape(this.projectId + "." + this.datasetName + "." + table);
+      return SqlUtils.backtickEscape(this.projectId + "." + this.datasetName + "." + table);
     }
 
     @Override
     public String select(String select) {
-      return SqlUtils.escape(select);
+      return SqlUtils.backtickEscape(select);
     }
 
     @Override
     public String rollup(String rollup) {
-      return SqlUtils.escape(rollup);
+      return SqlUtils.backtickEscape(rollup);
     }
 
     /**
@@ -222,7 +227,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
      */
     @Override
     public String measureAlias(String alias) {
-      return alias
+      return SqlUtils.backtickEscape(alias)
               .replace("(", "_")
               .replace(")", "_")
               .replace(" ", "_");
@@ -238,6 +243,11 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     public boolean useGroupingFunction() {
       // Not supported https://issuetracker.google.com/issues/205238172
       return false;
+    }
+
+    @Override
+    public String groupingAlias(String field) {
+      return SqlUtils.backtickEscape(QueryRewriter.super.groupingAlias(field));
     }
   }
 }

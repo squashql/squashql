@@ -5,9 +5,9 @@ import com.google.cloud.bigquery.*;
 
 public class BigQueryTestUtil {
 
-  public static final String CREDENTIALS = "/Users/paul/dev/unittests-370209-0eb082b518e1.json";
-  public static final String PROJECT_ID = "unittests-370209";
-  public static final String DATASET_NAME = "datasetfortests";
+  public static final String CREDENTIALS = "";
+  public static final String PROJECT_ID = "";
+  public static final String DATASET_NAME = "";
 
   public static void createDatasetIfDoesNotExist(BigQuery bigquery, String datasetName) {
     DatasetInfo datasetInfo = DatasetInfo.newBuilder(datasetName).build();

@@ -1,7 +1,5 @@
 package me.paulbares.query;
 
-import com.google.cloud.bigquery.Table;
-import com.google.cloud.bigquery.TableId;
 import me.paulbares.BigQueryDatastore;
 import me.paulbares.BigQueryUtil;
 import me.paulbares.query.database.BigQueryEngine;

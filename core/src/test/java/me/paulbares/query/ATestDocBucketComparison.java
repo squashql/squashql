@@ -20,7 +20,7 @@ import static me.paulbares.transaction.TransactionManager.SCENARIO_FIELD_NAME;
  * why it is @{@link Disabled}.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestClass(ignore = {TestClass.Type.SPARK, TestClass.Type.BIGQUERY})
+@TestClass(ignore = {TestClass.Type.SPARK, TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE})
 public abstract class ATestDocBucketComparison extends ABaseTestQuery {
 
   @Override

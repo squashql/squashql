@@ -15,8 +15,8 @@ import java.util.stream.IntStream;
 public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
 
   /**
-   * https://clickhouse.com/docs/en/sql-reference/aggregate-functions/reference/
-   * NOTE there is more but only a subset is proposed here.
+   * <a href="https://clickhouse.com/docs/en/sql-reference/aggregate-functions/reference/">aggregate functions</a>
+   * NOTE: there is more but only a subset is proposed here.
    */
   public static final List<String> SUPPORTED_AGGREGATION_FUNCTIONS = List.of(
           "count",
@@ -75,18 +75,28 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
   static class ClickHouseQueryRewriter implements QueryRewriter {
 
     @Override
+    public String fieldName(String field) {
+      return SqlUtils.backtickEscape(field);
+    }
+
+    @Override
     public String select(String select) {
-      return SqlUtils.escape(select);
+      return SqlUtils.backtickEscape(select);
     }
 
     @Override
     public String rollup(String rollup) {
-      return SqlUtils.escape(rollup);
+      return SqlUtils.backtickEscape(rollup);
     }
 
     @Override
     public String measureAlias(String alias) {
-      return SqlUtils.escape(alias);
+      return SqlUtils.backtickEscape(alias);
+    }
+
+    @Override
+    public String groupingAlias(String field) {
+      return SqlUtils.backtickEscape(QueryRewriter.super.groupingAlias(field));
     }
 
     @Override

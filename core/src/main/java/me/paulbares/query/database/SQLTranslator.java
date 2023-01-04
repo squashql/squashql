@@ -8,8 +8,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static me.paulbares.query.database.SqlUtils.escape;
-
 public class SQLTranslator {
 
   public static final String TOTAL_CELL = "___total___";
@@ -30,7 +28,7 @@ public class SQLTranslator {
 
     selects.addAll(groupBy); // coord first, then aggregates
     if (queryRewriter.useGroupingFunction()) {
-      query.rollup.forEach(field -> selects.add(String.format("grouping(%s) as %s", escape(field), groupingAlias(field)))); // use grouping to identify totals
+      query.rollup.forEach(field -> selects.add(String.format("grouping(%s) as %s", queryRewriter.fieldName(field), queryRewriter.groupingAlias(field)))); // use grouping to identify totals
     }
     selects.addAll(aggregates);
 
@@ -46,7 +44,7 @@ public class SQLTranslator {
       statement.append(queryRewriter.tableName(query.table.name));
       addJoins(statement, query.table, queryRewriter);
     }
-    addConditions(statement, query, fieldProvider);
+    addConditions(statement, query, fieldProvider, queryRewriter);
     addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
     return statement.toString();
   }
@@ -104,9 +102,9 @@ public class SQLTranslator {
     }
   }
 
-  protected static void addConditions(StringBuilder statement, DatabaseQuery query, Function<String, Field> fieldProvider) {
+  protected static void addConditions(StringBuilder statement, DatabaseQuery query, Function<String, Field> fieldProvider, QueryRewriter queryRewriter) {
     if (query.criteriaDto != null) {
-      String whereClause = toSql(fieldProvider, query.criteriaDto);
+      String whereClause = toSql(fieldProvider, query.criteriaDto, queryRewriter);
       if (whereClause != null) {
         statement
                 .append(" where ")
@@ -126,9 +124,9 @@ public class SQLTranslator {
       for (int i = 0; i < join.mappings.size(); i++) {
         JoinMappingDto mapping = join.mappings.get(i);
         statement
-                .append(queryRewriter.tableName(mapping.fromTable)).append('.').append(mapping.from)
+                .append(queryRewriter.tableName(mapping.fromTable)).append('.').append(queryRewriter.fieldName(mapping.from))
                 .append(" = ")
-                .append(queryRewriter.tableName(mapping.toTable)).append('.').append(mapping.to);
+                .append(queryRewriter.tableName(mapping.toTable)).append('.').append(queryRewriter.fieldName(mapping.to));
         if (i < join.mappings.size() - 1) {
           statement.append(" and ");
         }
@@ -140,7 +138,7 @@ public class SQLTranslator {
     }
   }
 
-  public static String toSql(Field field, ConditionDto dto) {
+  public static String toSql(Field field, ConditionDto dto, QueryRewriter queryRewriter) {
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
       Function<Object, String> sqlMapper;
       if (Number.class.isAssignableFrom(field.type())
@@ -158,25 +156,25 @@ public class SQLTranslator {
         throw new RuntimeException("Not supported " + field.type());
       }
 
-      String escape = escape(field.name());
+      String formattedFieldName = queryRewriter.fieldName(field.name());
       return switch (dto.type()) {
-        case IN -> escape + " in (" +
+        case IN -> formattedFieldName + " in (" +
                 ((InConditionDto) dto).values
                         .stream()
                         .map(sqlMapper)
                         .collect(Collectors.joining(", ")) + ")";
-        case EQ -> escape + " = " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
-        case NEQ -> escape + " <> " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
-        case LT -> escape + " < " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
-        case LE -> escape + " <= " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
-        case GT -> escape + " > " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
-        case GE -> escape + " >= " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
-        case LIKE -> escape + " like " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
+        case EQ -> formattedFieldName + " = " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
+        case NEQ -> formattedFieldName + " <> " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
+        case LT -> formattedFieldName + " < " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
+        case LE -> formattedFieldName + " <= " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
+        case GT -> formattedFieldName + " > " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
+        case GE -> formattedFieldName + " >= " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
+        case LIKE -> formattedFieldName + " like " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
         default -> throw new IllegalStateException("Unexpected value: " + dto.type());
       };
     } else if (dto instanceof LogicalConditionDto logical) {
-      String first = toSql(field, logical.one);
-      String second = toSql(field, logical.two);
+      String first = toSql(field, logical.one, queryRewriter);
+      String second = toSql(field, logical.two, queryRewriter);
       String typeString = switch (dto.type()) {
         case AND -> " and "; // TODO unnest nested and (and (and (and...))) = (and and and)
         case OR -> " or "; // TODO unnest nested or
@@ -184,10 +182,10 @@ public class SQLTranslator {
       };
       return first + typeString + second;
     } else if (dto instanceof ConstantConditionDto cc) {
-      String escape = escape(field.name());
+      String formattedFieldName = queryRewriter.fieldName(field.name());
       return switch (cc.type()) {
-        case NULL -> escape + " is null";
-        case NOT_NULL -> escape + " is not null";
+        case NULL -> formattedFieldName + " is null";
+        case NOT_NULL -> formattedFieldName + " is not null";
         default -> throw new IllegalStateException("Unexpected value: " + dto.type());
       };
     } else {
@@ -195,9 +193,9 @@ public class SQLTranslator {
     }
   }
 
-  public static String toSql(Function<String, Field> fieldProvider, CriteriaDto criteriaDto) {
+  public static String toSql(Function<String, Field> fieldProvider, CriteriaDto criteriaDto, QueryRewriter queryRewriter) {
     if (criteriaDto.isCriterion()) {
-      return toSql(fieldProvider.apply(criteriaDto.field), criteriaDto.condition);
+      return toSql(fieldProvider.apply(criteriaDto.field), criteriaDto.condition, queryRewriter);
     } else if (!criteriaDto.children.isEmpty()) {
       String sep = switch (criteriaDto.conditionType) {
         case AND -> " and ";
@@ -207,7 +205,7 @@ public class SQLTranslator {
       Iterator<CriteriaDto> iterator = criteriaDto.children.iterator();
       List<String> conditions = new ArrayList<>();
       while (iterator.hasNext()) {
-        String c = toSql(fieldProvider, iterator.next());
+        String c = toSql(fieldProvider, iterator.next(), queryRewriter);
         if (c != null) {
           conditions.add(c);
         }
@@ -216,13 +214,5 @@ public class SQLTranslator {
     } else {
       return null;
     }
-  }
-
-  /**
-   * Returns the name of the column used for grouping(). If it is modified, please modify also
-   * {@link SqlUtils#GROUPING_PATTERN}.
-   */
-  public static String groupingAlias(String field) {
-    return String.format(escape("___grouping___%s___"), field);
   }
 }

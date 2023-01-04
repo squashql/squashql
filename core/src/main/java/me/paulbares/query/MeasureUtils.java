@@ -1,6 +1,7 @@
 package me.paulbares.query;
 
 import lombok.NoArgsConstructor;
+import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.dto.CriteriaDto;
 import me.paulbares.query.dto.Period;
@@ -16,10 +17,22 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 public final class MeasureUtils {
 
+  private static final QueryRewriter BASIC = new QueryRewriter() {
+    @Override
+    public boolean usePartialRollupSyntax() {
+      return false;
+    }
+
+    @Override
+    public boolean useGroupingFunction() {
+      return false;
+    }
+  };
+
   public static String createExpression(Measure m) {
     if (m instanceof AggregatedMeasure a) {
       if (a.criteria != null) {
-        String conditionSt = SQLTranslator.toSql(f -> new Field(f, String.class), a.criteria);
+        String conditionSt = SQLTranslator.toSql(f -> new Field(f, String.class), a.criteria, BASIC);
         return a.aggregationFunction + "If(" + a.field + ", " + conditionSt + ")";
       } else {
         return a.aggregationFunction + "(" + a.field + ")";

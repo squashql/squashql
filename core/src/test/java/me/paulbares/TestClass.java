@@ -18,7 +18,9 @@ public @interface TestClass {
   enum Type {
     SPARK("Spark"),
     CLICKHOUSE("ClickHouse"),
-    BIGQUERY("BigQuery");
+    BIGQUERY("BigQuery"),
+
+    SNOWFLAKE("Snowflake");
 
     public final String className;
 

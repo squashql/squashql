@@ -19,8 +19,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import static me.paulbares.query.database.SQLTranslator.groupingAlias;
-
 @Slf4j
 public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T> {
 
@@ -153,10 +151,9 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue,
           QueryRewriter queryRewriter) {
-    List<String> fieldNames = new ArrayList<>();
-    query.select.forEach(fieldNames::add);
+    List<String> fieldNames = new ArrayList<>(query.select);
     if (queryRewriter.useGroupingFunction()) {
-      query.rollup.forEach(r -> fieldNames.add(groupingAlias(r)));
+      query.rollup.forEach(r -> fieldNames.add(queryRewriter.groupingAlias(r)));
     }
     query.measures.forEach(m -> fieldNames.add(m.alias()));
 

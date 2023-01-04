@@ -36,7 +36,7 @@ public class TestBigQueryEngine {
     String sqlStatement = bqe.createSqlStatement(query);
     Assertions.assertThat(sqlStatement)
             .isEqualTo("select coalesce(`scenario`, \"___null___\"), coalesce(`category`, \"___null___\")," +
-                    " sum(`price`) as price.sum, avg(`price`) as price.avg" +
+                    " sum(`price`) as `price.sum`, avg(`price`) as `price.avg`" +
                     " from `myProjectId.myDatasetName.baseStore`" +
                     " group by rollup(coalesce(`scenario`, \"___null___\"), coalesce(`category`, \"___null___\"))");
 
@@ -58,7 +58,7 @@ public class TestBigQueryEngine {
     // The order in the rollup is important to fetch the right (sub)totals
     Assertions.assertThat(sqlStatement)
             .isEqualTo("select coalesce(`col1`, \"___null___\"), coalesce(`col2`, \"___null___\"), coalesce(`col3`, \"___null___\")," +
-                    " sum(`price`) as price.sum" +
+                    " sum(`price`) as `price.sum`" +
                     " from `myProjectId.myDatasetName.baseStore`" +
                     " group by rollup(coalesce(`col1`, \"___null___\"), coalesce(`col3`, \"___null___\"), coalesce(`col2`, \"___null___\"))");
 
@@ -74,7 +74,7 @@ public class TestBigQueryEngine {
     // The order in the rollup is important to fetch the right (sub)totals
     Assertions.assertThat(sqlStatement)
             .isEqualTo("select coalesce(`col1`, \"___null___\"), coalesce(`col2`, \"___null___\"), coalesce(`col3`, \"___null___\")," +
-                    " sum(`price`) as price.sum" +
+                    " sum(`price`) as `price.sum`" +
                     " from `myProjectId.myDatasetName.baseStore`" +
                     " group by rollup(coalesce(`col1`, \"___null___\"), coalesce(`col3`, \"___null___\"), coalesce(`col2`, \"___null___\"))");
   }
@@ -96,7 +96,7 @@ public class TestBigQueryEngine {
     // Statement is the same as full rollup because BQ does not support partial rollup
     Assertions.assertThat(sqlStatement)
             .isEqualTo("select coalesce(`scenario`, \"___null___\"), coalesce(`category`, \"___null___\")," +
-                    " sum(`price`) as price.sum" +
+                    " sum(`price`) as `price.sum`" +
                     " from `myProjectId.myDatasetName.baseStore`" +
                     " group by rollup(coalesce(`scenario`, \"___null___\"), coalesce(`category`, \"___null___\"))");
 
