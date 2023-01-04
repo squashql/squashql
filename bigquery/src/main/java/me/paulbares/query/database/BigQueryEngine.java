@@ -21,13 +21,43 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
   public static final String NULL_VALUE = "___null___";
 
+  /**
+   * https://cloud.google.com/bigquery/docs/reference/standard-sql/statistical_aggregate_functions#covar_samp
+   * https://cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions
+   */
+  public static final List<String> SUPPORTED_AGGREGATION_FUNCTIONS = List.of(
+          "any_value",
+          "avg",
+          "corr",
+          "count",
+          "covar_pop",
+          "covar_samp",
+          "min",
+          "max",
+          "stddev_pop",
+          "stddev_samp",
+          "sum",
+          "var_pop",
+          "var_samp",
+          "variance"
+  );
+
   @Override
   protected String createSqlStatement(DatabaseQuery query) {
     boolean hasRollup = !query.rollup.isEmpty();
     if (!hasRollup) {
       return super.createSqlStatement(query);
     } else {
+      // Special case for BigQuery because it does not support either the grouping function used to identify extra-rows added
+      // by rollup or grouping sets for partial rollup.
       BigQueryQueryRewriter rewriter = (BigQueryQueryRewriter) this.queryRewriter;
+      /*
+       * The trick here is to change what is put in select and rollup:
+       * SELECT SUM(amount) as amount_sum, COALESCE(a, "r1"), COALESCE(b, "r2") FROM table
+       * GROUP BY ROLLUP(COALESCE(a, "___null___"), COALESCE(b, "___null___"))
+       * By doing so, null values (not the ones due to rollup) will be changed to "___null___" and null values in the
+       * result dataset correspond to the subtotals.
+       */
       BigQueryQueryRewriter newRewriter = new BigQueryQueryRewriter(rewriter.projectId, rewriter.datasetName) {
         @Override
         public String select(String select) {
@@ -45,66 +75,65 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       // Missing columns needs to be added at the beginning to have the correct sub-totals
       missingColumnsInRollup.addAll(query.rollup);
       deepCopy.rollup = missingColumnsInRollup;
-      String translate = SQLTranslator.translate(deepCopy, QueryExecutor.withFallback(this.fieldSupplier, String.class), newRewriter);
-      return translate;
+      return SQLTranslator.translate(deepCopy, QueryExecutor.withFallback(this.fieldSupplier, String.class), newRewriter);
     }
   }
 
   @Override
   protected Table postProcessDataset(Table input, DatabaseQuery query) {
-    if (!query.rollup.isEmpty()) {
-      boolean isPartialRollup = !Set.copyOf(query.select).equals(Set.copyOf(query.rollup));
-      List<String> missingColumnsInRollup = new ArrayList<>(query.select);
-      missingColumnsInRollup.removeAll(query.rollup);
-
-      MutableIntSet rowIndicesToRemove = new IntHashSet();
-      for (int i = 0; i < input.headers().size(); i++) {
-        Field header = input.headers().get(i);
-        List<Object> columnValues = input.getColumn(i);
-        if (i < query.select.size()) {
-          List<Object> baseColumnValues = input.getColumnValues(header.name());
-          for (int rowIndex = 0; rowIndex < input.count(); rowIndex++) {
-            Object value = columnValues.get(rowIndex);
-            if (value == null) {
-              baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
-              if (isPartialRollup && missingColumnsInRollup.contains(header.name())) {
-                // Partial rollup not supported https://issuetracker.google.com/issues/35905909, we let bigquery compute
-                // all totals, and we remove here the extra rows.
-                rowIndicesToRemove.add(rowIndex);
-              }
-            } else if (value.equals(NULL_VALUE)) {
-              baseColumnValues.set(rowIndex, null);
-            }
-          }
-        }
-      }
-
-      List<List<Object>> newValues;
-      if (!rowIndicesToRemove.isEmpty()) {
-        newValues = new ArrayList<>(input.headers().size());
-        for (int col = 0; col < input.headers().size(); col++) {
-          List<Object> columnValues = input.getColumn(col);
-          List<Object> newColumnValues = new ArrayList<>(columnValues.size() - rowIndicesToRemove.size());
-          for (int rowIndex = 0; rowIndex < input.count(); rowIndex++) {
-            if (!rowIndicesToRemove.contains(rowIndex)) {
-              newColumnValues.add(columnValues.get(rowIndex));
-            }
-          }
-          newValues.add(newColumnValues);
-        }
-      } else {
-        newValues = ((ColumnarTable) input).getColumns();
-      }
-
-      return new ColumnarTable(
-              input.headers(),
-              input.measures(),
-              input.measureIndices(),
-              input.columnIndices(),
-              newValues);
-    } else {
+    if (query.rollup.isEmpty()) {
       return input;
     }
+
+    boolean isPartialRollup = !Set.copyOf(query.select).equals(Set.copyOf(query.rollup));
+    List<String> missingColumnsInRollup = new ArrayList<>(query.select);
+    missingColumnsInRollup.removeAll(query.rollup);
+
+    MutableIntSet rowIndicesToRemove = new IntHashSet();
+    for (int i = 0; i < input.headers().size(); i++) {
+      Field header = input.headers().get(i);
+      List<Object> columnValues = input.getColumn(i);
+      if (i < query.select.size()) {
+        List<Object> baseColumnValues = input.getColumnValues(header.name());
+        for (int rowIndex = 0; rowIndex < input.count(); rowIndex++) {
+          Object value = columnValues.get(rowIndex);
+          if (value == null) {
+            baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
+            if (isPartialRollup && missingColumnsInRollup.contains(header.name())) {
+              // Partial rollup not supported https://issuetracker.google.com/issues/35905909, we let bigquery compute
+              // all totals, and we remove here the extra rows.
+              rowIndicesToRemove.add(rowIndex);
+            }
+          } else if (value.equals(NULL_VALUE)) {
+            baseColumnValues.set(rowIndex, null);
+          }
+        }
+      }
+    }
+
+    List<List<Object>> newValues;
+    if (!rowIndicesToRemove.isEmpty()) {
+      newValues = new ArrayList<>(input.headers().size());
+      for (int col = 0; col < input.headers().size(); col++) {
+        List<Object> columnValues = input.getColumn(col);
+        List<Object> newColumnValues = new ArrayList<>(columnValues.size() - rowIndicesToRemove.size());
+        for (int rowIndex = 0; rowIndex < input.count(); rowIndex++) {
+          if (!rowIndicesToRemove.contains(rowIndex)) {
+            newColumnValues.add(columnValues.get(rowIndex));
+          }
+        }
+        newValues.add(newColumnValues);
+      }
+    } else {
+      newValues = ((ColumnarTable) input).getColumns();
+    }
+
+    return new ColumnarTable(
+            input.headers(),
+            input.measures(),
+            input.measureIndices(),
+            input.columnIndices(),
+            newValues);
   }
 
   public BigQueryEngine(BigQueryDatastore datastore) {
@@ -157,24 +186,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
   @Override
   public List<String> supportedAggregationFunctions() {
-    // https://cloud.google.com/bigquery/docs/reference/standard-sql/statistical_aggregate_functions#covar_samp
-    // https://cloud.google.com/bigquery/docs/reference/standard-sql/aggregate_functions
-    return List.of(
-            "any_value",
-            "avg",
-            "corr",
-            "count",
-            "covar_pop",
-            "covar_samp",
-            "min",
-            "max",
-            "stddev_pop",
-            "stddev_samp",
-            "sum",
-            "var_pop",
-            "var_samp",
-            "variance"
-    );
+    return SUPPORTED_AGGREGATION_FUNCTIONS;
   }
 
   static class BigQueryQueryRewriter implements QueryRewriter {
