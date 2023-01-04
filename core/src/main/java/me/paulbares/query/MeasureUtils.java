@@ -1,27 +1,38 @@
 package me.paulbares.query;
 
 import lombok.NoArgsConstructor;
+import me.paulbares.query.database.QueryRewriter;
 import me.paulbares.query.database.SQLTranslator;
 import me.paulbares.query.dto.CriteriaDto;
 import me.paulbares.query.dto.Period;
 import me.paulbares.query.dto.QueryDto;
 import me.paulbares.store.Field;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public final class MeasureUtils {
 
+  private static final QueryRewriter BASIC = new QueryRewriter() {
+    @Override
+    public boolean usePartialRollupSyntax() {
+      return false;
+    }
+
+    @Override
+    public boolean useGroupingFunction() {
+      return false;
+    }
+  };
+
   public static String createExpression(Measure m) {
     if (m instanceof AggregatedMeasure a) {
       if (a.criteria != null) {
-        String conditionSt = SQLTranslator.toSql(f -> new Field(f, String.class), a.criteria, () -> false);
+        String conditionSt = SQLTranslator.toSql(f -> new Field(f, String.class), a.criteria, BASIC);
         return a.aggregationFunction + "If(" + a.field + ", " + conditionSt + ")";
       } else {
         return a.aggregationFunction + "(" + a.field + ")";
@@ -69,17 +80,15 @@ public final class MeasureUtils {
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(criteriaRemover::accept));
     Optional.ofNullable(cm.period)
             .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover::accept));
-    List<Field> rollupColumns = new ArrayList<>(queryScope.rollupColumns());
+    Set<Field> rollupColumns = new LinkedHashSet<>(queryScope.rollupColumns()); // order does matter
     Optional.ofNullable(cm.ancestors)
-            .ifPresent(p -> {
-              p.forEach(criteriaRemover::accept);
-              p.forEach(c -> {
-                if (query.columns.contains(c)) {
-                  rollupColumns.add(fieldSupplier.apply(c));
-                }
-              });
+            .ifPresent(ancestors -> {
+              ancestors.forEach(criteriaRemover::accept);
+              List<Field> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).map(fieldSupplier::apply).collect(Collectors.toList());
+              Collections.reverse(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage order".
+              rollupColumns.addAll(ancestorFields);
             });
-    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), copy.get(), rollupColumns);
+    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), copy.get(), new ArrayList<>(rollupColumns));
   }
 
   private static CriteriaDto removeCriteriaOnField(String field, CriteriaDto root) {

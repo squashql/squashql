@@ -1,16 +1,12 @@
 package me.paulbares.query.database;
 
-import java.sql.Types;
 import me.paulbares.SnowflakeDatastore;
 import me.paulbares.SnowflakeUtil;
 import me.paulbares.query.ColumnarTable;
 import me.paulbares.query.Table;
 import me.paulbares.store.Field;
 
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -40,16 +36,12 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
           "VAR_POP",
           "VAR_SAMP");
 
-  private final QueryRewriter queryRewriter;
-
   public SnowflakeQueryEngine(SnowflakeDatastore datastore) {
-    super(datastore);
-    this.queryRewriter = new SnowflakeQueryRewriter();
+    super(datastore, new SnowflakeQueryRewriter());
   }
 
   @Override
-  protected Table retrieveAggregates(DatabaseQuery query) {
-    String sql = SQLTranslator.translate(query, this.fieldSupplier, this.queryRewriter, QueryRewriter::tableName);
+  protected Table retrieveAggregates(DatabaseQuery query, String sql) {
     try (Statement snowflakeStatement = this.datastore.getConnection().createStatement()) {
       ResultSet tableResult = snowflakeStatement.executeQuery(sql);
 
@@ -112,6 +104,11 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
     }
 
     @Override
+    public String select(String select) {
+      return SqlUtils.doubleQuoteEscape(select);
+    }
+
+    @Override
     public String fieldName(String field) {
       return SqlUtils.doubleQuoteEscape(field);
     }
@@ -122,6 +119,16 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
     }
 
     @Override
+    public boolean usePartialRollupSyntax() {
+      return true;
+    }
+
+    @Override
+    public boolean useGroupingFunction() {
+      return true;
+    }
+
+    @Override
     public String rollup(String rollup) {
       return SqlUtils.doubleQuoteEscape(rollup);
     }
@@ -129,11 +136,6 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
     @Override
     public String groupingAlias(String field) {
       return SqlUtils.doubleQuoteEscape(QueryRewriter.super.groupingAlias(field));
-    }
-
-    @Override
-    public boolean doesSupportPartialRollup() {
-      return true;
     }
   }
 }

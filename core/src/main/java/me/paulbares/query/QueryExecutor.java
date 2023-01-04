@@ -182,7 +182,7 @@ public class QueryExecutor {
   private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(QueryScope queryScope, DatabaseQuery prefetchQuery, Function<String, Field> fieldSupplier) {
     Set<Field> fields = prefetchQuery.select.stream().map(fieldSupplier).collect(Collectors.toSet());
     if (queryScope.tableDto != null) {
-      return new TableScope(queryScope.tableDto, fields, queryScope.criteriaDto, new HashSet<>(queryScope.rollupColumns));
+      return new TableScope(queryScope.tableDto, fields, queryScope.criteriaDto, queryScope.rollupColumns);
     } else {
       return new SubQueryScope(queryScope.subQuery, fields, queryScope.criteriaDto);
     }

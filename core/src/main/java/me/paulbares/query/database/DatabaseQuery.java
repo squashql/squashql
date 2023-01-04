@@ -3,7 +3,6 @@ package me.paulbares.query.database;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import me.paulbares.jackson.JacksonUtil;
 import me.paulbares.query.AggregatedMeasure;
 import me.paulbares.query.ExpressionMeasure;
 import me.paulbares.query.Measure;
@@ -68,9 +67,5 @@ public class DatabaseQuery {
   public DatabaseQuery criteria(CriteriaDto criteriaDto) {
     this.criteriaDto = criteriaDto;
     return this;
-  }
-
-  public String json() {
-    return JacksonUtil.serialize(this);
   }
 }

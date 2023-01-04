@@ -20,7 +20,7 @@ public class SqlUtils {
   }
 
   /**
-   * See {@link SQLTranslator#groupingAlias(String, QueryRewriter)}.
+   * See {@link QueryRewriter#groupingAlias(String)}.
    */
   public static String extractFieldFromGroupingAlias(String str) {
     Matcher matcher = GROUPING_PATTERN.matcher(str);
@@ -29,5 +29,4 @@ public class SqlUtils {
     }
     return null;
   }
-
 }

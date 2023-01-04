@@ -1,55 +1,51 @@
 package me.paulbares.query.database;
 
+import com.google.common.collect.Ordering;
 import me.paulbares.query.dto.*;
 import me.paulbares.store.Field;
-import me.paulbares.transaction.TransactionManager;
 
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static me.paulbares.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 public class SQLTranslator {
 
   public static final String TOTAL_CELL = "___total___";
 
-  private static final QueryRewriter DEFAULT_QUERY_REWRITER = () -> false;
-
   public static String translate(DatabaseQuery query, Function<String, Field> fieldProvider) {
-    return translate(query, fieldProvider, DEFAULT_QUERY_REWRITER, (qr, name) -> qr.tableName(name));
+    return translate(query, fieldProvider, DefaultQueryRewriter.INSTANCE);
   }
 
   public static String translate(DatabaseQuery query,
                                  Function<String, Field> fieldProvider,
-                                 QueryRewriter queryRewriter,
-                                 BiFunction<QueryRewriter, String, String> tableTransformer) {
+                                 QueryRewriter queryRewriter) {
     List<String> selects = new ArrayList<>();
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
 
-    query.select.forEach(field -> groupBy.add(queryRewriter.fieldName(field)));
+    query.select.forEach(field -> groupBy.add(queryRewriter.select(field)));
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true)));
 
-    groupBy.forEach(selects::add); // coord first, then aggregates
-    query.rollup.forEach(field -> selects.add(String.format("grouping(%s) as %s", queryRewriter.fieldName(field), queryRewriter.groupingAlias(field)))); // use grouping to identify totals
-    aggregates.forEach(selects::add);
+    selects.addAll(groupBy); // coord first, then aggregates
+    if (queryRewriter.useGroupingFunction()) {
+      query.rollup.forEach(field -> selects.add(String.format("grouping(%s) as %s", queryRewriter.fieldName(field), queryRewriter.groupingAlias(field)))); // use grouping to identify totals
+    }
+    selects.addAll(aggregates);
 
     StringBuilder statement = new StringBuilder();
     statement.append("select ");
-    statement.append(selects.stream().collect(Collectors.joining(", ")));
+    statement.append(String.join(", ", selects));
     statement.append(" from ");
     if (query.subQuery != null) {
       statement.append("(");
-      statement.append(translate(query.subQuery, fieldProvider, queryRewriter, tableTransformer));
+      statement.append(translate(query.subQuery, fieldProvider, queryRewriter));
       statement.append(")");
     } else {
-      statement.append(tableTransformer.apply(queryRewriter, query.table.name));
+      statement.append(queryRewriter.tableName(query.table.name));
       addJoins(statement, query.table, queryRewriter);
     }
     addConditions(statement, query, fieldProvider, queryRewriter);
-    addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.doesSupportPartialRollup(), statement);
+    addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
     return statement.toString();
   }
 
@@ -61,7 +57,7 @@ public class SQLTranslator {
     statement.append(" group by ");
 
     boolean isPartialRollup = !Set.copyOf(groupBy).equals(Set.copyOf(rollup));
-    boolean hasRollup = rollup != null && !rollup.isEmpty();
+    boolean hasRollup = !rollup.isEmpty();
     List<String> groupByOnly = new ArrayList<>();
     List<String> rollupOnly = new ArrayList<>();
 
@@ -72,6 +68,10 @@ public class SQLTranslator {
         groupByOnly.add(s);
       }
     }
+
+    // Order in the rollup is important.
+    Ordering<String> explicit = Ordering.explicit(rollup);
+    rollupOnly.sort(explicit);
 
     if (hasRollup && isPartialRollup && !supportPartialRollup) {
       List<String> groupingSets = new ArrayList<>();
@@ -91,7 +91,7 @@ public class SQLTranslator {
               .append("grouping sets ")
               .append(groupingSets.stream().collect(Collectors.joining(", ", "(", ")")));
     } else {
-      statement.append(groupByOnly.stream().collect(Collectors.joining(", ")));
+      statement.append(String.join(", ", groupByOnly));
 
       if (hasRollup) {
         if (!groupByOnly.isEmpty()) {
@@ -148,7 +148,7 @@ public class SQLTranslator {
               || field.type().equals(float.class)
               || field.type().equals(boolean.class)) {
         // no quote
-        sqlMapper = o -> String.valueOf(o);
+        sqlMapper = String::valueOf;
       } else if (field.type().equals(String.class)) {
         // quote
         sqlMapper = s -> "'" + s + "'";
@@ -214,54 +214,5 @@ public class SQLTranslator {
     } else {
       return null;
     }
-  }
-
-  public static String virtualTableStatementWhereNotIn(String baseTableName, List<String> scenarios, List<String> columnKeys, QueryRewriter qr) {
-    List<String> vtScenarios = new ArrayList<>(scenarios.size());
-    for (String scenarioName : scenarios) {
-      String scenarioStoreName = TransactionManager.scenarioStoreName(baseTableName, scenarioName);
-      String keys = String.join(",", columnKeys);
-      String sql = "SELECT *, '" + scenarioName + "' AS " + TransactionManager.SCENARIO_FIELD_NAME + "\n" +
-              "FROM " + qr.tableName(baseTableName) + " WHERE (" + keys + ") NOT IN ( SELECT " + keys + " FROM " + qr.tableName(scenarioStoreName) + " )\n" +
-              "UNION ALL\n" +
-              "SELECT *, '" + scenarioName + "' FROM " + qr.tableName(scenarioStoreName) + "";
-      vtScenarios.add(sql);
-    }
-    String sqlBase = "SELECT *, '" + MAIN_SCENARIO_NAME + "' AS " + TransactionManager.SCENARIO_FIELD_NAME + " FROM " + qr.tableName(baseTableName);
-
-    String virtualTable = sqlBase;
-    for (String vtScenario : vtScenarios) {
-      virtualTable += "\n" + "UNION ALL\n" + vtScenario;
-    }
-    return virtualTable;
-  }
-
-  public static String virtualTableStatementWhereNotExists(String baseTableName, List<String> scenarios, List<String> columnKeys, QueryRewriter qr) {
-    List<String> vtScenarios = new ArrayList<>(scenarios.size());
-    for (String scenarioName : scenarios) {
-      String scenarioStoreName = TransactionManager.scenarioStoreName(baseTableName, scenarioName);
-      StringBuilder condition = new StringBuilder();
-      for (int i = 0; i < columnKeys.size(); i++) {
-        String key = columnKeys.get(i);
-        condition.append(baseTableName).append('.').append(key)
-                .append(" = ")
-                .append(scenarioStoreName).append('.').append(key);
-        if (i < columnKeys.size() - 1) {
-          condition.append(" AND ");
-        }
-      }
-      String sql = "SELECT *, '" + scenarioName + "' AS " + TransactionManager.SCENARIO_FIELD_NAME + "\n" +
-              "FROM " + qr.tableName(baseTableName) + " WHERE NOT EXISTS ( SELECT 1 FROM " + qr.tableName(scenarioStoreName) + " WHERE " + condition + " )\n" +
-              "UNION ALL\n" +
-              "SELECT *, '" + scenarioName + "' FROM " + qr.tableName(scenarioStoreName) + "";
-      vtScenarios.add(sql);
-    }
-    String sqlBase = "SELECT *, '" + MAIN_SCENARIO_NAME + "' AS " + TransactionManager.SCENARIO_FIELD_NAME + " FROM " + qr.tableName(baseTableName);
-
-    String virtualTable = sqlBase;
-    for (String vtScenario : vtScenarios) {
-      virtualTable += "\nUNION ALL\n" + vtScenario;
-    }
-    return virtualTable;
   }
 }
