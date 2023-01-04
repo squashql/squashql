@@ -1,5 +1,10 @@
 package me.paulbares.transaction;
 
+import me.paulbares.SnowflakeDatastore;
+import me.paulbares.SnowflakeUtil;
+import me.paulbares.store.Field;
+import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -8,10 +13,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.IntStream;
-import me.paulbares.SnowflakeDatastore;
-import me.paulbares.SnowflakeUtil;
-import me.paulbares.store.Field;
-import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
 public class SnowflakeTransactionManager implements TransactionManager {
 

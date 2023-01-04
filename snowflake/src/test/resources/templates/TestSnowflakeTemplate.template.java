@@ -2,7 +2,7 @@ package me.paulbares.query;
 
 import me.paulbares.SnowflakeDatastore;
 import me.paulbares.query.database.QueryEngine;
-import me.paulbares.query.database.SnowflakeEngine;
+import me.paulbares.query.database.SnowflakeQueryEngine;
 import me.paulbares.store.Datastore;
 import me.paulbares.transaction.SnowflakeTransactionManager;
 import me.paulbares.transaction.TransactionManager;
@@ -27,18 +27,16 @@ public class TestSnowflake{{classSuffix}} extends {{parentTestClass}} {
 
   @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {
-    return new SnowflakeEngine((SnowflakeDatastore) datastore);
+    return new SnowflakeQueryEngine((SnowflakeDatastore) datastore);
   }
 
   @Override
   protected Datastore createDatastore() {
     return new SnowflakeDatastore(
             SnowflakeTestUtil.jdbcUrl,
-            SnowflakeTestUtil.username,
-            SnowflakeTestUtil.password,
-            SnowflakeTestUtil.warehouse,
             SnowflakeTestUtil.database,
-            SnowflakeTestUtil.schema
+            SnowflakeTestUtil.schema,
+            SnowflakeTestUtil.properties
     );
   }
 

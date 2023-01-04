@@ -34,11 +34,9 @@ public class TestSnowflakeQueryExecutor extends ATestQueryExecutor {
   protected Datastore createDatastore() {
     return new SnowflakeDatastore(
             SnowflakeTestUtil.jdbcUrl,
-            SnowflakeTestUtil.username,
-            SnowflakeTestUtil.password,
-            SnowflakeTestUtil.warehouse,
             SnowflakeTestUtil.database,
-            SnowflakeTestUtil.schema
+            SnowflakeTestUtil.schema,
+            SnowflakeTestUtil.properties
     );
   }
 

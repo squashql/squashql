@@ -1,16 +1,15 @@
 package me.paulbares;
 
 import com.google.common.base.Suppliers;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import me.paulbares.store.Datastore;
 import me.paulbares.store.Field;
 import me.paulbares.store.Store;
 
-import java.util.*;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 import java.util.function.Supplier;
 
 public class SnowflakeDatastore implements Datastore {
@@ -19,18 +18,46 @@ public class SnowflakeDatastore implements Datastore {
   private final Properties connectionProperties;
   public final Supplier<Map<String, Store>> stores;
 
-  public SnowflakeDatastore(String jdbcUrl, String username, String password, String warehouse, String database,
-          String schema) {
+//  public SnowflakeDatastore(String jdbcUrl,
+//                            String username,
+//                            String password,
+//                            String warehouse,
+//                            String database,
+//                            String schema) {
+//    this.jdbcUrl = jdbcUrl;
+//    // build connection properties
+//    Properties properties = new Properties();
+//    properties.put("user", username);
+//    properties.put("password", password);
+//    properties.put("warehouse", warehouse);
+//    properties.put("db", database);
+//    properties.put("schema", schema);
+//    properties.put("role", "ACCOUNTADMIN");
+//    this.connectionProperties = properties;
+//    this.stores = Suppliers.memoize(() -> getStores(database, schema));
+//  }
+
+  /**
+   * Constructor.
+   * @param jdbcUrl a database url of the form jdbc:subprotocol:subname
+   * @param info a list of arbitrary string tag/value pairs as connection arguments; normally at least a "user" and
+   *             "password" property should be included
+   */
+  public SnowflakeDatastore(String jdbcUrl,
+                            String database,
+                            String schema,
+                            Properties info) {
     this.jdbcUrl = jdbcUrl;
-    // build connection properties
+    // Build connection properties
     Properties properties = new Properties();
-    properties.put("user", username);
-    properties.put("password", password);
-    properties.put("warehouse", warehouse);
+    properties.putAll(info);
     properties.put("db", database);
     properties.put("schema", schema);
+//    properties.put("user", username);
+//    properties.put("password", password);
+//    properties.put("warehouse", warehouse);
+//    properties.put("role", "ACCOUNTADMIN");
     this.connectionProperties = properties;
-
     this.stores = Suppliers.memoize(() -> getStores(database, schema));
   }
 

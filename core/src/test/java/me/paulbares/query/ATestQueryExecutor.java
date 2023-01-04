@@ -316,6 +316,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   @Test
   void testSumIf() {
     Assumptions.assumeFalse(this.queryEngine.getClass().getSimpleName().equals("SnowflakeQueryEngine"));
+
     ConditionDto or = eq("food").or(eq("drink"));
     QueryDto query = Query
             .from(this.storeName)
