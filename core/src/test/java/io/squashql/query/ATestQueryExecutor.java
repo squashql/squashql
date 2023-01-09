@@ -31,32 +31,33 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   @Override
   protected Map<String, List<Field>> getFieldsByStore() {
     Field ean = new Field("ean", String.class);
+    Field eanId = new Field("eanId", int.class);
     Field category = new Field("category", String.class);
     Field subcategory = new Field("subcategory", String.class);
     Field price = new Field("price", double.class);
     Field qty = new Field("quantity", int.class);
     Field isFood = new Field("isFood", boolean.class);
-    return Map.of(this.storeName, List.of(ean, category, subcategory, price, qty, isFood));
+    return Map.of(this.storeName, List.of(eanId, ean, category, subcategory, price, qty, isFood));
   }
 
   @Override
   protected void loadData() {
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
-            new Object[]{"bottle", "drink", null, 2d, 10, true},
-            new Object[]{"cookie", "food", "biscuit", 3d, 20, true},
-            new Object[]{"shirt", "cloth", null, 10d, 3, false}
+            new Object[]{0, "bottle", "drink", null, 2d, 10, true},
+            new Object[]{1, "cookie", "food", "biscuit", 3d, 20, true},
+            new Object[]{2, "shirt", "cloth", null, 10d, 3, false}
     ));
 
     this.tm.load("s1", this.storeName, List.of(
-            new Object[]{"bottle", "drink", null, 4d, 10, true},
-            new Object[]{"cookie", "food", "biscuit", 3d, 20, true},
-            new Object[]{"shirt", "cloth", null, 10d, 3, false}
+            new Object[]{0, "bottle", "drink", null, 4d, 10, true},
+            new Object[]{1, "cookie", "food", "biscuit", 3d, 20, true},
+            new Object[]{2, "shirt", "cloth", null, 10d, 3, false}
     ));
 
     this.tm.load("s2", this.storeName, List.of(
-            new Object[]{"bottle", "drink", null, 1.5d, 10, true},
-            new Object[]{"cookie", "food", "biscuit", 3d, 20, true},
-            new Object[]{"shirt", "cloth", null, 10d, 3, false}
+            new Object[]{0, "bottle", "drink", null, 1.5d, 10, true},
+            new Object[]{1, "cookie", "food", "biscuit", 3d, 20, true},
+            new Object[]{2, "shirt", "cloth", null, 10d, 3, false}
     ));
   }
 
@@ -80,6 +81,23 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .where(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
             .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("p", "price"), sum("q", "quantity")))
             .rollup(SCENARIO_FIELD_NAME, "category")
+            .build();
+    Table result = this.executor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList(GRAND_TOTAL, null, 15d, 33l),
+            List.of(MAIN_SCENARIO_NAME, TOTAL, 15d, 33l),
+            List.of(MAIN_SCENARIO_NAME, "cloth", 10d, 3l),
+            List.of(MAIN_SCENARIO_NAME, "drink", 2d, 10l),
+            List.of(MAIN_SCENARIO_NAME, "food", 3d, 20l));
+  }
+
+  @Test
+  void testQueryWildcardWithFullRollupOnColumnTypeInt() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
+            .select(List.of("eanId"), List.of(sum("p", "price"), sum("q", "quantity")))
+            .rollup("eanId")
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(

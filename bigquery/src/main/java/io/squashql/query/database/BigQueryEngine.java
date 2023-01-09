@@ -15,11 +15,10 @@ import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
-
-  public static final String NULL_VALUE = "___null___";
 
   /**
    * https://cloud.google.com/bigquery/docs/reference/standard-sql/statistical_aggregate_functions#covar_samp
@@ -59,14 +58,19 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
        * result dataset correspond to the subtotals.
        */
       BigQueryQueryRewriter newRewriter = new BigQueryQueryRewriter(rewriter.projectId, rewriter.datasetName) {
+
         @Override
         public String select(String select) {
-          return String.format("coalesce(%s, \"%s\")", rewriter.select(select), NULL_VALUE);
+          Field field = BigQueryEngine.this.fieldSupplier.apply(select);
+          Function<Object, String> quoter = SQLTranslator.getQuoter(field);
+          return String.format("coalesce(%s, %s)", rewriter.select(select), quoter.apply(BigQueryUtil.getNullValue(field)));
         }
 
         @Override
         public String rollup(String rollup) {
-          return String.format("coalesce(%s, \"%s\")", rewriter.rollup(rollup), NULL_VALUE);
+          Field field = BigQueryEngine.this.fieldSupplier.apply(rollup);
+          Function<Object, String> quoter = SQLTranslator.getQuoter(field);
+          return String.format("coalesce(%s, %s)", rewriter.rollup(rollup), quoter.apply(BigQueryUtil.getNullValue(field)));
         }
       };
       List<String> missingColumnsInRollup = new ArrayList<>(query.select);
@@ -104,7 +108,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
               // all totals, and we remove here the extra rows.
               rowIndicesToRemove.add(rowIndex);
             }
-          } else if (value.equals(NULL_VALUE)) {
+          } else if (value.equals(BigQueryUtil.getNullValue(header))) {
             baseColumnValues.set(rowIndex, null);
           }
         }

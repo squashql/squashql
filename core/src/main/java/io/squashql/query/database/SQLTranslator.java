@@ -147,22 +147,7 @@ public class SQLTranslator {
 
   public static String toSql(Field field, ConditionDto dto, QueryRewriter queryRewriter) {
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
-      Function<Object, String> sqlMapper;
-      if (Number.class.isAssignableFrom(field.type())
-              || field.type().equals(double.class)
-              || field.type().equals(int.class)
-              || field.type().equals(long.class)
-              || field.type().equals(float.class)
-              || field.type().equals(boolean.class)) {
-        // no quote
-        sqlMapper = String::valueOf;
-      } else if (field.type().equals(String.class)) {
-        // quote
-        sqlMapper = s -> "'" + s + "'";
-      } else {
-        throw new RuntimeException("Not supported " + field.type());
-      }
-
+      Function<Object, String> sqlMapper = getQuoter(field);
       String formattedFieldName = queryRewriter.fieldName(field.name());
       return switch (dto.type()) {
         case IN -> formattedFieldName + " in (" +
@@ -220,6 +205,23 @@ public class SQLTranslator {
       return conditions.isEmpty() ? null : ("(" + String.join(sep, conditions) + ")");
     } else {
       return null;
+    }
+  }
+
+  public static Function<Object, String> getQuoter(Field field) {
+    if (Number.class.isAssignableFrom(field.type())
+            || field.type().equals(double.class)
+            || field.type().equals(int.class)
+            || field.type().equals(long.class)
+            || field.type().equals(float.class)
+            || field.type().equals(boolean.class)) {
+      // no quote
+      return String::valueOf;
+    } else if (field.type().equals(String.class)) {
+      // quote
+      return s -> "'" + s + "'";
+    } else {
+      throw new RuntimeException("Not supported " + field.type());
     }
   }
 }
