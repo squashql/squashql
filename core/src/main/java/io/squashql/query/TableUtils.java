@@ -6,6 +6,7 @@ import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
+import io.squashql.util.NullAndTotalComparator;
 import io.squashql.util.SquashQLArrays;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.Queries;
@@ -16,10 +17,6 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class TableUtils {
-
-  public static final String NAME_KEY = "name";
-  public static final String TYPE_KEY = "type";
-  public static final String EXPRESSION_KEY = "expression";
 
   public static String toString(List<? extends Object> columns,
                                 Iterable<List<Object>> rows,
@@ -163,7 +160,7 @@ public class TableUtils {
       if (queryComp != null || (isColumn && !hasComparatorOnMeasure)) {
         args.add(table.getColumnValues(headerName));
         // Always order table. If not defined, use natural order comp.
-        comparators.add(queryComp == null ? Comparator.nullsLast(Comparator.naturalOrder()) : queryComp);
+        comparators.add(queryComp == null ? NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder()) : queryComp);
       }
     }
 

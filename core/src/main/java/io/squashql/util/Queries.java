@@ -20,7 +20,7 @@ public final class Queries {
     Map<String, Comparator<?>> res = new HashMap<>();
     orders.forEach((c, order) -> {
       if (order instanceof SimpleOrderDto so) {
-        Comparator<?> comp = Comparator.nullsLast(Comparator.naturalOrder());
+        Comparator<?> comp = NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder());
         res.put(c, so.order == DESC ? comp.reversed() : comp);
       } else if (order instanceof ExplicitOrderDto eo) {
         res.put(c, new CustomExplicitOrdering(eo.explicit));

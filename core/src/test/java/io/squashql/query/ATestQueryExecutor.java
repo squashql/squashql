@@ -101,11 +101,10 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList(GRAND_TOTAL, null, 15d, 33l),
-            List.of(MAIN_SCENARIO_NAME, TOTAL, 15d, 33l),
-            List.of(MAIN_SCENARIO_NAME, "cloth", 10d, 3l),
-            List.of(MAIN_SCENARIO_NAME, "drink", 2d, 10l),
-            List.of(MAIN_SCENARIO_NAME, "food", 3d, 20l));
+            List.of(GRAND_TOTAL, 15d, 33l),
+            List.of(translate(0), 2d, 10l),
+            List.of(translate(1), 3d, 20l),
+            List.of(translate(2), 10d, 3l));
   }
 
   /**
