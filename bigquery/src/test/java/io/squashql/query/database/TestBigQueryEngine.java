@@ -2,6 +2,7 @@ package io.squashql.query.database;
 
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import io.squashql.BigQueryDatastore;
+import io.squashql.BigQueryUtil;
 import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.ColumnarTable;
 import io.squashql.query.Table;
@@ -13,6 +14,7 @@ import org.mockito.Mockito;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -32,13 +34,23 @@ public class TestBigQueryEngine {
             .table("baseStore");
 
     BigQueryDatastore datastore = new BigQueryDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
-    BigQueryEngine bqe = new BigQueryEngine(datastore);
+    BigQueryEngine bqe = new BigQueryEngine(datastore) {
+      @Override
+      protected Function<String, Field> createFieldSupplier() {
+        return name -> switch (name) {
+          case SCENARIO_FIELD_NAME -> new Field(name, String.class);
+          case "category" -> new Field(name, long.class);
+          case "price" -> new Field(name, double.class);
+          default -> throw new IllegalStateException("Unexpected value: " + name);
+        };
+      }
+    };
     String sqlStatement = bqe.createSqlStatement(query);
     Assertions.assertThat(sqlStatement)
-            .isEqualTo("select coalesce(`scenario`, \"___null___\"), coalesce(`category`, \"___null___\")," +
+            .isEqualTo("select coalesce(`scenario`, '___null___'), coalesce(`category`, " + BigQueryUtil.getNullValue(new Field(category, long.class)) + ")," +
                     " sum(`price`) as `price.sum`, avg(`price`) as `price.avg`" +
                     " from `myProjectId.myDatasetName.baseStore`" +
-                    " group by rollup(coalesce(`scenario`, \"___null___\"), coalesce(`category`, \"___null___\"))");
+                    " group by rollup(coalesce(`scenario`, '___null___'), coalesce(`category`, " + BigQueryUtil.getNullValue(new Field(category, long.class)) + "))");
 
   }
 
@@ -53,14 +65,19 @@ public class TestBigQueryEngine {
             .table("baseStore");
 
     BigQueryDatastore datastore = new BigQueryDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
-    BigQueryEngine bqe = new BigQueryEngine(datastore);
+    BigQueryEngine bqe = new BigQueryEngine(datastore) {
+      @Override
+      protected Function<String, Field> createFieldSupplier() {
+        return name -> new Field(name, String.class);
+      }
+    };
     String sqlStatement = bqe.createSqlStatement(query);
     // The order in the rollup is important to fetch the right (sub)totals
     Assertions.assertThat(sqlStatement)
-            .isEqualTo("select coalesce(`col1`, \"___null___\"), coalesce(`col2`, \"___null___\"), coalesce(`col3`, \"___null___\")," +
+            .isEqualTo("select coalesce(`col1`, '___null___'), coalesce(`col2`, '___null___'), coalesce(`col3`, '___null___')," +
                     " sum(`price`) as `price.sum`" +
                     " from `myProjectId.myDatasetName.baseStore`" +
-                    " group by rollup(coalesce(`col1`, \"___null___\"), coalesce(`col3`, \"___null___\"), coalesce(`col2`, \"___null___\"))");
+                    " group by rollup(coalesce(`col1`, '___null___'), coalesce(`col3`, '___null___'), coalesce(`col2`, '___null___'))");
 
     query = new DatabaseQuery()
             .withSelect("col1")
@@ -73,10 +90,10 @@ public class TestBigQueryEngine {
     sqlStatement = bqe.createSqlStatement(query);
     // The order in the rollup is important to fetch the right (sub)totals
     Assertions.assertThat(sqlStatement)
-            .isEqualTo("select coalesce(`col1`, \"___null___\"), coalesce(`col2`, \"___null___\"), coalesce(`col3`, \"___null___\")," +
+            .isEqualTo("select coalesce(`col1`, '___null___'), coalesce(`col2`, '___null___'), coalesce(`col3`, '___null___')," +
                     " sum(`price`) as `price.sum`" +
                     " from `myProjectId.myDatasetName.baseStore`" +
-                    " group by rollup(coalesce(`col1`, \"___null___\"), coalesce(`col3`, \"___null___\"), coalesce(`col2`, \"___null___\"))");
+                    " group by rollup(coalesce(`col1`, '___null___'), coalesce(`col3`, '___null___'), coalesce(`col2`, '___null___'))");
   }
 
   @Test
@@ -91,14 +108,19 @@ public class TestBigQueryEngine {
             .table("baseStore");
 
     BigQueryDatastore datastore = new BigQueryDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
-    BigQueryEngine bqe = new BigQueryEngine(datastore);
+    BigQueryEngine bqe = new BigQueryEngine(datastore) {
+      @Override
+      protected Function<String, Field> createFieldSupplier() {
+        return name -> new Field(name, String.class);
+      }
+    };
     String sqlStatement = bqe.createSqlStatement(query);
     // Statement is the same as full rollup because BQ does not support partial rollup
     Assertions.assertThat(sqlStatement)
-            .isEqualTo("select coalesce(`scenario`, \"___null___\"), coalesce(`category`, \"___null___\")," +
+            .isEqualTo("select coalesce(`scenario`, '___null___'), coalesce(`category`, '___null___')," +
                     " sum(`price`) as `price.sum`" +
                     " from `myProjectId.myDatasetName.baseStore`" +
-                    " group by rollup(coalesce(`scenario`, \"___null___\"), coalesce(`category`, \"___null___\"))");
+                    " group by rollup(coalesce(`scenario`, '___null___'), coalesce(`category`, '___null___'))");
 
     List<List<Object>> values = List.of(
             new ArrayList<>(Arrays.asList(null, "main", "main", "main", "1", "1", "1")),

@@ -3,6 +3,7 @@ package io.squashql;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.StandardSQLTypeName;
+import io.squashql.store.Field;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -11,6 +12,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public final class BigQueryUtil {
+
+  /**
+   * See usage to understand why it exists, but basically it is due to the lack of grouping function.
+   */
+  public static final String OBJECT_NULL_VALUE = "___null___";
+  public static final int INTEGER_NULL_VALUE = Integer.MIN_VALUE;
+  public static final long LONG_NULL_VALUE = Long.MIN_VALUE;
 
   private BigQueryUtil() {
   }
@@ -50,6 +58,17 @@ public final class BigQueryUtil {
       throw new IllegalArgumentException("Unsupported field type " + clazz);
     }
     return type;
+  }
+
+  public static Object getNullValue(Field field) {
+    Class<?> clazz = field.type();
+    if (clazz.equals(Integer.class) || clazz.equals(int.class)) {
+      return INTEGER_NULL_VALUE;
+    } else if (clazz.equals(Long.class) || clazz.equals(long.class)) {
+      return LONG_NULL_VALUE;
+    } else {
+      return OBJECT_NULL_VALUE; // fallback
+    }
   }
 
   public static ServiceAccountCredentials createCredentials(String path) {
