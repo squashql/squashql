@@ -1,10 +1,12 @@
 package io.squashql.util;
 
-import io.squashql.query.database.QueryEngine;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Comparator;
+
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import static io.squashql.query.database.QueryEngine.TOTAL;
 
 public class TestNullAndTotalComparator {
 
@@ -16,11 +18,13 @@ public class TestNullAndTotalComparator {
     Assertions.assertEquals(1, comp.compare("b", "a"));
     Assertions.assertEquals(1, comp.compare(null, "a"));
     Assertions.assertEquals(-1, comp.compare("a", null));
-    Assertions.assertEquals(-1, comp.compare(QueryEngine.GRAND_TOTAL, "a"));
-    Assertions.assertEquals(1, comp.compare("a", QueryEngine.GRAND_TOTAL));
-    Assertions.assertEquals(-1, comp.compare(QueryEngine.TOTAL, "a"));
-    Assertions.assertEquals(1, comp.compare("a", QueryEngine.TOTAL));
-    Assertions.assertEquals(-1, comp.compare(QueryEngine.TOTAL, null));
-    Assertions.assertEquals(1, comp.compare(null, QueryEngine.TOTAL));
+    Assertions.assertEquals(-1, comp.compare(GRAND_TOTAL, "a"));
+    Assertions.assertEquals(1, comp.compare("a", GRAND_TOTAL));
+    Assertions.assertEquals(-1, comp.compare(TOTAL, "a"));
+    Assertions.assertEquals(1, comp.compare("a", TOTAL));
+    Assertions.assertEquals(-1, comp.compare(TOTAL, null));
+    Assertions.assertEquals(1, comp.compare(null, TOTAL));
+    Assertions.assertEquals(0, comp.compare(GRAND_TOTAL, GRAND_TOTAL));
+    Assertions.assertEquals(0, comp.compare(TOTAL, TOTAL));
   }
 }

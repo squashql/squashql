@@ -27,8 +27,14 @@ public class NullAndTotalComparator<T> implements Comparator<T>, Serializable {
       return this.nullFirst ? 1 : -1;
     } else {
       if (isTotal(a)) {
+        if (isTotal(b)) {
+          return 0;
+        }
         return this.totalFirst ? -1 : 1;
       } else if (isTotal(b)) {
+        if (isTotal(a)) {
+          return 0;
+        }
         return this.totalFirst ? 1 : -1;
       }
       return (this.real == null) ? 0 : this.real.compare(a, b);
