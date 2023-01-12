@@ -14,6 +14,7 @@ the UI.
 - It is a middleware between [a SQL database](#compatibility) and multiple clients/front end. Heavy computation is delegated to the underlying database. 
 - It makes calculations that were not possible or cumbersome in SQL easy to perform. See [comparison measures](./QUERY.md#complex-comparison)
 - It helps front-end developers build and run SQL queries in their own language in [TypeScript](https://www.typescriptlang.org/)
+- With its "write once, run everywhere" approach, it is a great solution for those who need to quickly and efficiently query data from multiple databases.
 
 ![test6](https://user-images.githubusercontent.com/5783183/210366738-06007ce4-a46a-4b14-b01c-d58de933c5d9.gif)
 
