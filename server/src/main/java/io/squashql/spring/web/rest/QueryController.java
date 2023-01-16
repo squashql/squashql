@@ -7,9 +7,11 @@ import io.squashql.query.dto.*;
 import io.squashql.query.monitoring.QueryWatch;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
-import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,13 +28,13 @@ public class QueryController {
   protected final QueryEngine queryEngine;
   protected final QueryExecutor queryExecutor;
 
-  public QueryController(QueryEngine queryEngine, Environment environment) {
+  public QueryController(QueryEngine queryEngine) {
     this.queryEngine = queryEngine;
     this.queryExecutor = new QueryExecutor(this.queryEngine);
   }
 
   @PostMapping(MAPPING_QUERY)
-  public ResponseEntity<QueryResultDto> execute(@RequestBody QueryDto query) throws IllegalAccessException {
+  public ResponseEntity<QueryResultDto> execute(@RequestBody QueryDto query) {
     QueryWatch queryWatch = new QueryWatch();
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
     Table table = this.queryExecutor.execute(query, queryWatch, csBuilder);
@@ -52,13 +54,13 @@ public class QueryController {
   }
 
   @PostMapping(MAPPING_QUERY_BEAUTIFY)
-  public ResponseEntity<String> executeBeautify(String apiKey, @RequestBody QueryDto query) throws IllegalAccessException {
+  public ResponseEntity<String> executeBeautify(@RequestBody QueryDto query) {
     Table table = this.queryExecutor.execute(query);
     return ResponseEntity.ok(table.toString());
   }
 
   @GetMapping(MAPPING_METADATA)
-  public ResponseEntity<MetadataResultDto> getMetadata(String apiKey) throws IllegalAccessException {
+  public ResponseEntity<MetadataResultDto> getMetadata() {
     List<MetadataResultDto.StoreMetadata> stores = new ArrayList<>();
     for (Store store : this.queryEngine.datastore().storesByName().values()) {
       List<MetadataItem> items = store.fields().stream().map(f -> new MetadataItem(f.name(), f.name(), f.type())).toList();

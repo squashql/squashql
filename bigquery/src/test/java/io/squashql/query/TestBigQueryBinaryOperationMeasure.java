@@ -1,8 +1,7 @@
 package io.squashql.query;
 
-import com.google.cloud.bigquery.Table;
-import com.google.cloud.bigquery.TableId;
 import io.squashql.BigQueryDatastore;
+import io.squashql.BigQueryServiceAccountDatastore;
 import io.squashql.BigQueryUtil;
 import io.squashql.query.database.BigQueryEngine;
 import io.squashql.query.database.QueryEngine;
@@ -38,7 +37,7 @@ public class TestBigQueryBinaryOperationMeasure extends ATestBinaryOperationMeas
 
   @Override
   protected Datastore createDatastore() {
-    return new BigQueryDatastore(BigQueryUtil.createCredentials(BigQueryTestUtil.CREDENTIALS), PROJECT_ID, DATASET_NAME);
+    return new BigQueryServiceAccountDatastore(BigQueryUtil.createCredentials(BigQueryTestUtil.CREDENTIALS), PROJECT_ID, DATASET_NAME);
   }
 
   @Override

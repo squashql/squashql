@@ -44,7 +44,7 @@ public class ClassTemplateGenerator {
     URL resource = ClassTemplateGenerator.class.getClassLoader().getResource("templates/Test" + testClassType.className + "Template.template.java");
     List<String> lines = Files.readLines(new File(resource.toURI()), UTF_8);
 
-    File rootTestClasses = new File(testClassType.className.toLowerCase() + "/src/test/java/me/paulbares/query").getAbsoluteFile();
+    File rootTestClasses = new File(testClassType.className.toLowerCase() + "/src/test/java/io/squashql/query").getAbsoluteFile();
 
     String prefix = "Test" + testClassType.className;
     List<Path> classGenerated = new ArrayList<>();

@@ -2,6 +2,7 @@ package io.squashql.query.database;
 
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import io.squashql.BigQueryDatastore;
+import io.squashql.BigQueryServiceAccountDatastore;
 import io.squashql.BigQueryUtil;
 import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.ColumnarTable;
@@ -33,7 +34,7 @@ public class TestBigQueryEngine {
             .aggregatedMeasure("price.avg", "price", "avg")
             .table("baseStore");
 
-    BigQueryDatastore datastore = new BigQueryDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
+    BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
     BigQueryEngine bqe = new BigQueryEngine(datastore) {
       @Override
       protected Function<String, Field> createFieldSupplier() {
@@ -64,7 +65,7 @@ public class TestBigQueryEngine {
             .aggregatedMeasure("price.sum", "price", "sum")
             .table("baseStore");
 
-    BigQueryDatastore datastore = new BigQueryDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
+    BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
     BigQueryEngine bqe = new BigQueryEngine(datastore) {
       @Override
       protected Function<String, Field> createFieldSupplier() {
@@ -107,7 +108,7 @@ public class TestBigQueryEngine {
             .aggregatedMeasure("price.sum", "price", "sum")
             .table("baseStore");
 
-    BigQueryDatastore datastore = new BigQueryDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
+    BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
     BigQueryEngine bqe = new BigQueryEngine(datastore) {
       @Override
       protected Function<String, Field> createFieldSupplier() {
