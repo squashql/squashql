@@ -170,8 +170,8 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
 
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList(GRAND_TOTAL, null, null, 28.5d, 1d),
-            Arrays.asList("am", TOTAL, null, 17d, 0.5964912280701754d),
+            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, GRAND_TOTAL, 28.5d, 1d),
+            Arrays.asList("am", TOTAL, TOTAL, 17d, 0.5964912280701754d),
             Arrays.asList("am", "canada", TOTAL, 6d, 0.35294117647058826d),
             Arrays.asList("am", "canada", "montreal", 2d, .3333333333333333),
             Arrays.asList("am", "canada", "otawa", 1d, .16666666666666666),
@@ -179,7 +179,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
             Arrays.asList("am", "usa", TOTAL, 11d, 0.6470588235294118d),
             Arrays.asList("am", "usa", "chicago", 3d, .2727272727272727),
             Arrays.asList("am", "usa", "nyc", 8d, .7272727272727273),
-            Arrays.asList("eu", TOTAL, null, 11.5d, 0.40350877192982454d),
+            Arrays.asList("eu", TOTAL, TOTAL, 11.5d, 0.40350877192982454d),
             Arrays.asList("eu", "france", TOTAL, 2.5, 0.21739130434782608),
             Arrays.asList("eu", "france", "lyon", 0.5, 0.2),
             Arrays.asList("eu", "france", "paris", 2d, 0.8),

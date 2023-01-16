@@ -84,7 +84,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList(GRAND_TOTAL, null, 15d, 33l),
+            List.of(GRAND_TOTAL, GRAND_TOTAL, 15d, 33l),
             List.of(MAIN_SCENARIO_NAME, TOTAL, 15d, 33l),
             List.of(MAIN_SCENARIO_NAME, "cloth", 10d, 3l),
             List.of(MAIN_SCENARIO_NAME, "drink", 2d, 10l),
@@ -178,7 +178,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList("s1", TOTAL, null, 33l),
+            Arrays.asList("s1", TOTAL, TOTAL, 33l),
             Arrays.asList("s1", "cloth", TOTAL, 3l),
             Arrays.asList("s1", "cloth", null, 3l),
             Arrays.asList("s1", "drink", TOTAL, 10l),
