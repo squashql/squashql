@@ -143,7 +143,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   }
 
   public BigQueryEngine(BigQueryDatastore datastore) {
-    super(datastore, new BigQueryQueryRewriter(datastore.projectId, datastore.datasetName));
+    super(datastore, new BigQueryQueryRewriter(datastore.getProjectId(), datastore.getDatasetName()));
   }
 
   @Override
