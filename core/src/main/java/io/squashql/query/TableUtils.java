@@ -210,15 +210,13 @@ public class TableUtils {
         boolean isTotalCell = SQLTranslator.TOTAL_CELL.equals(table.getColumn(i).get(rowIndex));
         if (isTotalCell) {
           table.getColumn(i).set(rowIndex, total);
-          total = null; // First totalCell, TOTAL is written, null for the others.
         }
         grandTotal &= isTotalCell;
       }
 
       if (grandTotal) {
-        table.getColumn(0).set(rowIndex, QueryEngine.GRAND_TOTAL);
-        for (int i = 1; i < table.columnsIndices.length; i++) {
-          table.getColumn(i).set(rowIndex, null);
+        for (int i = 0; i < table.columnsIndices.length; i++) {
+          table.getColumn(i).set(rowIndex, QueryEngine.GRAND_TOTAL);
         }
       }
     }
