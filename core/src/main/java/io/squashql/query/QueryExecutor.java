@@ -50,10 +50,11 @@ public class QueryExecutor {
     return execute(
             query,
             new QueryWatch(),
-            CacheStatsDto.builder());
+            CacheStatsDto.builder(),
+            null);
   }
 
-  public Table execute(QueryDto query, QueryWatch queryWatch, CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder) {
+  public Table execute(QueryDto query, QueryWatch queryWatch, CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder, SquashQLUser user) {
     queryWatch.start(QueryWatch.GLOBAL);
     queryWatch.start(QueryWatch.PREPARE_PLAN);
 
@@ -81,7 +82,7 @@ public class QueryExecutor {
     for (QueryScope scope : prefetchQueryByQueryScope.keySet()) {
       DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
       Set<Measure> measures = measuresByQueryScope.get(scope);
-      QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(scope, prefetchQuery, fieldSupplier);
+      QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(scope, prefetchQuery, user, fieldSupplier);
       QueryCache queryCache = getQueryCache((QueryCacheContextValue) query.context.getOrDefault(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE)));
 
       // Finish to prepare the query
@@ -179,12 +180,12 @@ public class QueryExecutor {
     return new QueryScope(query.table, query.subQuery, columns, query.criteriaDto, rollupColumns);
   }
 
-  private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(QueryScope queryScope, DatabaseQuery prefetchQuery, Function<String, Field> fieldSupplier) {
+  private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(QueryScope queryScope, DatabaseQuery prefetchQuery, SquashQLUser user, Function<String, Field> fieldSupplier) {
     Set<Field> fields = prefetchQuery.select.stream().map(fieldSupplier).collect(Collectors.toSet());
     if (queryScope.tableDto != null) {
-      return new TableScope(queryScope.tableDto, fields, queryScope.criteriaDto, queryScope.rollupColumns);
+      return new TableScope(queryScope.tableDto, fields, queryScope.criteriaDto, queryScope.rollupColumns, user);
     } else {
-      return new SubQueryScope(queryScope.subQuery, fields, queryScope.criteriaDto);
+      return new SubQueryScope(queryScope.subQuery, fields, queryScope.criteriaDto, user);
     }
   }
 

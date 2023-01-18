@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @RestController
@@ -27,17 +29,19 @@ public class QueryController {
   public static final String MAPPING_EXPRESSION = "/expression";
   protected final QueryEngine queryEngine;
   protected final QueryExecutor queryExecutor;
+  protected final Supplier<SquashQLUser> squashQLUserSupplier;
 
-  public QueryController(QueryEngine queryEngine) {
+  public QueryController(QueryEngine queryEngine, Optional<Supplier<SquashQLUser>> squashQLUserSupplier) {
     this.queryEngine = queryEngine;
     this.queryExecutor = new QueryExecutor(this.queryEngine);
+    this.squashQLUserSupplier = squashQLUserSupplier.orElse(null);
   }
 
   @PostMapping(MAPPING_QUERY)
   public ResponseEntity<QueryResultDto> execute(@RequestBody QueryDto query) {
     QueryWatch queryWatch = new QueryWatch();
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
-    Table table = this.queryExecutor.execute(query, queryWatch, csBuilder);
+    Table table = this.queryExecutor.execute(query, queryWatch, csBuilder, this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get());
     List<String> fields = table.headers().stream().map(Field::name).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))

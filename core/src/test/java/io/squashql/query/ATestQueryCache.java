@@ -6,6 +6,7 @@ import io.squashql.query.builder.Query;
 import io.squashql.query.context.QueryCacheContextValue;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.query.monitoring.QueryWatch;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -326,6 +327,61 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     Assertions.assertThat(stats.evictionCount).isEqualTo(1);
   }
 
+  @Test
+  void testQueryDifferentUsers() {
+    BasicUser paul = new BasicUser("paul");
+    BasicUser peter = new BasicUser("peter");
+
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("ps", "price"), sum("qs", "quantity")))
+            .build();
+    Table result = execute(this.executor, query, paul);
+    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
+    assertCacheStats(0, 3);
+
+    // Execute the same query, same user
+    result = execute(this.executor, query, paul);
+    assertCacheStats(3, 3);
+    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
+
+    // Execute the same query, but different user
+    result = execute(this.executor, query, peter);
+    assertCacheStats(3, 6);
+    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
+  }
+
+  @Test
+  void testQueryDifferentUsersWithSubQuery() {
+    BasicUser paul = new BasicUser("paul");
+    BasicUser peter = new BasicUser("peter");
+
+    Measure ca = sum("ca", "price");
+    Measure avg_ca = avg("mean_ca", "ca");
+
+    QueryDto subQuery = Query
+            .from(this.storeName)
+            .select(List.of("category"), List.of(ca)) // ca per category
+            .build();
+
+    QueryDto queryDto = Query
+            .from(subQuery)
+            .select(List.of(), List.of(avg_ca)) // avg of ca
+            .build();
+    Table result = execute(this.executor, queryDto, paul);
+    Assertions.assertThat(result).containsExactly(List.of(5d));
+    assertCacheStats(0, 2);
+
+    // Same query, same user
+    execute(this.executor, queryDto, paul);
+    assertCacheStats(2, 2);
+
+    // Same query, different user
+    execute(this.executor, queryDto, peter);
+    assertCacheStats(2, 4);
+  }
+
+
   private void assertCacheStats(int hitCount, int missCount) {
     CacheStatsDto stats = this.queryCache.stats();
     assertCacheStats(stats, hitCount, missCount);
@@ -334,5 +390,16 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   private void assertCacheStats(CacheStatsDto stats, int hitCount, int missCount) {
     Assertions.assertThat(stats.hitCount).isEqualTo(hitCount);
     Assertions.assertThat(stats.missCount).isEqualTo(missCount);
+  }
+
+  private static Table execute(QueryExecutor executor, QueryDto query, SquashQLUser user) {
+    return executor.execute(
+            query,
+            new QueryWatch(),
+            CacheStatsDto.builder(),
+            user);
+  }
+
+  record BasicUser(String name) implements SquashQLUser {
   }
 }
