@@ -1,15 +1,17 @@
 import axios, {AxiosInstance} from "axios";
 import {Query} from "./query";
 import {Measure} from "./measures";
+import {CreateAxiosDefaults} from "axios/index";
 
 export class Querier {
 
   axiosInstance: AxiosInstance
 
-  constructor(private url: string) {
+  constructor(private url: string, config?: CreateAxiosDefaults) {
     this.axiosInstance = axios.create({
       baseURL: url,
       timeout: 30_000,
+      ...config
     });
   }
 

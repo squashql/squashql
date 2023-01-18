@@ -2,10 +2,7 @@ package io.squashql;
 
 import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.ServiceAccountCredentials;
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.BigQueryOptions;
-import com.google.cloud.bigquery.Schema;
-import com.google.cloud.bigquery.Table;
+import com.google.cloud.bigquery.*;
 import com.google.common.base.Suppliers;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
@@ -35,13 +32,7 @@ public class BigQueryServiceAccountDatastore implements BigQueryDatastore {
     build.setThrowNotFound(true);
     this.bigquery = build
             .getService();
-    this.stores = Suppliers.memoize(
-            () -> getTableNames(this.bigquery, projectId, datasetName)
-                    .stream()
-                    .collect(HashMap::new,
-                            (map, table) -> map.put(table, new Store(table, getFields(this.bigquery, datasetName, table))),
-                            (x, y) -> {
-                            }));
+    this.stores = Suppliers.memoize(() -> fetchStoresByName(this));
   }
 
   @Override
@@ -64,6 +55,22 @@ public class BigQueryServiceAccountDatastore implements BigQueryDatastore {
     return this.stores.get();
   }
 
+  public static Map<String, Store> fetchStoresByName(BigQueryDatastore datastore) {
+    BigQuery bigquery = datastore.getBigquery();
+    String datasetName = datastore.getDatasetName();
+    return getTableNames(bigquery, datastore.getProjectId(), datasetName)
+            .stream()
+            .collect(HashMap::new,
+                    (map, table) -> {
+                      List<Field> fields = getFieldsOrNull(bigquery, datasetName, table);
+                      if (fields != null) {
+                        map.put(table, new Store(table, fields));
+                      }
+                    },
+                    (x, y) -> {
+                    });
+  }
+
   public static Collection<String> getTableNames(BigQuery query, String projectId, String datasetName) {
     Page<Table> tablePage = query.listTables(datasetName);
     Set<String> tableNames = new HashSet<>();
@@ -74,12 +81,20 @@ public class BigQueryServiceAccountDatastore implements BigQueryDatastore {
     return tableNames;
   }
 
-  public static List<Field> getFields(BigQuery query, String datasetName, String tableName) {
+  public static List<Field> getFieldsOrNull(BigQuery query, String datasetName, String tableName) {
     List<Field> fields = new ArrayList<>();
-    Schema schema = query.getTable(datasetName, tableName).getDefinition().getSchema();
-    for (com.google.cloud.bigquery.Field field : schema.getFields()) {
-      fields.add(new Field(field.getName(), BigQueryUtil.bigQueryTypeToClass(field.getType())));
+    try {
+      Schema schema = query.getTable(datasetName, tableName).getDefinition().getSchema();
+      for (com.google.cloud.bigquery.Field field : schema.getFields()) {
+        fields.add(new Field(field.getName(), BigQueryUtil.bigQueryTypeToClass(field.getType())));
+      }
+      return fields;
+    } catch (Exception e) {
+      if (e instanceof BigQueryException bqe && bqe.getCode() == 403) {
+        // Ignore, the user is not allowed to see this table
+        return null;
+      }
+      throw e;
     }
-    return fields;
   }
 }

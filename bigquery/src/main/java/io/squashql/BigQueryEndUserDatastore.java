@@ -16,10 +16,9 @@ import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepo
 
 import java.sql.Date;
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
 
-import static io.squashql.BigQueryServiceAccountDatastore.getTableNames;
+import static io.squashql.BigQueryServiceAccountDatastore.fetchStoresByName;
 
 /**
  * Implementation of {@link BigQueryDatastore} that uses with end user authentication to leverage fine-grained access
@@ -71,15 +70,7 @@ public class BigQueryEndUserDatastore implements BigQueryDatastore {
   @Override
   public Map<String, Store> storesByName() {
     OAuth2AuthenticationToken token = getOAuth2AuthenticationToken();
-    return this.stores.get(token.getPrincipal().getName(), name -> {
-      BigQuery bigquery = getBigquery();
-      return getTableNames(bigquery, this.projectId, this.datasetName)
-              .stream()
-              .collect(HashMap::new,
-                      (map, table) -> map.put(table, new Store(table, BigQueryServiceAccountDatastore.getFields(bigquery, this.datasetName, table))),
-                      (x, y) -> {
-                      });
-    });
+    return this.stores.get(token.getPrincipal().getName(), name -> fetchStoresByName(this));
   }
 
   private OAuth2AuthenticationToken getOAuth2AuthenticationToken() {

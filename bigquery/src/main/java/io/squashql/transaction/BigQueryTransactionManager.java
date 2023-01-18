@@ -65,7 +65,7 @@ public class BigQueryTransactionManager implements TransactionManager {
     // Check the table contains a column scenario.
     ensureScenarioColumnIsPresent(store);
 
-    List<Field> fields = BigQueryServiceAccountDatastore.getFields(this.bigquery, this.datasetName, store);
+    List<Field> fields = BigQueryServiceAccountDatastore.getFieldsOrNull(this.bigquery, this.datasetName, store);
     List<InsertAllRequest.RowToInsert> list = new ArrayList<>();
     for (Object[] tuple : tuples) {
       Map<String, Object> m = new HashMap<>();
@@ -126,7 +126,7 @@ public class BigQueryTransactionManager implements TransactionManager {
   }
 
   private void ensureScenarioColumnIsPresent(String store) {
-    List<Field> fields = BigQueryServiceAccountDatastore.getFields(this.bigquery, this.datasetName, store);
+    List<Field> fields = BigQueryServiceAccountDatastore.getFieldsOrNull(this.bigquery, this.datasetName, store);
     boolean found = fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
     if (!found) {
       throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));
