@@ -132,4 +132,26 @@ public class ColumnarTable implements Table {
       return r;
     }
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ColumnarTable lists = (ColumnarTable) o;
+    return headers.equals(lists.headers) && measures.equals(lists.measures) && Arrays.equals(columnsIndices,
+            lists.columnsIndices) && Arrays.equals(measureIndices, lists.measureIndices) && values.equals(
+            lists.values);
+  }
+
+  @Override
+  public int hashCode() {
+    int result = Objects.hash(headers, measures, values);
+    result = 31 * result + Arrays.hashCode(columnsIndices);
+    result = 31 * result + Arrays.hashCode(measureIndices);
+    return result;
+  }
 }
