@@ -123,60 +123,68 @@ class MergeTables {
     int rightRowIndex = 0;
     List<Object> leftRow = leftTable.getFactRow(leftRowIndex);
     List<Object> rightRow = rightTable.getFactRow(rightRowIndex);
-    int commonColumns = getCommonColumnsCount(leftHeaders, rightHeaders);
+    int commonColumnsCount = getCommonColumnsCount(leftHeaders, rightHeaders);
     while (leftRow != null || rightRow != null) {
-      // Handle null cases
-      if (leftRow == null) {
-        addRowFromTableToValues(mergedValues, mergedTableHeaders, mergedTableColumnIndices, rightTable, rightRowIndex);
-        rightRow = rightTable.getFactRow(++rightRowIndex);
-        continue;
-      }
-      if (rightRow == null) {
-        addRowFromTableToValues(mergedValues, mergedTableHeaders, mergedTableColumnIndices, leftTable, leftRowIndex);
-        leftRow = leftTable.getFactRow(++leftRowIndex);
-        continue;
-      }
-
-      if (!leftRow.subList(0, commonColumns).equals(rightRow.subList(0, commonColumns))) {
-        for (int commonIndex = 0; commonIndex < commonColumns; commonIndex++) {
-          // Is it enough to compare string values ?
-          int columnValueComparison = leftRow.get(commonIndex).toString()
-                  .compareTo(rightRow.get(commonIndex).toString());
-          if (columnValueComparison != 0) {
-            if (columnValueComparison < 0) {
-              addRowFromTableToValues(mergedValues, mergedTableHeaders, mergedTableColumnIndices, leftTable,
-                      leftRowIndex);
-              leftRow = leftTable.getFactRow(++leftRowIndex);
-            } else {
-              addRowFromTableToValues(mergedValues, mergedTableHeaders, mergedTableColumnIndices, rightTable,
-                      rightRowIndex);
-              rightRow = rightTable.getFactRow(++rightRowIndex);
-            }
-            break;
-          }
-        }
-        continue;
-      }
-      if (((commonColumns != leftRow.size()) && leftRow.subList(commonColumns, leftRow.size()).stream()
-              .anyMatch(x -> x != SQLTranslator.TOTAL_CELL)) ||
-              ((commonColumns != rightRow.size()) && rightRow.subList(commonColumns, rightRow.size()).stream()
-                      .anyMatch(x -> x != SQLTranslator.TOTAL_CELL))) {
-        if (commonColumns == leftRow.size()) {
+      MergeRowsStrategy mergeRowsStrategy = getMergeRowsStrategy(leftRow, rightRow, commonColumnsCount);
+      switch (mergeRowsStrategy) {
+        case KEEP_LEFT -> {
           addRowFromTableToValues(mergedValues, mergedTableHeaders, mergedTableColumnIndices, leftTable, leftRowIndex);
           leftRow = leftTable.getFactRow(++leftRowIndex);
-        } else {
+        }
+        case KEEP_RIGHT -> {
           addRowFromTableToValues(mergedValues, mergedTableHeaders, mergedTableColumnIndices, rightTable,
                   rightRowIndex);
           rightRow = rightTable.getFactRow(++rightRowIndex);
         }
-        continue;
+        case MERGE -> {
+          addMergedRowToValues(mergedValues, mergedTableHeaders, leftTable, leftRowIndex, rightTable, rightRowIndex);
+          leftRow = leftTable.getFactRow(++leftRowIndex);
+          rightRow = rightTable.getFactRow(++rightRowIndex);
+        }
       }
-
-      addMergedRowToValues(mergedValues, mergedTableHeaders, leftTable, leftRowIndex, rightTable, rightRowIndex);
-      leftRow = leftTable.getFactRow(++leftRowIndex);
-      rightRow = rightTable.getFactRow(++rightRowIndex);
     }
+
     return mergedValues;
+  }
+
+  enum MergeRowsStrategy {
+    KEEP_LEFT,
+    KEEP_RIGHT,
+    MERGE
+  }
+
+  private static MergeRowsStrategy getMergeRowsStrategy(List<Object> leftRow, List<Object> rightRow,
+          int commonColumnsCount) {
+    // Handle null row cases
+    if (leftRow == null) {
+      return MergeRowsStrategy.KEEP_RIGHT;
+    }
+    if (rightRow == null) {
+      return MergeRowsStrategy.KEEP_LEFT;
+    }
+
+    // Check if the two rows have the same values on the common columns
+    for (int commonIndex = 0; commonIndex < commonColumnsCount; commonIndex++) {
+      Object leftRowValue = leftRow.get(commonIndex);
+      Object rightRowValue = rightRow.get(commonIndex);
+      if (!leftRowValue.equals(rightRowValue)) { // The two rows don't have the same values on all the common columns
+        // Keep one row ensuring that the merged table will be well sorted
+        // Is it enough to compare string values ?
+        return leftRowValue.toString().compareTo(rightRowValue.toString()) < 0 ? MergeRowsStrategy.KEEP_LEFT
+                : MergeRowsStrategy.KEEP_RIGHT;
+      }
+    }
+    // The two rows have the same values on all the common columns
+    // Check if there are only total values on the non-common columns
+    if (((leftRow.size() == commonColumnsCount) || leftRow.subList(commonColumnsCount, leftRow.size()).stream()
+            .noneMatch(x -> x != SQLTranslator.TOTAL_CELL))
+            && ((rightRow.size() == commonColumnsCount) || rightRow.subList(commonColumnsCount, rightRow.size())
+            .stream().noneMatch(x -> x != SQLTranslator.TOTAL_CELL))) {
+      // We can merge the rows
+      return MergeRowsStrategy.MERGE;
+    }
+    // Keep one row ensuring that the merged table will be well sorted
+    return leftRow.size() == commonColumnsCount ? MergeRowsStrategy.KEEP_LEFT : MergeRowsStrategy.KEEP_RIGHT;
   }
 
   private static void addRowFromTableToValues(List<List<Object>> values, List<Field> headers, int[] columnIndices,
