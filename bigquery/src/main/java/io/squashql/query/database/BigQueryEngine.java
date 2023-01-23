@@ -137,8 +137,6 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     return new ColumnarTable(
             input.headers(),
             input.measures(),
-            input.measureIndices(),
-            input.columnIndices(),
             newValues);
   }
 

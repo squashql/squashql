@@ -19,9 +19,9 @@ import java.util.stream.Stream;
 public class TableUtils {
 
   public static String toString(List<? extends Object> columns,
-                                Iterable<List<Object>> rows,
-                                Function<Object, String> columnElementPrinters,
-                                Function<Object, String> rowElementPrinters) {
+          Iterable<List<Object>> rows,
+          Function<Object, String> columnElementPrinters,
+          Function<Object, String> rowElementPrinters) {
     /*
      * leftJustifiedRows - If true, it will add "-" as a flag to format string to
      * make it left justified. Otherwise, right justified.
@@ -91,11 +91,10 @@ public class TableUtils {
 
   public static List<MetadataItem> buildTableMetadata(Table t) {
     List<MetadataItem> metadata = new ArrayList<>();
-    int index = 0;
     for (Field field : t.headers()) {
-      if (t.isMeasure(index)) {
-        int i = SquashQLArrays.search(t.measureIndices(), index);
-        Measure measure = t.measures().get(i);
+      Optional<Measure> optionalMeasure = t.measures().stream().filter(m -> m.alias().equals(field.name())).findAny();
+      if (optionalMeasure.isPresent()) {
+        Measure measure = optionalMeasure.get();
         String expression = measure.expression();
         if (expression == null) {
           measure.setExpression(MeasureUtils.createExpression(measure));
@@ -104,9 +103,7 @@ public class TableUtils {
       } else {
         metadata.add(new MetadataItem(field.name(), field.name(), field.type()));
       }
-      index++;
     }
-
     return metadata;
   }
 
@@ -116,7 +113,8 @@ public class TableUtils {
    */
   public static ColumnarTable selectAndOrderColumns(ColumnarTable table, QueryDto queryDto) {
     List<String> finalColumns = new ArrayList<>();
-    queryDto.columnSets.values().forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
+    queryDto.columnSets.values()
+            .forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
     queryDto.columns.forEach(finalColumns::add);
 
     // Once complete, construct the final result with columns in correct order.
@@ -132,11 +130,7 @@ public class TableUtils {
       values.add(Objects.requireNonNull(table.getAggregateValues(measure)));
     }
 
-    return new ColumnarTable(fields,
-            queryDto.measures,
-            IntStream.range(finalColumns.size(), fields.size()).toArray(),
-            IntStream.range(0, finalColumns.size()).toArray(),
-            values);
+    return new ColumnarTable(fields, queryDto.measures, values);
   }
 
   public static Table orderRows(ColumnarTable table, QueryDto queryDto) {
@@ -146,21 +140,22 @@ public class TableUtils {
 
     boolean hasComparatorOnMeasure = false;
     List<Field> headers = table.headers;
-    for (int i = 0; i < headers.size(); i++) {
-      if (table.isMeasure(i)) {
-        hasComparatorOnMeasure |= comparatorByColumnName.containsKey(headers.get(i).name());
+    for (Field header : headers) {
+      if (table.isMeasure(header)) {
+        hasComparatorOnMeasure |= comparatorByColumnName.containsKey(header.name());
       }
     }
 
     for (int i = 0; i < headers.size(); i++) {
-      boolean isColumn = SquashQLArrays.search(table.columnsIndices, i) >= 0;
+      boolean isColumn = !table.isMeasure(table.headers().get(i));
       String headerName = headers.get(i).name();
       Comparator<?> queryComp = comparatorByColumnName.get(headerName);
       // Order a column even if not explicitly asked in the query only if no comparator on any measure
       if (queryComp != null || (isColumn && !hasComparatorOnMeasure)) {
         args.add(table.getColumnValues(headerName));
         // Always order table. If not defined, use natural order comp.
-        comparators.add(queryComp == null ? NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder()) : queryComp);
+        comparators.add(queryComp == null ? NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder())
+                : queryComp);
       }
     }
 
@@ -183,7 +178,7 @@ public class TableUtils {
       values.add(reorder(value, finalIndices));
     }
 
-    return new ColumnarTable(headers, table.measures, table.measureIndices, table.columnsIndices, values);
+    return new ColumnarTable(headers, table.measures, values);
   }
 
   public static List<Object> reorder(List<?> list, int[] order) {
@@ -206,19 +201,23 @@ public class TableUtils {
     for (int rowIndex = 0; rowIndex < table.count(); rowIndex++) {
       boolean grandTotal = true;
       String total = QueryEngine.TOTAL;
-      for (int i = 0; i < table.columnsIndices.length; i++) {
-        boolean isTotalCell = SQLTranslator.TOTAL_CELL.equals(table.getColumn(i).get(rowIndex));
-        if (isTotalCell) {
-          table.getColumn(i).set(rowIndex, total);
-          total = null; // First totalCell, TOTAL is written, null for the others.
+      for (int i = 0; i < table.headers().size(); i++) {
+        if (!table.isMeasure(table.headers().get(i))) {
+          boolean isTotalCell = SQLTranslator.TOTAL_CELL.equals(table.getColumn(i).get(rowIndex));
+          if (isTotalCell) {
+            table.getColumn(i).set(rowIndex, total);
+            total = null; // First totalCell, TOTAL is written, null for the others.
+          }
+          grandTotal &= isTotalCell;
         }
-        grandTotal &= isTotalCell;
       }
 
       if (grandTotal) {
         table.getColumn(0).set(rowIndex, QueryEngine.GRAND_TOTAL);
-        for (int i = 1; i < table.columnsIndices.length; i++) {
-          table.getColumn(i).set(rowIndex, null);
+        for (int i = 1; i < table.headers().size(); i++) {
+          if (!table.isMeasure(table.headers().get(i))) {
+            table.getColumn(i).set(rowIndex, null);
+          }
         }
       }
     }

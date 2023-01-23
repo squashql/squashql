@@ -26,8 +26,6 @@ class TestMergeTables {
             List.of(new Field("typology", String.class), new Field("category", String.class),
                     new Field("price.sum", int.class)),
             List.of(new AggregatedMeasure("price.sum", "price", "sum")),
-            new int[] {2},
-            new int[] {0, 1},
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MDD", "MDD")),
                     new ArrayList<>(Arrays.asList("A", "B", "A", "C")),
@@ -51,8 +49,6 @@ class TestMergeTables {
             List.of(new Field("typology", String.class), new Field("category", String.class),
                     new Field("price.sum", int.class)),
             List.of(new AggregatedMeasure("price.sum", "price", "sum")),
-            new int[] {2},
-            new int[] {0, 1},
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MDD", "MDD")),
                     new ArrayList<>(Arrays.asList("A", "B", "A", "C")),
@@ -73,8 +69,6 @@ class TestMergeTables {
     Table leftTable = new ColumnarTable(
             List.of(new Field("typology", String.class), new Field("price.sum", int.class)),
             List.of(new AggregatedMeasure("price.sum", "price", "sum")),
-            new int[] {1},
-            new int[] {0},
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MDD")),
                     new ArrayList<>(Arrays.asList(20, 12))));
@@ -88,8 +82,6 @@ class TestMergeTables {
     Table rightTable = new ColumnarTable(
             List.of(new Field("category", String.class), new Field("price.sum", int.class)),
             List.of(new AggregatedMeasure("price.sum", "price", "sum")),
-            new int[] {1},
-            new int[] {0},
             List.of(
                     new ArrayList<>(Arrays.asList("A", "B", "C")),
                     new ArrayList<>(Arrays.asList(2.3, 3, 5))));
@@ -112,8 +104,6 @@ class TestMergeTables {
             List.of(new Field("typology", String.class), new Field("category", String.class),
                     new Field("price.sum", int.class)),
             List.of(new AggregatedMeasure("price.sum", "price", "sum")),
-            new int[] {2},
-            new int[] {0, 1},
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MDD", "MDD")),
                     new ArrayList<>(Arrays.asList("A", "B", "A", "C")),
@@ -130,8 +120,6 @@ class TestMergeTables {
             List.of(new Field("typology", String.class), new Field("category", String.class),
                     new Field("price.avg", int.class)),
             List.of(new AggregatedMeasure("price.avg", "price", "avg")),
-            new int[] {2},
-            new int[] {0, 1},
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MDD", "MDD")),
                     new ArrayList<>(Arrays.asList("A", "B", "A", "C")),
@@ -150,8 +138,6 @@ class TestMergeTables {
                     new Field("price.sum", int.class), new Field("price.avg", int.class)),
             List.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
-            new int[] {2, 3},
-            new int[] {0, 1},
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MDD", "MDD")),
                     new ArrayList<>(Arrays.asList("A", "B", "A", "C")),
@@ -174,8 +160,6 @@ class TestMergeTables {
             List.of(new Field("typology", String.class), new Field("category", String.class),
                     new Field("price.sum", int.class)),
             List.of(new AggregatedMeasure("price.sum", "price", "sum")),
-            new int[] {2},
-            new int[] {0, 1},
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("C", "A", "B")),
@@ -191,8 +175,6 @@ class TestMergeTables {
             List.of(new Field("typology", String.class), new Field("category", String.class),
                     new Field("price.avg", int.class)),
             List.of(new AggregatedMeasure("price.avg", "price", "avg")),
-            new int[] {2},
-            new int[] {0, 1},
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("A", "A", "B")),
@@ -211,8 +193,6 @@ class TestMergeTables {
                     new Field("price.sum", int.class), new Field("price.avg", int.class)),
             List.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
-            new int[] {2, 3},
-            new int[] {0, 1},
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MDD", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("A", "C", "A", "B")),
@@ -235,8 +215,6 @@ class TestMergeTables {
             List.of(new Field("typology", String.class), new Field("category", String.class),
                     new Field("price.sum", int.class)),
             List.of(new AggregatedMeasure("price.sum", "price", "sum")),
-            new int[] {2},
-            new int[] {0, 1},
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("C", "A", "B")),
@@ -253,8 +231,6 @@ class TestMergeTables {
             List.of(new Field("typology", String.class), new Field("category", String.class),
                     new Field("company", String.class), new Field("price.avg", int.class)),
             List.of(new AggregatedMeasure("price.avg", "price", "avg")),
-            new int[] {3},
-            new int[] {0, 1, 2},
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("A", "A", "A", "B")),
@@ -278,8 +254,6 @@ class TestMergeTables {
                     new Field("price.avg", int.class)),
             List.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
-            new int[] {3, 4},
-            new int[] {0, 1, 2},
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MDD", "MN", "MN", "MN", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("A", "C", "A", "A", "A", "B", "B")),
@@ -304,8 +278,6 @@ class TestMergeTables {
             List.of(new Field("typology", String.class), new Field("category", String.class),
                     new Field("price.sum", int.class)),
             List.of(new AggregatedMeasure("price.sum", "price", "sum")),
-            new int[] {2},
-            new int[] {0, 1},
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("C", "A", "B")),
@@ -321,8 +293,6 @@ class TestMergeTables {
             List.of(new Field("typology", String.class), new Field("category", String.class),
                     new Field("company", String.class), new Field("price.avg", int.class)),
             List.of(new AggregatedMeasure("price.avg", "price", "avg")),
-            new int[] {3},
-            new int[] {0, 1, 2},
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("A", "A", "B")),
@@ -344,8 +314,6 @@ class TestMergeTables {
                     new Field("price.avg", int.class)),
             List.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
-            new int[] {3, 4},
-            new int[] {0, 1, 2},
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("C", "A", "A", "B", "B")),
@@ -371,8 +339,6 @@ class TestMergeTables {
             List.of(new Field("typology", String.class), new Field("category", String.class),
                     new Field("price.sum", int.class)),
             List.of(new AggregatedMeasure("price.sum", "price", "sum")),
-            new int[] {2},
-            new int[] {0, 1},
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "MDD", "MDD", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("___total___", "___total___", "B", "___total___", "A")),
@@ -387,8 +353,6 @@ class TestMergeTables {
     Table rightTable = new ColumnarTable(
             List.of(new Field("typology", String.class), new Field("price.avg", int.class)),
             List.of(new AggregatedMeasure("price.avg", "price", "avg")),
-            new int[] {1},
-            new int[] {0},
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "MDD", "PP")),
                     new ArrayList<>(Arrays.asList(5.3, 2.3, 3))));
@@ -408,8 +372,6 @@ class TestMergeTables {
                     new Field("price.sum", int.class), new Field("price.avg", int.class)),
             List.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
-            new int[] {2, 3},
-            new int[] {0, 1},
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "MDD", "MDD", "MN", "MN", "PP")),
                     new ArrayList<>(
@@ -433,8 +395,6 @@ class TestMergeTables {
     Table leftTable = new ColumnarTable(
             List.of(new Field("typology", String.class), new Field("price.sum", int.class)),
             List.of(new AggregatedMeasure("price.sum", "price", "sum")),
-            new int[] {1},
-            new int[] {0},
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "MDD", "MN", "PP")),
                     new ArrayList<>(Arrays.asList(45, 15, 12, 18))));
@@ -448,8 +408,6 @@ class TestMergeTables {
     Table rightTable = new ColumnarTable(
             List.of(new Field("category", String.class), new Field("price.avg", int.class)),
             List.of(new AggregatedMeasure("price.avg", "price", "avg")),
-            new int[] {1},
-            new int[] {0},
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "A", "B")),
                     new ArrayList<>(Arrays.asList(5.3, 2.3, 3))));
@@ -469,8 +427,6 @@ class TestMergeTables {
                     new Field("price.sum", int.class), new Field("price.avg", int.class)),
             List.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
-            new int[] {2, 3},
-            new int[] {0, 1},
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "___total___", "___total___", "MDD", "MN", "PP")),
                     new ArrayList<>(

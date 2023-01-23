@@ -4,6 +4,7 @@ import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.store.Field;
 import io.squashql.util.SquashQLArrays;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,19 +29,16 @@ public interface Table extends Iterable<List<Object>> {
   }
 
   default List<Object> getAggregateValues(Measure measure) {
-    int index = measures().indexOf(measure);
+    int index = headers().indexOf(getField(measure));
     if (index < 0) {
       throw new IllegalArgumentException("no aggregate values for " + measure);
     }
-    return getColumn(measureIndices()[index]);
+    return getColumn(index);
   }
 
   default Field getField(Measure measure) {
-    int index = measures().indexOf(measure);
-    if (index < 0) {
-      throw new IllegalArgumentException("no aggregate values for " + measure);
-    }
-    return headers().get(measureIndices()[index]);
+    return headers().stream().filter(header -> header.name().equals(measure.alias()))
+            .findAny().orElseThrow(() -> new IllegalArgumentException("no field for " + measure));
   }
 
   default Field getField(String column) {
@@ -48,10 +46,6 @@ public interface Table extends Iterable<List<Object>> {
   }
 
   List<Measure> measures();
-
-  int[] measureIndices();
-
-  int[] columnIndices();
 
   default int columnIndex(String column) {
     int index = -1, i = 0;
@@ -83,8 +77,8 @@ public interface Table extends Iterable<List<Object>> {
     return index;
   }
 
-  default boolean isMeasure(int index) {
-    return SquashQLArrays.search(measureIndices(), index) >= 0;
+  default boolean isMeasure(Field field) {
+    return measures().stream().map(Measure::alias).anyMatch(measureName -> measureName.equals(field.name()));
   }
 
   /**
@@ -99,9 +93,11 @@ public interface Table extends Iterable<List<Object>> {
       return null;
     }
     List<Object> result = new ArrayList<>();
-    for (int columnIndex : columnIndices()) {
-      result.add(getColumn(columnIndex).get(rowIndex));
-    }
+    headers().forEach(header -> {
+      if (!isMeasure(header)) {
+        result.add(getColumnValues(header.name()).get(rowIndex));
+      }
+    });
     return result;
   }
 

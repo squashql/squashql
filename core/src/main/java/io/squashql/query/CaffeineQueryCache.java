@@ -58,8 +58,6 @@ public class CaffeineQueryCache implements QueryCache {
     return new ColumnarTable(
             headers,
             Collections.singletonList(CountMeasure.INSTANCE),
-            new int[]{headers.size() - 1},
-            IntStream.range(0, headers.size() - 1).toArray(),
             values);
   }
 

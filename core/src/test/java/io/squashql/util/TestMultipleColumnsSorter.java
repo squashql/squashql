@@ -78,10 +78,10 @@ public class TestMultipleColumnsSorter {
             new Field("c1", String.class),
             new Field("c2", String.class),
             new Field("c3", String.class));
-    new ColumnarTable(headers, Collections.emptyList(), new int[0], new int[0], List.of(c1, c2, c3))
+    new ColumnarTable(headers, Collections.emptyList(), List.of(c1, c2, c3))
             .show();
 
-    new ColumnarTable(headers, Collections.emptyList(), new int[0], new int[0],
+    new ColumnarTable(headers, Collections.emptyList(),
             List.of(reorder(c1, sort), reorder(c2, sort), reorder(c3, sort)))
             .show();
   }
@@ -90,10 +90,10 @@ public class TestMultipleColumnsSorter {
     List<Field> headers = Arrays.asList(
             new Field("c1", String.class),
             new Field("c2", String.class));
-    new ColumnarTable(headers, Collections.emptyList(), new int[0], new int[0], List.of(c1, c2))
+    new ColumnarTable(headers, Collections.emptyList(), List.of(c1, c2))
             .show();
 
-    new ColumnarTable(headers, Collections.emptyList(), new int[0], new int[0],
+    new ColumnarTable(headers, Collections.emptyList(),
             List.of(reorder(c1, sort), reorder(c2, sort)))
             .show();
   }
