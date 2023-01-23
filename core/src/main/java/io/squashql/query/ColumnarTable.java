@@ -19,7 +19,7 @@ public class ColumnarTable implements Table {
     if (headers.stream().map(Field::name).distinct().count() != headers.size()) {
       throw new IllegalArgumentException("All header names should be unique.");
     }
-    if (measures.stream().map(Measure::alias).distinct().count() != headers.size()) {
+    if (measures.stream().map(Measure::alias).distinct().count() != measures.size()) {
       throw new IllegalArgumentException("All measure names should be unique.");
     }
     measures.forEach(measure -> {
