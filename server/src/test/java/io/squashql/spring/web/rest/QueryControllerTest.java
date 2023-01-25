@@ -4,7 +4,10 @@ import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.SparkQueryEngine;
-import io.squashql.query.dto.*;
+import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.dto.MetadataItem;
+import io.squashql.query.dto.MetadataResultDto;
+import io.squashql.query.dto.QueryResultDto;
 import io.squashql.spring.dataset.DatasetTestConfig;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -12,13 +15,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
@@ -31,10 +34,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class QueryControllerTest {
 
   @Autowired
-  private MockMvc mvc;
+  MockMvc mvc;
 
   @Autowired
-  private Environment env;
+  QueryController queryController;
 
   @Test
   void testQuery() throws Exception {
@@ -166,13 +169,12 @@ public class QueryControllerTest {
             .andExpect(status().isOk())
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
-              Map queryResult = JacksonUtil.mapper.readValue(contentAsString, Map.class);
-              Map<String, Object> table = (Map<String, Object>) queryResult.get("table");
+              QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
 
               double baseValue = 0.9803921568627451d;
               double mnValue = 1.0294117647058822d;
               double mnmddValue = 1.0784313725490196d;
-              Assertions.assertThat((List) table.get("rows")).containsExactlyInAnyOrder(
+              Assertions.assertThat(queryResult.table.rows).containsExactlyInAnyOrder(
                       List.of("group1", MAIN_SCENARIO_NAME, 0d, 0d),
                       List.of("group1", "MN up", 10_000d, mnValue - baseValue),
                       List.of("group2", MAIN_SCENARIO_NAME, 0d, 0d),
@@ -180,11 +182,48 @@ public class QueryControllerTest {
                       List.of("group3", MAIN_SCENARIO_NAME, 0d, 0d),
                       List.of("group3", "MN up", 10_000d, mnValue - baseValue),
                       List.of("group3", "MN & MDD up", 10_000d, mnmddValue - mnValue));
-              Assertions.assertThat((List) table.get("columns"))
-                      .containsExactly("group",
-                              SCENARIO_FIELD_NAME,
-                              "aggregatedMeasureDiff",
-                              "indicePrixDiff");
+              Assertions.assertThat(queryResult.table.columns).containsExactly("group",
+                      SCENARIO_FIELD_NAME,
+                      "aggregatedMeasureDiff",
+                      "indicePrixDiff");
             });
+  }
+
+  @Test
+  void testQueryCache() {
+    this.queryController.queryExecutor.queryCache.clear();
+
+    // the query does not matter in our case.
+    var query = Query
+            .from("our_prices")
+            .select(List.of(), List.of(CountMeasure.INSTANCE))
+            .build();
+
+    DatasetTestConfig.squashQLUserSupplier.set(new BasicUser("paul"));
+    BiConsumer<Long, Long> checker = (expectedHitCount, expectedMissCount) -> {
+      try {
+        this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY)
+                        .content(JacksonUtil.serialize(query))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(result -> {
+                  String contentAsString = result.getResponse().getContentAsString();
+                  QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
+                  Assertions.assertThat(queryResult.debug.cache.hitCount).isEqualTo(expectedHitCount);
+                  Assertions.assertThat(queryResult.debug.cache.missCount).isEqualTo(expectedMissCount);
+                });
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    };
+    // same user
+    checker.accept(0l, 1l);
+    checker.accept(1l, 1l);
+
+    // different user
+    DatasetTestConfig.squashQLUserSupplier.set(new BasicUser("peter"));
+    checker.accept(1l, 2l);
+
+    DatasetTestConfig.squashQLUserSupplier.set(null); // reset
   }
 }

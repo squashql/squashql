@@ -18,7 +18,7 @@ public interface Measure {
 
   String expression();
 
-  void setExpression(String expression);
+  Measure withExpression(String expression);
 
   <R> R accept(MeasureVisitor<R> visitor);
 }

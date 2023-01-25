@@ -1,6 +1,7 @@
 package io.squashql.spring.dataset;
 
 import io.squashql.SparkDatastore;
+import io.squashql.query.SquashQLUser;
 import io.squashql.query.database.SparkQueryEngine;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
@@ -9,6 +10,8 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
@@ -18,6 +21,13 @@ public class DatasetTestConfig {
   @Bean
   public SparkQueryEngine queryEngine() {
     return new SparkQueryEngine(createTestDatastoreWithData());
+  }
+
+  public static final AtomicReference<SquashQLUser> squashQLUserSupplier = new AtomicReference<>();
+
+  @Bean
+  public Supplier<SquashQLUser> squashQLUserSupplier() {
+    return () -> squashQLUserSupplier.get();
   }
 
   public static SparkDatastore createTestDatastoreWithData() {

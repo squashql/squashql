@@ -1,9 +1,6 @@
 package io.squashql.query;
 
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.ToString;
+import lombok.*;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.store.Field;
@@ -13,15 +10,12 @@ import java.util.function.Function;
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
+@AllArgsConstructor
 public class ExpressionMeasure implements Measure {
 
   public String alias;
+  @With
   public String expression;
-
-  public ExpressionMeasure(@NonNull String alias, @NonNull String expression) {
-    this.alias = alias;
-    this.expression = expression;
-  }
 
   @Override
   public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
@@ -38,10 +32,10 @@ public class ExpressionMeasure implements Measure {
     return this.expression;
   }
 
-  @Override
-  public void setExpression(String expression) {
-    this.expression = expression;
-  }
+//  @Override
+//  public void setExpression(String expression) {
+//    this.expression = expression;
+//  }
 
   @Override
   public <R> R accept(MeasureVisitor<R> visitor) {

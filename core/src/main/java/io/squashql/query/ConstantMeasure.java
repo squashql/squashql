@@ -1,9 +1,6 @@
 package io.squashql.query;
 
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.ToString;
+import lombok.*;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.store.Field;
 
@@ -15,6 +12,7 @@ import java.util.function.Function;
 public abstract class ConstantMeasure<T> implements Measure {
 
   public T value;
+  @With
   public String expression;
 
   public ConstantMeasure(@NonNull T value) {
@@ -38,10 +36,5 @@ public abstract class ConstantMeasure<T> implements Measure {
   @Override
   public String expression() {
     return this.expression;
-  }
-
-  @Override
-  public void setExpression(String expression) {
-    this.expression = expression;
   }
 }

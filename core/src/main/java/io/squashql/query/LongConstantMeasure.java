@@ -27,4 +27,11 @@ public class LongConstantMeasure extends ConstantMeasure<Long> {
     sb.append('}');
     return sb.toString();
   }
+
+  @Override
+  public ConstantMeasure<Long> withExpression(String expression) {
+    LongConstantMeasure measure = new LongConstantMeasure(this.value);
+    measure.expression = expression;
+    return measure;
+  }
 }

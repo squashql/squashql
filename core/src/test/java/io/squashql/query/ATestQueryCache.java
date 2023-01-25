@@ -400,6 +400,4 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             user);
   }
 
-  record BasicUser(String name) implements SquashQLUser {
-  }
 }

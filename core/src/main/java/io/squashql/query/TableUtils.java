@@ -98,7 +98,7 @@ public class TableUtils {
         Measure measure = t.measures().get(i);
         String expression = measure.expression();
         if (expression == null) {
-          measure.setExpression(MeasureUtils.createExpression(measure));
+          measure = measure.withExpression(MeasureUtils.createExpression(measure));
         }
         metadata.add(new MetadataItem(field.name(), measure.expression(), field.type()));
       } else {

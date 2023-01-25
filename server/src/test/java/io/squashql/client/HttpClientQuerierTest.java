@@ -153,14 +153,12 @@ public class HttpClientQuerierTest {
     AggregatedMeasure b = new AggregatedMeasure("b", "b", "sum");
     Measure plus = Functions.plus("a+b", a, b);
 
-    List<Measure> input = List.of(a, b, plus);
-    input.forEach(m -> m.setExpression(null));// Expression should not be defined but computed and set by the server
+    List<Measure> input = List.of(a, b, plus).stream().map(m -> m.withExpression(null)).toList(); // Expression should not be defined but computed and set by the server
 
     String url = "http://127.0.0.1:" + this.port;
     var querier = new HttpClientQuerier(url);
 
     List<Measure> expression = querier.expression(input);
-    Assertions.assertThat(expression.stream().map(Measure::expression))
-            .containsExactly("sum(a)", "sum(b)", "a + b");
+    Assertions.assertThat(expression.stream().map(Measure::expression)).containsExactly("sum(a)", "sum(b)", "a + b");
   }
 }

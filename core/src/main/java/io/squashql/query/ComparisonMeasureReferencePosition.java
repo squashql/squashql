@@ -1,9 +1,6 @@
 package io.squashql.query;
 
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.ToString;
+import lombok.*;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.dto.Period;
 import io.squashql.store.Field;
@@ -15,9 +12,11 @@ import java.util.function.Function;
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
+@AllArgsConstructor
 public class ComparisonMeasureReferencePosition implements Measure {
 
   public String alias;
+  @With
   public String expression;
   public ComparisonMethod comparisonMethod;
   public Measure measure;
@@ -86,11 +85,6 @@ public class ComparisonMeasureReferencePosition implements Measure {
   @Override
   public String expression() {
     return this.expression;
-  }
-
-  @Override
-  public void setExpression(String expression) {
-    this.expression = expression;
   }
 
   @Override

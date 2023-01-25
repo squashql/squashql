@@ -1,9 +1,6 @@
 package io.squashql.query;
 
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.ToString;
+import lombok.*;
 
 @ToString
 @EqualsAndHashCode(callSuper = true)
@@ -26,5 +23,12 @@ public class DoubleConstantMeasure extends ConstantMeasure<Double> {
     sb.append(", expression='").append(expression).append('\'');
     sb.append('}');
     return sb.toString();
+  }
+
+  @Override
+  public ConstantMeasure<Double> withExpression(String expression) {
+    DoubleConstantMeasure measure = new DoubleConstantMeasure(this.value);
+    measure.expression = expression;
+    return measure;
   }
 }

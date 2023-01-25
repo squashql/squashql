@@ -75,12 +75,14 @@ public class QueryController {
 
   @PostMapping(MAPPING_EXPRESSION)
   public ResponseEntity<List<Measure>> setMeasureExpressions(@RequestBody List<Measure> measures) {
-    List<Measure> res = new ArrayList<>(measures);
-    for (Measure measure : res) {
+    List<Measure> res = new ArrayList<>(measures.size());
+    for (Measure measure : measures) {
       String expression = measure.expression();
+      Measure m = measure;
       if (expression == null) {
-        measure.setExpression(MeasureUtils.createExpression(measure));
+        m = measure.withExpression(MeasureUtils.createExpression(measure));
       }
+      res.add(m);
     }
     return ResponseEntity.ok(res);
   }

@@ -1,25 +1,22 @@
 package io.squashql.query;
 
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.CriteriaDto;
 import io.squashql.store.Field;
+import lombok.*;
 
 import java.util.function.Function;
 
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
-@Slf4j
+@AllArgsConstructor
 public class AggregatedMeasure implements Measure {
 
   public String alias;
+  @With
   public String expression;
   public String field;
   public String aggregationFunction;
@@ -56,11 +53,6 @@ public class AggregatedMeasure implements Measure {
   @Override
   public String expression() {
     return this.expression;
-  }
-
-  @Override
-  public void setExpression(String expression) {
-    this.expression = expression;
   }
 
   @Override
