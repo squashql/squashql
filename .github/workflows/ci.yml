@@ -1,0 +1,130 @@
+name: squashql ci
+
+on:
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Launch manually'
+  schedule:
+    - cron: '0 4 * * *'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: Build with Maven
+        run: mvn -pl :squashql-core -am clean install --no-transfer-progress -DskipTests
+      - name: Run core tests
+        run: mvn -pl :squashql-core --no-transfer-progress test
+
+  clickhouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: Build with Maven
+        run: mvn -pl :squashql-clickhouse -am clean install --no-transfer-progress -DskipTests
+      - name: Run clickhouse tests
+        run: mvn -pl :squashql-clickhouse --no-transfer-progress test
+        env:
+          TESTCONTAINERS_REUSE_ENABLE: true
+
+  spark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: Build with Maven
+        run: mvn -pl :squashql-spark -am clean install --no-transfer-progress -DskipTests
+      - name: Run spark tests
+        run: mvn -pl :squashql-spark --no-transfer-progress test
+        env:
+          TESTCONTAINERS_REUSE_ENABLE: true
+
+  bigquery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: Build with Maven
+        run: mvn -pl :squashql-bigquery -am clean install --no-transfer-progress -DskipTests
+
+  snowflake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: Build with Maven
+        run: mvn -pl :squashql-snowflake -am clean install --no-transfer-progress -DskipTests
+
+  server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: server - Build with Maven
+        run: mvn -pl :squashql-server -am clean install --no-transfer-progress -DskipTests
+      - name: js - Build with Maven
+        run: mvn -pl :squashql-js -am clean install --no-transfer-progress -DskipTests
+      - name: js - Package with Maven
+        run: mvn -pl :squashql-js package --no-transfer-progress
+      - name: Run server tests
+        run: mvn -pl :squashql-server --no-transfer-progress test
+
+  java-client:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: Build with Maven
+        run: mvn -pl :squashql-java-client -am clean install --no-transfer-progress -DskipTests
+      - name: Run http-client tests
+        run: mvn -pl :squashql-java-client --no-transfer-progress test
+
