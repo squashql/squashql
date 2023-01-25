@@ -18,10 +18,10 @@ public class ColumnarTable implements Table {
   protected final List<List<Object>> values;
 
   public ColumnarTable(List<Field> headers,
-                       List<Measure> measures,
-                       int[] measureIndices,
-                       int[] columnsIndices,
-                       List<List<Object>> values) {
+          List<Measure> measures,
+          int[] measureIndices,
+          int[] columnsIndices,
+          List<List<Object>> values) {
     this.headers = new ArrayList<>(headers);
     this.measures = new ArrayList<>(measures);
     this.values = new ArrayList<>(values);
@@ -131,5 +131,27 @@ public class ColumnarTable implements Table {
       this.current++;
       return r;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ColumnarTable lists = (ColumnarTable) o;
+    return headers.equals(lists.headers) && measures.equals(lists.measures) && Arrays.equals(columnsIndices,
+            lists.columnsIndices) && Arrays.equals(measureIndices, lists.measureIndices) && values.equals(
+            lists.values);
+  }
+
+  @Override
+  public int hashCode() {
+    int result = Objects.hash(headers, measures, values);
+    result = 31 * result + Arrays.hashCode(columnsIndices);
+    result = 31 * result + Arrays.hashCode(measureIndices);
+    return result;
   }
 }
