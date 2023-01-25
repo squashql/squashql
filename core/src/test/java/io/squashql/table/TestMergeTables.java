@@ -357,6 +357,75 @@ class TestMergeTables {
   }
 
   @Test
+  void merge_tables_with_both_common_and_different_columns() {
+    /*
+    | typology | category | price.sum |
+    |----------|----------|-----------|
+    | MDD      | A        | 5         |
+    | MN       | A        | 20        |
+    | MN       | B        | 25        |
+     */
+    Table leftTable = new ColumnarTable(
+            List.of(new Field("typology", String.class), new Field("category", String.class),
+                    new Field("price.sum", int.class)),
+            List.of(new AggregatedMeasure("price.sum", "price", "sum")),
+            new int[] {2},
+            new int[] {0, 1},
+            List.of(
+                    new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
+                    new ArrayList<>(Arrays.asList("A", "A", "B")),
+                    new ArrayList<>(Arrays.asList(5, 20, 25))));
+    /*
+    | typology | company     | price.avg |
+    |----------|-------------|-----------|
+    | MDD      | CARREFOUR   | 6.8       |
+    | MN       | ___total___ | 4         |
+    | MN       | LECLERC     | 2.3       |
+    | MN       | SUPER U     | 3         |
+     */
+    Table rightTable = new ColumnarTable(
+            List.of(new Field("typology", String.class), new Field("company", String.class),
+                    new Field("price.avg", int.class)),
+            List.of(new AggregatedMeasure("price.avg", "price", "avg")),
+            new int[] {2},
+            new int[] {0, 1},
+            List.of(
+                    new ArrayList<>(Arrays.asList("MDD", "MN", "MN", "MN")),
+                    new ArrayList<>(Arrays.asList("CARREFOUR", "___total___", "LECLERC", "SUPER U")),
+                    new ArrayList<>(Arrays.asList(6.8, 4, 2.3, 3))));
+
+    /*
+    | typology | category    | company     | price.sum | price.avg |
+    |----------|-------------|-------------|-----------|-----------|
+    | MDD      | ___total___ | CARREFOUR   | null      | 6.8       |
+    | MDD      | A           | ___total___ | 5         | null      |
+    | MN       | ___total___ | ___total___ | null      | 4         |
+    | MN       | ___total___ | LECLERC     | null      | 2.3       |
+    | MN       | ___total___ | SUPER U     | null      | 3         |
+    | MN       | A           | ___total___ | 20        | null      |
+    | MN       | B           | ___total___ | 25        | null      |
+     */
+    Table expectedTable = new ColumnarTable(
+            List.of(new Field("typology", String.class), new Field("category", String.class),
+                    new Field("company", String.class), new Field("price.sum", int.class),
+                    new Field("price.avg", int.class)),
+            List.of(new AggregatedMeasure("price.sum", "price", "sum"),
+                    new AggregatedMeasure("price.avg", "price", "avg")),
+            new int[] {3, 4},
+            new int[] {0, 1, 2},
+            List.of(
+                    new ArrayList<>(Arrays.asList("MDD", "MDD", "MN", "MN", "MN", "MN", "MN")),
+                    new ArrayList<>(
+                            Arrays.asList("___total___", "A", "___total___", "___total___", "___total___", "A", "B")),
+                    new ArrayList<>(Arrays.asList("CARREFOUR", "___total___", "___total___", "LECLERC", "SUPER U",
+                            "___total___", "___total___")),
+                    new ArrayList<>(Arrays.asList(null, 5, null, null, null, 20, 25)),
+                    new ArrayList<>(Arrays.asList(6.8, null, 4, 2.3, 3, null, null))));
+    Table mergedTable = MergeTables.mergeTables(leftTable, rightTable);
+    Assertions.assertThat(mergedTable).isEqualTo(expectedTable);
+  }
+
+  @Test
   void merge_tables_with_totals() {
     /*
     | typology    | category    | price.sum |
@@ -478,6 +547,108 @@ class TestMergeTables {
                     new ArrayList<>(Arrays.asList(45, null, null, 15, 12, 18)),
                     new ArrayList<>(Arrays.asList(5.3, 2.3, 3, null, null, null))));
     Table mergedTable = MergeTables.mergeTables(leftTable, rightTable);
+    Assertions.assertThat(mergedTable).isEqualTo(expectedTable);
+  }
+
+  @Test
+  void merge_three_tables() {
+    /*
+    | typology    | Turnover | Margin |
+    |-------------|----------|--------|
+    | ___total___ | 2950     | 450    |
+    | MDD         | 1000     | 220    |
+    | MN          | 2500     | 180    |
+    | PP          | 450      | 50     |
+     */
+    Table table1 = new ColumnarTable(
+            List.of(new Field("typology", String.class), new Field("Turnover", double.class),
+                    new Field("Margin", double.class)),
+            List.of(new AggregatedMeasure("Turnover", "unit_turnover", "sum"),
+                    new AggregatedMeasure("Margin", "unit_margin", "sum")),
+            new int[] {1, 2},
+            new int[] {0},
+            List.of(
+                    new ArrayList<>(Arrays.asList("___total___", "MDD", "MN", "PP")),
+                    new ArrayList<>(Arrays.asList(2950, 1000, 2500, 450)),
+                    new ArrayList<>(Arrays.asList(450, 220, 180, 50))));
+    /*
+    | typology    | category    | PriceVariation |
+    |-------------|-------------|----------------|
+    | ___total___ | ___total___ | 0.09           |
+    | MDD         | ___total___ | 0.15           |
+    | MDD         | A           | 0.15           |
+    | MN          | ___total___ | -0.01          |
+    | MN          | B           | 0.02           |
+    | MN          | C           | -0.05          |
+     */
+    Table table2 = new ColumnarTable(
+            List.of(new Field("typology", String.class), new Field("category", String.class),
+                    new Field("PriceVariation", double.class)),
+            List.of(new AggregatedMeasure("PriceVariation", "price_variation", "avg")),
+            new int[] {2},
+            new int[] {0, 1},
+            List.of(
+                    new ArrayList<>(Arrays.asList("___total___", "MDD", "MDD", "MN", "MN", "MN")),
+                    new ArrayList<>(Arrays.asList("___total___", "___total___", "A", "___total___", "B", "C")),
+                    new ArrayList<>(Arrays.asList(0.09, 0.15, 0.15, -0.01, 0.02, -0.05))));
+
+    /*
+    | company     | PriceIndex |
+    |-------------|------------|
+    | ___total___ | 101.5      |
+    | CARREFOUR   | 99.27      |
+    | LECLERC     | 105.1      |
+    | SUPER U     | 101        |
+     */
+    Table table3 = new ColumnarTable(
+            List.of(new Field("company", String.class), new Field("PriceIndex", double.class)),
+            List.of(new AggregatedMeasure("PriceIndex", "price_index", "avg")),
+            new int[] {1},
+            new int[] {0},
+            List.of(
+                    new ArrayList<>(Arrays.asList("___total___", "CARREFOUR", "LECLERC", "SUPER U")),
+                    new ArrayList<>(Arrays.asList(101.5, 99.27, 105.1, 101))));
+
+
+    /*
+    | typology    | category    | company     | Turnover | Margin | PriceVariation | PriceIndex |
+    |-------------|-------------|-------------|----------|--------|----------------|------------|
+    | ___total___ | ___total___ | ___total___ | 2950     | 450    | 0.09           | 101.5      |
+    | ___total___ | ___total___ | CARREFOUR   | null     | null   | null           | 99.27      |
+    | ___total___ | ___total___ | LECLERC     | null     | null   | null           | 105.1      |
+    | ___total___ | ___total___ | SUPER U     | null     | null   | null           | 101        |
+    | MDD         | ___total___ | ___total___ | 1000     | 220    | 0.15           | null       |
+    | MDD         | A           | ___total___ | null     | null   | 0.15           | null       |
+    | MN          | ___total___ | ___total___ | 2500     | 180    | -0.01          | null       |
+    | MN          | B           | ___total___ | null     | null   | 0.02           | null       |
+    | MN          | C           | ___total___ | null     | null   | -0.05          | null       |
+    | PP          | ___total___ | ___total___ | 450      | 50     | null           | null       |
+     */
+    Table expectedTable = new ColumnarTable(
+            List.of(new Field("typology", String.class), new Field("category", String.class),
+                    new Field("company", String.class), new Field("Turnover", double.class),
+                    new Field("Margin", double.class), new Field("PriceVariation", double.class),
+                    new Field("PriceIndex", double.class)),
+            List.of(new AggregatedMeasure("Turnover", "unit_turnover", "sum"),
+                    new AggregatedMeasure("Margin", "unit_margin", "sum"),
+                    new AggregatedMeasure("PriceVariation", "price_variation", "avg"),
+                    new AggregatedMeasure("PriceIndex", "price_index", "avg")),
+            new int[] {3, 4, 5, 6},
+            new int[] {0, 1, 2},
+            List.of(
+                    new ArrayList<>(
+                            Arrays.asList("___total___", "___total___", "___total___", "___total___", "MDD", "MDD",
+                                    "MN", "MN", "MN", "PP")),
+                    new ArrayList<>(
+                            Arrays.asList("___total___", "___total___", "___total___", "___total___", "___total___",
+                                    "A", "___total___", "B", "C", "___total___")),
+                    new ArrayList<>(Arrays.asList("___total___", "CARREFOUR", "LECLERC", "SUPER U", "___total___",
+                            "___total___", "___total___", "___total___", "___total___", "___total___")),
+                    new ArrayList<>(Arrays.asList(2950, null, null, null, 1000, null, 2500, null, null, 450)),
+                    new ArrayList<>(Arrays.asList(450, null, null, null, 220, null, 180, null, null, 50)),
+                    new ArrayList<>(Arrays.asList(0.09, null, null, null, 0.15, 0.15, -0.01, 0.02, -0.05, null)),
+                    new ArrayList<>(Arrays.asList(101.5, 99.27, 105.1, 101, null, null, null, null, null, null))));
+    Table mergedTable = MergeTables.mergeTables(List.of(table1, table2, table3));
     Assertions.assertThat(mergedTable).isEqualTo(expectedTable);
   }
 
