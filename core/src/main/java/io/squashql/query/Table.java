@@ -2,7 +2,6 @@ package io.squashql.query;
 
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.store.Field;
-import io.squashql.util.SquashQLArrays;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +11,7 @@ public interface Table extends Iterable<List<Object>> {
 
   ObjectArrayDictionary pointDictionary();
 
-  List<Field> headers();
+  List<Header> headers();
 
   Set<Measure> measures();
 
@@ -31,7 +30,7 @@ public interface Table extends Iterable<List<Object>> {
   }
 
   default List<Object> getAggregateValues(Measure measure) {
-    int index = headers().indexOf(getField(measure));
+    int index = headers().indexOf(new Header(getField(measure), true));
     if (index < 0) {
       throw new IllegalArgumentException("no aggregate values for " + measure);
     }
@@ -39,18 +38,18 @@ public interface Table extends Iterable<List<Object>> {
   }
 
   default Field getField(Measure measure) {
-    return headers().stream().filter(header -> header.name().equals(measure.alias()))
+    return headers().stream().map(Header::field).filter(header -> header.name().equals(measure.alias()))
             .findAny().orElseThrow(() -> new IllegalArgumentException("no field for " + measure));
   }
 
   default Field getField(String column) {
-    return headers().get(columnIndex(column));
+    return headers().get(columnIndex(column)).field();
   }
 
   default int columnIndex(String column) {
     int index = -1, i = 0;
-    for (Field header : headers()) {
-      if (header.name().equals(column)) {
+    for (Header header : headers()) {
+      if (header.field().name().equals(column)) {
         index = i;
         break;
       }
@@ -63,22 +62,11 @@ public interface Table extends Iterable<List<Object>> {
   }
 
   default int index(Field field) {
-    int index = -1, i = 0;
-    for (Field header : headers()) {
-      if (header.equals(field)) {
-        index = i;
-        break;
-      }
-      i++;
-    }
+    int index = headers().stream().map(Header::field).toList().indexOf(field);
     if (index < 0) {
       throw new IllegalArgumentException("no field named " + field);
     }
     return index;
-  }
-
-  default boolean isMeasure(Field field) {
-    return measures().stream().map(Measure::alias).anyMatch(measureName -> measureName.equals(field.name()));
   }
 
   /**
@@ -94,8 +82,8 @@ public interface Table extends Iterable<List<Object>> {
     }
     List<Object> result = new ArrayList<>();
     headers().forEach(header -> {
-      if (!isMeasure(header)) {
-        result.add(getColumnValues(header.name()).get(rowIndex));
+      if (!header.isMeasure()) {
+        result.add(getColumnValues(header.field().name()).get(rowIndex));
       }
     });
     return result;

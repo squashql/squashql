@@ -23,15 +23,15 @@ public class BucketerExecutor {
 
     MutableIntSet indexColsInPrefetch = new IntHashSet();
     List<Field> newColumns = bucketColumnSetDto.getNewColumns();
-    List<Field> finalHeaders = new ArrayList<>(table.headers());
+    List<Header> finalHeaders = new ArrayList<>(table.headers());
     for (int i = 0; i < newColumns.size(); i++) {
       Field field = newColumns.get(i);
       if (!bucketColumnSetDto.getColumnsForPrefetching().contains(field.name())) {
         indexColsInPrefetch.add(i);
       }
-
-      if (!table.headers().contains(field)) {
-        finalHeaders.add(field); // append to the end
+      Header header = new Header(field, false);
+      if (!table.headers().contains(header)) {
+        finalHeaders.add(header); // append to the end
       }
     }
 

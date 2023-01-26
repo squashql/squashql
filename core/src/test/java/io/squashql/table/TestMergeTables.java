@@ -2,6 +2,7 @@ package io.squashql.table;
 
 import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.ColumnarTable;
+import io.squashql.query.Header;
 import io.squashql.query.Table;
 import io.squashql.store.Field;
 import java.util.ArrayList;
@@ -24,8 +25,9 @@ class TestMergeTables {
     | MDD      | C        | 5         |
      */
     Table rightTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("price.sum", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MDD", "MDD")),
@@ -47,8 +49,9 @@ class TestMergeTables {
     | MDD      | C        | 5         |
      */
     Table leftTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("price.sum", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MDD", "MDD")),
@@ -68,7 +71,8 @@ class TestMergeTables {
     | MDD      | 12        |
      */
     Table leftTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("price.sum", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MDD")),
@@ -81,7 +85,8 @@ class TestMergeTables {
     | C        | 5         |
      */
     Table rightTable = new ColumnarTable(
-            List.of(new Field("category", String.class), new Field("price.sum", int.class)),
+            List.of(new Header(new Field("category", String.class), false),
+                    new Header(new Field("price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             List.of(
                     new ArrayList<>(Arrays.asList("A", "B", "C")),
@@ -102,8 +107,9 @@ class TestMergeTables {
     | MDD      | C        | 5         |
      */
     Table leftTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("price.sum", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MDD", "MDD")),
@@ -118,8 +124,9 @@ class TestMergeTables {
     | MDD      | C        | 5         |
      */
     Table rightTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("price.avg", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("price.avg", int.class), true)),
             Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MDD", "MDD")),
@@ -135,8 +142,10 @@ class TestMergeTables {
     | MDD      | C        | 5         | 5         |
      */
     Table expectedTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("price.sum", int.class), new Field("price.avg", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("price.sum", int.class), true),
+                    new Header(new Field("price.avg", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
@@ -158,8 +167,9 @@ class TestMergeTables {
     | MN       | B        | 25        |
      */
     Table leftTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("price.sum", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
@@ -173,8 +183,9 @@ class TestMergeTables {
     | MN       | B        | 3         |
      */
     Table rightTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("price.avg", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("price.avg", int.class), true)),
             Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
@@ -190,8 +201,10 @@ class TestMergeTables {
     | MN       | B        | 25        | 3         |
      */
     Table expectedTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("price.sum", int.class), new Field("price.avg", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("price.sum", int.class), true),
+                    new Header(new Field("price.avg", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
@@ -213,8 +226,9 @@ class TestMergeTables {
     | MN       | B        | 25        |
      */
     Table leftTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("price.sum", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
@@ -229,8 +243,10 @@ class TestMergeTables {
     | MN       | B        | SUPER U | 3         |
      */
     Table rightTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("company", String.class), new Field("price.avg", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("company", String.class), false),
+                    new Header(new Field("price.avg", int.class), true)),
             Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN", "MN")),
@@ -250,9 +266,11 @@ class TestMergeTables {
     | MN       | B        | SUPER U     | null      | 3         |
      */
     Table expectedTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("company", String.class), new Field("price.sum", int.class),
-                    new Field("price.avg", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("company", String.class), false),
+                    new Header(new Field("price.sum", int.class), true),
+                    new Header(new Field("price.avg", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
@@ -276,8 +294,9 @@ class TestMergeTables {
     | MN       | B        | 25        |
      */
     Table leftTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("price.sum", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
@@ -291,8 +310,10 @@ class TestMergeTables {
     | MN       | B        | SUPER U     | 3         |
      */
     Table rightTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("company", String.class), new Field("price.avg", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("company", String.class), false),
+                    new Header(new Field("price.avg", int.class), true)),
             Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MN")),
@@ -310,9 +331,11 @@ class TestMergeTables {
     | MN       | B        | SUPER U     | null      | 3         |
      */
     Table expectedTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("company", String.class), new Field("price.sum", int.class),
-                    new Field("price.avg", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("company", String.class), false),
+                    new Header(new Field("price.sum", int.class), true),
+                    new Header(new Field("price.avg", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
@@ -335,8 +358,9 @@ class TestMergeTables {
     | MN       | B        | 25        |
      */
     Table leftTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("price.sum", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
@@ -351,8 +375,9 @@ class TestMergeTables {
     | MN       | SUPER U     | 3         |
      */
     Table rightTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("company", String.class),
-                    new Field("price.avg", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("company", String.class), false),
+                    new Header(new Field("price.avg", int.class), true)),
             Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN", "MN")),
@@ -371,9 +396,11 @@ class TestMergeTables {
     | MN       | B           | ___total___ | 25        | null      |
      */
     Table expectedTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("company", String.class), new Field("price.sum", int.class),
-                    new Field("price.avg", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("company", String.class), false),
+                    new Header(new Field("price.sum", int.class), true),
+                    new Header(new Field("price.avg", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
@@ -400,8 +427,9 @@ class TestMergeTables {
     | MN          | A           | 12        |
      */
     Table leftTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("price.sum", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "MDD", "MDD", "MN", "MN")),
@@ -415,7 +443,8 @@ class TestMergeTables {
     | PP          | 3         |
      */
     Table rightTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("price.avg", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("price.avg", int.class), true)),
             Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "MDD", "PP")),
@@ -432,8 +461,10 @@ class TestMergeTables {
     | PP          | ___total___ | null      | 3         |
      */
     Table expectedTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("price.sum", int.class), new Field("price.avg", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("price.sum", int.class), true),
+                    new Header(new Field("price.avg", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
@@ -457,7 +488,8 @@ class TestMergeTables {
     | PP          | 18        |
      */
     Table leftTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("price.sum", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "MDD", "MN", "PP")),
@@ -470,7 +502,8 @@ class TestMergeTables {
     | B           | 3         |
      */
     Table rightTable = new ColumnarTable(
-            List.of(new Field("category", String.class), new Field("price.avg", int.class)),
+            List.of(new Header(new Field("category", String.class), false),
+                    new Header(new Field("price.avg", int.class), true)),
             Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "A", "B")),
@@ -487,8 +520,10 @@ class TestMergeTables {
     | PP          | ___total___ | 18        | null      |
      */
     Table expectedTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("price.sum", int.class), new Field("price.avg", int.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("price.sum", int.class), true),
+                    new Header(new Field("price.avg", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
@@ -512,8 +547,9 @@ class TestMergeTables {
     | PP          | 450      | 50     |
      */
     Table table1 = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("Turnover", double.class),
-                    new Field("Margin", double.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("Turnover", double.class), true),
+                    new Header(new Field("Margin", double.class), true)),
             Set.of(new AggregatedMeasure("Turnover", "unit_turnover", "sum"),
                     new AggregatedMeasure("Margin", "unit_margin", "sum")),
             List.of(
@@ -531,8 +567,9 @@ class TestMergeTables {
     | MN          | C           | -0.05          |
      */
     Table table2 = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("PriceVariation", double.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("PriceVariation", double.class), true)),
             Set.of(new AggregatedMeasure("PriceVariation", "price_variation", "avg")),
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "MDD", "MDD", "MN", "MN", "MN")),
@@ -548,7 +585,8 @@ class TestMergeTables {
     | SUPER U     | 101        |
      */
     Table table3 = new ColumnarTable(
-            List.of(new Field("company", String.class), new Field("PriceIndex", double.class)),
+            List.of(new Header(new Field("company", String.class), false),
+                    new Header(new Field("PriceIndex", double.class), true)),
             Set.of(new AggregatedMeasure("PriceIndex", "price_index", "avg")),
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "CARREFOUR", "LECLERC", "SUPER U")),
@@ -570,10 +608,13 @@ class TestMergeTables {
     | PP          | ___total___ | ___total___ | 450      | 50     | null           | null       |
      */
     Table expectedTable = new ColumnarTable(
-            List.of(new Field("typology", String.class), new Field("category", String.class),
-                    new Field("company", String.class), new Field("Turnover", double.class),
-                    new Field("Margin", double.class), new Field("PriceVariation", double.class),
-                    new Field("PriceIndex", double.class)),
+            List.of(new Header(new Field("typology", String.class), false),
+                    new Header(new Field("category", String.class), false),
+                    new Header(new Field("company", String.class), false),
+                    new Header(new Field("Turnover", double.class), true),
+                    new Header(new Field("Margin", double.class), true),
+                    new Header(new Field("PriceVariation", double.class), true),
+                    new Header(new Field("PriceIndex", double.class), true)),
             Set.of(new AggregatedMeasure("Turnover", "unit_turnover", "sum"),
                     new AggregatedMeasure("Margin", "unit_margin", "sum"),
                     new AggregatedMeasure("PriceVariation", "price_variation", "avg"),

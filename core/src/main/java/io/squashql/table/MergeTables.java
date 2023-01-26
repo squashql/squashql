@@ -1,6 +1,7 @@
 package io.squashql.table;
 
 import io.squashql.query.ColumnarTable;
+import io.squashql.query.Header;
 import io.squashql.query.Measure;
 import io.squashql.query.Table;
 import io.squashql.query.database.SQLTranslator;
@@ -41,7 +42,7 @@ class MergeTables {
       return leftTable;
     }
 
-    final List<Field> mergedTableHeaders = mergeHeaders(leftTable, rightTable);
+    final List<Header> mergedTableHeaders = mergeHeaders(leftTable, rightTable);
     final Set<Measure> mergedTableMeasures = mergeMeasures(leftTable.measures(), rightTable.measures());
     int mergedTableHeaderSize = mergedTableHeaders.size();
     int mergedTableColumnSize = mergedTableHeaderSize - mergedTableMeasures.size();
@@ -56,22 +57,22 @@ class MergeTables {
 
   }
 
-  private static int getCommonColumnsCount(List<Field> leftHeaders, List<Field> rightHeaders) {
+  private static int getCommonColumnsCount(List<Header> leftHeaders, List<Header> rightHeaders) {
     return leftHeaders.stream().filter(rightHeaders::contains).mapToInt(e -> 1).sum();
   }
 
-  private static List<Field> mergeHeaders(Table leftTable, Table rightTable) {
-    List<Field> mergedColumns = new ArrayList<>();
-    List<Field> mergedMeasures = new ArrayList<>();
+  private static List<Header> mergeHeaders(Table leftTable, Table rightTable) {
+    List<Header> mergedColumns = new ArrayList<>();
+    List<Header> mergedMeasures = new ArrayList<>();
     leftTable.headers().forEach(leftHeader -> {
-      if (leftTable.isMeasure(leftHeader)) {
+      if (leftHeader.isMeasure()) {
         mergedMeasures.add(leftHeader);
       } else {
         mergedColumns.add(leftHeader);
       }
     });
     rightTable.headers().forEach(rightHeader -> {
-      if (rightTable.isMeasure(rightHeader)) {
+      if (rightHeader.isMeasure()) {
         if (!mergedMeasures.contains(rightHeader)) {
           mergedMeasures.add(rightHeader);
         }
@@ -81,7 +82,7 @@ class MergeTables {
         }
       }
     });
-    List<Field> mergedTableHeaders = new ArrayList<>(mergedColumns);
+    List<Header> mergedTableHeaders = new ArrayList<>(mergedColumns);
     mergedTableHeaders.addAll(mergedMeasures);
     return mergedTableHeaders;
   }
@@ -102,12 +103,12 @@ class MergeTables {
   }
 
   private static List<List<Object>> mergeValues(
-          List<Field> mergedTableHeaders,
+          List<Header> mergedTableHeaders,
           int[] mergedTableColumnIndices,
           Table leftTable,
-          List<Field> leftHeaders,
+          List<Header> leftHeaders,
           Table rightTable,
-          List<Field> rightHeaders) {
+          List<Header> rightHeaders) {
     // values initialization
     final List<List<Object>> mergedValues = new ArrayList<>();
     for (int i = 0; i < mergedTableHeaders.size(); i++) {
@@ -182,7 +183,7 @@ class MergeTables {
     return leftRow.size() == commonColumnsCount ? MergeRowsStrategy.KEEP_LEFT : MergeRowsStrategy.KEEP_RIGHT;
   }
 
-  private static void addRowFromTableToValues(List<List<Object>> values, List<Field> headers, int[] columnIndices,
+  private static void addRowFromTableToValues(List<List<Object>> values, List<Header> headers, int[] columnIndices,
           Table table, int rowToAddIndex) {
     for (int index = 0; index < headers.size(); index++) {
       Object element = null;
@@ -192,23 +193,23 @@ class MergeTables {
           break;
         }
       }
-      Field header = headers.get(index);
+      Header header = headers.get(index);
       if (table.headers().contains(header)) {
-        element = table.getColumnValues(header.name()).get(rowToAddIndex);
+        element = table.getColumnValues(header.field().name()).get(rowToAddIndex);
       }
       values.get(index).add(element);
     }
   }
 
-  private static void addMergedRowToValues(List<List<Object>> values, List<Field> headers, Table leftTable,
+  private static void addMergedRowToValues(List<List<Object>> values, List<Header> headers, Table leftTable,
           int leftRowIndex, Table rightTable, int rightRowIndex) {
     for (int index = 0; index < headers.size(); index++) {
       Object element;
-      Field header = headers.get(index);
+      Header header = headers.get(index);
       if (leftTable.headers().contains(header)) {
-        element = leftTable.getColumnValues(header.name()).get(leftRowIndex);
+        element = leftTable.getColumnValues(header.field().name()).get(leftRowIndex);
       } else {
-        element = rightTable.getColumnValues(header.name()).get(rightRowIndex);
+        element = rightTable.getColumnValues(header.field().name()).get(rightRowIndex);
       }
       values.get(index).add(element);
     }

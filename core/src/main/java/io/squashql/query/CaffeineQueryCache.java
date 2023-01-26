@@ -46,8 +46,8 @@ public class CaffeineQueryCache implements QueryCache {
   @Override
   public ColumnarTable createRawResult(PrefetchQueryScope scope) {
     Set<Field> columns = scope.columns();
-    List<Field> headers = new ArrayList<>(columns);
-    headers.add(new Field(CountMeasure.ALIAS, long.class));
+    List<Header> headers = new ArrayList<>(columns.stream().map(column -> new Header(column, false)).toList());
+    headers.add(new Header(new Field(CountMeasure.ALIAS, long.class), true));
 
     List<List<Object>> values = new ArrayList<>();
     Table table = this.results.getIfPresent(scope);

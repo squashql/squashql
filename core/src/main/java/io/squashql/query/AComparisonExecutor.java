@@ -29,14 +29,14 @@ public abstract class AComparisonExecutor {
     MutableObjectIntMap<String> indexByColumn = new ObjectIntHashMap<>();
     int readFromTableHeaderSize = readFromTable.headers().size();
     for (int index=0; index<readFromTableHeaderSize; index++) {
-      Field readFromTableHeader = readFromTable.headers().get(index);
-      if (!readFromTable.isMeasure(readFromTableHeader)) {
-        indexByColumn.put(readFromTableHeader.name(), index);
+      Header readFromTableHeader = readFromTable.headers().get(index);
+      if (!readFromTableHeader.isMeasure()) {
+        indexByColumn.put(readFromTableHeader.field().name(), index);
       }
     }
     BiPredicate<Object[], Field[]> procedure = createShiftProcedure(cm, indexByColumn);
 
-    int readFromTableColumnsCount = readFromTable.headers().stream().filter(field -> !readFromTable.isMeasure(field))
+    int readFromTableColumnsCount = readFromTable.headers().stream().filter(header -> !header.isMeasure())
             .mapToInt(e -> 1).sum();
     Object[] buffer = new Object[readFromTableColumnsCount];
     Field[] fields = new Field[readFromTableColumnsCount];
@@ -49,9 +49,9 @@ public abstract class AComparisonExecutor {
     writeToTable.forEach(row -> {
       int i = 0;
       for (int columnIndex=0; columnIndex < readFromTableHeaderSize; columnIndex++) {
-        Field header = readFromTable.headers().get(columnIndex);
-        if (!readFromTable.isMeasure(header)) {
-          fields[i] = header;
+        Header header = readFromTable.headers().get(columnIndex);
+        if (!header.isMeasure()) {
+          fields[i] = header.field();
           int index = mapping.getIfAbsent(columnIndex, -1);
           buffer[i] = row.get(index);
           i++;
@@ -76,9 +76,9 @@ public abstract class AComparisonExecutor {
   public IntIntMap buildMapping(Table writeToTable, Table readFromTable) {
     MutableIntIntMap mapping = new IntIntHashMap();
     for (int index=0; index < readFromTable.headers().size(); index++) {
-      Field field = readFromTable.headers().get(index);
-      if (readFromTable.isMeasure(field)) {
-        int writeToTableIndex = writeToTable.index(field);
+      Header header = readFromTable.headers().get(index);
+      if (header.isMeasure()) {
+        int writeToTableIndex = writeToTable.index(header.field());
         mapping.put(index, writeToTableIndex);
       }
     }

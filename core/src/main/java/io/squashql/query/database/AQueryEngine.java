@@ -1,5 +1,6 @@
 package io.squashql.query.database;
 
+import io.squashql.query.Header;
 import lombok.extern.slf4j.Slf4j;
 import io.squashql.query.ColumnarTable;
 import io.squashql.query.CountMeasure;
@@ -113,16 +114,16 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
    */
   protected Table postProcessDataset(Table input, DatabaseQuery query) {
     if (!query.rollup.isEmpty()) {
-      List<Field> newFields = new ArrayList<>();
+      List<Header> newHeaders = new ArrayList<>();
       List<List<Object>> newValues = new ArrayList<>();
       for (int i = 0; i < input.headers().size(); i++) {
-        Field header = input.headers().get(i);
+        Header header = input.headers().get(i);
         List<Object> columnValues = input.getColumn(i);
         if (i < query.select.size() || i >= query.select.size() + query.rollup.size()) {
-          newFields.add(header);
+          newHeaders.add(header);
           newValues.add(columnValues);
         } else {
-          String baseName = Objects.requireNonNull(SqlUtils.extractFieldFromGroupingAlias(header.name()));
+          String baseName = Objects.requireNonNull(SqlUtils.extractFieldFromGroupingAlias(header.field().name()));
           List<Object> baseColumnValues = input.getColumnValues(baseName);
           for (int rowIndex = 0; rowIndex < columnValues.size(); rowIndex++) {
             if (((Number) columnValues.get(rowIndex)).longValue() == 1) {
@@ -134,7 +135,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
       }
 
       return new ColumnarTable(
-              newFields,
+              newHeaders,
               input.measures(),
               newValues);
     } else {

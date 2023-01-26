@@ -9,15 +9,16 @@ import java.util.function.Supplier;
 
 public class ColumnarTable implements Table {
 
-  protected final List<Field> headers;
+  protected final List<Header> headers;
   protected final Set<Measure> measures;
 
   protected final Supplier<ObjectArrayDictionary> pointDictionary;
   protected final List<List<Object>> values;
 
-  public ColumnarTable(List<Field> headers, Set<Measure> measures, List<List<Object>> values) {
+  public ColumnarTable(List<Header> headers, Set<Measure> measures, List<List<Object>> values) {
+    // TODO fix
     measures.forEach(measure -> {
-      if (headers.stream().noneMatch(header -> header.name().equals(measure.alias()))) {
+      if (headers.stream().noneMatch(header -> header.field().name().equals(measure.alias()))) {
         throw new IllegalArgumentException(String.format("Measure %s is absent of headers", measure));
       }
     });
@@ -28,13 +29,13 @@ public class ColumnarTable implements Table {
   }
 
   public static ObjectArrayDictionary createPointDictionary(Table table) {
-    int pointLength = table.headers().stream().filter(header -> !table.isMeasure(header)).mapToInt(e -> 1).sum();
+    int pointLength = table.headers().stream().filter(header -> !header.isMeasure()).mapToInt(e -> 1).sum();
     ObjectArrayDictionary dictionary = new ObjectArrayDictionary(pointLength);
     table.forEach(row -> {
       Object[] columnValues = new Object[pointLength];
       int i = 0;
-      for (int index=0; index <table.headers().size(); index++) {
-        if (!table.isMeasure(table.headers().get(index))) {
+      for (int index = 0; index < table.headers().size(); index++) {
+        if (!table.headers().get(index).isMeasure()) {
           columnValues[i++] = row.get(index);
         }
       }
@@ -45,7 +46,7 @@ public class ColumnarTable implements Table {
 
   @Override
   public void addAggregates(Field field, Measure measure, List<Object> values) {
-    this.headers.add(field);
+    this.headers.add(new Header(field, true));
     this.measures.add(measure);
     this.values.add(values);
   }
@@ -75,7 +76,7 @@ public class ColumnarTable implements Table {
   }
 
   @Override
-  public List<Field> headers() {
+  public List<Header> headers() {
     return this.headers;
   }
 
@@ -128,7 +129,7 @@ public class ColumnarTable implements Table {
       return false;
     }
     ColumnarTable lists = (ColumnarTable) o;
-    return headers.equals(lists.headers) && measures.equals(lists.measures)  && values.equals(lists.values);
+    return headers.equals(lists.headers) && measures.equals(lists.measures) && values.equals(lists.values);
   }
 
   @Override

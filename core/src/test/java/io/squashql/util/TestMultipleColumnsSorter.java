@@ -1,6 +1,7 @@
 package io.squashql.util;
 
 import io.squashql.query.ColumnarTable;
+import io.squashql.query.Header;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -74,10 +75,10 @@ public class TestMultipleColumnsSorter {
 
   // To easily check the result.
   private void print(List<Object> c1, List<Object> c2, List<Object> c3, int[] sort) {
-    List<Field> headers = Arrays.asList(
-            new Field("c1", String.class),
-            new Field("c2", String.class),
-            new Field("c3", String.class));
+    List<Header> headers = Arrays.asList(
+            new Header(new Field("c1", String.class), false),
+            new Header(new Field("c2", String.class), false),
+            new Header(new Field("c3", String.class), false));
     new ColumnarTable(headers, Collections.emptySet(), List.of(c1, c2, c3))
             .show();
 
@@ -87,9 +88,9 @@ public class TestMultipleColumnsSorter {
   }
 
   private void print(List<Object> c1, List<Object> c2, int[] sort) {
-    List<Field> headers = Arrays.asList(
-            new Field("c1", String.class),
-            new Field("c2", String.class));
+    List<Header> headers = Arrays.asList(
+            new Header(new Field("c1", String.class), false),
+            new Header(new Field("c2", String.class), false));
     new ColumnarTable(headers, Collections.emptySet(), List.of(c1, c2))
             .show();
 

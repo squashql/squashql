@@ -7,13 +7,11 @@ import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
 import io.squashql.util.NullAndTotalComparator;
-import io.squashql.util.SquashQLArrays;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.Queries;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class TableUtils {
@@ -91,17 +89,17 @@ public class TableUtils {
 
   public static List<MetadataItem> buildTableMetadata(Table t) {
     List<MetadataItem> metadata = new ArrayList<>();
-    for (Field field : t.headers()) {
-      Optional<Measure> optionalMeasure = t.measures().stream().filter(m -> m.alias().equals(field.name())).findAny();
+    for (Header header : t.headers()) {
+      Optional<Measure> optionalMeasure = t.measures().stream().filter(m -> m.alias().equals(header.field().name())).findAny();
       if (optionalMeasure.isPresent()) {
         Measure measure = optionalMeasure.get();
         String expression = measure.expression();
         if (expression == null) {
           measure = measure.withExpression(MeasureUtils.createExpression(measure));
         }
-        metadata.add(new MetadataItem(field.name(), measure.expression(), field.type()));
+        metadata.add(new MetadataItem(header.field().name(), measure.expression(), header.field().type()));
       } else {
-        metadata.add(new MetadataItem(field.name(), field.name(), field.type()));
+        metadata.add(new MetadataItem(header.field().name(), header.field().name(), header.field().type()));
       }
     }
     return metadata;
@@ -115,22 +113,22 @@ public class TableUtils {
     List<String> finalColumns = new ArrayList<>();
     queryDto.columnSets.values()
             .forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
-    queryDto.columns.forEach(finalColumns::add);
+    finalColumns.addAll(queryDto.columns);
 
     // Once complete, construct the final result with columns in correct order.
-    List<Field> fields = new ArrayList<>();
+    List<Header> headers = new ArrayList<>();
     List<List<Object>> values = new ArrayList<>();
     for (String finalColumn : finalColumns) {
-      fields.add(table.getField(finalColumn));
+      headers.add(new Header(table.getField(finalColumn), false));
       values.add(Objects.requireNonNull(table.getColumnValues(finalColumn)));
     }
 
     for (Measure measure : queryDto.measures) {
-      fields.add(table.getField(measure));
+      headers.add(new Header(table.getField(measure), true));
       values.add(Objects.requireNonNull(table.getAggregateValues(measure)));
     }
 
-    return new ColumnarTable(fields, queryDto.measures, values);
+    return new ColumnarTable(headers, queryDto.measures, values);
   }
 
   public static Table orderRows(ColumnarTable table, QueryDto queryDto) {
@@ -139,16 +137,16 @@ public class TableUtils {
     List<Comparator<?>> comparators = new ArrayList<>();
 
     boolean hasComparatorOnMeasure = false;
-    List<Field> headers = table.headers;
-    for (Field header : headers) {
-      if (table.isMeasure(header)) {
-        hasComparatorOnMeasure |= comparatorByColumnName.containsKey(header.name());
+    List<Header> headers = table.headers;
+    for (Header header : headers) {
+      if (header.isMeasure()) {
+        hasComparatorOnMeasure |= comparatorByColumnName.containsKey(header.field().name());
       }
     }
 
     for (int i = 0; i < headers.size(); i++) {
-      boolean isColumn = !table.isMeasure(table.headers().get(i));
-      String headerName = headers.get(i).name();
+      boolean isColumn = !table.headers().get(i).isMeasure();
+      String headerName = headers.get(i).field().name();
       Comparator<?> queryComp = comparatorByColumnName.get(headerName);
       // Order a column even if not explicitly asked in the query only if no comparator on any measure
       if (queryComp != null || (isColumn && !hasComparatorOnMeasure)) {
@@ -202,7 +200,7 @@ public class TableUtils {
       boolean grandTotal = true;
       String total = QueryEngine.TOTAL;
       for (int i = 0; i < table.headers().size(); i++) {
-        if (!table.isMeasure(table.headers().get(i))) {
+        if (!table.headers().get(i).isMeasure()) {
           boolean isTotalCell = SQLTranslator.TOTAL_CELL.equals(table.getColumn(i).get(rowIndex));
           if (isTotalCell) {
             table.getColumn(i).set(rowIndex, total);
@@ -214,7 +212,7 @@ public class TableUtils {
 
       if (grandTotal) {
         for (int i = 1; i < table.headers().size(); i++) {
-          if (!table.isMeasure(table.headers().get(i))) {
+          if (!table.headers().get(i).isMeasure()) {
             table.getColumn(i).set(rowIndex, null);
           }
         }
