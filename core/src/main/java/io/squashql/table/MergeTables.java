@@ -1,16 +1,15 @@
 package io.squashql.table;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.Measure;
 import io.squashql.query.Table;
 import io.squashql.query.database.SQLTranslator;
-import io.squashql.store.Field;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.IntStream;
 
 class MergeTables {
 
@@ -44,17 +43,12 @@ class MergeTables {
 
     final List<Header> mergedTableHeaders = mergeHeaders(leftTable, rightTable);
     final Set<Measure> mergedTableMeasures = mergeMeasures(leftTable.measures(), rightTable.measures());
-    int mergedTableHeaderSize = mergedTableHeaders.size();
-    int mergedTableColumnSize = mergedTableHeaderSize - mergedTableMeasures.size();
-    final int[] mergedTableColumnIndices = IntStream.range(0, mergedTableColumnSize).toArray();
-    final List<List<Object>> mergedValues = mergeValues(mergedTableHeaders, mergedTableColumnIndices, leftTable,
-            leftTable.headers(), rightTable, rightTable.headers());
+    final List<List<Object>> mergedValues = mergeValues(mergedTableHeaders, leftTable, rightTable);
 
     return new ColumnarTable(
             mergedTableHeaders,
             mergedTableMeasures,
             mergedValues);
-
   }
 
   private static int getCommonColumnsCount(List<Header> leftHeaders, List<Header> rightHeaders) {
@@ -73,7 +67,11 @@ class MergeTables {
     });
     rightTable.headers().forEach(rightHeader -> {
       if (rightHeader.isMeasure()) {
-        if (!mergedMeasures.contains(rightHeader)) {
+        if (mergedMeasures.contains(rightHeader)) {
+          throw new UnsupportedOperationException(String.format(
+                  "The two tables both contain the measure %s while they must not share any measure to be merged.",
+                  rightHeader.field().name()));
+        } else {
           mergedMeasures.add(rightHeader);
         }
       } else {
@@ -88,48 +86,36 @@ class MergeTables {
   }
 
   private static Set<Measure> mergeMeasures(Set<Measure> leftMeasures, Set<Measure> rightMeasures) {
-    Set<Measure> mergedTableMeasures = new HashSet<>(leftMeasures);
-    for (Measure rightTableMeasure : rightMeasures) {
-      if (mergedTableMeasures.contains(rightTableMeasure)) {
-        // TODO : this should be checked in headers + array isMeasure
-        throw new UnsupportedOperationException(String.format(
-                "The two tables both contain the measure %s while they must not share any measure to be merged.",
-                rightTableMeasure));
-      } else {
-        mergedTableMeasures.add(rightTableMeasure);
-      }
-    }
-    return mergedTableMeasures;
+    return Sets.newHashSet(Iterables.concat(leftMeasures, rightMeasures));
   }
 
   private static List<List<Object>> mergeValues(
           List<Header> mergedTableHeaders,
-          int[] mergedTableColumnIndices,
           Table leftTable,
-          List<Header> leftHeaders,
-          Table rightTable,
-          List<Header> rightHeaders) {
+          Table rightTable) {
     // values initialization
     final List<List<Object>> mergedValues = new ArrayList<>();
     for (int i = 0; i < mergedTableHeaders.size(); i++) {
       mergedValues.add(new ArrayList<>());
     }
 
+    List<Header> leftHeaders = leftTable.headers();
+    List<Header> rightHeaders = rightTable.headers();
+    int commonColumnsCount = getCommonColumnsCount(leftHeaders, rightHeaders);
+
     int leftRowIndex = 0;
     int rightRowIndex = 0;
     List<Object> leftRow = leftTable.getFactRow(leftRowIndex);
     List<Object> rightRow = rightTable.getFactRow(rightRowIndex);
-    int commonColumnsCount = getCommonColumnsCount(leftHeaders, rightHeaders);
     while (leftRow != null || rightRow != null) {
       MergeRowsStrategy mergeRowsStrategy = getMergeRowsStrategy(leftRow, rightRow, commonColumnsCount);
       switch (mergeRowsStrategy) {
         case KEEP_LEFT -> {
-          addRowFromTableToValues(mergedValues, mergedTableHeaders, mergedTableColumnIndices, leftTable, leftRowIndex);
+          addRowFromTableToValues(mergedValues, mergedTableHeaders, leftTable, leftRowIndex);
           leftRow = leftTable.getFactRow(++leftRowIndex);
         }
         case KEEP_RIGHT -> {
-          addRowFromTableToValues(mergedValues, mergedTableHeaders, mergedTableColumnIndices, rightTable,
-                  rightRowIndex);
+          addRowFromTableToValues(mergedValues, mergedTableHeaders, rightTable, rightRowIndex);
           rightRow = rightTable.getFactRow(++rightRowIndex);
         }
         case MERGE -> {
@@ -183,17 +169,11 @@ class MergeTables {
     return leftRow.size() == commonColumnsCount ? MergeRowsStrategy.KEEP_LEFT : MergeRowsStrategy.KEEP_RIGHT;
   }
 
-  private static void addRowFromTableToValues(List<List<Object>> values, List<Header> headers, int[] columnIndices,
-          Table table, int rowToAddIndex) {
+  private static void addRowFromTableToValues(List<List<Object>> values, List<Header> headers, Table table,
+          int rowToAddIndex) {
     for (int index = 0; index < headers.size(); index++) {
-      Object element = null;
-      for (int columnIndex : columnIndices) {
-        if (index == columnIndex) {
-          element = SQLTranslator.TOTAL_CELL;
-          break;
-        }
-      }
       Header header = headers.get(index);
+      Object element = header.isMeasure() ? null : SQLTranslator.TOTAL_CELL;
       if (table.headers().contains(header)) {
         element = table.getColumnValues(header.field().name()).get(rowToAddIndex);
       }

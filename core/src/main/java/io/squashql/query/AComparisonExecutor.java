@@ -20,7 +20,8 @@ public abstract class AComparisonExecutor {
 
   public static final String REF_POS_FIRST = "first";
 
-  protected abstract BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn);
+  protected abstract BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm,
+          ObjectIntMap<String> indexByColumn);
 
   public List<Object> compare(
           ComparisonMeasureReferencePosition cm,
@@ -28,7 +29,7 @@ public abstract class AComparisonExecutor {
           Table readFromTable) {
     MutableObjectIntMap<String> indexByColumn = new ObjectIntHashMap<>();
     int readFromTableHeaderSize = readFromTable.headers().size();
-    for (int index=0; index<readFromTableHeaderSize; index++) {
+    for (int index = 0; index < readFromTableHeaderSize; index++) {
       Header readFromTableHeader = readFromTable.headers().get(index);
       if (!readFromTableHeader.isMeasure()) {
         indexByColumn.put(readFromTableHeader.field().name(), index);
@@ -43,12 +44,13 @@ public abstract class AComparisonExecutor {
     List<Object> result = new ArrayList<>((int) writeToTable.count());
     List<Object> readAggregateValues = readFromTable.getAggregateValues(cm.measure);
     List<Object> writeAggregateValues = writeToTable.getAggregateValues(cm.measure);
-    BiFunction<Number, Number, Number> comparisonBiFunction = BinaryOperations.createComparisonBiFunction(cm.comparisonMethod, readFromTable.getField(cm.measure).type());
+    BiFunction<Number, Number, Number> comparisonBiFunction = BinaryOperations.createComparisonBiFunction(
+            cm.comparisonMethod, readFromTable.getField(cm.measure).type());
     int[] rowIndex = new int[1];
     IntIntMap mapping = buildMapping(writeToTable, readFromTable); // columns might be in a different order
     writeToTable.forEach(row -> {
       int i = 0;
-      for (int columnIndex=0; columnIndex < readFromTableHeaderSize; columnIndex++) {
+      for (int columnIndex = 0; columnIndex < readFromTableHeaderSize; columnIndex++) {
         Header header = readFromTable.headers().get(columnIndex);
         if (!header.isMeasure()) {
           fields[i] = header.field();
@@ -75,7 +77,7 @@ public abstract class AComparisonExecutor {
 
   public IntIntMap buildMapping(Table writeToTable, Table readFromTable) {
     MutableIntIntMap mapping = new IntIntHashMap();
-    for (int index=0; index < readFromTable.headers().size(); index++) {
+    for (int index = 0; index < readFromTable.headers().size(); index++) {
       Header header = readFromTable.headers().get(index);
       if (header.isMeasure()) {
         int writeToTableIndex = writeToTable.index(header.field());

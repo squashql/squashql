@@ -16,12 +16,11 @@ public class ColumnarTable implements Table {
   protected final List<List<Object>> values;
 
   public ColumnarTable(List<Header> headers, Set<Measure> measures, List<List<Object>> values) {
-    // TODO fix
-    measures.forEach(measure -> {
-      if (headers.stream().noneMatch(header -> header.field().name().equals(measure.alias()))) {
-        throw new IllegalArgumentException(String.format("Measure %s is absent of headers", measure));
-      }
-    });
+    if (headers.stream().filter(Header::isMeasure)
+            .anyMatch(measureHeader -> !measures.stream().map(Measure::alias).toList()
+                    .contains(measureHeader.field().name()))) {
+      throw new IllegalArgumentException("Every header measure should have its description in measures.");
+    }
     this.headers = new ArrayList<>(headers);
     this.measures = new HashSet<>(measures);
     this.values = new ArrayList<>(values);

@@ -90,16 +90,18 @@ public class TableUtils {
   public static List<MetadataItem> buildTableMetadata(Table t) {
     List<MetadataItem> metadata = new ArrayList<>();
     for (Header header : t.headers()) {
-      Optional<Measure> optionalMeasure = t.measures().stream().filter(m -> m.alias().equals(header.field().name())).findAny();
-      if (optionalMeasure.isPresent()) {
+      Field field = header.field();
+      Optional<Measure> optionalMeasure = t.measures().stream().filter(m -> m.alias().equals(header.field().name()))
+              .findAny();
+      if (header.isMeasure() && optionalMeasure.isPresent()) {
         Measure measure = optionalMeasure.get();
         String expression = measure.expression();
         if (expression == null) {
           measure = measure.withExpression(MeasureUtils.createExpression(measure));
         }
-        metadata.add(new MetadataItem(header.field().name(), measure.expression(), header.field().type()));
+        metadata.add(new MetadataItem(field.name(), measure.expression(), field.type()));
       } else {
-        metadata.add(new MetadataItem(header.field().name(), header.field().name(), header.field().type()));
+        metadata.add(new MetadataItem(field.name(), field.name(), field.type()));
       }
     }
     return metadata;
@@ -145,11 +147,10 @@ public class TableUtils {
     }
 
     for (int i = 0; i < headers.size(); i++) {
-      boolean isColumn = !table.headers().get(i).isMeasure();
       String headerName = headers.get(i).field().name();
       Comparator<?> queryComp = comparatorByColumnName.get(headerName);
       // Order a column even if not explicitly asked in the query only if no comparator on any measure
-      if (queryComp != null || (isColumn && !hasComparatorOnMeasure)) {
+      if (queryComp != null || (!headers.get(i).isMeasure() && !hasComparatorOnMeasure)) {
         args.add(table.getColumnValues(headerName));
         // Always order table. If not defined, use natural order comp.
         comparators.add(queryComp == null ? NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder())
@@ -204,7 +205,6 @@ public class TableUtils {
           boolean isTotalCell = SQLTranslator.TOTAL_CELL.equals(table.getColumn(i).get(rowIndex));
           if (isTotalCell) {
             table.getColumn(i).set(rowIndex, total);
-            total = null; // First totalCell, TOTAL is written, null for the others.
           }
           grandTotal &= isTotalCell;
         }

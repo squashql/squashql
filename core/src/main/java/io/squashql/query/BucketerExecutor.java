@@ -12,8 +12,7 @@ import java.util.function.Function;
 
 public class BucketerExecutor {
 
-  public static Table bucket(Table table,
-                             BucketColumnSetDto bucketColumnSetDto) {
+  public static Table bucket(Table table, BucketColumnSetDto bucketColumnSetDto) {
     Function<Object[], List<Object[]>> bucketer = createBucketer(bucketColumnSetDto);
 
     int[] indexColumnsToRead = new int[bucketColumnSetDto.getColumnsForPrefetching().size()];
@@ -75,7 +74,8 @@ public class BucketerExecutor {
     }
     Function<Object[], List<Object[]>> bucketer = toBucketColumnValues -> {
       List<String> buckets = bucketsByValue.get(toBucketColumnValues[0]);
-      return buckets == null ? Collections.emptyList() : buckets.stream().map(b -> new Object[]{b, toBucketColumnValues[0]}).toList();
+      return buckets == null ? Collections.emptyList()
+              : buckets.stream().map(b -> new Object[] {b, toBucketColumnValues[0]}).toList();
     };
     return bucketer;
   }
