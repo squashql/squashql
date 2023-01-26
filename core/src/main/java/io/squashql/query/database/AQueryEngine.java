@@ -136,8 +136,6 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
       return new ColumnarTable(
               newFields,
               input.measures(),
-              IntStream.range(query.select.size(), query.select.size() + query.measures.size()).toArray(),
-              IntStream.range(0, query.select.size()).toArray(),
               newValues);
     } else {
       return input;

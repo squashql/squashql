@@ -6,7 +6,9 @@ import io.squashql.query.Table;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.store.Field;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.IntStream;
 
 class MergeTables {
@@ -39,23 +41,17 @@ class MergeTables {
       return leftTable;
     }
 
-    List<Field> leftHeaders = leftTable.headers();
-    List<Field> rightHeaders = rightTable.headers();
-    final List<Field> mergedTableHeaders = mergeHeaders(leftHeaders, leftTable.columnIndices(),
-            leftTable.measureIndices(), rightHeaders, rightTable.columnIndices(), rightTable.measureIndices());
-    final List<Measure> mergedTableMeasures = mergeMeasures(leftTable.measures(), rightTable.measures());
+    final List<Field> mergedTableHeaders = mergeHeaders(leftTable, rightTable);
+    final Set<Measure> mergedTableMeasures = mergeMeasures(leftTable.measures(), rightTable.measures());
     int mergedTableHeaderSize = mergedTableHeaders.size();
     int mergedTableColumnSize = mergedTableHeaderSize - mergedTableMeasures.size();
     final int[] mergedTableColumnIndices = IntStream.range(0, mergedTableColumnSize).toArray();
-    final int[] mergedTableMeasureIndices = IntStream.range(mergedTableColumnSize, mergedTableHeaderSize).toArray();
     final List<List<Object>> mergedValues = mergeValues(mergedTableHeaders, mergedTableColumnIndices, leftTable,
-            leftHeaders, rightTable, rightHeaders);
+            leftTable.headers(), rightTable, rightTable.headers());
 
     return new ColumnarTable(
             mergedTableHeaders,
             mergedTableMeasures,
-            mergedTableMeasureIndices,
-            mergedTableColumnIndices,
             mergedValues);
 
   }
@@ -64,38 +60,37 @@ class MergeTables {
     return leftHeaders.stream().filter(rightHeaders::contains).mapToInt(e -> 1).sum();
   }
 
-  private static List<Field> mergeHeaders(List<Field> leftHeaders, int[] leftColumnIndices, int[] leftMeasureIndices,
-          List<Field> rightHeaders, int[] rightColumnIndices, int[] rightMeasureIndices) {
-    List<Field> mergedTableHeaders = new ArrayList<>();
-    for (int index : leftColumnIndices) {
-      mergedTableHeaders.add(leftHeaders.get(index));
-    }
-    for (int index : rightColumnIndices) {
-      Field rightTableHeader = rightHeaders.get(index);
-      if (!mergedTableHeaders.contains(rightTableHeader)) {
-        mergedTableHeaders.add(rightTableHeader);
-      }
-    }
-    for (int index : leftMeasureIndices) {
-      mergedTableHeaders.add(leftHeaders.get(index));
-    }
-    for (int index : rightMeasureIndices) {
-      Field rightTableHeader = rightHeaders.get(index);
-      if (mergedTableHeaders.contains(rightTableHeader)) {
-        throw new UnsupportedOperationException(String.format(
-                "The two tables both contain the measure %s while they must not share any measure to be merged.",
-                rightTableHeader.name()));
+  private static List<Field> mergeHeaders(Table leftTable, Table rightTable) {
+    List<Field> mergedColumns = new ArrayList<>();
+    List<Field> mergedMeasures = new ArrayList<>();
+    leftTable.headers().forEach(leftHeader -> {
+      if (leftTable.isMeasure(leftHeader)) {
+        mergedMeasures.add(leftHeader);
       } else {
-        mergedTableHeaders.add(rightTableHeader);
+        mergedColumns.add(leftHeader);
       }
-    }
+    });
+    rightTable.headers().forEach(rightHeader -> {
+      if (rightTable.isMeasure(rightHeader)) {
+        if (!mergedMeasures.contains(rightHeader)) {
+          mergedMeasures.add(rightHeader);
+        }
+      } else {
+        if (!mergedColumns.contains(rightHeader)) {
+          mergedColumns.add(rightHeader);
+        }
+      }
+    });
+    List<Field> mergedTableHeaders = new ArrayList<>(mergedColumns);
+    mergedTableHeaders.addAll(mergedMeasures);
     return mergedTableHeaders;
   }
 
-  private static List<Measure> mergeMeasures(List<Measure> leftMeasures, List<Measure> rightMeasures) {
-    List<Measure> mergedTableMeasures = new ArrayList<>(leftMeasures);
+  private static Set<Measure> mergeMeasures(Set<Measure> leftMeasures, Set<Measure> rightMeasures) {
+    Set<Measure> mergedTableMeasures = new HashSet<>(leftMeasures);
     for (Measure rightTableMeasure : rightMeasures) {
       if (mergedTableMeasures.contains(rightTableMeasure)) {
+        // TODO : this should be checked in headers + array isMeasure
         throw new UnsupportedOperationException(String.format(
                 "The two tables both contain the measure %s while they must not share any measure to be merged.",
                 rightTableMeasure));

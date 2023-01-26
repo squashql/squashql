@@ -10,35 +10,33 @@ import java.util.function.Supplier;
 public class ColumnarTable implements Table {
 
   protected final List<Field> headers;
-  protected final List<Measure> measures;
-  protected final int[] columnsIndices;
-  protected int[] measureIndices;
+  protected final Set<Measure> measures;
 
   protected final Supplier<ObjectArrayDictionary> pointDictionary;
   protected final List<List<Object>> values;
 
-  public ColumnarTable(List<Field> headers,
-          List<Measure> measures,
-          int[] measureIndices,
-          int[] columnsIndices,
-          List<List<Object>> values) {
+  public ColumnarTable(List<Field> headers, Set<Measure> measures, List<List<Object>> values) {
+    measures.forEach(measure -> {
+      if (headers.stream().noneMatch(header -> header.name().equals(measure.alias()))) {
+        throw new IllegalArgumentException(String.format("Measure %s is absent of headers", measure));
+      }
+    });
     this.headers = new ArrayList<>(headers);
-    this.measures = new ArrayList<>(measures);
+    this.measures = new HashSet<>(measures);
     this.values = new ArrayList<>(values);
-    this.measureIndices = measureIndices;
-    this.columnsIndices = columnsIndices;
     this.pointDictionary = Suppliers.memoize(() -> createPointDictionary(this));
   }
 
   public static ObjectArrayDictionary createPointDictionary(Table table) {
-    int[] columnIndices = table.columnIndices();
-    int pointLength = columnIndices.length;
+    int pointLength = table.headers().stream().filter(header -> !table.isMeasure(header)).mapToInt(e -> 1).sum();
     ObjectArrayDictionary dictionary = new ObjectArrayDictionary(pointLength);
     table.forEach(row -> {
       Object[] columnValues = new Object[pointLength];
       int i = 0;
-      for (int columnIndex : columnIndices) {
-        columnValues[i++] = row.get(columnIndex);
+      for (int index=0; index <table.headers().size(); index++) {
+        if (!table.isMeasure(table.headers().get(index))) {
+          columnValues[i++] = row.get(index);
+        }
       }
       dictionary.map(columnValues);
     });
@@ -49,8 +47,6 @@ public class ColumnarTable implements Table {
   public void addAggregates(Field field, Measure measure, List<Object> values) {
     this.headers.add(field);
     this.measures.add(measure);
-    this.measureIndices = Arrays.copyOf(this.measureIndices, this.measureIndices.length + 1);
-    this.measureIndices[this.measureIndices.length - 1] = this.headers.size() - 1;
     this.values.add(values);
   }
 
@@ -74,18 +70,8 @@ public class ColumnarTable implements Table {
   }
 
   @Override
-  public List<Measure> measures() {
+  public Set<Measure> measures() {
     return this.measures;
-  }
-
-  @Override
-  public int[] measureIndices() {
-    return this.measureIndices;
-  }
-
-  @Override
-  public int[] columnIndices() {
-    return this.columnsIndices;
   }
 
   @Override
@@ -142,16 +128,11 @@ public class ColumnarTable implements Table {
       return false;
     }
     ColumnarTable lists = (ColumnarTable) o;
-    return headers.equals(lists.headers) && measures.equals(lists.measures) && Arrays.equals(columnsIndices,
-            lists.columnsIndices) && Arrays.equals(measureIndices, lists.measureIndices) && values.equals(
-            lists.values);
+    return headers.equals(lists.headers) && measures.equals(lists.measures)  && values.equals(lists.values);
   }
 
   @Override
   public int hashCode() {
-    int result = Objects.hash(headers, measures, values);
-    result = 31 * result + Arrays.hashCode(columnsIndices);
-    result = 31 * result + Arrays.hashCode(measureIndices);
-    return result;
+    return Objects.hash(headers, measures, values);
   }
 }

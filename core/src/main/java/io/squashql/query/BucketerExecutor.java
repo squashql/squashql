@@ -24,7 +24,6 @@ public class BucketerExecutor {
     MutableIntSet indexColsInPrefetch = new IntHashSet();
     List<Field> newColumns = bucketColumnSetDto.getNewColumns();
     List<Field> finalHeaders = new ArrayList<>(table.headers());
-    MutableIntList columnIndices = new IntArrayList(table.columnIndices());
     for (int i = 0; i < newColumns.size(); i++) {
       Field field = newColumns.get(i);
       if (!bucketColumnSetDto.getColumnsForPrefetching().contains(field.name())) {
@@ -33,7 +32,6 @@ public class BucketerExecutor {
 
       if (!table.headers().contains(field)) {
         finalHeaders.add(field); // append to the end
-        columnIndices.add(finalHeaders.size() - 1);
       }
     }
 
@@ -63,8 +61,6 @@ public class BucketerExecutor {
     return new ColumnarTable(
             finalHeaders,
             table.measures(),
-            table.measureIndices(),
-            columnIndices.toArray(),
             newColumnValues);
   }
 

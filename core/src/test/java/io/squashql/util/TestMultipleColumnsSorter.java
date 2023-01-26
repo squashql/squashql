@@ -55,7 +55,7 @@ public class TestMultipleColumnsSorter {
     int[] sort = MultipleColumnsSorter.sort(
             Arrays.asList(c1, c2, c3),
             Arrays.asList(o1, o2, naturalOrder()),
-            new int[]{-1, 0, -1});
+            new int[] {-1, 0, -1});
     Assertions.assertThat(sort).containsExactly(3, 2, 1, 0, 5, 6, 4);
   }
 
@@ -78,10 +78,10 @@ public class TestMultipleColumnsSorter {
             new Field("c1", String.class),
             new Field("c2", String.class),
             new Field("c3", String.class));
-    new ColumnarTable(headers, Collections.emptyList(), new int[0], new int[0], List.of(c1, c2, c3))
+    new ColumnarTable(headers, Collections.emptySet(), List.of(c1, c2, c3))
             .show();
 
-    new ColumnarTable(headers, Collections.emptyList(), new int[0], new int[0],
+    new ColumnarTable(headers, Collections.emptySet(),
             List.of(reorder(c1, sort), reorder(c2, sort), reorder(c3, sort)))
             .show();
   }
@@ -90,11 +90,10 @@ public class TestMultipleColumnsSorter {
     List<Field> headers = Arrays.asList(
             new Field("c1", String.class),
             new Field("c2", String.class));
-    new ColumnarTable(headers, Collections.emptyList(), new int[0], new int[0], List.of(c1, c2))
+    new ColumnarTable(headers, Collections.emptySet(), List.of(c1, c2))
             .show();
 
-    new ColumnarTable(headers, Collections.emptyList(), new int[0], new int[0],
-            List.of(reorder(c1, sort), reorder(c2, sort)))
+    new ColumnarTable(headers, Collections.emptySet(), List.of(reorder(c1, sort), reorder(c2, sort)))
             .show();
   }
 }

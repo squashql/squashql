@@ -1,5 +1,7 @@
 package io.squashql.query.database;
 
+import java.util.HashSet;
+import java.util.Set;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -21,7 +23,7 @@ public class DatabaseQuery {
   public DatabaseQuery subQuery;
   public List<String> select = new ArrayList<>();
   public CriteriaDto criteriaDto = null;
-  public List<Measure> measures = new ArrayList<>();
+  public Set<Measure> measures = new HashSet<>();
   public List<String> rollup = new ArrayList<>();
 
   public DatabaseQuery withSelect(String field) {

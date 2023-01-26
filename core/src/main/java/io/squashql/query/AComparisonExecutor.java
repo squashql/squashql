@@ -2,7 +2,6 @@ package io.squashql.query;
 
 import io.squashql.query.comp.BinaryOperations;
 import io.squashql.store.Field;
-import io.squashql.util.SquashQLArrays;
 import org.eclipse.collections.api.map.primitive.IntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableIntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
@@ -28,14 +27,19 @@ public abstract class AComparisonExecutor {
           Table writeToTable,
           Table readFromTable) {
     MutableObjectIntMap<String> indexByColumn = new ObjectIntHashMap<>();
-    for (int columnIndex : readFromTable.columnIndices()) {
-      int index = SquashQLArrays.search(readFromTable.columnIndices(), columnIndex);
-      indexByColumn.put(readFromTable.headers().get(columnIndex).name(), index);
+    int readFromTableHeaderSize = readFromTable.headers().size();
+    for (int index=0; index<readFromTableHeaderSize; index++) {
+      Field readFromTableHeader = readFromTable.headers().get(index);
+      if (!readFromTable.isMeasure(readFromTableHeader)) {
+        indexByColumn.put(readFromTableHeader.name(), index);
+      }
     }
     BiPredicate<Object[], Field[]> procedure = createShiftProcedure(cm, indexByColumn);
 
-    Object[] buffer = new Object[readFromTable.columnIndices().length];
-    Field[] fields = new Field[readFromTable.columnIndices().length];
+    int readFromTableColumnsCount = readFromTable.headers().stream().filter(field -> !readFromTable.isMeasure(field))
+            .mapToInt(e -> 1).sum();
+    Object[] buffer = new Object[readFromTableColumnsCount];
+    Field[] fields = new Field[readFromTableColumnsCount];
     List<Object> result = new ArrayList<>((int) writeToTable.count());
     List<Object> readAggregateValues = readFromTable.getAggregateValues(cm.measure);
     List<Object> writeAggregateValues = writeToTable.getAggregateValues(cm.measure);
@@ -44,11 +48,14 @@ public abstract class AComparisonExecutor {
     IntIntMap mapping = buildMapping(writeToTable, readFromTable); // columns might be in a different order
     writeToTable.forEach(row -> {
       int i = 0;
-      for (int columnIndex : readFromTable.columnIndices()) {
-        fields[i] = readFromTable.headers().get(columnIndex);
-        int index = mapping.getIfAbsent(columnIndex, -1);
-        buffer[i] = row.get(index);
-        i++;
+      for (int columnIndex=0; columnIndex < readFromTableHeaderSize; columnIndex++) {
+        Field header = readFromTable.headers().get(columnIndex);
+        if (!readFromTable.isMeasure(header)) {
+          fields[i] = header;
+          int index = mapping.getIfAbsent(columnIndex, -1);
+          buffer[i] = row.get(index);
+          i++;
+        }
       }
       boolean success = procedure.test(buffer, fields);
       int readPosition = readFromTable.pointDictionary().getPosition(buffer);
@@ -68,10 +75,12 @@ public abstract class AComparisonExecutor {
 
   public IntIntMap buildMapping(Table writeToTable, Table readFromTable) {
     MutableIntIntMap mapping = new IntIntHashMap();
-    for (int columnIndex : readFromTable.columnIndices()) {
-      Field field = readFromTable.headers().get(columnIndex);
-      int index = writeToTable.index(field);
-      mapping.put(columnIndex, index);
+    for (int index=0; index < readFromTable.headers().size(); index++) {
+      Field field = readFromTable.headers().get(index);
+      if (readFromTable.isMeasure(field)) {
+        int writeToTableIndex = writeToTable.index(field);
+        mapping.put(index, writeToTableIndex);
+      }
     }
     return mapping;
   }

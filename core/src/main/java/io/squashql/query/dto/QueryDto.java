@@ -26,7 +26,7 @@ public class QueryDto {
 
   public Map<ColumnSetKey, ColumnSet> columnSets = new LinkedHashMap<>();
 
-  public List<Measure> measures = new ArrayList<>();
+  public Set<Measure> measures = new HashSet<>();
 
   public CriteriaDto criteriaDto = null;
 
