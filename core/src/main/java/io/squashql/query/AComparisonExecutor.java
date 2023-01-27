@@ -37,8 +37,7 @@ public abstract class AComparisonExecutor {
     }
     BiPredicate<Object[], Field[]> procedure = createShiftProcedure(cm, indexByColumn);
 
-    int readFromTableColumnsCount = readFromTable.headers().stream().filter(header -> !header.isMeasure())
-            .mapToInt(e -> 1).sum();
+    int readFromTableColumnsCount = (int) readFromTable.headers().stream().filter(header -> !header.isMeasure()).count();
     Object[] buffer = new Object[readFromTableColumnsCount];
     Field[] fields = new Field[readFromTableColumnsCount];
     List<Object> result = new ArrayList<>((int) writeToTable.count());

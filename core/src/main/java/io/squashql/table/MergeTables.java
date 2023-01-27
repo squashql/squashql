@@ -52,7 +52,7 @@ class MergeTables {
   }
 
   private static int getCommonColumnsCount(List<Header> leftHeaders, List<Header> rightHeaders) {
-    return leftHeaders.stream().filter(rightHeaders::contains).mapToInt(e -> 1).sum();
+    return (int) leftHeaders.stream().filter(rightHeaders::contains).count();
   }
 
   private static List<Header> mergeHeaders(Table leftTable, Table rightTable) {
