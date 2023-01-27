@@ -2,16 +2,18 @@ package io.squashql.query;
 
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.store.Field;
-import io.squashql.util.SquashQLArrays;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public interface Table extends Iterable<List<Object>> {
 
   ObjectArrayDictionary pointDictionary();
 
-  List<Field> headers();
+  List<Header> headers();
+
+  Set<Measure> measures();
 
   void addAggregates(Field field, Measure measure, List<Object> values);
 
@@ -28,35 +30,26 @@ public interface Table extends Iterable<List<Object>> {
   }
 
   default List<Object> getAggregateValues(Measure measure) {
-    int index = measures().indexOf(measure);
+    int index = headers().indexOf(new Header(getField(measure), true));
     if (index < 0) {
       throw new IllegalArgumentException("no aggregate values for " + measure);
     }
-    return getColumn(measureIndices()[index]);
+    return getColumn(index);
   }
 
   default Field getField(Measure measure) {
-    int index = measures().indexOf(measure);
-    if (index < 0) {
-      throw new IllegalArgumentException("no aggregate values for " + measure);
-    }
-    return headers().get(measureIndices()[index]);
+    return headers().stream().map(Header::field).filter(header -> header.name().equals(measure.alias()))
+            .findAny().orElseThrow(() -> new IllegalArgumentException("no field for " + measure));
   }
 
   default Field getField(String column) {
-    return headers().get(columnIndex(column));
+    return headers().get(columnIndex(column)).field();
   }
-
-  List<Measure> measures();
-
-  int[] measureIndices();
-
-  int[] columnIndices();
 
   default int columnIndex(String column) {
     int index = -1, i = 0;
-    for (Field header : headers()) {
-      if (header.name().equals(column)) {
+    for (Header header : headers()) {
+      if (header.field().name().equals(column)) {
         index = i;
         break;
       }
@@ -69,22 +62,11 @@ public interface Table extends Iterable<List<Object>> {
   }
 
   default int index(Field field) {
-    int index = -1, i = 0;
-    for (Field header : headers()) {
-      if (header.equals(field)) {
-        index = i;
-        break;
-      }
-      i++;
-    }
+    int index = headers().stream().map(Header::field).toList().indexOf(field);
     if (index < 0) {
       throw new IllegalArgumentException("no field named " + field);
     }
     return index;
-  }
-
-  default boolean isMeasure(int index) {
-    return SquashQLArrays.search(measureIndices(), index) >= 0;
   }
 
   /**
@@ -99,9 +81,11 @@ public interface Table extends Iterable<List<Object>> {
       return null;
     }
     List<Object> result = new ArrayList<>();
-    for (int columnIndex : columnIndices()) {
-      result.add(getColumn(columnIndex).get(rowIndex));
-    }
+    headers().forEach(header -> {
+      if (!header.isMeasure()) {
+        result.add(getColumnValues(header.field().name()).get(rowIndex));
+      }
+    });
     return result;
   }
 

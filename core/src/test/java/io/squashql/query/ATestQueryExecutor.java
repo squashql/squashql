@@ -212,7 +212,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of(MAIN_SCENARIO_NAME, 3l),
             List.of("s1", 3l),
             List.of("s2", 3l));
-    Assertions.assertThat(result.headers().stream().map(Field::name))
+    Assertions.assertThat(result.headers().stream().map(Header::field).map(Field::name))
             .containsExactly(SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
   }
 
@@ -346,7 +346,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of(MAIN_SCENARIO_NAME, 30l, 30l),
             List.of("s1", 30l, 30l),
             List.of("s2", 30l, 30l));
-    Assertions.assertThat(result.headers().stream().map(Field::name))
+    Assertions.assertThat(result.headers().stream().map(Header::field).map(Field::name))
             .containsExactly(SCENARIO_FIELD_NAME, "quantity if food or drink", "quantity filtered");
 
     // Mutliple fields
@@ -465,7 +465,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(List.of(4650d, 4650d, 9900l, 9900d, 100l, 100d));
-    Assertions.assertThat(result.headers().stream().map(Field::name).toList())
+    Assertions.assertThat(result.headers().stream().map(Header::field).map(Field::name).toList())
             .containsExactly("a1", "a2", "b1", "b2", "constant(100)", "constant(100.0)");
   }
 }

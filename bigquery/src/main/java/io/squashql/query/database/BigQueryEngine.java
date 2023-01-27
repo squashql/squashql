@@ -137,8 +137,6 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     return new ColumnarTable(
             input.headers(),
             input.measures(),
-            input.measureIndices(),
-            input.columnIndices(),
             newValues);
   }
 
@@ -163,8 +161,6 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       return new ColumnarTable(
               result.getOne(),
               query.measures,
-              IntStream.range(query.select.size(), query.select.size() + query.measures.size()).toArray(),
-              IntStream.range(0, query.select.size()).toArray(),
               result.getTwo());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
