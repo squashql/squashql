@@ -211,9 +211,9 @@ public class TableUtils {
       }
 
       if (grandTotal) {
-        for (int i = 1; i < table.headers().size(); i++) {
+        for (int i = 0; i < table.headers().size(); i++) {
           if (!table.headers().get(i).isMeasure()) {
-            table.getColumn(i).set(rowIndex, null);
+            table.getColumn(i).set(rowIndex, QueryEngine.GRAND_TOTAL);
           }
         }
       }
