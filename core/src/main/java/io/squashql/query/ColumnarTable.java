@@ -86,7 +86,7 @@ public class ColumnarTable implements Table {
 
   @Override
   public String toString() {
-    return TableUtils.toString(this.headers, this, f -> ((Field) f).name(), String::valueOf);
+    return TableUtils.toString(this.headers, this, h -> ((Header) h).field().name(), String::valueOf);
   }
 
   @Override

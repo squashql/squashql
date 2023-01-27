@@ -5,9 +5,11 @@ import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryUtil;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.ColumnarTable;
+import io.squashql.query.Header;
 import io.squashql.query.QueryExecutor;
 import io.squashql.query.Table;
 import io.squashql.store.Field;
+import java.util.HashSet;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
@@ -16,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.IntStream;
 
 public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
@@ -47,7 +48,8 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     if (!hasRollup) {
       return super.createSqlStatement(query);
     } else {
-      // Special case for BigQuery because it does not support either the grouping function used to identify extra-rows added
+      // Special case for BigQuery because it does not support either the grouping function used to identify
+      // extra-rows added
       // by rollup or grouping sets for partial rollup.
       BigQueryQueryRewriter rewriter = (BigQueryQueryRewriter) this.queryRewriter;
       /*
@@ -63,14 +65,16 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
         public String select(String select) {
           Field field = BigQueryEngine.this.fieldSupplier.apply(select);
           Function<Object, String> quoter = SQLTranslator.getQuoter(field);
-          return String.format("coalesce(%s, %s)", rewriter.select(select), quoter.apply(BigQueryUtil.getNullValue(field)));
+          return String.format("coalesce(%s, %s)", rewriter.select(select),
+                  quoter.apply(BigQueryUtil.getNullValue(field)));
         }
 
         @Override
         public String rollup(String rollup) {
           Field field = BigQueryEngine.this.fieldSupplier.apply(rollup);
           Function<Object, String> quoter = SQLTranslator.getQuoter(field);
-          return String.format("coalesce(%s, %s)", rewriter.rollup(rollup), quoter.apply(BigQueryUtil.getNullValue(field)));
+          return String.format("coalesce(%s, %s)", rewriter.rollup(rollup),
+                  quoter.apply(BigQueryUtil.getNullValue(field)));
         }
       };
       List<String> missingColumnsInRollup = new ArrayList<>(query.select);
@@ -97,20 +101,20 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
     MutableIntSet rowIndicesToRemove = new IntHashSet();
     for (int i = 0; i < input.headers().size(); i++) {
-      Field header = input.headers().get(i);
+      Field field = input.headers().get(i).field();
       List<Object> columnValues = input.getColumn(i);
       if (i < query.select.size()) {
-        List<Object> baseColumnValues = input.getColumnValues(header.name());
+        List<Object> baseColumnValues = input.getColumnValues(field.name());
         for (int rowIndex = 0; rowIndex < input.count(); rowIndex++) {
           Object value = columnValues.get(rowIndex);
           if (value == null) {
             baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
-            if (isPartialRollup && missingColumnsInRollup.contains(header.name())) {
+            if (isPartialRollup && missingColumnsInRollup.contains(field.name())) {
               // Partial rollup not supported https://issuetracker.google.com/issues/35905909, we let bigquery compute
               // all totals, and we remove here the extra rows.
               rowIndicesToRemove.add(rowIndex);
             }
-          } else if (value.equals(BigQueryUtil.getNullValue(header))) {
+          } else if (value.equals(BigQueryUtil.getNullValue(field))) {
             baseColumnValues.set(rowIndex, null);
           }
         }
@@ -150,7 +154,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     try {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
       Schema schema = tableResult.getSchema();
-      Pair<List<Field>, List<List<Object>>> result = AQueryEngine.transform(
+      Pair<List<Header>, List<List<Object>>> result = AQueryEngine.transform(
               query,
               schema.getFields(),
               (column, name) -> new Field(name, BigQueryUtil.bigQueryTypeToClass(column.getType())),
@@ -160,7 +164,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       );
       return new ColumnarTable(
               result.getOne(),
-              query.measures,
+              new HashSet<>(query.measures),
               result.getTwo());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
@@ -222,7 +226,9 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     }
 
     /**
-     * See <a href="https://cloud.google.com/bigquery/docs/schemas#column_names">https://cloud.google.com/bigquery/docs/schemas#column_names</a>.
+     * See <a
+     * href="https://cloud.google.com/bigquery/docs/schemas#column_names">https://cloud.google
+     * .com/bigquery/docs/schemas#column_names</a>.
      * A column name must contain only letters (a-z, A-Z), numbers (0-9), or underscores (_), and it must start with a
      * letter or underscore. The maximum column name length is 300 characters.
      * FIXME must used a regex instead to replace incorrect characters.

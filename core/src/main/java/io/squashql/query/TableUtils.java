@@ -130,7 +130,7 @@ public class TableUtils {
       values.add(Objects.requireNonNull(table.getAggregateValues(measure)));
     }
 
-    return new ColumnarTable(headers, queryDto.measures, values);
+    return new ColumnarTable(headers, new HashSet<>(queryDto.measures), values);
   }
 
   public static Table orderRows(ColumnarTable table, QueryDto queryDto) {

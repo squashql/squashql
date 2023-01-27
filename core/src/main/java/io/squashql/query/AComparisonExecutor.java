@@ -78,7 +78,7 @@ public abstract class AComparisonExecutor {
     MutableIntIntMap mapping = new IntIntHashMap();
     for (int index = 0; index < readFromTable.headers().size(); index++) {
       Header header = readFromTable.headers().get(index);
-      if (header.isMeasure()) {
+      if (!header.isMeasure()) {
         int writeToTableIndex = writeToTable.index(header.field());
         mapping.put(index, writeToTableIndex);
       }

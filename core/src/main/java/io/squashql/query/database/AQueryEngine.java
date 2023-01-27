@@ -1,6 +1,9 @@
 package io.squashql.query.database;
 
 import io.squashql.query.Header;
+import io.squashql.query.Measure;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import io.squashql.query.ColumnarTable;
 import io.squashql.query.CountMeasure;
@@ -18,7 +21,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.IntStream;
 
 @Slf4j
 public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T> {
@@ -82,7 +84,8 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   }
 
   protected String createSqlStatement(DatabaseQuery query) {
-    return SQLTranslator.translate(query, QueryExecutor.withFallback(this.fieldSupplier, String.class), this.queryRewriter);
+    return SQLTranslator.translate(query, QueryExecutor.withFallback(this.fieldSupplier, String.class),
+            this.queryRewriter);
   }
 
   /**
@@ -127,7 +130,8 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
           List<Object> baseColumnValues = input.getColumnValues(baseName);
           for (int rowIndex = 0; rowIndex < columnValues.size(); rowIndex++) {
             if (((Number) columnValues.get(rowIndex)).longValue() == 1) {
-              // It is a total if == 1. It is cast as Number because the type is Byte with Spark, Long with ClickHouse...
+              // It is a total if == 1. It is cast as Number because the type is Byte with Spark, Long with
+              // ClickHouse...
               baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
             }
           }
@@ -143,7 +147,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     }
   }
 
-  public static <Column, Record> Pair<List<Field>, List<List<Object>>> transform(
+  public static <Column, Record> Pair<List<Header>, List<List<Object>>> transform(
           DatabaseQuery query,
           List<Column> columns,
           BiFunction<Column, String, Field> columnToField,
@@ -154,19 +158,21 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     if (queryRewriter.useGroupingFunction()) {
       query.rollup.forEach(r -> fieldNames.add(queryRewriter.groupingAlias(r)));
     }
-    query.measures.forEach(m -> fieldNames.add(m.alias()));
-
-    List<Field> fields = new ArrayList<>();
+    Set<String> measureNames = query.measures.stream().map(Measure::alias).collect(Collectors.toSet());
+    fieldNames.addAll(measureNames);
+    List<Header> headers = new ArrayList<>();
     for (int i = 0; i < columns.size(); i++) {
-      fields.add(columnToField.apply(columns.get(i), fieldNames.get(i)));
+      headers.add(new Header(
+              columnToField.apply(columns.get(i), fieldNames.get(i)),
+              measureNames.contains(fieldNames.get(i))));
     }
     List<List<Object>> values = new ArrayList<>();
-    fields.forEach(f -> values.add(new ArrayList<>()));
+    headers.forEach(f -> values.add(new ArrayList<>()));
     recordIterator.forEachRemaining(r -> {
-      for (int i = 0; i < fields.size(); i++) {
+      for (int i = 0; i < headers.size(); i++) {
         values.get(i).add(recordToFieldValue.apply(i, r));
       }
     });
-    return Tuples.pair(fields, values);
+    return Tuples.pair(headers, values);
   }
 }
