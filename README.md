@@ -89,6 +89,27 @@ BigQueryQueryEngine qe = new BigQueryQueryEngine(ds);
 
 See how to create a [credentials object in BigQuery documentation](https://cloud.google.com/bigquery/docs/authentication/service-account-file)
 
+#### Snowflake
+
+Maven
+```xml
+<dependency>
+  <groupId>io.squashql</groupId>
+  <artifactId>squashql-snowflake</artifactId>
+  <version>${squashql.version}</version>
+</dependency>
+```
+
+Java
+```
+String jdbcUrl = jdbc:snowflake://<account_identifier>.snowflakecomputing.com; // to be defined
+String database = ...; // to be defined
+String schema = ...; // to be defined
+Properties properties = ... // to be defined, it contains in particular the credentials (user, password, warehouse...)
+SnowflakeDatastore ds = new SnowflakeDatastore(jdbcUrl, database, schema, properties);
+SnowflakeQueryEngine qe = new SnowflakeQueryEngine(ds);
+```
+
 ## API
 
 SquashQL exposes two http endpoints to interrogate your database.
