@@ -1,7 +1,6 @@
 package io.squashql.query;
 
 import com.google.common.graph.Graph;
-import lombok.extern.slf4j.Slf4j;
 import io.squashql.MeasurePrefetcherVisitor;
 import io.squashql.query.QueryCache.SubQueryScope;
 import io.squashql.query.QueryCache.TableScope;
@@ -12,8 +11,10 @@ import io.squashql.query.dto.*;
 import io.squashql.query.monitoring.QueryWatch;
 import io.squashql.store.Field;
 import io.squashql.util.Queries;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -51,10 +52,15 @@ public class QueryExecutor {
             query,
             new QueryWatch(),
             CacheStatsDto.builder(),
-            null);
+            null,
+            true);
   }
 
-  public Table execute(QueryDto query, QueryWatch queryWatch, CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder, SquashQLUser user) {
+  public Table execute(QueryDto query,
+                       QueryWatch queryWatch,
+                       CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
+                       SquashQLUser user,
+                       boolean replaceTotalCellsAndOrderRows) {
     queryWatch.start(QueryWatch.GLOBAL);
     queryWatch.start(QueryWatch.PREPARE_PLAN);
 
@@ -137,8 +143,10 @@ public class QueryExecutor {
     queryWatch.start(QueryWatch.ORDER);
 
     result = TableUtils.selectAndOrderColumns((ColumnarTable) result, query);
-    result = TableUtils.replaceTotalCellValues((ColumnarTable) result, query);
-    result = TableUtils.orderRows((ColumnarTable) result, query);
+    if (replaceTotalCellsAndOrderRows) {
+      result = TableUtils.replaceTotalCellValues((ColumnarTable) result, query);
+      result = TableUtils.orderRows((ColumnarTable) result, query);
+    }
 
     queryWatch.stop(QueryWatch.ORDER);
     queryWatch.stop(QueryWatch.GLOBAL);
@@ -208,6 +216,22 @@ public class QueryExecutor {
 
   protected static void resolveMeasures(QueryDto queryDto) {
     // Deactivate for now.
+  }
+
+  public Table execute(QueryDto first, QueryDto second) {
+    Function<QueryDto, Table> execute = q -> execute(
+            q,
+            new QueryWatch(),
+            CacheStatsDto.builder(),
+            null,
+            false);
+    CompletableFuture<Table> f1 = CompletableFuture.supplyAsync(() -> execute.apply(first));
+    CompletableFuture<Table> f2 = CompletableFuture.supplyAsync(() -> execute.apply(second));
+    return CompletableFuture.allOf(f1, f2).thenApply(__ -> merge(f1.join(), f2.join())).join();
+  }
+
+  public static Table merge(Table table1, Table table2) {
+    return null;// FIXME
   }
 
   public static Function<String, Field> withFallback(Function<String, Field> fieldProvider, Class<?> fallbackType) {

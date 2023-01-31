@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 public class QueryController {
 
   public static final String MAPPING_QUERY = "/query";
+  public static final String MAPPING_QUERY_MERGE = "/query-merge";
   public static final String MAPPING_QUERY_BEAUTIFY = "/query-beautify";
   public static final String MAPPING_METADATA = "/metadata";
   public static final String MAPPING_EXPRESSION = "/expression";
@@ -41,7 +42,7 @@ public class QueryController {
   public ResponseEntity<QueryResultDto> execute(@RequestBody QueryDto query) {
     QueryWatch queryWatch = new QueryWatch();
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
-    Table table = this.queryExecutor.execute(query, queryWatch, csBuilder, this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get());
+    Table table = this.queryExecutor.execute(query, queryWatch, csBuilder, this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(), true);
     List<String> fields = table.headers().stream().map(Field::name).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))
@@ -53,6 +54,21 @@ public class QueryController {
             .debug(DebugInfoDto.builder()
                     .cache(csBuilder.build())
                     .timings(queryWatch.toQueryTimings()).build())
+            .build();
+    return ResponseEntity.ok(result);
+  }
+
+  @PostMapping(MAPPING_QUERY_MERGE)
+  public ResponseEntity<QueryResultDto> executeAndMerge(@RequestBody QueryMergeDto queryMergeDto) {
+    Table table = this.queryExecutor.execute(queryMergeDto.first, queryMergeDto.second);
+    List<String> fields = table.headers().stream().map(Field::name).collect(Collectors.toList());
+    SimpleTableDto simpleTable = SimpleTableDto.builder()
+            .rows(ImmutableList.copyOf(table.iterator()))
+            .columns(fields)
+            .build();
+    QueryResultDto result = QueryResultDto.builder()
+            .table(simpleTable)
+            .metadata(TableUtils.buildTableMetadata(table))
             .build();
     return ResponseEntity.ok(result);
   }

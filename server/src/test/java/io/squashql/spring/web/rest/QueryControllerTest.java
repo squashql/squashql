@@ -4,10 +4,7 @@ import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.SparkQueryEngine;
-import io.squashql.query.dto.BucketColumnSetDto;
-import io.squashql.query.dto.MetadataItem;
-import io.squashql.query.dto.MetadataResultDto;
-import io.squashql.query.dto.QueryResultDto;
+import io.squashql.query.dto.*;
 import io.squashql.spring.dataset.DatasetTestConfig;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -225,5 +222,43 @@ public class QueryControllerTest {
     checker.accept(1l, 2l);
 
     DatasetTestConfig.squashQLUserSupplier.set(null); // reset
+  }
+
+  @Test
+  void testQueryMerge() throws Exception {
+    var query1 = Query
+            .from("our_prices")
+            .select(List.of("ean"), List.of(Functions.sum("capdv-sum", "capdv")))
+            .build();
+    var query2 = Query
+            .from("our_prices")
+            .select(List.of("ean"), List.of(Functions.avg("capdv-avg", "capdv")))
+            .build();
+
+    this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_MERGE)
+                    .content(JacksonUtil.serialize(new QueryMergeDto(query1, query2)))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(result -> {
+              String contentAsString = result.getResponse().getContentAsString();
+              QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
+//              Assertions.assertThat(queryResult.table.rows).containsExactlyInAnyOrder(
+//                      List.of("MN & MDD up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
+//                      List.of("MN & MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196),
+//
+//                      List.of("MN up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
+//                      List.of("MN up", "ITMella 250g", 100000d, 102000d, 0.9803921568627451d),
+//
+//                      List.of("MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196d),
+//                      List.of("MDD up", "Nutella 250g", 100000d, 102000d, 0.9803921568627451d),
+//
+//                      List.of("MN & MDD down", "Nutella 250g", 90000d, 102000d, 0.8823529411764706),
+//                      List.of("MN & MDD down", "ITMella 250g", 90000d, 102000d, 0.8823529411764706),
+//
+//                      List.of(MAIN_SCENARIO_NAME, "ITMella 250g", 100000d, 102000d, 0.9803921568627451d),
+//                      List.of(MAIN_SCENARIO_NAME, "Nutella 250g", 100000d, 102000d, 0.9803921568627451d));
+
+              Assertions.assertThat(queryResult.table.columns).containsExactly("ean", "capdv-sum", "capdv-avg");
+            });
   }
 }
