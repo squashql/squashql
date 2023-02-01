@@ -78,11 +78,7 @@ jobs:
       - name: Build with Maven
         run: mvn -pl :squashql-bigquery -am clean install --no-transfer-progress -DskipTests
       - name: Run bigquery tests
-        run: mvn -pl :squashql-bigquery --no-transfer-progress -Pbigquery-test test
-        env:
-          SERVICE_ACCOUNT_KEY: ${{ secrets.SERVICE_ACCOUNT_KEY }}
-          PROJECT_ID: ${{ secrets.PROJECT_ID }}
-          DATASET_NAME: ${{ secrets.DATASET_NAME }}
+        run: mvn -pl :squashql-bigquery --no-transfer-progress test
 
   snowflake:
     runs-on: ubuntu-latest
