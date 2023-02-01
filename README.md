@@ -122,7 +122,7 @@ To use those endpoints, SquashQL provides a [TypeScript](https://www.typescriptl
 ```typescript
 import {count, from, Querier} from "@squashql/squashql-js"
 
-const querier = new Querier("http://localhost:8080");
+const querier = new Querier("http://localhost:8080")
 
 querier.getMetadata().then(response => {
   console.log(response)
@@ -135,6 +135,17 @@ const query = from("myTable")
 querier.execute(query).then(response => {
   console.log(response)
 })
+```
+
+The object `Querier` uses [Axios](https://axios-http.com/) under the hood as HTTP
+Client. [Additional configuration](https://axios-http.com/docs/req_config) can be
+provided like this:
+
+```typescript
+const axiosConfig = {
+  timeout: 10000
+}
+const querier = new Querier("http://localhost:8080", axiosConfig)
 ```
 
 See [this page](./QUERY.md) to learn more about the API.
