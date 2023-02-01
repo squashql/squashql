@@ -5,6 +5,7 @@ import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.StandardSQLTypeName;
 import io.squashql.store.Field;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -71,13 +72,28 @@ public final class BigQueryUtil {
     }
   }
 
-  public static ServiceAccountCredentials createCredentials(String path) {
+  /**
+   * Creates {@link ServiceAccountCredentials} from a file.
+   * See <a href="https://cloud.google.com/bigquery/docs/authentication/service-account-file">https://cloud.google.com/bigquery/docs/authentication/service-account-file</a>
+   *
+   * @param path path to the service account key file.
+   * @return the {@link ServiceAccountCredentials}
+   */
+  public static ServiceAccountCredentials createCredentialsFromFile(String path) {
     try {
       InputStream resourceAsStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
       if (resourceAsStream == null) {
         resourceAsStream = new FileInputStream(path);
       }
       return ServiceAccountCredentials.fromStream(resourceAsStream);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static ServiceAccountCredentials createCredentialsFromFileContent(String jsonKey) {
+    try {
+      return ServiceAccountCredentials.fromStream(new ByteArrayInputStream(jsonKey.getBytes()));
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
