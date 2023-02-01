@@ -16,7 +16,7 @@ the UI.
 - It helps front-end developers build and run SQL queries in their own language in [TypeScript](https://www.typescriptlang.org/)
 - With its "write once, run everywhere" approach, it is a great solution for those who need to quickly and efficiently query data from multiple databases.
 
-![test6](https://user-images.githubusercontent.com/5783183/210366738-06007ce4-a46a-4b14-b01c-d58de933c5d9.gif)
+![ide ts squashql](https://user-images.githubusercontent.com/5783183/215964358-37814efa-f315-4de5-97cd-cefce537caaa.gif)
 
 ## Compatibility
 
