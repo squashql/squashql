@@ -22,7 +22,7 @@ jobs:
       - name: Build with Maven
         run: mvn -pl :squashql-bigquery -am clean install --no-transfer-progress -DskipTests
       - name: Run bigquery tests
-        run: mvn -pl :squashql-bigquery --no-transfer-progress -Pbigquery-test test -Dbigquery.test.key='$SERVICE_ACCOUNT_KEY' -Dbigquery.test.project.id=$PROJECT_ID -Dbigquery.test.dataset.name=$DATASET_NAME
+        run: mvn -pl :squashql-bigquery --no-transfer-progress -Pbigquery-test test -Dbigquery.test.key=$SERVICE_ACCOUNT_KEY -Dbigquery.test.project.id=$PROJECT_ID -Dbigquery.test.dataset.name=$DATASET_NAME
         env:
           SERVICE_ACCOUNT_KEY: ${{ secrets.SERVICE_ACCOUNT_KEY }}
           PROJECT_ID: ${{ secrets.PROJECT_ID }}
