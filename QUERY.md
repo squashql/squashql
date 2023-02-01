@@ -104,12 +104,12 @@ const q = from("myTable")
         .select(
                 ["col1", "col2", "col3", "col4"],
                 [],
-                [sum("alias1", "col3")])
+                [sum("alias1", "col5")])
         .build();
 ```
 
 ```sql
-SELECT col1, col2, col3, col4, sum(col3) as alias1
+SELECT col1, col2, col3, col4, sum(col5) as alias1
 FROM myTable
 GROUP BY col1, col2, col3, col4
 ORDER BY col1, col2, col3, col4,
