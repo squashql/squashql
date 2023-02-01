@@ -1,17 +1,10 @@
 package io.squashql.query.database;
 
-import io.squashql.query.Header;
-import io.squashql.query.Measure;
-import java.util.Set;
-import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
-import io.squashql.query.ColumnarTable;
-import io.squashql.query.CountMeasure;
-import io.squashql.query.QueryExecutor;
-import io.squashql.query.Table;
+import io.squashql.query.*;
 import io.squashql.store.Datastore;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 
@@ -154,17 +147,16 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue,
           QueryRewriter queryRewriter) {
+    List<Header> headers = new ArrayList<>();
     List<String> fieldNames = new ArrayList<>(query.select);
     if (queryRewriter.useGroupingFunction()) {
       query.rollup.forEach(r -> fieldNames.add(queryRewriter.groupingAlias(r)));
     }
-    Set<String> measureNames = query.measures.stream().map(Measure::alias).collect(Collectors.toSet());
-    fieldNames.addAll(measureNames);
-    List<Header> headers = new ArrayList<>();
+    query.measures.forEach(m -> fieldNames.add(m.alias()));
     for (int i = 0; i < columns.size(); i++) {
       headers.add(new Header(
               columnToField.apply(columns.get(i), fieldNames.get(i)),
-              measureNames.contains(fieldNames.get(i))));
+              i >= query.select.size() + query.rollup.size()));
     }
     List<List<Object>> values = new ArrayList<>();
     headers.forEach(f -> values.add(new ArrayList<>()));

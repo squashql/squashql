@@ -29,10 +29,10 @@ public abstract class AComparisonExecutor {
           Table readFromTable) {
     MutableObjectIntMap<String> indexByColumn = new ObjectIntHashMap<>();
     int readFromTableHeaderSize = readFromTable.headers().size();
-    for (int index = 0; index < readFromTableHeaderSize; index++) {
-      Header readFromTableHeader = readFromTable.headers().get(index);
-      if (!readFromTableHeader.isMeasure()) {
-        indexByColumn.put(readFromTableHeader.field().name(), index);
+    int index = 0;
+    for (Header header : readFromTable.headers()) {
+      if (!header.isMeasure()) {
+        indexByColumn.put(header.field().name(), index++);
       }
     }
     BiPredicate<Object[], Field[]> procedure = createShiftProcedure(cm, indexByColumn);
@@ -53,8 +53,7 @@ public abstract class AComparisonExecutor {
         Header header = readFromTable.headers().get(columnIndex);
         if (!header.isMeasure()) {
           fields[i] = header.field();
-          int index = mapping.getIfAbsent(columnIndex, -1);
-          buffer[i] = row.get(index);
+          buffer[i] = row.get(mapping.getIfAbsent(columnIndex, -1));
           i++;
         }
       }

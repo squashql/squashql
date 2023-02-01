@@ -28,7 +28,7 @@ public class ColumnarTable implements Table {
   }
 
   public static ObjectArrayDictionary createPointDictionary(Table table) {
-    int pointLength = table.headers().stream().filter(header -> !header.isMeasure()).mapToInt(e -> 1).sum();
+    int pointLength = (int) table.headers().stream().filter(header -> !header.isMeasure()).count();
     ObjectArrayDictionary dictionary = new ObjectArrayDictionary(pointLength);
     table.forEach(row -> {
       Object[] columnValues = new Object[pointLength];
