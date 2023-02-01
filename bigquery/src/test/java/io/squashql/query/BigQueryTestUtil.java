@@ -7,10 +7,10 @@ import io.squashql.BigQueryUtil;
 
 public class BigQueryTestUtil {
 
-  public static final String SERVICE_ACCOUNT_KEY_FILE_PATH = System.getProperty("bigquery.test.key.file.path");
-  public static final String SERVICE_ACCOUNT_KEY = System.getProperty("bigquery.test.key");
-  public static final String PROJECT_ID = System.getProperty("bigquery.test.project.id");
-  public static final String DATASET_NAME = System.getProperty("bigquery.test.dataset.name");
+  public static final String SERVICE_ACCOUNT_KEY_FILE_PATH = System.getenv().getOrDefault("SERVICE_ACCOUNT_KEY_FILE_PATH", System.getProperty("bigquery.test.key.file.path"));
+  public static final String SERVICE_ACCOUNT_KEY = System.getenv().getOrDefault("SERVICE_ACCOUNT_KEY", System.getProperty("bigquery.test.key"));
+  public static final String PROJECT_ID = System.getenv().getOrDefault("PROJECT_ID", System.getProperty("bigquery.test.project.id"));
+  public static final String DATASET_NAME = System.getenv().getOrDefault("DATASET_NAME", System.getProperty("bigquery.test.dataset.name"));
 
   public static final ServiceAccountCredentials createServiceAccountCredentials() {
     if (SERVICE_ACCOUNT_KEY_FILE_PATH != null) {
