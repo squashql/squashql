@@ -29,9 +29,9 @@ from("myTable")
 
 Note: the concepts of measure and columnSet are detailed below.
 
-Selects columns from the table to be displayed and the measures to compute. Note that the columns and columnSets
-added to select are automatically injected to the groupBy clause of the query: aggregated results are then grouped by
-the columns and columnSets indicated.
+Selects columns from the table to be displayed and the measures to compute. Note that the **columns and columnSets
+added to `select` are automatically injected to the groupBy clause of the query** to avoid repetitive and verbose code. 
+Aggregated results are then grouped by the columns and columnSets indicated.
 
 ```typescript
 import {
@@ -88,6 +88,56 @@ GROUP BY col1, col2
 ```
 
 Condition operators available: `eq, neq, lt, le, gt, ge, _in, isNull, isNotNull, like, and, or`.
+
+## Ordering
+
+To avoid repetitive and verbose code, ordering of table result rows is automatically performed by SquashQL. It's
+order by all columns in the query from left to right following natural order.
+
+
+```typescript
+import {
+  from, sum, OrderKeyword
+} from "@squashql/squashql-js"
+
+const q = from("myTable")
+        .select(
+                ["col1", "col2", "col3", "col4"],
+                [],
+                [sum("alias1", "col5")])
+        .build();
+```
+
+```sql
+SELECT col1, col2, col3, col4, sum(col5) as alias1
+FROM myTable
+GROUP BY col1, col2, col3, col4
+ORDER BY col1, col2, col3, col4,
+```
+
+However, ordering can be customized by using `orderBy` method.
+
+```typescript
+import {
+  from, sum, OrderKeyword
+} from "@squashql/squashql-js"
+
+
+const q = from("myTable")
+        .select(
+                ["col1", "col2"],
+                [],
+                [sum("alias1", "col3")])
+        .orderBy("col2", OrderKeyword.ASC)
+        .build();
+```
+
+```sql
+SELECT col1, col2, sum(col3) as alias1
+FROM myTable
+GROUP BY col1, col2
+ORDER BY col2
+```
 
 ## Joining Tables
 
@@ -187,25 +237,25 @@ GROUP BY ROLLUP (continent, country, city);
 
 Example
 ```
-+-------------+---------+----------+------------+
-|   continent | country |     city |        pop |
-+-------------+---------+----------+------------+
-| Grand Total |    null |     null |       28.5 |
-|          am |   Total |     null |       17.0 |
-|          am |  canada |    Total |        6.0 |
-|          am |  canada | montreal |        2.0 |
-|          am |  canada |    otawa |        1.0 |
-|          am |  canada |  toronto |        3.0 |
-|          am |     usa |    Total |       11.0 |
-|          am |     usa |  chicago |        3.0 |
-|          am |     usa |      nyc |        8.0 |
-|          eu |   Total |     null |       11.5 |
-|          eu |  france |    Total |        2.5 |
-|          eu |  france |     lyon |        0.5 |
-|          eu |  france |    paris |        2.0 |
-|          eu |      uk |    Total |        9.0 |
-|          eu |      uk |   london |        9.0 |
-+-------------+---------+----------+------------+
++-------------+-------------+-------------+------------+
+|   continent |     country |        city |        pop |
++-------------+-------------+-------------+------------+
+| Grand Total | Grand Total | Grand Total |       28.5 |
+|          am |       Total |       Total |       17.0 |
+|          am |      canada |       Total |        6.0 |
+|          am |      canada |    montreal |        2.0 |
+|          am |      canada |       otawa |        1.0 |
+|          am |      canada |     toronto |        3.0 |
+|          am |         usa |       Total |       11.0 |
+|          am |         usa |     chicago |        3.0 |
+|          am |         usa |         nyc |        8.0 |
+|          eu |       Total |       Total |       11.5 |
+|          eu |      france |       Total |        2.5 |
+|          eu |      france |        lyon |        0.5 |
+|          eu |      france |       paris |        2.0 |
+|          eu |          uk |       Total |        9.0 |
+|          eu |          uk |      london |        9.0 |
++-------------+-------------+-------------+------------+
 ```
 
 ### Partial rollup
@@ -239,7 +289,7 @@ Example
 +-----------+---------+----------+------------+
 | continent | country |     city | population |
 +-----------+---------+----------+------------+
-|        am |   Total |     null |       17.0 |
+|        am |   Total |    Total |       17.0 |
 |        am |  canada |    Total |        6.0 |
 |        am |  canada | montreal |        2.0 |
 |        am |  canada |    otawa |        1.0 |
@@ -247,7 +297,7 @@ Example
 |        am |     usa |    Total |       11.0 |
 |        am |     usa |  chicago |        3.0 |
 |        am |     usa |      nyc |        8.0 |
-|        eu |   Total |     null |       11.5 |
+|        eu |   Total |    Total |       11.5 |
 |        eu |  france |    Total |        2.5 |
 |        eu |  france |     lyon |        0.5 |
 |        eu |  france |    paris |        2.0 |
@@ -532,25 +582,25 @@ compute at different levels of the lineage.
 
 Example: compute the ratio of population of a city to its country and of a country to its continent. 
 ```
-+-------------+---------+----------+------------+
-|   continent | country |     city |        pop |
-+-------------+---------+----------+------------+
-| Grand Total |    null |     null |       28.5 |
-|          am |   Total |     null |       17.0 |
-|          am |  canada |    Total |        6.0 |
-|          am |  canada | montreal |        2.0 |
-|          am |  canada |    otawa |        1.0 |
-|          am |  canada |  toronto |        3.0 |
-|          am |     usa |    Total |       11.0 |
-|          am |     usa |  chicago |        3.0 |
-|          am |     usa |      nyc |        8.0 |
-|          eu |   Total |     null |       11.5 |
-|          eu |  france |    Total |        2.5 |
-|          eu |  france |     lyon |        0.5 |
-|          eu |  france |    paris |        2.0 |
-|          eu |      uk |    Total |        9.0 |
-|          eu |      uk |   london |        9.0 |
-+-------------+---------+----------+------------+
++-------------+-------------+-------------+------------+
+|   continent |     country |        city |        pop |
++-------------+-------------+-------------+------------+
+| Grand Total | Grand Total | Grand Total |       28.5 |
+|          am |       Total |       Total |       17.0 |
+|          am |      canada |       Total |        6.0 |
+|          am |      canada |    montreal |        2.0 |
+|          am |      canada |       otawa |        1.0 |
+|          am |      canada |     toronto |        3.0 |
+|          am |         usa |       Total |       11.0 |
+|          am |         usa |     chicago |        3.0 |
+|          am |         usa |         nyc |        8.0 |
+|          eu |       Total |       Total |       11.5 |
+|          eu |      france |       Total |        2.5 |
+|          eu |      france |        lyon |        0.5 |
+|          eu |      france |       paris |        2.0 |
+|          eu |          uk |       Total |        9.0 |
+|          eu |          uk |      london |        9.0 |
++-------------+-------------+-------------+------------+
 ```
 
 ```typescript
@@ -578,25 +628,25 @@ Note the columns used to define the ancestors need to be passed to the select me
 
 Result
 ```
-+-------------+---------+----------+------------+---------------------+
-|   continent | country |     city |        pop |               ratio |
-+-------------+---------+----------+------------+---------------------+
-| Grand Total |    null |     null |       28.5 |                 1.0 |
-|          am |   Total |     null |       17.0 |  0.5964912280701754 |
-|          am |  canada |    Total |        6.0 | 0.35294117647058826 |
-|          am |  canada | montreal |        2.0 |  0.3333333333333333 |
-|          am |  canada |    otawa |        1.0 | 0.16666666666666666 |
-|          am |  canada |  toronto |        3.0 |                 0.5 |
-|          am |     usa |    Total |       11.0 |  0.6470588235294118 |
-|          am |     usa |  chicago |        3.0 |  0.2727272727272727 |
-|          am |     usa |      nyc |        8.0 |  0.7272727272727273 |
-|          eu |   Total |     null |       11.5 | 0.40350877192982454 |
-|          eu |  france |    Total |        2.5 | 0.21739130434782608 |
-|          eu |  france |     lyon |        0.5 |                 0.2 |
-|          eu |  france |    paris |        2.0 |                 0.8 |
-|          eu |      uk |    Total |        9.0 |   0.782608695652174 |
-|          eu |      uk |   london |        9.0 |                 1.0 |
-+-------------+---------+----------+------------+---------------------+
++-------------+-------------+-------------+------------+---------------------+
+|   continent |     country |        city |        pop |               ratio |
++-------------+-------------+-------------+------------+---------------------+
+| Grand Total | Grand Total | Grand Total |       28.5 |                 1.0 |
+|          am |       Total |       Total |       17.0 |  0.5964912280701754 |
+|          am |      canada |       Total |        6.0 | 0.35294117647058826 |
+|          am |      canada |    montreal |        2.0 |  0.3333333333333333 |
+|          am |      canada |       otawa |        1.0 | 0.16666666666666666 |
+|          am |      canada |     toronto |        3.0 |                 0.5 |
+|          am |         usa |       Total |       11.0 |  0.6470588235294118 |
+|          am |         usa |     chicago |        3.0 |  0.2727272727272727 |
+|          am |         usa |         nyc |        8.0 |  0.7272727272727273 |
+|          eu |       Total |       Total |       11.5 | 0.40350877192982454 |
+|          eu |      france |       Total |        2.5 | 0.21739130434782608 |
+|          eu |      france |        lyon |        0.5 |                 0.2 |
+|          eu |      france |       paris |        2.0 |                 0.8 |
+|          eu |          uk |       Total |        9.0 |   0.782608695652174 |
+|          eu |          uk |      london |        9.0 |                 1.0 |
++-------------+-------------+-------------+------------+---------------------+
 ```
 
 ##### Dynamic comparison - What-if - ColumnSet
