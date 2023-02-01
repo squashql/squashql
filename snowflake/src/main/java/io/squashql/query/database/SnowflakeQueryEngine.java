@@ -3,13 +3,17 @@ package io.squashql.query.database;
 import io.squashql.SnowflakeDatastore;
 import io.squashql.SnowflakeUtil;
 import io.squashql.query.ColumnarTable;
+import io.squashql.query.Header;
+import io.squashql.query.Measure;
 import io.squashql.query.Table;
 import io.squashql.store.Field;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.IntStream;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
 
@@ -45,11 +49,15 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
     try (Statement snowflakeStatement = this.datastore.getConnection().createStatement()) {
       ResultSet tableResult = snowflakeStatement.executeQuery(sql);
 
-      List<Field> headers = new ArrayList<>();
+      List<Header> headers = new ArrayList<>();
       ResultSetMetaData metadata = tableResult.getMetaData();
       // get the column names; column indexes start from 1
+      Set<String> measureNames = query.measures.stream().map(Measure::alias).collect(Collectors.toSet());
       for (int i = 1; i < metadata.getColumnCount() + 1; i++) {
-        headers.add(new Field(metadata.getColumnName(i), SnowflakeUtil.sqlTypeToClass(metadata.getColumnType(i))));
+        String fieldName = metadata.getColumnName(i);
+        headers.add(new Header(
+                new Field(fieldName, SnowflakeUtil.sqlTypeToClass(metadata.getColumnType(i))),
+                measureNames.contains(fieldName)));
       }
       List<List<Object>> values = new ArrayList<>();
       headers.forEach(field -> values.add(new ArrayList<>()));
@@ -61,9 +69,7 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
 
       return new ColumnarTable(
               headers,
-              query.measures,
-              IntStream.range(query.select.size(), query.select.size() + query.measures.size()).toArray(),
-              IntStream.range(0, query.select.size()).toArray(),
+              new HashSet<>(query.measures),
               values);
     } catch (SQLException e) {
       throw new RuntimeException(e);

@@ -42,7 +42,7 @@ public class QueryController {
     QueryWatch queryWatch = new QueryWatch();
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
     Table table = this.queryExecutor.execute(query, queryWatch, csBuilder, this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get());
-    List<String> fields = table.headers().stream().map(Field::name).collect(Collectors.toList());
+    List<String> fields = table.headers().stream().map(Header::field).map(Field::name).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))
             .columns(fields)
