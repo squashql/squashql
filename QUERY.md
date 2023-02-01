@@ -238,7 +238,7 @@ GROUP BY ROLLUP (continent, country, city);
 Example
 ```
 +-------------+-------------+-------------+------------+
-|   continent |     country |        city | population |
+|   continent |     country |        city |        pop |
 +-------------+-------------+-------------+------------+
 | Grand Total | Grand Total | Grand Total |       28.5 |
 |          am |       Total |       Total |       17.0 |
@@ -629,7 +629,7 @@ Note the columns used to define the ancestors need to be passed to the select me
 Result
 ```
 +-------------+-------------+-------------+------------+---------------------+
-|   continent |     country |        city | population |               ratio |
+|   continent |     country |        city |        pop |               ratio |
 +-------------+-------------+-------------+------------+---------------------+
 | Grand Total | Grand Total | Grand Total |       28.5 |                 1.0 |
 |          am |       Total |       Total |       17.0 |  0.5964912280701754 |
