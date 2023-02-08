@@ -1,6 +1,5 @@
 package io.squashql.query.database;
 
-import lombok.extern.slf4j.Slf4j;
 import io.squashql.query.ColumnarTable;
 import io.squashql.query.CountMeasure;
 import io.squashql.query.QueryExecutor;
@@ -8,6 +7,7 @@ import io.squashql.query.Table;
 import io.squashql.store.Datastore;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 
@@ -32,6 +32,11 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     this.datastore = datastore;
     this.fieldSupplier = createFieldSupplier();
     this.queryRewriter = queryRewriter;
+  }
+
+  @Override
+  public QueryRewriter queryRewriter() {
+    return this.queryRewriter;
   }
 
   protected Function<String, Field> createFieldSupplier() {
@@ -144,7 +149,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     }
   }
 
-  public static <Column, Record> Pair<List<Field>, List<List<Object>>> transform(
+  public static <Column, Record> Pair<List<Field>, List<List<Object>>> transformToColumnFormat(
           DatabaseQuery query,
           List<Column> columns,
           BiFunction<Column, String, Field> columnToField,
@@ -169,5 +174,16 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
       }
     });
     return Tuples.pair(fields, values);
+  }
+
+  public static <Column, Record> Pair<List<Field>, List<List<Object>>> transformToRowFormat(
+          List<Column> columns,
+          Function<Column, Field> columnToField,
+          Iterator<Record> recordIterator,
+          BiFunction<Integer, Record, Object> recordToFieldValue) {
+    List<Field> fields = columns.stream().map(columnToField::apply).toList();
+    List<List<Object>> rows = new ArrayList<>();
+    recordIterator.forEachRemaining(r -> rows.add(IntStream.range(0, fields.size()).mapToObj(i -> recordToFieldValue.apply(i, r)).toList()));
+    return Tuples.pair(fields, rows);
   }
 }

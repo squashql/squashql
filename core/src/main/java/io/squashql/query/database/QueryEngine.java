@@ -14,6 +14,8 @@ public interface QueryEngine<T extends Datastore> {
 
   Table execute(DatabaseQuery query);
 
+  Table executeRawSql(String sql);
+
   T datastore();
 
   Function<String, Field> getFieldSupplier();
@@ -22,4 +24,6 @@ public interface QueryEngine<T extends Datastore> {
    * Returns the list of supported aggregation functions by the underlying database.
    */
   List<String> supportedAggregationFunctions();
+
+  QueryRewriter queryRewriter();
 }

@@ -468,4 +468,16 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     Assertions.assertThat(result.headers().stream().map(Field::name).toList())
             .containsExactly("a1", "a2", "b1", "b2", "constant(100)", "constant(100.0)");
   }
+
+  @Test
+  void testRawQueryExecution() {
+    String tableName = this.executor.queryEngine.queryRewriter().tableName(this.storeName);
+    Table result = this.executor.execute(String.format("select ean, sum(price) as sumprice from %s group by ean order by ean", tableName));
+    Assertions.assertThat(result.headers().stream().map(Field::name).toList())
+            .containsExactly("ean", "sumprice");
+    Assertions.assertThat(result).containsExactly(
+            List.of("bottle", 7.5d),
+            List.of("cookie", 9.0d),
+            List.of("shirt", 30d));
+  }
 }
