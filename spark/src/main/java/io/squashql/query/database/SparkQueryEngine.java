@@ -2,6 +2,7 @@ package io.squashql.query.database;
 
 import io.squashql.SparkDatastore;
 import io.squashql.query.ColumnarTable;
+import io.squashql.query.RowTable;
 import io.squashql.query.Table;
 import io.squashql.store.Field;
 import org.apache.spark.sql.Dataset;
@@ -42,7 +43,7 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
   @Override
   protected Table retrieveAggregates(DatabaseQuery query, String sql) {
     Dataset<Row> ds = this.datastore.spark.sql(sql);
-    Pair<List<Field>, List<List<Object>>> result = transform(
+    Pair<List<Field>, List<List<Object>>> result = transformToColumnFormat(
             query,
             Arrays.stream(ds.schema().fields()).toList(),
             (column, name) -> new Field(name, datatypeToClass(column.dataType())),
@@ -55,6 +56,17 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
             IntStream.range(query.select.size(), query.select.size() + query.measures.size()).toArray(),
             IntStream.range(0, query.select.size()).toArray(),
             result.getTwo());
+  }
+
+  @Override
+  public Table executeRawSql(String sql) {
+    Dataset<Row> ds = this.datastore.spark.sql(sql);
+    Pair<List<Field>, List<List<Object>>> result = transformToRowFormat(
+            Arrays.stream(ds.schema().fields()).toList(),
+            c -> new Field(c.name(), datatypeToClass(c.dataType())),
+            ds.toLocalIterator(),
+            (i, r) -> r.get(i));
+    return new RowTable(result.getOne(), result.getTwo());
   }
 
   @Override

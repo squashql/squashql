@@ -6,6 +6,7 @@ import io.squashql.BigQueryUtil;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.ColumnarTable;
 import io.squashql.query.QueryExecutor;
+import io.squashql.query.RowTable;
 import io.squashql.query.Table;
 import io.squashql.store.Field;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
@@ -152,7 +153,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     try {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
       Schema schema = tableResult.getSchema();
-      Pair<List<Field>, List<List<Object>>> result = AQueryEngine.transform(
+      Pair<List<Field>, List<List<Object>>> result = AQueryEngine.transformToColumnFormat(
               query,
               schema.getFields(),
               (column, name) -> new Field(name, BigQueryUtil.bigQueryTypeToClass(column.getType())),
@@ -166,6 +167,23 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
               IntStream.range(query.select.size(), query.select.size() + query.measures.size()).toArray(),
               IntStream.range(0, query.select.size()).toArray(),
               result.getTwo());
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public Table executeRawSql(String sql) {
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(sql).build();
+    try {
+      TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
+      Schema schema = tableResult.getSchema();
+      Pair<List<Field>, List<List<Object>>> result = AQueryEngine.transformToRowFormat(
+              schema.getFields(),
+              column -> new Field(column.getName(), BigQueryUtil.bigQueryTypeToClass(column.getType())),
+              tableResult.iterateAll().iterator(),
+              (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i));
+      return new RowTable(result.getOne(), result.getTwo());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }

@@ -14,6 +14,8 @@ public interface QueryEngine<T extends Datastore> {
 
   Table execute(DatabaseQuery query);
 
+  Table executeRawSql(String sql);
+
   T datastore();
 
   Function<String, Field> getFieldSupplier();
