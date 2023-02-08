@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 public class QueryController {
 
   public static final String MAPPING_QUERY = "/query";
+  public static final String MAPPING_QUERY_RAW = "/query-raw";
   public static final String MAPPING_QUERY_BEAUTIFY = "/query-beautify";
   public static final String MAPPING_METADATA = "/metadata";
   public static final String MAPPING_EXPRESSION = "/expression";
@@ -61,6 +62,19 @@ public class QueryController {
   public ResponseEntity<String> executeBeautify(@RequestBody QueryDto query) {
     Table table = this.queryExecutor.execute(query);
     return ResponseEntity.ok(table.toString());
+  }
+
+  @PostMapping(MAPPING_QUERY_RAW)
+  public ResponseEntity<QueryResultDto> executeRaw(@RequestBody String sql) {
+    Table table = this.queryExecutor.execute(sql);
+    SimpleTableDto simpleTable = SimpleTableDto.builder()
+            .rows(ImmutableList.copyOf(table.iterator()))
+            .columns(table.headers().stream().map(Field::name).collect(Collectors.toList()))
+            .build();
+    QueryResultDto result = QueryResultDto.builder()
+            .table(simpleTable)
+            .build();
+    return ResponseEntity.ok(result);
   }
 
   @GetMapping(MAPPING_METADATA)

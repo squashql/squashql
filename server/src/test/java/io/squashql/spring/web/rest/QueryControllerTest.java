@@ -226,4 +226,20 @@ public class QueryControllerTest {
 
     DatasetTestConfig.squashQLUserSupplier.set(null); // reset
   }
+
+  @Test
+  void testQueryRaw() throws Exception {
+    this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_RAW)
+                    .content("select count(*) as numberOfPrices from our_prices")
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(result -> {
+              String contentAsString = result.getResponse().getContentAsString();
+              QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
+              Assertions.assertThat(queryResult.table.rows).containsExactly(List.of(20));
+              Assertions.assertThat(queryResult.table.columns).containsExactly("numberOfPrices");
+              Assertions.assertThat(queryResult.metadata).isNull();
+              Assertions.assertThat(queryResult.debug).isNull();
+            });
+  }
 }
