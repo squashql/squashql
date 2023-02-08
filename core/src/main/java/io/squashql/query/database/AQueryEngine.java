@@ -34,6 +34,11 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     this.queryRewriter = queryRewriter;
   }
 
+  @Override
+  public QueryRewriter queryRewriter() {
+    return this.queryRewriter;
+  }
+
   protected Function<String, Field> createFieldSupplier() {
     return fieldName -> {
       for (Store store : this.datastore.storesByName().values()) {

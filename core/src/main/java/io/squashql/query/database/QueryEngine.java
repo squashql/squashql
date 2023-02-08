@@ -24,4 +24,6 @@ public interface QueryEngine<T extends Datastore> {
    * Returns the list of supported aggregation functions by the underlying database.
    */
   List<String> supportedAggregationFunctions();
+
+  QueryRewriter queryRewriter();
 }
