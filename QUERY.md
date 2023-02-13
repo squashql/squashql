@@ -454,6 +454,9 @@ const oneHundredInteger = integer(100)
 
 Comparison between "time" period like year, semester, quarter, month.
 
+> **Warning**
+> Values of such periods are expected to be integers. Semester must be 1 or 2, quarter must be within `[1;4]`, month must be within `[1;12]`.
+
 Example: Compare sum of score of each student with previous semester given this dataset
 ```
 +------+----------+---------+-------------+-------+
