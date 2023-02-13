@@ -2,6 +2,7 @@
   "name": "@squashql/squashql-js",
   "version": "1.0.3-SNAPSHOT",
   "description": "SquashQL query builder/helper",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
