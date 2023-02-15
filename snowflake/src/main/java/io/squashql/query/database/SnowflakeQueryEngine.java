@@ -5,21 +5,25 @@ import io.squashql.SnowflakeUtil;
 import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.Measure;
+import io.squashql.query.RowTable;
 import io.squashql.query.Table;
 import io.squashql.store.Field;
 
+import java.io.Serializable;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
 
   /**
-   * https://docs.snowflake.com/en/sql-reference/functions-aggregation.html
-   * NOTE there is more but only a subset is proposed here.
+   * https://docs.snowflake.com/en/sql-reference/functions-aggregation.html NOTE there is more but only a subset is
+   * proposed here.
    */
   public static final List<String> SUPPORTED_AGGREGATION_FUNCTIONS = List.of(
           "ANY_VALUE",
@@ -46,19 +50,8 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
 
   @Override
   protected Table retrieveAggregates(DatabaseQuery query, String sql) {
-    try (Statement snowflakeStatement = this.datastore.getConnection().createStatement()) {
-      ResultSet tableResult = snowflakeStatement.executeQuery(sql);
-
-      List<Header> headers = new ArrayList<>();
-      ResultSetMetaData metadata = tableResult.getMetaData();
-      // get the column names; column indexes start from 1
-      Set<String> measureNames = query.measures.stream().map(Measure::alias).collect(Collectors.toSet());
-      for (int i = 1; i < metadata.getColumnCount() + 1; i++) {
-        String fieldName = metadata.getColumnName(i);
-        headers.add(new Header(
-                new Field(fieldName, SnowflakeUtil.sqlTypeToClass(metadata.getColumnType(i))),
-                measureNames.contains(fieldName)));
-      }
+    return executeQuery(sql, tableResult -> {
+      List<Header> headers = createHeaderList(tableResult, query.measures);
       List<List<Object>> values = new ArrayList<>();
       headers.forEach(field -> values.add(new ArrayList<>()));
       while (tableResult.next()) {
@@ -66,35 +59,78 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
           values.get(i).add(getTypeValue(tableResult, i));
         }
       }
-
       return new ColumnarTable(
               headers,
               new HashSet<>(query.measures),
               values);
+    });
+  }
+
+  @Override
+  public Table executeRawSql(String sql) {
+    return executeQuery(sql, tableResult -> {
+      List<Field> headers = createHeaderList(tableResult, Collections.emptyList()).stream().map(Header::field).toList();
+      List<List<Object>> rows = new ArrayList<>();
+      while (tableResult.next()) {
+        rows.add(IntStream.range(0, headers.size()).mapToObj(i -> getTypeValue(tableResult, i)).toList());
+      }
+      return new RowTable(headers, rows);
+    });
+  }
+
+  protected List<Header> createHeaderList(ResultSet tableResult, List<Measure> measureNames) throws SQLException {
+    List<Header> headers = new ArrayList<>();
+    ResultSetMetaData metadata = tableResult.getMetaData();
+    // get the column names; column indexes start from 1
+    for (int i = 1; i < metadata.getColumnCount() + 1; i++) {
+      String fieldName = metadata.getColumnName(i);
+      headers.add(new Header(
+              new Field(fieldName, SnowflakeUtil.sqlTypeToClass(metadata.getColumnType(i))),
+              measureNames.contains(fieldName)));
+    }
+
+    return headers;
+  }
+
+  protected <R> R executeQuery(String sql, ThrowingFunction<ResultSet, R> consumer) {
+    try (Statement snowflakeStatement = this.datastore.getConnection().createStatement()) {
+      ResultSet tableResult = snowflakeStatement.executeQuery(sql);
+      return consumer.apply(tableResult);
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
   }
 
+  @FunctionalInterface
+  public interface ThrowingFunction<T, R> extends Serializable {
+
+    @SuppressWarnings("ProhibitedExceptionDeclared")
+    R apply(T t) throws SQLException;
+  }
+
   /**
    * Gets the value with the correct type, otherwise everything is read as Object.
    */
-  public static Object getTypeValue(ResultSet tableResult, int index) throws SQLException {
-    return switch (tableResult.getMetaData().getColumnType(1 + index)) {
-      case Types.CHAR, Types.NVARCHAR, Types.VARCHAR, Types.LONGVARCHAR -> tableResult.getString(1 + index);
-      case Types.BOOLEAN, Types.BIT -> tableResult.getBoolean(1 + index);
-      case Types.TINYINT -> tableResult.getByte(1 + index);
-      case Types.SMALLINT -> tableResult.getShort(1 + index);
-      case Types.INTEGER -> tableResult.getInt(1 + index);
-      case Types.BIGINT -> tableResult.getLong(1 + index);
-      case Types.REAL, Types.FLOAT -> tableResult.getFloat(1 + index);
-      case Types.DECIMAL, Types.DOUBLE -> tableResult.getDouble(1 + index);
-      case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> tableResult.getBytes(1 + index);
-      case Types.DATE -> tableResult.getDate(1 + index);
-      case Types.TIME -> tableResult.getTime(1 + index);
-      case Types.TIMESTAMP -> tableResult.getTimestamp(1 + index);
-      default -> tableResult.getObject(1 + index);
-    };
+  public static Object getTypeValue(ResultSet tableResult, int index) {
+    try {
+      return switch (tableResult.getMetaData().getColumnType(1 + index)) {
+        case Types.CHAR, Types.NVARCHAR, Types.VARCHAR, Types.LONGVARCHAR -> tableResult.getString(1 + index);
+        case Types.BOOLEAN, Types.BIT -> tableResult.getBoolean(1 + index);
+        case Types.TINYINT -> tableResult.getByte(1 + index);
+        case Types.SMALLINT -> tableResult.getShort(1 + index);
+        case Types.INTEGER -> tableResult.getInt(1 + index);
+        case Types.BIGINT -> tableResult.getLong(1 + index);
+        case Types.REAL, Types.FLOAT -> tableResult.getFloat(1 + index);
+        case Types.DECIMAL, Types.DOUBLE -> tableResult.getDouble(1 + index);
+        case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> tableResult.getBytes(1 + index);
+        case Types.DATE -> tableResult.getDate(1 + index);
+        case Types.TIME -> tableResult.getTime(1 + index);
+        case Types.TIMESTAMP -> tableResult.getTimestamp(1 + index);
+        default -> tableResult.getObject(1 + index);
+      };
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override

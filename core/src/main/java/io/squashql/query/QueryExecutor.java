@@ -46,6 +46,10 @@ public class QueryExecutor {
     };
   }
 
+  public Table execute(String rawSqlQuery) {
+    return this.queryEngine.executeRawSql(rawSqlQuery);
+  }
+
   public Table execute(QueryDto query) {
     return execute(
             query,

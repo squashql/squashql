@@ -1,13 +1,26 @@
 package io.squashql.query;
 
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.*;
+import io.squashql.BigQueryUtil;
 
 public class BigQueryTestUtil {
 
-  public static final String CREDENTIALS = "";
-  public static final String PROJECT_ID = "";
-  public static final String DATASET_NAME = "";
+  public static final String SERVICE_ACCOUNT_KEY_FILE_PATH = System.getenv().getOrDefault("SERVICE_ACCOUNT_KEY_FILE_PATH", System.getProperty("bigquery.test.key.file.path"));
+  public static final String SERVICE_ACCOUNT_KEY = System.getenv().getOrDefault("SERVICE_ACCOUNT_KEY", System.getProperty("bigquery.test.key"));
+  public static final String PROJECT_ID = System.getenv().getOrDefault("PROJECT_ID", System.getProperty("bigquery.test.project.id"));
+  public static final String DATASET_NAME = System.getenv().getOrDefault("DATASET_NAME", System.getProperty("bigquery.test.dataset.name"));
+
+  public static final ServiceAccountCredentials createServiceAccountCredentials() {
+    if (SERVICE_ACCOUNT_KEY_FILE_PATH != null) {
+      return BigQueryUtil.createCredentialsFromFile(SERVICE_ACCOUNT_KEY_FILE_PATH);
+    } else if (SERVICE_ACCOUNT_KEY != null) {
+      return BigQueryUtil.createCredentialsFromFileContent(SERVICE_ACCOUNT_KEY);
+    } else {
+      throw new IllegalStateException("no service account credentials provided");
+    }
+  }
 
   public static void createDatasetIfDoesNotExist(BigQuery bigquery, String datasetName) {
     DatasetInfo datasetInfo = DatasetInfo.newBuilder(datasetName).build();

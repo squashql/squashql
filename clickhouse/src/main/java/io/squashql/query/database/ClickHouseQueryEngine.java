@@ -5,6 +5,7 @@ import io.squashql.ClickHouseDatastore;
 import io.squashql.ClickHouseUtil;
 import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
+import io.squashql.query.RowTable;
 import io.squashql.query.Table;
 import io.squashql.store.Field;
 import java.util.HashSet;
@@ -33,24 +34,25 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
           "covarPop",
           "covarSamp");
 
+  protected final ClickHouseNode node;
+
   public ClickHouseQueryEngine(ClickHouseDatastore datastore) {
     super(datastore, new ClickHouseQueryRewriter());
+    this.node = ClickHouseNode.builder()
+            .host(this.datastore.dataSource.getHost())
+            .port(ClickHouseProtocol.HTTP, this.datastore.dataSource.getPort())
+            .build();
   }
 
   @Override
   protected Table retrieveAggregates(DatabaseQuery query, String sql) {
-    ClickHouseNode server = ClickHouseNode.builder()
-            .host(this.datastore.dataSource.getHost())
-            .port(ClickHouseProtocol.HTTP, this.datastore.dataSource.getPort())
-            .build();
-
     try (ClickHouseClient client = ClickHouseClient.newInstance(ClickHouseProtocol.HTTP);
-            ClickHouseResponse response = client.connect(server)
+            ClickHouseResponse response = client.connect(this.node)
                     .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
                     .query(sql)
                     .execute()
                     .get()) {
-      Pair<List<Header>, List<List<Object>>> result = transform(
+      Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
               query,
               response.getColumns(),
               (column, name) -> new Field(name, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())),
@@ -61,6 +63,25 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
               result.getOne(),
               new HashSet<>(query.measures),
               result.getTwo());
+    } catch (ExecutionException | InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public Table executeRawSql(String sql) {
+    try (ClickHouseClient client = ClickHouseClient.newInstance(ClickHouseProtocol.HTTP);
+         ClickHouseResponse response = client.connect(this.node)
+                 .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+                 .query(sql)
+                 .execute()
+                 .get()) {
+      Pair<List<Field>, List<List<Object>>> result = transformToRowFormat(
+              response.getColumns(),
+              column -> new Field(column.getColumnName(), ClickHouseUtil.clickHouseTypeToClass(column.getDataType())),
+              response.records().iterator(),
+              (i, r) -> r.getValue(i).asObject());
+      return new RowTable(result.getOne(), result.getTwo());
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);
     }

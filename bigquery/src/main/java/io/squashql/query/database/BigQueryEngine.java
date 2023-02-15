@@ -7,6 +7,7 @@ import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.QueryExecutor;
+import io.squashql.query.RowTable;
 import io.squashql.query.Table;
 import io.squashql.store.Field;
 import java.util.HashSet;
@@ -48,8 +49,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     if (!hasRollup) {
       return super.createSqlStatement(query);
     } else {
-      // Special case for BigQuery because it does not support either the grouping function used to identify
-      // extra-rows added
+      // Special case for BigQuery because it does not support either the grouping function used to identify extra-rows added
       // by rollup or grouping sets for partial rollup.
       BigQueryQueryRewriter rewriter = (BigQueryQueryRewriter) this.queryRewriter;
       /*
@@ -154,7 +154,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     try {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
       Schema schema = tableResult.getSchema();
-      Pair<List<Header>, List<List<Object>>> result = AQueryEngine.transform(
+      Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
               query,
               schema.getFields(),
               (column, name) -> new Field(name, BigQueryUtil.bigQueryTypeToClass(column.getType())),
@@ -166,6 +166,23 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
               result.getOne(),
               new HashSet<>(query.measures),
               result.getTwo());
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public Table executeRawSql(String sql) {
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(sql).build();
+    try {
+      TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
+      Schema schema = tableResult.getSchema();
+      Pair<List<Field>, List<List<Object>>> result = transformToRowFormat(
+              schema.getFields(),
+              column -> new Field(column.getName(), BigQueryUtil.bigQueryTypeToClass(column.getType())),
+              tableResult.iterateAll().iterator(),
+              (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i));
+      return new RowTable(result.getOne(), result.getTwo());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
@@ -226,9 +243,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     }
 
     /**
-     * See <a
-     * href="https://cloud.google.com/bigquery/docs/schemas#column_names">https://cloud.google
-     * .com/bigquery/docs/schemas#column_names</a>.
+     * See <a href="https://cloud.google.com/bigquery/docs/schemas#column_names">https://cloud.google.com/bigquery/docs/schemas#column_names</a>.
      * A column name must contain only letters (a-z, A-Z), numbers (0-9), or underscores (_), and it must start with a
      * letter or underscore. The maximum column name length is 300 characters.
      * FIXME must used a regex instead to replace incorrect characters.

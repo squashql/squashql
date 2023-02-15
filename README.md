@@ -16,7 +16,7 @@ the UI.
 - It helps front-end developers build and run SQL queries in their own language in [TypeScript](https://www.typescriptlang.org/)
 - With its "write once, run everywhere" approach, it is a great solution for those who need to quickly and efficiently query data from multiple databases.
 
-![test6](https://user-images.githubusercontent.com/5783183/210366738-06007ce4-a46a-4b14-b01c-d58de933c5d9.gif)
+![ide ts squashql](https://user-images.githubusercontent.com/5783183/215964358-37814efa-f315-4de5-97cd-cefce537caaa.gif)
 
 ## Compatibility
 
@@ -89,6 +89,27 @@ BigQueryQueryEngine qe = new BigQueryQueryEngine(ds);
 
 See how to create a [credentials object in BigQuery documentation](https://cloud.google.com/bigquery/docs/authentication/service-account-file)
 
+#### Snowflake
+
+Maven
+```xml
+<dependency>
+  <groupId>io.squashql</groupId>
+  <artifactId>squashql-snowflake</artifactId>
+  <version>${squashql.version}</version>
+</dependency>
+```
+
+Java
+```
+String jdbcUrl = jdbc:snowflake://<account_identifier>.snowflakecomputing.com; // to be defined
+String database = ...; // to be defined
+String schema = ...; // to be defined
+Properties properties = ... // to be defined, it contains in particular the credentials (user, password, warehouse...)
+SnowflakeDatastore ds = new SnowflakeDatastore(jdbcUrl, database, schema, properties);
+SnowflakeQueryEngine qe = new SnowflakeQueryEngine(ds);
+```
+
 ## API
 
 SquashQL exposes two http endpoints to interrogate your database.
@@ -101,7 +122,7 @@ To use those endpoints, SquashQL provides a [TypeScript](https://www.typescriptl
 ```typescript
 import {count, from, Querier} from "@squashql/squashql-js"
 
-const querier = new Querier("http://localhost:8080");
+const querier = new Querier("http://localhost:8080")
 
 querier.getMetadata().then(response => {
   console.log(response)
@@ -114,6 +135,17 @@ const query = from("myTable")
 querier.execute(query).then(response => {
   console.log(response)
 })
+```
+
+The object `Querier` uses [Axios](https://axios-http.com/) under the hood as HTTP
+Client. [Additional configuration](https://axios-http.com/docs/req_config) can be
+provided like this:
+
+```typescript
+const axiosConfig = {
+  timeout: 10000
+}
+const querier = new Querier("http://localhost:8080", axiosConfig)
 ```
 
 See [this page](./QUERY.md) to learn more about the API.

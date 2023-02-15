@@ -6,7 +6,10 @@ import io.squashql.query.dto.Period;
 import io.squashql.store.Field;
 import io.squashql.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -16,6 +19,8 @@ import java.util.Map;
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.Functions.criterion;
 import static io.squashql.query.Functions.eq;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import static io.squashql.query.database.QueryEngine.TOTAL;
 import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -178,6 +183,20 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     Assertions
             .assertThat(finalTable.headers().stream().map(Header::field).map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), "myMeasure", "sum(sales)");
+
+    // Rollup will make Grand Total and Total appear. For this line, we can't make the comparison. Null should be
+    // written and the query should not fail.
+    query = Query.from(this.storeName)
+            .select(List.of("year_sales", SCENARIO_FIELD_NAME), List.of(m, sales))
+            .rollup(List.of("year_sales", SCENARIO_FIELD_NAME))
+            .build();
+    finalTable = this.executor.execute(query);
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, null, 600d),
+            Arrays.asList(2022l, TOTAL, null, 300d),
+            Arrays.asList(2022l, "base", null, 300d),
+            Arrays.asList(2023l, TOTAL, 0d, 300d),
+            Arrays.asList(2023l, "base", 0d, 300d));
   }
 
   @Test
