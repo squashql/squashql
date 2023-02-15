@@ -12,14 +12,15 @@ import io.squashql.util.Queries;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TableUtils {
 
   public static String toString(List<? extends Object> columns,
-                                Iterable<List<Object>> rows,
-                                Function<Object, String> columnElementPrinters,
-                                Function<Object, String> rowElementPrinters) {
+          Iterable<List<Object>> rows,
+          Function<Object, String> columnElementPrinters,
+          Function<Object, String> rowElementPrinters) {
     /*
      * leftJustifiedRows - If true, it will add "-" as a flag to format string to
      * make it left justified. Otherwise, right justified.
@@ -116,25 +117,25 @@ public class TableUtils {
     queryDto.columnSets.values()
             .forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
     finalColumns.addAll(queryDto.columns);
+    return selectAndOrderColumns(table, finalColumns, queryDto.measures);
+  }
 
-    // Once complete, construct the final result with columns in correct order.
+  public static ColumnarTable selectAndOrderColumns(ColumnarTable table, List<String> columns, List<Measure> measures) {
     List<Header> headers = new ArrayList<>();
     List<List<Object>> values = new ArrayList<>();
-    for (String finalColumn : finalColumns) {
+    for (String finalColumn : columns) {
       headers.add(new Header(table.getField(finalColumn), false));
       values.add(Objects.requireNonNull(table.getColumnValues(finalColumn)));
     }
-
-    for (Measure measure : queryDto.measures) {
+    for (Measure measure : measures) {
       headers.add(new Header(table.getField(measure), true));
       values.add(Objects.requireNonNull(table.getAggregateValues(measure)));
     }
-
-    return new ColumnarTable(headers, new HashSet<>(queryDto.measures), values);
+    return new ColumnarTable(headers, new HashSet<>(measures), values);
   }
 
-  public static Table orderRows(ColumnarTable table, QueryDto queryDto) {
-    Map<String, Comparator<?>> comparatorByColumnName = Queries.getComparators(queryDto);
+  public static Table orderRows(ColumnarTable table, Map<String, Comparator<?>> comparatorByColumnName,
+          Map<ColumnSetKey, ColumnSet> columnSets) {
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
 
@@ -164,7 +165,7 @@ public class TableUtils {
 
     int[] contextIndices = new int[args.size()];
     java.util.Arrays.fill(contextIndices, -1);
-    ColumnSet bucket = queryDto.columnSets.get(ColumnSetKey.BUCKET);
+    ColumnSet bucket = columnSets.get(ColumnSetKey.BUCKET);
     if (bucket != null) {
       BucketColumnSetDto cs = (BucketColumnSetDto) bucket;
       contextIndices[table.columnIndex(cs.field)] = table.columnIndex(cs.name);
@@ -221,4 +222,27 @@ public class TableUtils {
 
     return table;
   }
+
+  public static Map<String, Comparator<?>> getMergedComparator(QueryDto leftQueryDto, QueryDto rightQueryDto) {
+    Map<String, Comparator<?>> leftComparatorByColumnName = Queries.getComparators(leftQueryDto);
+    Map<String, Comparator<?>> rightComparatorByColumnName = Queries.getComparators(rightQueryDto);
+    return Stream.of(leftComparatorByColumnName, rightComparatorByColumnName)
+            .flatMap(map -> map.entrySet().stream())
+            .collect(Collectors.toMap(
+                    Map.Entry::getKey,
+                    Map.Entry::getValue,
+                    (leftValue, rightValue) -> leftValue));
+  }
+
+  public static Map<ColumnSetKey, ColumnSet> getMergedColumnSets(QueryDto leftQueryDto, QueryDto rightQueryDto) {
+    Map<ColumnSetKey, ColumnSet> leftColumnSets = leftQueryDto.columnSets;
+    Map<ColumnSetKey, ColumnSet> rightColumnSets = rightQueryDto.columnSets;
+    return Stream.of(leftColumnSets, rightColumnSets)
+            .flatMap(map -> map.entrySet().stream())
+            .collect(Collectors.toMap(
+                    Map.Entry::getKey,
+                    Map.Entry::getValue,
+                    (leftValue, rightValue) -> leftValue));
+  }
+
 }

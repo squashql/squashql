@@ -2,6 +2,7 @@ package io.squashql.util;
 
 import io.squashql.query.database.QueryEngine;
 
+import io.squashql.query.database.SQLTranslator;
 import java.io.Serializable;
 import java.util.Comparator;
 
@@ -42,7 +43,7 @@ public class NullAndTotalComparator<T> implements Comparator<T>, Serializable {
   }
 
   private static <T> boolean isTotal(T a) {
-    return a.equals(QueryEngine.TOTAL) || a.equals(QueryEngine.GRAND_TOTAL);
+    return a.equals(QueryEngine.TOTAL) || a.equals(QueryEngine.GRAND_TOTAL) || a.equals(SQLTranslator.TOTAL_CELL);
   }
 
   public static <T> NullAndTotalComparator<T> nullsLastAndTotalsFirst(Comparator<? super T> comparator) {

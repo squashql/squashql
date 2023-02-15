@@ -136,10 +136,10 @@ class TestMergeTables {
     /*
     | typology | category | price.sum | price.avg |
     |----------|----------|-----------|-----------|
-    | MN       | A        | 20        | 2.3       |
-    | MN       | B        | 25        | 3         |
     | MDD      | A        | 12        | 6         |
     | MDD      | C        | 5         | 5         |
+    | MN       | A        | 20        | 2.3       |
+    | MN       | B        | 25        | 3         |
      */
     Table expectedTable = new ColumnarTable(
             List.of(new Header(new Field("typology", String.class), false),
@@ -149,10 +149,10 @@ class TestMergeTables {
             Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
-                    new ArrayList<>(Arrays.asList("MN", "MN", "MDD", "MDD")),
-                    new ArrayList<>(Arrays.asList("A", "B", "A", "C")),
-                    new ArrayList<>(Arrays.asList(20, 25, 12, 5)),
-                    new ArrayList<>(Arrays.asList(2.3, 3, 6, 5))));
+                    new ArrayList<>(Arrays.asList("MDD", "MDD", "MN", "MN")),
+                    new ArrayList<>(Arrays.asList("A", "C", "A", "B")),
+                    new ArrayList<>(Arrays.asList(12, 5, 20, 25)),
+                    new ArrayList<>(Arrays.asList(6, 5, 2.3, 3))));
     Table mergedTable = MergeTables.mergeTables(leftTable, rightTable);
     Assertions.assertThat(mergedTable).isEqualTo(expectedTable);
   }

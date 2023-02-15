@@ -6,8 +6,10 @@ import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.Measure;
 import io.squashql.query.Table;
+import io.squashql.query.TableUtils;
 import io.squashql.query.database.SQLTranslator;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -25,13 +27,7 @@ class MergeTables {
   }
 
   /**
-   * Merge two tables into only one resulting table. We choose to first get all columns and then all measures.
-   * Hypothesis:
-   * <ul>
-   *   <li>the input tables must have their common columns at the beginning, in the same order, and sorted</li>
-   *   <li>every table must have all its columns first, then its measures</li>
-   *   <li>the input tables must not share any measure</li>
-   * </ul>
+   * Merge two tables into only one resulting table. Hypothesis: the input tables must not share any measure.
    */
   static Table mergeTables(Table leftTable, Table rightTable) {
     if (leftTable == null) {
@@ -89,10 +85,61 @@ class MergeTables {
     return Sets.newHashSet(Iterables.concat(leftMeasures, rightMeasures));
   }
 
+
+  /**
+   * In order to merge the tables, they must have their common columns at the beginning, in the same order, and sorted.
+   * They also must have all their columns first, then their measures.
+   *
+   * This method takes as input the tables to merge and return them reshaped to respect this.
+   */
+  private static Table[] prepareTablesForMerge(Table leftTable, Table rightTable) {
+    // Order columns to have all commons first
+    List<Header> leftHeaders = leftTable.headers();
+    List<Header> rightHeaders = rightTable.headers();
+    List<String> commonColumns = leftHeaders.stream()
+            .filter(header -> !header.isMeasure() && rightHeaders.contains(header)).map(header -> header.field().name())
+            .toList();
+
+    List<String> leftColumns = leftHeaders.stream().filter(header -> !header.isMeasure())
+            .map(header -> header.field().name()).toList();
+    List<String> leftColumnsOrdered = new ArrayList<>(commonColumns.stream().filter(leftColumns::contains).toList());
+    leftColumns.forEach(columnName -> {
+      if (!leftColumnsOrdered.contains(columnName)) {
+        leftColumnsOrdered.add(columnName);
+      }
+    });
+
+    List<String> rightColumns = rightHeaders.stream().filter(header -> !header.isMeasure())
+            .map(header -> header.field().name()).toList();
+    List<String> rightColumnsOrdered = new ArrayList<>(commonColumns.stream().filter(rightColumns::contains).toList());
+    rightColumns.forEach(columnName -> {
+      if (!rightColumnsOrdered.contains(columnName)) {
+        rightColumnsOrdered.add(columnName);
+      }
+    });
+
+    ColumnarTable orderedLeftTable = TableUtils.selectAndOrderColumns((ColumnarTable) leftTable, leftColumnsOrdered,
+            leftTable.measures().stream().toList());
+    ColumnarTable orderedRightTable = TableUtils.selectAndOrderColumns((ColumnarTable) rightTable, rightColumnsOrdered,
+            rightTable.measures().stream().toList());
+
+    // Sort rows on all columns with default comparator (natural order)
+    orderedLeftTable = (ColumnarTable) TableUtils.orderRows(orderedLeftTable, Collections.emptyMap(),
+            Collections.emptyMap());
+    orderedRightTable = (ColumnarTable) TableUtils.orderRows(orderedRightTable, Collections.emptyMap(),
+            Collections.emptyMap());
+
+    return new Table[] {orderedLeftTable, orderedRightTable};
+  }
+
   private static List<List<Object>> mergeValues(
           List<Header> mergedTableHeaders,
           Table leftTable,
           Table rightTable) {
+    // Order headers and sort rows
+    Table[] preparedTablesForMerge = prepareTablesForMerge(leftTable, rightTable);
+    leftTable = preparedTablesForMerge[0];
+    rightTable = preparedTablesForMerge[1];
     // values initialization
     final List<List<Object>> mergedValues = new ArrayList<>();
     for (int i = 0; i < mergedTableHeaders.size(); i++) {
