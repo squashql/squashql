@@ -69,7 +69,7 @@ public class QueryController {
     Table table = this.queryExecutor.execute(sql);
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))
-            .columns(table.headers().stream().map(Field::name).collect(Collectors.toList()))
+            .columns(table.headers().stream().map(header -> header.field().name()).collect(Collectors.toList()))
             .build();
     QueryResultDto result = QueryResultDto.builder()
             .table(simpleTable)
