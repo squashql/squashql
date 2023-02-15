@@ -69,7 +69,7 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
   @Override
   public Table executeRawSql(String sql) {
     return executeQuery(sql, tableResult -> {
-      List<Field> headers = createHeaderList(tableResult, Collections.emptyList()).stream().map(Header::field).toList();
+      List<Header> headers = createHeaderList(tableResult, Collections.emptyList());
       List<List<Object>> rows = new ArrayList<>();
       while (tableResult.next()) {
         rows.add(IntStream.range(0, headers.size()).mapToObj(i -> getTypeValue(tableResult, i)).toList());

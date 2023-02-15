@@ -60,7 +60,7 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
   @Override
   public Table executeRawSql(String sql) {
     Dataset<Row> ds = this.datastore.spark.sql(sql);
-    Pair<List<Field>, List<List<Object>>> result = transformToRowFormat(
+    Pair<List<Header>, List<List<Object>>> result = transformToRowFormat(
             Arrays.stream(ds.schema().fields()).toList(),
             c -> new Field(c.name(), datatypeToClass(c.dataType())),
             ds.toLocalIterator(),

@@ -174,15 +174,15 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     return Tuples.pair(headers, values);
   }
 
-  public static <Column, Record> Pair<List<Field>, List<List<Object>>> transformToRowFormat(
+  public static <Column, Record> Pair<List<Header>, List<List<Object>>> transformToRowFormat(
           List<Column> columns,
           Function<Column, Field> columnToField,
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue) {
-    List<Field> fields = columns.stream().map(columnToField::apply).toList();
+    List<Header> headers = columns.stream().map(column -> new Header(columnToField.apply(column), false)).toList();
     List<List<Object>> rows = new ArrayList<>();
     recordIterator.forEachRemaining(r -> rows.add(
-            IntStream.range(0, fields.size()).mapToObj(i -> recordToFieldValue.apply(i, r)).toList()));
-    return Tuples.pair(fields, rows);
+            IntStream.range(0, headers.size()).mapToObj(i -> recordToFieldValue.apply(i, r)).toList()));
+    return Tuples.pair(headers, rows);
   }
 }
