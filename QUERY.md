@@ -710,7 +710,7 @@ const groups = new Map(Object.entries({
   "group3": ["base", "s3"],
   "group4": ["s1", "s2", "s3"],
 }))
-const columnSet = new BucketColumnSet("group", "scenario", values);
+const columnSet = new BucketColumnSet("group", "scenario", groups);
 ```
 
 The first argument of `BucketColumnSet` is the name of the new (virtual) column that will be created.
