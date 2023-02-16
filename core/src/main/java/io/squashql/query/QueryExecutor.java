@@ -171,8 +171,7 @@ public class QueryExecutor {
           QueryDto query,
           QueryScope queryScope,
           Function<String, Field> fieldSupplier) {
-    // FIXME clean this code, create a dedicated class?
-    // This graph is used to keep track of dependency between execution plan.
+    // This graph is used to keep track of dependency between execution plans. An Execution Plan is bound to a given scope.
     MutableGraph<NodeWithId<QueryScope>> executionGraph = GraphBuilder.directed().build();
     IntSupplier id = new AtomicInteger()::getAndIncrement;
     Map<QueryScope, Integer> idByNode = new HashMap<>();

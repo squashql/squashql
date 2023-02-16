@@ -22,7 +22,7 @@ public class GraphDependencyBuilder<N> {
   public Graph<NodeWithId<N>> build(List<N> nodes) {
     Function<N, NodeWithId<N>> transformer = m -> new NodeWithId<>(m, this.idByNode.computeIfAbsent(m, k -> this.id.getAsInt()));
     MutableGraph<NodeWithId<N>> graph = GraphBuilder.directed().build();
-    for (N node  : nodes) {
+    for (N node : nodes) {
       this.idByNode.computeIfAbsent(node, k -> this.id.getAsInt());
       addToGraph(graph, transformer, node);
     }

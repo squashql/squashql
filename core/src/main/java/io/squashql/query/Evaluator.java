@@ -1,5 +1,7 @@
 package io.squashql.query;
 
+import io.squashql.query.QueryExecutor.ExecutionContext;
+import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import io.squashql.query.comp.BinaryOperations;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.store.Field;
@@ -13,21 +15,29 @@ import java.util.function.Function;
 
 import static io.squashql.query.ColumnSetKey.BUCKET;
 
-public class Evaluator implements BiConsumer<QueryExecutor.QueryPlanNodeKey, QueryExecutor.ExecutionContext>, MeasureVisitor<Void> {
+public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>, MeasureVisitor<Void> {
 
   private final Function<String, Field> fieldSupplier;
-  private QueryExecutor.ExecutionContext executionContext;
+  private ExecutionContext executionContext;
 
   public Evaluator(Function<String, Field> fieldSupplier) {
     this.fieldSupplier = fieldSupplier;
   }
 
   @Override
-  public void accept(QueryExecutor.QueryPlanNodeKey queryPlanNodeKey, QueryExecutor.ExecutionContext executionContext) {
+  public void accept(QueryPlanNodeKey queryPlanNodeKey, ExecutionContext executionContext) {
+    if (!queryPlanNodeKey.queryScope().equals(executionContext.queryScope())) {
+      // Not in the correct plan, abort execution. This condition is very important to not write aggregates where they
+      // should not suppose to be written. The whole dependency graph (See QueryExecutor) can be traversed multiple times
+      // when there are more than 1 execution plan.
+      return;
+    }
+
     Measure measure = queryPlanNodeKey.measure();
     if (executionContext.writeToTable().measures().contains(measure)) {
-      return; // nothing to do
+      return; // Nothing to do
     }
+    
     this.executionContext = executionContext;
     executionContext.queryWatch().start(queryPlanNodeKey);
     measure.accept(this);
