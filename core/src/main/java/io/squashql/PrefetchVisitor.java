@@ -11,13 +11,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-public class MeasurePrefetcherVisitor implements MeasureVisitor<Map<QueryExecutor.QueryScope, Set<Measure>>> {
+public class PrefetchVisitor implements MeasureVisitor<Map<QueryExecutor.QueryScope, Set<Measure>>> {
 
   private final QueryDto query;
   private final QueryExecutor.QueryScope originalQueryScope;
   private final Function<String, Field> fieldSupplier;
 
-  public MeasurePrefetcherVisitor(QueryDto query, QueryExecutor.QueryScope originalQueryScope, Function<String, Field> fieldSupplier) {
+  public PrefetchVisitor(QueryDto query, QueryExecutor.QueryScope originalQueryScope, Function<String, Field> fieldSupplier) {
     this.query = query;
     this.originalQueryScope = originalQueryScope;
     this.fieldSupplier = fieldSupplier;
@@ -48,6 +48,7 @@ public class MeasurePrefetcherVisitor implements MeasureVisitor<Map<QueryExecuto
       // Not support for the moment
       // Only for parent because it uses rollup during the prefetch so subtotals are computed by the database, not SquashQL.
       throw new IllegalArgumentException("Only a primitive measure can be used in a parent comparison measure");
+      // TODO see if we can do something.
     }
     QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.query, cmrp, this.originalQueryScope, this.fieldSupplier);
     Map<QueryExecutor.QueryScope, Set<Measure>> result = new HashMap<>(Map.of(this.originalQueryScope, Set.of(cmrp.measure)));

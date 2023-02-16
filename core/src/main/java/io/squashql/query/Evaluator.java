@@ -13,12 +13,12 @@ import java.util.function.Function;
 
 import static io.squashql.query.ColumnSetKey.BUCKET;
 
-public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeKey, QueryExecutor.ExecutionContext>, MeasureVisitor<Void> {
+public class Evaluator implements BiConsumer<QueryExecutor.QueryPlanNodeKey, QueryExecutor.ExecutionContext>, MeasureVisitor<Void> {
 
   private final Function<String, Field> fieldSupplier;
   private QueryExecutor.ExecutionContext executionContext;
 
-  public MeasureEvaluator(Function<String, Field> fieldSupplier) {
+  public Evaluator(Function<String, Field> fieldSupplier) {
     this.fieldSupplier = fieldSupplier;
   }
 
@@ -29,9 +29,9 @@ public class MeasureEvaluator implements BiConsumer<QueryExecutor.QueryPlanNodeK
       return; // nothing to do
     }
     this.executionContext = executionContext;
-    executionContext.queryWatch().start(measure);
+    executionContext.queryWatch().start(queryPlanNodeKey);
     measure.accept(this);
-    executionContext.queryWatch().stop(measure);
+    executionContext.queryWatch().stop(queryPlanNodeKey);
   }
 
   @Override

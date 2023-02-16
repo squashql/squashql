@@ -1,8 +1,10 @@
 package io.squashql.query;
 
 import com.google.common.graph.Graph;
-import lombok.extern.slf4j.Slf4j;
-import io.squashql.MeasurePrefetcherVisitor;
+import com.google.common.graph.GraphBuilder;
+import com.google.common.graph.MutableGraph;
+import io.squashql.PrefetchVisitor;
+import io.squashql.query.GraphDependencyBuilder.NodeWithId;
 import io.squashql.query.QueryCache.SubQueryScope;
 import io.squashql.query.QueryCache.TableScope;
 import io.squashql.query.context.QueryCacheContextValue;
@@ -12,9 +14,14 @@ import io.squashql.query.dto.*;
 import io.squashql.query.monitoring.QueryWatch;
 import io.squashql.store.Field;
 import io.squashql.util.Queries;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -69,11 +76,11 @@ public class QueryExecutor {
     queryWatch.start(QueryWatch.EXECUTE_PREFETCH_PLAN);
     Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
     QueryScope queryScope = createQueryScope(query, fieldSupplier);
-    Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> graph = computeDependencyGraph(query, queryScope, fieldSupplier);
+    Pair<Graph<NodeWithId<QueryPlanNodeKey>>, Graph<NodeWithId<QueryScope>>> dependencyGraph = computeDependencyGraph(query, queryScope, fieldSupplier);
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
     Map<QueryScope, Set<Measure>> measuresByQueryScope = new HashMap<>();
-    ExecutionPlan<QueryPlanNodeKey, Void> prefetchingPlan = new ExecutionPlan<>(graph, (node, v) -> {
+    ExecutionPlan<QueryPlanNodeKey, Void> prefetchingPlan = new ExecutionPlan<>(dependencyGraph.getOne(), (node, v) -> {
       QueryScope scope = node.queryScope;
       prefetchQueryByQueryScope.computeIfAbsent(scope, k -> Queries.queryScopeToDatabaseQuery(scope));
       measuresByQueryScope.computeIfAbsent(scope, k -> new HashSet<>()).add(node.measure);
@@ -132,14 +139,19 @@ public class QueryExecutor {
 
     queryWatch.start(QueryWatch.EXECUTE_EVALUATION_PLAN);
 
-    Table result = tableByScope.get(queryScope);
-    ExecutionPlan<QueryPlanNodeKey, ExecutionContext> plan = new ExecutionPlan<>(graph, new MeasureEvaluator(fieldSupplier));
-    plan.execute(new ExecutionContext(result, queryScope, tableByScope, query, queryWatch));
+    // Here we take the global plan and execute the plans for a given scope one by one, in dependency order. The order
+    // is given by the graph itself.
+    ExecutionPlan globalPlan = new ExecutionPlan<>(dependencyGraph.getTwo(), (scope, context) -> {
+      ExecutionPlan<QueryPlanNodeKey, ExecutionContext> scopedPlan = new ExecutionPlan<>(dependencyGraph.getOne(), new Evaluator(fieldSupplier));
+      scopedPlan.execute(new ExecutionContext(tableByScope.get(scope), scope, tableByScope, query, queryWatch));
+    });
+    globalPlan.execute(null);
 
     queryWatch.stop(QueryWatch.EXECUTE_EVALUATION_PLAN);
 
     queryWatch.start(QueryWatch.ORDER);
 
+    Table result = tableByScope.get(queryScope);
     result = TableUtils.selectAndOrderColumns((ColumnarTable) result, query);
     result = TableUtils.replaceTotalCellValues((ColumnarTable) result, query);
     result = TableUtils.orderRows((ColumnarTable) result, query);
@@ -155,15 +167,28 @@ public class QueryExecutor {
     return result;
   }
 
-  private static Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> computeDependencyGraph(
+  private static Pair<Graph<NodeWithId<QueryPlanNodeKey>>, Graph<NodeWithId<QueryScope>>> computeDependencyGraph(
           QueryDto query,
           QueryScope queryScope,
           Function<String, Field> fieldSupplier) {
-    MeasurePrefetcherVisitor visitor = new MeasurePrefetcherVisitor(query, queryScope, fieldSupplier);
+    // FIXME clean this code, create a dedicated class?
+    // This graph is used to keep track of dependency between execution plan.
+    MutableGraph<NodeWithId<QueryScope>> executionGraph = GraphBuilder.directed().build();
+    IntSupplier id = new AtomicInteger()::getAndIncrement;
+    Map<QueryScope, Integer> idByNode = new HashMap<>();
+    Function<QueryScope, NodeWithId<QueryScope>> transformer = m -> new NodeWithId<>(m, idByNode.computeIfAbsent(m, k -> id.getAsInt()));
+
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
-      Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(visitor);
+      Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(query, nodeKey.queryScope, fieldSupplier));
       Set<QueryPlanNodeKey> set = new HashSet<>();
+      executionGraph.addNode(transformer.apply(nodeKey.queryScope));
       for (Map.Entry<QueryScope, Set<Measure>> entry : dependencies.entrySet()) {
+
+        executionGraph.addNode(transformer.apply(entry.getKey()));
+        if (!nodeKey.queryScope.equals(entry.getKey())) {
+          executionGraph.putEdge(transformer.apply(nodeKey.queryScope), transformer.apply(entry.getKey()));
+        }
+
         for (Measure measure : entry.getValue()) {
           set.add(new QueryPlanNodeKey(entry.getKey(), measure));
         }
@@ -172,7 +197,9 @@ public class QueryExecutor {
     });
     Set<Measure> queriedMeasures = new HashSet<>(query.measures);
     queriedMeasures.add(CountMeasure.INSTANCE); // Always add count
-    return builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList());
+    return Tuples.pair(
+            builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList()),
+            executionGraph);
   }
 
   public static QueryScope createQueryScope(QueryDto query, Function<String, Field> fieldSupplier) {

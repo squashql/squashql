@@ -20,9 +20,9 @@ public class GraphDependencyBuilder<N> {
   }
 
   public Graph<NodeWithId<N>> build(List<N> nodes) {
-    Function<N, NodeWithId<N>> transformer = m -> new NodeWithId(m, this.idByNode.computeIfAbsent(m, k -> this.id.getAsInt()));
+    Function<N, NodeWithId<N>> transformer = m -> new NodeWithId<>(m, this.idByNode.computeIfAbsent(m, k -> this.id.getAsInt()));
     MutableGraph<NodeWithId<N>> graph = GraphBuilder.directed().build();
-    for (N node : nodes) {
+    for (N node  : nodes) {
       this.idByNode.computeIfAbsent(node, k -> this.id.getAsInt());
       addToGraph(graph, transformer, node);
     }
@@ -58,7 +58,7 @@ public class GraphDependencyBuilder<N> {
     public boolean equals(Object o) {
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
-      NodeWithId that = (NodeWithId) o;
+      NodeWithId<N> that = (NodeWithId<N>) o;
       return this.node.equals(that.node);
     }
 
