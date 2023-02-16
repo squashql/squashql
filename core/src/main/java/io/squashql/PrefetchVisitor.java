@@ -1,6 +1,7 @@
 package io.squashql;
 
 import io.squashql.query.*;
+import io.squashql.query.QueryExecutor.QueryScope;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
 import org.eclipse.collections.impl.set.mutable.MutableSetFactoryImpl;
@@ -11,58 +12,52 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-public class PrefetchVisitor implements MeasureVisitor<Map<QueryExecutor.QueryScope, Set<Measure>>> {
+public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Measure>>> {
 
   private final QueryDto query;
-  private final QueryExecutor.QueryScope originalQueryScope;
+  private final QueryScope originalQueryScope;
   private final Function<String, Field> fieldSupplier;
 
-  public PrefetchVisitor(QueryDto query, QueryExecutor.QueryScope originalQueryScope, Function<String, Field> fieldSupplier) {
+  public PrefetchVisitor(QueryDto query, QueryScope originalQueryScope, Function<String, Field> fieldSupplier) {
     this.query = query;
     this.originalQueryScope = originalQueryScope;
     this.fieldSupplier = fieldSupplier;
   }
 
-  private Map<QueryExecutor.QueryScope, Set<Measure>> original() {
+  private Map<QueryScope, Set<Measure>> original() {
     return Collections.emptyMap();
   }
 
   @Override
-  public Map<QueryExecutor.QueryScope, Set<Measure>> visit(AggregatedMeasure measure) {
+  public Map<QueryScope, Set<Measure>> visit(AggregatedMeasure measure) {
     return original();
   }
 
   @Override
-  public Map<QueryExecutor.QueryScope, Set<Measure>> visit(ExpressionMeasure measure) {
+  public Map<QueryScope, Set<Measure>> visit(ExpressionMeasure measure) {
     return original();
   }
 
   @Override
-  public Map<QueryExecutor.QueryScope, Set<Measure>> visit(BinaryOperationMeasure measure) {
+  public Map<QueryScope, Set<Measure>> visit(BinaryOperationMeasure measure) {
     return Map.of(this.originalQueryScope, MutableSetFactoryImpl.INSTANCE.of(measure.leftOperand, measure.rightOperand));
   }
 
   @Override
-  public Map<QueryExecutor.QueryScope, Set<Measure>> visit(ComparisonMeasureReferencePosition cmrp) {
-    if (cmrp.ancestors != null && !MeasureUtils.isPrimitive(cmrp.measure)) {
-      // Not support for the moment
-      // Only for parent because it uses rollup during the prefetch so subtotals are computed by the database, not SquashQL.
-      throw new IllegalArgumentException("Only a primitive measure can be used in a parent comparison measure");
-      // TODO see if we can do something.
-    }
-    QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.query, cmrp, this.originalQueryScope, this.fieldSupplier);
-    Map<QueryExecutor.QueryScope, Set<Measure>> result = new HashMap<>(Map.of(this.originalQueryScope, Set.of(cmrp.measure)));
+  public Map<QueryScope, Set<Measure>> visit(ComparisonMeasureReferencePosition cmrp) {
+    QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.query, cmrp, this.originalQueryScope, this.fieldSupplier);
+    Map<QueryScope, Set<Measure>> result = new HashMap<>(Map.of(this.originalQueryScope, Set.of(cmrp.measure)));
     result.put(readScope, Set.of(cmrp.measure));
     return result;
   }
 
   @Override
-  public Map<QueryExecutor.QueryScope, Set<Measure>> visit(LongConstantMeasure measure) {
+  public Map<QueryScope, Set<Measure>> visit(LongConstantMeasure measure) {
     return Collections.emptyMap();
   }
 
   @Override
-  public Map<QueryExecutor.QueryScope, Set<Measure>> visit(DoubleConstantMeasure measure) {
+  public Map<QueryScope, Set<Measure>> visit(DoubleConstantMeasure measure) {
     return Collections.emptyMap();
   }
 }

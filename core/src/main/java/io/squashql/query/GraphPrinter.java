@@ -10,7 +10,7 @@ import java.util.function.IntSupplier;
 
 public class GraphPrinter {
 
-  public static <N> String print(Graph<GraphDependencyBuilder.NodeWithId<N>> graph) {
+  public static <N> void print(Graph<GraphDependencyBuilder.NodeWithId<N>> graph) {
     StringBuilder sb = new StringBuilder();
 
     Set<GraphDependencyBuilder.NodeWithId<N>> roots = new HashSet<>();
@@ -36,10 +36,10 @@ public class GraphPrinter {
       sb.append("#").append(e.getValue()).append(": ").append(printQueryPlanNodeKey(e.getKey())).append(System.lineSeparator());
     }
 
-    return sb.toString();
+    System.out.println(sb);
   }
 
-  static <N> void executeRecursively(StringBuilder sb, Graph<GraphDependencyBuilder.NodeWithId<N>> graph, GraphDependencyBuilder.NodeWithId<N> node, Set<N> alreadyPrinted, Function<QueryExecutor.QueryScope, Integer> idProvider, int level) {
+  private static <N> void executeRecursively(StringBuilder sb, Graph<GraphDependencyBuilder.NodeWithId<N>> graph, GraphDependencyBuilder.NodeWithId<N> node, Set<N> alreadyPrinted, Function<QueryExecutor.QueryScope, Integer> idProvider, int level) {
     Set<GraphDependencyBuilder.NodeWithId<N>> successors = graph.successors(node);
     for (GraphDependencyBuilder.NodeWithId<N> successor : successors) {
       for (int i = 0; i < level; i++) {
@@ -71,22 +71,22 @@ public class GraphPrinter {
 
   private static String printQueryPlanNodeKey(QueryExecutor.QueryScope scope) {
     StringBuilder sb = new StringBuilder();
-    appendIfNotNullOrNotEmpty(sb, scope.tableDto());
-    appendIfNotNullOrNotEmpty(sb, scope.subQuery());
-    appendIfNotNullOrNotEmpty(sb, scope.columns().stream().map(Field::name).toList());
-    appendIfNotNullOrNotEmpty(sb, scope.criteriaDto());
-    appendIfNotNullOrNotEmpty(sb, scope.rollupColumns().stream().map(Field::name).toList());
+    appendIfNotNullOrNotEmpty(sb, null, scope.tableDto());
+    appendIfNotNullOrNotEmpty(sb, null, scope.subQuery());
+    appendIfNotNullOrNotEmpty(sb, "columns=", scope.columns().stream().map(Field::name).toList());
+    appendIfNotNullOrNotEmpty(sb, null, scope.criteriaDto());
+    appendIfNotNullOrNotEmpty(sb, "rollup=", scope.rollupColumns().stream().map(Field::name).toList());
     return sb.toString();
   }
 
-  private static void appendIfNotNullOrNotEmpty(StringBuilder sb, Object o) {
+  private static void appendIfNotNullOrNotEmpty(StringBuilder sb, String prefix, Object o) {
     if (o instanceof Collection collection) {
       if (collection.isEmpty()) {
         return;
       }
-      sb.append(o).append(", ");
+      sb.append(prefix == null ? "" : prefix).append(o).append(", ");
     } else if (o != null) {
-      sb.append(o).append(", ");
+      sb.append(prefix == null ? "" : prefix).append(o).append(", ");
     }
   }
 }

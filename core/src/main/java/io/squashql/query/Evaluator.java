@@ -37,7 +37,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     if (executionContext.writeToTable().measures().contains(measure)) {
       return; // Nothing to do
     }
-    
+
     this.executionContext = executionContext;
     executionContext.queryWatch().start(queryPlanNodeKey);
     measure.accept(this);
