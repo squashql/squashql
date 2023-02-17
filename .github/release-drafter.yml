@@ -1,0 +1,9 @@
+template: |
+  ## What’s Changed
+
+  $CHANGES
+
+exclude-contributors:
+  - 'dependabot'
+  - 'dependabot[bot]'
+  - 'github-actions[bot]'
