@@ -24,7 +24,7 @@ public class QueryWatch {
 
   private Map<String, Stopwatch> stopwatches = new HashMap<>();
 
-  private Map<QueryPlanNodeKey, Stopwatch> stopwatchByMeasure = new HashMap<>();
+  private Map<QueryPlanNodeKey, Stopwatch> stopwatchByNode = new HashMap<>();
 
   public void start(String key) {
     this.stopwatches.computeIfAbsent(key, k -> Stopwatch.createStarted());
@@ -35,11 +35,11 @@ public class QueryWatch {
   }
 
   public void start(QueryPlanNodeKey queryPlanNodeKey) {
-    this.stopwatchByMeasure.computeIfAbsent(queryPlanNodeKey, k -> Stopwatch.createStarted());
+    this.stopwatchByNode.computeIfAbsent(queryPlanNodeKey, k -> Stopwatch.createStarted());
   }
 
   public void stop(QueryPlanNodeKey queryPlanNodeKey) {
-    this.stopwatchByMeasure.get(queryPlanNodeKey).stop();
+    this.stopwatchByNode.get(queryPlanNodeKey).stop();
   }
 
   public QueryTimings toQueryTimings() {
@@ -57,7 +57,7 @@ public class QueryWatch {
     }
 
     queryTimings.execute.total = this.stopwatches.get(EXECUTE_EVALUATION_PLAN).elapsed(unit);
-    for (Map.Entry<QueryPlanNodeKey, Stopwatch> e : this.stopwatchByMeasure.entrySet()) {
+    for (Map.Entry<QueryPlanNodeKey, Stopwatch> e : this.stopwatchByNode.entrySet()) {
       String key = e.getKey().measure().alias();
       queryTimings.execute.detail.put(key, e.getValue().elapsed(unit));
     }

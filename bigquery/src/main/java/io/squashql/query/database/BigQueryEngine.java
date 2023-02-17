@@ -14,11 +14,12 @@ import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.IntStream;
+
+import static io.squashql.query.database.SQLTranslator.checkRollupIsValid;
 
 public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
@@ -49,6 +50,8 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     if (!hasRollup) {
       return super.createSqlStatement(query);
     } else {
+      checkRollupIsValid(query.select, query.rollup);
+
       // Special case for BigQuery because it does not support either the grouping function used to identify extra-rows added
       // by rollup or grouping sets for partial rollup.
       BigQueryQueryRewriter rewriter = (BigQueryQueryRewriter) this.queryRewriter;
@@ -75,10 +78,6 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
           return String.format("coalesce(%s, %s)", rewriter.rollup(rollup), quoter.apply(BigQueryUtil.getNullValue(field)));
         }
       };
-
-      if (Collections.disjoint(query.select, query.rollup)) {
-        throw new RuntimeException(String.format("The columns contain in rollup %s must be a subset of the columns contain in the select %s", query.rollup, query.select));
-      }
 
       List<String> missingColumnsInRollup = new ArrayList<>(query.select);
       missingColumnsInRollup.removeAll(query.rollup);

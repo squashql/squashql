@@ -1,10 +1,6 @@
 package io.squashql.query;
 
-import com.google.common.graph.Graph;
-import com.google.common.graph.GraphBuilder;
-import com.google.common.graph.MutableGraph;
 import io.squashql.PrefetchVisitor;
-import io.squashql.query.GraphDependencyBuilder.NodeWithId;
 import io.squashql.query.QueryCache.SubQueryScope;
 import io.squashql.query.QueryCache.TableScope;
 import io.squashql.query.context.QueryCacheContextValue;
@@ -19,9 +15,7 @@ import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -76,7 +70,7 @@ public class QueryExecutor {
     queryWatch.start(QueryWatch.EXECUTE_PREFETCH_PLAN);
     Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
     QueryScope queryScope = createQueryScope(query, fieldSupplier);
-    Pair<Graph<NodeWithId<QueryPlanNodeKey>>, Graph<NodeWithId<QueryScope>>> dependencyGraph = computeDependencyGraph(query, queryScope, fieldSupplier);
+    Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> dependencyGraph = computeDependencyGraph(query, queryScope, fieldSupplier);
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
     Map<QueryScope, Set<Measure>> measuresByQueryScope = new HashMap<>();
@@ -167,25 +161,22 @@ public class QueryExecutor {
     return result;
   }
 
-  private static Pair<Graph<NodeWithId<QueryPlanNodeKey>>, Graph<NodeWithId<QueryScope>>> computeDependencyGraph(
+  private static Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> computeDependencyGraph(
           QueryDto query,
           QueryScope queryScope,
           Function<String, Field> fieldSupplier) {
     // This graph is used to keep track of dependency between execution plans. An Execution Plan is bound to a given scope.
-    MutableGraph<NodeWithId<QueryScope>> executionGraph = GraphBuilder.directed().build();
-    IntSupplier id = new AtomicInteger()::getAndIncrement;
-    Map<QueryScope, Integer> idByNode = new HashMap<>();
-    Function<QueryScope, NodeWithId<QueryScope>> transformer = m -> new NodeWithId<>(m, idByNode.computeIfAbsent(m, k -> id.getAsInt()));
+    DependencyGraph<QueryScope> executionGraph = new DependencyGraph<>();
 
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
       Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(query, nodeKey.queryScope, fieldSupplier));
       Set<QueryPlanNodeKey> set = new HashSet<>();
-      executionGraph.addNode(transformer.apply(nodeKey.queryScope));
+      executionGraph.addNode(nodeKey.queryScope);
       for (Map.Entry<QueryScope, Set<Measure>> entry : dependencies.entrySet()) {
 
-        executionGraph.addNode(transformer.apply(entry.getKey()));
+        executionGraph.addNode(entry.getKey());
         if (!nodeKey.queryScope.equals(entry.getKey())) {
-          executionGraph.putEdge(transformer.apply(nodeKey.queryScope), transformer.apply(entry.getKey()));
+          executionGraph.putEdge(nodeKey.queryScope, entry.getKey());
         }
 
         for (Measure measure : entry.getValue()) {

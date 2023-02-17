@@ -1,6 +1,5 @@
 package io.squashql.query;
 
-import com.google.common.graph.Graph;
 import io.squashql.store.Field;
 
 import java.util.*;
@@ -10,11 +9,11 @@ import java.util.function.IntSupplier;
 
 public class GraphPrinter {
 
-  public static <N> void print(Graph<GraphDependencyBuilder.NodeWithId<N>> graph) {
+  public static <N> void print(DependencyGraph<N> graph) {
     StringBuilder sb = new StringBuilder();
 
-    Set<GraphDependencyBuilder.NodeWithId<N>> roots = new HashSet<>();
-    for (GraphDependencyBuilder.NodeWithId<N> node : graph.nodes()) {
+    Set<DependencyGraph.NodeWithId<N>> roots = new HashSet<>();
+    for (DependencyGraph.NodeWithId<N> node : graph.nodes()) {
       if (graph.inDegree(node) == 0) {
         roots.add(node);
       }
@@ -24,7 +23,7 @@ public class GraphPrinter {
     Map<QueryExecutor.QueryScope, Integer> idByScope = new HashMap<>();
     Function<QueryExecutor.QueryScope, Integer> idProvider = scope -> idByScope.computeIfAbsent(scope, k -> id.getAsInt());
     Set<N> alreadyPrinted = new HashSet<>();
-    for (GraphDependencyBuilder.NodeWithId<N> root : roots) {
+    for (DependencyGraph.NodeWithId<N> root : roots) {
       appendNode(sb, root, alreadyPrinted, idProvider);
       sb.append(System.lineSeparator());
       executeRecursively(sb, graph, root, alreadyPrinted, idProvider, 1);
@@ -39,9 +38,9 @@ public class GraphPrinter {
     System.out.println(sb);
   }
 
-  private static <N> void executeRecursively(StringBuilder sb, Graph<GraphDependencyBuilder.NodeWithId<N>> graph, GraphDependencyBuilder.NodeWithId<N> node, Set<N> alreadyPrinted, Function<QueryExecutor.QueryScope, Integer> idProvider, int level) {
-    Set<GraphDependencyBuilder.NodeWithId<N>> successors = graph.successors(node);
-    for (GraphDependencyBuilder.NodeWithId<N> successor : successors) {
+  private static <N> void executeRecursively(StringBuilder sb, DependencyGraph graph, DependencyGraph.NodeWithId<N> node, Set<N> alreadyPrinted, Function<QueryExecutor.QueryScope, Integer> idProvider, int level) {
+    Set<DependencyGraph.NodeWithId<N>> successors = graph.successors(node);
+    for (DependencyGraph.NodeWithId<N> successor : successors) {
       for (int i = 0; i < level; i++) {
         sb.append("\t");
       }
@@ -51,7 +50,7 @@ public class GraphPrinter {
     }
   }
 
-  private static <N> void appendNode(StringBuilder sb, GraphDependencyBuilder.NodeWithId<N> node, Set<N> alreadyPrinted, Function<QueryExecutor.QueryScope, Integer> idProvider) {
+  private static <N> void appendNode(StringBuilder sb, DependencyGraph.NodeWithId<N> node, Set<N> alreadyPrinted, Function<QueryExecutor.QueryScope, Integer> idProvider) {
     sb.append("#").append(node.id);
     if (alreadyPrinted.add(node.node)) {
       sb.append(", n=").append(printQueryPlanNodeKey(idProvider, node.node));
