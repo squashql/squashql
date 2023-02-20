@@ -142,7 +142,7 @@ public class QueryExecutor {
 
     result = TableUtils.selectAndOrderColumns((ColumnarTable) result, query);
     result = TableUtils.replaceTotalCellValues((ColumnarTable) result, query);
-    result = TableUtils.orderRows((ColumnarTable) result, query);
+    result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets);
 
     queryWatch.stop(QueryWatch.ORDER);
     queryWatch.stop(QueryWatch.GLOBAL);

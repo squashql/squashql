@@ -6,8 +6,10 @@ import io.squashql.BigQueryServiceAccountDatastore;
 import io.squashql.BigQueryUtil;
 import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.ColumnarTable;
+import io.squashql.query.Header;
 import io.squashql.query.Table;
 import io.squashql.store.Field;
+import java.util.Set;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -129,10 +131,10 @@ public class TestBigQueryEngine {
             new ArrayList<>(Arrays.asList(4, 2, 1, 1, 2, 1, 1)));
 
     ColumnarTable input = new ColumnarTable(
-            List.of(new Field(scenario, String.class), new Field(category, String.class), new Field("price.sum", int.class)),
-            List.of(new AggregatedMeasure("price.sum", "price", "sum")),
-            new int[]{2},
-            new int[]{0, 1},
+            List.of(new Header(new Field(scenario, String.class), true),
+                    new Header(new Field(category, String.class), true),
+                    new Header(new Field("price.sum", int.class), false)),
+            Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             values);
     Table output = bqe.postProcessDataset(input, query);
     Assertions.assertThat(output).containsExactly(

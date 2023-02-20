@@ -12,8 +12,7 @@ import java.util.function.Function;
 
 public class BucketerExecutor {
 
-  public static Table bucket(Table table,
-                             BucketColumnSetDto bucketColumnSetDto) {
+  public static Table bucket(Table table, BucketColumnSetDto bucketColumnSetDto) {
     Function<Object[], List<Object[]>> bucketer = createBucketer(bucketColumnSetDto);
 
     int[] indexColumnsToRead = new int[bucketColumnSetDto.getColumnsForPrefetching().size()];
@@ -23,17 +22,15 @@ public class BucketerExecutor {
 
     MutableIntSet indexColsInPrefetch = new IntHashSet();
     List<Field> newColumns = bucketColumnSetDto.getNewColumns();
-    List<Field> finalHeaders = new ArrayList<>(table.headers());
-    MutableIntList columnIndices = new IntArrayList(table.columnIndices());
+    List<Header> finalHeaders = new ArrayList<>(table.headers());
     for (int i = 0; i < newColumns.size(); i++) {
       Field field = newColumns.get(i);
       if (!bucketColumnSetDto.getColumnsForPrefetching().contains(field.name())) {
         indexColsInPrefetch.add(i);
       }
-
-      if (!table.headers().contains(field)) {
-        finalHeaders.add(field); // append to the end
-        columnIndices.add(finalHeaders.size() - 1);
+      Header header = new Header(field, false);
+      if (!table.headers().contains(header)) {
+        finalHeaders.add(header); // append to the end
       }
     }
 
@@ -63,8 +60,6 @@ public class BucketerExecutor {
     return new ColumnarTable(
             finalHeaders,
             table.measures(),
-            table.measureIndices(),
-            columnIndices.toArray(),
             newColumnValues);
   }
 
@@ -79,7 +74,8 @@ public class BucketerExecutor {
     }
     Function<Object[], List<Object[]>> bucketer = toBucketColumnValues -> {
       List<String> buckets = bucketsByValue.get(toBucketColumnValues[0]);
-      return buckets == null ? Collections.emptyList() : buckets.stream().map(b -> new Object[]{b, toBucketColumnValues[0]}).toList();
+      return buckets == null ? Collections.emptyList()
+              : buckets.stream().map(b -> new Object[] {b, toBucketColumnValues[0]}).toList();
     };
     return bucketer;
   }

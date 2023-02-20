@@ -46,8 +46,8 @@ public class CaffeineQueryCache implements QueryCache {
   @Override
   public ColumnarTable createRawResult(PrefetchQueryScope scope) {
     Set<Field> columns = scope.columns();
-    List<Field> headers = new ArrayList<>(columns);
-    headers.add(new Field(CountMeasure.ALIAS, long.class));
+    List<Header> headers = new ArrayList<>(columns.stream().map(column -> new Header(column, false)).toList());
+    headers.add(new Header(new Field(CountMeasure.ALIAS, long.class), true));
 
     List<List<Object>> values = new ArrayList<>();
     Table table = this.results.getIfPresent(scope);
@@ -57,9 +57,7 @@ public class CaffeineQueryCache implements QueryCache {
     values.add(table.getAggregateValues(CountMeasure.INSTANCE));
     return new ColumnarTable(
             headers,
-            Collections.singletonList(CountMeasure.INSTANCE),
-            new int[]{headers.size() - 1},
-            IntStream.range(0, headers.size() - 1).toArray(),
+            Collections.singleton(CountMeasure.INSTANCE),
             values);
   }
 
@@ -67,7 +65,7 @@ public class CaffeineQueryCache implements QueryCache {
   public boolean contains(Measure measure, PrefetchQueryScope scope) {
     Table table = this.results.getIfPresent(scope);
     if (table != null) {
-      return table.measures().indexOf(measure) >= 0;
+      return table.measures().contains(measure);
     }
     return false;
   }
@@ -80,7 +78,7 @@ public class CaffeineQueryCache implements QueryCache {
     });
 
     for (Measure measure : measures) {
-      if (cache.measures().indexOf(measure) < 0) {
+      if (!cache.measures().contains(measure)) {
         // Not in the previousResult, add it.
         List<Object> aggregateValues = result.getAggregateValues(measure);
         Field field = result.getField(measure);

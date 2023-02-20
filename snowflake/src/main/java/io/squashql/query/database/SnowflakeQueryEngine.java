@@ -2,22 +2,22 @@ package io.squashql.query.database;
 
 import io.squashql.SnowflakeDatastore;
 import io.squashql.SnowflakeUtil;
-import io.squashql.query.ColumnarTable;
-import io.squashql.query.RowTable;
-import io.squashql.query.Table;
+import io.squashql.query.*;
 import io.squashql.store.Field;
 
 import java.io.Serializable;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.IntStream;
 
 public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
 
   /**
-   * https://docs.snowflake.com/en/sql-reference/functions-aggregation.html
-   * NOTE there is more but only a subset is proposed here.
+   * https://docs.snowflake.com/en/sql-reference/functions-aggregation.html. NOTE there is more but only a subset is
+   * proposed here.
    */
   public static final List<String> SUPPORTED_AGGREGATION_FUNCTIONS = List.of(
           "ANY_VALUE",
@@ -45,7 +45,7 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
   @Override
   protected Table retrieveAggregates(DatabaseQuery query, String sql) {
     return executeQuery(sql, tableResult -> {
-      List<Field> headers = createHeaderList(tableResult);
+      List<Header> headers = createHeaderList(tableResult, query.measures);
       List<List<Object>> values = new ArrayList<>();
       headers.forEach(field -> values.add(new ArrayList<>()));
       while (tableResult.next()) {
@@ -55,9 +55,7 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
       }
       return new ColumnarTable(
               headers,
-              query.measures,
-              IntStream.range(query.select.size(), query.select.size() + query.measures.size()).toArray(),
-              IntStream.range(0, query.select.size()).toArray(),
+              new HashSet<>(query.measures),
               values);
     });
   }
@@ -65,7 +63,7 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
   @Override
   public Table executeRawSql(String sql) {
     return executeQuery(sql, tableResult -> {
-      List<Field> headers = createHeaderList(tableResult);
+      List<Header> headers = createHeaderList(tableResult, Collections.emptyList());
       List<List<Object>> rows = new ArrayList<>();
       while (tableResult.next()) {
         rows.add(IntStream.range(0, headers.size()).mapToObj(i -> getTypeValue(tableResult, i)).toList());
@@ -74,13 +72,17 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
     });
   }
 
-  protected List<Field> createHeaderList(ResultSet tableResult) throws SQLException {
-    List<Field> headers = new ArrayList<>();
+  protected List<Header> createHeaderList(ResultSet tableResult, List<Measure> measureNames) throws SQLException {
+    List<Header> headers = new ArrayList<>();
     ResultSetMetaData metadata = tableResult.getMetaData();
     // get the column names; column indexes start from 1
     for (int i = 1; i < metadata.getColumnCount() + 1; i++) {
-      headers.add(new Field(metadata.getColumnName(i), SnowflakeUtil.sqlTypeToClass(metadata.getColumnType(i))));
+      String fieldName = metadata.getColumnName(i);
+      headers.add(new Header(
+              new Field(fieldName, SnowflakeUtil.sqlTypeToClass(metadata.getColumnType(i))),
+              measureNames.contains(fieldName)));
     }
+
     return headers;
   }
 
@@ -95,6 +97,7 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
 
   @FunctionalInterface
   public interface ThrowingFunction<T, R> extends Serializable {
+
     @SuppressWarnings("ProhibitedExceptionDeclared")
     R apply(T t) throws SQLException;
   }
