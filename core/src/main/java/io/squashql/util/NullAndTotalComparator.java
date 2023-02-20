@@ -43,7 +43,7 @@ public class NullAndTotalComparator<T> implements Comparator<T>, Serializable {
   }
 
   private static <T> boolean isTotal(T a) {
-    return a.equals(QueryEngine.TOTAL) || a.equals(QueryEngine.GRAND_TOTAL) || a.equals(SQLTranslator.TOTAL_CELL);
+    return QueryEngine.TOTAL.equals(a) || QueryEngine.GRAND_TOTAL.equals(a) || SQLTranslator.TOTAL_CELL.equals(a);
   }
 
   public static <T> NullAndTotalComparator<T> nullsLastAndTotalsFirst(Comparator<? super T> comparator) {

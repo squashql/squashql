@@ -2,23 +2,20 @@ package io.squashql.table;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import io.squashql.query.ColumnarTable;
-import io.squashql.query.Header;
-import io.squashql.query.Measure;
-import io.squashql.query.Table;
-import io.squashql.query.TableUtils;
+import io.squashql.query.*;
 import io.squashql.query.database.SQLTranslator;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-class MergeTables {
+public final class MergeTables {
 
   private MergeTables() {
   }
 
-  static Table mergeTables(List<Table> tables) {
+  public static Table mergeTables(List<Table> tables) {
     Table result = null;
     for (Table table : tables) {
       result = result == null ? table : mergeTables(result, table);
@@ -29,7 +26,7 @@ class MergeTables {
   /**
    * Merge two tables into only one resulting table. Hypothesis: the input tables must not share any measure.
    */
-  static Table mergeTables(Table leftTable, Table rightTable) {
+  public static Table mergeTables(Table leftTable, Table rightTable) {
     if (leftTable == null) {
       return rightTable;
     }
@@ -241,5 +238,4 @@ class MergeTables {
       values.get(index).add(element);
     }
   }
-
 }

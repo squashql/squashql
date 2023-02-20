@@ -2,11 +2,7 @@ package io.squashql.query.database;
 
 import io.squashql.SnowflakeDatastore;
 import io.squashql.SnowflakeUtil;
-import io.squashql.query.ColumnarTable;
-import io.squashql.query.Header;
-import io.squashql.query.Measure;
-import io.squashql.query.RowTable;
-import io.squashql.query.Table;
+import io.squashql.query.*;
 import io.squashql.store.Field;
 
 import java.io.Serializable;
@@ -15,14 +11,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
 
   /**
-   * https://docs.snowflake.com/en/sql-reference/functions-aggregation.html NOTE there is more but only a subset is
+   * https://docs.snowflake.com/en/sql-reference/functions-aggregation.html. NOTE there is more but only a subset is
    * proposed here.
    */
   public static final List<String> SUPPORTED_AGGREGATION_FUNCTIONS = List.of(

@@ -5,17 +5,20 @@ import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.Table;
 import io.squashql.store.Field;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
+
+import static io.squashql.query.database.SQLTranslator.TOTAL_CELL;
 
 class TestMergeTables {
 
   @Test
-  void merge_with_empty_left_table() {
+  void mergeWithEmptyLeftTable() {
     /*
     | typology | category | price.sum |
     |----------|----------|-----------|
@@ -39,7 +42,7 @@ class TestMergeTables {
   }
 
   @Test
-  void merge_with_empty_right_table() {
+  void mergeWithEmptyRightTable() {
     /*
     | typology | category | price.sum |
     |----------|----------|-----------|
@@ -63,7 +66,7 @@ class TestMergeTables {
   }
 
   @Test
-  void merge_fail_with_common_measures() {
+  void mergeFailWithCommonMeasures() {
     /*
     | typology | price.sum |
     |----------|-----------|
@@ -97,7 +100,7 @@ class TestMergeTables {
   }
 
   @Test
-  void merge_tables_with_same_columns() {
+  void mergeTablesWithSameColumns() {
     /*
     | typology | category | price.sum |
     |----------|----------|-----------|
@@ -158,7 +161,7 @@ class TestMergeTables {
   }
 
   @Test
-  void merge_tables_with_same_columns_but_different_values() {
+  void mergeTablesWithSameColumnsButDifferentValues() {
     /*
     | typology | category | price.sum |
     |----------|----------|-----------|
@@ -217,7 +220,7 @@ class TestMergeTables {
   }
 
   @Test
-  void merge_tables_with_different_columns() {
+  void mergeTablesWithDifferentColumns() {
     /*
     | typology | category | price.sum |
     |----------|----------|-----------|
@@ -276,7 +279,7 @@ class TestMergeTables {
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MDD", "MN", "MN", "MN", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("A", "C", "A", "A", "A", "B", "B")),
-                    new ArrayList<>(Arrays.asList(null, "___total___", "___total___", "LECLERC", null, "___total___",
+                    new ArrayList<>(Arrays.asList(null, TOTAL_CELL, TOTAL_CELL, "LECLERC", null, TOTAL_CELL,
                             "SUPER U")),
                     new ArrayList<>(Arrays.asList(null, 5, 20, null, null, 25, null)),
                     new ArrayList<>(Arrays.asList(6, null, null, 2.3, 4, null, 3))));
@@ -285,7 +288,7 @@ class TestMergeTables {
   }
 
   @Test
-  void merge_tables_with_different_columns_and_total_values() {
+  void mergeTablesWithDifferentColumnsAndTotalValues() {
     /*
     | typology | category | price.sum |
     |----------|----------|-----------|
@@ -318,7 +321,7 @@ class TestMergeTables {
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("A", "A", "B")),
-                    new ArrayList<>(Arrays.asList("___total___", "LECLERC", "SUPER U")),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, "LECLERC", "SUPER U")),
                     new ArrayList<>(Arrays.asList(4, 2.3, 3))));
 
     /*
@@ -341,7 +344,7 @@ class TestMergeTables {
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("C", "A", "A", "B", "B")),
-                    new ArrayList<>(Arrays.asList("___total___", "___total___", "LECLERC", "___total___", "SUPER U")),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, TOTAL_CELL, "LECLERC", TOTAL_CELL, "SUPER U")),
                     new ArrayList<>(Arrays.asList(5, 20, null, 25, null)),
                     new ArrayList<>(Arrays.asList(null, 4, 2.3, null, 3))));
     Table mergedTable = MergeTables.mergeTables(leftTable, rightTable);
@@ -349,7 +352,7 @@ class TestMergeTables {
   }
 
   @Test
-  void merge_tables_with_both_common_and_different_columns() {
+  void mergeTablesWithBothCommonAndDifferentColumns() {
     /*
     | typology | category | price.sum |
     |----------|----------|-----------|
@@ -381,7 +384,7 @@ class TestMergeTables {
             Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN", "MN")),
-                    new ArrayList<>(Arrays.asList("CARREFOUR", "___total___", "LECLERC", "SUPER U")),
+                    new ArrayList<>(Arrays.asList("CARREFOUR", TOTAL_CELL, "LECLERC", "SUPER U")),
                     new ArrayList<>(Arrays.asList(6.8, 4, 2.3, 3))));
 
     /*
@@ -406,9 +409,9 @@ class TestMergeTables {
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MDD", "MN", "MN", "MN", "MN", "MN")),
                     new ArrayList<>(
-                            Arrays.asList("___total___", "A", "___total___", "___total___", "___total___", "A", "B")),
-                    new ArrayList<>(Arrays.asList("CARREFOUR", "___total___", "___total___", "LECLERC", "SUPER U",
-                            "___total___", "___total___")),
+                            Arrays.asList(TOTAL_CELL, "A", TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, "A", "B")),
+                    new ArrayList<>(Arrays.asList("CARREFOUR", TOTAL_CELL, TOTAL_CELL, "LECLERC", "SUPER U",
+                            TOTAL_CELL, TOTAL_CELL)),
                     new ArrayList<>(Arrays.asList(null, 5, null, null, null, 20, 25)),
                     new ArrayList<>(Arrays.asList(6.8, null, 4, 2.3, 3, null, null))));
     Table mergedTable = MergeTables.mergeTables(leftTable, rightTable);
@@ -416,7 +419,7 @@ class TestMergeTables {
   }
 
   @Test
-  void merge_tables_with_totals() {
+  void mergeTablesWithTotals() {
     /*
     | typology    | category    | price.sum |
     |-------------|-------------|-----------|
@@ -432,8 +435,8 @@ class TestMergeTables {
                     new Header(new Field("price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             List.of(
-                    new ArrayList<>(Arrays.asList("___total___", "MDD", "MDD", "MN", "MN")),
-                    new ArrayList<>(Arrays.asList("___total___", "___total___", "B", "___total___", "A")),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, "MDD", "MDD", "MN", "MN")),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, TOTAL_CELL, "B", TOTAL_CELL, "A")),
                     new ArrayList<>(Arrays.asList(27, 15, 15, 12, 12))));
     /*
     | typology    | price.avg |
@@ -447,7 +450,7 @@ class TestMergeTables {
                     new Header(new Field("price.avg", int.class), true)),
             Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
-                    new ArrayList<>(Arrays.asList("___total___", "MDD", "PP")),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, "MDD", "PP")),
                     new ArrayList<>(Arrays.asList(5.3, 2.3, 3))));
 
     /*
@@ -468,9 +471,9 @@ class TestMergeTables {
             Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
-                    new ArrayList<>(Arrays.asList("___total___", "MDD", "MDD", "MN", "MN", "PP")),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, "MDD", "MDD", "MN", "MN", "PP")),
                     new ArrayList<>(
-                            Arrays.asList("___total___", "___total___", "B", "___total___", "A", "___total___")),
+                            Arrays.asList(TOTAL_CELL, TOTAL_CELL, "B", TOTAL_CELL, "A", TOTAL_CELL)),
                     new ArrayList<>(Arrays.asList(27, 15, 15, 12, 12, null)),
                     new ArrayList<>(Arrays.asList(5.3, 2.3, null, null, null, 3))));
     Table mergedTable = MergeTables.mergeTables(leftTable, rightTable);
@@ -478,7 +481,7 @@ class TestMergeTables {
   }
 
   @Test
-  void merge_tables_without_common_columns() {
+  void mergeTablesWithoutCommonColumns() {
     /*
     | typology    | price.sum |
     |-------------|-----------|
@@ -492,7 +495,7 @@ class TestMergeTables {
                     new Header(new Field("price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             List.of(
-                    new ArrayList<>(Arrays.asList("___total___", "MDD", "MN", "PP")),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, "MDD", "MN", "PP")),
                     new ArrayList<>(Arrays.asList(45, 15, 12, 18))));
     /*
     | category    | price.avg |
@@ -506,7 +509,7 @@ class TestMergeTables {
                     new Header(new Field("price.avg", int.class), true)),
             Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
-                    new ArrayList<>(Arrays.asList("___total___", "A", "B")),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, "A", "B")),
                     new ArrayList<>(Arrays.asList(5.3, 2.3, 3))));
 
     /*
@@ -527,9 +530,9 @@ class TestMergeTables {
             Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
-                    new ArrayList<>(Arrays.asList("___total___", "___total___", "___total___", "MDD", "MN", "PP")),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, "MDD", "MN", "PP")),
                     new ArrayList<>(
-                            Arrays.asList("___total___", "A", "B", "___total___", "___total___", "___total___")),
+                            Arrays.asList(TOTAL_CELL, "A", "B", TOTAL_CELL, TOTAL_CELL, TOTAL_CELL)),
                     new ArrayList<>(Arrays.asList(45, null, null, 15, 12, 18)),
                     new ArrayList<>(Arrays.asList(5.3, 2.3, 3, null, null, null))));
     Table mergedTable = MergeTables.mergeTables(leftTable, rightTable);
@@ -537,7 +540,7 @@ class TestMergeTables {
   }
 
   @Test
-  void merge_three_tables() {
+  void mergeThreeTables() {
     /*
     | typology    | Turnover | Margin |
     |-------------|----------|--------|
@@ -553,7 +556,7 @@ class TestMergeTables {
             Set.of(new AggregatedMeasure("Turnover", "unit_turnover", "sum"),
                     new AggregatedMeasure("Margin", "unit_margin", "sum")),
             List.of(
-                    new ArrayList<>(Arrays.asList("___total___", "MDD", "MN", "PP")),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, "MDD", "MN", "PP")),
                     new ArrayList<>(Arrays.asList(2950, 1000, 2500, 450)),
                     new ArrayList<>(Arrays.asList(450, 220, 180, 50))));
     /*
@@ -572,8 +575,8 @@ class TestMergeTables {
                     new Header(new Field("PriceVariation", double.class), true)),
             Set.of(new AggregatedMeasure("PriceVariation", "price_variation", "avg")),
             List.of(
-                    new ArrayList<>(Arrays.asList("___total___", "MDD", "MDD", "MN", "MN", "MN")),
-                    new ArrayList<>(Arrays.asList("___total___", "___total___", "A", "___total___", "B", "C")),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, "MDD", "MDD", "MN", "MN", "MN")),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, TOTAL_CELL, "A", TOTAL_CELL, "B", "C")),
                     new ArrayList<>(Arrays.asList(0.09, 0.15, 0.15, -0.01, 0.02, -0.05))));
 
     /*
@@ -589,7 +592,7 @@ class TestMergeTables {
                     new Header(new Field("PriceIndex", double.class), true)),
             Set.of(new AggregatedMeasure("PriceIndex", "price_index", "avg")),
             List.of(
-                    new ArrayList<>(Arrays.asList("___total___", "CARREFOUR", "LECLERC", "SUPER U")),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, "CARREFOUR", "LECLERC", "SUPER U")),
                     new ArrayList<>(Arrays.asList(101.5, 99.27, 105.1, 101))));
 
 
@@ -621,13 +624,13 @@ class TestMergeTables {
                     new AggregatedMeasure("PriceIndex", "price_index", "avg")),
             List.of(
                     new ArrayList<>(
-                            Arrays.asList("___total___", "___total___", "___total___", "___total___", "MDD", "MDD",
+                            Arrays.asList(TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, "MDD", "MDD",
                                     "MN", "MN", "MN", "PP")),
                     new ArrayList<>(
-                            Arrays.asList("___total___", "___total___", "___total___", "___total___", "___total___",
-                                    "A", "___total___", "B", "C", "___total___")),
-                    new ArrayList<>(Arrays.asList("___total___", "CARREFOUR", "LECLERC", "SUPER U", "___total___",
-                            "___total___", "___total___", "___total___", "___total___", "___total___")),
+                            Arrays.asList(TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, TOTAL_CELL,
+                                    "A", TOTAL_CELL, "B", "C", TOTAL_CELL)),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, "CARREFOUR", "LECLERC", "SUPER U", TOTAL_CELL,
+                            TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, TOTAL_CELL)),
                     new ArrayList<>(Arrays.asList(2950, null, null, null, 1000, null, 2500, null, null, 450)),
                     new ArrayList<>(Arrays.asList(450, null, null, null, 220, null, 180, null, null, 50)),
                     new ArrayList<>(Arrays.asList(0.09, null, null, null, 0.15, 0.15, -0.01, 0.02, -0.05, null)),
@@ -637,7 +640,7 @@ class TestMergeTables {
   }
 
   @Test
-  void merge_three_unordered_tables() {
+  void mergeThreeUnorderedTables() {
     /*
     | typology    | Turnover | Margin |
     |-------------|----------|--------|
@@ -653,7 +656,7 @@ class TestMergeTables {
             Set.of(new AggregatedMeasure("Turnover", "unit_turnover", "sum"),
                     new AggregatedMeasure("Margin", "unit_margin", "sum")),
             List.of(
-                    new ArrayList<>(Arrays.asList("MN", "MDD", "PP", "___total___")),
+                    new ArrayList<>(Arrays.asList("MN", "MDD", "PP", TOTAL_CELL)),
                     new ArrayList<>(Arrays.asList(2500, 1000, 450, 2950)),
                     new ArrayList<>(Arrays.asList(180, 220, 50, 450))));
     /*
@@ -673,8 +676,8 @@ class TestMergeTables {
             Set.of(new AggregatedMeasure("PriceVariation", "price_variation", "avg")),
             List.of(
                     new ArrayList<>(Arrays.asList(0.09, -0.01, 0.02, -0.05, 0.15, 0.15)),
-                    new ArrayList<>(Arrays.asList("___total___", "___total___", "B", "C", "___total___", "A")),
-                    new ArrayList<>(Arrays.asList("___total___", "MN", "MN", "MN", "MDD", "MDD"))));
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, TOTAL_CELL, "B", "C", TOTAL_CELL, "A")),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, "MN", "MN", "MN", "MDD", "MDD"))));
 
     /*
     | company     | PriceIndex |
@@ -689,7 +692,7 @@ class TestMergeTables {
                     new Header(new Field("PriceIndex", double.class), true)),
             Set.of(new AggregatedMeasure("PriceIndex", "price_index", "avg")),
             List.of(
-                    new ArrayList<>(Arrays.asList("___total___", "CARREFOUR", "LECLERC", "SUPER U")),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, "CARREFOUR", "LECLERC", "SUPER U")),
                     new ArrayList<>(Arrays.asList(101.5, 99.27, 105.1, 101))));
 
 
@@ -721,13 +724,13 @@ class TestMergeTables {
                     new AggregatedMeasure("PriceIndex", "price_index", "avg")),
             List.of(
                     new ArrayList<>(
-                            Arrays.asList("___total___", "___total___", "___total___", "___total___", "MDD", "MDD",
+                            Arrays.asList(TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, "MDD", "MDD",
                                     "MN", "MN", "MN", "PP")),
                     new ArrayList<>(
-                            Arrays.asList("___total___", "___total___", "___total___", "___total___", "___total___",
-                                    "A", "___total___", "B", "C", "___total___")),
-                    new ArrayList<>(Arrays.asList("___total___", "CARREFOUR", "LECLERC", "SUPER U", "___total___",
-                            "___total___", "___total___", "___total___", "___total___", "___total___")),
+                            Arrays.asList(TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, TOTAL_CELL,
+                                    "A", TOTAL_CELL, "B", "C", TOTAL_CELL)),
+                    new ArrayList<>(Arrays.asList(TOTAL_CELL, "CARREFOUR", "LECLERC", "SUPER U", TOTAL_CELL,
+                            TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, TOTAL_CELL)),
                     new ArrayList<>(Arrays.asList(2950, null, null, null, 1000, null, 2500, null, null, 450)),
                     new ArrayList<>(Arrays.asList(450, null, null, null, 220, null, 180, null, null, 50)),
                     new ArrayList<>(Arrays.asList(0.09, null, null, null, 0.15, 0.15, -0.01, 0.02, -0.05, null)),
@@ -735,5 +738,4 @@ class TestMergeTables {
     Table mergedTable = MergeTables.mergeTables(List.of(table1, table2, table3));
     Assertions.assertThat(mergedTable).isEqualTo(expectedTable);
   }
-
 }

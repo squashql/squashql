@@ -6,21 +6,19 @@ import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
-import io.squashql.util.NullAndTotalComparator;
 import io.squashql.util.MultipleColumnsSorter;
-import io.squashql.util.Queries;
+import io.squashql.util.NullAndTotalComparator;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TableUtils {
 
   public static String toString(List<? extends Object> columns,
-          Iterable<List<Object>> rows,
-          Function<Object, String> columnElementPrinters,
-          Function<Object, String> rowElementPrinters) {
+                                Iterable<List<Object>> rows,
+                                Function<Object, String> columnElementPrinters,
+                                Function<Object, String> rowElementPrinters) {
     /*
      * leftJustifiedRows - If true, it will add "-" as a flag to format string to
      * make it left justified. Otherwise, right justified.
@@ -92,7 +90,8 @@ public class TableUtils {
     List<MetadataItem> metadata = new ArrayList<>();
     for (Header header : t.headers()) {
       Field field = header.field();
-      Optional<Measure> optionalMeasure = t.measures().stream().filter(m -> m.alias().equals(header.field().name()))
+      Optional<Measure> optionalMeasure = t.measures().stream()
+              .filter(m -> m.alias().equals(header.field().name()))
               .findAny();
       if (header.isMeasure() && optionalMeasure.isPresent()) {
         Measure measure = optionalMeasure.get();
@@ -135,7 +134,7 @@ public class TableUtils {
   }
 
   public static Table orderRows(ColumnarTable table, Map<String, Comparator<?>> comparatorByColumnName,
-          Map<ColumnSetKey, ColumnSet> columnSets) {
+                                Map<ColumnSetKey, ColumnSet> columnSets) {
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
 
@@ -222,27 +221,4 @@ public class TableUtils {
 
     return table;
   }
-
-  public static Map<String, Comparator<?>> getMergedComparator(QueryDto leftQueryDto, QueryDto rightQueryDto) {
-    Map<String, Comparator<?>> leftComparatorByColumnName = Queries.getComparators(leftQueryDto);
-    Map<String, Comparator<?>> rightComparatorByColumnName = Queries.getComparators(rightQueryDto);
-    return Stream.of(leftComparatorByColumnName, rightComparatorByColumnName)
-            .flatMap(map -> map.entrySet().stream())
-            .collect(Collectors.toMap(
-                    Map.Entry::getKey,
-                    Map.Entry::getValue,
-                    (leftValue, rightValue) -> leftValue));
-  }
-
-  public static Map<ColumnSetKey, ColumnSet> getMergedColumnSets(QueryDto leftQueryDto, QueryDto rightQueryDto) {
-    Map<ColumnSetKey, ColumnSet> leftColumnSets = leftQueryDto.columnSets;
-    Map<ColumnSetKey, ColumnSet> rightColumnSets = rightQueryDto.columnSets;
-    return Stream.of(leftColumnSets, rightColumnSets)
-            .flatMap(map -> map.entrySet().stream())
-            .collect(Collectors.toMap(
-                    Map.Entry::getKey,
-                    Map.Entry::getValue,
-                    (leftValue, rightValue) -> leftValue));
-  }
-
 }

@@ -4,7 +4,6 @@ import io.squashql.query.*;
 import io.squashql.store.Datastore;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
-import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -15,6 +14,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 @Slf4j
 public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T> {

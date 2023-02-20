@@ -6,12 +6,12 @@ import io.squashql.query.Header;
 import io.squashql.query.RowTable;
 import io.squashql.query.Table;
 import io.squashql.store.Field;
-import java.util.HashSet;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.eclipse.collections.api.tuple.Pair;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import static io.squashql.SparkUtil.datatypeToClass;
