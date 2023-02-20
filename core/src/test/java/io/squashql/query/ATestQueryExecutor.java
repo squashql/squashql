@@ -2,10 +2,7 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
-import io.squashql.query.dto.ConditionDto;
-import io.squashql.query.dto.CriteriaDto;
-import io.squashql.query.dto.OrderKeywordDto;
-import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.*;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
@@ -19,6 +16,8 @@ import java.util.Map;
 import static io.squashql.query.Functions.*;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
+import static io.squashql.query.dto.OrderKeywordDto.ASC;
+import static io.squashql.query.dto.OrderKeywordDto.DESC;
 import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -414,6 +413,41 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   }
 
   @Test
+  void testOrderByWithRollup() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("category"), List.of(sum("p.sum", "price")))
+            .rollup(List.of("category"))
+            .orderBy("category", ASC)
+            .build();
+    Table result = this.executor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of(GRAND_TOTAL, 46.5d),
+            List.of("cloth", 30d),
+            List.of("drink", 7.5d),
+            List.of("food", 9d));
+
+    query.orderBy("category", DESC);
+    result = this.executor.execute(query);
+    // Total AND Grand Total always on top
+    Assertions.assertThat(result).containsExactly(
+            List.of(GRAND_TOTAL, 46.5d),
+            List.of("food", 9d),
+            List.of("drink", 7.5d),
+            List.of("cloth", 30d));
+
+    // With explicit ordering
+    query.orderBy("category", List.of("drink", "food", "cloth"));
+    result = this.executor.execute(query);
+    // Total AND Grand Total always on top
+    Assertions.assertThat(result).containsExactly(
+            List.of(GRAND_TOTAL, 46.5d),
+            List.of("drink", 7.5d),
+            List.of("food", 9d),
+            List.of("cloth", 30d));
+  }
+
+  @Test
   void testOrderByColumnWithNullValues() {
     // Without explicit ordering
     QueryDto query = Query
@@ -430,7 +464,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     query = Query
             .from(this.storeName)
             .select(List.of("subcategory"), List.of(CountMeasure.INSTANCE))
-            .orderBy("subcategory", OrderKeywordDto.ASC)
+            .orderBy("subcategory", ASC)
             .build();
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -525,5 +559,84 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             Arrays.asList("food", MAIN_SCENARIO_NAME, null, 3d),
             Arrays.asList("food", "s1", null, 3d),
             Arrays.asList("food", "s2", null, 3d));
+  }
+
+  @Test
+  void testMergeWithComparators() {
+    QueryDto query1 = Query
+            .from(this.storeName)
+            .select(List.of("category"), List.of(sum("p.sum", "price")))
+            .rollup(List.of("category"))
+            .orderBy("category", OrderKeywordDto.DESC)
+            .build();
+
+    QueryDto query2 = Query
+            .from(this.storeName)
+            .select(List.of("category", SCENARIO_FIELD_NAME), List.of(avg("p.avg", "price")))
+            .rollup(List.of("category", SCENARIO_FIELD_NAME))
+            .orderBy("category", ASC)
+            .orderBy(SCENARIO_FIELD_NAME, List.of("s1", MAIN_SCENARIO_NAME, "s2"))
+            .build();
+
+    Table result = this.executor.execute(query1, query2, null);
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, 46.5d, 5.166666666666667d),
+            Arrays.asList("food", TOTAL, 9d, 3d),
+            Arrays.asList("food", "s1", null, 3d),
+            Arrays.asList("food", MAIN_SCENARIO_NAME, null, 3d),
+            Arrays.asList("food", "s2", null, 3d),
+            Arrays.asList("drink", TOTAL, 7.5d, 2.5d),
+            Arrays.asList("drink", "s1", null, 4d),
+            Arrays.asList("drink", MAIN_SCENARIO_NAME, null, 2d),
+            Arrays.asList("drink", "s2", null, 1.5d),
+            Arrays.asList("cloth", TOTAL, 30d, 10d),
+            Arrays.asList("", "s1", null, 10d),
+            Arrays.asList("cloth", MAIN_SCENARIO_NAME, null, 10d),
+            Arrays.asList("cloth", "s2", null, 10d));
+  }
+
+  @Test
+  void testMergeWithColumnSetsPreserveOrder() {
+    BucketColumnSetDto group1 = new BucketColumnSetDto("group1", "category")
+            .withNewBucket("Food & Drink", List.of("food", "drink"))
+            .withNewBucket("Other", List.of("cloth"));
+    /*
+      +--------------+----------+----------+-------+
+      |       group1 | category | category | p.sum |
+      +--------------+----------+----------+-------+
+      | Food & Drink |     food |     food |   9.0 |
+      | Food & Drink |    drink |    drink |   7.5 |
+      |        Other |    cloth |    cloth |  30.0 |
+      +--------------+----------+----------+-------+
+     */
+    QueryDto query1 = Query
+            .from(this.storeName)
+            .select_(List.of(group1), List.of(sum("p.sum", "price")))
+            .build();
+
+    BucketColumnSetDto group2 = new BucketColumnSetDto("group2", "subcategory")
+            .withNewBucket("Categorized", List.of("biscuit"))
+            .withNewBucket("Not categorized", Arrays.asList(null, "other"));
+    /*
+      +-----------------+-------------+-------+
+      |          group2 | subcategory | p.avg |
+      +-----------------+-------------+-------+
+      |     Categorized |     biscuit |   3.0 |
+      | Not categorized |        null |  6.25 |
+      +-----------------+-------------+-------+
+     */
+    QueryDto query2 = Query
+            .from(this.storeName)
+            .select_(List.of(group2), List.of(avg("p.avg", "price")))
+            .build();
+    this.executor.execute(query2).show();
+
+    Table result = this.executor.execute(query1, query2, null);
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList("Food & Drink", "food", TOTAL, TOTAL, 9d, null),
+            Arrays.asList("Food & Drink", "drink", TOTAL, TOTAL, 7.5d, null),
+            Arrays.asList("Other", "cloth", TOTAL, TOTAL, 30d, null),
+            Arrays.asList(TOTAL, TOTAL, "Categorized", "biscuit", null, 3d),
+            Arrays.asList(TOTAL, TOTAL, "Not categorized", null, null, 6.25d));
   }
 }

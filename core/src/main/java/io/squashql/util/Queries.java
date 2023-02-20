@@ -20,10 +20,9 @@ public final class Queries {
     Map<String, Comparator<?>> res = new HashMap<>();
     orders.forEach((c, order) -> {
       if (order instanceof SimpleOrderDto so) {
-        Comparator<?> comp = NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder());
-        res.put(c, so.order == DESC ? comp.reversed() : comp);
+        res.put(c, NullAndTotalComparator.nullsLastAndTotalsFirst(so.order == DESC ? Comparator.naturalOrder().reversed() : Comparator.naturalOrder()));
       } else if (order instanceof ExplicitOrderDto eo) {
-        res.put(c, new CustomExplicitOrdering(eo.explicit));
+        res.put(c, NullAndTotalComparator.nullsLastAndTotalsFirst(new CustomExplicitOrdering(eo.explicit)));
       } else {
         throw new IllegalStateException("Unexpected value: " + orders);
       }

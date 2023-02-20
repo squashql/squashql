@@ -133,8 +133,9 @@ public class TableUtils {
     return new ColumnarTable(headers, new HashSet<>(measures), values);
   }
 
-  public static Table orderRows(ColumnarTable table, Map<String, Comparator<?>> comparatorByColumnName,
-                                Map<ColumnSetKey, ColumnSet> columnSets) {
+  public static Table orderRows(ColumnarTable table,
+                                Map<String, Comparator<?>> comparatorByColumnName,
+                                Collection<ColumnSet> columnSets) {
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
 
@@ -163,10 +164,12 @@ public class TableUtils {
     }
 
     int[] contextIndices = new int[args.size()];
-    java.util.Arrays.fill(contextIndices, -1);
-    ColumnSet bucket = columnSets.get(ColumnSetKey.BUCKET);
-    if (bucket != null) {
-      BucketColumnSetDto cs = (BucketColumnSetDto) bucket;
+    Arrays.fill(contextIndices, -1);
+    for (ColumnSet columnSet : new HashSet<>(columnSets)) {
+      if (columnSet.getColumnSetKey() != ColumnSetKey.BUCKET) {
+        throw new IllegalArgumentException("Unexpected column set type " + columnSet);
+      }
+      BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
       contextIndices[table.columnIndex(cs.field)] = table.columnIndex(cs.name);
     }
 

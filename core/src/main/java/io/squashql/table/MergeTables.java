@@ -122,9 +122,9 @@ public final class MergeTables {
 
     // Sort rows on all columns with default comparator (natural order)
     orderedLeftTable = (ColumnarTable) TableUtils.orderRows(orderedLeftTable, Collections.emptyMap(),
-            Collections.emptyMap());
+            Collections.emptySet());
     orderedRightTable = (ColumnarTable) TableUtils.orderRows(orderedRightTable, Collections.emptyMap(),
-            Collections.emptyMap());
+            Collections.emptySet());
 
     return new Table[] {orderedLeftTable, orderedRightTable};
   }

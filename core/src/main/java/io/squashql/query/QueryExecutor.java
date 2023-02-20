@@ -156,7 +156,7 @@ public class QueryExecutor {
     result = TableUtils.selectAndOrderColumns((ColumnarTable) result, query);
     if (replaceTotalCellsAndOrderRows) {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result, !query.rollupColumns.isEmpty());
-      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets);
+      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
     }
 
     queryWatch.stop(QueryWatch.ORDER);
@@ -241,6 +241,13 @@ public class QueryExecutor {
   }
 
   public Table execute(QueryDto first, QueryDto second, SquashQLUser user) {
+    Map<String, Comparator<?>> firstComparators = Queries.getComparators(first);
+    Map<String, Comparator<?>> secondComparators = Queries.getComparators(second);
+    secondComparators.putAll(firstComparators); // the comparators of the first query take precendence over the second's
+
+    Set<ColumnSet> columnSets = Stream.concat(first.columnSets.values().stream(), second.columnSets.values().stream())
+            .collect(Collectors.toSet());
+
     Function<QueryDto, Table> execute = q -> execute(
             q,
             new QueryWatch(),
@@ -249,13 +256,13 @@ public class QueryExecutor {
             false);
     CompletableFuture<Table> f1 = CompletableFuture.supplyAsync(() -> execute.apply(first));
     CompletableFuture<Table> f2 = CompletableFuture.supplyAsync(() -> execute.apply(second));
-    return CompletableFuture.allOf(f1, f2).thenApply(__ -> merge(f1.join(), f2.join())).join();
+    return CompletableFuture.allOf(f1, f2).thenApply(__ -> merge(f1.join(), f2.join(), secondComparators, columnSets)).join();
   }
 
-  public static Table merge(Table table1, Table table2) {
-    // TOOD sort/order rows and columns
-    Table table = MergeTables.mergeTables(table1, table2);
-    return TableUtils.replaceTotalCellValues((ColumnarTable) table, true);
+  public static Table merge(Table table1, Table table2, Map<String, Comparator<?>> comparators, Set<ColumnSet> columnSets) {
+    ColumnarTable table = (ColumnarTable) MergeTables.mergeTables(table1, table2);
+    table = (ColumnarTable) TableUtils.orderRows(table, comparators, columnSets);
+    return TableUtils.replaceTotalCellValues(table, true);
   }
 
   public static Function<String, Field> withFallback(Function<String, Field> fieldProvider, Class<?> fallbackType) {

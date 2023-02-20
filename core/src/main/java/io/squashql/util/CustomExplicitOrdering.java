@@ -17,6 +17,7 @@ import java.util.List;
 @EqualsAndHashCode
 public class CustomExplicitOrdering implements Comparator<Object>, Serializable {
   final ImmutableObjectIntMap<?> rankMap;
+  final Comparator fallbackComparator = Comparator.naturalOrder();
 
   public CustomExplicitOrdering(List<?> valuesInOrder) {
     this.rankMap = indexMap(valuesInOrder);
@@ -45,8 +46,7 @@ public class CustomExplicitOrdering implements Comparator<Object>, Serializable 
     } else if (rankRight >= 0) {
       return 1;
     } else {
-      Comparator comparator = NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder());
-      return comparator.compare(left, right);
+      return this.fallbackComparator.compare(left, right);
     }
   }
 }
