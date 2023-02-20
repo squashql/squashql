@@ -2,9 +2,9 @@
 
 [logo]
 
-![build](https://github.com/paulbares/aitm/actions/workflows/ci.yml/badge.svg?branch=main)
-![activity](https://img.shields.io/github/commit-activity/m/paulbares/aitm/main)
-![license](https://img.shields.io/github/license/paulbares/aitm)
+![build](https://github.com/squashql/squashql/actions/workflows/ci.yml/badge.svg?branch=main)
+![activity](https://img.shields.io/github/commit-activity/m/squashql/squashql/main)
+![license](https://img.shields.io/github/license/squashql/squashql)
 ---
 
 SquashQL is an open-source SQL query engine specialized in what-if analysis, building multi-dimensional queries to help
@@ -28,7 +28,7 @@ To connect SquashQL to your database you will first have to import the associate
 java project a `QueryEngine` and `Datasatore` by picking the correct implementations. Then declare a bean that returns 
 the `QueryEngine` instance.
 
-Find a ready-to-use example with Apache Spark and Spring Boot [here](https://github.com/paulbares/aitm-sandbox).
+Find a ready-to-use example with Apache Spark and Spring Boot [here](https://github.com/squashql/squashql-showcase).
 
 #### Apache Spark
 

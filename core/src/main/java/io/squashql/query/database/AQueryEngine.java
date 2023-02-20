@@ -1,9 +1,6 @@
 package io.squashql.query.database;
 
-import io.squashql.query.ColumnarTable;
-import io.squashql.query.CountMeasure;
-import io.squashql.query.QueryExecutor;
-import io.squashql.query.Table;
+import io.squashql.query.*;
 import io.squashql.store.Datastore;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
@@ -86,7 +83,8 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   }
 
   protected String createSqlStatement(DatabaseQuery query) {
-    return SQLTranslator.translate(query, QueryExecutor.withFallback(this.fieldSupplier, String.class), this.queryRewriter);
+    return SQLTranslator.translate(query, QueryExecutor.withFallback(this.fieldSupplier, String.class),
+            this.queryRewriter);
   }
 
   /**
@@ -118,20 +116,21 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
    */
   protected Table postProcessDataset(Table input, DatabaseQuery query) {
     if (!query.rollup.isEmpty()) {
-      List<Field> newFields = new ArrayList<>();
+      List<Header> newHeaders = new ArrayList<>();
       List<List<Object>> newValues = new ArrayList<>();
       for (int i = 0; i < input.headers().size(); i++) {
-        Field header = input.headers().get(i);
+        Header header = input.headers().get(i);
         List<Object> columnValues = input.getColumn(i);
         if (i < query.select.size() || i >= query.select.size() + query.rollup.size()) {
-          newFields.add(header);
+          newHeaders.add(header);
           newValues.add(columnValues);
         } else {
-          String baseName = Objects.requireNonNull(SqlUtils.extractFieldFromGroupingAlias(header.name()));
+          String baseName = Objects.requireNonNull(SqlUtils.extractFieldFromGroupingAlias(header.field().name()));
           List<Object> baseColumnValues = input.getColumnValues(baseName);
           for (int rowIndex = 0; rowIndex < columnValues.size(); rowIndex++) {
             if (((Number) columnValues.get(rowIndex)).longValue() == 1) {
-              // It is a total if == 1. It is cast as Number because the type is Byte with Spark, Long with ClickHouse...
+              // It is a total if == 1. It is cast as Number because the type is Byte with Spark, Long with
+              // ClickHouse...
               baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
             }
           }
@@ -139,51 +138,51 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
       }
 
       return new ColumnarTable(
-              newFields,
+              newHeaders,
               input.measures(),
-              IntStream.range(query.select.size(), query.select.size() + query.measures.size()).toArray(),
-              IntStream.range(0, query.select.size()).toArray(),
               newValues);
     } else {
       return input;
     }
   }
 
-  public static <Column, Record> Pair<List<Field>, List<List<Object>>> transformToColumnFormat(
+  public static <Column, Record> Pair<List<Header>, List<List<Object>>> transformToColumnFormat(
           DatabaseQuery query,
           List<Column> columns,
           BiFunction<Column, String, Field> columnToField,
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue,
           QueryRewriter queryRewriter) {
+    List<Header> headers = new ArrayList<>();
     List<String> fieldNames = new ArrayList<>(query.select);
     if (queryRewriter.useGroupingFunction()) {
       query.rollup.forEach(r -> fieldNames.add(queryRewriter.groupingAlias(r)));
     }
     query.measures.forEach(m -> fieldNames.add(m.alias()));
-
-    List<Field> fields = new ArrayList<>();
     for (int i = 0; i < columns.size(); i++) {
-      fields.add(columnToField.apply(columns.get(i), fieldNames.get(i)));
+      headers.add(new Header(
+              columnToField.apply(columns.get(i), fieldNames.get(i)),
+              i >= query.select.size() + query.rollup.size()));
     }
     List<List<Object>> values = new ArrayList<>();
-    fields.forEach(f -> values.add(new ArrayList<>()));
+    headers.forEach(f -> values.add(new ArrayList<>()));
     recordIterator.forEachRemaining(r -> {
-      for (int i = 0; i < fields.size(); i++) {
+      for (int i = 0; i < headers.size(); i++) {
         values.get(i).add(recordToFieldValue.apply(i, r));
       }
     });
-    return Tuples.pair(fields, values);
+    return Tuples.pair(headers, values);
   }
 
-  public static <Column, Record> Pair<List<Field>, List<List<Object>>> transformToRowFormat(
+  public static <Column, Record> Pair<List<Header>, List<List<Object>>> transformToRowFormat(
           List<Column> columns,
           Function<Column, Field> columnToField,
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue) {
-    List<Field> fields = columns.stream().map(columnToField::apply).toList();
+    List<Header> headers = columns.stream().map(column -> new Header(columnToField.apply(column), false)).toList();
     List<List<Object>> rows = new ArrayList<>();
-    recordIterator.forEachRemaining(r -> rows.add(IntStream.range(0, fields.size()).mapToObj(i -> recordToFieldValue.apply(i, r)).toList()));
-    return Tuples.pair(fields, rows);
+    recordIterator.forEachRemaining(r -> rows.add(
+            IntStream.range(0, headers.size()).mapToObj(i -> recordToFieldValue.apply(i, r)).toList()));
+    return Tuples.pair(headers, rows);
   }
 }

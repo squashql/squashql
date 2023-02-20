@@ -2,7 +2,6 @@ package io.squashql.query;
 
 import io.squashql.query.comp.BinaryOperations;
 import io.squashql.store.Field;
-import io.squashql.util.SquashQLArrays;
 import org.eclipse.collections.api.map.primitive.IntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableIntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
@@ -21,34 +20,42 @@ public abstract class AComparisonExecutor {
 
   public static final String REF_POS_FIRST = "first";
 
-  protected abstract BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn);
+  protected abstract BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm,
+          ObjectIntMap<String> indexByColumn);
 
   public List<Object> compare(
           ComparisonMeasureReferencePosition cm,
           Table writeToTable,
           Table readFromTable) {
     MutableObjectIntMap<String> indexByColumn = new ObjectIntHashMap<>();
-    for (int columnIndex : readFromTable.columnIndices()) {
-      int index = SquashQLArrays.search(readFromTable.columnIndices(), columnIndex);
-      indexByColumn.put(readFromTable.headers().get(columnIndex).name(), index);
+    int readFromTableHeaderSize = readFromTable.headers().size();
+    int index = 0;
+    for (Header header : readFromTable.headers()) {
+      if (!header.isMeasure()) {
+        indexByColumn.put(header.field().name(), index++);
+      }
     }
     BiPredicate<Object[], Field[]> procedure = createShiftProcedure(cm, indexByColumn);
 
-    Object[] buffer = new Object[readFromTable.columnIndices().length];
-    Field[] fields = new Field[readFromTable.columnIndices().length];
+    int readFromTableColumnsCount = (int) readFromTable.headers().stream().filter(header -> !header.isMeasure()).count();
+    Object[] buffer = new Object[readFromTableColumnsCount];
+    Field[] fields = new Field[readFromTableColumnsCount];
     List<Object> result = new ArrayList<>((int) writeToTable.count());
     List<Object> readAggregateValues = readFromTable.getAggregateValues(cm.measure);
     List<Object> writeAggregateValues = writeToTable.getAggregateValues(cm.measure);
-    BiFunction<Number, Number, Number> comparisonBiFunction = BinaryOperations.createComparisonBiFunction(cm.comparisonMethod, readFromTable.getField(cm.measure).type());
+    BiFunction<Number, Number, Number> comparisonBiFunction = BinaryOperations.createComparisonBiFunction(
+            cm.comparisonMethod, readFromTable.getField(cm.measure).type());
     int[] rowIndex = new int[1];
     IntIntMap mapping = buildMapping(writeToTable, readFromTable); // columns might be in a different order
     writeToTable.forEach(row -> {
       int i = 0;
-      for (int columnIndex : readFromTable.columnIndices()) {
-        fields[i] = readFromTable.headers().get(columnIndex);
-        int index = mapping.getIfAbsent(columnIndex, -1);
-        buffer[i] = row.get(index);
-        i++;
+      for (int columnIndex = 0; columnIndex < readFromTableHeaderSize; columnIndex++) {
+        Header header = readFromTable.headers().get(columnIndex);
+        if (!header.isMeasure()) {
+          fields[i] = header.field();
+          buffer[i] = row.get(mapping.getIfAbsent(columnIndex, -1));
+          i++;
+        }
       }
       boolean success = procedure.test(buffer, fields);
       int readPosition = readFromTable.pointDictionary().getPosition(buffer);
@@ -68,10 +75,12 @@ public abstract class AComparisonExecutor {
 
   public IntIntMap buildMapping(Table writeToTable, Table readFromTable) {
     MutableIntIntMap mapping = new IntIntHashMap();
-    for (int columnIndex : readFromTable.columnIndices()) {
-      Field field = readFromTable.headers().get(columnIndex);
-      int index = writeToTable.index(field);
-      mapping.put(columnIndex, index);
+    for (int index = 0; index < readFromTable.headers().size(); index++) {
+      Header header = readFromTable.headers().get(index);
+      if (!header.isMeasure()) {
+        int writeToTableIndex = writeToTable.index(header.field());
+        mapping.put(index, writeToTableIndex);
+      }
     }
     return mapping;
   }

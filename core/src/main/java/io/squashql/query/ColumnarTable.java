@@ -9,36 +9,34 @@ import java.util.function.Supplier;
 
 public class ColumnarTable implements Table {
 
-  protected final List<Field> headers;
-  protected final List<Measure> measures;
-  protected final int[] columnsIndices;
-  protected int[] measureIndices;
+  protected final List<Header> headers;
+  protected final Set<Measure> measures;
 
   protected final Supplier<ObjectArrayDictionary> pointDictionary;
   protected final List<List<Object>> values;
 
-  public ColumnarTable(List<Field> headers,
-                       List<Measure> measures,
-                       int[] measureIndices,
-                       int[] columnsIndices,
-                       List<List<Object>> values) {
+  public ColumnarTable(List<Header> headers, Set<Measure> measures, List<List<Object>> values) {
+    if (headers.stream().filter(Header::isMeasure)
+            .anyMatch(measureHeader -> !measures.stream().map(Measure::alias).toList()
+                    .contains(measureHeader.field().name()))) {
+      throw new IllegalArgumentException("Every header measure should have its description in measures.");
+    }
     this.headers = new ArrayList<>(headers);
-    this.measures = new ArrayList<>(measures);
+    this.measures = new HashSet<>(measures);
     this.values = new ArrayList<>(values);
-    this.measureIndices = measureIndices;
-    this.columnsIndices = columnsIndices;
     this.pointDictionary = Suppliers.memoize(() -> createPointDictionary(this));
   }
 
   public static ObjectArrayDictionary createPointDictionary(Table table) {
-    int[] columnIndices = table.columnIndices();
-    int pointLength = columnIndices.length;
+    int pointLength = (int) table.headers().stream().filter(header -> !header.isMeasure()).count();
     ObjectArrayDictionary dictionary = new ObjectArrayDictionary(pointLength);
     table.forEach(row -> {
       Object[] columnValues = new Object[pointLength];
       int i = 0;
-      for (int columnIndex : columnIndices) {
-        columnValues[i++] = row.get(columnIndex);
+      for (int index = 0; index < table.headers().size(); index++) {
+        if (!table.headers().get(index).isMeasure()) {
+          columnValues[i++] = row.get(index);
+        }
       }
       dictionary.map(columnValues);
     });
@@ -47,10 +45,8 @@ public class ColumnarTable implements Table {
 
   @Override
   public void addAggregates(Field field, Measure measure, List<Object> values) {
-    this.headers.add(field);
+    this.headers.add(new Header(field, true));
     this.measures.add(measure);
-    this.measureIndices = Arrays.copyOf(this.measureIndices, this.measureIndices.length + 1);
-    this.measureIndices[this.measureIndices.length - 1] = this.headers.size() - 1;
     this.values.add(values);
   }
 
@@ -74,22 +70,12 @@ public class ColumnarTable implements Table {
   }
 
   @Override
-  public List<Measure> measures() {
+  public Set<Measure> measures() {
     return this.measures;
   }
 
   @Override
-  public int[] measureIndices() {
-    return this.measureIndices;
-  }
-
-  @Override
-  public int[] columnIndices() {
-    return this.columnsIndices;
-  }
-
-  @Override
-  public List<Field> headers() {
+  public List<Header> headers() {
     return this.headers;
   }
 
@@ -100,7 +86,7 @@ public class ColumnarTable implements Table {
 
   @Override
   public String toString() {
-    return TableUtils.toString(this.headers, this, f -> ((Field) f).name(), String::valueOf);
+    return TableUtils.toString(this.headers, this, h -> ((Header) h).field().name(), String::valueOf);
   }
 
   @Override
@@ -131,5 +117,22 @@ public class ColumnarTable implements Table {
       this.current++;
       return r;
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ColumnarTable lists = (ColumnarTable) o;
+    return headers.equals(lists.headers) && measures.equals(lists.measures) && values.equals(lists.values);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(headers, measures, values);
   }
 }

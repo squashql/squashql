@@ -7,14 +7,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.IntStream;
 
 public class RowTable implements Table {
 
-  protected final List<Field> headers;
+  protected final List<Header> headers;
   protected final List<List<Object>> rows;
 
-  public RowTable(List<Field> headers, List<List<Object>> rows) {
+  public RowTable(List<Header> headers, List<List<Object>> rows) {
     this.headers = new ArrayList<>(headers);
     this.rows = new ArrayList<>(rows);
   }
@@ -46,22 +47,12 @@ public class RowTable implements Table {
   }
 
   @Override
-  public List<Measure> measures() {
-    return Collections.emptyList();
+  public Set<Measure> measures() {
+    return Collections.emptySet();
   }
 
   @Override
-  public int[] measureIndices() {
-    return new int[0];
-  }
-
-  @Override
-  public int[] columnIndices() {
-    return IntStream.range(0, this.headers.size()).toArray();
-  }
-
-  @Override
-  public List<Field> headers() {
+  public List<Header> headers() {
     return this.headers;
   }
 
