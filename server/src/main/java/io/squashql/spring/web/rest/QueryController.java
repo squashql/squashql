@@ -61,7 +61,10 @@ public class QueryController {
 
   @PostMapping(MAPPING_QUERY_MERGE)
   public ResponseEntity<QueryResultDto> executeAndMerge(@RequestBody QueryMergeDto queryMergeDto) {
-    Table table = this.queryExecutor.execute(queryMergeDto.first, queryMergeDto.second);
+    Table table = this.queryExecutor.execute(
+            queryMergeDto.first,
+            queryMergeDto.second,
+            this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get());
     List<String> fields = table.headers().stream().map(Header::field).map(Field::name).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))

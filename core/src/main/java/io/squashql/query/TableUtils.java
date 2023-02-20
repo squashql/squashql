@@ -192,8 +192,9 @@ public class TableUtils {
    * Replaces cell values containing {@link SQLTranslator#TOTAL_CELL} with {@link QueryEngine#GRAND_TOTAL} or
    * {@link QueryEngine#TOTAL}.
    */
-  public static Table replaceTotalCellValues(ColumnarTable table, QueryDto queryDto) {
-    if (queryDto.rollupColumns.isEmpty()) {
+  public static Table replaceTotalCellValues(ColumnarTable table, boolean hasRollup) {
+    if (!hasRollup) {
+      // Quick escape
       return table;
     }
 

@@ -492,4 +492,38 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of("cookie", 9.0d),
             List.of("shirt", 30d));
   }
+
+  @Test
+  void testMergeTables() {
+    QueryDto query1 = Query
+            .from(this.storeName)
+            .select(List.of("category"), List.of(sum("p.sum", "price")))
+            .rollup(List.of("category"))
+            .build();
+
+    QueryDto query2 = Query
+            .from(this.storeName)
+            .select(List.of("category", SCENARIO_FIELD_NAME), List.of(avg("p.avg", "price")))
+            .rollup(List.of("category", SCENARIO_FIELD_NAME))
+            .build();
+
+    Table result = this.executor.execute(query1, query2, null);
+
+    Assertions.assertThat(result.headers().stream().map(Header::field).map(Field::name).toList())
+            .containsExactly("category", SCENARIO_FIELD_NAME, "p.sum", "p.avg");
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, 46.5d, 5.166666666666667d),
+            Arrays.asList("cloth", TOTAL, 30d, 10d),
+            Arrays.asList("cloth", MAIN_SCENARIO_NAME, null, 10d),
+            Arrays.asList("cloth", "s1", null, 10d),
+            Arrays.asList("cloth", "s2", null, 10d),
+            Arrays.asList("drink", TOTAL, 7.5d, 2.5d),
+            Arrays.asList("drink", MAIN_SCENARIO_NAME, null, 2d),
+            Arrays.asList("drink", "s1", null, 4d),
+            Arrays.asList("drink", "s2", null, 1.5d),
+            Arrays.asList("food", TOTAL, 9d, 3d),
+            Arrays.asList("food", MAIN_SCENARIO_NAME, null, 3d),
+            Arrays.asList("food", "s1", null, 3d),
+            Arrays.asList("food", "s2", null, 3d));
+  }
 }

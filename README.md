@@ -178,4 +178,5 @@ mvn test
 
 ## Contributing
 
-Before contributing to SquashQL, please read our [contributing guidelines](CONTRIBUTING.md).
+Before contributing to SquashQL, please read our [contributing guidelines](CONTRIBUTING.md). 
+If you can't find something you'd want to use or want to share your ideas, please open an issue or join our [discord server](https://discord.gg/p7dg2wEwFs).

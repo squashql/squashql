@@ -241,22 +241,9 @@ public class QueryControllerTest {
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
-//              Assertions.assertThat(queryResult.table.rows).containsExactlyInAnyOrder(
-//                      List.of("MN & MDD up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
-//                      List.of("MN & MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196),
-//
-//                      List.of("MN up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
-//                      List.of("MN up", "ITMella 250g", 100000d, 102000d, 0.9803921568627451d),
-//
-//                      List.of("MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196d),
-//                      List.of("MDD up", "Nutella 250g", 100000d, 102000d, 0.9803921568627451d),
-//
-//                      List.of("MN & MDD down", "Nutella 250g", 90000d, 102000d, 0.8823529411764706),
-//                      List.of("MN & MDD down", "ITMella 250g", 90000d, 102000d, 0.8823529411764706),
-//
-//                      List.of(MAIN_SCENARIO_NAME, "ITMella 250g", 100000d, 102000d, 0.9803921568627451d),
-//                      List.of(MAIN_SCENARIO_NAME, "Nutella 250g", 100000d, 102000d, 0.9803921568627451d));
-
+              Assertions.assertThat(queryResult.table.rows).containsExactlyInAnyOrder(
+                      List.of("ITMella 250g", 102000d, 10200d),
+                      List.of("Nutella 250g", 102000d, 10200d));
               Assertions.assertThat(queryResult.table.columns).containsExactly("ean", "capdv-sum", "capdv-avg");
             });
   }

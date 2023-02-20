@@ -9,6 +9,7 @@ import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.monitoring.QueryWatch;
 import io.squashql.store.Field;
+import io.squashql.table.MergeTables;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
@@ -154,7 +155,7 @@ public class QueryExecutor {
     Table result = tableByScope.get(queryScope);
     result = TableUtils.selectAndOrderColumns((ColumnarTable) result, query);
     if (replaceTotalCellsAndOrderRows) {
-      result = TableUtils.replaceTotalCellValues((ColumnarTable) result, query);
+      result = TableUtils.replaceTotalCellValues((ColumnarTable) result, !query.rollupColumns.isEmpty());
       result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets);
     }
 
@@ -239,12 +240,12 @@ public class QueryExecutor {
     // Deactivate for now.
   }
 
-  public Table execute(QueryDto first, QueryDto second) {
+  public Table execute(QueryDto first, QueryDto second, SquashQLUser user) {
     Function<QueryDto, Table> execute = q -> execute(
             q,
             new QueryWatch(),
             CacheStatsDto.builder(),
-            null,
+            user,
             false);
     CompletableFuture<Table> f1 = CompletableFuture.supplyAsync(() -> execute.apply(first));
     CompletableFuture<Table> f2 = CompletableFuture.supplyAsync(() -> execute.apply(second));
@@ -252,7 +253,9 @@ public class QueryExecutor {
   }
 
   public static Table merge(Table table1, Table table2) {
-    return null;// FIXME
+    // TOOD sort/order rows and columns
+    Table table = MergeTables.mergeTables(table1, table2);
+    return TableUtils.replaceTotalCellValues((ColumnarTable) table, true);
   }
 
   public static Function<String, Field> withFallback(Function<String, Field> fieldProvider, Class<?> fallbackType) {
