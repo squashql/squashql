@@ -2,9 +2,9 @@
 
 [logo]
 
-![build](https://github.com/paulbares/aitm/actions/workflows/ci.yml/badge.svg?branch=main)
-![activity](https://img.shields.io/github/commit-activity/m/paulbares/aitm/main)
-![license](https://img.shields.io/github/license/paulbares/aitm)
+![build](https://github.com/squashql/squashql/actions/workflows/ci.yml/badge.svg?branch=main)
+![activity](https://img.shields.io/github/commit-activity/m/squashql/squashql/main)
+![license](https://img.shields.io/github/license/squashql/squashql)
 ---
 
 SquashQL is an open-source SQL query engine specialized in what-if analysis, building multi-dimensional queries to help
@@ -16,7 +16,7 @@ the UI.
 - It helps front-end developers build and run SQL queries in their own language in [TypeScript](https://www.typescriptlang.org/)
 - With its "write once, run everywhere" approach, it is a great solution for those who need to quickly and efficiently query data from multiple databases.
 
-![test6](https://user-images.githubusercontent.com/5783183/210366738-06007ce4-a46a-4b14-b01c-d58de933c5d9.gif)
+![ide ts squashql](https://user-images.githubusercontent.com/5783183/215964358-37814efa-f315-4de5-97cd-cefce537caaa.gif)
 
 ## Compatibility
 
@@ -28,7 +28,7 @@ To connect SquashQL to your database you will first have to import the associate
 java project a `QueryEngine` and `Datasatore` by picking the correct implementations. Then declare a bean that returns 
 the `QueryEngine` instance.
 
-Find a ready-to-use example with Apache Spark and Spring Boot [here](https://github.com/paulbares/aitm-sandbox).
+Find a ready-to-use example with Apache Spark and Spring Boot [here](https://github.com/squashql/squashql-showcase).
 
 #### Apache Spark
 
@@ -122,7 +122,7 @@ To use those endpoints, SquashQL provides a [TypeScript](https://www.typescriptl
 ```typescript
 import {count, from, Querier} from "@squashql/squashql-js"
 
-const querier = new Querier("http://localhost:8080");
+const querier = new Querier("http://localhost:8080")
 
 querier.getMetadata().then(response => {
   console.log(response)
@@ -135,6 +135,17 @@ const query = from("myTable")
 querier.execute(query).then(response => {
   console.log(response)
 })
+```
+
+The object `Querier` uses [Axios](https://axios-http.com/) under the hood as HTTP
+Client. [Additional configuration](https://axios-http.com/docs/req_config) can be
+provided like this:
+
+```typescript
+const axiosConfig = {
+  timeout: 10000
+}
+const querier = new Querier("http://localhost:8080", axiosConfig)
 ```
 
 See [this page](./QUERY.md) to learn more about the API.

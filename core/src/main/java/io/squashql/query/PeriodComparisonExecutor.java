@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.Period;
 import io.squashql.store.Field;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
@@ -91,62 +92,69 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
       Object monthTransformation = this.transformationByPeriodUnit.get(PeriodUnit.MONTH);
       if (this.period instanceof Period.Quarter) {
         // YEAR, QUARTER
-        int year = readAsLong(row[yearIndex]);
-        if (this.referencePosition.containsKey(PeriodUnit.YEAR)) {
-          if (yearTransformation != null) {
-            write(row, yearIndex, fields[yearIndex], year + (int) yearTransformation);
+        if (this.referencePosition.containsKey(PeriodUnit.YEAR) && yearTransformation != null) {
+          int year = readAsLong(row[yearIndex]);
+          if (year < 0) {
+            return false;
           }
+          write(row, yearIndex, fields[yearIndex], year + (int) yearTransformation);
         }
-        if (this.referencePosition.containsKey(PeriodUnit.QUARTER)) {
+        if (this.referencePosition.containsKey(PeriodUnit.QUARTER) && quarterTransformation != null) {
           int quarter = readAsLong(row[quarterIndex]);
-          if (quarterTransformation != null) {
-            LocalDate d = LocalDate.of(readAsLong(row[yearIndex]), quarter * 3, 1);
-            LocalDate newDate = d.plusMonths(((int) quarterTransformation) * 3);
-            write(row, quarterIndex, fields[quarterIndex], (int) IsoFields.QUARTER_OF_YEAR.getFrom(newDate));
-            write(row, yearIndex, fields[yearIndex], newDate.getYear());// year might have changed
+          if (quarter < 0) {
+            return false;
           }
+          LocalDate d = LocalDate.of(readAsLong(row[yearIndex]), quarter * 3, 1);
+          LocalDate newDate = d.plusMonths(((int) quarterTransformation) * 3);
+          write(row, quarterIndex, fields[quarterIndex], (int) IsoFields.QUARTER_OF_YEAR.getFrom(newDate));
+          write(row, yearIndex, fields[yearIndex], newDate.getYear());// year might have changed
         }
       } else if (this.period instanceof Period.Year) {
         // YEAR
-        int year = readAsLong(row[yearIndex]);
-        if (this.referencePosition.containsKey(PeriodUnit.YEAR)) {
-          if (yearTransformation != null) {
-            write(row, yearIndex, fields[yearIndex], year + (int) yearTransformation);
+        if (this.referencePosition.containsKey(PeriodUnit.YEAR) && yearTransformation != null) {
+          int year = readAsLong(row[yearIndex]);
+          if (year < 0) {
+            return false;
           }
+          write(row, yearIndex, fields[yearIndex], year + (int) yearTransformation);
         }
       } else if (this.period instanceof Period.Month) {
         // YEAR, MONTH
-        int year = readAsLong(row[yearIndex]);
-        if (this.referencePosition.containsKey(PeriodUnit.YEAR)) {
-          if (yearTransformation != null) {
-            write(row, yearIndex, fields[yearIndex], year + (int) yearTransformation);
+        if (this.referencePosition.containsKey(PeriodUnit.YEAR) && yearTransformation != null) {
+          int year = readAsLong(row[yearIndex]);
+          if (year < 0) {
+            return false;
           }
+          write(row, yearIndex, fields[yearIndex], year + (int) yearTransformation);
         }
-        if (this.referencePosition.containsKey(PeriodUnit.MONTH)) {
+        if (this.referencePosition.containsKey(PeriodUnit.MONTH) && monthTransformation != null) {
           int month = readAsLong(row[monthIndex]);
-          if (monthTransformation != null) {
-            LocalDate newDate = LocalDate.of(readAsLong(row[yearIndex]), month, 1)
-                    .plusMonths((int) monthTransformation);
-            write(row, monthIndex, fields[monthIndex], newDate.getMonthValue());
-            write(row, yearIndex, fields[yearIndex], newDate.getYear()); // year might have changed
+          if (month < 0) {
+            return false;
           }
+          LocalDate newDate = LocalDate.of(readAsLong(row[yearIndex]), month, 1)
+                  .plusMonths((int) monthTransformation);
+          write(row, monthIndex, fields[monthIndex], newDate.getMonthValue());
+          write(row, yearIndex, fields[yearIndex], newDate.getYear()); // year might have changed
         }
       } else if (this.period instanceof Period.Semester) {
         // YEAR, SEMESTER
-        int year = readAsLong(row[yearIndex]);
-        if (this.referencePosition.containsKey(PeriodUnit.YEAR)) {
-          if (yearTransformation != null) {
-            write(row, yearIndex, fields[yearIndex], year + (int) yearTransformation);
+        if (this.referencePosition.containsKey(PeriodUnit.YEAR) && yearTransformation != null) {
+          int year = readAsLong(row[yearIndex]);
+          if (year < 0) {
+            return false;
           }
+          write(row, yearIndex, fields[yearIndex], year + (int) yearTransformation);
         }
-        if (this.referencePosition.containsKey(PeriodUnit.SEMESTER)) {
+        if (this.referencePosition.containsKey(PeriodUnit.SEMESTER) && semesterTransformation != null) {
           int semester = readAsLong(row[semesterIndex]);
-          if (semesterTransformation != null) {
-            LocalDate d = LocalDate.of(readAsLong(row[yearIndex]), semester * 6, 1);
-            LocalDate newDate = d.plusMonths(((int) semesterTransformation) * 6);
-            write(row, semesterIndex, fields[semesterIndex], newDate.getMonthValue() / 6);
-            write(row, yearIndex, fields[yearIndex], newDate.getYear()); // year might have changed
+          if (semester < 0) {
+            return false;
           }
+          LocalDate d = LocalDate.of(readAsLong(row[yearIndex]), semester * 6, 1);
+          LocalDate newDate = d.plusMonths(((int) semesterTransformation) * 6);
+          write(row, semesterIndex, fields[semesterIndex], newDate.getMonthValue() / 6);
+          write(row, yearIndex, fields[yearIndex], newDate.getYear()); // year might have changed
         }
       } else {
         throw new RuntimeException(this.period + " not supported yet");
@@ -155,6 +163,9 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     }
 
     private static int readAsLong(Object o) {
+      if (SQLTranslator.TOTAL_CELL.equals(o)) {
+        return -1;
+      }
       return (int) ((Number) o).longValue(); // with some database, year could be Long object.
     }
 

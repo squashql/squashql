@@ -25,14 +25,15 @@ public class QueryController {
 
   public static final String MAPPING_QUERY = "/query";
   public static final String MAPPING_QUERY_MERGE = "/query-merge";
+  public static final String MAPPING_QUERY_RAW = "/query-raw";
   public static final String MAPPING_QUERY_BEAUTIFY = "/query-beautify";
   public static final String MAPPING_METADATA = "/metadata";
   public static final String MAPPING_EXPRESSION = "/expression";
-  protected final QueryEngine queryEngine;
+  protected final QueryEngine<?> queryEngine;
   protected final QueryExecutor queryExecutor;
   protected final Supplier<SquashQLUser> squashQLUserSupplier;
 
-  public QueryController(QueryEngine queryEngine, Optional<Supplier<SquashQLUser>> squashQLUserSupplier) {
+  public QueryController(QueryEngine<?> queryEngine, Optional<Supplier<SquashQLUser>> squashQLUserSupplier) {
     this.queryEngine = queryEngine;
     this.queryExecutor = new QueryExecutor(this.queryEngine);
     this.squashQLUserSupplier = squashQLUserSupplier.orElse(null);
@@ -43,7 +44,7 @@ public class QueryController {
     QueryWatch queryWatch = new QueryWatch();
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
     Table table = this.queryExecutor.execute(query, queryWatch, csBuilder, this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(), true);
-    List<String> fields = table.headers().stream().map(Field::name).collect(Collectors.toList());
+    List<String> fields = table.headers().stream().map(Header::field).map(Field::name).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))
             .columns(fields)
@@ -61,7 +62,7 @@ public class QueryController {
   @PostMapping(MAPPING_QUERY_MERGE)
   public ResponseEntity<QueryResultDto> executeAndMerge(@RequestBody QueryMergeDto queryMergeDto) {
     Table table = this.queryExecutor.execute(queryMergeDto.first, queryMergeDto.second);
-    List<String> fields = table.headers().stream().map(Field::name).collect(Collectors.toList());
+    List<String> fields = table.headers().stream().map(Header::field).map(Field::name).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))
             .columns(fields)
@@ -77,6 +78,19 @@ public class QueryController {
   public ResponseEntity<String> executeBeautify(@RequestBody QueryDto query) {
     Table table = this.queryExecutor.execute(query);
     return ResponseEntity.ok(table.toString());
+  }
+
+  @PostMapping(MAPPING_QUERY_RAW)
+  public ResponseEntity<QueryResultDto> executeRaw(@RequestBody String sql) {
+    Table table = this.queryExecutor.execute(sql);
+    SimpleTableDto simpleTable = SimpleTableDto.builder()
+            .rows(ImmutableList.copyOf(table.iterator()))
+            .columns(table.headers().stream().map(header -> header.field().name()).collect(Collectors.toList()))
+            .build();
+    QueryResultDto result = QueryResultDto.builder()
+            .table(simpleTable)
+            .build();
+    return ResponseEntity.ok(result);
   }
 
   @GetMapping(MAPPING_METADATA)

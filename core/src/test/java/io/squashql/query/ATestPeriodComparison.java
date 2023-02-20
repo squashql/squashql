@@ -6,7 +6,10 @@ import io.squashql.query.dto.Period;
 import io.squashql.store.Field;
 import io.squashql.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -16,6 +19,8 @@ import java.util.Map;
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.Functions.criterion;
 import static io.squashql.query.Functions.eq;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import static io.squashql.query.database.QueryEngine.TOTAL;
 import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
@@ -102,7 +107,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(2), 0d, 80d),
             Arrays.asList(2023l, translate(3), 0d, 85d),
             Arrays.asList(2023l, translate(4), 0d, 35d));
-    Assertions.assertThat(finalTable.headers().stream().map(Field::name))
+    Assertions.assertThat(finalTable.headers().stream().map(Header::field).map(Field::name))
             .containsExactlyInAnyOrder(period.year(), period.quarter(), "myMeasure", "sum(sales)");
 
     // Add a condition and make sure condition is cleared during prefetching.s
@@ -153,7 +158,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(3), "base", 5d, 85d),
             Arrays.asList(2023l, translate(4), "base", -50d, 35d));
     Assertions
-            .assertThat(finalTable.headers().stream().map(Field::name))
+            .assertThat(finalTable.headers().stream().map(Header::field).map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.quarter(), "myMeasure", "sum(sales)");
   }
 
@@ -176,8 +181,22 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2022l, "base", null, 300d),
             Arrays.asList(2023l, "base", 0d, 300d));
     Assertions
-            .assertThat(finalTable.headers().stream().map(Field::name))
+            .assertThat(finalTable.headers().stream().map(Header::field).map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), "myMeasure", "sum(sales)");
+
+    // Rollup will make Grand Total and Total appear. For this line, we can't make the comparison. Null should be
+    // written and the query should not fail.
+    query = Query.from(this.storeName)
+            .select(List.of("year_sales", SCENARIO_FIELD_NAME), List.of(m, sales))
+            .rollup(List.of("year_sales", SCENARIO_FIELD_NAME))
+            .build();
+    finalTable = this.executor.execute(query);
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, null, 600d),
+            Arrays.asList(2022l, TOTAL, null, 300d),
+            Arrays.asList(2022l, "base", null, 300d),
+            Arrays.asList(2023l, TOTAL, 0d, 300d),
+            Arrays.asList(2023l, "base", 0d, 300d));
   }
 
   @Test
@@ -202,7 +221,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(1), "base", 60d, 180d),
             Arrays.asList(2023l, translate(2), "base", -60d, 120d));
     Assertions
-            .assertThat(finalTable.headers().stream().map(Field::name))
+            .assertThat(finalTable.headers().stream().map(Header::field).map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.semester(), "myMeasure", "sum(sales)");
   }
 
@@ -234,7 +253,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(2), "base", 40d, 60d),
             Arrays.asList(2023l, translate(12), "base", -5d, 10d));
     Assertions
-            .assertThat(finalTable.headers().stream().map(Field::name))
+            .assertThat(finalTable.headers().stream().map(Header::field).map(Field::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.month(), "myMeasure", "sum(sales)");
   }
 
@@ -255,5 +274,34 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     Assertions.assertThatThrownBy(() -> this.executor.execute(query))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("year_sales is not specified in the query but is used in a comparison measure");
+  }
+
+  /**
+   * This test is making sure that the following case is supported:
+   * 1) Two execution plans are created. One for the scope of the query with filter (Plan1), another one for the scope of the
+   * query without the filter (Plan2).
+   * 2) A comparison measure uses a complex measure (evaluated in SquashQL) as underlying.
+   * 3) Plan2 is computed THEN Plan1 is computed in that order (dependency of plans) to compute the final values of the
+   * comparison measure.
+   */
+  @Test
+  void testCompareYearCurrentWithPreviousWithFilterAndCalculatedMeasure() {
+    Period.Year period = new Period.Year("year_sales");
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
+    Measure multiply = Functions.multiply("sales*2", sales, Functions.integer(2));
+    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
+            "myMeasure",
+            ABSOLUTE_DIFFERENCE,
+            multiply,
+            Map.of("year_sales", "y-1"),
+            period);
+
+    var query = Query.from(this.storeName)
+            .where(criterion("year_sales", eq(2023l)))
+            .select(List.of("year_sales", SCENARIO_FIELD_NAME), List.of(m, multiply))
+            .build();
+    Table finalTable = this.executor.execute(query);
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            Arrays.asList(2023l, "base", 0d, 600d));
   }
 }

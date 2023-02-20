@@ -17,7 +17,7 @@ discussion first. For minor changes or bug fixes you can skip this part and go s
 
 Here's a quick checklist for a good PR, more details below:
 
-1. A discussion around the change (https://github.com/paulbares/aitm/discussions/categories/ideas)
+1. A discussion around the change (https://github.com/squashql/squashql/discussions/categories/ideas)
 2. A GitHub Issue with a good description associated with the PR
 3. One feature/change per PR
 4. PR rebased on main (`git rebase`, not `git pull`) 

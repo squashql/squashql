@@ -1,7 +1,6 @@
 package io.squashql.query;
 
-import com.google.common.graph.Graph;
-import io.squashql.MeasurePrefetcherVisitor;
+import io.squashql.PrefetchVisitor;
 import io.squashql.query.QueryCache.SubQueryScope;
 import io.squashql.query.QueryCache.TableScope;
 import io.squashql.query.context.QueryCacheContextValue;
@@ -12,6 +11,8 @@ import io.squashql.query.monitoring.QueryWatch;
 import io.squashql.store.Field;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -24,14 +25,14 @@ import static io.squashql.query.ColumnSetKey.BUCKET;
 @Slf4j
 public class QueryExecutor {
 
-  public final QueryEngine queryEngine;
+  public final QueryEngine<?> queryEngine;
   public final QueryCache queryCache;
 
-  public QueryExecutor(QueryEngine queryEngine) {
+  public QueryExecutor(QueryEngine<?> queryEngine) {
     this(queryEngine, new CaffeineQueryCache());
   }
 
-  public QueryExecutor(QueryEngine queryEngine, QueryCache cache) {
+  public QueryExecutor(QueryEngine<?> queryEngine, QueryCache cache) {
     this.queryEngine = queryEngine;
     this.queryCache = cache;
   }
@@ -45,6 +46,10 @@ public class QueryExecutor {
         yield this.queryCache;
       }
     };
+  }
+
+  public Table execute(String rawSqlQuery) {
+    return this.queryEngine.executeRawSql(rawSqlQuery);
   }
 
   public Table execute(QueryDto query) {
@@ -71,11 +76,11 @@ public class QueryExecutor {
     queryWatch.start(QueryWatch.EXECUTE_PREFETCH_PLAN);
     Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
     QueryScope queryScope = createQueryScope(query, fieldSupplier);
-    Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> graph = computeDependencyGraph(query, queryScope, fieldSupplier);
+    Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> dependencyGraph = computeDependencyGraph(query, queryScope, fieldSupplier);
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
     Map<QueryScope, Set<Measure>> measuresByQueryScope = new HashMap<>();
-    ExecutionPlan<QueryPlanNodeKey, Void> prefetchingPlan = new ExecutionPlan<>(graph, (node, v) -> {
+    ExecutionPlan<QueryPlanNodeKey, Void> prefetchingPlan = new ExecutionPlan<>(dependencyGraph.getOne(), (node, v) -> {
       QueryScope scope = node.queryScope;
       prefetchQueryByQueryScope.computeIfAbsent(scope, k -> Queries.queryScopeToDatabaseQuery(scope));
       measuresByQueryScope.computeIfAbsent(scope, k -> new HashSet<>()).add(node.measure);
@@ -104,7 +109,7 @@ public class QueryExecutor {
       }
 
       Table result;
-      if (!notCached.isEmpty() || (cached.isEmpty() && notCached.isEmpty())) {
+      if (!notCached.isEmpty() || cached.isEmpty()) {
         if (!primitives.contains(CountMeasure.INSTANCE)) {
           // Always add count
           notCached.add(CountMeasure.INSTANCE);
@@ -134,18 +139,23 @@ public class QueryExecutor {
 
     queryWatch.start(QueryWatch.EXECUTE_EVALUATION_PLAN);
 
-    Table result = tableByScope.get(queryScope);
-    ExecutionPlan<QueryPlanNodeKey, ExecutionContext> plan = new ExecutionPlan<>(graph, new MeasureEvaluator(fieldSupplier));
-    plan.execute(new ExecutionContext(result, queryScope, tableByScope, query, queryWatch));
+    // Here we take the global plan and execute the plans for a given scope one by one, in dependency order. The order
+    // is given by the graph itself.
+    ExecutionPlan<QueryScope, Void> globalPlan = new ExecutionPlan<>(dependencyGraph.getTwo(), (scope, context) -> {
+      ExecutionPlan<QueryPlanNodeKey, ExecutionContext> scopedPlan = new ExecutionPlan<>(dependencyGraph.getOne(), new Evaluator(fieldSupplier));
+      scopedPlan.execute(new ExecutionContext(tableByScope.get(scope), scope, tableByScope, query, queryWatch));
+    });
+    globalPlan.execute(null);
 
     queryWatch.stop(QueryWatch.EXECUTE_EVALUATION_PLAN);
 
     queryWatch.start(QueryWatch.ORDER);
 
+    Table result = tableByScope.get(queryScope);
     result = TableUtils.selectAndOrderColumns((ColumnarTable) result, query);
     if (replaceTotalCellsAndOrderRows) {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result, query);
-      result = TableUtils.orderRows((ColumnarTable) result, query);
+      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets);
     }
 
     queryWatch.stop(QueryWatch.ORDER);
@@ -159,15 +169,24 @@ public class QueryExecutor {
     return result;
   }
 
-  private static Graph<GraphDependencyBuilder.NodeWithId<QueryPlanNodeKey>> computeDependencyGraph(
+  private static Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> computeDependencyGraph(
           QueryDto query,
           QueryScope queryScope,
           Function<String, Field> fieldSupplier) {
-    MeasurePrefetcherVisitor visitor = new MeasurePrefetcherVisitor(query, queryScope, fieldSupplier);
+    // This graph is used to keep track of dependency between execution plans. An Execution Plan is bound to a given scope.
+    DependencyGraph<QueryScope> executionGraph = new DependencyGraph<>();
+
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
-      Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(visitor);
+      Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(query, nodeKey.queryScope, fieldSupplier));
       Set<QueryPlanNodeKey> set = new HashSet<>();
+      executionGraph.addNode(nodeKey.queryScope);
       for (Map.Entry<QueryScope, Set<Measure>> entry : dependencies.entrySet()) {
+
+        executionGraph.addNode(entry.getKey());
+        if (!nodeKey.queryScope.equals(entry.getKey())) {
+          executionGraph.putEdge(nodeKey.queryScope, entry.getKey());
+        }
+
         for (Measure measure : entry.getValue()) {
           set.add(new QueryPlanNodeKey(entry.getKey(), measure));
         }
@@ -176,7 +195,9 @@ public class QueryExecutor {
     });
     Set<Measure> queriedMeasures = new HashSet<>(query.measures);
     queriedMeasures.add(CountMeasure.INSTANCE); // Always add count
-    return builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList());
+    return Tuples.pair(
+            builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList()),
+            executionGraph);
   }
 
   public static QueryScope createQueryScope(QueryDto query, Function<String, Field> fieldSupplier) {

@@ -89,7 +89,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             .build();
 
     Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
+    Assertions.assertThat(dataset.headers().stream().map(Header::field).map(Field::name)).containsExactly(
             this.groupOfScenario, SCENARIO_FIELD_NAME,
             "priceDiff", "p",
             "quantityDiff", "q");
@@ -144,7 +144,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             .withMeasure(quantity);
 
     Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
+    Assertions.assertThat(dataset.headers().stream().map(Header::field).map(Field::name)).containsExactly(
             this.groupOfScenario, SCENARIO_FIELD_NAME,
             "priceDiff", "p",
             "quantityDiff", "q");
@@ -190,7 +190,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             .withMeasure(quantity);
 
     Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.headers().stream().map(Field::name)).containsExactly(
+    Assertions.assertThat(dataset.headers().stream().map(Header::field).map(Field::name)).containsExactly(
             this.groupOfScenario, SCENARIO_FIELD_NAME,
             "priceDiff", "p",
             "quantityDiff", "q");
@@ -218,7 +218,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             .build();
 
     Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.headers().stream().map(Field::name))
+    Assertions.assertThat(dataset.headers().stream().map(Header::field).map(Field::name))
             .containsExactly(this.groupOfScenario, SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
     Assertions.assertThat(dataset).containsExactly(
             List.of("B", "s1", 3l),
@@ -246,7 +246,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             .build();
 
     Table dataset = this.executor.execute(query);
-    Assertions.assertThat(dataset.headers().stream().map(Field::name))
+    Assertions.assertThat(dataset.headers().stream().map(Header::field).map(Field::name))
             .containsExactly(this.groupOfScenario, SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
     Assertions.assertThat(dataset).containsExactly(
             List.of("B", "s1", 3l),

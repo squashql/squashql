@@ -1,8 +1,8 @@
 package io.squashql.query.monitoring;
 
 import com.google.common.base.Stopwatch;
+import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import lombok.ToString;
-import io.squashql.query.Measure;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +24,7 @@ public class QueryWatch {
 
   private Map<String, Stopwatch> stopwatches = new HashMap<>();
 
-  private Map<Measure, Stopwatch> stopwatchByMeasure = new HashMap<>();
+  private Map<QueryPlanNodeKey, Stopwatch> stopwatchByNode = new HashMap<>();
 
   public void start(String key) {
     this.stopwatches.computeIfAbsent(key, k -> Stopwatch.createStarted());
@@ -34,12 +34,12 @@ public class QueryWatch {
     this.stopwatches.get(key).stop();
   }
 
-  public void start(Measure measure) {
-    this.stopwatchByMeasure.computeIfAbsent(measure, k -> Stopwatch.createStarted());
+  public void start(QueryPlanNodeKey queryPlanNodeKey) {
+    this.stopwatchByNode.computeIfAbsent(queryPlanNodeKey, k -> Stopwatch.createStarted());
   }
 
-  public void stop(Measure measure) {
-    this.stopwatchByMeasure.get(measure).stop();
+  public void stop(QueryPlanNodeKey queryPlanNodeKey) {
+    this.stopwatchByNode.get(queryPlanNodeKey).stop();
   }
 
   public QueryTimings toQueryTimings() {
@@ -57,8 +57,8 @@ public class QueryWatch {
     }
 
     queryTimings.execute.total = this.stopwatches.get(EXECUTE_EVALUATION_PLAN).elapsed(unit);
-    for (Map.Entry<Measure, Stopwatch> e : this.stopwatchByMeasure.entrySet()) {
-      String key = e.getKey().alias();
+    for (Map.Entry<QueryPlanNodeKey, Stopwatch> e : this.stopwatchByNode.entrySet()) {
+      String key = e.getKey().measure().alias();
       queryTimings.execute.detail.put(key, e.getValue().elapsed(unit));
     }
 

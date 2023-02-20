@@ -2,7 +2,6 @@ package io.squashql.query;
 
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryServiceAccountDatastore;
-import io.squashql.BigQueryUtil;
 import io.squashql.query.database.BigQueryEngine;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.store.Datastore;
@@ -37,7 +36,7 @@ public class TestBigQueryQueryCache extends ATestQueryCache {
 
   @Override
   protected Datastore createDatastore() {
-    return new BigQueryServiceAccountDatastore(BigQueryUtil.createCredentials(BigQueryTestUtil.CREDENTIALS), PROJECT_ID, DATASET_NAME);
+    return new BigQueryServiceAccountDatastore(BigQueryTestUtil.createServiceAccountCredentials(), PROJECT_ID, DATASET_NAME);
   }
 
   @Override

@@ -37,7 +37,7 @@ public class TestBigQueryParentComparison extends ATestParentComparison {
 
   @Override
   protected Datastore createDatastore() {
-    return new BigQueryServiceAccountDatastore(BigQueryUtil.createCredentials(BigQueryTestUtil.CREDENTIALS), PROJECT_ID, DATASET_NAME);
+    return new BigQueryServiceAccountDatastore(BigQueryTestUtil.createServiceAccountCredentials(), PROJECT_ID, DATASET_NAME);
   }
 
   @Override

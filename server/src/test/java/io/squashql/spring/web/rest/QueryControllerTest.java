@@ -238,7 +238,6 @@ public class QueryControllerTest {
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_MERGE)
                     .content(JacksonUtil.serialize(new QueryMergeDto(query1, query2)))
                     .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
@@ -259,6 +258,22 @@ public class QueryControllerTest {
 //                      List.of(MAIN_SCENARIO_NAME, "Nutella 250g", 100000d, 102000d, 0.9803921568627451d));
 
               Assertions.assertThat(queryResult.table.columns).containsExactly("ean", "capdv-sum", "capdv-avg");
+            });
+  }
+
+  @Test
+  void testQueryRaw() throws Exception {
+    this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_RAW)
+                    .content("select count(*) as numberOfPrices from our_prices")
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(result -> {
+              String contentAsString = result.getResponse().getContentAsString();
+              QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
+              Assertions.assertThat(queryResult.table.rows).containsExactly(List.of(20));
+              Assertions.assertThat(queryResult.table.columns).containsExactly("numberOfPrices");
+              Assertions.assertThat(queryResult.metadata).isNull();
+              Assertions.assertThat(queryResult.debug).isNull();
             });
   }
 }

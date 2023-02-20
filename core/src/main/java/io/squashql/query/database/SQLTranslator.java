@@ -60,11 +60,13 @@ public class SQLTranslator {
     if (groupBy.isEmpty()) {
       return;
     }
+    checkRollupIsValid(groupBy, rollup);
 
     statement.append(" group by ");
 
     boolean isPartialRollup = !Set.copyOf(groupBy).equals(Set.copyOf(rollup));
     boolean hasRollup = !rollup.isEmpty();
+
     List<String> groupByOnly = new ArrayList<>();
     List<String> rollupOnly = new ArrayList<>();
 
@@ -222,6 +224,12 @@ public class SQLTranslator {
       return s -> "'" + s + "'";
     } else {
       throw new RuntimeException("Not supported " + field.type());
+    }
+  }
+
+  public static void checkRollupIsValid(List<String> select, List<String> rollup) {
+    if (!rollup.isEmpty() && Collections.disjoint(select, rollup)) {
+      throw new RuntimeException(String.format("The columns contain in rollup %s must be a subset of the columns contain in the select %s", rollup, select));
     }
   }
 }
