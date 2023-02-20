@@ -82,7 +82,6 @@ public final class MergeTables {
     return Sets.newHashSet(Iterables.concat(leftMeasures, rightMeasures));
   }
 
-
   /**
    * In order to merge the tables, they must have their common columns at the beginning, in the same order, and sorted.
    * They also must have all their columns first, then their measures.

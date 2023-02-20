@@ -590,7 +590,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             Arrays.asList("drink", MAIN_SCENARIO_NAME, null, 2d),
             Arrays.asList("drink", "s2", null, 1.5d),
             Arrays.asList("cloth", TOTAL, 30d, 10d),
-            Arrays.asList("", "s1", null, 10d),
+            Arrays.asList("cloth", "s1", null, 10d),
             Arrays.asList("cloth", MAIN_SCENARIO_NAME, null, 10d),
             Arrays.asList("cloth", "s2", null, 10d));
   }

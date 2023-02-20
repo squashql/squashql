@@ -243,7 +243,7 @@ public class QueryExecutor {
   public Table execute(QueryDto first, QueryDto second, SquashQLUser user) {
     Map<String, Comparator<?>> firstComparators = Queries.getComparators(first);
     Map<String, Comparator<?>> secondComparators = Queries.getComparators(second);
-    secondComparators.putAll(firstComparators); // the comparators of the first query take precendence over the second's
+    secondComparators.putAll(firstComparators); // the comparators of the first query take precedence over the second's
 
     Set<ColumnSet> columnSets = Stream.concat(first.columnSets.values().stream(), second.columnSets.values().stream())
             .collect(Collectors.toSet());

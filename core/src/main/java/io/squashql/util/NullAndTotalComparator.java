@@ -54,7 +54,7 @@ public class NullAndTotalComparator<T> implements Comparator<T>, Serializable {
       }
       // we should never end up in case where a = TOTAL_CELL and b != TOTAL_CELL
     }
-    throw new RuntimeException("Unexpected value " + a);
+    throw new RuntimeException("Unexpected value a: " + a + ". b: " + b);
   }
 
   public static <T> boolean isTotal(T a) {
@@ -65,5 +65,3 @@ public class NullAndTotalComparator<T> implements Comparator<T>, Serializable {
     return new NullAndTotalComparator<>(false, true, comparator);
   }
 }
-
-
