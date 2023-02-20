@@ -65,6 +65,11 @@ public class SQLTranslator {
 
     boolean isPartialRollup = !Set.copyOf(groupBy).equals(Set.copyOf(rollup));
     boolean hasRollup = !rollup.isEmpty();
+
+    if (hasRollup && Collections.disjoint(groupBy, rollup)) {
+      throw new RuntimeException(String.format("The columns contain in rollup %s must be a subset of the columns contain in the select %s", rollup, groupBy));
+    }
+
     List<String> groupByOnly = new ArrayList<>();
     List<String> rollupOnly = new ArrayList<>();
 

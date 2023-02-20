@@ -202,6 +202,18 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   }
 
   @Test
+  void testQueryRollupIncorrect() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("category"), List.of(sum("p", "price")))
+            .rollup("subcategory") // not correct because it should be a subset of the column in the select
+            .build();
+    Assertions.assertThatThrownBy(() -> this.executor.execute(query))
+            // The columns contain in rollup [`subcategory`] must be a subset of the columns contain in the select [`category`]
+            .hasMessageContaining("must be a subset of the columns contain in the select");
+  }
+
+  @Test
   void testQueryWildcardCount() {
     QueryDto query = Query
             .from(this.storeName)
