@@ -9,7 +9,6 @@ import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.Table;
 import io.squashql.store.Field;
-import java.util.Set;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -17,6 +16,7 @@ import org.mockito.Mockito;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
@@ -131,9 +131,9 @@ public class TestBigQueryEngine {
             new ArrayList<>(Arrays.asList(4, 2, 1, 1, 2, 1, 1)));
 
     ColumnarTable input = new ColumnarTable(
-            List.of(new Header(new Field(scenario, String.class), true),
-                    new Header(new Field(category, String.class), true),
-                    new Header(new Field("price.sum", int.class), false)),
+            List.of(new Header(new Field(scenario, String.class), false),
+                    new Header(new Field(category, String.class), false),
+                    new Header(new Field("price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             values);
     Table output = bqe.postProcessDataset(input, query);

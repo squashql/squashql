@@ -162,7 +162,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     for (int i = 0; i < columns.size(); i++) {
       headers.add(new Header(
               columnToField.apply(columns.get(i), fieldNames.get(i)),
-              i >= query.select.size() + query.rollup.size()));
+              i >= query.select.size() + (queryRewriter.useGroupingFunction() ? query.rollup.size() : 0)));
     }
     List<List<Object>> values = new ArrayList<>();
     headers.forEach(f -> values.add(new ArrayList<>()));

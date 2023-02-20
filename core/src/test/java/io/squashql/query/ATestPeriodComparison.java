@@ -275,4 +275,33 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("year_sales is not specified in the query but is used in a comparison measure");
   }
+
+  /**
+   * This test is making sure that the following case is supported:
+   * 1) Two execution plans are created. One for the scope of the query with filter (Plan1), another one for the scope of the
+   * query without the filter (Plan2).
+   * 2) A comparison measure uses a complex measure (evaluated in SquashQL) as underlying.
+   * 3) Plan2 is computed THEN Plan1 is computed in that order (dependency of plans) to compute the final values of the
+   * comparison measure.
+   */
+  @Test
+  void testCompareYearCurrentWithPreviousWithFilterAndCalculatedMeasure() {
+    Period.Year period = new Period.Year("year_sales");
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
+    Measure multiply = Functions.multiply("sales*2", sales, Functions.integer(2));
+    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
+            "myMeasure",
+            ABSOLUTE_DIFFERENCE,
+            multiply,
+            Map.of("year_sales", "y-1"),
+            period);
+
+    var query = Query.from(this.storeName)
+            .where(criterion("year_sales", eq(2023l)))
+            .select(List.of("year_sales", SCENARIO_FIELD_NAME), List.of(m, multiply))
+            .build();
+    Table finalTable = this.executor.execute(query);
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            Arrays.asList(2023l, "base", 0d, 600d));
+  }
 }

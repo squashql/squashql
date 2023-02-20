@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
+import static io.squashql.query.database.SQLTranslator.checkRollupIsValid;
+
 public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
   /**
@@ -49,6 +51,8 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     if (!hasRollup) {
       return super.createSqlStatement(query);
     } else {
+      checkRollupIsValid(query.select, query.rollup);
+
       // Special case for BigQuery because it does not support either the grouping function used to identify extra-rows added
       // by rollup or grouping sets for partial rollup.
       BigQueryQueryRewriter rewriter = (BigQueryQueryRewriter) this.queryRewriter;
@@ -77,6 +81,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
                   quoter.apply(BigQueryUtil.getNullValue(field)));
         }
       };
+
       List<String> missingColumnsInRollup = new ArrayList<>(query.select);
       missingColumnsInRollup.removeAll(query.rollup);
       DatabaseQuery deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), DatabaseQuery.class);

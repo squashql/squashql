@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static io.squashql.query.ComparisonMethod.DIVIDE;
 import static io.squashql.query.Functions.*;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
@@ -48,7 +49,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   @Test
   void testSimple() {
     Measure pop = Functions.sum("population", "population");
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, List.of("city", "country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of("continent", "country", "city"), List.of(pop, pOp))
@@ -85,7 +86,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   @Test
   void testClearFilter() {
     Measure pop = Functions.sum("population", "population");
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, List.of("city", "country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
             .where(criterion("city", in("montreal", "toronto")))
@@ -124,7 +125,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   @Test
   void testWithMissingAncestor() {
     Measure pop = Functions.sum("population", "population");
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("country", "continent"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, List.of("country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of("continent", "country", "city"), List.of(pop, pOp))
@@ -145,22 +146,31 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
 
   @Test
   void testWithCalculatedMeasure() {
-    Measure pop = Functions.multiply("double", Functions.sum("population", "population"), Functions.integer(2));
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
+    // Note this calculation may look weird but the goal of this test is to make sure we can compute the percent of
+    // parent with a measure computed by SquashQL.
+    Measure pop = Functions.sum("population", "population");
+    Measure pop2 = Functions.plus("pop2", Functions.sum("population", "population"), Functions.integer(2));
+    List<String> ancestors = List.of("city", "country", "continent");
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, ancestors);
+    ComparisonMeasureReferencePosition pOp2 = new ComparisonMeasureReferencePosition("percentOfParent2", DIVIDE, pop2, ancestors);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("continent", "country", "city"), List.of(pop, pOp))
+            .where(criterion("country", eq("canada"))) // use a filter to limit the number of rows
+            .select(List.of("continent", "country", "city"), List.of(pop, pOp, pop2, pOp2))
             .build(); // query only parent
 
-    Assertions.assertThatThrownBy(() -> this.executor.execute(query))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("primitive measure");
+    Table table = this.executor.execute(query);
+    double canadaTotalPlus2 = 2d + 1d + 3d + 2;
+    Assertions.assertThat(table).containsExactly(
+            Arrays.asList("am", "canada", "montreal", 2d, .3333333333333333, 2d + 2, (2d + 2) / canadaTotalPlus2),
+            Arrays.asList("am", "canada", "otawa", 1d, .16666666666666666, 1d + 2, (1d + 2) / canadaTotalPlus2),
+            Arrays.asList("am", "canada", "toronto", 3d, 0.5, 3d + 2, (3d + 2) / canadaTotalPlus2));
   }
 
   @Test
   void testSimpleWithTotals() {
     Measure pop = Functions.sum("population", "population");
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, pop, List.of("city", "country", "continent"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, List.of("city", "country", "continent"));
     List<String> cols = List.of("continent", "country", "city");
     QueryDto query = Query
             .from(this.storeName)

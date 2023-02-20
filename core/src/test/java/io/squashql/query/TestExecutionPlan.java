@@ -1,6 +1,5 @@
 package io.squashql.query;
 
-import com.google.common.graph.Graph;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -52,7 +51,7 @@ public class TestExecutionPlan {
     Node a1 = new Node(Set.of(e3, c2, d2), "a1");
     Node b1 = new Node(Set.of(d2), "b1");
 
-    Graph<GraphDependencyBuilder.NodeWithId<Node>> graph = builder.build(List.of(a1, b1));
+    DependencyGraph<Node> graph = builder.build(List.of(a1, b1));
     List<Node> nodes = new ArrayList<>();
     ExecutionPlan<Node, Void> plan = new ExecutionPlan<>(graph, (n, c) -> nodes.add(n));
 
