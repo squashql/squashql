@@ -1,5 +1,5 @@
 import axios, {AxiosInstance} from "axios";
-import {Query} from "./query";
+import {Query, QueryMerge} from "./query";
 import {Measure} from "./measures";
 import {CreateAxiosDefaults} from "axios/index";
 
@@ -24,6 +24,12 @@ export class Querier {
   async execute(query: Query): Promise<QueryResult> {
     return this.axiosInstance
             .post("/query", query)
+            .then(r => r.data)
+  }
+
+  async executeQueryMerge(query: QueryMerge): Promise<QueryResult> {
+    return this.axiosInstance
+            .post("/query-merge", query)
             .then(r => r.data)
   }
 
