@@ -38,6 +38,10 @@ public class HttpClientQuerierTest {
   @LocalServerPort
   int port;
 
+  String url() {
+    return "http://127.0.0.1:" + this.port;
+  }
+
   @Test
   void testGetMetadata() {
     String url = "http://127.0.0.1:" + this.port;
@@ -68,10 +72,36 @@ public class HttpClientQuerierTest {
   }
 
   @Test
-  void testRunGroupingScenarioQuery() {
-    String url = "http://127.0.0.1:" + this.port;
+  void testMergeQuery() {
+    var querier = new HttpClientQuerier(url());
 
-    var querier = new HttpClientQuerier(url);
+    QueryDto query1 = new QueryDto()
+            .table("our_prices")
+            .withColumn(SCENARIO_FIELD_NAME)
+            .aggregatedMeasure("qs", "quantity", "sum");
+    QueryDto query2 = new QueryDto()
+            .table("our_prices")
+            .withColumn(SCENARIO_FIELD_NAME)
+            .aggregatedMeasure("qa", "quantity", "avg");
+
+    QueryResultDto response = querier.queryMerge(new QueryMergeDto(query1, query2));
+    Assertions.assertThat(response.table.rows).containsExactlyInAnyOrder(List.of("MDD up", 4000, 1000d),
+            List.of("MN & MDD down", 4000, 1000d),
+            List.of("MN & MDD up", 4000, 1000d),
+            List.of("MN up", 4000, 1000d),
+            List.of(MAIN_SCENARIO_NAME, 4000, 1000d));
+    Assertions.assertThat(response.table.columns).containsExactly(SCENARIO_FIELD_NAME, "qs", "qa");
+    Assertions.assertThat(response.metadata).containsExactly(
+            new MetadataItem(SCENARIO_FIELD_NAME, SCENARIO_FIELD_NAME, String.class),
+            new MetadataItem("qs", "sum(quantity)", long.class),
+            new MetadataItem("qa", "avg(quantity)", double.class));
+
+    Assertions.assertThat(response.debug).isNull();
+  }
+
+  @Test
+  void testRunGroupingScenarioQuery() {
+    var querier = new HttpClientQuerier(url());
 
     BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", SCENARIO_FIELD_NAME)
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
@@ -119,9 +149,7 @@ public class HttpClientQuerierTest {
             .select(List.of(SCENARIO_FIELD_NAME, "pdv"), List.of(Functions.sum("ps", "price")))
             .build();
 
-    String url = "http://127.0.0.1:" + this.port;
-
-    var querier = new HttpClientQuerier(url);
+    var querier = new HttpClientQuerier(url());
 
     QueryResultDto response = querier.run(query);
     SimpleTableDto table = response.table;
@@ -155,8 +183,7 @@ public class HttpClientQuerierTest {
 
     List<Measure> input = List.of(a, b, plus).stream().map(m -> m.withExpression(null)).toList(); // Expression should not be defined but computed and set by the server
 
-    String url = "http://127.0.0.1:" + this.port;
-    var querier = new HttpClientQuerier(url);
+    var querier = new HttpClientQuerier(url());
 
     List<Measure> expression = querier.expression(input);
     Assertions.assertThat(expression.stream().map(Measure::expression)).containsExactly("sum(a)", "sum(b)", "a + b");

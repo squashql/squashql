@@ -7,6 +7,7 @@ import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.Measure;
 import io.squashql.query.dto.MetadataResultDto;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.QueryMergeDto;
 import io.squashql.query.dto.QueryResultDto;
 import okhttp3.OkHttpClient;
 
@@ -32,6 +33,11 @@ public class HttpClientQuerier {
     return target.run(query);
   }
 
+  public QueryResultDto queryMerge(QueryMergeDto query) {
+    QueryApi target = builder.target(QueryApi.class, this.url);
+    return target.queryMerge(query);
+  }
+
   public MetadataResultDto metadata() {
     QueryApi target = builder.target(QueryApi.class, this.url);
     return target.metadata();
@@ -46,6 +52,10 @@ public class HttpClientQuerier {
     @RequestLine("POST /query")
     @Headers("Content-Type: application/json")
     QueryResultDto run(QueryDto query);
+
+    @RequestLine("POST /query-merge")
+    @Headers("Content-Type: application/json")
+    QueryResultDto queryMerge(QueryMergeDto query);
 
     @RequestLine("GET /metadata")
     MetadataResultDto metadata();
