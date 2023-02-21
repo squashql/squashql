@@ -13,7 +13,7 @@ the UI.
 
 - It is a middleware between [a SQL database](#compatibility) and multiple clients/front end. Heavy computation is delegated to the underlying database. 
 - It makes calculations that were not possible or cumbersome in SQL easy to perform. See [comparison measures](./QUERY.md#complex-comparison)
-- It helps front-end developers build and run SQL queries in their own language in [TypeScript](https://www.typescriptlang.org/)
+- It helps front-end developers build and run SQL queries from their front-end or node.js applications thanks to its [TypeScript SQL-like query builder](https://www.npmjs.com/package/@squashql/squashql-js) 
 - With its "write once, run everywhere" approach, it is a great solution for those who need to quickly and efficiently query data from multiple databases.
 
 ![ide ts squashql](https://user-images.githubusercontent.com/5783183/215964358-37814efa-f315-4de5-97cd-cefce537caaa.gif)
