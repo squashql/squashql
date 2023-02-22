@@ -31,7 +31,10 @@ public class SQLTranslator {
     List<String> aggregates = new ArrayList<>();
 
     query.select.forEach(field -> groupBy.add(queryRewriter.select(field)));
-    query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true)));
+    // We do not want to use aliases to avoid issues with some database like BQ:
+    // "Invalid field name \"p.sum\". Fields must contain only letters, numbers, and underscores, start with a letter or underscore,
+    // and be at most 300 characters long."
+    query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, false)));
 
     selects.addAll(groupBy); // coord first, then aggregates
     if (queryRewriter.useGroupingFunction()) {
