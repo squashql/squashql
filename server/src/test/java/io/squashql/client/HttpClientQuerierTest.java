@@ -3,7 +3,6 @@ package io.squashql.client;
 import io.squashql.client.http.HttpClientQuerier;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
-import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.spring.SquashQLApplication;
 import io.squashql.spring.dataset.DatasetTestConfig;
@@ -15,9 +14,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
@@ -44,17 +43,13 @@ public class HttpClientQuerierTest {
 
   @Test
   void testGetMetadata() {
-    String url = "http://127.0.0.1:" + this.port;
-
-    var querier = new HttpClientQuerier(url);
+    var querier = new HttpClientQuerier(url());
     QueryControllerTest.assertMetadataResult(querier.metadata());
   }
 
   @Test
   void testRunQuery() {
-    String url = "http://127.0.0.1:" + this.port;
-
-    var querier = new HttpClientQuerier(url);
+    var querier = new HttpClientQuerier(url());
 
     QueryDto query = new QueryDto()
             .table("our_prices")
@@ -62,7 +57,7 @@ public class HttpClientQuerierTest {
             .aggregatedMeasure("qs", "quantity", "sum");
 
     QueryResultDto response = querier.run(query);
-    assertQuery(response.table, false);
+    assertQuery(response.table);
     Assertions.assertThat(response.metadata).containsExactly(
             new MetadataItem(SCENARIO_FIELD_NAME, SCENARIO_FIELD_NAME, String.class),
             new MetadataItem("qs", "sum(quantity)", long.class));
@@ -160,18 +155,13 @@ public class HttpClientQuerierTest {
     Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "pdv", "ps");
   }
 
-  static void assertQuery(SimpleTableDto table, boolean withTotals) {
-    List[] lists = {List.of("MDD up", 4000),
+  static void assertQuery(SimpleTableDto table) {
+    Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
+            List.of("MDD up", 4000),
             List.of("MN & MDD down", 4000),
             List.of("MN & MDD up", 4000),
             List.of("MN up", 4000),
-            List.of(MAIN_SCENARIO_NAME, 4000)};
-    if (withTotals) {
-      Arrays.copyOf(lists, lists.length + 1);
-      lists[lists.length - 1] = Arrays.asList(QueryEngine.GRAND_TOTAL, 5 * 4000);
-      Assertions.assertThat(table.rows).containsExactlyInAnyOrder(lists);
-    }
-    Assertions.assertThat(table.rows).containsExactlyInAnyOrder(lists);
+            List.of(MAIN_SCENARIO_NAME, 4000));
     Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "qs");
   }
 
@@ -181,7 +171,7 @@ public class HttpClientQuerierTest {
     AggregatedMeasure b = new AggregatedMeasure("b", "b", "sum");
     Measure plus = Functions.plus("a+b", a, b);
 
-    List<Measure> input = List.of(a, b, plus).stream().map(m -> m.withExpression(null)).toList(); // Expression should not be defined but computed and set by the server
+    List<Measure> input = Stream.of(a, b, plus).map(m -> m.withExpression(null)).toList(); // Expression should not be defined but computed and set by the server
 
     var querier = new HttpClientQuerier(url());
 
