@@ -537,21 +537,21 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
     QueryDto query2 = Query
             .from(this.storeName)
-            .select(List.of("category", SCENARIO_FIELD_NAME), List.of(avg("p.avg", "price")))
+            .select(List.of("category", SCENARIO_FIELD_NAME), List.of(min("p.min", "price")))
             .rollup(List.of("category", SCENARIO_FIELD_NAME))
             .build();
 
     Table result = this.executor.execute(query1, query2, null);
 
     Assertions.assertThat(result.headers().stream().map(Header::field).map(Field::name).toList())
-            .containsExactly("category", SCENARIO_FIELD_NAME, "p.sum", "p.avg");
+            .containsExactly("category", SCENARIO_FIELD_NAME, "p.sum", "p.min");
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, 46.5d, 5.166666666666667d),
+            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, 46.5d, 1.5d),
             Arrays.asList("cloth", TOTAL, 30d, 10d),
             Arrays.asList("cloth", MAIN_SCENARIO_NAME, null, 10d),
             Arrays.asList("cloth", "s1", null, 10d),
             Arrays.asList("cloth", "s2", null, 10d),
-            Arrays.asList("drink", TOTAL, 7.5d, 2.5d),
+            Arrays.asList("drink", TOTAL, 7.5d, 1.5d),
             Arrays.asList("drink", MAIN_SCENARIO_NAME, null, 2d),
             Arrays.asList("drink", "s1", null, 4d),
             Arrays.asList("drink", "s2", null, 1.5d),
@@ -572,7 +572,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
     QueryDto query2 = Query
             .from(this.storeName)
-            .select(List.of("category", SCENARIO_FIELD_NAME), List.of(avg("p.avg", "price")))
+            .select(List.of("category", SCENARIO_FIELD_NAME), List.of(min("p.min", "price")))
             .rollup(List.of("category", SCENARIO_FIELD_NAME))
             .orderBy("category", ASC)
             .orderBy(SCENARIO_FIELD_NAME, List.of("s1", MAIN_SCENARIO_NAME, "s2"))
@@ -580,12 +580,12 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
     Table result = this.executor.execute(query1, query2, null);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, 46.5d, 5.166666666666667d),
+            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, 46.5d, 1.5d),
             Arrays.asList("food", TOTAL, 9d, 3d),
             Arrays.asList("food", "s1", null, 3d),
             Arrays.asList("food", MAIN_SCENARIO_NAME, null, 3d),
             Arrays.asList("food", "s2", null, 3d),
-            Arrays.asList("drink", TOTAL, 7.5d, 2.5d),
+            Arrays.asList("drink", TOTAL, 7.5d, 1.5d),
             Arrays.asList("drink", "s1", null, 4d),
             Arrays.asList("drink", MAIN_SCENARIO_NAME, null, 2d),
             Arrays.asList("drink", "s2", null, 1.5d),
