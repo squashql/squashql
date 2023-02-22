@@ -416,7 +416,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testOrderByWithRollup() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(sum("p.sum", "price")))
+            .select(List.of("category"), List.of(sum("p_sum", "price")))
             .rollup(List.of("category"))
             .orderBy("category", ASC)
             .build();
@@ -531,20 +531,20 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testMergeTables() {
     QueryDto query1 = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(sum("p.sum", "price")))
+            .select(List.of("category"), List.of(sum("p_sum", "price")))
             .rollup(List.of("category"))
             .build();
 
     QueryDto query2 = Query
             .from(this.storeName)
-            .select(List.of("category", SCENARIO_FIELD_NAME), List.of(min("p.min", "price")))
+            .select(List.of("category", SCENARIO_FIELD_NAME), List.of(min("p_min", "price")))
             .rollup(List.of("category", SCENARIO_FIELD_NAME))
             .build();
 
     Table result = this.executor.execute(query1, query2, null);
 
     Assertions.assertThat(result.headers().stream().map(Header::field).map(Field::name).toList())
-            .containsExactly("category", SCENARIO_FIELD_NAME, "p.sum", "p.min");
+            .containsExactly("category", SCENARIO_FIELD_NAME, "p_sum", "p_min");
     Assertions.assertThat(result).containsExactly(
             Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, 46.5d, 1.5d),
             Arrays.asList("cloth", TOTAL, 30d, 10d),
@@ -565,14 +565,14 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testMergeWithComparators() {
     QueryDto query1 = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(sum("p.sum", "price")))
+            .select(List.of("category"), List.of(sum("p_sum", "price")))
             .rollup(List.of("category"))
             .orderBy("category", OrderKeywordDto.DESC)
             .build();
 
     QueryDto query2 = Query
             .from(this.storeName)
-            .select(List.of("category", SCENARIO_FIELD_NAME), List.of(min("p.min", "price")))
+            .select(List.of("category", SCENARIO_FIELD_NAME), List.of(min("p_min", "price")))
             .rollup(List.of("category", SCENARIO_FIELD_NAME))
             .orderBy("category", ASC)
             .orderBy(SCENARIO_FIELD_NAME, List.of("s1", MAIN_SCENARIO_NAME, "s2"))
@@ -602,7 +602,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .withNewBucket("Other", List.of("cloth"));
     /*
       +--------------+----------+----------+-------+
-      |       group1 | category | category | p.sum |
+      |       group1 | category | category | p_sum |
       +--------------+----------+----------+-------+
       | Food & Drink |     food |     food |   9.0 |
       | Food & Drink |    drink |    drink |   7.5 |
@@ -611,7 +611,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
      */
     QueryDto query1 = Query
             .from(this.storeName)
-            .select_(List.of(group1), List.of(sum("p.sum", "price")))
+            .select_(List.of(group1), List.of(sum("p_sum", "price")))
             .build();
 
     BucketColumnSetDto group2 = new BucketColumnSetDto("group2", "subcategory")
@@ -619,7 +619,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .withNewBucket("Not categorized", Arrays.asList(null, "other"));
     /*
       +-----------------+-------------+-------+
-      |          group2 | subcategory | p.avg |
+      |          group2 | subcategory | p_avg |
       +-----------------+-------------+-------+
       |     Categorized |     biscuit |   3.0 |
       | Not categorized |        null |  6.25 |
@@ -627,9 +627,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
      */
     QueryDto query2 = Query
             .from(this.storeName)
-            .select_(List.of(group2), List.of(avg("p.avg", "price")))
+            .select_(List.of(group2), List.of(avg("p_avg", "price")))
             .build();
-    this.executor.execute(query2).show();
 
     Table result = this.executor.execute(query1, query2, null);
     Assertions.assertThat(result).containsExactly(
