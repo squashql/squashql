@@ -1,6 +1,5 @@
 package io.squashql;
 
-import java.math.BigDecimal;
 import java.sql.Types;
 
 public final class SnowflakeUtil {
@@ -62,5 +61,4 @@ public final class SnowflakeUtil {
     }
     throw new IllegalArgumentException("Unsupported field type " + clazz);
   }
-
 }

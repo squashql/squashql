@@ -172,7 +172,8 @@ public class TableUtils {
         throw new IllegalArgumentException("Unexpected column set type " + columnSet);
       }
       BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
-      contextIndices[table.columnIndex(cs.field)] = table.columnIndex(cs.name);
+      // cs.field can appear multiple times in the table.
+      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(cs.name));
     }
 
     int[] finalIndices = MultipleColumnsSorter.sort(args, comparators, contextIndices);

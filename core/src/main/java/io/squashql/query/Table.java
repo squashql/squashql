@@ -2,6 +2,9 @@ package io.squashql.query;
 
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.store.Field;
+import org.eclipse.collections.api.list.primitive.IntList;
+import org.eclipse.collections.api.list.primitive.MutableIntList;
+import org.eclipse.collections.impl.list.mutable.primitive.MutableIntListFactoryImpl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +64,18 @@ public interface Table extends Iterable<List<Object>> {
     return index;
   }
 
+  default IntList columnIndices(String column) {
+    int i = 0;
+    MutableIntList list = MutableIntListFactoryImpl.INSTANCE.empty();
+    for (Header header : headers()) {
+      if (header.field().name().equals(column)) {
+        list.add(i);
+      }
+      i++;
+    }
+    return list;
+  }
+
   default int index(Field field) {
     int index = headers().stream().map(Header::field).toList().indexOf(field);
     if (index < 0) {
@@ -72,8 +87,7 @@ public interface Table extends Iterable<List<Object>> {
   /**
    * Retrieve the column values for a given row index.
    *
-   * @param rowIndex
-   *         the index of the row to retrieve
+   * @param rowIndex the index of the row to retrieve
    * @return the list of column values for this row or null if the rowIndex is outside the table
    */
   default List<Object> getFactRow(int rowIndex) {
