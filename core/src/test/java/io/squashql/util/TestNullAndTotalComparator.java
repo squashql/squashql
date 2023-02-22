@@ -26,5 +26,7 @@ public class TestNullAndTotalComparator {
     Assertions.assertEquals(1, comp.compare(null, TOTAL));
     Assertions.assertEquals(0, comp.compare(GRAND_TOTAL, GRAND_TOTAL));
     Assertions.assertEquals(0, comp.compare(TOTAL, TOTAL));
+    Assertions.assertEquals(-1, comp.compare(GRAND_TOTAL, TOTAL));
+    Assertions.assertEquals(1, comp.compare(TOTAL, GRAND_TOTAL));
   }
 }

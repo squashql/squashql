@@ -31,7 +31,7 @@ public class SQLTranslator {
     List<String> aggregates = new ArrayList<>();
 
     query.select.forEach(field -> groupBy.add(queryRewriter.select(field)));
-    query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true)));
+    query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true))); // Alias is needed when using sub-queries
 
     selects.addAll(groupBy); // coord first, then aggregates
     if (queryRewriter.useGroupingFunction()) {

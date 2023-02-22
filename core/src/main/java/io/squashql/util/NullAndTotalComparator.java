@@ -1,10 +1,11 @@
 package io.squashql.util;
 
-import io.squashql.query.database.QueryEngine;
-
-import io.squashql.query.database.SQLTranslator;
 import java.io.Serializable;
 import java.util.Comparator;
+
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import static io.squashql.query.database.QueryEngine.TOTAL;
+import static io.squashql.query.database.SQLTranslator.TOTAL_CELL;
 
 public class NullAndTotalComparator<T> implements Comparator<T>, Serializable {
 
@@ -29,12 +30,12 @@ public class NullAndTotalComparator<T> implements Comparator<T>, Serializable {
     } else {
       if (isTotal(a)) {
         if (isTotal(b)) {
-          return 0;
+          return compareTotals(a, b);
         }
         return this.totalFirst ? -1 : 1;
       } else if (isTotal(b)) {
         if (isTotal(a)) {
-          return 0;
+          return compareTotals(a, b);
         }
         return this.totalFirst ? 1 : -1;
       }
@@ -42,13 +43,25 @@ public class NullAndTotalComparator<T> implements Comparator<T>, Serializable {
     }
   }
 
-  private static <T> boolean isTotal(T a) {
-    return QueryEngine.TOTAL.equals(a) || QueryEngine.GRAND_TOTAL.equals(a) || SQLTranslator.TOTAL_CELL.equals(a);
+  private static <T> int compareTotals(T a, T b) {
+    if (GRAND_TOTAL.equals(a)) {
+      return GRAND_TOTAL.equals(b) ? 0 : -1;
+    } else if (TOTAL.equals(a)) {
+      return TOTAL.equals(b) ? 0 : 1;
+    } else if (TOTAL_CELL.equals(a)) {
+      if (TOTAL_CELL.equals(b)) {
+        return 0;
+      }
+      // we should never end up in case where a = TOTAL_CELL and b != TOTAL_CELL
+    }
+    throw new RuntimeException("Unexpected value a: " + a + ". b: " + b);
+  }
+
+  public static <T> boolean isTotal(T a) {
+    return TOTAL.equals(a) || GRAND_TOTAL.equals(a) || TOTAL_CELL.equals(a);
   }
 
   public static <T> NullAndTotalComparator<T> nullsLastAndTotalsFirst(Comparator<? super T> comparator) {
     return new NullAndTotalComparator<>(false, true, comparator);
   }
 }
-
-

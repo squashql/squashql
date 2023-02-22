@@ -32,7 +32,11 @@ public class MultipleColumnsSorter {
       for (int i = 0; i < this.argsList.size(); i++) {
         Comparator<Object> comp = (Comparator<Object>) this.comparators.get(i);
         if (comp instanceof DependentExplicitOrdering deo) {
-          deo.setContext(this.argsList.get(this.contextIndexReaders[i]).get(x));
+          Object context = this.argsList.get(this.contextIndexReaders[i]).get(x);
+          if (NullAndTotalComparator.isTotal(context)) {
+            continue; // use the next comparator
+          }
+          deo.setContext(context);
           // we can use x or y independently because this comparator is used when the values in the context are equals
           // to determine in which order the current column values should be ordered.
         }

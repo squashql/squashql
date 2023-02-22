@@ -1,7 +1,7 @@
 export const PACKAGE = "io.squashql.query."
 
 export {
-  Query, Table, JoinType, JoinMapping,
+  Query, Table, JoinType, JoinMapping, QueryMerge,
 } from './query'
 
 export {

@@ -9,12 +9,14 @@ import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.monitoring.QueryWatch;
 import io.squashql.store.Field;
+import io.squashql.table.MergeTables;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -24,14 +26,14 @@ import static io.squashql.query.ColumnSetKey.BUCKET;
 @Slf4j
 public class QueryExecutor {
 
-  public final QueryEngine queryEngine;
+  public final QueryEngine<?> queryEngine;
   public final QueryCache queryCache;
 
-  public QueryExecutor(QueryEngine queryEngine) {
+  public QueryExecutor(QueryEngine<?> queryEngine) {
     this(queryEngine, new CaffeineQueryCache());
   }
 
-  public QueryExecutor(QueryEngine queryEngine, QueryCache cache) {
+  public QueryExecutor(QueryEngine<?> queryEngine, QueryCache cache) {
     this.queryEngine = queryEngine;
     this.queryCache = cache;
   }
@@ -56,10 +58,15 @@ public class QueryExecutor {
             query,
             new QueryWatch(),
             CacheStatsDto.builder(),
-            null);
+            null,
+            true);
   }
 
-  public Table execute(QueryDto query, QueryWatch queryWatch, CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder, SquashQLUser user) {
+  public Table execute(QueryDto query,
+                       QueryWatch queryWatch,
+                       CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
+                       SquashQLUser user,
+                       boolean replaceTotalCellsAndOrderRows) {
     queryWatch.start(QueryWatch.GLOBAL);
     queryWatch.start(QueryWatch.PREPARE_PLAN);
 
@@ -103,11 +110,8 @@ public class QueryExecutor {
       }
 
       Table result;
-      if (!notCached.isEmpty() || (cached.isEmpty() && notCached.isEmpty())) {
-        if (!primitives.contains(CountMeasure.INSTANCE)) {
-          // Always add count
-          notCached.add(CountMeasure.INSTANCE);
-        }
+      if (!notCached.isEmpty()) {
+        notCached.add(CountMeasure.INSTANCE); // Always add count
         notCached.forEach(prefetchQuery::withMeasure);
         result = this.queryEngine.execute(prefetchQuery);
       } else {
@@ -135,7 +139,7 @@ public class QueryExecutor {
 
     // Here we take the global plan and execute the plans for a given scope one by one, in dependency order. The order
     // is given by the graph itself.
-    ExecutionPlan globalPlan = new ExecutionPlan<>(dependencyGraph.getTwo(), (scope, context) -> {
+    ExecutionPlan<QueryScope, Void> globalPlan = new ExecutionPlan<>(dependencyGraph.getTwo(), (scope, context) -> {
       ExecutionPlan<QueryPlanNodeKey, ExecutionContext> scopedPlan = new ExecutionPlan<>(dependencyGraph.getOne(), new Evaluator(fieldSupplier));
       scopedPlan.execute(new ExecutionContext(tableByScope.get(scope), scope, tableByScope, query, queryWatch));
     });
@@ -147,8 +151,10 @@ public class QueryExecutor {
 
     Table result = tableByScope.get(queryScope);
     result = TableUtils.selectAndOrderColumns((ColumnarTable) result, query);
-    result = TableUtils.replaceTotalCellValues((ColumnarTable) result, query);
-    result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets);
+    if (replaceTotalCellsAndOrderRows) {
+      result = TableUtils.replaceTotalCellValues((ColumnarTable) result, !query.rollupColumns.isEmpty());
+      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
+    }
 
     queryWatch.stop(QueryWatch.ORDER);
     queryWatch.stop(QueryWatch.GLOBAL);
@@ -229,6 +235,31 @@ public class QueryExecutor {
 
   protected static void resolveMeasures(QueryDto queryDto) {
     // Deactivate for now.
+  }
+
+  public Table execute(QueryDto first, QueryDto second, SquashQLUser user) {
+    Map<String, Comparator<?>> firstComparators = Queries.getComparators(first);
+    Map<String, Comparator<?>> secondComparators = Queries.getComparators(second);
+    secondComparators.putAll(firstComparators); // the comparators of the first query take precedence over the second's
+
+    Set<ColumnSet> columnSets = Stream.concat(first.columnSets.values().stream(), second.columnSets.values().stream())
+            .collect(Collectors.toSet());
+
+    Function<QueryDto, Table> execute = q -> execute(
+            q,
+            new QueryWatch(),
+            CacheStatsDto.builder(),
+            user,
+            false);
+    CompletableFuture<Table> f1 = CompletableFuture.supplyAsync(() -> execute.apply(first));
+    CompletableFuture<Table> f2 = CompletableFuture.supplyAsync(() -> execute.apply(second));
+    return CompletableFuture.allOf(f1, f2).thenApply(__ -> merge(f1.join(), f2.join(), secondComparators, columnSets)).join();
+  }
+
+  public static Table merge(Table table1, Table table2, Map<String, Comparator<?>> comparators, Set<ColumnSet> columnSets) {
+    ColumnarTable table = (ColumnarTable) MergeTables.mergeTables(table1, table2);
+    table = (ColumnarTable) TableUtils.orderRows(table, comparators, columnSets);
+    return TableUtils.replaceTotalCellValues(table, true);
   }
 
   public static Function<String, Field> withFallback(Function<String, Field> fieldProvider, Class<?> fallbackType) {

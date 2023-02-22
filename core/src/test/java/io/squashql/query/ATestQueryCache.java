@@ -397,7 +397,8 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             query,
             new QueryWatch(),
             CacheStatsDto.builder(),
-            user);
+            user,
+            true);
   }
 
 }

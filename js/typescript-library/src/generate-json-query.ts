@@ -1,7 +1,7 @@
 import {from} from "./queryBuilder";
 import {all, criterion, eq, gt} from "./conditions";
-import {BucketColumnSet, Month} from "./columnsets";
-import {avg, comparisonMeasureWithPeriod, ComparisonMethod, sum} from "./measures";
+import {BucketColumnSet} from "./columnsets";
+import {avg, sum} from "./measures";
 import {OrderKeyword} from "./order";
 import * as fs from "fs"
 

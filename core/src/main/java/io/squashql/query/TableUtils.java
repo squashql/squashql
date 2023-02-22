@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import com.google.common.base.Suppliers;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.BucketColumnSetDto;
@@ -11,6 +12,7 @@ import io.squashql.util.NullAndTotalComparator;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class TableUtils {
@@ -133,8 +135,9 @@ public class TableUtils {
     return new ColumnarTable(headers, new HashSet<>(measures), values);
   }
 
-  public static Table orderRows(ColumnarTable table, Map<String, Comparator<?>> comparatorByColumnName,
-                                Map<ColumnSetKey, ColumnSet> columnSets) {
+  public static Table orderRows(ColumnarTable table,
+                                Map<String, Comparator<?>> comparatorByColumnName,
+                                Collection<ColumnSet> columnSets) {
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
 
@@ -163,10 +166,12 @@ public class TableUtils {
     }
 
     int[] contextIndices = new int[args.size()];
-    java.util.Arrays.fill(contextIndices, -1);
-    ColumnSet bucket = columnSets.get(ColumnSetKey.BUCKET);
-    if (bucket != null) {
-      BucketColumnSetDto cs = (BucketColumnSetDto) bucket;
+    Arrays.fill(contextIndices, -1);
+    for (ColumnSet columnSet : new HashSet<>(columnSets)) {
+      if (columnSet.getColumnSetKey() != ColumnSetKey.BUCKET) {
+        throw new IllegalArgumentException("Unexpected column set type " + columnSet);
+      }
+      BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
       contextIndices[table.columnIndex(cs.field)] = table.columnIndex(cs.name);
     }
 
@@ -192,10 +197,22 @@ public class TableUtils {
    * Replaces cell values containing {@link SQLTranslator#TOTAL_CELL} with {@link QueryEngine#GRAND_TOTAL} or
    * {@link QueryEngine#TOTAL}.
    */
-  public static Table replaceTotalCellValues(ColumnarTable table, QueryDto queryDto) {
-    if (queryDto.rollupColumns.isEmpty()) {
+  public static Table replaceTotalCellValues(ColumnarTable table, boolean hasRollup) {
+    if (!hasRollup) {
+      // Quick escape
       return table;
     }
+
+    // To lazily copy the table when needed.
+    boolean[] lazilyCreated = new boolean[1];
+    Supplier<Table> finalTable = Suppliers.memoize(() -> {
+      List<List<Object>> newValues = new ArrayList<>();
+      for (int i = 0; i < table.headers.size(); i++) {
+        newValues.add(new ArrayList<>(table.getColumn(i)));
+      }
+      lazilyCreated[0] = true;
+      return new ColumnarTable(table.headers, table.measures, newValues);
+    });
 
     for (int rowIndex = 0; rowIndex < table.count(); rowIndex++) {
       boolean grandTotal = true;
@@ -204,7 +221,7 @@ public class TableUtils {
         if (!table.headers().get(i).isMeasure()) {
           boolean isTotalCell = SQLTranslator.TOTAL_CELL.equals(table.getColumn(i).get(rowIndex));
           if (isTotalCell) {
-            table.getColumn(i).set(rowIndex, total);
+            finalTable.get().getColumn(i).set(rowIndex, total);
           }
           grandTotal &= isTotalCell;
         }
@@ -213,12 +230,12 @@ public class TableUtils {
       if (grandTotal) {
         for (int i = 0; i < table.headers().size(); i++) {
           if (!table.headers().get(i).isMeasure()) {
-            table.getColumn(i).set(rowIndex, QueryEngine.GRAND_TOTAL);
+            finalTable.get().getColumn(i).set(rowIndex, QueryEngine.GRAND_TOTAL);
           }
         }
       }
     }
 
-    return table;
+    return lazilyCreated[0] ? finalTable.get() : table;
   }
 }

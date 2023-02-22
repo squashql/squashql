@@ -3,6 +3,11 @@ import {Criteria} from "./conditions";
 import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order";
 import {BucketColumnSet, ColumnSet, ColumnSetKey} from "./columnsets";
 
+export class QueryMerge {
+  constructor(readonly first: Query, readonly second: Query) {
+  }
+}
+
 export class Query {
   columns: Array<string>
   rollupColumns: Array<string>
