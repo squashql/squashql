@@ -110,11 +110,8 @@ public class QueryExecutor {
       }
 
       Table result;
-      if (!notCached.isEmpty() || cached.isEmpty()) {
-        if (!primitives.contains(CountMeasure.INSTANCE)) {
-          // Always add count
-          notCached.add(CountMeasure.INSTANCE);
-        }
+      if (!notCached.isEmpty()) {
+        notCached.add(CountMeasure.INSTANCE); // Always add count
         notCached.forEach(prefetchQuery::withMeasure);
         result = this.queryEngine.execute(prefetchQuery);
       } else {
