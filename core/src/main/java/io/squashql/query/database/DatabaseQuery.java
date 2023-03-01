@@ -20,7 +20,8 @@ public class DatabaseQuery {
   public TableDto table;
   public DatabaseQuery subQuery;
   public List<String> select = new ArrayList<>();
-  public CriteriaDto criteriaDto = null;
+  public CriteriaDto whereCriteriaDto = null;
+  public CriteriaDto havingCriteriaDto = null;
   public List<Measure> measures = new ArrayList<>();
   public List<String> rollup = new ArrayList<>();
   public int limit = -1;
@@ -65,8 +66,13 @@ public class DatabaseQuery {
     return this;
   }
 
-  public DatabaseQuery criteria(CriteriaDto criteriaDto) {
-    this.criteriaDto = criteriaDto;
+  public DatabaseQuery whereCriteria(CriteriaDto criteriaDto) {
+    this.whereCriteriaDto = criteriaDto;
+    return this;
+  }
+
+  public DatabaseQuery havingCriteria(CriteriaDto criteriaDto) {
+    this.havingCriteriaDto = criteriaDto;
     return this;
   }
 

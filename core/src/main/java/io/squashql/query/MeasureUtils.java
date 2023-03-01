@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 public final class MeasureUtils {
 
-  private static final QueryRewriter BASIC = new QueryRewriter() {
+  public static final QueryRewriter BASIC = new QueryRewriter() {
     @Override
     public boolean usePartialRollupSyntax() {
       return false;
@@ -74,7 +74,7 @@ public final class MeasureUtils {
           ComparisonMeasureReferencePosition cm,
           QueryExecutor.QueryScope queryScope,
           Function<String, Field> fieldSupplier) {
-    AtomicReference<CriteriaDto> copy = new AtomicReference<>(queryScope.criteriaDto() == null ? null : CriteriaDto.deepCopy(queryScope.criteriaDto()));
+    AtomicReference<CriteriaDto> copy = new AtomicReference<>(queryScope.whereCriteriaDto() == null ? null : CriteriaDto.deepCopy(queryScope.whereCriteriaDto()));
     Consumer<String> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(criteriaRemover::accept));
@@ -88,13 +88,18 @@ public final class MeasureUtils {
               Collections.reverse(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage order".
               rollupColumns.addAll(ancestorFields);
             });
-    return new QueryExecutor.QueryScope(queryScope.tableDto(), queryScope.subQuery(), queryScope.columns(), copy.get(), new ArrayList<>(rollupColumns));
+    return new QueryExecutor.QueryScope(queryScope.tableDto(),
+            queryScope.subQuery(),
+            queryScope.columns(),
+            copy.get(),
+            queryScope.havingCriteriaDto(),
+            new ArrayList<>(rollupColumns));
   }
 
   private static CriteriaDto removeCriteriaOnField(String field, CriteriaDto root) {
     if (root == null) {
       return null;
-    } else if (root.isCriterion()) {
+    } else if (root.isWhereCriterion()) {
       return root.field.equals(field) ? null : root;
     } else {
       removeCriteriaOnField(field, root.children);
@@ -106,7 +111,7 @@ public final class MeasureUtils {
     Iterator<CriteriaDto> iterator = children.iterator();
     while (iterator.hasNext()) {
       CriteriaDto criteriaDto = iterator.next();
-      if (criteriaDto.isCriterion()) {
+      if (criteriaDto.isWhereCriterion()) {
         if (criteriaDto.field.equals(field)) {
           iterator.remove();
         }

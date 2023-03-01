@@ -56,7 +56,8 @@ public final class Queries {
     } else {
       throw new IllegalArgumentException("A table or sub-query was expected in " + queryScope);
     }
-    prefetchQuery.criteriaDto = queryScope.criteriaDto();
+    prefetchQuery.whereCriteriaDto = queryScope.whereCriteriaDto();
+    prefetchQuery.havingCriteriaDto = queryScope.havingCriteriaDto();
     selects.forEach(prefetchQuery::withSelect);
     Optional.ofNullable(queryScope.rollupColumns()).ifPresent(r -> r.stream().map(Field::name).forEach(prefetchQuery::withRollup));
     prefetchQuery.limit(limit);
@@ -91,7 +92,8 @@ public final class Queries {
     }
 
     DatabaseQuery prefetchQuery = new DatabaseQuery().table(query.table);
-    prefetchQuery.criteriaDto = query.criteriaDto;
+    prefetchQuery.whereCriteriaDto = query.whereCriteriaDto;
+    prefetchQuery.havingCriteriaDto = query.havingCriteriaDto;
     cols.forEach(prefetchQuery::withSelect);
     query.measures.forEach(prefetchQuery::withMeasure);
     return prefetchQuery;

@@ -7,7 +7,7 @@ import io.squashql.query.dto.*;
 import java.util.Arrays;
 import java.util.List;
 
-public class Query implements HasCondition, HasSelectAndRollup, HasJoin, HasStartedBuildingTable, HasOrderBy, CanAddRollup {
+public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildingTable, HasOrderBy, CanAddRollup {
 
   private final QueryDto queryDto = new QueryDto();
 
@@ -65,7 +65,7 @@ public class Query implements HasCondition, HasSelectAndRollup, HasJoin, HasStar
   @Override
   public HasTable where(CriteriaDto criteriaDto) {
     addJoinToQueryDto();
-    this.queryDto.withCriteria(criteriaDto);
+    this.queryDto.withWhereCriteria(criteriaDto);
     return this;
   }
 
@@ -85,20 +85,26 @@ public class Query implements HasCondition, HasSelectAndRollup, HasJoin, HasStar
   }
 
   @Override
-  public HasSelectAndRollup orderBy(String column, OrderKeywordDto orderKeywordDto) {
+  public HasHaving orderBy(String column, OrderKeywordDto orderKeywordDto) {
     this.queryDto.orderBy(column, orderKeywordDto);
     return this;
   }
 
   @Override
-  public HasSelectAndRollup orderBy(String column, List<?> firstElements) {
+  public HasHaving orderBy(String column, List<?> firstElements) {
     this.queryDto.orderBy(column, firstElements);
     return this;
   }
 
   @Override
-  public HasSelectAndRollup rollup(String... columns) {
+  public CanAddHaving rollup(String... columns) {
     Arrays.stream(columns).forEach(this.queryDto::withRollup);
+    return this;
+  }
+
+  @Override
+  public HasHaving having(CriteriaDto criteriaDto) {
+    this.queryDto.withHavingCriteria(criteriaDto);
     return this;
   }
 

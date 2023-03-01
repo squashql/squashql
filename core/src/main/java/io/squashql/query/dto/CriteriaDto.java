@@ -1,6 +1,7 @@
 package io.squashql.query.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.squashql.query.AggregatedMeasure;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -19,12 +20,18 @@ public class CriteriaDto {
   public static final CriteriaDto NO_CRITERIA = new CriteriaDto(AND, Collections.emptyList());
 
   public String field;
+  public AggregatedMeasure measure;
   public ConditionDto condition;
   public ConditionType conditionType;
   public List<CriteriaDto> children;
 
   public CriteriaDto(String field, ConditionDto condition) {
     this.field = field;
+    this.condition = condition;
+  }
+
+  public CriteriaDto(AggregatedMeasure measure, ConditionDto condition) {
+    this.measure = measure;
     this.condition = condition;
   }
 
@@ -47,7 +54,12 @@ public class CriteriaDto {
   }
 
   @JsonIgnore
-  public boolean isCriterion() {
+  public boolean isWhereCriterion() {
     return this.field != null;
+  }
+
+  @JsonIgnore
+  public boolean isHavingCriterion() {
+    return this.measure != null;
   }
 }

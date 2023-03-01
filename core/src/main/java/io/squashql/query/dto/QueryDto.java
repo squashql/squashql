@@ -28,7 +28,8 @@ public class QueryDto {
 
   public List<Measure> measures = new ArrayList<>();
 
-  public CriteriaDto criteriaDto = null;
+  public CriteriaDto whereCriteriaDto = null;
+  public CriteriaDto havingCriteriaDto = null;
 
   public Map<String, OrderDto> orders = new HashMap<>();
 
@@ -92,15 +93,20 @@ public class QueryDto {
   }
 
   public QueryDto withCondition(String field, ConditionDto conditionDto) {
-    if (this.criteriaDto == null) {
-      this.criteriaDto = new CriteriaDto(AND, new ArrayList<>());
+    if (this.whereCriteriaDto == null) {
+      this.whereCriteriaDto = new CriteriaDto(AND, new ArrayList<>());
     }
-    this.criteriaDto.children.add(new CriteriaDto(field, conditionDto));
+    this.whereCriteriaDto.children.add(new CriteriaDto(field, conditionDto));
     return this;
   }
 
-  public QueryDto withCriteria(CriteriaDto criteriaDto) {
-    this.criteriaDto = criteriaDto;
+  public QueryDto withWhereCriteria(CriteriaDto criteriaDto) {
+    this.whereCriteriaDto = criteriaDto;
+    return this;
+  }
+
+  public QueryDto withHavingCriteria(CriteriaDto criteriaDto) {
+    this.havingCriteriaDto = criteriaDto;
     return this;
   }
 

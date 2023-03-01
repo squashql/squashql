@@ -1,6 +1,7 @@
 package io.squashql.query.database;
 
 import com.google.common.collect.Ordering;
+import io.squashql.query.MeasureUtils;
 import io.squashql.query.dto.*;
 import io.squashql.store.Field;
 
@@ -53,6 +54,7 @@ public class SQLTranslator {
     }
     addConditions(statement, query, fieldProvider, queryRewriter);
     addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
+    addHavingCondition(statement, query.havingCriteriaDto);
     addLimit(query.limit, statement);
     return statement.toString();
   }
@@ -119,8 +121,8 @@ public class SQLTranslator {
   }
 
   protected static void addConditions(StringBuilder statement, DatabaseQuery query, Function<String, Field> fieldProvider, QueryRewriter queryRewriter) {
-    if (query.criteriaDto != null) {
-      String whereClause = toSql(fieldProvider, query.criteriaDto, queryRewriter);
+    if (query.whereCriteriaDto != null) {
+      String whereClause = toSql(fieldProvider, query.whereCriteriaDto, queryRewriter);
       if (whereClause != null) {
         statement
                 .append(" where ")
@@ -195,8 +197,10 @@ public class SQLTranslator {
   }
 
   public static String toSql(Function<String, Field> fieldProvider, CriteriaDto criteriaDto, QueryRewriter queryRewriter) {
-    if (criteriaDto.isCriterion()) {
+    if (criteriaDto.isWhereCriterion()) {
       return toSql(fieldProvider.apply(criteriaDto.field), criteriaDto.condition, queryRewriter);
+    } else if (criteriaDto.isHavingCriterion()) {
+      return toSql(fieldProvider.apply(criteriaDto.measure.alias), criteriaDto.condition, queryRewriter);
     } else if (!criteriaDto.children.isEmpty()) {
       String sep = switch (criteriaDto.conditionType) {
         case AND -> " and ";
@@ -231,6 +235,17 @@ public class SQLTranslator {
       return s -> "'" + s + "'";
     } else {
       throw new RuntimeException("Not supported " + field.type());
+    }
+  }
+
+  protected static void addHavingCondition(StringBuilder statement, CriteriaDto havingCriteriaDto) {
+    if (havingCriteriaDto != null) {
+      String havingClause = toSql(name -> new Field(name, double.class), havingCriteriaDto, MeasureUtils.BASIC);
+      if (havingClause != null) {
+        statement
+                .append(" having ")
+                .append(havingClause);
+      }
     }
   }
 

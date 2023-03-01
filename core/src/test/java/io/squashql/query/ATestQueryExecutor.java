@@ -650,4 +650,32 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     Table result = this.executor.execute(query);
     Assertions.assertThat(result.count()).isEqualTo(limit); // we don't care about the result, and we can't know what lines will be returned
   }
+
+  @Test
+  void testHavingConditions() {
+    AggregatedMeasure price_sum = (AggregatedMeasure) sum("p", "price");
+    // Single condition
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("ean"), List.of(price_sum))
+            .having(criterion(price_sum, ge(9.0)))
+            .build();
+    Table table = this.executor.execute(query);
+    Assertions.assertThat(table).containsExactly(
+            List.of("cookie", 9.0d),
+            List.of("shirt", 30d));
+
+    // Multiple conditions
+    query = Query
+            .from(this.storeName)
+            .select(List.of("ean"), List.of(price_sum))
+            .having(all(
+                    criterion(price_sum, ge(7d)),
+                    criterion(price_sum, le(10d))))
+            .build();
+    table = this.executor.execute(query);
+    Assertions.assertThat(table).containsExactly(
+            List.of("bottle", 7.5d),
+            List.of("cookie", 9.0d));
+  }
 }
