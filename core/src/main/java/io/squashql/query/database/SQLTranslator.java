@@ -53,7 +53,14 @@ public class SQLTranslator {
     }
     addConditions(statement, query, fieldProvider, queryRewriter);
     addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
+    addLimit(query.limit, statement);
     return statement.toString();
+  }
+
+  private static void addLimit(int limit, StringBuilder statement) {
+    if (limit > 0) {
+      statement.append(" limit " + limit);
+    }
   }
 
   private static void addGroupByAndRollup(List<String> groupBy, List<String> rollup, boolean supportPartialRollup, StringBuilder statement) {

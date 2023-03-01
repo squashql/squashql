@@ -26,6 +26,7 @@ import static io.squashql.query.ColumnSetKey.BUCKET;
 @Slf4j
 public class QueryExecutor {
 
+  public static final int LIMIT_DEFAULT_VALUE = Integer.valueOf(System.getProperty("query.limit", Integer.toString(10_000)));
   public final QueryEngine<?> queryEngine;
   public final QueryCache queryCache;
 
@@ -67,6 +68,7 @@ public class QueryExecutor {
                        CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
                        SquashQLUser user,
                        boolean replaceTotalCellsAndOrderRows) {
+    int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
     queryWatch.start(QueryWatch.GLOBAL);
     queryWatch.start(QueryWatch.PREPARE_PLAN);
 
@@ -83,7 +85,8 @@ public class QueryExecutor {
     Map<QueryScope, Set<Measure>> measuresByQueryScope = new HashMap<>();
     ExecutionPlan<QueryPlanNodeKey, Void> prefetchingPlan = new ExecutionPlan<>(dependencyGraph.getOne(), (node, v) -> {
       QueryScope scope = node.queryScope;
-      prefetchQueryByQueryScope.computeIfAbsent(scope, k -> Queries.queryScopeToDatabaseQuery(scope));
+      int limit = scope.equals(queryScope) ? queryLimit : queryLimit + 1; // limit + 1 to detect when results can be wrong
+      prefetchQueryByQueryScope.computeIfAbsent(scope, k -> Queries.queryScopeToDatabaseQuery(scope, limit));
       measuresByQueryScope.computeIfAbsent(scope, k -> new HashSet<>()).add(node.measure);
     });
     prefetchingPlan.execute(null);
@@ -207,12 +210,16 @@ public class QueryExecutor {
     return new QueryScope(query.table, query.subQuery, columns, query.criteriaDto, rollupColumns);
   }
 
-  private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(QueryScope queryScope, DatabaseQuery prefetchQuery, SquashQLUser user, Function<String, Field> fieldSupplier) {
+  private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(
+          QueryScope queryScope,
+          DatabaseQuery prefetchQuery,
+          SquashQLUser user,
+          Function<String, Field> fieldSupplier) {
     Set<Field> fields = prefetchQuery.select.stream().map(fieldSupplier).collect(Collectors.toSet());
     if (queryScope.tableDto != null) {
-      return new TableScope(queryScope.tableDto, fields, queryScope.criteriaDto, queryScope.rollupColumns, user);
+      return new TableScope(queryScope.tableDto, fields, queryScope.criteriaDto, queryScope.rollupColumns, user, prefetchQuery.limit);
     } else {
-      return new SubQueryScope(queryScope.subQuery, fields, queryScope.criteriaDto, user);
+      return new SubQueryScope(queryScope.subQuery, fields, queryScope.criteriaDto, user, prefetchQuery.limit);
     }
   }
 

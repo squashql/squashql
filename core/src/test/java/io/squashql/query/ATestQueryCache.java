@@ -381,6 +381,38 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     assertCacheStats(2, 4);
   }
 
+  @Test
+  void testQueryDifferentLimits() {
+    // No limit, it will use the default value (10k)
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("ean"), List.of(sum("ps", "price")))
+            .build();
+    Table result = this.executor.execute(query);
+    Assertions.assertThat(result).containsExactlyInAnyOrder(
+            List.of("bottle", 2d),
+            List.of("cookie", 3d),
+            List.of("shirt", 10d));
+    assertCacheStats(0, 2);
+
+    int limit = 2;
+    query.withLimit(limit);
+    result = this.executor.execute(query);
+    assertCacheStats(0, 4);
+    Assertions.assertThat(result.count()).isEqualTo(limit);
+
+    // Same with same limit
+    result = this.executor.execute(query);
+    assertCacheStats(2, 4);
+    Assertions.assertThat(result.count()).isEqualTo(limit);
+
+    // Same with different limit
+    int otherLimit = 1;
+    query.withLimit(otherLimit);
+    result = this.executor.execute(query);
+    assertCacheStats(2, 6);
+    Assertions.assertThat(result.count()).isEqualTo(otherLimit);
+  }
 
   private void assertCacheStats(int hitCount, int missCount) {
     CacheStatsDto stats = this.queryCache.stats();
