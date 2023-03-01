@@ -129,15 +129,6 @@ public class QueryExecutor {
     }
     queryWatch.stop(QueryWatch.PREFETCH);
 
-//    for (Map.Entry<QueryScope, Table> entry : tableByScope.entrySet()) {
-//      // If for query dependencies the result exceed the limit, it means that for some measures the calculation cannot
-//      // be correctly done and would lead to wrong result. Abort immediately!
-//      if (!entry.getKey().equals(queryScope) && entry.getValue().count() == queryLimit + 1) {
-//        // TODO detect that intermediate result can be in scope
-//        throw new RuntimeException("Too many rows, some intermediate results exceed the limit " + queryLimit);
-//      }
-//    }
-
     queryWatch.start(QueryWatch.BUCKET);
     if (query.columnSets.containsKey(BUCKET)) {
       // Apply this as it modifies the "shape" of the result

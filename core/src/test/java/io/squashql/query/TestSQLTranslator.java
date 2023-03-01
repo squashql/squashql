@@ -44,6 +44,17 @@ public class TestSQLTranslator {
   }
 
   @Test
+  void testLimit() {
+    DatabaseQuery query = new DatabaseQuery()
+            .aggregatedMeasure("pnl.sum", "pnl", "sum")
+            .limit(8)
+            .table(BASE_STORE_NAME);
+
+    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
+            .isEqualTo("select sum(`pnl`) as `pnl.sum` from `" + BASE_STORE_NAME + "` limit 8");
+  }
+
+  @Test
   void testGroupBy() {
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(SCENARIO_FIELD_NAME)
