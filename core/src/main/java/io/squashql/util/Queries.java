@@ -45,7 +45,7 @@ public final class Queries {
     return res;
   }
 
-  public static DatabaseQuery queryScopeToDatabaseQuery(QueryExecutor.QueryScope queryScope) {
+  public static DatabaseQuery queryScopeToDatabaseQuery(QueryExecutor.QueryScope queryScope, int limit) {
     Set<String> selects = new HashSet<>();
     queryScope.columns().stream().map(Field::name).forEach(selects::add);
     DatabaseQuery prefetchQuery = new DatabaseQuery();
@@ -59,6 +59,7 @@ public final class Queries {
     prefetchQuery.criteriaDto = queryScope.criteriaDto();
     selects.forEach(prefetchQuery::withSelect);
     Optional.ofNullable(queryScope.rollupColumns()).ifPresent(r -> r.stream().map(Field::name).forEach(prefetchQuery::withRollup));
+    prefetchQuery.limit(limit);
     return prefetchQuery;
   }
 

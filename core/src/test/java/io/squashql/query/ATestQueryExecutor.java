@@ -638,4 +638,16 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             Arrays.asList(TOTAL, TOTAL, "Categorized", "biscuit", null, 3d),
             Arrays.asList(TOTAL, TOTAL, "Not categorized", null, null, 6.25d));
   }
+
+  @Test
+  void testQueryLimit() {
+    int limit = 2;
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price")))
+            .limit(limit)
+            .build();
+    Table result = this.executor.execute(query);
+    Assertions.assertThat(result.count()).isEqualTo(limit); // we don't care about the result, and we can't know what lines will be returned
+  }
 }

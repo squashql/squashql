@@ -304,4 +304,23 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2023l, "base", 0d, 600d));
   }
+
+  @Test
+  void testCompareWithLimit() {
+    Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
+    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
+            "myMeasure",
+            ABSOLUTE_DIFFERENCE,
+            sales,
+            Map.of("quarter_sales", "q", "year_sales", "y-1"),
+            period);
+
+    var query = Query.from(this.storeName)
+            .select(List.of("year_sales", "quarter_sales"), List.of(m, sales))
+            .limit(2)
+            .build();
+
+    Assertions.assertThatThrownBy(() -> this.executor.execute(query)).hasMessageContaining("Too many rows");
+  }
 }

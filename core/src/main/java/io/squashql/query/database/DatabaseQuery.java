@@ -23,6 +23,7 @@ public class DatabaseQuery {
   public CriteriaDto criteriaDto = null;
   public List<Measure> measures = new ArrayList<>();
   public List<String> rollup = new ArrayList<>();
+  public int limit = -1;
 
   public DatabaseQuery withSelect(String field) {
     this.select.add(field);
@@ -66,6 +67,11 @@ public class DatabaseQuery {
 
   public DatabaseQuery criteria(CriteriaDto criteriaDto) {
     this.criteriaDto = criteriaDto;
+    return this;
+  }
+
+  public DatabaseQuery limit(int limit) {
+    this.limit = limit;
     return this;
   }
 }
