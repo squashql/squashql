@@ -751,6 +751,8 @@ Result
 | group4 |       s3 |   350.0 |
 +--------+----------+---------+
 ```
+As you can see, adding the column set to the query will add two columns in the result: group and scenario so that we 
+can remove scenario column from the first argument.
 
 Now to perform the comparison, use the built-in measure `comparisonMeasureWithBucket`
 ```typescript
