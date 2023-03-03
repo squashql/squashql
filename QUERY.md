@@ -527,10 +527,10 @@ measure
 
 To indicate "previous semester", a "translation" or "shift" operator is passed to the
 comparison function: `{"semester": "s-1", "year": "y"}`. `"semester": "s-1"` means 'take the current semester value and
-remove 1'.
+remove 1'. You can use any translation that follows the same pattern" `s-2`, `s-3`, `s+1`, `s+2`... The translation
+can be replaced with `first` to indicate the first semester.  
 The `Semester` object is meant to make SquashQL understand the measure is working with a **time period** so that it knows
-that
-the previous semester value of the 1st semester of 2023 is the 2nd semester of 2022.
+that the previous semester value of the 1st semester of 2023 is the 2nd semester of 2022.
 
 Similarly to `Semester`, one can use `Year`, `Quarter`, `Month` to work with a different time period. The arguments
 passed to build a time period object are
@@ -775,8 +775,8 @@ const query = from("myTable")
         .build();
 ```
 
-`{"scenario": "s-1"}` indicates that each value is to be compared with the one for the previous scenario (in the current group).
-This is why order in `values` is important.
+`{"scenario": "s-1"}`, the "translation" or "shift" operator indicates that each value is to be compared with the one for the previous scenario (in the current group).
+This is why order in `values` is important. Usage of `first` keyword is also possible (see time-series comparison).
 
 Result
 ```
