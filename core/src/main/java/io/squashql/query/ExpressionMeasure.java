@@ -11,7 +11,7 @@ import java.util.function.Function;
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
 @AllArgsConstructor
-public class ExpressionMeasure implements Measure {
+public class ExpressionMeasure implements BasicMeasure {
 
   public String alias;
   @With

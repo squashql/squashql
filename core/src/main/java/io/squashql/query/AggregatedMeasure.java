@@ -13,7 +13,7 @@ import java.util.function.Function;
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
 @AllArgsConstructor
-public class AggregatedMeasure implements Measure {
+public class AggregatedMeasure implements BasicMeasure {
 
   public String alias;
   @With

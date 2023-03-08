@@ -200,7 +200,7 @@ public class SQLTranslator {
     if (criteriaDto.isWhereCriterion()) {
       return toSql(fieldProvider.apply(criteriaDto.field), criteriaDto.condition, queryRewriter);
     } else if (criteriaDto.isHavingCriterion()) {
-      return toSql(fieldProvider.apply(criteriaDto.measure.alias), criteriaDto.condition, queryRewriter);
+      return toSql(fieldProvider.apply(criteriaDto.measure.alias()), criteriaDto.condition, queryRewriter);
     } else if (!criteriaDto.children.isEmpty()) {
       String sep = switch (criteriaDto.conditionType) {
         case AND -> " and ";

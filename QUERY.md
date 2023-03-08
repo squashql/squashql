@@ -57,7 +57,11 @@ GROUP BY col1, col2
 
 ## Filtering
 
-Queries can be filtered by using Criteria class. A Criteria instance can contain a condition on a single field and can be build as so:
+Queries can be filtered by using Criteria class. 
+
+### WHERE - filtering records
+
+A Criteria instance can contain a condition on a single field and can be build as so:
 ```typescript
 import { criterion } from "@squashql/squashql-js"
 const criteria = criterion("col2", eq("c"));
@@ -88,6 +92,43 @@ GROUP BY col1, col2
 ```
 
 Condition operators available: `eq, neq, lt, le, gt, ge, _in, isNull, isNotNull, like, and, or`.
+
+### HAVING - filtering aggregates
+
+> **Warning**
+> Filtering can only be applied on [basic measure](#basic-measure)
+
+A Criteria instance can contain a condition on a single [basic measure](#basic-measure) and can be build as so:
+```typescript
+import { criterion, sum, ge } from "@squashql/squashql-js"
+const measure = sum("sum", "f1");
+const criteria = criterion(measure, ge(0));
+```
+
+Several criteria can be chained with AND or OR by using the methods `any` and `all`
+
+```typescript
+import {
+  from, sum, avg, gt, eq, havingCriterion, all
+} from "@squashql/squashql-js"
+
+const measure1 = sum("alias1", "col3");
+const measure2 = avg("alias2", "col4");
+const q = from("myTable")
+        .select(
+                ["col1", "col2"],
+                [],
+                [measure1, measure2])
+        .having(all([havingCriterion(measure1, gt(10)), havingCriterion(measure2, eq(5))]))
+        .build();
+```
+
+```sql
+SELECT col1, col2, sum(col3) as alias1, avg(col4) as alias2
+FROM myTable
+GROUP BY col1, col2
+HAVING sum(col3) > 10 AND avg(col4) = 5
+```
 
 ## Ordering
 

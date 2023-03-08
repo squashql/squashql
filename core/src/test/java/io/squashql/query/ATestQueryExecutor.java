@@ -653,7 +653,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Test
   void testHavingConditions() {
-    AggregatedMeasure price_sum = (AggregatedMeasure) sum("p", "price");
+    BasicMeasure price_sum = (BasicMeasure) sum("p", "price");
+    BasicMeasure price_sum_expr = new ExpressionMeasure("p_expr", "sum(price)");
     // Single condition
     QueryDto query = Query
             .from(this.storeName)
@@ -668,14 +669,14 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     // Multiple conditions
     query = Query
             .from(this.storeName)
-            .select(List.of("ean"), List.of(price_sum))
+            .select(List.of("ean"), List.of(price_sum, price_sum_expr))
             .having(all(
                     criterion(price_sum, ge(7d)),
-                    criterion(price_sum, le(10d))))
+                    criterion(price_sum_expr, le(10d))))
             .build();
     table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(
-            List.of("bottle", 7.5d),
-            List.of("cookie", 9.0d));
+            List.of("bottle", 7.5d, 7.5d),
+            List.of("cookie", 9.0d, 9.0d));
   }
 }

@@ -15,7 +15,7 @@ public class Functions {
     return new CriteriaDto(field, conditionDto);
   }
 
-  public static CriteriaDto criterion(AggregatedMeasure measure, ConditionDto conditionDto) {
+  public static CriteriaDto criterion(BasicMeasure measure, ConditionDto conditionDto) {
     return new CriteriaDto(measure, conditionDto);
   }
 

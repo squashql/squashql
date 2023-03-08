@@ -1,4 +1,4 @@
-import {AggregatedMeasure, PACKAGE} from "./index";
+import {AggregatedMeasure, BasicMeasure, PACKAGE} from "./index";
 
 export interface Condition {
   readonly class: string
@@ -87,7 +87,7 @@ class LogicalCondition implements Condition {
 export class Criteria {
 
   constructor(private field: string,
-              private measure: AggregatedMeasure,
+              private measure: BasicMeasure,
               private condition: Condition,
               private conditionType: ConditionType,
               public children: Criteria[]) {
@@ -98,7 +98,7 @@ export function criterion(field: string, condition: Condition): Criteria {
   return new Criteria(field, undefined, condition, undefined, undefined)
 }
 
-export function havingCriterion(measure: AggregatedMeasure, condition: Condition): Criteria {
+export function havingCriterion(measure: BasicMeasure, condition: Condition): Criteria {
   return new Criteria(undefined, measure, condition, undefined, undefined)
 }
 

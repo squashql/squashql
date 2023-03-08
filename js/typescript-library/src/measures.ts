@@ -2,13 +2,16 @@ import {PACKAGE, Period} from "./index"
 import {Condition, Criteria} from "./conditions"
 import {ColumnSetKey} from "./columnsets"
 
+// Marker type
+export type BasicMeasure = Measure
+
 export interface Measure {
   readonly class: string
   readonly alias: string
   readonly expression?: string
 }
 
-export class AggregatedMeasure implements Measure {
+export class AggregatedMeasure implements BasicMeasure {
   readonly class: string = PACKAGE + "AggregatedMeasure"
   readonly field: string
   readonly aggregationFunction: string
@@ -35,7 +38,7 @@ export class AggregatedMeasure implements Measure {
   }
 }
 
-export class ExpressionMeasure implements Measure {
+export class ExpressionMeasure implements BasicMeasure {
   readonly class: string = PACKAGE + "ExpressionMeasure"
   readonly alias: string
 

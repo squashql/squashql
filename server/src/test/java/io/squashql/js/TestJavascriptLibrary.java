@@ -66,7 +66,7 @@ public class TestJavascriptLibrary {
     q.withCondition("f4", isNull());
     q.withCondition("f5", isNotNull());
 
-    q.withHavingCriteria(all(criterion(price, ge(10)), criterion(price, lt(100))));
+    q.withHavingCriteria(all(criterion(price, ge(10)), criterion(expression, lt(100))));
 
     q.orderBy("a", OrderKeywordDto.ASC);
     q.orderBy("b", List.of("1", "l", "p"));
@@ -107,6 +107,7 @@ public class TestJavascriptLibrary {
             .withNewBucket("b", List.of("b1", "b2"));
 
     Measure measure = sum("sum", "f1");
+    Measure measureExpr = new ExpressionMeasure("sum_expr", "sum(f1)");
     QueryDto q = Query.from(table.name)
             .innerJoin(refTable.name)
             .on("myTable", "id", "refTable", "id")
@@ -115,9 +116,9 @@ public class TestJavascriptLibrary {
             .where("f3", eq(123))
             .select(List.of("a", "b"),
                     List.of(bucketColumnSet),
-                    List.of(measure, avg("sum", "f1")))
+                    List.of(measure, avg("sum", "f1"), measureExpr))
             .rollup("a", "b")
-            .having(all(criterion((AggregatedMeasure) measure, gt(0)), criterion((AggregatedMeasure) measure, lt(10))))
+            .having(all(criterion((BasicMeasure) measure, gt(0)), criterion((BasicMeasure) measureExpr, lt(10))))
             .orderBy("f4", OrderKeywordDto.ASC)
             .build();
 
