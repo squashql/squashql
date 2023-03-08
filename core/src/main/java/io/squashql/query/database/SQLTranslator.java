@@ -52,9 +52,9 @@ public class SQLTranslator {
       statement.append(queryRewriter.tableName(query.table.name));
       addJoins(statement, query.table, queryRewriter);
     }
-    addConditions(statement, query, fieldProvider, queryRewriter);
+    addWhereConditions(statement, query, fieldProvider, queryRewriter);
     addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
-    addHavingCondition(statement, query.havingCriteriaDto);
+    addHavingConditions(statement, query.havingCriteriaDto);
     addLimit(query.limit, statement);
     return statement.toString();
   }
@@ -120,7 +120,7 @@ public class SQLTranslator {
     }
   }
 
-  protected static void addConditions(StringBuilder statement, DatabaseQuery query, Function<String, Field> fieldProvider, QueryRewriter queryRewriter) {
+  protected static void addWhereConditions(StringBuilder statement, DatabaseQuery query, Function<String, Field> fieldProvider, QueryRewriter queryRewriter) {
     if (query.whereCriteriaDto != null) {
       String whereClause = toSql(fieldProvider, query.whereCriteriaDto, queryRewriter);
       if (whereClause != null) {
@@ -238,7 +238,7 @@ public class SQLTranslator {
     }
   }
 
-  protected static void addHavingCondition(StringBuilder statement, CriteriaDto havingCriteriaDto) {
+  protected static void addHavingConditions(StringBuilder statement, CriteriaDto havingCriteriaDto) {
     if (havingCriteriaDto != null) {
       String havingClause = toSql(name -> new Field(name, double.class), havingCriteriaDto, MeasureUtils.BASIC);
       if (havingClause != null) {
