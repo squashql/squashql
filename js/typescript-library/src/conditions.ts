@@ -1,4 +1,4 @@
-import {PACKAGE} from "./index";
+import {AggregatedMeasure, PACKAGE} from "./index";
 
 export interface Condition {
   readonly class: string
@@ -87,6 +87,7 @@ class LogicalCondition implements Condition {
 export class Criteria {
 
   constructor(private field: string,
+              private measure: AggregatedMeasure,
               private condition: Condition,
               private conditionType: ConditionType,
               public children: Criteria[]) {
@@ -94,15 +95,19 @@ export class Criteria {
 }
 
 export function criterion(field: string, condition: Condition): Criteria {
-  return new Criteria(field, condition, undefined, undefined)
+  return new Criteria(field, undefined, condition, undefined, undefined)
 }
 
-export function all(criteria: Criteria[]) {
-  return new Criteria(undefined, undefined, ConditionType.AND, criteria)
+export function havingCriterion(measure: AggregatedMeasure, condition: Condition): Criteria {
+  return new Criteria(undefined, measure, condition, undefined, undefined)
 }
 
-export function any(criteria: Criteria[]) {
-  return new Criteria(undefined, undefined, ConditionType.OR, criteria)
+export function all(criteria: Criteria[]): Criteria {
+  return new Criteria(undefined, undefined, undefined, ConditionType.AND, criteria)
+}
+
+export function any(criteria: Criteria[]): Criteria {
+  return new Criteria(undefined, undefined, undefined, ConditionType.OR, criteria)
 }
 
 export function and(left: Condition, right: Condition): Condition {

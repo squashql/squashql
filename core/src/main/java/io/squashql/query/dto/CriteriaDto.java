@@ -43,6 +43,8 @@ public class CriteriaDto {
   public static CriteriaDto deepCopy(CriteriaDto criteriaDto) {
     if (criteriaDto.field != null) {
       return new CriteriaDto(criteriaDto.field, criteriaDto.condition);
+    } else if (criteriaDto.measure != null) {
+      return new CriteriaDto(criteriaDto.measure, criteriaDto.condition);
     } else {
       List<CriteriaDto> list = new ArrayList<>(criteriaDto.children.size());
       for (CriteriaDto dto : criteriaDto.children) {

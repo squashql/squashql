@@ -21,7 +21,7 @@ export {
   Condition,
   eq, neq, lt, le, gt, ge, _in, like, isNull, isNotNull,
   and, or,
-  all, any, criterion
+  all, any, criterion, havingCriterion,
 } from './conditions'
 
 export {
@@ -35,7 +35,7 @@ export {
 
 export {
   CanAddOrderBy, CanBeBuildQuery, CanStartBuildingJoin, HasCondition, HasJoin,
-  HasOrderBy, HasSelectAndRollup, HasStartedBuildingJoin, HasStartedBuildingTable,
+  HasOrderBy, HasHaving, CanAddHaving, HasStartedBuildingJoin, HasStartedBuildingTable,
   HasTable, CanAddRollup,
   from, fromSubQuery
 } from './queryBuilder'

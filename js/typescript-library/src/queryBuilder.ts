@@ -5,9 +5,9 @@ import {Criteria} from "./conditions";
 import {OrderKeyword} from "./order";
 
 export interface CanAddOrderBy {
-  orderBy(column: string, order: OrderKeyword): HasSelectAndRollup
+  orderBy(column: string, order: OrderKeyword): HasHaving
 
-  orderByFirstElements(column: string, firstElements: Array<any>): HasSelectAndRollup
+  orderByFirstElements(column: string, firstElements: Array<any>): HasHaving
 }
 
 export interface CanBeBuildQuery {
@@ -35,7 +35,7 @@ export interface HasOrderBy extends CanBeBuildQuery {
   limit(limit: number): CanBeBuildQuery;
 }
 
-export type HasSelectAndRollup = HasOrderBy & CanAddOrderBy
+export type HasHaving = HasOrderBy & CanAddOrderBy
 
 export interface HasStartedBuildingJoin {
   on(fromTable: string, from: string, toTable: string, to: string): HasJoin
@@ -47,8 +47,12 @@ export interface HasTable extends HasCondition {
   where(criterion: Criteria): HasCondition
 }
 
-export interface CanAddRollup extends HasOrderBy, CanAddOrderBy {
-  rollup(columns: string[]): HasSelectAndRollup
+export interface CanAddRollup extends HasOrderBy, CanAddOrderBy, CanAddHaving {
+  rollup(columns: string[]): CanAddHaving
+}
+
+export interface CanAddHaving extends HasOrderBy, CanAddOrderBy {
+  having(criterion: Criteria): HasHaving
 }
 
 export function from(tableName: string): HasStartedBuildingTable {
@@ -63,7 +67,7 @@ export function fromSubQuery(subQuery: Query): HasStartedBuildingTable {
   return queryBuilder
 }
 
-class QueryBuilder implements HasCondition, HasSelectAndRollup, HasJoin, HasStartedBuildingTable, HasOrderBy, CanAddRollup {
+class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildingTable, HasOrderBy, CanAddRollup {
   readonly queryDto: Query = new Query()
   private currentJoinTableBuilder: JoinTableBuilder = null;
 
@@ -102,14 +106,19 @@ class QueryBuilder implements HasCondition, HasSelectAndRollup, HasJoin, HasStar
     return this
   }
 
-  rollup(columns: string[]): HasSelectAndRollup {
+  rollup(columns: string[]): CanAddHaving {
     columns.forEach(c => this.queryDto.withRollupColumn(c))
     return this
   }
 
   where(criterion: Criteria): HasTable {
     this.addJoinToQueryDto()
-    this.queryDto.withCriteria(criterion)
+    this.queryDto.withWhereCriteria(criterion)
+    return this
+  }
+
+  having(criterion: Criteria): HasHaving {
+    this.queryDto.withHavingCriteria(criterion)
     return this
   }
 
@@ -122,12 +131,12 @@ class QueryBuilder implements HasCondition, HasSelectAndRollup, HasJoin, HasStar
     return undefined
   }
 
-  orderBy(column: string, order: OrderKeyword): HasSelectAndRollup {
+  orderBy(column: string, order: OrderKeyword): HasHaving {
     this.queryDto.orderBy(column, order)
     return this
   }
 
-  orderByFirstElements(column: string, firstElements: Array<any>): HasSelectAndRollup {
+  orderByFirstElements(column: string, firstElements: Array<any>): HasHaving {
     this.queryDto.orderByFirstElements(column, firstElements)
     return this
   }
