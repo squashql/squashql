@@ -2,11 +2,11 @@ package io.squashql.query.builder;
 
 import java.util.List;
 
-public interface CanAddRollup extends HasOrderBy, CanAddOrderBy {
+public interface CanAddRollup extends HasOrderBy, CanAddOrderBy, CanAddHaving {
 
-  HasSelectAndRollup rollup(String... columns);
+  CanAddHaving rollup(String... columns);
 
-  default HasSelectAndRollup rollup(List<String> columns) {
+  default CanAddHaving rollup(List<String> columns) {
     return rollup(columns.toArray(new String[0]));
   }
 }

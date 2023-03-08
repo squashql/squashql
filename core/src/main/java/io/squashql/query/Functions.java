@@ -15,6 +15,10 @@ public class Functions {
     return new CriteriaDto(field, conditionDto);
   }
 
+  public static CriteriaDto criterion(BasicMeasure measure, ConditionDto conditionDto) {
+    return new CriteriaDto(measure, conditionDto);
+  }
+
   public static CriteriaDto all(CriteriaDto... criteria) {
     return buildCriteria(AND, criteria);
   }

@@ -14,7 +14,8 @@ export class Query {
   columnSets: Map<string, ColumnSet>
   measures: Array<Measure>
   table: Table
-  criteria: Criteria
+  whereCriteria: Criteria
+  havingCriteriaDto: Criteria
   orders: Map<string, Order>
   subQuery: Query
   limit: number = -1
@@ -23,7 +24,8 @@ export class Query {
     this.columns = []
     this.rollupColumns = []
     this.measures = []
-    this.criteria = undefined
+    this.whereCriteria = undefined
+    this.havingCriteriaDto = undefined
     this.orders = new Map<string, Order>()
     this.columnSets = new Map<string, ColumnSet>()
   }
@@ -38,8 +40,13 @@ export class Query {
     return this
   }
 
-  withCriteria(criterion: Criteria): Query {
-    this.criteria = criterion
+  withWhereCriteria(criterion: Criteria): Query {
+    this.whereCriteria = criterion
+    return this;
+  }
+
+  withHavingCriteria(criterion: Criteria): Query {
+    this.havingCriteriaDto = criterion
     return this;
   }
 
@@ -81,7 +88,8 @@ export class Query {
       "rollupColumns": this.rollupColumns,
       "columnSets": Object.fromEntries(this.columnSets),
       "measures": this.measures,
-      "criteriaDto": this.criteria,
+      "whereCriteriaDto": this.whereCriteria,
+      "havingCriteriaDto": this.havingCriteriaDto,
       "orders": Object.fromEntries(this.orders),
       "limit": this.limit
     }

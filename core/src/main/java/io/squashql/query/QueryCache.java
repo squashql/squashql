@@ -23,11 +23,20 @@ public interface QueryCache {
 
   CacheStatsDto stats();
 
-  record TableScope(TableDto tableDto, Set<Field> columns, CriteriaDto criteriaDto, List<Field> rollupColumns,
-                    SquashQLUser user, int limit) implements PrefetchQueryScope {
+  record TableScope(TableDto tableDto,
+                    Set<Field> columns,
+                    CriteriaDto whereCriteriaDto,
+                    CriteriaDto havingCriteriaDto,
+                    List<Field> rollupColumns,
+                    SquashQLUser user,
+                    int limit) implements PrefetchQueryScope {
   }
 
-  record SubQueryScope(QueryDto subQueryDto, Set<Field> columns, CriteriaDto criteriaDto, SquashQLUser user,
+  record SubQueryScope(QueryDto subQueryDto,
+                       Set<Field> columns,
+                       CriteriaDto whereCriteriaDto,
+                       CriteriaDto havingCriteriaDto,
+                       SquashQLUser user,
                        int limit) implements PrefetchQueryScope {
   }
 

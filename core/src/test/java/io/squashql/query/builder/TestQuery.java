@@ -1,5 +1,6 @@
 package io.squashql.query.builder;
 
+import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.ColumnSetKey;
 import io.squashql.query.Measure;
 import io.squashql.query.dto.*;
@@ -50,7 +51,7 @@ public class TestQuery {
             .select(List.of("col1", "col2"), List.of(columnSet), List.of(sum))
             .build();
 
-    Assertions.assertThat(build).isEqualTo(q.withCondition("f2", eq("B")).withCriteria(any));
+    Assertions.assertThat(build).isEqualTo(q.withCondition("f2", eq("B")).withWhereCriteria(any));
 
     // with limit
     build = Query
@@ -256,5 +257,39 @@ public class TestQuery {
             .withMeasure(sum);
 
     Assertions.assertThat(build).isEqualTo(q);
+  }
+
+  @Test
+  void testHaving() {
+    Measure sum = sum("sum", "f2");
+    CriteriaDto criterion = criterion((AggregatedMeasure) sum, ge(0));
+    QueryDto buildWoRollup = Query
+            .from("saas")
+            .select(List.of("col1"), List.of(sum))
+            .having(criterion)
+            .build();
+
+    QueryDto buildWithRollup = Query
+            .from("saas")
+            .select(List.of("col1"), List.of(sum))
+            .rollup(List.of("col1"))
+            .having(criterion)
+            .build();
+
+    QueryDto qWithRollup = new QueryDto()
+            .table("saas")
+            .withColumn("col1")
+            .withRollup("col1")
+            .withHavingCriteria(criterion)
+            .withMeasure(sum);
+
+    QueryDto qWoRollup = new QueryDto()
+            .table("saas")
+            .withColumn("col1")
+            .withHavingCriteria(criterion)
+            .withMeasure(sum);
+
+    Assertions.assertThat(buildWoRollup).isEqualTo(qWoRollup);
+    Assertions.assertThat(buildWithRollup).isEqualTo(qWithRollup);
   }
 }
