@@ -22,6 +22,10 @@ the UI.
 
 SquashQL is currently compatible with [Apache Spark](https://spark.apache.org/), [ClickHouse](https://clickhouse.com/), [BigQuery](https://cloud.google.com/bigquery/) and [Snowflake](https://www.snowflake.com/en/). 
 
+## Try SquashQL
+
+You can try SquashQL directly from your web browser with [our showcase project](https://github.com/squashql/squashql-showcase/blob/main/TUTORIAL.md). You won't need to install anything!
+
 ### Configuration
 
 To connect SquashQL to your database you will first have to import the associated maven module and defined in your 
