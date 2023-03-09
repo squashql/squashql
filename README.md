@@ -18,13 +18,13 @@ the UI.
 
 ![ide ts squashql](https://user-images.githubusercontent.com/5783183/215964358-37814efa-f315-4de5-97cd-cefce537caaa.gif)
 
-## Compatibility
-
-SquashQL is currently compatible with [Apache Spark](https://spark.apache.org/), [ClickHouse](https://clickhouse.com/), [BigQuery](https://cloud.google.com/bigquery/) and [Snowflake](https://www.snowflake.com/en/). 
-
 ## Try SquashQL
 
 You can try SquashQL directly from your web browser with [our showcase project](https://github.com/squashql/squashql-showcase/blob/main/TUTORIAL.md). You won't need to install anything!
+
+## Compatibility
+
+SquashQL is currently compatible with [Apache Spark](https://spark.apache.org/), [ClickHouse](https://clickhouse.com/), [BigQuery](https://cloud.google.com/bigquery/) and [Snowflake](https://www.snowflake.com/en/). 
 
 ### Configuration
 
