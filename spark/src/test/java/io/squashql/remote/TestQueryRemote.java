@@ -9,6 +9,7 @@ import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.SparkQueryEngine;
 import io.squashql.store.Datastore;
 import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import io.squashql.transaction.SparkTransactionManager;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparkSession;
@@ -109,7 +110,7 @@ public class TestQueryRemote {
 
     DatabaseQuery query = new DatabaseQuery()
             .table(storeName)
-            .withSelect(SCENARIO_FIELD_NAME)
+            .withSelect(new FieldWithStore(storeName, SCENARIO_FIELD_NAME, String.class))
             .aggregatedMeasure("p", "price", "sum")
             .aggregatedMeasure("q", "quantity", "sum");
     Table result = queryEngine.execute(query);

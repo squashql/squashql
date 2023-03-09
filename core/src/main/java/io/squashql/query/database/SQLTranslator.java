@@ -3,7 +3,7 @@ package io.squashql.query.database;
 import com.google.common.collect.Ordering;
 import io.squashql.query.MeasureUtils;
 import io.squashql.query.dto.*;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 
 import java.util.*;
 import java.util.function.Function;
@@ -13,30 +13,35 @@ public class SQLTranslator {
 
   public static final String TOTAL_CELL = "___total___";
 
-  public static String translate(DatabaseQuery query, Function<String, Field> fieldProvider) {
+  public static String translate(DatabaseQuery query, Function<String, FieldWithStore> fieldProvider) {
     return translate(query, fieldProvider, DefaultQueryRewriter.INSTANCE);
   }
 
   public static String translate(DatabaseQuery query,
-                                 Function<String, Field> fieldProvider,
+                                 Function<String, FieldWithStore> fieldProvider,
                                  QueryRewriter queryRewriter) {
     return translate(query, fieldProvider, __ -> queryRewriter);
   }
 
   public static String translate(DatabaseQuery query,
-                                 Function<String, Field> fieldProvider,
+                                 Function<String, FieldWithStore> fieldProvider,
                                  Function<DatabaseQuery, QueryRewriter> queryRewriterSupplier) {
     QueryRewriter queryRewriter = queryRewriterSupplier.apply(query);
     List<String> selects = new ArrayList<>();
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
 
-    query.select.forEach(field -> groupBy.add(queryRewriter.select(field)));
+    query.select.forEach(f -> groupBy.add(queryRewriter.select(f.store(), f.name())));
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true))); // Alias is needed when using sub-queries
 
     selects.addAll(groupBy); // coord first, then aggregates
     if (queryRewriter.useGroupingFunction()) {
-      query.rollup.forEach(field -> selects.add(String.format("grouping(%s) as %s", queryRewriter.fieldName(field), queryRewriter.groupingAlias(field)))); // use grouping to identify totals
+//      query.rollup.forEach(field -> selects.add(String.format("grouping(%s) as %s", queryRewriter.fieldName(field), queryRewriter.groupingAlias(field)))); // use grouping to identify totals
+
+      query.rollup.forEach(f -> {
+        String name = queryRewriter.select(f.store(), f.name());
+        selects.add(String.format("grouping(%s) as %s", name, queryRewriter.groupingAlias(f.name())));
+      }); // use grouping to identify totals
     }
     selects.addAll(aggregates);
 
@@ -53,7 +58,7 @@ public class SQLTranslator {
       addJoins(statement, query.table, queryRewriter);
     }
     addWhereConditions(statement, query, fieldProvider, queryRewriter);
-    addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
+    addGroupByAndRollup(groupBy, query.rollup.stream().map(f -> queryRewriter.rollup(f.store(), f.name())).toList(), queryRewriter.usePartialRollupSyntax(), statement);
     addHavingConditions(statement, query.havingCriteriaDto);
     addLimit(query.limit, statement);
     return statement.toString();
@@ -120,7 +125,7 @@ public class SQLTranslator {
     }
   }
 
-  protected static void addWhereConditions(StringBuilder statement, DatabaseQuery query, Function<String, Field> fieldProvider, QueryRewriter queryRewriter) {
+  protected static void addWhereConditions(StringBuilder statement, DatabaseQuery query, Function<String, FieldWithStore> fieldProvider, QueryRewriter queryRewriter) {
     if (query.whereCriteriaDto != null) {
       String whereClause = toSql(fieldProvider, query.whereCriteriaDto, queryRewriter);
       if (whereClause != null) {
@@ -156,7 +161,7 @@ public class SQLTranslator {
     }
   }
 
-  public static String toSql(Field field, ConditionDto dto, QueryRewriter queryRewriter) {
+  public static String toSql(FieldWithStore field, ConditionDto dto, QueryRewriter queryRewriter) {
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
       Function<Object, String> sqlMapper = getQuoter(field);
       String formattedFieldName = queryRewriter.fieldName(field.name());
@@ -196,7 +201,7 @@ public class SQLTranslator {
     }
   }
 
-  public static String toSql(Function<String, Field> fieldProvider, CriteriaDto criteriaDto, QueryRewriter queryRewriter) {
+  public static String toSql(Function<String, FieldWithStore> fieldProvider, CriteriaDto criteriaDto, QueryRewriter queryRewriter) {
     if (criteriaDto.isWhereCriterion()) {
       return toSql(fieldProvider.apply(criteriaDto.field), criteriaDto.condition, queryRewriter);
     } else if (criteriaDto.isHavingCriterion()) {
@@ -221,7 +226,7 @@ public class SQLTranslator {
     }
   }
 
-  public static Function<Object, String> getQuoter(Field field) {
+  public static Function<Object, String> getQuoter(FieldWithStore field) {
     if (Number.class.isAssignableFrom(field.type())
             || field.type().equals(double.class)
             || field.type().equals(int.class)
@@ -240,7 +245,7 @@ public class SQLTranslator {
 
   protected static void addHavingConditions(StringBuilder statement, CriteriaDto havingCriteriaDto) {
     if (havingCriteriaDto != null) {
-      String havingClause = toSql(name -> new Field(name, double.class), havingCriteriaDto, MeasureUtils.BASIC);
+      String havingClause = toSql(name -> new FieldWithStore(null, name, double.class), havingCriteriaDto, MeasureUtils.BASIC);
       if (havingClause != null) {
         statement
                 .append(" having ")

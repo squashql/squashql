@@ -17,8 +17,8 @@ public interface QueryRewriter {
    * @param select name of the column
    * @return the customized argument
    */
-  default String select(String select) {
-    return select;
+  default String select(String table, String select) {
+    return table == null ? fieldName(select) : tableName(table) + "." + fieldName(select);
   }
 
   /**
@@ -27,8 +27,8 @@ public interface QueryRewriter {
    * @param rollup name of the column in the rollup
    * @return the customized argument
    */
-  default String rollup(String rollup) {
-    return rollup;
+  default String rollup(String table, String rollup) {
+    return table == null ? fieldName(rollup) : tableName(table) + "." + fieldName(rollup);
   }
 
   default String measureAlias(String alias) {

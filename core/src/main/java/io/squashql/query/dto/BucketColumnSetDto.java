@@ -1,13 +1,16 @@
 package io.squashql.query.dto;
 
+import io.squashql.query.ColumnSet;
+import io.squashql.query.ColumnSetKey;
+import io.squashql.store.FieldWithStore;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import io.squashql.query.ColumnSet;
-import io.squashql.query.ColumnSetKey;
-import io.squashql.store.Field;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @ToString
 @EqualsAndHashCode
@@ -36,8 +39,8 @@ public class BucketColumnSetDto implements ColumnSet {
   }
 
   @Override
-  public List<Field> getNewColumns() {
-    return List.of(new Field(this.name, String.class), new Field(this.field, String.class));
+  public List<FieldWithStore> getNewColumns() {
+    return List.of(new FieldWithStore(null, this.name, String.class), new FieldWithStore(null, this.field, String.class));
   }
 
   @Override

@@ -2,7 +2,7 @@ package io.squashql.query.database;
 
 import io.squashql.query.Table;
 import io.squashql.store.Datastore;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 
 import java.util.List;
 import java.util.function.Function;
@@ -18,7 +18,7 @@ public interface QueryEngine<T extends Datastore> {
 
   T datastore();
 
-  Function<String, Field> getFieldSupplier();
+  Function<String, FieldWithStore> getFieldSupplier();
 
   /**
    * Returns the list of supported aggregation functions by the underlying database.

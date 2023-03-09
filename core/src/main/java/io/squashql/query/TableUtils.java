@@ -2,11 +2,13 @@ package io.squashql.query;
 
 import com.google.common.base.Suppliers;
 import io.squashql.query.database.QueryEngine;
+import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.NullAndTotalComparator;
 
@@ -113,11 +115,18 @@ public class TableUtils {
   /**
    * Selects and reorder the columns to match the selection and order in the query.
    */
-  public static ColumnarTable selectAndOrderColumns(ColumnarTable table, QueryDto queryDto) {
+  public static ColumnarTable selectAndOrderColumns(ColumnarTable table,
+                                                    QueryDto queryDto,
+                                                    Function<String, FieldWithStore> fieldSupplier,
+                                                    QueryRewriter queryRewriter) {
     List<String> finalColumns = new ArrayList<>();
     queryDto.columnSets.values()
-            .forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
+            .forEach(cs -> finalColumns.addAll(cs.getNewColumns()
+                    .stream()
+                    .map(FieldWithStore::getFullName)
+                    .toList()));
     finalColumns.addAll(queryDto.columns);
+//    List<String> l = finalColumns.stream().map(f -> f.name()).toList(); //FIXME add comment to explain why we take the name only
     return selectAndOrderColumns(table, finalColumns, queryDto.measures);
   }
 

@@ -4,7 +4,7 @@ import io.squashql.query.*;
 import io.squashql.query.context.ContextValue;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -14,11 +14,11 @@ import java.util.function.Function;
 
 public class TestDatabaseQueryCreation {
 
-  private final Function<String, Field> fieldSupplier = Mockito.mock(Function.class);
+  private final Function<String, FieldWithStore> fieldSupplier = Mockito.mock(Function.class);
 
   @Test
   void testNoTable() {
-    Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(new QueryDto(), this.fieldSupplier), -1))
+    Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(new QueryDto(), this.fieldSupplier), this.fieldSupplier, -1))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("table or sub-query was expected");
   }
@@ -29,7 +29,7 @@ public class TestDatabaseQueryCreation {
     QueryDto subQuery = new QueryDto().table(subSubQuery);
     QueryDto queryDto = new QueryDto().table(subQuery);
 
-    Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier), -1))
+    Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier), this.fieldSupplier, -1))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("not supported");
   }
@@ -40,7 +40,7 @@ public class TestDatabaseQueryCreation {
             .withColumnSet(ColumnSetKey.BUCKET, new BucketColumnSetDto("a", "b"));
     QueryDto queryDto = new QueryDto().table(subQuery);
 
-    Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier), -1))
+    Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier), this.fieldSupplier, -1))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("column sets are not expected");
   }
@@ -51,7 +51,7 @@ public class TestDatabaseQueryCreation {
     subQuery.context("any", Mockito.mock(ContextValue.class));
     QueryDto queryDto = new QueryDto().table(subQuery);
 
-    Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier), -1))
+    Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier), this.fieldSupplier, -1))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("context values are not expected");
   }
@@ -62,7 +62,7 @@ public class TestDatabaseQueryCreation {
             .withMeasure(new ComparisonMeasureReferencePosition("alias", ComparisonMethod.DIVIDE, Mockito.mock(Measure.class), Collections.emptyMap(), ColumnSetKey.BUCKET));
     QueryDto queryDto = new QueryDto().table(subQuery);
 
-    Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier), -1))
+    Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier), this.fieldSupplier, -1))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Only AggregatedMeasure, ExpressionMeasure or BinaryOperationMeasure can be used in a sub-query");
   }

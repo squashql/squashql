@@ -8,7 +8,7 @@ import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.monitoring.QueryWatch;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import io.squashql.table.MergeTables;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
@@ -77,7 +77,7 @@ public class QueryExecutor {
     queryWatch.stop(QueryWatch.PREPARE_RESOLVE_MEASURES);
 
     queryWatch.start(QueryWatch.EXECUTE_PREFETCH_PLAN);
-    Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
+    Function<String, FieldWithStore> fieldSupplier = this.queryEngine.getFieldSupplier();
     QueryScope queryScope = createQueryScope(query, fieldSupplier);
     Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> dependencyGraph = computeDependencyGraph(query, queryScope, fieldSupplier);
     // Compute what needs to be prefetched
@@ -86,7 +86,7 @@ public class QueryExecutor {
     ExecutionPlan<QueryPlanNodeKey, Void> prefetchingPlan = new ExecutionPlan<>(dependencyGraph.getOne(), (node, v) -> {
       QueryScope scope = node.queryScope;
       int limit = scope.equals(queryScope) ? queryLimit : queryLimit + 1; // limit + 1 to detect when results can be wrong
-      prefetchQueryByQueryScope.computeIfAbsent(scope, k -> Queries.queryScopeToDatabaseQuery(scope, limit));
+      prefetchQueryByQueryScope.computeIfAbsent(scope, k -> Queries.queryScopeToDatabaseQuery(scope, fieldSupplier, limit));
       measuresByQueryScope.computeIfAbsent(scope, k -> new HashSet<>()).add(node.measure);
     });
     prefetchingPlan.execute(null);
@@ -97,7 +97,7 @@ public class QueryExecutor {
     for (QueryScope scope : prefetchQueryByQueryScope.keySet()) {
       DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
       Set<Measure> measures = measuresByQueryScope.get(scope);
-      QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(scope, prefetchQuery, user, fieldSupplier);
+      QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(scope, prefetchQuery, user);
       QueryCache queryCache = getQueryCache((QueryCacheContextValue) query.context.getOrDefault(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE)));
 
       // Finish to prepare the query
@@ -153,7 +153,7 @@ public class QueryExecutor {
     queryWatch.start(QueryWatch.ORDER);
 
     Table result = tableByScope.get(queryScope);
-    result = TableUtils.selectAndOrderColumns((ColumnarTable) result, query);
+    result = TableUtils.selectAndOrderColumns((ColumnarTable) result, query, this.queryEngine.getFieldSupplier(), this.queryEngine.queryRewriter());
     if (replaceTotalCellsAndOrderRows) {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result, !query.rollupColumns.isEmpty());
       result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
@@ -173,7 +173,7 @@ public class QueryExecutor {
   private static Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> computeDependencyGraph(
           QueryDto query,
           QueryScope queryScope,
-          Function<String, Field> fieldSupplier) {
+          Function<String, FieldWithStore> fieldSupplier) {
     // This graph is used to keep track of dependency between execution plans. An Execution Plan is bound to a given scope.
     DependencyGraph<QueryScope> executionGraph = new DependencyGraph<>();
 
@@ -201,21 +201,20 @@ public class QueryExecutor {
             executionGraph);
   }
 
-  public static QueryScope createQueryScope(QueryDto query, Function<String, Field> fieldSupplier) {
+  public static QueryScope createQueryScope(QueryDto query, Function<String, FieldWithStore> fieldSupplier) {
     // If column set, it changes the scope
-    List<Field> columns = Stream.concat(
+    List<FieldWithStore> columns = Stream.concat(
             query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
             query.columns.stream()).map(fieldSupplier).toList();
-    List<Field> rollupColumns = query.rollupColumns.stream().map(fieldSupplier).toList();
+    List<FieldWithStore> rollupColumns = query.rollupColumns.stream().map(fieldSupplier).toList();
     return new QueryScope(query.table, query.subQuery, columns, query.whereCriteriaDto, query.havingCriteriaDto, rollupColumns);
   }
 
   private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(
           QueryScope queryScope,
           DatabaseQuery prefetchQuery,
-          SquashQLUser user,
-          Function<String, Field> fieldSupplier) {
-    Set<Field> fields = prefetchQuery.select.stream().map(fieldSupplier).collect(Collectors.toSet());
+          SquashQLUser user) {
+    Set<FieldWithStore> fields = new HashSet<>(prefetchQuery.select);
     if (queryScope.tableDto != null) {
       return new TableScope(queryScope.tableDto, fields, queryScope.whereCriteriaDto, queryScope.havingCriteriaDto, queryScope.rollupColumns, user, prefetchQuery.limit);
     } else {
@@ -225,10 +224,10 @@ public class QueryExecutor {
 
   public record QueryScope(TableDto tableDto,
                            QueryDto subQuery,
-                           List<Field> columns,
+                           List<FieldWithStore> columns,
                            CriteriaDto whereCriteriaDto,
                            CriteriaDto havingCriteriaDto,
-                           List<Field> rollupColumns) {
+                           List<FieldWithStore> rollupColumns) {
   }
 
   public record QueryPlanNodeKey(QueryScope queryScope, Measure measure) {
@@ -270,16 +269,16 @@ public class QueryExecutor {
     return TableUtils.replaceTotalCellValues(table, true);
   }
 
-  public static Function<String, Field> withFallback(Function<String, Field> fieldProvider, Class<?> fallbackType) {
+  public static Function<String, FieldWithStore> withFallback(Function<String, FieldWithStore> fieldProvider, Class<?> fallbackType) {
     return fieldName -> {
-      Field f;
+      FieldWithStore f;
       try {
         f = fieldProvider.apply(fieldName);
       } catch (Exception e) {
         // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
         // contains only "raw" fields, it will throw an exception.
         log.info("Cannot find field " + fieldName + " with default field provider, fallback to default type: " + fallbackType.getSimpleName());
-        f = new Field(fieldName, Number.class);
+        f = new FieldWithStore(null, fieldName, Number.class);
       }
       return f;
     };

@@ -8,6 +8,7 @@ import com.github.benmanes.caffeine.cache.stats.ConcurrentStatsCounter;
 import com.github.benmanes.caffeine.cache.stats.StatsCounter;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -44,13 +45,13 @@ public class CaffeineQueryCache implements QueryCache {
 
   @Override
   public ColumnarTable createRawResult(PrefetchQueryScope scope) {
-    Set<Field> columns = scope.columns();
-    List<Header> headers = new ArrayList<>(columns.stream().map(column -> new Header(column, false)).toList());
+    Set<FieldWithStore> columns = scope.columns();
+    List<Header> headers = new ArrayList<>(columns.stream().map(column -> new Header(new Field(column.name(), column.type()), false)).toList());
     headers.add(new Header(new Field(CountMeasure.ALIAS, long.class), true));
 
     List<List<Object>> values = new ArrayList<>();
     Table table = this.results.getIfPresent(scope);
-    for (Field f : columns) {
+    for (FieldWithStore f : columns) {
       values.add(table.getColumnValues(f.name()));
     }
     values.add(table.getAggregateValues(CountMeasure.INSTANCE));

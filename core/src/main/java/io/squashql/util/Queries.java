@@ -3,9 +3,10 @@ package io.squashql.util;
 import io.squashql.query.*;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.dto.*;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 
 import java.util.*;
+import java.util.function.Function;
 
 import static io.squashql.query.dto.OrderKeywordDto.DESC;
 
@@ -45,26 +46,26 @@ public final class Queries {
     return res;
   }
 
-  public static DatabaseQuery queryScopeToDatabaseQuery(QueryExecutor.QueryScope queryScope, int limit) {
-    Set<String> selects = new HashSet<>();
-    queryScope.columns().stream().map(Field::name).forEach(selects::add);
+  public static DatabaseQuery queryScopeToDatabaseQuery(QueryExecutor.QueryScope queryScope, Function<String, FieldWithStore> fieldSupplier, int limit) {
+    Set<FieldWithStore> selects = new HashSet<>();
+    queryScope.columns().forEach(selects::add);
     DatabaseQuery prefetchQuery = new DatabaseQuery();
     if (queryScope.tableDto() != null) {
       prefetchQuery.table(queryScope.tableDto());
     } else if (queryScope.subQuery() != null) {
-      prefetchQuery.subQuery(toSubDatabaseQuery(queryScope.subQuery()));
+      prefetchQuery.subQuery(toSubDatabaseQuery(queryScope.subQuery(), fieldSupplier));
     } else {
       throw new IllegalArgumentException("A table or sub-query was expected in " + queryScope);
     }
     prefetchQuery.whereCriteriaDto = queryScope.whereCriteriaDto();
     prefetchQuery.havingCriteriaDto = queryScope.havingCriteriaDto();
     selects.forEach(prefetchQuery::withSelect);
-    Optional.ofNullable(queryScope.rollupColumns()).ifPresent(r -> r.stream().map(Field::name).forEach(prefetchQuery::withRollup));
+    Optional.ofNullable(queryScope.rollupColumns()).ifPresent(r -> r.forEach(prefetchQuery::withRollup));
     prefetchQuery.limit(limit);
     return prefetchQuery;
   }
 
-  public static DatabaseQuery toSubDatabaseQuery(QueryDto query) {
+  public static DatabaseQuery toSubDatabaseQuery(QueryDto query, Function<String, FieldWithStore> fieldSupplier) {
     if (query.subQuery != null) {
       throw new IllegalArgumentException("sub-query in a sub-query is not supported");
     }
@@ -94,7 +95,7 @@ public final class Queries {
     DatabaseQuery prefetchQuery = new DatabaseQuery().table(query.table);
     prefetchQuery.whereCriteriaDto = query.whereCriteriaDto;
     prefetchQuery.havingCriteriaDto = query.havingCriteriaDto;
-    cols.forEach(prefetchQuery::withSelect);
+    cols.stream().map(fieldSupplier).forEach(prefetchQuery::withSelect);
     query.measures.forEach(prefetchQuery::withMeasure);
     return prefetchQuery;
   }

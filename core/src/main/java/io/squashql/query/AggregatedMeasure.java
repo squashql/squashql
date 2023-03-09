@@ -5,6 +5,7 @@ import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.CriteriaDto;
 import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import lombok.*;
 
 import java.util.function.Function;
@@ -34,7 +35,7 @@ public class AggregatedMeasure implements BasicMeasure {
   }
 
   @Override
-  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
+  public String sqlExpression(Function<String, FieldWithStore> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     String sql;
     if (this.criteria != null) {
       String conditionSt = SQLTranslator.toSql(QueryExecutor.withFallback(fieldProvider, Number.class), this.criteria, queryRewriter);

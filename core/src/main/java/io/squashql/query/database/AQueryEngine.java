@@ -3,6 +3,7 @@ package io.squashql.query.database;
 import io.squashql.query.*;
 import io.squashql.store.Datastore;
 import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import io.squashql.store.Store;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
@@ -21,7 +22,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   public final T datastore;
 
-  public final Function<String, Field> fieldSupplier;
+  public final Function<String, FieldWithStore> fieldSupplier;
 
   protected final QueryRewriter queryRewriter;
 
@@ -36,25 +37,52 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     return this.queryRewriter;
   }
 
-  protected Function<String, Field> createFieldSupplier() {
+  protected Function<String, FieldWithStore> createFieldSupplier() {
     return fieldName -> {
-      for (Store store : this.datastore.storesByName().values()) {
-        for (Field field : store.fields()) {
-          if (field.name().equals(fieldName)) {
-            return field;
+      String[] split = fieldName.split("\\.");
+      if (split.length > 1) {
+        String tableName = split[0];
+        String fieldNameInTable = split[1];
+        Store store = this.datastore.storesByName().get(tableName);
+        if (store != null) {
+          for (Field field : store.fields()) {
+            if (field.name().equals(fieldNameInTable)) {
+              return new FieldWithStore(store.name(), field.name(), field.type());
+            }
           }
         }
+      } else {
+//        String table = null;
+//        Field f = null;
+        for (Store store : this.datastore.storesByName().values()) {
+          for (Field field : store.fields()) {
+            if (field.name().equals(fieldName)) {
+              return new FieldWithStore(null, field.name(), field.type());
+
+//              if (table == null) {
+//                table = store.name();
+//                f = field;
+//              } else {
+//                throw new RuntimeException(String.format("ambiguous field '%s'. It exists in table '%s' and '%s'", fieldName, table, store.name()));
+//              }
+            }
+          }
+        }
+
+//        if (f != null) {
+//          return new FieldWithStore(table, f.name(), f.type());
+//        }
       }
 
       if (fieldName.equals(CountMeasure.INSTANCE.alias())) {
-        return new Field(CountMeasure.INSTANCE.alias(), long.class);
+        return new FieldWithStore(null, CountMeasure.INSTANCE.alias(), long.class);
       }
       throw new IllegalArgumentException("Cannot find field with name " + fieldName);
     };
   }
 
   @Override
-  public Function<String, Field> getFieldSupplier() {
+  public Function<String, FieldWithStore> getFieldSupplier() {
     return this.fieldSupplier;
   }
 
@@ -83,7 +111,8 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   }
 
   protected String createSqlStatement(DatabaseQuery query) {
-    return SQLTranslator.translate(query, QueryExecutor.withFallback(this.fieldSupplier, String.class),
+    return SQLTranslator.translate(query,
+            QueryExecutor.withFallback(this.fieldSupplier, String.class),
             this.queryRewriter);
   }
 
@@ -154,9 +183,9 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
           BiFunction<Integer, Record, Object> recordToFieldValue,
           QueryRewriter queryRewriter) {
     List<Header> headers = new ArrayList<>();
-    List<String> fieldNames = new ArrayList<>(query.select);
+    List<String> fieldNames = new ArrayList<>(query.select.stream().map(FieldWithStore::getFullName).toList());
     if (queryRewriter.useGroupingFunction()) {
-      query.rollup.forEach(r -> fieldNames.add(queryRewriter.groupingAlias(r)));
+      query.rollup.forEach(r -> fieldNames.add(queryRewriter.groupingAlias(r.getFullName())));
     }
     query.measures.forEach(m -> fieldNames.add(m.alias()));
     for (int i = 0; i < columns.size(); i++) {

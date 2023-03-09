@@ -18,16 +18,6 @@ public class DefaultQueryRewriter implements QueryRewriter {
   }
 
   @Override
-  public String select(String select) {
-    return SqlUtils.backtickEscape(select);
-  }
-
-  @Override
-  public String rollup(String rollup) {
-    return SqlUtils.backtickEscape(rollup);
-  }
-
-  @Override
   public String measureAlias(String alias) {
     return SqlUtils.backtickEscape(alias);
   }

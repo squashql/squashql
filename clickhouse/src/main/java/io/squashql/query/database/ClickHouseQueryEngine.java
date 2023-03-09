@@ -8,9 +8,9 @@ import io.squashql.query.Header;
 import io.squashql.query.RowTable;
 import io.squashql.query.Table;
 import io.squashql.store.Field;
-import java.util.HashSet;
 import org.eclipse.collections.api.tuple.Pair;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -97,16 +97,6 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
     @Override
     public String fieldName(String field) {
       return SqlUtils.backtickEscape(field);
-    }
-
-    @Override
-    public String select(String select) {
-      return SqlUtils.backtickEscape(select);
-    }
-
-    @Override
-    public String rollup(String rollup) {
-      return SqlUtils.backtickEscape(rollup);
     }
 
     @Override

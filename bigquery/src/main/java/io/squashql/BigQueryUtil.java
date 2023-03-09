@@ -3,7 +3,6 @@ package io.squashql;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.StandardSQLTypeName;
-import io.squashql.store.Field;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -61,11 +60,10 @@ public final class BigQueryUtil {
     return type;
   }
 
-  public static Object getNullValue(Field field) {
-    Class<?> clazz = field.type();
-    if (clazz.equals(Integer.class) || clazz.equals(int.class)) {
+  public static Object getNullValue(Class<?> fieldType) {
+    if (fieldType.equals(Integer.class) || fieldType.equals(int.class)) {
       return INTEGER_NULL_VALUE;
-    } else if (clazz.equals(Long.class) || clazz.equals(long.class)) {
+    } else if (fieldType.equals(Long.class) || fieldType.equals(long.class)) {
       return LONG_NULL_VALUE;
     } else {
       return OBJECT_NULL_VALUE; // fallback

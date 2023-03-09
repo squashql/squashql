@@ -140,11 +140,6 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
     }
 
     @Override
-    public String select(String select) {
-      return SqlUtils.doubleQuoteEscape(select);
-    }
-
-    @Override
     public String fieldName(String field) {
       return SqlUtils.doubleQuoteEscape(field);
     }
@@ -162,11 +157,6 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
     @Override
     public boolean useGroupingFunction() {
       return true;
-    }
-
-    @Override
-    public String rollup(String rollup) {
-      return SqlUtils.doubleQuoteEscape(rollup);
     }
 
     @Override

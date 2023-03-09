@@ -9,6 +9,7 @@ import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.Table;
 import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -23,15 +24,22 @@ import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 public class TestBigQueryEngine {
 
+  final Function<String, FieldWithStore> fieldSupplier = name -> switch (name) {
+    case SCENARIO_FIELD_NAME -> new FieldWithStore("baseStore", name, String.class);
+    case "category" -> new FieldWithStore("baseStore", name, long.class);
+    case "price" -> new FieldWithStore("baseStore", name, double.class);
+    default -> new FieldWithStore("baseStore", name, String.class);
+  };
+
   @Test
   void testSqlGenerationWithRollup() {
     String category = "category";
     String scenario = SCENARIO_FIELD_NAME;
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect(scenario)
-            .withSelect(category)
-            .withRollup(scenario)
-            .withRollup(category)
+            .withSelect(this.fieldSupplier.apply(scenario))
+            .withSelect(this.fieldSupplier.apply(category))
+            .withRollup(this.fieldSupplier.apply(scenario))
+            .withRollup(this.fieldSupplier.apply(category))
             .aggregatedMeasure("price.sum", "price", "sum")
             .aggregatedMeasure("price.avg", "price", "avg")
             .table("baseStore");
@@ -39,39 +47,34 @@ public class TestBigQueryEngine {
     BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
     BigQueryEngine bqe = new BigQueryEngine(datastore) {
       @Override
-      protected Function<String, Field> createFieldSupplier() {
-        return name -> switch (name) {
-          case SCENARIO_FIELD_NAME -> new Field(name, String.class);
-          case "category" -> new Field(name, long.class);
-          case "price" -> new Field(name, double.class);
-          default -> throw new IllegalStateException("Unexpected value: " + name);
-        };
+      protected Function<String, FieldWithStore> createFieldSupplier() {
+        return this.fieldSupplier;
       }
     };
     String sqlStatement = bqe.createSqlStatement(query);
     Assertions.assertThat(sqlStatement)
-            .isEqualTo("select coalesce(`scenario`, '___null___'), coalesce(`category`, " + BigQueryUtil.getNullValue(new Field(category, long.class)) + ")," +
+            .isEqualTo("select coalesce(`scenario`, '___null___'), coalesce(`category`, " + BigQueryUtil.getNullValue(long.class) + ")," +
                     " sum(`price`) as `price.sum`, avg(`price`) as `price.avg`" +
                     " from `myProjectId.myDatasetName.baseStore`" +
-                    " group by rollup(coalesce(`scenario`, '___null___'), coalesce(`category`, " + BigQueryUtil.getNullValue(new Field(category, long.class)) + "))");
+                    " group by rollup(coalesce(`scenario`, '___null___'), coalesce(`category`, " + BigQueryUtil.getNullValue(long.class) + "))");
 
   }
 
   @Test
   void testSqlGenerationWithPartialRollup() {
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect("col1")
-            .withSelect("col2")
-            .withSelect("col3")
-            .withRollup("col2")
+            .withSelect(this.fieldSupplier.apply("col1"))
+            .withSelect(this.fieldSupplier.apply("col2"))
+            .withSelect(this.fieldSupplier.apply("col3"))
+            .withRollup(this.fieldSupplier.apply("col2"))
             .aggregatedMeasure("price.sum", "price", "sum")
             .table("baseStore");
 
     BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
     BigQueryEngine bqe = new BigQueryEngine(datastore) {
       @Override
-      protected Function<String, Field> createFieldSupplier() {
-        return name -> new Field(name, String.class);
+      protected Function<String, FieldWithStore> createFieldSupplier() {
+        return name -> new FieldWithStore("baseStore", name, String.class);
       }
     };
     String sqlStatement = bqe.createSqlStatement(query);
@@ -83,11 +86,11 @@ public class TestBigQueryEngine {
                     " group by rollup(coalesce(`col1`, '___null___'), coalesce(`col3`, '___null___'), coalesce(`col2`, '___null___'))");
 
     query = new DatabaseQuery()
-            .withSelect("col1")
-            .withSelect("col2")
-            .withSelect("col3")
-            .withRollup("col3")
-            .withRollup("col2")
+            .withSelect(this.fieldSupplier.apply("col1"))
+            .withSelect(this.fieldSupplier.apply("col2"))
+            .withSelect(this.fieldSupplier.apply("col3"))
+            .withRollup(this.fieldSupplier.apply("col3"))
+            .withRollup(this.fieldSupplier.apply("col2"))
             .aggregatedMeasure("price.sum", "price", "sum")
             .table("baseStore");
     sqlStatement = bqe.createSqlStatement(query);
@@ -104,17 +107,17 @@ public class TestBigQueryEngine {
     String category = "category";
     String scenario = SCENARIO_FIELD_NAME;
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect(scenario)
-            .withSelect(category)
-            .withRollup(category)
+            .withSelect(this.fieldSupplier.apply(scenario))
+            .withSelect(this.fieldSupplier.apply(category))
+            .withRollup(this.fieldSupplier.apply(category))
             .aggregatedMeasure("price.sum", "price", "sum")
             .table("baseStore");
 
     BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
     BigQueryEngine bqe = new BigQueryEngine(datastore) {
       @Override
-      protected Function<String, Field> createFieldSupplier() {
-        return name -> new Field(name, String.class);
+      protected Function<String, FieldWithStore> createFieldSupplier() {
+        return name -> new FieldWithStore("baseStore", name, String.class);
       }
     };
     String sqlStatement = bqe.createSqlStatement(query);

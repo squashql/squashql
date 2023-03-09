@@ -1,8 +1,8 @@
 package io.squashql.query;
 
-import lombok.*;
 import io.squashql.query.database.QueryRewriter;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
+import lombok.*;
 
 import java.util.function.Function;
 
@@ -24,7 +24,7 @@ public abstract class ConstantMeasure<T> implements Measure {
   }
 
   @Override
-  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
+  public String sqlExpression(Function<String, FieldWithStore> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     throw new IllegalStateException();
   }
 

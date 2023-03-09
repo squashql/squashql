@@ -5,6 +5,7 @@ import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import io.squashql.query.comp.BinaryOperations;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,10 +18,10 @@ import static io.squashql.query.ColumnSetKey.BUCKET;
 
 public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>, MeasureVisitor<Void> {
 
-  private final Function<String, Field> fieldSupplier;
+  private final Function<String, FieldWithStore> fieldSupplier;
   private ExecutionContext executionContext;
 
-  public Evaluator(Function<String, Field> fieldSupplier) {
+  public Evaluator(Function<String, FieldWithStore> fieldSupplier) {
     this.fieldSupplier = fieldSupplier;
   }
 

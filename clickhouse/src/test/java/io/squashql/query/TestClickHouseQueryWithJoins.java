@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 /**
  * Do not edit this class, it has been generated automatically by {@link ClickHouseClassTemplateGenerator}.
  */
-public class TestClickHouse{{classSuffix}} extends {{parentTestClass}} {
+public class TestClickHouseQueryWithJoins extends ATestQueryWithJoins {
 
   public org.testcontainers.containers.GenericContainer container = TestUtils.createClickHouseContainer();
 
@@ -48,5 +48,10 @@ public class TestClickHouse{{classSuffix}} extends {{parentTestClass}} {
   @Override
   protected TransactionManager createTransactionManager() {
     return new ClickHouseTransactionManager(((ClickHouseDatastore) this.datastore).dataSource);
+  }
+
+  @Override
+  protected String ambiguousNameMessage() {
+    return "Ambiguous column 'name'";
   }
 }
