@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static io.squashql.query.database.SQLTranslator.checkRollupIsValid;
 
@@ -103,6 +104,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     boolean isPartialRollup = !Set.copyOf(query.select).equals(Set.copyOf(query.rollup));
     List<FieldWithStore> missingColumnsInRollup = new ArrayList<>(query.select);
     missingColumnsInRollup.removeAll(query.rollup);
+    Set<String> missingColumnsInRollupSet = missingColumnsInRollup.stream().map(FieldWithStore::getFullName).collect(Collectors.toSet());
 
     MutableIntSet rowIndicesToRemove = new IntHashSet();
     for (int i = 0; i < input.headers().size(); i++) {
@@ -114,7 +116,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
           Object value = columnValues.get(rowIndex);
           if (value == null) {
             baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
-            if (isPartialRollup && missingColumnsInRollup.contains(field.name())) {
+            if (isPartialRollup && missingColumnsInRollupSet.contains(field.name())) {
               // Partial rollup not supported https://issuetracker.google.com/issues/35905909, we let bigquery compute
               // all totals, and we remove here the extra rows.
               rowIndicesToRemove.add(rowIndex);

@@ -153,7 +153,7 @@ public class QueryExecutor {
     queryWatch.start(QueryWatch.ORDER);
 
     Table result = tableByScope.get(queryScope);
-    result = TableUtils.selectAndOrderColumns((ColumnarTable) result, query, this.queryEngine.getFieldSupplier(), this.queryEngine.queryRewriter());
+    result = TableUtils.selectAndOrderColumns((ColumnarTable) result, query);
     if (replaceTotalCellsAndOrderRows) {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result, !query.rollupColumns.isEmpty());
       result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());

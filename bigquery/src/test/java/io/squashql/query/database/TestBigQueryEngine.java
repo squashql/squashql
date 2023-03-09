@@ -25,7 +25,6 @@ import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 public class TestBigQueryEngine {
 
   final Function<String, FieldWithStore> fieldSupplier = name -> switch (name) {
-    case SCENARIO_FIELD_NAME -> new FieldWithStore("baseStore", name, String.class);
     case "category" -> new FieldWithStore("baseStore", name, long.class);
     case "price" -> new FieldWithStore("baseStore", name, double.class);
     default -> new FieldWithStore("baseStore", name, String.class);
@@ -48,15 +47,15 @@ public class TestBigQueryEngine {
     BigQueryEngine bqe = new BigQueryEngine(datastore) {
       @Override
       protected Function<String, FieldWithStore> createFieldSupplier() {
-        return this.fieldSupplier;
+        return TestBigQueryEngine.this.fieldSupplier;
       }
     };
     String sqlStatement = bqe.createSqlStatement(query);
     Assertions.assertThat(sqlStatement)
-            .isEqualTo("select coalesce(`scenario`, '___null___'), coalesce(`category`, " + BigQueryUtil.getNullValue(long.class) + ")," +
+            .isEqualTo("select coalesce(`myProjectId.myDatasetName.baseStore`.`scenario`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`category`, " + BigQueryUtil.getNullValue(long.class) + ")," +
                     " sum(`price`) as `price.sum`, avg(`price`) as `price.avg`" +
                     " from `myProjectId.myDatasetName.baseStore`" +
-                    " group by rollup(coalesce(`scenario`, '___null___'), coalesce(`category`, " + BigQueryUtil.getNullValue(long.class) + "))");
+                    " group by rollup(coalesce(`myProjectId.myDatasetName.baseStore`.`scenario`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`category`, " + BigQueryUtil.getNullValue(long.class) + "))");
 
   }
 
@@ -80,10 +79,10 @@ public class TestBigQueryEngine {
     String sqlStatement = bqe.createSqlStatement(query);
     // The order in the rollup is important to fetch the right (sub)totals
     Assertions.assertThat(sqlStatement)
-            .isEqualTo("select coalesce(`col1`, '___null___'), coalesce(`col2`, '___null___'), coalesce(`col3`, '___null___')," +
+            .isEqualTo("select coalesce(`myProjectId.myDatasetName.baseStore`.`col1`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`col2`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`col3`, '___null___')," +
                     " sum(`price`) as `price.sum`" +
                     " from `myProjectId.myDatasetName.baseStore`" +
-                    " group by rollup(coalesce(`col1`, '___null___'), coalesce(`col3`, '___null___'), coalesce(`col2`, '___null___'))");
+                    " group by rollup(coalesce(`myProjectId.myDatasetName.baseStore`.`col1`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`col3`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`col2`, '___null___'))");
 
     query = new DatabaseQuery()
             .withSelect(this.fieldSupplier.apply("col1"))
@@ -96,10 +95,10 @@ public class TestBigQueryEngine {
     sqlStatement = bqe.createSqlStatement(query);
     // The order in the rollup is important to fetch the right (sub)totals
     Assertions.assertThat(sqlStatement)
-            .isEqualTo("select coalesce(`col1`, '___null___'), coalesce(`col2`, '___null___'), coalesce(`col3`, '___null___')," +
+            .isEqualTo("select coalesce(`myProjectId.myDatasetName.baseStore`.`col1`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`col2`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`col3`, '___null___')," +
                     " sum(`price`) as `price.sum`" +
                     " from `myProjectId.myDatasetName.baseStore`" +
-                    " group by rollup(coalesce(`col1`, '___null___'), coalesce(`col3`, '___null___'), coalesce(`col2`, '___null___'))");
+                    " group by rollup(coalesce(`myProjectId.myDatasetName.baseStore`.`col1`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`col3`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`col2`, '___null___'))");
   }
 
   @Test
@@ -123,10 +122,10 @@ public class TestBigQueryEngine {
     String sqlStatement = bqe.createSqlStatement(query);
     // Statement is the same as full rollup because BQ does not support partial rollup
     Assertions.assertThat(sqlStatement)
-            .isEqualTo("select coalesce(`scenario`, '___null___'), coalesce(`category`, '___null___')," +
+            .isEqualTo("select coalesce(`myProjectId.myDatasetName.baseStore`.`scenario`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`category`, '___null___')," +
                     " sum(`price`) as `price.sum`" +
                     " from `myProjectId.myDatasetName.baseStore`" +
-                    " group by rollup(coalesce(`scenario`, '___null___'), coalesce(`category`, '___null___'))");
+                    " group by rollup(coalesce(`myProjectId.myDatasetName.baseStore`.`scenario`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`category`, '___null___'))");
 
     List<List<Object>> values = List.of(
             new ArrayList<>(Arrays.asList(null, "main", "main", "main", "1", "1", "1")),
@@ -134,8 +133,8 @@ public class TestBigQueryEngine {
             new ArrayList<>(Arrays.asList(4, 2, 1, 1, 2, 1, 1)));
 
     ColumnarTable input = new ColumnarTable(
-            List.of(new Header(new Field(scenario, String.class), false),
-                    new Header(new Field(category, String.class), false),
+            List.of(new Header(new Field(this.fieldSupplier.apply(scenario).getFullName(), String.class), false),
+                    new Header(new Field(this.fieldSupplier.apply(category).getFullName(), String.class), false),
                     new Header(new Field("price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             values);

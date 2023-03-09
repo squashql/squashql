@@ -116,9 +116,7 @@ public class TableUtils {
    * Selects and reorder the columns to match the selection and order in the query.
    */
   public static ColumnarTable selectAndOrderColumns(ColumnarTable table,
-                                                    QueryDto queryDto,
-                                                    Function<String, FieldWithStore> fieldSupplier,
-                                                    QueryRewriter queryRewriter) {
+                                                    QueryDto queryDto) {
     List<String> finalColumns = new ArrayList<>();
     queryDto.columnSets.values()
             .forEach(cs -> finalColumns.addAll(cs.getNewColumns()
@@ -126,7 +124,6 @@ public class TableUtils {
                     .map(FieldWithStore::getFullName)
                     .toList()));
     finalColumns.addAll(queryDto.columns);
-//    List<String> l = finalColumns.stream().map(f -> f.name()).toList(); //FIXME add comment to explain why we take the name only
     return selectAndOrderColumns(table, finalColumns, queryDto.measures);
   }
 
