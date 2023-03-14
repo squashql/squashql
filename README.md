@@ -1,7 +1,5 @@
-# SquashQL 
-
-<p style="text-align: center;">
-  <img width="512" src="https://github.com/squashql/squashql/blob/main/documentation/assets/SQL_LightSquareName.svg">
+<p align="center">
+  <img width="300" src="./documentation/assets/SQL_LightSquareName.svg">
 </p>
 
 ![build](https://github.com/squashql/squashql/actions/workflows/ci.yml/badge.svg?branch=main)
