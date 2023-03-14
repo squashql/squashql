@@ -2,9 +2,15 @@
   <img width="300" src="./documentation/assets/SQL_LightSquareName.svg">
 </p>
 
-![build](https://github.com/squashql/squashql/actions/workflows/ci.yml/badge.svg?branch=main)
-![activity](https://img.shields.io/github/commit-activity/m/squashql/squashql/main)
-![license](https://img.shields.io/github/license/squashql/squashql)
+<p align="center">
+  <a href="https://github.com/squashql/squashql/actions">
+    <img src="https://github.com/squashql/squashql/actions/workflows/ci.yml/badge.svg?branch=main" alt="Github Actions Badge">
+  </a>
+  <a>
+    <img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/squashql/squashql">
+  </a>
+</p>
+
 ---
 
 SquashQL is an open-source SQL query engine specialized in what-if analysis, building multi-dimensional queries to help
