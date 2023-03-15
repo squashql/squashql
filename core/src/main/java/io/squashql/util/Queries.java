@@ -47,8 +47,7 @@ public final class Queries {
   }
 
   public static DatabaseQuery queryScopeToDatabaseQuery(QueryExecutor.QueryScope queryScope, Function<String, Field> fieldSupplier, int limit) {
-    Set<Field> selects = new HashSet<>();
-    queryScope.columns().forEach(selects::add);
+    Set<Field> selects = new HashSet<>(queryScope.columns());
     DatabaseQuery prefetchQuery = new DatabaseQuery();
     if (queryScope.tableDto() != null) {
       prefetchQuery.table(queryScope.tableDto());
@@ -70,8 +69,7 @@ public final class Queries {
       throw new IllegalArgumentException("sub-query in a sub-query is not supported");
     }
 
-    Set<String> cols = new HashSet<>();
-    query.columns.forEach(cols::add);
+    Set<String> cols = new HashSet<>(query.columns);
     if (query.columnSets != null && !query.columnSets.isEmpty()) {
       throw new IllegalArgumentException("column sets are not expected in sub query: " + query);
     }

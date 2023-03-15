@@ -35,13 +35,15 @@ public class AggregatedMeasure implements BasicMeasure {
 
   @Override
   public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
-    // FIXME field should belongs to the a table or subquery. Need to check?
     String sql;
     if (this.criteria != null) {
       String conditionSt = SQLTranslator.toSql(QueryExecutor.withFallback(fieldProvider, Number.class), this.criteria, queryRewriter);
       sql = this.aggregationFunction + "(case when " + conditionSt + " then " + queryRewriter.fieldName(this.field) + " end)";
+    } else if (this.field.equals("*")) {
+      sql = this.aggregationFunction + "(*)";
     } else {
-      sql = this.aggregationFunction + "(" + (this.field.equals("*") ? this.field : queryRewriter.fieldName(this.field)) + ")";
+      Field field = fieldProvider.apply(this.field);
+      sql = this.aggregationFunction + "(" + queryRewriter.select(field) + ")";
     }
     return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.alias) : sql;
   }

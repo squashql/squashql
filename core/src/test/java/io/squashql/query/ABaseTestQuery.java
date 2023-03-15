@@ -22,12 +22,14 @@ public abstract class ABaseTestQuery {
   @BeforeAll
   void setup() {
     this.datastore = createDatastore();
-    this.queryEngine = createQueryEngine(this.datastore);
-    this.executor = new QueryExecutor(this.queryEngine);
     this.tm = createTransactionManager();
     this.fieldsByStore = getFieldsByStore();
 
     createTables();
+    // Create the engine after the tables because some components (such as AQueryEngine#datastore.storesByName()) need
+    // to know the list of tables in advance.
+    this.queryEngine = createQueryEngine(this.datastore);
+    this.executor = new QueryExecutor(this.queryEngine);
     loadData();
     afterSetup();
   }

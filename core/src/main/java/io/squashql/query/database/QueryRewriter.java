@@ -20,7 +20,7 @@ public interface QueryRewriter {
    * @return the customized argument
    */
   default String select(Field f) {
-    return Field.buildFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
+    return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
   }
 
   /**
@@ -30,7 +30,7 @@ public interface QueryRewriter {
    * @return the customized argument
    */
   default String rollup(Field f) {
-    return Field.buildFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
+    return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
   }
 
   default String measureAlias(String alias) {
@@ -69,7 +69,7 @@ public interface QueryRewriter {
    * Returns the name of the column used for grouping(). If it is modified, please modify also
    * {@link SqlUtils#GROUPING_PATTERN}.
    */
-  default String groupingAlias(String field) {
-    return String.format("___grouping___%s___", field);
+  default String groupingAlias(String column) {
+    return String.format("___grouping___%s___", column);
   }
 }

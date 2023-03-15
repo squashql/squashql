@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
@@ -80,6 +81,26 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .where(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
             .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("p", "price"), sum("q", "quantity")))
             .rollup(SCENARIO_FIELD_NAME, "category")
+            .build();
+    Table result = this.executor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of(GRAND_TOTAL, GRAND_TOTAL, 15d, 33l),
+            List.of(MAIN_SCENARIO_NAME, TOTAL, 15d, 33l),
+            List.of(MAIN_SCENARIO_NAME, "cloth", 10d, 3l),
+            List.of(MAIN_SCENARIO_NAME, "drink", 2d, 10l),
+            List.of(MAIN_SCENARIO_NAME, "food", 3d, 20l));
+  }
+
+  /**
+   * Same as {@link #testQueryWildcardWithFullRollup()} but name of columns are explicit i.e. full name.
+   */
+  @Test
+  void testQueryWildcardWithFullRollupFullName() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME), eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
+            .select(List.of(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME), SqlUtils.getFieldFullName(this.storeName, "category")), List.of(sum("p", "price"), sum("q", "quantity")))
+            .rollup(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME), SqlUtils.getFieldFullName(this.storeName, "category"))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(

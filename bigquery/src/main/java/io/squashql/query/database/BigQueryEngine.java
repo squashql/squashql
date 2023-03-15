@@ -67,14 +67,14 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
         @Override
         public String select(Field field) {
-          Function<Object, String> quoter = SQLTranslator.getQuoter(field);
+          Function<Object, String> quoter = SQLTranslator.getQuoteFn(field);
           return String.format("coalesce(%s, %s)", rewriter.select(field),
                   quoter.apply(BigQueryUtil.getNullValue(field.type())));
         }
 
         @Override
         public String rollup(Field field) {
-          Function<Object, String> quoter = SQLTranslator.getQuoter(field);
+          Function<Object, String> quoter = SQLTranslator.getQuoteFn(field);
           return String.format("coalesce(%s, %s)", rewriter.rollup(field),
                   quoter.apply(BigQueryUtil.getNullValue(field.type())));
         }
@@ -101,7 +101,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     boolean isPartialRollup = !Set.copyOf(query.select).equals(Set.copyOf(query.rollup));
     List<Field> missingColumnsInRollup = new ArrayList<>(query.select);
     missingColumnsInRollup.removeAll(query.rollup);
-    Set<String> missingColumnsInRollupSet = missingColumnsInRollup.stream().map(Field::getFullName).collect(Collectors.toSet());
+    Set<String> missingColumnsInRollupSet = missingColumnsInRollup.stream().map(SqlUtils::getFieldFullName).collect(Collectors.toSet());
 
     MutableIntSet rowIndicesToRemove = new IntHashSet();
     for (int i = 0; i < input.headers().size(); i++) {

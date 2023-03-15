@@ -3,6 +3,7 @@ package io.squashql.query;
 import com.google.common.base.Suppliers;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
@@ -119,7 +120,7 @@ public class TableUtils {
     queryDto.columnSets.values()
             .forEach(cs -> finalColumns.addAll(cs.getNewColumns()
                     .stream()
-                    .map(Field::getFullName)
+                    .map(SqlUtils::getFieldFullName)
                     .toList()));
     finalColumns.addAll(queryDto.columns);
     return selectAndOrderColumns(table, finalColumns, queryDto.measures);

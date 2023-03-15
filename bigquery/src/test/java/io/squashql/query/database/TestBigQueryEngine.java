@@ -43,19 +43,13 @@ public class TestBigQueryEngine {
             .table("baseStore");
 
     BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
-    BigQueryEngine bqe = new BigQueryEngine(datastore) {
-      @Override
-      protected Function<String, Field> createFieldSupplier() {
-        return TestBigQueryEngine.this.fieldSupplier;
-      }
-    };
+    BigQueryEngine bqe = new BigQueryEngine(datastore);
     String sqlStatement = bqe.createSqlStatement(query);
     Assertions.assertThat(sqlStatement)
             .isEqualTo("select coalesce(`myProjectId.myDatasetName.baseStore`.`scenario`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`category`, " + BigQueryUtil.getNullValue(long.class) + ")," +
                     " sum(`price`) as `price.sum`, avg(`price`) as `price.avg`" +
                     " from `myProjectId.myDatasetName.baseStore`" +
                     " group by rollup(coalesce(`myProjectId.myDatasetName.baseStore`.`scenario`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`category`, " + BigQueryUtil.getNullValue(long.class) + "))");
-
   }
 
   @Test
@@ -122,8 +116,8 @@ public class TestBigQueryEngine {
             new ArrayList<>(Arrays.asList(4, 2, 1, 1, 2, 1, 1)));
 
     ColumnarTable input = new ColumnarTable(
-            List.of(new Header(new Field(null, this.fieldSupplier.apply(scenario).getFullName(), String.class), false),
-                    new Header(new Field(null, this.fieldSupplier.apply(category).getFullName(), String.class), false),
+            List.of(new Header(new Field(null, SqlUtils.getFieldFullName(this.fieldSupplier.apply(scenario)), String.class), false),
+                    new Header(new Field(null, SqlUtils.getFieldFullName(this.fieldSupplier.apply(category)), String.class), false),
                     new Header(new Field(null, "price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             values);
