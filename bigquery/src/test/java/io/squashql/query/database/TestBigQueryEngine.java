@@ -139,21 +139,21 @@ public class TestBigQueryEngine {
     List<List<Object>> values = List.of(
             new ArrayList<>(Arrays.asList(null, "main", "main", "main", "1", "1", "1")),
             new ArrayList<>(Arrays.asList(null, null, "A", "B", null, "A", "B")),
-            new ArrayList<>(Arrays.asList(4, 2, 1, 1, 2, 1, 1)));
+            new ArrayList<>(Arrays.asList(4d, 2d, 1d, 1d, 2d, 1d, 1d)));
 
     ColumnarTable input = new ColumnarTable(
-            List.of(new Header(new Field(null, SqlUtils.getFieldFullName(this.fieldSupplier.apply(scenario)), String.class), false),
-                    new Header(new Field(null, SqlUtils.getFieldFullName(this.fieldSupplier.apply(category)), String.class), false),
-                    new Header(new Field(null, "price.sum", int.class), true)),
+            List.of(new Header(this.fieldSupplier.apply(scenario), false),
+                    new Header(this.fieldSupplier.apply(category), false),
+                    new Header(new Field(null, "price.sum", double.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             values);
     Table output = bqe.postProcessDataset(input, query);
     Assertions.assertThat(output).containsExactly(
-            List.of("main", SQLTranslator.TOTAL_CELL, 2),
-            List.of("main", "A", 1),
-            List.of("main", "B", 1),
-            List.of("1", SQLTranslator.TOTAL_CELL, 2),
-            List.of("1", "A", 1),
-            List.of("1", "B", 1));
+            List.of("main", SQLTranslator.TOTAL_CELL, 2d),
+            List.of("main", "A", 1d),
+            List.of("main", "B", 1d),
+            List.of("1", SQLTranslator.TOTAL_CELL, 2d),
+            List.of("1", "A", 1d),
+            List.of("1", "B", 1d));
   }
 }

@@ -4,6 +4,10 @@ import io.squashql.store.Field;
 
 public interface QueryRewriter {
 
+  default String getFieldFullName(Field f) {
+    return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
+  }
+
   default String fieldName(String field) {
     return field;
   }
@@ -20,7 +24,7 @@ public interface QueryRewriter {
    * @return the customized argument
    */
   default String select(Field f) {
-    return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
+    return getFieldFullName(f);
   }
 
   /**
@@ -30,7 +34,7 @@ public interface QueryRewriter {
    * @return the customized argument
    */
   default String rollup(Field f) {
-    return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
+    return getFieldFullName(f);
   }
 
   default String measureAlias(String alias) {

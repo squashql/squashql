@@ -113,7 +113,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
           Object value = columnValues.get(rowIndex);
           if (value == null) {
             baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
-            if (isPartialRollup && missingColumnsInRollupSet.contains(field.name())) {
+            if (isPartialRollup && missingColumnsInRollupSet.contains(SqlUtils.getFieldFullName(field))) {
               // Partial rollup not supported https://issuetracker.google.com/issues/35905909, we let bigquery compute
               // all totals, and we remove here the extra rows.
               rowIndicesToRemove.add(rowIndex);
