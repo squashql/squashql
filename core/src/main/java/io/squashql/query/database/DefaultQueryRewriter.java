@@ -23,11 +23,6 @@ public class DefaultQueryRewriter implements QueryRewriter {
   }
 
   @Override
-  public String groupingAlias(String field) {
-    return SqlUtils.backtickEscape(QueryRewriter.super.groupingAlias(field));
-  }
-
-  @Override
   public boolean usePartialRollupSyntax() {
     return true;
   }

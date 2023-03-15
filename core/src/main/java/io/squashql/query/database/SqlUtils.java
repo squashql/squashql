@@ -30,7 +30,7 @@ public class SqlUtils {
   }
 
   /**
-   * See {@link QueryRewriter#groupingAlias(String)}.
+   * See {@link #groupingAlias(String)}.
    */
   public static String extractFieldFromGroupingAlias(String str) {
     Matcher matcher = GROUPING_PATTERN.matcher(str);
@@ -38,5 +38,14 @@ public class SqlUtils {
       return matcher.group(1);
     }
     return null;
+  }
+
+
+  /**
+   * Returns the name of the column used for grouping(). If it is modified, please modify also
+   * {@link SqlUtils#GROUPING_PATTERN}.
+   */
+  public static String groupingAlias(String column) {
+    return String.format("___grouping___%s___", column);
   }
 }

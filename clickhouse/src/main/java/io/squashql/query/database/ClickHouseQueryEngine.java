@@ -105,11 +105,6 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
     }
 
     @Override
-    public String groupingAlias(String field) {
-      return SqlUtils.backtickEscape(QueryRewriter.super.groupingAlias(field));
-    }
-
-    @Override
     public boolean usePartialRollupSyntax() {
       // Not supported as of now: https://github.com/ClickHouse/ClickHouse/issues/322#issuecomment-615087004
       // Tested with version https://github.com/ClickHouse/ClickHouse/tree/v22.10.2.11-stable

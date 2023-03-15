@@ -158,10 +158,5 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
     public boolean useGroupingFunction() {
       return true;
     }
-
-    @Override
-    public String groupingAlias(String field) {
-      return SqlUtils.doubleQuoteEscape(QueryRewriter.super.groupingAlias(field));
-    }
   }
 }

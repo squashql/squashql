@@ -170,7 +170,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     List<Header> headers = new ArrayList<>();
     List<String> fieldNames = new ArrayList<>(query.select.stream().map(SqlUtils::getFieldFullName).toList());
     if (queryRewriter.useGroupingFunction()) {
-      query.rollup.forEach(r -> fieldNames.add(queryRewriter.groupingAlias(SqlUtils.getFieldFullName(r))));
+      query.rollup.forEach(r -> fieldNames.add(SqlUtils.groupingAlias(SqlUtils.getFieldFullName(r))));
     }
     query.measures.forEach(m -> fieldNames.add(m.alias()));
     for (int i = 0; i < columns.size(); i++) {

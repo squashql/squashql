@@ -261,10 +261,5 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       // Not supported https://issuetracker.google.com/issues/205238172
       return false;
     }
-
-    @Override
-    public String groupingAlias(String field) {
-      return SqlUtils.backtickEscape(QueryRewriter.super.groupingAlias(field));
-    }
   }
 }

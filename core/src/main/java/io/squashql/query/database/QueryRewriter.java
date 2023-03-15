@@ -68,12 +68,4 @@ public interface QueryRewriter {
    * </a>.
    */
   boolean useGroupingFunction();
-
-  /**
-   * Returns the name of the column used for grouping(). If it is modified, please modify also
-   * {@link SqlUtils#GROUPING_PATTERN}.
-   */
-  default String groupingAlias(String column) {
-    return String.format("___grouping___%s___", column);
-  }
 }
