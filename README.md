@@ -1,10 +1,16 @@
-# SquashQL 
+<p align="center">
+  <img width="300" src="./documentation/assets/SQL_LightSquareName.svg">
+</p>
 
-[logo]
+<p align="center">
+  <a href="https://github.com/squashql/squashql/actions">
+    <img src="https://github.com/squashql/squashql/actions/workflows/ci.yml/badge.svg?branch=main" alt="Github Actions Badge">
+  </a>
+  <a>
+    <img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/squashql/squashql">
+  </a>
+</p>
 
-![build](https://github.com/squashql/squashql/actions/workflows/ci.yml/badge.svg?branch=main)
-![activity](https://img.shields.io/github/commit-activity/m/squashql/squashql/main)
-![license](https://img.shields.io/github/license/squashql/squashql)
 ---
 
 SquashQL is an open-source SQL query engine specialized in what-if analysis, building multi-dimensional queries to help
@@ -17,6 +23,10 @@ the UI.
 - With its "write once, run everywhere" approach, it is a great solution for those who need to quickly and efficiently query data from multiple databases.
 
 ![ide ts squashql](https://user-images.githubusercontent.com/5783183/215964358-37814efa-f315-4de5-97cd-cefce537caaa.gif)
+
+## Try SquashQL
+
+You can try SquashQL directly from your web browser with [our showcase project](https://github.com/squashql/squashql-showcase/blob/main/TUTORIAL.md). You won't need to install anything!
 
 ## Compatibility
 
