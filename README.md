@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="300" src="./documentation/assets/SQL_LightSquareName.svg">
+  <img width="400" src="./documentation/assets/logo_horizontal.svg">
 </p>
 
 <p align="center">
