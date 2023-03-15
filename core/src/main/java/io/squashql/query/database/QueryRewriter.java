@@ -1,5 +1,7 @@
 package io.squashql.query.database;
 
+import io.squashql.store.FieldWithStore;
+
 public interface QueryRewriter {
 
   default String fieldName(String field) {
@@ -14,21 +16,21 @@ public interface QueryRewriter {
    * Customizes what's written in the SELECT statement AND GROUP BY for the given selected column.
    * See {@link SQLTranslator}.
    *
-   * @param select name of the column
+   * @param f field to use in select
    * @return the customized argument
    */
-  default String select(String table, String select) {
-    return table == null ? fieldName(select) : tableName(table) + "." + fieldName(select); // FIXME should it take FieldWithStore?
+  default String select(FieldWithStore f) {
+    return FieldWithStore.buildFullName(tableName(f.store()), fieldName(f.name()));
   }
 
   /**
    * Customizes what's written within the ROLLUP function as argument for the given column. See {@link SQLTranslator}.
    *
-   * @param rollup name of the column in the rollup
+   * @param f field to use in rollup
    * @return the customized argument
    */
-  default String rollup(String table, String rollup) {
-    return table == null ? fieldName(rollup) : tableName(table) + "." + fieldName(rollup); // FIXME should it take FieldWithStore?
+  default String rollup(FieldWithStore f) {
+    return FieldWithStore.buildFullName(tableName(f.store()), fieldName(f.name()));
   }
 
   default String measureAlias(String alias) {

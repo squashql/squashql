@@ -6,6 +6,10 @@ public record FieldWithStore(String store, String name, Class<?> type) {
 
   @JsonIgnore
   public String getFullName() {
-    return this.store == null ? this.name : this.store + "." + this.name;
+    return buildFullName(this.store, this.name);
+  }
+
+  public static String buildFullName(String store, String name) {
+    return store == null ? name : store + "." + name;
   }
 }

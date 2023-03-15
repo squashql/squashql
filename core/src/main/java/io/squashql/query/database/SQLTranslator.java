@@ -31,7 +31,7 @@ public class SQLTranslator {
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
 
-    query.select.forEach(f -> groupBy.add(queryRewriter.select(f.store(), f.name())));
+    query.select.forEach(f -> groupBy.add(queryRewriter.select(f)));
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true))); // Alias is needed when using sub-queries
 
     selects.addAll(groupBy); // coord first, then aggregates
@@ -39,7 +39,7 @@ public class SQLTranslator {
 //      query.rollup.forEach(field -> selects.add(String.format("grouping(%s) as %s", queryRewriter.fieldName(field), queryRewriter.groupingAlias(field)))); // use grouping to identify totals
 
       query.rollup.forEach(f -> {
-        String name = queryRewriter.select(f.store(), f.name());
+        String name = queryRewriter.select(f);
         selects.add(String.format("grouping(%s) as %s", name, queryRewriter.groupingAlias(f.name())));
       }); // use grouping to identify totals
     }
@@ -58,7 +58,7 @@ public class SQLTranslator {
       addJoins(statement, query.table, queryRewriter);
     }
     addWhereConditions(statement, query, fieldProvider, queryRewriter);
-    addGroupByAndRollup(groupBy, query.rollup.stream().map(f -> queryRewriter.rollup(f.store(), f.name())).toList(), queryRewriter.usePartialRollupSyntax(), statement);
+    addGroupByAndRollup(groupBy, query.rollup.stream().map(f -> queryRewriter.rollup(f)).toList(), queryRewriter.usePartialRollupSyntax(), statement);
     addHavingConditions(statement, query.havingCriteriaDto);
     addLimit(query.limit, statement);
     return statement.toString();

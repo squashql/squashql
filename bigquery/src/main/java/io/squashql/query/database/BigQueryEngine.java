@@ -51,8 +51,8 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       return super.createSqlStatement(query);
     } else {
       checkRollupIsValid(
-              query.select.stream().map(f -> queryRewriter.select(f.store(), f.name())).toList(),
-              query.rollup.stream().map(f -> queryRewriter.rollup(f.store(), f.name())).toList());
+              query.select.stream().map(f -> this.queryRewriter.select(f)).toList(),
+              query.rollup.stream().map(f -> this.queryRewriter.rollup(f)).toList());
 
       // Special case for BigQuery because it does not support either the grouping function used to identify extra-rows added
       // by rollup or grouping sets for partial rollup.
@@ -67,18 +67,16 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       BigQueryQueryRewriter newRewriter = new BigQueryQueryRewriter(rewriter.projectId, rewriter.datasetName) {
 
         @Override
-        public String select(String table, String select) {
-          FieldWithStore field = BigQueryEngine.this.fieldSupplier.apply(select);
+        public String select(FieldWithStore field) {
           Function<Object, String> quoter = SQLTranslator.getQuoter(field);
-          return String.format("coalesce(%s, %s)", rewriter.select(field.store(), field.name()),
+          return String.format("coalesce(%s, %s)", rewriter.select(field),
                   quoter.apply(BigQueryUtil.getNullValue(field.type())));
         }
 
         @Override
-        public String rollup(String table, String rollup) {
-          FieldWithStore field = BigQueryEngine.this.fieldSupplier.apply(rollup);
+        public String rollup(FieldWithStore field) {
           Function<Object, String> quoter = SQLTranslator.getQuoter(field);
-          return String.format("coalesce(%s, %s)", rewriter.rollup(field.store(), field.name()),
+          return String.format("coalesce(%s, %s)", rewriter.rollup(field),
                   quoter.apply(BigQueryUtil.getNullValue(field.type())));
         }
       };
