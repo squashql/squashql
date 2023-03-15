@@ -2,7 +2,7 @@ package io.squashql.query;
 
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SqlUtils;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import lombok.*;
 
 import java.util.function.Function;
@@ -31,7 +31,7 @@ public class BinaryOperationMeasure implements Measure {
   }
 
   @Override
-  public String sqlExpression(Function<String, FieldWithStore> fp, QueryRewriter qr, boolean withAlias) {
+  public String sqlExpression(Function<String, Field> fp, QueryRewriter qr, boolean withAlias) {
     String sql = new StringBuilder()
             .append(this.leftOperand.sqlExpression(fp, qr, false))
             .append(this.operator.infix)

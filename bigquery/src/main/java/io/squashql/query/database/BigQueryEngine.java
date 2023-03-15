@@ -6,7 +6,7 @@ import io.squashql.BigQueryUtil;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.Table;
 import io.squashql.query.*;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
@@ -66,21 +66,21 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       BigQueryQueryRewriter newRewriter = new BigQueryQueryRewriter(rewriter.projectId, rewriter.datasetName) {
 
         @Override
-        public String select(FieldWithStore field) {
+        public String select(Field field) {
           Function<Object, String> quoter = SQLTranslator.getQuoter(field);
           return String.format("coalesce(%s, %s)", rewriter.select(field),
                   quoter.apply(BigQueryUtil.getNullValue(field.type())));
         }
 
         @Override
-        public String rollup(FieldWithStore field) {
+        public String rollup(Field field) {
           Function<Object, String> quoter = SQLTranslator.getQuoter(field);
           return String.format("coalesce(%s, %s)", rewriter.rollup(field),
                   quoter.apply(BigQueryUtil.getNullValue(field.type())));
         }
       };
 
-      List<FieldWithStore> missingColumnsInRollup = new ArrayList<>(query.select);
+      List<Field> missingColumnsInRollup = new ArrayList<>(query.select);
       missingColumnsInRollup.removeAll(query.rollup);
       DatabaseQuery deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), DatabaseQuery.class);
       // Missing columns needs to be added at the beginning to have the correct sub-totals
@@ -99,13 +99,13 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     }
 
     boolean isPartialRollup = !Set.copyOf(query.select).equals(Set.copyOf(query.rollup));
-    List<FieldWithStore> missingColumnsInRollup = new ArrayList<>(query.select);
+    List<Field> missingColumnsInRollup = new ArrayList<>(query.select);
     missingColumnsInRollup.removeAll(query.rollup);
-    Set<String> missingColumnsInRollupSet = missingColumnsInRollup.stream().map(FieldWithStore::getFullName).collect(Collectors.toSet());
+    Set<String> missingColumnsInRollupSet = missingColumnsInRollup.stream().map(Field::getFullName).collect(Collectors.toSet());
 
     MutableIntSet rowIndicesToRemove = new IntHashSet();
     for (int i = 0; i < input.headers().size(); i++) {
-      FieldWithStore field = input.headers().get(i).field();
+      Field field = input.headers().get(i).field();
       List<Object> columnValues = input.getColumn(i);
       if (i < query.select.size()) {
         List<Object> baseColumnValues = input.getColumnValues(field.name());
@@ -161,7 +161,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
               query,
               schema.getFields(),
-              (column, name) -> new FieldWithStore(null, name, BigQueryUtil.bigQueryTypeToClass(column.getType())),
+              (column, name) -> new Field(null, name, BigQueryUtil.bigQueryTypeToClass(column.getType())),
               tableResult.iterateAll().iterator(),
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i),
               this.queryRewriter
@@ -183,7 +183,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       Schema schema = tableResult.getSchema();
       Pair<List<Header>, List<List<Object>>> result = transformToRowFormat(
               schema.getFields(),
-              column -> new FieldWithStore(null, column.getName(), BigQueryUtil.bigQueryTypeToClass(column.getType())),
+              column -> new Field(null, column.getName(), BigQueryUtil.bigQueryTypeToClass(column.getType())),
               tableResult.iterateAll().iterator(),
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i));
       return new RowTable(result.getOne(), result.getTwo());

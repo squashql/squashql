@@ -1,6 +1,6 @@
 package io.squashql.query;
 
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 
-public record Header(FieldWithStore field, boolean isMeasure) {
+public record Header(Field field, boolean isMeasure) {
 }

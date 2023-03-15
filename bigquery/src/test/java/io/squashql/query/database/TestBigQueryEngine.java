@@ -8,7 +8,7 @@ import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.Table;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -23,10 +23,10 @@ import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 public class TestBigQueryEngine {
 
-  final Function<String, FieldWithStore> fieldSupplier = name -> switch (name) {
-    case "category" -> new FieldWithStore("baseStore", name, long.class);
-    case "price" -> new FieldWithStore("baseStore", name, double.class);
-    default -> new FieldWithStore("baseStore", name, String.class);
+  final Function<String, Field> fieldSupplier = name -> switch (name) {
+    case "category" -> new Field("baseStore", name, long.class);
+    case "price" -> new Field("baseStore", name, double.class);
+    default -> new Field("baseStore", name, String.class);
   };
 
   @Test
@@ -45,7 +45,7 @@ public class TestBigQueryEngine {
     BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
     BigQueryEngine bqe = new BigQueryEngine(datastore) {
       @Override
-      protected Function<String, FieldWithStore> createFieldSupplier() {
+      protected Function<String, Field> createFieldSupplier() {
         return TestBigQueryEngine.this.fieldSupplier;
       }
     };
@@ -122,9 +122,9 @@ public class TestBigQueryEngine {
             new ArrayList<>(Arrays.asList(4, 2, 1, 1, 2, 1, 1)));
 
     ColumnarTable input = new ColumnarTable(
-            List.of(new Header(new FieldWithStore(null, this.fieldSupplier.apply(scenario).getFullName(), String.class), false),
-                    new Header(new FieldWithStore(null, this.fieldSupplier.apply(category).getFullName(), String.class), false),
-                    new Header(new FieldWithStore(null, "price.sum", int.class), true)),
+            List.of(new Header(new Field(null, this.fieldSupplier.apply(scenario).getFullName(), String.class), false),
+                    new Header(new Field(null, this.fieldSupplier.apply(category).getFullName(), String.class), false),
+                    new Header(new Field(null, "price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             values);
     Table output = bqe.postProcessDataset(input, query);

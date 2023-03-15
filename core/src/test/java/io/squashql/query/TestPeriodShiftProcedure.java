@@ -1,7 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.dto.Period;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
@@ -22,7 +22,7 @@ public class TestPeriodShiftProcedure {
       new PeriodComparisonExecutor.ShiftProcedure(
               period,
               Map.of(PeriodUnit.YEAR, refPos[0], PeriodUnit.QUARTER, refPos[1]),
-              indexByPeriodUnit).test(point, new FieldWithStore[]{new FieldWithStore(null, "year", int.class), new FieldWithStore(null, "quarter", int.class)});
+              indexByPeriodUnit).test(point, new Field[]{new Field(null, "year", int.class), new Field(null, "quarter", int.class)});
       return point;
     };
 
@@ -49,7 +49,7 @@ public class TestPeriodShiftProcedure {
       new PeriodComparisonExecutor.ShiftProcedure(
               period,
               Map.of(PeriodUnit.YEAR, refPos[0], PeriodUnit.MONTH, refPos[1]),
-              indexByPeriodUnit).test(point, new FieldWithStore[]{new FieldWithStore(null, "year", long.class), new FieldWithStore(null, "month", long.class)}); // use long and make sure we get long at the end
+              indexByPeriodUnit).test(point, new Field[]{new Field(null, "year", long.class), new Field(null, "month", long.class)}); // use long and make sure we get long at the end
       return point;
     };
 
@@ -76,7 +76,7 @@ public class TestPeriodShiftProcedure {
       new PeriodComparisonExecutor.ShiftProcedure(
               period,
               Map.of(PeriodUnit.YEAR, refPos[0], PeriodUnit.SEMESTER, refPos[1]),
-              indexByPeriodUnit).test(point, new FieldWithStore[]{new FieldWithStore(null, "year", int.class), new FieldWithStore(null, "semester", int.class)});
+              indexByPeriodUnit).test(point, new Field[]{new Field(null, "year", int.class), new Field(null, "semester", int.class)});
       return point;
     };
 

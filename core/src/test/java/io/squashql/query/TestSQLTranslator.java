@@ -6,7 +6,7 @@ import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.JoinDto;
 import io.squashql.query.dto.JoinMappingDto;
 import io.squashql.query.dto.TableDto;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -25,10 +25,10 @@ public class TestSQLTranslator {
   private static final String BASE_STORE_NAME = "baseStore";
   private static final String BASE_STORE_NAME_ESCAPED = SqlUtils.backtickEscape(BASE_STORE_NAME);
 
-  private static final Function<String, FieldWithStore> fieldProvider = s -> switch (s) {
-    case "pnl" -> new FieldWithStore(BASE_STORE_NAME, s, double.class);
-    case "delta" -> new FieldWithStore(BASE_STORE_NAME, s, Double.class);
-    default -> new FieldWithStore(BASE_STORE_NAME, s, String.class);
+  private static final Function<String, Field> fieldProvider = s -> switch (s) {
+    case "pnl" -> new Field(BASE_STORE_NAME, s, double.class);
+    case "delta" -> new Field(BASE_STORE_NAME, s, Double.class);
+    default -> new Field(BASE_STORE_NAME, s, String.class);
   };
 
   @Test

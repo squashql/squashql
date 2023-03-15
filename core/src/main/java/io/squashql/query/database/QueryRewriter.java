@@ -1,6 +1,6 @@
 package io.squashql.query.database;
 
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 
 public interface QueryRewriter {
 
@@ -19,8 +19,8 @@ public interface QueryRewriter {
    * @param f field to use in select
    * @return the customized argument
    */
-  default String select(FieldWithStore f) {
-    return FieldWithStore.buildFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
+  default String select(Field f) {
+    return Field.buildFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
   }
 
   /**
@@ -29,8 +29,8 @@ public interface QueryRewriter {
    * @param f field to use in rollup
    * @return the customized argument
    */
-  default String rollup(FieldWithStore f) {
-    return FieldWithStore.buildFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
+  default String rollup(Field f) {
+    return Field.buildFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
   }
 
   default String measureAlias(String alias) {

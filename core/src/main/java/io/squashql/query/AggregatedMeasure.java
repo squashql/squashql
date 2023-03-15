@@ -4,7 +4,7 @@ import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.CriteriaDto;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import lombok.*;
 
 import java.util.function.Function;
@@ -34,7 +34,7 @@ public class AggregatedMeasure implements BasicMeasure {
   }
 
   @Override
-  public String sqlExpression(Function<String, FieldWithStore> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
+  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     // FIXME field should belongs to the a table or subquery. Need to check?
     String sql;
     if (this.criteria != null) {

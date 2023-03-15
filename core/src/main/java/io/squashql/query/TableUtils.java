@@ -6,7 +6,7 @@ import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.NullAndTotalComparator;
 
@@ -91,7 +91,7 @@ public class TableUtils {
   public static List<MetadataItem> buildTableMetadata(Table t) {
     List<MetadataItem> metadata = new ArrayList<>();
     for (Header header : t.headers()) {
-      FieldWithStore field = header.field();
+      Field field = header.field();
       Optional<Measure> optionalMeasure = t.measures().stream()
               .filter(m -> m.alias().equals(header.field().name()))
               .findAny();
@@ -119,7 +119,7 @@ public class TableUtils {
     queryDto.columnSets.values()
             .forEach(cs -> finalColumns.addAll(cs.getNewColumns()
                     .stream()
-                    .map(FieldWithStore::getFullName)
+                    .map(Field::getFullName)
                     .toList()));
     finalColumns.addAll(queryDto.columns);
     return selectAndOrderColumns(table, finalColumns, queryDto.measures);

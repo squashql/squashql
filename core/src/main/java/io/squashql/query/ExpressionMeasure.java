@@ -2,7 +2,7 @@ package io.squashql.query;
 
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SqlUtils;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import lombok.*;
 
 import java.util.function.Function;
@@ -18,7 +18,7 @@ public class ExpressionMeasure implements BasicMeasure {
   public String expression;
 
   @Override
-  public String sqlExpression(Function<String, FieldWithStore> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
+  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     return withAlias ? SqlUtils.appendAlias(this.expression, queryRewriter, this.alias) : this.expression;
   }
 

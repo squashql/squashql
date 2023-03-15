@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.common.base.Suppliers;
 import io.squashql.store.Datastore;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import io.squashql.store.Store;
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.Dataset;
@@ -70,18 +70,18 @@ public class SparkDatastore implements Datastore {
     }
   }
 
-  public static List<FieldWithStore> getFields(SparkSession spark, String tableName) {
+  public static List<Field> getFields(SparkSession spark, String tableName) {
     try {
       Catalog catalog = spark.catalog();
       Table table = catalog.getTable(tableName);
       Dataset<Column> columns = table.isTemporary()
               ? catalog.listColumns(tableName)
               : catalog.listColumns("default", tableName);
-      List<FieldWithStore> fields = new ArrayList<>();
+      List<Field> fields = new ArrayList<>();
       Iterator<Column> columnIterator = columns.toLocalIterator();
       while (columnIterator.hasNext()) {
         Column column = columnIterator.next();
-        fields.add(new FieldWithStore(tableName, column.name(), SparkUtil.datatypeToClass(DataType.fromDDL(column.dataType()))));
+        fields.add(new Field(tableName, column.name(), SparkUtil.datatypeToClass(DataType.fromDDL(column.dataType()))));
       }
       return fields;
     } catch (AnalysisException e) {

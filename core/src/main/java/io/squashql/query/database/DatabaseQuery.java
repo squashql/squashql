@@ -1,6 +1,6 @@
 package io.squashql.query.database;
 
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -20,19 +20,19 @@ public class DatabaseQuery {
 
   public TableDto table;
   public DatabaseQuery subQuery;
-  public List<FieldWithStore> select = new ArrayList<>();
+  public List<Field> select = new ArrayList<>();
   public CriteriaDto whereCriteriaDto = null;
   public CriteriaDto havingCriteriaDto = null;
   public List<Measure> measures = new ArrayList<>();
-  public List<FieldWithStore> rollup = new ArrayList<>();
+  public List<Field> rollup = new ArrayList<>();
   public int limit = -1;
 
-  public DatabaseQuery withSelect(FieldWithStore field) {
+  public DatabaseQuery withSelect(Field field) {
     this.select.add(field);
     return this;
   }
 
-  public DatabaseQuery withRollup(FieldWithStore field) {
+  public DatabaseQuery withRollup(Field field) {
     this.rollup.add(field);
     return this;
   }

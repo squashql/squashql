@@ -2,7 +2,7 @@ package io.squashql.query.database;
 
 import io.squashql.query.*;
 import io.squashql.store.Datastore;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import io.squashql.store.Store;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
@@ -21,7 +21,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   public final T datastore;
 
-  public final Function<String, FieldWithStore> fieldSupplier;
+  public final Function<String, Field> fieldSupplier;
 
   protected final QueryRewriter queryRewriter;
 
@@ -36,7 +36,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     return this.queryRewriter;
   }
 
-  protected Function<String, FieldWithStore> createFieldSupplier() {
+  protected Function<String, Field> createFieldSupplier() {
     return fieldName -> {
       String[] split = fieldName.split("\\.");
       if (split.length > 1) {
@@ -44,7 +44,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
         String fieldNameInTable = split[1];
         Store store = this.datastore.storesByName().get(tableName);
         if (store != null) {
-          for (FieldWithStore field : store.fields()) {
+          for (Field field : store.fields()) {
             if (field.name().equals(fieldNameInTable)) {
               return field;
             }
@@ -52,25 +52,25 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
         }
       } else {
         for (Store store : this.datastore.storesByName().values()) {
-          for (FieldWithStore field : store.fields()) {
+          for (Field field : store.fields()) {
             if (field.name().equals(fieldName)) {
               // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
               // if any ambiguity, the DB will raise an exception.
-              return new FieldWithStore(null, field.name(), field.type());
+              return new Field(null, field.name(), field.type());
             }
           }
         }
       }
 
       if (fieldName.equals(CountMeasure.INSTANCE.alias())) {
-        return new FieldWithStore(null, CountMeasure.INSTANCE.alias(), long.class);
+        return new Field(null, CountMeasure.INSTANCE.alias(), long.class);
       }
       throw new IllegalArgumentException("Cannot find field with name " + fieldName);
     };
   }
 
   @Override
-  public Function<String, FieldWithStore> getFieldSupplier() {
+  public Function<String, Field> getFieldSupplier() {
     return this.fieldSupplier;
   }
 
@@ -166,12 +166,12 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   public static <Column, Record> Pair<List<Header>, List<List<Object>>> transformToColumnFormat(
           DatabaseQuery query,
           List<Column> columns,
-          BiFunction<Column, String, FieldWithStore> columnToField,
+          BiFunction<Column, String, Field> columnToField,
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue,
           QueryRewriter queryRewriter) {
     List<Header> headers = new ArrayList<>();
-    List<String> fieldNames = new ArrayList<>(query.select.stream().map(FieldWithStore::getFullName).toList());
+    List<String> fieldNames = new ArrayList<>(query.select.stream().map(Field::getFullName).toList());
     if (queryRewriter.useGroupingFunction()) {
       query.rollup.forEach(r -> fieldNames.add(queryRewriter.groupingAlias(r.getFullName())));
     }
@@ -193,7 +193,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   public static <Column, Record> Pair<List<Header>, List<List<Object>>> transformToRowFormat(
           List<Column> columns,
-          Function<Column, FieldWithStore> columnToField,
+          Function<Column, Field> columnToField,
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue) {
     List<Header> headers = columns.stream().map(column -> new Header(columnToField.apply(column), false)).toList();

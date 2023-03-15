@@ -8,7 +8,7 @@ import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.monitoring.QueryWatch;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import io.squashql.table.MergeTables;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
@@ -77,7 +77,7 @@ public class QueryExecutor {
     queryWatch.stop(QueryWatch.PREPARE_RESOLVE_MEASURES);
 
     queryWatch.start(QueryWatch.EXECUTE_PREFETCH_PLAN);
-    Function<String, FieldWithStore> fieldSupplier = this.queryEngine.getFieldSupplier();
+    Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
     QueryScope queryScope = createQueryScope(query, fieldSupplier);
     Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> dependencyGraph = computeDependencyGraph(query, queryScope, fieldSupplier);
     // Compute what needs to be prefetched
@@ -173,7 +173,7 @@ public class QueryExecutor {
   private static Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> computeDependencyGraph(
           QueryDto query,
           QueryScope queryScope,
-          Function<String, FieldWithStore> fieldSupplier) {
+          Function<String, Field> fieldSupplier) {
     // This graph is used to keep track of dependency between execution plans. An Execution Plan is bound to a given scope.
     DependencyGraph<QueryScope> executionGraph = new DependencyGraph<>();
 
@@ -201,12 +201,12 @@ public class QueryExecutor {
             executionGraph);
   }
 
-  public static QueryScope createQueryScope(QueryDto query, Function<String, FieldWithStore> fieldSupplier) {
+  public static QueryScope createQueryScope(QueryDto query, Function<String, Field> fieldSupplier) {
     // If column set, it changes the scope
-    List<FieldWithStore> columns = Stream.concat(
+    List<Field> columns = Stream.concat(
             query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
             query.columns.stream()).map(fieldSupplier).toList();
-    List<FieldWithStore> rollupColumns = query.rollupColumns.stream().map(fieldSupplier).toList();
+    List<Field> rollupColumns = query.rollupColumns.stream().map(fieldSupplier).toList();
     return new QueryScope(query.table, query.subQuery, columns, query.whereCriteriaDto, query.havingCriteriaDto, rollupColumns);
   }
 
@@ -214,7 +214,7 @@ public class QueryExecutor {
           QueryScope queryScope,
           DatabaseQuery prefetchQuery,
           SquashQLUser user) {
-    Set<FieldWithStore> fields = new HashSet<>(prefetchQuery.select);
+    Set<Field> fields = new HashSet<>(prefetchQuery.select);
     if (queryScope.tableDto != null) {
       return new TableScope(queryScope.tableDto, fields, queryScope.whereCriteriaDto, queryScope.havingCriteriaDto, queryScope.rollupColumns, user, prefetchQuery.limit);
     } else {
@@ -224,10 +224,10 @@ public class QueryExecutor {
 
   public record QueryScope(TableDto tableDto,
                            QueryDto subQuery,
-                           List<FieldWithStore> columns,
+                           List<Field> columns,
                            CriteriaDto whereCriteriaDto,
                            CriteriaDto havingCriteriaDto,
-                           List<FieldWithStore> rollupColumns) {
+                           List<Field> rollupColumns) {
   }
 
   public record QueryPlanNodeKey(QueryScope queryScope, Measure measure) {
@@ -269,16 +269,16 @@ public class QueryExecutor {
     return TableUtils.replaceTotalCellValues(table, true);
   }
 
-  public static Function<String, FieldWithStore> withFallback(Function<String, FieldWithStore> fieldProvider, Class<?> fallbackType) {
+  public static Function<String, Field> withFallback(Function<String, Field> fieldProvider, Class<?> fallbackType) {
     return fieldName -> {
-      FieldWithStore f;
+      Field f;
       try {
         f = fieldProvider.apply(fieldName);
       } catch (Exception e) {
         // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
         // contains only "raw" fields, it will throw an exception.
         log.info("Cannot find field " + fieldName + " with default field provider, fallback to default type: " + fallbackType.getSimpleName());
-        f = new FieldWithStore(null, fieldName, Number.class);
+        f = new Field(null, fieldName, Number.class);
       }
       return f;
     };

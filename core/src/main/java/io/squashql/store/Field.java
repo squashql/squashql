@@ -2,7 +2,7 @@ package io.squashql.store;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-public record FieldWithStore(String store, String name, Class<?> type) {
+public record Field(String store, String name, Class<?> type) {
 
   @JsonIgnore
   public String getFullName() {

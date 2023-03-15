@@ -8,7 +8,7 @@ import io.squashql.query.Table;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.SparkQueryEngine;
 import io.squashql.store.Datastore;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import io.squashql.transaction.SparkTransactionManager;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparkSession;
@@ -89,10 +89,10 @@ public class TestQueryRemote {
     SparkQueryEngine queryEngine = new SparkQueryEngine(datastore);
     SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
 
-    FieldWithStore ean = new FieldWithStore(storeName, "ean", String.class);
-    FieldWithStore category = new FieldWithStore(storeName, "category", String.class);
-    FieldWithStore price = new FieldWithStore(storeName, "price", double.class);
-    FieldWithStore qty = new FieldWithStore(storeName, "quantity", int.class);
+    Field ean = new Field(storeName, "ean", String.class);
+    Field category = new Field(storeName, "category", String.class);
+    Field price = new Field(storeName, "price", double.class);
+    Field qty = new Field(storeName, "quantity", int.class);
     tm.createTemporaryTable(storeName, List.of(ean, category, price, qty));
 
     tm.load(MAIN_SCENARIO_NAME, storeName, List.of(
@@ -109,7 +109,7 @@ public class TestQueryRemote {
 
     DatabaseQuery query = new DatabaseQuery()
             .table(storeName)
-            .withSelect(new FieldWithStore(storeName, SCENARIO_FIELD_NAME, String.class))
+            .withSelect(new Field(storeName, SCENARIO_FIELD_NAME, String.class))
             .aggregatedMeasure("p", "price", "sum")
             .aggregatedMeasure("q", "quantity", "sum");
     Table result = queryEngine.execute(query);

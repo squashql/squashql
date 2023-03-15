@@ -2,7 +2,7 @@ package io.squashql.query.dto;
 
 import io.squashql.query.ColumnSet;
 import io.squashql.query.ColumnSetKey;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -39,8 +39,8 @@ public class BucketColumnSetDto implements ColumnSet {
   }
 
   @Override
-  public List<FieldWithStore> getNewColumns() {
-    return List.of(new FieldWithStore(null, this.name, String.class), new FieldWithStore(null, this.field, String.class));
+  public List<Field> getNewColumns() {
+    return List.of(new Field(null, this.name, String.class), new Field(null, this.field, String.class));
   }
 
   @Override

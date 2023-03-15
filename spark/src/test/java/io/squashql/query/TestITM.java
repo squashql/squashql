@@ -5,7 +5,7 @@ import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SparkQueryEngine;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.dto.TableDto;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import io.squashql.transaction.SparkTransactionManager;
 import io.squashql.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
@@ -33,17 +33,17 @@ public class TestITM {
 
   @BeforeAll
   void setup() {
-    FieldWithStore ean = new FieldWithStore("our_prices", "ean", String.class);
-    FieldWithStore pdv = new FieldWithStore("our_prices", "pdv", String.class);
-    FieldWithStore price = new FieldWithStore("our_prices", "price", double.class);
-    FieldWithStore qty = new FieldWithStore("our_prices", "quantity", int.class);
-    FieldWithStore capdv = new FieldWithStore("our_prices", "capdv", double.class);
+    Field ean = new Field("our_prices", "ean", String.class);
+    Field pdv = new Field("our_prices", "pdv", String.class);
+    Field price = new Field("our_prices", "price", double.class);
+    Field qty = new Field("our_prices", "quantity", int.class);
+    Field capdv = new Field("our_prices", "capdv", double.class);
 
-    FieldWithStore compEan = new FieldWithStore("their_prices", "competitor_ean", String.class);
-    FieldWithStore compConcurrentPdv = new FieldWithStore("their_prices", "competitor_concurrent_pdv", String.class);
-    FieldWithStore compBrand = new FieldWithStore("their_prices", "competitor_brand", String.class);
-    FieldWithStore compConcurrentEan = new FieldWithStore("their_prices", "competitor_concurrent_ean", String.class);
-    FieldWithStore compPrice = new FieldWithStore("their_prices", "competitor_price", double.class);
+    Field compEan = new Field("their_prices", "competitor_ean", String.class);
+    Field compConcurrentPdv = new Field("their_prices", "competitor_concurrent_pdv", String.class);
+    Field compBrand = new Field("their_prices", "competitor_brand", String.class);
+    Field compConcurrentEan = new Field("their_prices", "competitor_concurrent_ean", String.class);
+    Field compPrice = new Field("their_prices", "competitor_price", double.class);
 
     this.datastore = new SparkDatastore();
 
@@ -51,8 +51,8 @@ public class TestITM {
     tm.createTemporaryTable("our_prices", List.of(ean, pdv, price, qty, capdv));
     tm.createTemporaryTable("their_prices", List.of(compEan, compConcurrentPdv, compBrand, compConcurrentEan, compPrice), false);
     tm.createTemporaryTable("our_stores_their_stores", List.of(
-            new FieldWithStore("our_stores_their_stores", "our_store", String.class),
-            new FieldWithStore("our_stores_their_stores", "their_store", String.class)
+            new Field("our_stores_their_stores", "our_store", String.class),
+            new Field("our_stores_their_stores", "their_store", String.class)
     ), false);
 
     tm.load(MAIN_SCENARIO_NAME,

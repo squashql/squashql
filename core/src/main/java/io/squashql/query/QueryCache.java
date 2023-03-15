@@ -4,7 +4,7 @@ import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.dto.TableDto;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 
 import java.util.List;
 import java.util.Set;
@@ -24,16 +24,16 @@ public interface QueryCache {
   CacheStatsDto stats();
 
   record TableScope(TableDto tableDto,
-                    Set<FieldWithStore> columns,
+                    Set<Field> columns,
                     CriteriaDto whereCriteriaDto,
                     CriteriaDto havingCriteriaDto,
-                    List<FieldWithStore> rollupColumns,
+                    List<Field> rollupColumns,
                     SquashQLUser user,
                     int limit) implements PrefetchQueryScope {
   }
 
   record SubQueryScope(QueryDto subQueryDto,
-                       Set<FieldWithStore> columns,
+                       Set<Field> columns,
                        CriteriaDto whereCriteriaDto,
                        CriteriaDto havingCriteriaDto,
                        SquashQLUser user,
@@ -44,6 +44,6 @@ public interface QueryCache {
    * Marker interface.
    */
   interface PrefetchQueryScope {
-    Set<FieldWithStore> columns();
+    Set<Field> columns();
   }
 }

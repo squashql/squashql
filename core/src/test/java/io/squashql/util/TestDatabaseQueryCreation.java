@@ -4,7 +4,7 @@ import io.squashql.query.*;
 import io.squashql.query.context.ContextValue;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -14,7 +14,7 @@ import java.util.function.Function;
 
 public class TestDatabaseQueryCreation {
 
-  private final Function<String, FieldWithStore> fieldSupplier = Mockito.mock(Function.class);
+  private final Function<String, Field> fieldSupplier = Mockito.mock(Function.class);
 
   @Test
   void testNoTable() {

@@ -3,7 +3,7 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.*;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
@@ -28,14 +28,14 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
-  protected Map<String, List<FieldWithStore>> getFieldsByStore() {
-    FieldWithStore ean = new FieldWithStore(this.storeName, "ean", String.class);
-    FieldWithStore eanId = new FieldWithStore(this.storeName, "eanId", int.class);
-    FieldWithStore category = new FieldWithStore(this.storeName, "category", String.class);
-    FieldWithStore subcategory = new FieldWithStore(this.storeName, "subcategory", String.class);
-    FieldWithStore price = new FieldWithStore(this.storeName, "price", double.class);
-    FieldWithStore qty = new FieldWithStore(this.storeName, "quantity", int.class);
-    FieldWithStore isFood = new FieldWithStore(this.storeName, "isFood", boolean.class);
+  protected Map<String, List<Field>> getFieldsByStore() {
+    Field ean = new Field(this.storeName, "ean", String.class);
+    Field eanId = new Field(this.storeName, "eanId", int.class);
+    Field category = new Field(this.storeName, "category", String.class);
+    Field subcategory = new Field(this.storeName, "subcategory", String.class);
+    Field price = new Field(this.storeName, "price", double.class);
+    Field qty = new Field(this.storeName, "quantity", int.class);
+    Field isFood = new Field(this.storeName, "isFood", boolean.class);
     return Map.of(this.storeName, List.of(eanId, ean, category, subcategory, price, qty, isFood));
   }
 
@@ -223,7 +223,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of(MAIN_SCENARIO_NAME, 3l),
             List.of("s1", 3l),
             List.of("s2", 3l));
-    Assertions.assertThat(result.headers().stream().map(Header::field).map(FieldWithStore::name))
+    Assertions.assertThat(result.headers().stream().map(Header::field).map(Field::name))
             .containsExactly(SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
   }
 
@@ -357,7 +357,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of(MAIN_SCENARIO_NAME, 30l, 30l),
             List.of("s1", 30l, 30l),
             List.of("s2", 30l, 30l));
-    Assertions.assertThat(result.headers().stream().map(Header::field).map(FieldWithStore::name))
+    Assertions.assertThat(result.headers().stream().map(Header::field).map(Field::name))
             .containsExactly(SCENARIO_FIELD_NAME, "quantity if food or drink", "quantity filtered");
 
     // Mutliple fields
@@ -511,7 +511,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(List.of(4650d, 4650d, 9900l, 9900d, 100l, 100d));
-    Assertions.assertThat(result.headers().stream().map(Header::field).map(FieldWithStore::name).toList())
+    Assertions.assertThat(result.headers().stream().map(Header::field).map(Field::name).toList())
             .containsExactly("a1", "a2", "b1", "b2", "constant(100)", "constant(100.0)");
   }
 
@@ -543,7 +543,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
     Table result = this.executor.execute(query1, query2, null);
 
-    Assertions.assertThat(result.headers().stream().map(Header::field).map(FieldWithStore::name).toList())
+    Assertions.assertThat(result.headers().stream().map(Header::field).map(Field::name).toList())
             .containsExactly("category", SCENARIO_FIELD_NAME, "p_sum", "p_min");
     Assertions.assertThat(result).containsExactly(
             Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, 46.5d, 1.5d),

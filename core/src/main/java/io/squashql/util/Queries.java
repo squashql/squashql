@@ -3,7 +3,7 @@ package io.squashql.util;
 import io.squashql.query.*;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.dto.*;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 
 import java.util.*;
 import java.util.function.Function;
@@ -46,8 +46,8 @@ public final class Queries {
     return res;
   }
 
-  public static DatabaseQuery queryScopeToDatabaseQuery(QueryExecutor.QueryScope queryScope, Function<String, FieldWithStore> fieldSupplier, int limit) {
-    Set<FieldWithStore> selects = new HashSet<>();
+  public static DatabaseQuery queryScopeToDatabaseQuery(QueryExecutor.QueryScope queryScope, Function<String, Field> fieldSupplier, int limit) {
+    Set<Field> selects = new HashSet<>();
     queryScope.columns().forEach(selects::add);
     DatabaseQuery prefetchQuery = new DatabaseQuery();
     if (queryScope.tableDto() != null) {
@@ -65,7 +65,7 @@ public final class Queries {
     return prefetchQuery;
   }
 
-  public static DatabaseQuery toSubDatabaseQuery(QueryDto query, Function<String, FieldWithStore> fieldSupplier) {
+  public static DatabaseQuery toSubDatabaseQuery(QueryDto query, Function<String, Field> fieldSupplier) {
     if (query.subQuery != null) {
       throw new IllegalArgumentException("sub-query in a sub-query is not supported");
     }

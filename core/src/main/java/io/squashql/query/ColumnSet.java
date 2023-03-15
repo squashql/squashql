@@ -2,7 +2,7 @@ package io.squashql.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ public interface ColumnSet {
   List<String> getColumnsForPrefetching();
 
   @JsonIgnore
-  List<FieldWithStore> getNewColumns();
+  List<Field> getNewColumns();
 
   @JsonIgnore
   ColumnSetKey getColumnSetKey();

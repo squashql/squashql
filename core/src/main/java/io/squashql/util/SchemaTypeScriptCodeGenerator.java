@@ -1,7 +1,7 @@
 package io.squashql.util;
 
 import io.squashql.store.Datastore;
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 import io.squashql.store.Store;
 
 import java.util.Map;
@@ -46,7 +46,7 @@ public class SchemaTypeScriptCodeGenerator {
     storesByName.forEach((storeName, store) -> {
       sb.append("export class ").append(transformName(storeName, true)).append("Table {").append(System.lineSeparator());
       addAttribute(sb, "tableName", storeName);
-      for (FieldWithStore field : store.fields()) {
+      for (Field field : store.fields()) {
         addAttribute(sb, transformName(field.name(), false), field.name());
       }
       sb.append('}').append(System.lineSeparator());

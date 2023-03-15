@@ -1,6 +1,6 @@
 package io.squashql.query;
 
-import io.squashql.store.FieldWithStore;
+import io.squashql.store.Field;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -72,9 +72,9 @@ public class GraphPrinter {
     StringBuilder sb = new StringBuilder();
     appendIfNotNullOrNotEmpty(sb, null, scope.tableDto());
     appendIfNotNullOrNotEmpty(sb, null, scope.subQuery());
-    appendIfNotNullOrNotEmpty(sb, "columns=", scope.columns().stream().map(FieldWithStore::name).toList());
+    appendIfNotNullOrNotEmpty(sb, "columns=", scope.columns().stream().map(Field::name).toList());
     appendIfNotNullOrNotEmpty(sb, null, scope.whereCriteriaDto());
-    appendIfNotNullOrNotEmpty(sb, "rollup=", scope.rollupColumns().stream().map(FieldWithStore::name).toList());
+    appendIfNotNullOrNotEmpty(sb, "rollup=", scope.rollupColumns().stream().map(Field::name).toList());
     return sb.toString();
   }
 
