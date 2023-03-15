@@ -113,7 +113,7 @@ public class TestSQLTranslator {
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("""
                     select `scenario`, `type`,
-                     grouping(`scenario`) as `___grouping___scenario___`, grouping(`type`) as `___grouping___type___`,
+                     grouping(`scenario`), grouping(`type`),
                      sum(`price`) as `pnl.sum`
                      from `baseStore` group by rollup(`scenario`, `type`)
                     """.replaceAll(System.lineSeparator(), ""));
@@ -132,7 +132,7 @@ public class TestSQLTranslator {
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("""
                     select `baseStore`.`scenario`, `baseStore`.`type`,
-                     grouping(`baseStore`.`scenario`) as `___grouping___scenario___`, grouping(`baseStore`.`type`) as `___grouping___type___`,
+                     grouping(`baseStore`.`scenario`), grouping(`baseStore`.`type`),
                      sum(`price`) as `pnl.sum`
                      from `baseStore` group by rollup(`baseStore`.`scenario`, `baseStore`.`type`)
                     """.replaceAll(System.lineSeparator(), ""));
@@ -149,7 +149,7 @@ public class TestSQLTranslator {
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select `scenario`, `type`," +
-                    " grouping(`scenario`) as `___grouping___scenario___`," +
+                    " grouping(`scenario`)," +
                     " sum(`price`) as `pnl.sum`" +
                     " from `baseStore` group by `type`, rollup(`scenario`)");
   }

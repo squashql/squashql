@@ -42,8 +42,9 @@ public class AggregatedMeasure implements BasicMeasure {
     } else if (this.field.equals("*")) {
       sql = this.aggregationFunction + "(*)";
     } else {
-      Field field = fieldProvider.apply(this.field);
-      sql = this.aggregationFunction + "(" + queryRewriter.select(field) + ")";
+      Field f = fieldProvider.apply(this.field);
+      String fieldFullName = SqlUtils.getFieldFullName(f.store() == null ? null : queryRewriter.tableName(f.store()), queryRewriter.fieldName(f.name()));
+      sql = this.aggregationFunction + "(" + fieldFullName + ")";
     }
     return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.alias) : sql;
   }

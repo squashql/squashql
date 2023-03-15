@@ -9,14 +9,12 @@ import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.Table;
 import io.squashql.store.Field;
+import io.squashql.store.Store;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 
 import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
@@ -42,7 +40,16 @@ public class TestBigQueryEngine {
             .aggregatedMeasure("price.avg", "price", "avg")
             .table("baseStore");
 
-    BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
+    BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName") {
+      @Override
+      public Map<String, Store> storesByName() {
+        return Map.of("baseStore", new Store("baseStore", List.of(
+                TestBigQueryEngine.this.fieldSupplier.apply(SCENARIO_FIELD_NAME),
+                TestBigQueryEngine.this.fieldSupplier.apply(category),
+                TestBigQueryEngine.this.fieldSupplier.apply("price")
+        )));
+      }
+    };
     BigQueryEngine bqe = new BigQueryEngine(datastore);
     String sqlStatement = bqe.createSqlStatement(query);
     Assertions.assertThat(sqlStatement)
@@ -62,7 +69,17 @@ public class TestBigQueryEngine {
             .aggregatedMeasure("price.sum", "price", "sum")
             .table("baseStore");
 
-    BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
+    BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName") {
+      @Override
+      public Map<String, Store> storesByName() {
+        return Map.of("baseStore", new Store("baseStore", List.of(
+                TestBigQueryEngine.this.fieldSupplier.apply("col1"),
+                TestBigQueryEngine.this.fieldSupplier.apply("col2"),
+                TestBigQueryEngine.this.fieldSupplier.apply("col3"),
+                TestBigQueryEngine.this.fieldSupplier.apply("col4")
+        )));
+      }
+    };
     BigQueryEngine bqe = new BigQueryEngine(datastore);
     String sqlStatement = bqe.createSqlStatement(query);
     // The order in the rollup is important to fetch the right (sub)totals
@@ -100,7 +117,16 @@ public class TestBigQueryEngine {
             .aggregatedMeasure("price.sum", "price", "sum")
             .table("baseStore");
 
-    BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
+    BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName") {
+      @Override
+      public Map<String, Store> storesByName() {
+        return Map.of("baseStore", new Store("baseStore", List.of(
+                TestBigQueryEngine.this.fieldSupplier.apply(SCENARIO_FIELD_NAME),
+                TestBigQueryEngine.this.fieldSupplier.apply(category),
+                TestBigQueryEngine.this.fieldSupplier.apply("price")
+        )));
+      }
+    };
     BigQueryEngine bqe = new BigQueryEngine(datastore);
     String sqlStatement = bqe.createSqlStatement(query);
     // Statement is the same as full rollup because BQ does not support partial rollup
