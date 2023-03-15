@@ -18,7 +18,7 @@ public interface QueryRewriter {
    * @return the customized argument
    */
   default String select(String table, String select) {
-    return table == null ? fieldName(select) : tableName(table) + "." + fieldName(select);
+    return table == null ? fieldName(select) : tableName(table) + "." + fieldName(select); // FIXME should it take FieldWithStore?
   }
 
   /**
@@ -28,7 +28,7 @@ public interface QueryRewriter {
    * @return the customized argument
    */
   default String rollup(String table, String rollup) {
-    return table == null ? fieldName(rollup) : tableName(table) + "." + fieldName(rollup);
+    return table == null ? fieldName(rollup) : tableName(table) + "." + fieldName(rollup); // FIXME should it take FieldWithStore?
   }
 
   default String measureAlias(String alias) {
