@@ -2,7 +2,7 @@ package io.squashql.transaction;
 
 import io.squashql.SnowflakeDatastore;
 import io.squashql.SnowflakeUtil;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
 import java.sql.Connection;
@@ -30,24 +30,24 @@ public class SnowflakeTransactionManager implements TransactionManager {
     }
   }
 
-  public void createOrReplaceTable(String table, List<Field> fields) {
+  public void createOrReplaceTable(String table, List<FieldWithStore> fields) {
     createOrReplaceTable(this.snowflakeDatastore, table, fields, true);
   }
 
-  public static void createOrReplaceTable(SnowflakeDatastore snowflakeDatastore, String table, List<Field> fields,
-          boolean cjMode) {
-    List<Field> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
+  public static void createOrReplaceTable(SnowflakeDatastore snowflakeDatastore, String table, List<FieldWithStore> fields,
+                                          boolean cjMode) {
+    List<FieldWithStore> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
             .ofAll(fields)
-            .newWith(new Field(SCENARIO_FIELD_NAME, String.class))
+            .newWith(new FieldWithStore(table, SCENARIO_FIELD_NAME, String.class))
             .castToList() : fields;
 
     try (Connection conn = snowflakeDatastore.getConnection();
-            Statement stmt = conn.createStatement()) {
+         Statement stmt = conn.createStatement()) {
       StringBuilder sb = new StringBuilder();
       sb.append("(");
       int size = list.size();
       for (int i = 0; i < size; i++) {
-        Field field = list.get(i);
+        FieldWithStore field = list.get(i);
         sb.append("\"").append(field.name()).append("\" ").append(SnowflakeUtil.classToSqlType(field.type()));
         if (i < size - 1) {
           sb.append(", ");
@@ -67,7 +67,7 @@ public class SnowflakeTransactionManager implements TransactionManager {
     String join = String.join(",", IntStream.range(0, tuples.get(0).length + 1).mapToObj(i -> "?").toList());
     String pattern = "insert into \"" + store + "\" values(" + join + ")";
     try (Connection conn = this.snowflakeDatastore.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(pattern)) {
+         PreparedStatement stmt = conn.prepareStatement(pattern)) {
       for (Object[] tuple : tuples) {
         for (int i = 0; i < tuple.length; i++) {
           Object o = tuple[i];
@@ -86,7 +86,7 @@ public class SnowflakeTransactionManager implements TransactionManager {
   }
 
   private void ensureScenarioColumnIsPresent(String store) {
-    List<Field> fields = this.snowflakeDatastore.storesByName().get(store).fields();
+    List<FieldWithStore> fields = this.snowflakeDatastore.storesByName().get(store).fields();
     boolean found = fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
     if (!found) {
       throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));

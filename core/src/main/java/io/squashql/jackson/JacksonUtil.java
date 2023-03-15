@@ -5,11 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.squashql.query.Header;
 import io.squashql.query.Table;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class JacksonUtil {
 
@@ -38,7 +37,7 @@ public class JacksonUtil {
   }
 
   public static Map<String, Iterable<?>> serializeTable(Table table) {
-    List<String> fields = table.headers().stream().map(Header::field).map(Field::name).toList();
+    List<String> fields = table.headers().stream().map(Header::field).map(FieldWithStore::name).toList();
     // Jackson can serialize Iterable<?> so there is nothing to do to serialize table!
     return Map.of("columns", fields, "rows", table);
   }

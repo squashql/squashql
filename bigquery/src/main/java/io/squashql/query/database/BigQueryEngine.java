@@ -6,7 +6,6 @@ import io.squashql.BigQueryUtil;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.Table;
 import io.squashql.query.*;
-import io.squashql.store.Field;
 import io.squashql.store.FieldWithStore;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.api.tuple.Pair;
@@ -106,7 +105,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
     MutableIntSet rowIndicesToRemove = new IntHashSet();
     for (int i = 0; i < input.headers().size(); i++) {
-      Field field = input.headers().get(i).field();
+      FieldWithStore field = input.headers().get(i).field();
       List<Object> columnValues = input.getColumn(i);
       if (i < query.select.size()) {
         List<Object> baseColumnValues = input.getColumnValues(field.name());
@@ -162,7 +161,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
               query,
               schema.getFields(),
-              (column, name) -> new Field(name, BigQueryUtil.bigQueryTypeToClass(column.getType())),
+              (column, name) -> new FieldWithStore(null, name, BigQueryUtil.bigQueryTypeToClass(column.getType())),
               tableResult.iterateAll().iterator(),
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i),
               this.queryRewriter
@@ -184,7 +183,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       Schema schema = tableResult.getSchema();
       Pair<List<Header>, List<List<Object>>> result = transformToRowFormat(
               schema.getFields(),
-              column -> new Field(column.getName(), BigQueryUtil.bigQueryTypeToClass(column.getType())),
+              column -> new FieldWithStore(null, column.getName(), BigQueryUtil.bigQueryTypeToClass(column.getType())),
               tableResult.iterateAll().iterator(),
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i));
       return new RowTable(result.getOne(), result.getTwo());

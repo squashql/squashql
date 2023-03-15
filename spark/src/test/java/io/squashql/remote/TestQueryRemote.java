@@ -8,7 +8,6 @@ import io.squashql.query.Table;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.SparkQueryEngine;
 import io.squashql.store.Datastore;
-import io.squashql.store.Field;
 import io.squashql.store.FieldWithStore;
 import io.squashql.transaction.SparkTransactionManager;
 import org.apache.spark.SparkConf;
@@ -90,10 +89,10 @@ public class TestQueryRemote {
     SparkQueryEngine queryEngine = new SparkQueryEngine(datastore);
     SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
 
-    Field ean = new Field("ean", String.class);
-    Field category = new Field("category", String.class);
-    Field price = new Field("price", double.class);
-    Field qty = new Field("quantity", int.class);
+    FieldWithStore ean = new FieldWithStore(storeName, "ean", String.class);
+    FieldWithStore category = new FieldWithStore(storeName, "category", String.class);
+    FieldWithStore price = new FieldWithStore(storeName, "price", double.class);
+    FieldWithStore qty = new FieldWithStore(storeName, "quantity", int.class);
     tm.createTemporaryTable(storeName, List.of(ean, category, price, qty));
 
     tm.load(MAIN_SCENARIO_NAME, storeName, List.of(

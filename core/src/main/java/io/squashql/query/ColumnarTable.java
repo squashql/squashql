@@ -2,7 +2,7 @@ package io.squashql.query;
 
 import com.google.common.base.Suppliers;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -44,7 +44,7 @@ public class ColumnarTable implements Table {
   }
 
   @Override
-  public void addAggregates(Field field, Measure measure, List<Object> values) {
+  public void addAggregates(FieldWithStore field, Measure measure, List<Object> values) {
     this.headers.add(new Header(field, true));
     this.measures.add(measure);
     this.values.add(values);

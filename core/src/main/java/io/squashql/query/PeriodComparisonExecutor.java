@@ -2,7 +2,7 @@ package io.squashql.query;
 
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.Period;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
@@ -38,7 +38,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
   }
 
   @Override
-  protected BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
+  protected BiPredicate<Object[], FieldWithStore[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
     Map<PeriodUnit, String> referencePosition = new HashMap<>();
     Period period = this.cmrp.period;
     Map<String, PeriodUnit> mapping = mapping(period);
@@ -56,7 +56,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     return new ShiftProcedure(period, referencePosition, indexByPeriodUnit);
   }
 
-  static class ShiftProcedure implements BiPredicate<Object[], Field[]> {
+  static class ShiftProcedure implements BiPredicate<Object[], FieldWithStore[]> {
 
     final Period period;
     final Map<PeriodUnit, String> referencePosition;
@@ -80,7 +80,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     }
 
     @Override
-    public boolean test(Object[] row, Field[] fields) {
+    public boolean test(Object[] row, FieldWithStore[] fields) {
       int unknown = -1;
       int yearIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.YEAR, unknown);
       int semesterIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.SEMESTER, unknown);
@@ -169,7 +169,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
       return (int) ((Number) o).longValue(); // with some database, year could be Long object.
     }
 
-    private static void write(Object[] rowIndex, int index, Field field, int number) {
+    private static void write(Object[] rowIndex, int index, FieldWithStore field, int number) {
       if (field.type() == Long.class || field.type() == long.class) {
         rowIndex[index] = (long) number;
       } else if (field.type() == Integer.class || field.type() == int.class) {

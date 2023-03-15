@@ -4,7 +4,7 @@ import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.*;
 import com.google.common.base.Suppliers;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import io.squashql.store.Store;
 
 import java.util.*;
@@ -62,7 +62,7 @@ public class BigQueryServiceAccountDatastore implements BigQueryDatastore {
             .stream()
             .collect(HashMap::new,
                     (map, table) -> {
-                      List<Field> fields = getFieldsOrNull(bigquery, datasetName, table);
+                      List<FieldWithStore> fields = getFieldsOrNull(bigquery, datasetName, table);
                       if (fields != null) {
                         map.put(table, new Store(table, fields));
                       }
@@ -81,12 +81,12 @@ public class BigQueryServiceAccountDatastore implements BigQueryDatastore {
     return tableNames;
   }
 
-  public static List<Field> getFieldsOrNull(BigQuery query, String datasetName, String tableName) {
-    List<Field> fields = new ArrayList<>();
+  public static List<FieldWithStore> getFieldsOrNull(BigQuery query, String datasetName, String tableName) {
+    List<FieldWithStore> fields = new ArrayList<>();
     try {
       Schema schema = query.getTable(datasetName, tableName).getDefinition().getSchema();
       for (com.google.cloud.bigquery.Field field : schema.getFields()) {
-        fields.add(new Field(field.getName(), BigQueryUtil.bigQueryTypeToClass(field.getType())));
+        fields.add(new FieldWithStore(tableName, field.getName(), BigQueryUtil.bigQueryTypeToClass(field.getType())));
       }
       return fields;
     } catch (Exception e) {

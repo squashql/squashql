@@ -3,9 +3,10 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,12 +21,12 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
   protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
-  protected Map<String, List<Field>> getFieldsByStore() {
-    Field city = new Field("city", String.class);
-    Field country = new Field("country", String.class);
-    Field continent = new Field("continent", String.class);
-    Field spendingCategory = new Field("spending_category", String.class);
-    Field amount = new Field("amount", double.class);
+  protected Map<String, List<FieldWithStore>> getFieldsByStore() {
+    FieldWithStore city = new FieldWithStore(this.storeName, "city", String.class);
+    FieldWithStore country = new FieldWithStore(this.storeName, "country", String.class);
+    FieldWithStore continent = new FieldWithStore(this.storeName, "continent", String.class);
+    FieldWithStore spendingCategory = new FieldWithStore(this.storeName, "spending_category", String.class);
+    FieldWithStore amount = new FieldWithStore(this.storeName, "amount", double.class);
     return Map.of(this.storeName, List.of(city, country, continent, spendingCategory, amount));
   }
 

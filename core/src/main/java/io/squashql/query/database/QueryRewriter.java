@@ -20,7 +20,7 @@ public interface QueryRewriter {
    * @return the customized argument
    */
   default String select(FieldWithStore f) {
-    return FieldWithStore.buildFullName(tableName(f.store()), fieldName(f.name()));
+    return FieldWithStore.buildFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
   }
 
   /**
@@ -30,7 +30,7 @@ public interface QueryRewriter {
    * @return the customized argument
    */
   default String rollup(FieldWithStore f) {
-    return FieldWithStore.buildFullName(tableName(f.store()), fieldName(f.name()));
+    return FieldWithStore.buildFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
   }
 
   default String measureAlias(String alias) {

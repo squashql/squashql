@@ -2,12 +2,10 @@ package io.squashql.query;
 
 import com.google.common.base.Suppliers;
 import io.squashql.query.database.QueryEngine;
-import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.Field;
 import io.squashql.store.FieldWithStore;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.NullAndTotalComparator;
@@ -93,7 +91,7 @@ public class TableUtils {
   public static List<MetadataItem> buildTableMetadata(Table t) {
     List<MetadataItem> metadata = new ArrayList<>();
     for (Header header : t.headers()) {
-      Field field = header.field();
+      FieldWithStore field = header.field();
       Optional<Measure> optionalMeasure = t.measures().stream()
               .filter(m -> m.alias().equals(header.field().name()))
               .findAny();

@@ -7,7 +7,6 @@ import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import com.github.benmanes.caffeine.cache.stats.ConcurrentStatsCounter;
 import com.github.benmanes.caffeine.cache.stats.StatsCounter;
 import io.squashql.query.dto.CacheStatsDto;
-import io.squashql.store.Field;
 import io.squashql.store.FieldWithStore;
 
 import java.time.Duration;
@@ -46,8 +45,8 @@ public class CaffeineQueryCache implements QueryCache {
   @Override
   public ColumnarTable createRawResult(PrefetchQueryScope scope) {
     Set<FieldWithStore> columns = scope.columns();
-    List<Header> headers = new ArrayList<>(columns.stream().map(column -> new Header(new Field(column.name(), column.type()), false)).toList());
-    headers.add(new Header(new Field(CountMeasure.ALIAS, long.class), true));
+    List<Header> headers = new ArrayList<>(columns.stream().map(column -> new Header(new FieldWithStore(null, column.name(), column.type()), false)).toList());
+    headers.add(new Header(new FieldWithStore(null, CountMeasure.ALIAS, long.class), true));
 
     List<List<Object>> values = new ArrayList<>();
     Table table = this.results.getIfPresent(scope);
@@ -81,7 +80,7 @@ public class CaffeineQueryCache implements QueryCache {
       if (!cache.measures().contains(measure)) {
         // Not in the previousResult, add it.
         List<Object> aggregateValues = result.getAggregateValues(measure);
-        Field field = result.getField(measure);
+        FieldWithStore field = result.getField(measure);
         cache.addAggregates(field, measure, aggregateValues);
         this.measureCounter.recordMisses(1);
       }
@@ -96,7 +95,7 @@ public class CaffeineQueryCache implements QueryCache {
     Table cacheResult = this.results.getIfPresent(scope);
     for (Measure measure : measures) {
       List<Object> aggregateValues = cacheResult.getAggregateValues(measure);
-      Field field = cacheResult.getField(measure);
+      FieldWithStore field = cacheResult.getField(measure);
       result.addAggregates(field, measure, aggregateValues);
       this.measureCounter.recordHits(1);
     }

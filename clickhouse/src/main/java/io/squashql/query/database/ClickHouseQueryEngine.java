@@ -7,7 +7,7 @@ import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.RowTable;
 import io.squashql.query.Table;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import org.eclipse.collections.api.tuple.Pair;
 
 import java.util.HashSet;
@@ -55,7 +55,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
               query,
               response.getColumns(),
-              (column, name) -> new Field(name, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())),
+              (column, name) -> new FieldWithStore(null, name, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())),
               response.records().iterator(),
               (i, r) -> r.getValue(i).asObject(),
               this.queryRewriter);
@@ -78,7 +78,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
                  .get()) {
       Pair<List<Header>, List<List<Object>>> result = transformToRowFormat(
               response.getColumns(),
-              column -> new Field(column.getColumnName(), ClickHouseUtil.clickHouseTypeToClass(column.getDataType())),
+              column -> new FieldWithStore(null, column.getColumnName(), ClickHouseUtil.clickHouseTypeToClass(column.getDataType())),
               response.records().iterator(),
               (i, r) -> r.getValue(i).asObject());
       return new RowTable(result.getOne(), result.getTwo());

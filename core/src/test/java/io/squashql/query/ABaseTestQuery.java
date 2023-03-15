@@ -2,7 +2,7 @@ package io.squashql.query;
 
 import io.squashql.query.database.QueryEngine;
 import io.squashql.store.Datastore;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import io.squashql.transaction.TransactionManager;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
@@ -17,7 +17,7 @@ public abstract class ABaseTestQuery {
   protected QueryEngine queryEngine;
   protected TransactionManager tm;
   protected QueryExecutor executor;
-  protected Map<String, List<Field>> fieldsByStore;
+  protected Map<String, List<FieldWithStore>> fieldsByStore;
 
   @BeforeAll
   void setup() {
@@ -41,7 +41,7 @@ public abstract class ABaseTestQuery {
 
   protected abstract TransactionManager createTransactionManager();
 
-  protected abstract Map<String, List<Field>> getFieldsByStore();
+  protected abstract Map<String, List<FieldWithStore>> getFieldsByStore();
 
   protected abstract void createTables();
 

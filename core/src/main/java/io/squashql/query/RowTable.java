@@ -1,14 +1,9 @@
 package io.squashql.query;
 
 import io.squashql.query.dictionary.ObjectArrayDictionary;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.IntStream;
+import java.util.*;
 
 public class RowTable implements Table {
 
@@ -25,7 +20,7 @@ public class RowTable implements Table {
   }
 
   @Override
-  public void addAggregates(Field field, Measure measure, List<Object> values) {
+  public void addAggregates(FieldWithStore field, Measure measure, List<Object> values) {
     throwNotSupportedException();
   }
 
@@ -63,7 +58,7 @@ public class RowTable implements Table {
 
   @Override
   public String toString() {
-    return TableUtils.toString(this.headers, this, f -> ((Field) f).name(), String::valueOf);
+    return TableUtils.toString(this.headers, this, f -> ((FieldWithStore) f).name(), String::valueOf);
   }
 
   @Override

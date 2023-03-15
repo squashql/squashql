@@ -3,7 +3,7 @@ package io.squashql.query;
 import io.squashql.ClickHouseDatastore;
 import io.squashql.query.database.ClickHouseQueryEngine;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import io.squashql.transaction.ClickHouseTransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Disabled;
@@ -58,13 +58,13 @@ public class TestLoadingFromCSV {
 
     String storeName = "myAwesomeStore";
     tm.dropAndCreateInMemoryTableWithoutScenarioColumn(storeName, List.of(
-            new Field("CustomerID", int.class),
-            new Field("CustomerName", String.class),
-            new Field("ContactName", String.class),
-            new Field("Address", String.class),
-            new Field("City", String.class),
-            new Field("PostalCode", String.class),
-            new Field("Country", String.class)
+            new FieldWithStore(storeName, "CustomerID", int.class),
+            new FieldWithStore(storeName, "CustomerName", String.class),
+            new FieldWithStore(storeName, "ContactName", String.class),
+            new FieldWithStore(storeName, "Address", String.class),
+            new FieldWithStore(storeName, "City", String.class),
+            new FieldWithStore(storeName, "PostalCode", String.class),
+            new FieldWithStore(storeName, "Country", String.class)
     ));
 
     tm.loadCsv(MAIN_SCENARIO_NAME, storeName, pathFunction.apply("customers.csv").toString(), delimiter, header);

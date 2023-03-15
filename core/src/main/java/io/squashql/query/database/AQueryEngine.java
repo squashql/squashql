@@ -2,7 +2,6 @@ package io.squashql.query.database;
 
 import io.squashql.query.*;
 import io.squashql.store.Datastore;
-import io.squashql.store.Field;
 import io.squashql.store.FieldWithStore;
 import io.squashql.store.Store;
 import lombok.extern.slf4j.Slf4j;
@@ -45,33 +44,22 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
         String fieldNameInTable = split[1];
         Store store = this.datastore.storesByName().get(tableName);
         if (store != null) {
-          for (Field field : store.fields()) {
+          for (FieldWithStore field : store.fields()) {
             if (field.name().equals(fieldNameInTable)) {
-              return new FieldWithStore(store.name(), field.name(), field.type());
+              return field;
             }
           }
         }
       } else {
-//        String table = null;
-//        Field f = null;
         for (Store store : this.datastore.storesByName().values()) {
-          for (Field field : store.fields()) {
+          for (FieldWithStore field : store.fields()) {
             if (field.name().equals(fieldName)) {
+              // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
+              // if any ambiguity, the DB will raise an exception.
               return new FieldWithStore(null, field.name(), field.type());
-
-//              if (table == null) {
-//                table = store.name();
-//                f = field;
-//              } else {
-//                throw new RuntimeException(String.format("ambiguous field '%s'. It exists in table '%s' and '%s'", fieldName, table, store.name()));
-//              }
             }
           }
         }
-
-//        if (f != null) {
-//          return new FieldWithStore(table, f.name(), f.type());
-//        }
       }
 
       if (fieldName.equals(CountMeasure.INSTANCE.alias())) {
@@ -178,7 +166,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   public static <Column, Record> Pair<List<Header>, List<List<Object>>> transformToColumnFormat(
           DatabaseQuery query,
           List<Column> columns,
-          BiFunction<Column, String, Field> columnToField,
+          BiFunction<Column, String, FieldWithStore> columnToField,
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue,
           QueryRewriter queryRewriter) {
@@ -205,7 +193,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   public static <Column, Record> Pair<List<Header>, List<List<Object>>> transformToRowFormat(
           List<Column> columns,
-          Function<Column, Field> columnToField,
+          Function<Column, FieldWithStore> columnToField,
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue) {
     List<Header> headers = columns.stream().map(column -> new Header(columnToField.apply(column), false)).toList();

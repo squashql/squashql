@@ -1,7 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.database.SQLTranslator;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
 
 import java.util.List;
@@ -16,11 +16,11 @@ public class ParentComparisonExecutor extends AComparisonExecutor {
   }
 
   @Override
-  protected BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
+  protected BiPredicate<Object[], FieldWithStore[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
     return new ShiftProcedure(this.pcm.ancestors, indexByColumn);
   }
 
-  static class ShiftProcedure implements BiPredicate<Object[], Field[]> {
+  static class ShiftProcedure implements BiPredicate<Object[], FieldWithStore[]> {
 
     final List<String> ancestors;
     final ObjectIntMap<String> indexByColumn;
@@ -31,7 +31,7 @@ public class ParentComparisonExecutor extends AComparisonExecutor {
     }
 
     @Override
-    public boolean test(Object[] row, Field[] fields) {
+    public boolean test(Object[] row, FieldWithStore[] fields) {
       for (String ancestor : this.ancestors) {
         // Is it expressed ?
         if (this.indexByColumn.containsKey(ancestor)) {

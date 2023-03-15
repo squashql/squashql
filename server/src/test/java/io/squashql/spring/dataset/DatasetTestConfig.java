@@ -3,7 +3,7 @@ package io.squashql.spring.dataset;
 import io.squashql.SparkDatastore;
 import io.squashql.query.SquashQLUser;
 import io.squashql.query.database.SparkQueryEngine;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import io.squashql.store.Store;
 import io.squashql.transaction.SparkTransactionManager;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -31,24 +31,24 @@ public class DatasetTestConfig {
   }
 
   public static SparkDatastore createTestDatastoreWithData() {
-    Field ean = new Field("ean", String.class);
-    Field pdv = new Field("pdv", String.class);
-    Field price = new Field("price", double.class);
-    Field qty = new Field("quantity", int.class);
-    Field capdv = new Field("capdv", double.class);
+    FieldWithStore ean = new FieldWithStore("our_prices", "ean", String.class);
+    FieldWithStore pdv = new FieldWithStore("our_prices", "pdv", String.class);
+    FieldWithStore price = new FieldWithStore("our_prices", "price", double.class);
+    FieldWithStore qty = new FieldWithStore("our_prices", "quantity", int.class);
+    FieldWithStore capdv = new FieldWithStore("our_prices", "capdv", double.class);
 
-    Field compEan = new Field("competitor_ean", String.class);
-    Field compConcurrentPdv = new Field("competitor_concurrent_pdv", String.class);
-    Field compBrand = new Field("competitor_brand", String.class);
-    Field compConcurrentEan = new Field("competitor_concurrent_ean", String.class);
-    Field compPrice = new Field("competitor_price", double.class);
+    FieldWithStore compEan = new FieldWithStore("their_prices", "competitor_ean", String.class);
+    FieldWithStore compConcurrentPdv = new FieldWithStore("their_prices", "competitor_concurrent_pdv", String.class);
+    FieldWithStore compBrand = new FieldWithStore("their_prices", "competitor_brand", String.class);
+    FieldWithStore compConcurrentEan = new FieldWithStore("their_prices", "competitor_concurrent_ean", String.class);
+    FieldWithStore compPrice = new FieldWithStore("their_prices", "competitor_price", double.class);
 
     Store our_price_store = new Store("our_prices", List.of(ean, pdv, price, qty, capdv));
     Store their_prices_store = new Store("their_prices", List.of(compEan, compConcurrentPdv, compBrand,
             compConcurrentEan, compPrice));
     Store our_stores_their_stores_store = new Store("our_stores_their_stores", List.of(
-            new Field("our_store", String.class),
-            new Field("their_store", String.class)
+            new FieldWithStore("our_stores_their_stores", "our_store", String.class),
+            new FieldWithStore("our_stores_their_stores", "their_store", String.class)
     ));
 
     SparkDatastore datastore = new SparkDatastore();

@@ -5,7 +5,7 @@ import io.squashql.query.*;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.monitoring.QueryWatch;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import io.squashql.store.Store;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,7 +44,7 @@ public class QueryController {
     QueryWatch queryWatch = new QueryWatch();
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
     Table table = this.queryExecutor.execute(query, queryWatch, csBuilder, this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(), true);
-    List<String> fields = table.headers().stream().map(Header::field).map(Field::name).collect(Collectors.toList());
+    List<String> fields = table.headers().stream().map(Header::field).map(FieldWithStore::name).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))
             .columns(fields)
@@ -65,7 +65,7 @@ public class QueryController {
             queryMergeDto.first,
             queryMergeDto.second,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get());
-    List<String> fields = table.headers().stream().map(Header::field).map(Field::name).collect(Collectors.toList());
+    List<String> fields = table.headers().stream().map(Header::field).map(FieldWithStore::name).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))
             .columns(fields)

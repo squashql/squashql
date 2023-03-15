@@ -7,7 +7,7 @@ import io.squashql.query.context.QueryCacheContextValue;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.monitoring.QueryWatch;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,15 +39,15 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   }
 
   @Override
-  protected Map<String, List<Field>> getFieldsByStore() {
-    Field ean = new Field("ean", String.class);
-    Field category = new Field("category", String.class);
-    Field price = new Field("price", double.class);
-    Field qty = new Field("quantity", int.class);
+  protected Map<String, List<FieldWithStore>> getFieldsByStore() {
+    FieldWithStore ean = new FieldWithStore(this.storeName, "ean", String.class);
+    FieldWithStore category = new FieldWithStore(this.storeName, "category", String.class);
+    FieldWithStore price = new FieldWithStore(this.storeName, "price", double.class);
+    FieldWithStore qty = new FieldWithStore(this.storeName, "quantity", int.class);
 
-    Field comp_ean = new Field("comp_ean", String.class);
-    Field comp_name = new Field("comp_name", String.class);
-    Field comp_price = new Field("comp_price", double.class);
+    FieldWithStore comp_ean = new FieldWithStore(this.competitorStoreName, "comp_ean", String.class);
+    FieldWithStore comp_name = new FieldWithStore(this.competitorStoreName, "comp_name", String.class);
+    FieldWithStore comp_price = new FieldWithStore(this.competitorStoreName, "comp_price", double.class);
 
     return Map.of(
             this.storeName, List.of(ean, category, price, qty),

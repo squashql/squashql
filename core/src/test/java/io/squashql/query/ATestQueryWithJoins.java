@@ -3,7 +3,7 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.util.Throwables;
 import org.junit.jupiter.api.Test;
@@ -11,6 +11,7 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
@@ -29,23 +30,23 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
   protected final String categories = storeName("categories");
 
   @Override
-  protected Map<String, List<Field>> getFieldsByStore() {
-    Field orderId = new Field("orderId", int.class);
-    Field shipperId = new Field("shipperId", int.class);
-    Field orderDetailsId = new Field("orderDetailsId", int.class);
-    Field productId = new Field("productId", int.class);
-    Field quantity = new Field("quantity", int.class);
-    Field shipperName = new Field("name", String.class);
-    Field productName = new Field("name", String.class);
-    Field categoryId = new Field("categoryId", int.class);
-    Field price = new Field("price", double.class);
-    Field categoryName = new Field("name", String.class);
+  protected Map<String, List<FieldWithStore>> getFieldsByStore() {
+    Function<String, FieldWithStore> orderId = s -> new FieldWithStore(s, "orderId", int.class);
+    Function<String, FieldWithStore> shipperId = s -> new FieldWithStore(s, "shipperId", int.class);
+    FieldWithStore orderDetailsId = new FieldWithStore(this.orderDetails, "orderDetailsId", int.class);
+    Function<String, FieldWithStore> productId = s -> new FieldWithStore(s, "productId", int.class);
+    FieldWithStore quantity = new FieldWithStore(this.orderDetails, "quantity", int.class);
+    FieldWithStore shipperName = new FieldWithStore(this.shippers, "name", String.class);
+    FieldWithStore productName = new FieldWithStore(this.products, "name", String.class);
+    Function<String, FieldWithStore> categoryId = s -> new FieldWithStore(s, "categoryId", int.class);
+    FieldWithStore price = new FieldWithStore(this.products, "price", double.class);
+    FieldWithStore categoryName = new FieldWithStore(this.categories, "name", String.class);
     return Map.of(
-            this.orders, List.of(orderId, shipperId),
-            this.orderDetails, List.of(orderDetailsId, orderId, productId, quantity),
-            this.shippers, List.of(shipperId, shipperName),
-            this.products, List.of(productId, productName, categoryId, price),
-            this.categories, List.of(categoryId, categoryName));
+            this.orders, List.of(orderId.apply(this.orders), shipperId.apply(this.orders)),
+            this.orderDetails, List.of(orderDetailsId, orderId.apply(this.orderDetails), productId.apply(this.orderDetails), quantity),
+            this.shippers, List.of(shipperId.apply(this.shippers), shipperName),
+            this.products, List.of(productId.apply(this.products), productName, categoryId.apply(this.products), price),
+            this.categories, List.of(categoryId.apply(this.categories), categoryName));
   }
 
   @Override
@@ -109,7 +110,7 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
             List.of("Confections", "Chocolade", 10l),
             List.of("Confections", "Pavlova", 1l),
             List.of("Dairy Products", "Camembert Pierrot", 8l));
-    Assertions.assertThat(table.headers().stream().map(Header::field).map(Field::name))
+    Assertions.assertThat(table.headers().stream().map(Header::field).map(FieldWithStore::name))
             .containsExactly(this.categories + ".name", this.products + ".name", "quantity_sum");
   }
 

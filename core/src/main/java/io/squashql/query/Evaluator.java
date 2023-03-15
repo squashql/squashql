@@ -4,7 +4,6 @@ import io.squashql.query.QueryExecutor.ExecutionContext;
 import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import io.squashql.query.comp.BinaryOperations;
 import io.squashql.query.dto.BucketColumnSetDto;
-import io.squashql.store.Field;
 import io.squashql.store.FieldWithStore;
 
 import java.util.ArrayList;
@@ -58,7 +57,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     for (int i = 0; i < lo.size(); i++) {
       r.add(operation.apply((Number) lo.get(i), (Number) ro.get(i)));
     }
-    Field field = new Field(bom.alias(), BinaryOperations.getOutputType(bom.operator, lType, rType));
+    FieldWithStore field = new FieldWithStore(null, bom.alias(), BinaryOperations.getOutputType(bom.operator, lType, rType));
     intermediateResult.addAggregates(field, bom, r);
     return null;
   }
@@ -97,7 +96,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
 
   private static void executeComparator(ComparisonMeasureReferencePosition cm, Table writeToTable, Table readFromTable, AComparisonExecutor executor) {
     List<Object> agg = executor.compare(cm, writeToTable, readFromTable);
-    Field field = new Field(cm.alias(), BinaryOperations.getComparisonOutputType(cm.comparisonMethod, writeToTable.getField(cm.measure).type()));
+    FieldWithStore field = new FieldWithStore(null, cm.alias(), BinaryOperations.getComparisonOutputType(cm.comparisonMethod, writeToTable.getField(cm.measure).type()));
     writeToTable.addAggregates(field, cm, agg);
   }
 
@@ -125,7 +124,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     } else {
       throw new IllegalArgumentException("Unexpected type " + cm.getValue().getClass() + ". Only double and long are supported");
     }
-    Field field = new Field(cm.alias(), type);
+    FieldWithStore field = new FieldWithStore(null, cm.alias(), type);
     List<Object> r = Collections.nCopies((int) intermediateResult.count(), v);
     intermediateResult.addAggregates(field, cm, r);
   }

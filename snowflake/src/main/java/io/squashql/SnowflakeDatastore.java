@@ -2,7 +2,7 @@ package io.squashql;
 
 import com.google.common.base.Suppliers;
 import io.squashql.store.Datastore;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import io.squashql.store.Store;
 
 import java.sql.*;
@@ -60,7 +60,7 @@ public class SnowflakeDatastore implements Datastore {
           if (value == null) {
             value = new Store(key, new ArrayList<>());
           }
-          value.fields().add(new Field(columnName, SnowflakeUtil.sqlTypeToClass(dataType)));
+          value.fields().add(new FieldWithStore(tableName, columnName, SnowflakeUtil.sqlTypeToClass(dataType)));
           return value;
         });
       }

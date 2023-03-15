@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.common.base.Suppliers;
 import io.squashql.store.Datastore;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import io.squashql.store.Store;
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.Dataset;
@@ -16,14 +16,7 @@ import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.types.DataType;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Supplier;
 
 public class SparkDatastore implements Datastore {
@@ -77,18 +70,18 @@ public class SparkDatastore implements Datastore {
     }
   }
 
-  public static List<Field> getFields(SparkSession spark, String tableName) {
+  public static List<FieldWithStore> getFields(SparkSession spark, String tableName) {
     try {
       Catalog catalog = spark.catalog();
       Table table = catalog.getTable(tableName);
       Dataset<Column> columns = table.isTemporary()
               ? catalog.listColumns(tableName)
               : catalog.listColumns("default", tableName);
-      List<Field> fields = new ArrayList<>();
+      List<FieldWithStore> fields = new ArrayList<>();
       Iterator<Column> columnIterator = columns.toLocalIterator();
       while (columnIterator.hasNext()) {
         Column column = columnIterator.next();
-        fields.add(new Field(column.name(), SparkUtil.datatypeToClass(DataType.fromDDL(column.dataType()))));
+        fields.add(new FieldWithStore(tableName, column.name(), SparkUtil.datatypeToClass(DataType.fromDDL(column.dataType()))));
       }
       return fields;
     } catch (AnalysisException e) {

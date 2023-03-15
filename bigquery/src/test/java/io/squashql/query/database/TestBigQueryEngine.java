@@ -8,7 +8,6 @@ import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.Table;
-import io.squashql.store.Field;
 import io.squashql.store.FieldWithStore;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -70,12 +69,7 @@ public class TestBigQueryEngine {
             .table("baseStore");
 
     BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
-    BigQueryEngine bqe = new BigQueryEngine(datastore) {
-      @Override
-      protected Function<String, FieldWithStore> createFieldSupplier() {
-        return name -> new FieldWithStore("baseStore", name, String.class);
-      }
-    };
+    BigQueryEngine bqe = new BigQueryEngine(datastore);
     String sqlStatement = bqe.createSqlStatement(query);
     // The order in the rollup is important to fetch the right (sub)totals
     Assertions.assertThat(sqlStatement)
@@ -113,19 +107,14 @@ public class TestBigQueryEngine {
             .table("baseStore");
 
     BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName");
-    BigQueryEngine bqe = new BigQueryEngine(datastore) {
-      @Override
-      protected Function<String, FieldWithStore> createFieldSupplier() {
-        return name -> new FieldWithStore("baseStore", name, String.class);
-      }
-    };
+    BigQueryEngine bqe = new BigQueryEngine(datastore);
     String sqlStatement = bqe.createSqlStatement(query);
     // Statement is the same as full rollup because BQ does not support partial rollup
     Assertions.assertThat(sqlStatement)
-            .isEqualTo("select coalesce(`myProjectId.myDatasetName.baseStore`.`scenario`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`category`, '___null___')," +
+            .isEqualTo("select coalesce(`myProjectId.myDatasetName.baseStore`.`scenario`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`category`, -9223372036854775808)," +
                     " sum(`price`) as `price.sum`" +
                     " from `myProjectId.myDatasetName.baseStore`" +
-                    " group by rollup(coalesce(`myProjectId.myDatasetName.baseStore`.`scenario`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`category`, '___null___'))");
+                    " group by rollup(coalesce(`myProjectId.myDatasetName.baseStore`.`scenario`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`category`, -9223372036854775808))");
 
     List<List<Object>> values = List.of(
             new ArrayList<>(Arrays.asList(null, "main", "main", "main", "1", "1", "1")),
@@ -133,9 +122,9 @@ public class TestBigQueryEngine {
             new ArrayList<>(Arrays.asList(4, 2, 1, 1, 2, 1, 1)));
 
     ColumnarTable input = new ColumnarTable(
-            List.of(new Header(new Field(this.fieldSupplier.apply(scenario).getFullName(), String.class), false),
-                    new Header(new Field(this.fieldSupplier.apply(category).getFullName(), String.class), false),
-                    new Header(new Field("price.sum", int.class), true)),
+            List.of(new Header(new FieldWithStore(null, this.fieldSupplier.apply(scenario).getFullName(), String.class), false),
+                    new Header(new FieldWithStore(null, this.fieldSupplier.apply(category).getFullName(), String.class), false),
+                    new Header(new FieldWithStore(null, "price.sum", int.class), true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             values);
     Table output = bqe.postProcessDataset(input, query);

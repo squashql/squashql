@@ -3,7 +3,7 @@ package io.squashql.query.database;
 import io.squashql.SnowflakeDatastore;
 import io.squashql.SnowflakeUtil;
 import io.squashql.query.*;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 
 import java.io.Serializable;
 import java.sql.*;
@@ -79,7 +79,7 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
     for (int i = 1; i < metadata.getColumnCount() + 1; i++) {
       String fieldName = metadata.getColumnName(i);
       headers.add(new Header(
-              new Field(fieldName, SnowflakeUtil.sqlTypeToClass(metadata.getColumnType(i))),
+              new FieldWithStore(null, fieldName, SnowflakeUtil.sqlTypeToClass(metadata.getColumnType(i))),
               measureNames.contains(fieldName)));
     }
 

@@ -3,7 +3,7 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.Period;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import io.squashql.transaction.TransactionManager;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
@@ -32,16 +32,16 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
-  protected Map<String, List<Field>> getFieldsByStore() {
-    Field ean = new Field("ean", String.class);
-    Field category = new Field("category", String.class);
-    Field sales = new Field("sales", double.class);
-    Field qty = new Field("quantity", long.class);
-    Field year = new Field("year_sales", long.class); // Use long to make sure we support also long as type
-    Field semester = new Field("semester_sales", int.class);
-    Field quarter = new Field("quarter_sales", int.class);
-    Field month = new Field("month_sales", int.class);
-    Field date = new Field("date_sales", LocalDate.class);
+  protected Map<String, List<FieldWithStore>> getFieldsByStore() {
+    FieldWithStore ean = new FieldWithStore(this.storeName, "ean", String.class);
+    FieldWithStore category = new FieldWithStore(this.storeName, "category", String.class);
+    FieldWithStore sales = new FieldWithStore(this.storeName, "sales", double.class);
+    FieldWithStore qty = new FieldWithStore(this.storeName, "quantity", long.class);
+    FieldWithStore year = new FieldWithStore(this.storeName, "year_sales", long.class); // Use long to make sure we support also long as type
+    FieldWithStore semester = new FieldWithStore(this.storeName, "semester_sales", int.class);
+    FieldWithStore quarter = new FieldWithStore(this.storeName, "quarter_sales", int.class);
+    FieldWithStore month = new FieldWithStore(this.storeName, "month_sales", int.class);
+    FieldWithStore date = new FieldWithStore(this.storeName, "date_sales", LocalDate.class);
     return Map.of(this.storeName, List.of(ean, category, sales, qty, year, semester, quarter, month, date));
   }
 
@@ -107,7 +107,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(2), 0d, 80d),
             Arrays.asList(2023l, translate(3), 0d, 85d),
             Arrays.asList(2023l, translate(4), 0d, 35d));
-    Assertions.assertThat(finalTable.headers().stream().map(Header::field).map(Field::name))
+    Assertions.assertThat(finalTable.headers().stream().map(Header::field).map(FieldWithStore::name))
             .containsExactlyInAnyOrder(period.year(), period.quarter(), "myMeasure", "sum(sales)");
 
     // Add a condition and make sure condition is cleared during prefetching.s
@@ -158,7 +158,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(3), "base", 5d, 85d),
             Arrays.asList(2023l, translate(4), "base", -50d, 35d));
     Assertions
-            .assertThat(finalTable.headers().stream().map(Header::field).map(Field::name))
+            .assertThat(finalTable.headers().stream().map(Header::field).map(FieldWithStore::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.quarter(), "myMeasure", "sum(sales)");
   }
 
@@ -181,7 +181,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2022l, "base", null, 300d),
             Arrays.asList(2023l, "base", 0d, 300d));
     Assertions
-            .assertThat(finalTable.headers().stream().map(Header::field).map(Field::name))
+            .assertThat(finalTable.headers().stream().map(Header::field).map(FieldWithStore::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), "myMeasure", "sum(sales)");
 
     // Rollup will make Grand Total and Total appear. For this line, we can't make the comparison. Null should be
@@ -221,7 +221,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(1), "base", 60d, 180d),
             Arrays.asList(2023l, translate(2), "base", -60d, 120d));
     Assertions
-            .assertThat(finalTable.headers().stream().map(Header::field).map(Field::name))
+            .assertThat(finalTable.headers().stream().map(Header::field).map(FieldWithStore::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.semester(), "myMeasure", "sum(sales)");
   }
 
@@ -253,7 +253,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(2), "base", 40d, 60d),
             Arrays.asList(2023l, translate(12), "base", -5d, 10d));
     Assertions
-            .assertThat(finalTable.headers().stream().map(Header::field).map(Field::name))
+            .assertThat(finalTable.headers().stream().map(Header::field).map(FieldWithStore::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.month(), "myMeasure", "sum(sales)");
   }
 

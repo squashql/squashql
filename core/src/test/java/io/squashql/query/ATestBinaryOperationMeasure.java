@@ -3,7 +3,7 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -20,11 +20,11 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
   protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
-  protected Map<String, List<Field>> getFieldsByStore() {
-    Field ean = new Field("ean", String.class);
-    Field category = new Field("category", String.class);
-    Field sales = new Field("sales", double.class);
-    Field qty = new Field("quantity", long.class);
+  protected Map<String, List<FieldWithStore>> getFieldsByStore() {
+    FieldWithStore ean = new FieldWithStore(this.storeName, "ean", String.class);
+    FieldWithStore category = new FieldWithStore(this.storeName, "category", String.class);
+    FieldWithStore sales = new FieldWithStore(this.storeName, "sales", double.class);
+    FieldWithStore qty = new FieldWithStore(this.storeName, "quantity", long.class);
     return Map.of(this.storeName, List.of(ean, category, sales, qty));
   }
 
@@ -57,7 +57,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV + salesV, salesV + qtyV, qtyV + qtyV));
     Assertions
-            .assertThat(table.headers().stream().map(Header::field).map(Field::name))
+            .assertThat(table.headers().stream().map(Header::field).map(FieldWithStore::name))
             .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "plus1", "plus2", "plus3");
   }
 
@@ -82,7 +82,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV - salesV, salesV - qtyV, qtyV - qtyV));
     Assertions
-            .assertThat(table.headers().stream().map(Header::field).map(Field::name))
+            .assertThat(table.headers().stream().map(Header::field).map(FieldWithStore::name))
             .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "minus1", "minus2", "minus3");
   }
 
@@ -107,7 +107,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV * salesV, salesV * qtyV, qtyV * qtyV));
     Assertions
-            .assertThat(table.headers().stream().map(Header::field).map(Field::name))
+            .assertThat(table.headers().stream().map(Header::field).map(FieldWithStore::name))
             .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "multiply1", "multiply2", "multiply3");
   }
 
@@ -132,7 +132,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV / salesV, salesV / qtyV, (double) qtyV / qtyV));
     Assertions
-            .assertThat(table.headers().stream().map(Header::field).map(Field::name))
+            .assertThat(table.headers().stream().map(Header::field).map(FieldWithStore::name))
             .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "divide1", "divide2", "divide3");
   }
 }

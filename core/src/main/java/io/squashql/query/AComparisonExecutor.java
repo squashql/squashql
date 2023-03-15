@@ -1,7 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.comp.BinaryOperations;
-import io.squashql.store.Field;
+import io.squashql.store.FieldWithStore;
 import org.eclipse.collections.api.map.primitive.IntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableIntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
@@ -20,8 +20,8 @@ public abstract class AComparisonExecutor {
 
   public static final String REF_POS_FIRST = "first";
 
-  protected abstract BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm,
-          ObjectIntMap<String> indexByColumn);
+  protected abstract BiPredicate<Object[], FieldWithStore[]> createShiftProcedure(ComparisonMeasureReferencePosition cm,
+                                                                                  ObjectIntMap<String> indexByColumn);
 
   public List<Object> compare(
           ComparisonMeasureReferencePosition cm,
@@ -35,11 +35,11 @@ public abstract class AComparisonExecutor {
         indexByColumn.put(header.field().name(), index++);
       }
     }
-    BiPredicate<Object[], Field[]> procedure = createShiftProcedure(cm, indexByColumn);
+    BiPredicate<Object[], FieldWithStore[]> procedure = createShiftProcedure(cm, indexByColumn);
 
     int readFromTableColumnsCount = (int) readFromTable.headers().stream().filter(header -> !header.isMeasure()).count();
     Object[] buffer = new Object[readFromTableColumnsCount];
-    Field[] fields = new Field[readFromTableColumnsCount];
+    FieldWithStore[] fields = new FieldWithStore[readFromTableColumnsCount];
     List<Object> result = new ArrayList<>((int) writeToTable.count());
     List<Object> readAggregateValues = readFromTable.getAggregateValues(cm.measure);
     List<Object> writeAggregateValues = writeToTable.getAggregateValues(cm.measure);
