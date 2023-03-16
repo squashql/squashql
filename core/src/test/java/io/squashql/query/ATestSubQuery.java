@@ -36,9 +36,9 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
             new Object[]{"Paul", "sql", 75},
             new Object[]{"Paul", "java", 73},
             new Object[]{"Peter", "sql", 43},
-            new Object[]{"Peter", "java", 31},
+            new Object[]{"Peter", "java", 33},
             new Object[]{"Tatiana", "sql", 87},
-            new Object[]{"Tatiana", "java", 83}
+            new Object[]{"Tatiana", "java", 85}
     ));
   }
 
@@ -52,19 +52,7 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
             .select(Collections.emptyList(), List.of(avg("avg", "score_sum")))
             .build();
     Table result = this.executor.execute(queryDto);
-    Assertions.assertThat(result).usingElementComparator(
-                    (left, right) -> {
-                      if (left.size() == right.size()) {
-                        for (int i = 0; i < left.size(); i++) {
-                          if (Math.abs((Double) left.get(i) - (Double) right.get(i)) > 1E-6) {
-                            return (Double) left.get(i) < (Double) right.get(i) ? -1 : 1;
-                          }
-                        }
-                        return 0;
-                      }
-                      return left.size() < right.size() ? -1 : 1;
-                    })
-            .containsExactly(List.of(130.66666666666666d));
+    Assertions.assertThat(result).containsExactly(List.of(132d));
   }
 
   @Test
@@ -80,7 +68,7 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
             .select(Collections.emptyList(), List.of(avg))
             .build();
     Table result = this.executor.execute(queryDto);
-    Assertions.assertThat(result).containsExactly(List.of(159d));
+    Assertions.assertThat(result).containsExactly(List.of(160d));
   }
 
   @Test
@@ -97,9 +85,9 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
             .build();
     Table result = this.executor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(
-            List.of(GRAND_TOTAL, 65.33333333333333d),
+            List.of(GRAND_TOTAL, 66d),
             List.of("Paul", 74d),
-            List.of("Peter", 37d),
-            List.of("Tatiana", 85d));
+            List.of("Peter", 38d),
+            List.of("Tatiana", 86d));
   }
 }

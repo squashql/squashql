@@ -52,6 +52,6 @@ public class TestSnowflakeQueryWithJoins extends ATestQueryWithJoins {
 
   @Override
   protected String ambiguousNameMessage() {
-    return "fixme";
+    return "ambiguous column name 'name'";
   }
 }

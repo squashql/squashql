@@ -1,7 +1,6 @@
 package io.squashql.query.database;
 
 import com.google.common.collect.Ordering;
-import io.squashql.query.MeasureUtils;
 import io.squashql.query.dto.*;
 import io.squashql.store.Field;
 
@@ -54,7 +53,7 @@ public class SQLTranslator {
     }
     addWhereConditions(statement, query, fieldProvider, queryRewriter);
     addGroupByAndRollup(groupBy, query.rollup.stream().map(f -> queryRewriter.rollup(f)).toList(), queryRewriter.usePartialRollupSyntax(), statement);
-    addHavingConditions(statement, query.havingCriteriaDto);
+    addHavingConditions(statement, query.havingCriteriaDto, queryRewriter);
     addLimit(query.limit, statement);
     return statement.toString();
   }
@@ -238,9 +237,9 @@ public class SQLTranslator {
     }
   }
 
-  protected static void addHavingConditions(StringBuilder statement, CriteriaDto havingCriteriaDto) {
+  protected static void addHavingConditions(StringBuilder statement, CriteriaDto havingCriteriaDto, QueryRewriter queryRewriter) {
     if (havingCriteriaDto != null) {
-      String havingClause = toSql(name -> new Field(null, name, double.class), havingCriteriaDto, MeasureUtils.BASIC);
+      String havingClause = toSql(name -> new Field(null, name, double.class), havingCriteriaDto, queryRewriter);
       if (havingClause != null) {
         statement
                 .append(" having ")

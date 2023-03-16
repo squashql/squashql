@@ -2,11 +2,11 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -364,13 +364,16 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
    */
   @Test
   void testSumIf() {
-    Assumptions.assumeFalse(this.queryEngine.getClass().getSimpleName().equals("SnowflakeQueryEngine"));
-
+    QueryRewriter qr = this.queryEngine.queryRewriter();
+    String expression = String.format("sum(case when %s = 'food' OR %s = 'drink' then %s end)",
+            qr.fieldName("category"),
+            qr.fieldName("category"),
+            qr.fieldName("quantity"));
     ConditionDto or = eq("food").or(eq("drink"));
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(SCENARIO_FIELD_NAME),
-                    List.of(new ExpressionMeasure("quantity if food or drink", "sum(case when category = 'food' OR category = 'drink' then quantity end)"),
+                    List.of(new ExpressionMeasure("quantity if food or drink", expression),
                             sumIf("quantity filtered", "quantity", criterion("category", or))))
             .build();
     Table result = this.executor.execute(query);
@@ -538,10 +541,14 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Test
   void testRawQueryExecution() {
-    String tableName = this.executor.queryEngine.queryRewriter().tableName(this.storeName);
-    Table result = this.executor.execute(String.format("select ean, sum(price) as sumprice from %s group by ean order by ean", tableName));
+    QueryRewriter qr = this.executor.queryEngine.queryRewriter();
+    String tableName = qr.tableName(this.storeName);
+    String ean = qr.fieldName("ean");
+    String price = qr.fieldName("price");
+    // Use SUMPRICE in upper case to simplify the test. Indeed, Snowflake converts lower case aliases to upper case...
+    Table result = this.executor.execute(String.format("select %s, sum(%s) as SUMPRICE from %s group by %s order by %s", ean, price, tableName, ean, ean));
     Assertions.assertThat(result.headers().stream().map(header -> header.field().name()).toList())
-            .containsExactly("ean", "sumprice");
+            .containsExactly("ean", "SUMPRICE");
     Assertions.assertThat(result).containsExactly(
             List.of("bottle", 7.5d),
             List.of("cookie", 9.0d),
@@ -674,8 +681,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Test
   void testHavingConditions() {
-    BasicMeasure price_sum = (BasicMeasure) sum("p", "price");
-    BasicMeasure price_sum_expr = new ExpressionMeasure("p_expr", "sum(price)");
+    BasicMeasure price_sum = (BasicMeasure) sum("pricesum", "price");
+    BasicMeasure price_sum_expr = new ExpressionMeasure("p_expr", "sum(" + this.queryEngine.queryRewriter().fieldName("price") + ")");
     // Single condition
     QueryDto query = Query
             .from(this.storeName)

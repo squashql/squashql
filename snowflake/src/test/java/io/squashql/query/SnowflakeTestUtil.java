@@ -4,17 +4,17 @@ import java.util.Properties;
 
 public class SnowflakeTestUtil {
 
-  public static final String jdbcUrl = "jdbc:snowflake://<account_identifier>.snowflakecomputing.com";
-  public static final String schema = "";
-  public static final String database = "";
+  public static final String jdbcUrl = System.getenv().getOrDefault("JDBC_URL", System.getProperty("snowflake.test.jdbc.url"));
+  public static final String schema = "PUBLIC";
+  public static final String database = "TEST";
 
   public static final Properties properties = new Properties();
 
   static {
-    properties.put("user", "");
-    properties.put("password", "");
-    properties.put("warehouse", "");
-    properties.put("role", "");
+    properties.put("user", System.getenv().getOrDefault("SNOWFLAKE_USER", System.getProperty("snowflake.test.user")));
+    properties.put("password", System.getenv().getOrDefault("SNOWFLAKE_PASSWORD", System.getProperty("snowflake.test.password")));
+    properties.put("warehouse", "COMPUTE_WH");
+    properties.put("role", "ACCOUNTADMIN");
   }
 
   /**
