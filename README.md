@@ -26,11 +26,63 @@ the UI.
 
 ## Try SquashQL
 
-You can try SquashQL directly from your web browser with [our showcase project](https://github.com/squashql/squashql-showcase/blob/main/TUTORIAL.md). You won't need to install anything!
+You can try SquashQL directly from your web browser with [our showcase project](https://github.com/squashql/squashql-showcase/blob/main/TUTORIAL.md). No need to install anything!
 
 ## Compatibility
 
-SquashQL is currently compatible with [Apache Spark](https://spark.apache.org/), [ClickHouse](https://clickhouse.com/), [BigQuery](https://cloud.google.com/bigquery/) and [Snowflake](https://www.snowflake.com/en/). 
+SquashQL is currently compatible with the following SQL databases: [Apache Spark](https://spark.apache.org/), [ClickHouse](https://clickhouse.com/), [BigQuery](https://cloud.google.com/bigquery/) and [Snowflake](https://www.snowflake.com/en/). 
+
+## API
+
+SquashQL provides an easy-to-use Typescript library to write SQL-like queries. See the [full documentation here](./QUERY.md).
+
+```typescript
+import {
+    from, avg
+} from "@squashql/squashql-js"
+
+const q = from("Orders")
+    .select(["customer_id"], [], [avg("average_spends", "amount")])
+    .build();
+```
+
+SquashQL comes with a [Spring Controller](./server/src/main/java/io/squashql/spring/web/rest/QueryController.java) to expose 
+http endpoints.
+
+1. `GET  /metadata`: it returns the list of tables and fields available
+2. `POST /query`: to execute a query. It accepts a json object built with the Typescript library and returns a two-dimensional
+array representing the result table of the computation. 
+
+To use those endpoints, you can use the `Querier` object from squashql-js library.
+
+```typescript
+import {count, from, Querier} from "@squashql/squashql-js"
+
+const serverUrl = "http://localhost:8080";
+const querier = new Querier(serverUrl)
+
+// Calling GET  /metadata
+querier.getMetadata().then(response => console.log(response))
+
+const myQuery = from("myTable")
+        .select(["col1"], [], [count])
+        .build()
+
+// POST /query with myQuery as payload
+querier.execute(myQuery).then(response => console.log(response))
+```
+
+The object `Querier` uses [Axios](https://axios-http.com/) under the hood as HTTP
+Client. [Additional configuration](https://axios-http.com/docs/req_config) can be
+provided like this:
+
+```typescript
+const axiosConfig = {
+  timeout: 10000
+}
+const serverUrl = "http://localhost:8080";
+const querier = new Querier(serverUrl, axiosConfig)
+```
 
 ### Configuration
 
@@ -119,46 +171,6 @@ Properties properties = ... // to be defined, it contains in particular the cred
 SnowflakeDatastore ds = new SnowflakeDatastore(jdbcUrl, database, schema, properties);
 SnowflakeQueryEngine qe = new SnowflakeQueryEngine(ds);
 ```
-
-## API
-
-SquashQL exposes two http endpoints to interrogate your database.
-
-1. `GET  /metadata`: to retrieve the list of tables and fields available
-2. `POST /query`: to execute queries that accepts a json object representing the query to execute
-
-To use those endpoints, SquashQL provides a [TypeScript](https://www.typescriptlang.org/) library with all you need available [here](https://www.npmjs.com/package/@squashql/squashql-js):
-
-```typescript
-import {count, from, Querier} from "@squashql/squashql-js"
-
-const querier = new Querier("http://localhost:8080")
-
-querier.getMetadata().then(response => {
-  console.log(response)
-})
-
-const query = from("myTable")
-        .select(["col1"], [], [count])
-        .build()
-
-querier.execute(query).then(response => {
-  console.log(response)
-})
-```
-
-The object `Querier` uses [Axios](https://axios-http.com/) under the hood as HTTP
-Client. [Additional configuration](https://axios-http.com/docs/req_config) can be
-provided like this:
-
-```typescript
-const axiosConfig = {
-  timeout: 10000
-}
-const querier = new Querier("http://localhost:8080", axiosConfig)
-```
-
-See [this page](./QUERY.md) to learn more about the API.
 
 ## Prerequisites
 
