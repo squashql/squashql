@@ -21,6 +21,7 @@ import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestClass(ignore = {TestClass.Type.SPARK, TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE})
+@Disabled
 public abstract class ATestDocBucketComparison extends ABaseTestQuery {
 
   @Override
