@@ -32,7 +32,7 @@ public class SparkTransactionManager implements TransactionManager {
   public static void createTemporaryTable(SparkSession spark, String table, List<Field> fields, boolean cjMode) {
     ImmutableList<Field> all = ImmutableListFactoryImpl.INSTANCE.ofAll(fields);
     if (cjMode) {
-      all = all.newWith(new Field(SCENARIO_FIELD_NAME, String.class));
+      all = all.newWith(new Field(table, SCENARIO_FIELD_NAME, String.class));
     }
     StructType schema = SparkUtil.createSchema(all.castToList());
     spark.conf().set("spark.sql.caseSensitive", String.valueOf(true)); // without it, table names are lowercase.

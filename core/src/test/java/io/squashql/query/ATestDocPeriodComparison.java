@@ -24,11 +24,11 @@ public abstract class ATestDocPeriodComparison extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<Field>> getFieldsByStore() {
-    Field studentName = new Field("name", String.class);
-    Field test = new Field("test", String.class);
-    Field score = new Field("score", int.class);
-    Field semester = new Field("semester", int.class);
-    Field year = new Field("year", int.class);
+    Field studentName = new Field("student", "name", String.class);
+    Field test = new Field("student", "test", String.class);
+    Field score = new Field("student", "score", int.class);
+    Field semester = new Field("student", "semester", int.class);
+    Field year = new Field("student", "year", int.class);
     return Map.of("student", List.of(studentName, test, score, year, semester));
   }
 

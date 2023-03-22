@@ -8,9 +8,9 @@ import io.squashql.query.Header;
 import io.squashql.query.RowTable;
 import io.squashql.query.Table;
 import io.squashql.store.Field;
-import java.util.HashSet;
 import org.eclipse.collections.api.tuple.Pair;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -55,7 +55,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
               query,
               response.getColumns(),
-              (column, name) -> new Field(name, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())),
+              (column, name) -> new Field(null, name, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())),
               response.records().iterator(),
               (i, r) -> r.getValue(i).asObject(),
               this.queryRewriter);
@@ -78,7 +78,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
                  .get()) {
       Pair<List<Header>, List<List<Object>>> result = transformToRowFormat(
               response.getColumns(),
-              column -> new Field(column.getColumnName(), ClickHouseUtil.clickHouseTypeToClass(column.getDataType())),
+              column -> new Field(null, column.getColumnName(), ClickHouseUtil.clickHouseTypeToClass(column.getDataType())),
               response.records().iterator(),
               (i, r) -> r.getValue(i).asObject());
       return new RowTable(result.getOne(), result.getTwo());
@@ -100,23 +100,8 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
     }
 
     @Override
-    public String select(String select) {
-      return SqlUtils.backtickEscape(select);
-    }
-
-    @Override
-    public String rollup(String rollup) {
-      return SqlUtils.backtickEscape(rollup);
-    }
-
-    @Override
     public String measureAlias(String alias) {
       return SqlUtils.backtickEscape(alias);
-    }
-
-    @Override
-    public String groupingAlias(String field) {
-      return SqlUtils.backtickEscape(QueryRewriter.super.groupingAlias(field));
     }
 
     @Override

@@ -58,13 +58,13 @@ public class TestLoadingFromCSV {
 
     String storeName = "myAwesomeStore";
     tm.dropAndCreateInMemoryTableWithoutScenarioColumn(storeName, List.of(
-            new Field("CustomerID", int.class),
-            new Field("CustomerName", String.class),
-            new Field("ContactName", String.class),
-            new Field("Address", String.class),
-            new Field("City", String.class),
-            new Field("PostalCode", String.class),
-            new Field("Country", String.class)
+            new Field(storeName, "CustomerID", int.class),
+            new Field(storeName, "CustomerName", String.class),
+            new Field(storeName, "ContactName", String.class),
+            new Field(storeName, "Address", String.class),
+            new Field(storeName, "City", String.class),
+            new Field(storeName, "PostalCode", String.class),
+            new Field(storeName, "Country", String.class)
     ));
 
     tm.loadCsv(MAIN_SCENARIO_NAME, storeName, pathFunction.apply("customers.csv").toString(), delimiter, header);

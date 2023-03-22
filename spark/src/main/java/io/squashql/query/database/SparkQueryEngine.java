@@ -47,7 +47,7 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
     Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
             query,
             Arrays.stream(ds.schema().fields()).toList(),
-            (column, name) -> new Field(name, datatypeToClass(column.dataType())),
+            (column, name) -> new Field(null, name, datatypeToClass(column.dataType())),
             ds.toLocalIterator(),
             (i, r) -> r.get(i),
             this.queryRewriter);
@@ -62,7 +62,7 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
     Dataset<Row> ds = this.datastore.spark.sql(sql);
     Pair<List<Header>, List<List<Object>>> result = transformToRowFormat(
             Arrays.stream(ds.schema().fields()).toList(),
-            c -> new Field(c.name(), datatypeToClass(c.dataType())),
+            c -> new Field(null, c.name(), datatypeToClass(c.dataType())),
             ds.toLocalIterator(),
             (i, r) -> r.get(i));
     return new RowTable(result.getOne(), result.getTwo());

@@ -5,7 +5,8 @@ import io.squashql.query.builder.Query;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,10 +26,10 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<Field>> getFieldsByStore() {
-    Field city = new Field("city", String.class);
-    Field country = new Field("country", String.class);
-    Field continent = new Field("continent", String.class);
-    Field population = new Field("population", double.class);
+    Field city = new Field(this.storeName, "city", String.class);
+    Field country = new Field(this.storeName, "country", String.class);
+    Field continent = new Field(this.storeName, "continent", String.class);
+    Field population = new Field(this.storeName, "population", double.class);
     return Map.of(this.storeName, List.of(city, country, continent, population));
   }
 

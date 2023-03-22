@@ -3,6 +3,7 @@ package io.squashql.query;
 import com.google.common.base.Suppliers;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
@@ -113,10 +114,14 @@ public class TableUtils {
   /**
    * Selects and reorder the columns to match the selection and order in the query.
    */
-  public static ColumnarTable selectAndOrderColumns(ColumnarTable table, QueryDto queryDto) {
+  public static ColumnarTable selectAndOrderColumns(ColumnarTable table,
+                                                    QueryDto queryDto) {
     List<String> finalColumns = new ArrayList<>();
     queryDto.columnSets.values()
-            .forEach(cs -> finalColumns.addAll(cs.getNewColumns().stream().map(Field::name).toList()));
+            .forEach(cs -> finalColumns.addAll(cs.getNewColumns()
+                    .stream()
+                    .map(SqlUtils::getFieldFullName)
+                    .toList()));
     finalColumns.addAll(queryDto.columns);
     return selectAndOrderColumns(table, finalColumns, queryDto.measures);
   }

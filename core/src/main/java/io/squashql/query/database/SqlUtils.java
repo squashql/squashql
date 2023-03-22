@@ -1,5 +1,7 @@
 package io.squashql.query.database;
 
+import io.squashql.store.Field;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,8 +21,16 @@ public class SqlUtils {
     return sql + " as " + queryRewriter.measureAlias(alias);
   }
 
+  public static String getFieldFullName(String store, String name) {
+    return store == null ? name : store + '.' + name;
+  }
+
+  public static String getFieldFullName(Field field) {
+    return field.store() == null ? field.name() : field.store() + '.' + field.name();
+  }
+
   /**
-   * See {@link QueryRewriter#groupingAlias(String)}.
+   * See {@link #groupingAlias(String)}.
    */
   public static String extractFieldFromGroupingAlias(String str) {
     Matcher matcher = GROUPING_PATTERN.matcher(str);
@@ -28,5 +38,14 @@ public class SqlUtils {
       return matcher.group(1);
     }
     return null;
+  }
+
+
+  /**
+   * Returns the name of the column used for grouping(). If it is modified, please modify also
+   * {@link SqlUtils#GROUPING_PATTERN}.
+   */
+  public static String groupingAlias(String column) {
+    return String.format("___grouping___%s___", column);
   }
 }

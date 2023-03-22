@@ -1,7 +1,6 @@
 package io.squashql.query.database;
 
 import com.google.common.collect.Ordering;
-import io.squashql.query.MeasureUtils;
 import io.squashql.query.dto.*;
 import io.squashql.store.Field;
 
@@ -31,12 +30,12 @@ public class SQLTranslator {
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
 
-    query.select.forEach(field -> groupBy.add(queryRewriter.select(field)));
+    query.select.forEach(f -> groupBy.add(queryRewriter.select(f)));
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true))); // Alias is needed when using sub-queries
 
     selects.addAll(groupBy); // coord first, then aggregates
     if (queryRewriter.useGroupingFunction()) {
-      query.rollup.forEach(field -> selects.add(String.format("grouping(%s) as %s", queryRewriter.fieldName(field), queryRewriter.groupingAlias(field)))); // use grouping to identify totals
+      query.rollup.forEach(f -> selects.add(String.format("grouping(%s)", queryRewriter.select(f)))); // use grouping to identify totals
     }
     selects.addAll(aggregates);
 
@@ -53,8 +52,8 @@ public class SQLTranslator {
       addJoins(statement, query.table, queryRewriter);
     }
     addWhereConditions(statement, query, fieldProvider, queryRewriter);
-    addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
-    addHavingConditions(statement, query.havingCriteriaDto);
+    addGroupByAndRollup(groupBy, query.rollup.stream().map(f -> queryRewriter.rollup(f)).toList(), queryRewriter.usePartialRollupSyntax(), statement);
+    addHavingConditions(statement, query.havingCriteriaDto, queryRewriter);
     addLimit(query.limit, statement);
     return statement.toString();
   }
@@ -142,9 +141,9 @@ public class SQLTranslator {
       for (int i = 0; i < join.mappings.size(); i++) {
         JoinMappingDto mapping = join.mappings.get(i);
         statement
-                .append(queryRewriter.tableName(mapping.fromTable)).append('.').append(queryRewriter.fieldName(mapping.from))
+                .append(SqlUtils.getFieldFullName(queryRewriter.tableName(mapping.fromTable), queryRewriter.fieldName(mapping.from)))
                 .append(" = ")
-                .append(queryRewriter.tableName(mapping.toTable)).append('.').append(queryRewriter.fieldName(mapping.to));
+                .append(SqlUtils.getFieldFullName(queryRewriter.tableName(mapping.toTable), queryRewriter.fieldName(mapping.to)));
         if (i < join.mappings.size() - 1) {
           statement.append(" and ");
         }
@@ -158,7 +157,7 @@ public class SQLTranslator {
 
   public static String toSql(Field field, ConditionDto dto, QueryRewriter queryRewriter) {
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
-      Function<Object, String> sqlMapper = getQuoter(field);
+      Function<Object, String> sqlMapper = getQuoteFn(field);
       String formattedFieldName = queryRewriter.fieldName(field.name());
       return switch (dto.type()) {
         case IN -> formattedFieldName + " in (" +
@@ -221,7 +220,7 @@ public class SQLTranslator {
     }
   }
 
-  public static Function<Object, String> getQuoter(Field field) {
+  public static Function<Object, String> getQuoteFn(Field field) {
     if (Number.class.isAssignableFrom(field.type())
             || field.type().equals(double.class)
             || field.type().equals(int.class)
@@ -238,9 +237,9 @@ public class SQLTranslator {
     }
   }
 
-  protected static void addHavingConditions(StringBuilder statement, CriteriaDto havingCriteriaDto) {
+  protected static void addHavingConditions(StringBuilder statement, CriteriaDto havingCriteriaDto, QueryRewriter queryRewriter) {
     if (havingCriteriaDto != null) {
-      String havingClause = toSql(name -> new Field(name, double.class), havingCriteriaDto, MeasureUtils.BASIC);
+      String havingClause = toSql(name -> new Field(null, name, double.class), havingCriteriaDto, queryRewriter);
       if (havingClause != null) {
         statement
                 .append(" having ")

@@ -21,10 +21,10 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<Field>> getFieldsByStore() {
-    Field ean = new Field("ean", String.class);
-    Field category = new Field("category", String.class);
-    Field sales = new Field("sales", double.class);
-    Field qty = new Field("quantity", long.class);
+    Field ean = new Field(this.storeName, "ean", String.class);
+    Field category = new Field(this.storeName, "category", String.class);
+    Field sales = new Field(this.storeName, "sales", double.class);
+    Field qty = new Field(this.storeName, "quantity", long.class);
     return Map.of(this.storeName, List.of(ean, category, sales, qty));
   }
 

@@ -89,10 +89,10 @@ public class TestQueryRemote {
     SparkQueryEngine queryEngine = new SparkQueryEngine(datastore);
     SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
 
-    Field ean = new Field("ean", String.class);
-    Field category = new Field("category", String.class);
-    Field price = new Field("price", double.class);
-    Field qty = new Field("quantity", int.class);
+    Field ean = new Field(storeName, "ean", String.class);
+    Field category = new Field(storeName, "category", String.class);
+    Field price = new Field(storeName, "price", double.class);
+    Field qty = new Field(storeName, "quantity", int.class);
     tm.createTemporaryTable(storeName, List.of(ean, category, price, qty));
 
     tm.load(MAIN_SCENARIO_NAME, storeName, List.of(
@@ -109,7 +109,7 @@ public class TestQueryRemote {
 
     DatabaseQuery query = new DatabaseQuery()
             .table(storeName)
-            .withSelect(SCENARIO_FIELD_NAME)
+            .withSelect(new Field(storeName, SCENARIO_FIELD_NAME, String.class))
             .aggregatedMeasure("p", "price", "sum")
             .aggregatedMeasure("q", "quantity", "sum");
     Table result = queryEngine.execute(query);

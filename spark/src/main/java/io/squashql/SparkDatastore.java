@@ -16,14 +16,7 @@ import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.types.DataType;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Supplier;
 
 public class SparkDatastore implements Datastore {
@@ -88,7 +81,7 @@ public class SparkDatastore implements Datastore {
       Iterator<Column> columnIterator = columns.toLocalIterator();
       while (columnIterator.hasNext()) {
         Column column = columnIterator.next();
-        fields.add(new Field(column.name(), SparkUtil.datatypeToClass(DataType.fromDDL(column.dataType()))));
+        fields.add(new Field(tableName, column.name(), SparkUtil.datatypeToClass(DataType.fromDDL(column.dataType()))));
       }
       return fields;
     } catch (AnalysisException e) {

@@ -2,15 +2,16 @@ package io.squashql.query.database;
 
 import io.squashql.SnowflakeDatastore;
 import io.squashql.SnowflakeUtil;
-import io.squashql.query.*;
+import io.squashql.query.ColumnarTable;
+import io.squashql.query.Header;
+import io.squashql.query.RowTable;
+import io.squashql.query.Table;
 import io.squashql.store.Field;
+import org.eclipse.collections.api.tuple.Pair;
 
 import java.io.Serializable;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.IntStream;
 
 public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
@@ -45,25 +46,73 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
   @Override
   protected Table retrieveAggregates(DatabaseQuery query, String sql) {
     return executeQuery(sql, tableResult -> {
-      List<Header> headers = createHeaderList(tableResult, query.measures);
-      List<List<Object>> values = new ArrayList<>();
-      headers.forEach(field -> values.add(new ArrayList<>()));
-      while (tableResult.next()) {
-        for (int i = 0; i < headers.size(); i++) {
-          values.get(i).add(getTypeValue(tableResult, i));
-        }
+      List<Class<?>> columnTypes = new ArrayList<>();
+      for (int i = 0; i < tableResult.getMetaData().getColumnCount(); i++) {
+        columnTypes.add(SnowflakeUtil.sqlTypeToClass(tableResult.getMetaData().getColumnType(i + 1)));
       }
+
+      Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
+              query,
+              columnTypes,
+              (columnType, name) -> new Field(null, name, columnType),
+              new ResultSetIterator(tableResult),
+              (i, fieldValues) -> fieldValues[i],
+              this.queryRewriter
+      );
       return new ColumnarTable(
-              headers,
+              result.getOne(),
               new HashSet<>(query.measures),
-              values);
+              result.getTwo());
     });
+  }
+
+  private static class ResultSetIterator implements Iterator<Object[]> {
+
+    private final ResultSet resultSet;
+    private final Object[] buffer;
+    private boolean isEmpty;
+    private boolean isFirst = true;
+
+    private ResultSetIterator(ResultSet resultSet) throws SQLException {
+      this.resultSet = resultSet;
+      this.isEmpty = !this.resultSet.next(); // the only way to know if it is empty, but we will have to ignore next() once to not miss the first row.
+      this.buffer = new Object[this.resultSet.getMetaData().getColumnCount()];
+    }
+
+    @Override
+    public boolean hasNext() {
+      if (this.isEmpty) {
+        return false;
+      }
+
+      try {
+        return this.isFirst || !this.resultSet.isLast();
+      } catch (SQLException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    @Override
+    public Object[] next() {
+      try {
+        if (!this.isFirst && !this.resultSet.next()) { // do not call next the first time.
+          throw new NoSuchElementException();
+        }
+        this.isFirst = false;
+      } catch (SQLException e) {
+        throw new RuntimeException(e);
+      }
+      for (int i = 0; i < this.buffer.length; i++) {
+        this.buffer[i] = getTypeValue(this.resultSet, i);
+      }
+      return this.buffer;
+    }
   }
 
   @Override
   public Table executeRawSql(String sql) {
     return executeQuery(sql, tableResult -> {
-      List<Header> headers = createHeaderList(tableResult, Collections.emptyList());
+      List<Header> headers = createHeaderList(tableResult, Collections.emptySet());
       List<List<Object>> rows = new ArrayList<>();
       while (tableResult.next()) {
         rows.add(IntStream.range(0, headers.size()).mapToObj(i -> getTypeValue(tableResult, i)).toList());
@@ -72,14 +121,14 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
     });
   }
 
-  protected List<Header> createHeaderList(ResultSet tableResult, List<Measure> measureNames) throws SQLException {
+  protected List<Header> createHeaderList(ResultSet tableResult, Set<String> measureNames) throws SQLException {
     List<Header> headers = new ArrayList<>();
     ResultSetMetaData metadata = tableResult.getMetaData();
     // get the column names; column indexes start from 1
     for (int i = 1; i < metadata.getColumnCount() + 1; i++) {
       String fieldName = metadata.getColumnName(i);
       headers.add(new Header(
-              new Field(fieldName, SnowflakeUtil.sqlTypeToClass(metadata.getColumnType(i))),
+              new Field(null, fieldName, SnowflakeUtil.sqlTypeToClass(metadata.getColumnType(i))),
               measureNames.contains(fieldName)));
     }
 
@@ -140,11 +189,6 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
     }
 
     @Override
-    public String select(String select) {
-      return SqlUtils.doubleQuoteEscape(select);
-    }
-
-    @Override
     public String fieldName(String field) {
       return SqlUtils.doubleQuoteEscape(field);
     }
@@ -162,16 +206,6 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
     @Override
     public boolean useGroupingFunction() {
       return true;
-    }
-
-    @Override
-    public String rollup(String rollup) {
-      return SqlUtils.doubleQuoteEscape(rollup);
-    }
-
-    @Override
-    public String groupingAlias(String field) {
-      return SqlUtils.doubleQuoteEscape(QueryRewriter.super.groupingAlias(field));
     }
   }
 }
