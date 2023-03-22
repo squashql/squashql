@@ -2,7 +2,7 @@
 
 SquashQL provides a simple interface in Typescript for building SQL-like queries specifically made for SquashQL. In each section, 
 a Typescript code snippet is shown along with a SQL query to fix ideas, but it does not mean that this will be the SQL 
-query executed because the generated SQL query might depend on the underlying database. 
+query executed because the generated SQL query depends on the underlying database and the type of computation to perform. 
 
 ### Goal
 
@@ -44,7 +44,7 @@ const q = from("myTable")
                 [], // list of columnSets
                 [sum("alias1", "col3"), avg("alias2", "col4")] // list of measures
         )
-        .build();
+        .build()
 ```
 
 The above example is equivalent to the following SQL
@@ -64,7 +64,7 @@ Queries can be filtered by using Criteria class.
 A Criteria instance can contain a condition on a single field and can be build as so:
 ```typescript
 import { criterion } from "@squashql/squashql-js"
-const criteria = criterion("col2", eq("c"));
+const criteria = criterion("col2", eq("c"))
 ```
 
 Several criteria can be chained with AND or OR by using the methods `any` and `all`
@@ -80,7 +80,7 @@ const q = from("myTable")
                 ["col1", "col2"],
                 [],
                 [sum("alias1", "col3"), avg("alias2", "col4")])
-        .build();
+        .build()
 ```
 
 ```sql
@@ -101,8 +101,8 @@ Condition operators available: `eq, neq, lt, le, gt, ge, _in, isNull, isNotNull,
 A Criteria instance can contain a condition on a single [basic measure](#basic-measure) and can be build as so:
 ```typescript
 import { criterion, sum, ge } from "@squashql/squashql-js"
-const measure = sum("sum", "f1");
-const criteria = criterion(measure, ge(0));
+const measure = sum("sum", "f1")
+const criteria = criterion(measure, ge(0))
 ```
 
 Several criteria can be chained with AND or OR by using the methods `any` and `all`
@@ -112,15 +112,15 @@ import {
   from, sum, avg, gt, eq, havingCriterion, all
 } from "@squashql/squashql-js"
 
-const measure1 = sum("alias1", "col3");
-const measure2 = avg("alias2", "col4");
+const measure1 = sum("alias1", "col3")
+const measure2 = avg("alias2", "col4")
 const q = from("myTable")
         .select(
                 ["col1", "col2"],
                 [],
                 [measure1, measure2])
         .having(all([havingCriterion(measure1, gt(10)), havingCriterion(measure2, eq(5))]))
-        .build();
+        .build()
 ```
 
 ```sql
@@ -146,7 +146,7 @@ const q = from("myTable")
                 ["col1", "col2", "col3", "col4"],
                 [],
                 [sum("alias1", "col5")])
-        .build();
+        .build()
 ```
 
 ```sql
@@ -170,7 +170,7 @@ const q = from("myTable")
                 [],
                 [sum("alias1", "col3")])
         .orderBy("col2", OrderKeyword.ASC)
-        .build();
+        .build()
 ```
 
 ```sql
@@ -264,7 +264,7 @@ import {
 const query = from("populationTable")
         .select(["continent", "country", "city"], [], [sum("pop", "population")])
         .rollup(["continent", "country", "city"])
-        .build();
+        .build()
 ```
 
 ```sql
@@ -273,7 +273,7 @@ SELECT continent,
        city,
        sum(population) as population
 FROM populationTable
-GROUP BY ROLLUP (continent, country, city);
+GROUP BY ROLLUP (continent, country, city)
 ```
 
 Example
@@ -311,7 +311,7 @@ import {
 const query = from("populationTable")
         .select(["continent", "country", "city"], [], [sum("pop", "population")])
         .rollup(["country", "city"])
-        .build();
+        .build()
 ```
 
 In the example above, subtotals for 'continent' won't be calculated i.e. the grand total in that case. 
@@ -322,7 +322,7 @@ SELECT continent,
        city,
        sum(population) as population
 FROM populationTable
-GROUP BY continent, ROLLUP (country, city);
+GROUP BY continent, ROLLUP (country, city)
 ```
 
 Example
@@ -369,7 +369,7 @@ Example: Return the average total for all students
 
 ```sql
 SELECT AVG(score_sum) AS result
-FROM (SELECT SUM(score) AS score_sum FROM student GROUP BY name);
+FROM (SELECT SUM(score) AS score_sum FROM student GROUP BY name)
 ```
 
 (from [https://mariadb.com/kb/en/subqueries-in-a-from-clause/](https://mariadb.com/kb/en/subqueries-in-a-from-clause/))
@@ -419,7 +419,7 @@ const query = from("myTable")
 SELECT SUM(amount)                                                AS sum_amount,
        AVG(amount)                                                AS avg_amount,
        SUM(CASE WHEN IncomeExpense = 'Revenue' THEN amount 0 END) AS sales
-FROM myTable;
+FROM myTable
 ```
 
 #### Expression measure
@@ -438,7 +438,7 @@ const query = from("myTable")
 ```
 
 ```sql
-SELECT SUM(price * quantity) AS myMeasure FROM myTable;
+SELECT SUM(price * quantity) AS myMeasure FROM myTable
 ```
 
 ### Calculated measure
@@ -722,7 +722,7 @@ import {ExpressionMeasure, from} from "@squashql/squashql-js"
 const revenue = new ExpressionMeasure("revenue", "sum(saleprice * loavessold)")
 const query = from("myTable")
         .select(["scenario"], [], [revenue])
-        .build();
+        .build()
 ```
 
 Result
@@ -751,7 +751,7 @@ const groups = new Map(Object.entries({
   "group3": ["base", "s3"],
   "group4": ["s1", "s2", "s3"],
 }))
-const columnSet = new BucketColumnSet("group", "scenario", groups);
+const columnSet = new BucketColumnSet("group", "scenario", groups)
 ```
 
 The first argument of `BucketColumnSet` is the name of the new (virtual) column that will be created.
@@ -769,11 +769,11 @@ const values = new Map(Object.entries({
   "group3": ["base", "s3"],
   "group4": ["s1", "s2", "s3"],
 }))
-const columnSet = new BucketColumnSet("group", "scenario", values);
+const columnSet = new BucketColumnSet("group", "scenario", values)
 const revenue = new ExpressionMeasure("revenue", "sum(saleprice * loavessold)")
 const query = from("myTable")
         .select([], [columnSet], [revenue])
-        .build();
+        .build()
 ```
 
 Result
@@ -805,7 +805,7 @@ const values = new Map(Object.entries({
   "group3": ["base", "s3"],
   "group4": ["s1", "s2", "s3"],
 }))
-const columnSet = new BucketColumnSet("group", "scenario", values);
+const columnSet = new BucketColumnSet("group", "scenario", values)
 const revenue = new ExpressionMeasure("revenue", "sum(saleprice * loavessold)")
 const revenueComparison = comparisonMeasureWithBucket("revenueComparison",
         ComparisonMethod.ABSOLUTE_DIFFERENCE,
@@ -813,7 +813,7 @@ const revenueComparison = comparisonMeasureWithBucket("revenueComparison",
         new Map(Object.entries({"scenario": "s-1"})),)
 const query = from("myTable")
         .select([], [columnSet], [revenue, revenueComparison])
-        .build();
+        .build()
 ```
 
 `{"scenario": "s-1"}`, the "translation" or "shift" operator indicates that each value is to be compared with the one for the previous scenario (in the current group).

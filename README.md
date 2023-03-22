@@ -52,11 +52,13 @@ http endpoints.
 1. `GET  /metadata`: it returns the list of tables and fields available
 2. `POST /query`: to execute a query. It accepts a json object built with the Typescript library and returns a two-dimensional
 array representing the result table of the computation. 
+3. `POST /query-merge`: to execute *Drilling across* query i.e. querying two fact tables. The two results are aligned by 
+performing a sort-merge operation on the common attribute column headers. More on [Drilling across](./documentation/DRILLING-ACROSS.md).
 
 To use those endpoints, you can use the `Querier` object from squashql-js library.
 
 ```typescript
-import {count, from, Querier} from "@squashql/squashql-js"
+import {count, sum, from, Querier, QueryMerge} from "@squashql/squashql-js"
 
 const serverUrl = "http://localhost:8080";
 const querier = new Querier(serverUrl)
@@ -64,12 +66,18 @@ const querier = new Querier(serverUrl)
 // Calling GET  /metadata
 querier.getMetadata().then(response => console.log(response))
 
-const myQuery = from("myTable")
+const myFirstQuery = from("myTable")
         .select(["col1"], [], [count])
         .build()
 
-// POST /query with myQuery as payload
-querier.execute(myQuery).then(response => console.log(response))
+// POST /query with myFirstQuery as payload
+querier.execute(myFirstQuery).then(response => console.log(response))
+
+// POST /query-merge
+const mySecondQuery = from("otherTable")
+        .select(["col1", "col2"], [], [sum("alias", "field")])
+        .build()
+querier.executeQueryMerge(new QueryMerge(myFirstQuery, mySecondQuery)).then(response => console.log(response))
 ```
 
 The object `Querier` uses [Axios](https://axios-http.com/) under the hood as HTTP
