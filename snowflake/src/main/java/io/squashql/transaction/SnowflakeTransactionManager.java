@@ -35,14 +35,14 @@ public class SnowflakeTransactionManager implements TransactionManager {
   }
 
   public static void createOrReplaceTable(SnowflakeDatastore snowflakeDatastore, String table, List<Field> fields,
-          boolean cjMode) {
+                                          boolean cjMode) {
     List<Field> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
             .ofAll(fields)
-            .newWith(new Field(SCENARIO_FIELD_NAME, String.class))
+            .newWith(new Field(table, SCENARIO_FIELD_NAME, String.class))
             .castToList() : fields;
 
     try (Connection conn = snowflakeDatastore.getConnection();
-            Statement stmt = conn.createStatement()) {
+         Statement stmt = conn.createStatement()) {
       StringBuilder sb = new StringBuilder();
       sb.append("(");
       int size = list.size();
@@ -67,7 +67,7 @@ public class SnowflakeTransactionManager implements TransactionManager {
     String join = String.join(",", IntStream.range(0, tuples.get(0).length + 1).mapToObj(i -> "?").toList());
     String pattern = "insert into \"" + store + "\" values(" + join + ")";
     try (Connection conn = this.snowflakeDatastore.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(pattern)) {
+         PreparedStatement stmt = conn.prepareStatement(pattern)) {
       for (Object[] tuple : tuples) {
         for (int i = 0; i < tuple.length; i++) {
           Object o = tuple[i];

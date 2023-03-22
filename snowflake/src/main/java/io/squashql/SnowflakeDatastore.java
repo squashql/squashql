@@ -60,7 +60,7 @@ public class SnowflakeDatastore implements Datastore {
           if (value == null) {
             value = new Store(key, new ArrayList<>());
           }
-          value.fields().add(new Field(columnName, SnowflakeUtil.sqlTypeToClass(dataType)));
+          value.fields().add(new Field(tableName, columnName, SnowflakeUtil.sqlTypeToClass(dataType)));
           return value;
         });
       }

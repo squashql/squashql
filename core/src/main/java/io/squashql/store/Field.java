@@ -1,4 +1,4 @@
 package io.squashql.store;
 
-public record Field(String name, Class<?> type) {
+public record Field(String store, String name, Class<?> type) {
 }

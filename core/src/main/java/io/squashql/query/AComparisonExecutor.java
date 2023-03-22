@@ -21,7 +21,7 @@ public abstract class AComparisonExecutor {
   public static final String REF_POS_FIRST = "first";
 
   protected abstract BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm,
-          ObjectIntMap<String> indexByColumn);
+                                                                         ObjectIntMap<String> indexByColumn);
 
   public List<Object> compare(
           ComparisonMeasureReferencePosition cm,

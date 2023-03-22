@@ -8,10 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -27,7 +24,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   protected AQueryEngine(T datastore, QueryRewriter queryRewriter) {
     this.datastore = datastore;
-    this.fieldSupplier = createFieldSupplier();
+    this.fieldSupplier = createFieldSupplier(this.datastore.storesByName());
     this.queryRewriter = queryRewriter;
   }
 
@@ -36,18 +33,34 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     return this.queryRewriter;
   }
 
-  protected Function<String, Field> createFieldSupplier() {
+  public static Function<String, Field> createFieldSupplier(Map<String, Store> storesByName) {
     return fieldName -> {
-      for (Store store : this.datastore.storesByName().values()) {
-        for (Field field : store.fields()) {
-          if (field.name().equals(fieldName)) {
-            return field;
+      String[] split = fieldName.split("\\.");
+      if (split.length > 1) {
+        String tableName = split[0];
+        String fieldNameInTable = split[1];
+        Store store = storesByName.get(tableName);
+        if (store != null) {
+          for (Field field : store.fields()) {
+            if (field.name().equals(fieldNameInTable)) {
+              return field;
+            }
+          }
+        }
+      } else {
+        for (Store store : storesByName.values()) {
+          for (Field field : store.fields()) {
+            if (field.name().equals(fieldName)) {
+              // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
+              // if any ambiguity, the DB will raise an exception.
+              return new Field(null, field.name(), field.type());
+            }
           }
         }
       }
 
       if (fieldName.equals(CountMeasure.INSTANCE.alias())) {
-        return new Field(CountMeasure.INSTANCE.alias(), long.class);
+        return new Field(null, CountMeasure.INSTANCE.alias(), long.class);
       }
       throw new IllegalArgumentException("Cannot find field with name " + fieldName);
     };
@@ -83,7 +96,8 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   }
 
   protected String createSqlStatement(DatabaseQuery query) {
-    return SQLTranslator.translate(query, QueryExecutor.withFallback(this.fieldSupplier, String.class),
+    return SQLTranslator.translate(query,
+            QueryExecutor.withFallback(this.fieldSupplier, String.class),
             this.queryRewriter);
   }
 
@@ -154,9 +168,9 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
           BiFunction<Integer, Record, Object> recordToFieldValue,
           QueryRewriter queryRewriter) {
     List<Header> headers = new ArrayList<>();
-    List<String> fieldNames = new ArrayList<>(query.select);
+    List<String> fieldNames = new ArrayList<>(query.select.stream().map(SqlUtils::getFieldFullName).toList());
     if (queryRewriter.useGroupingFunction()) {
-      query.rollup.forEach(r -> fieldNames.add(queryRewriter.groupingAlias(r)));
+      query.rollup.forEach(r -> fieldNames.add(SqlUtils.groupingAlias(SqlUtils.getFieldFullName(r))));
     }
     query.measures.forEach(m -> fieldNames.add(m.alias()));
     for (int i = 0; i < columns.size(); i++) {

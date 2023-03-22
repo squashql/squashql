@@ -86,7 +86,7 @@ public class BigQueryServiceAccountDatastore implements BigQueryDatastore {
     try {
       Schema schema = query.getTable(datasetName, tableName).getDefinition().getSchema();
       for (com.google.cloud.bigquery.Field field : schema.getFields()) {
-        fields.add(new Field(field.getName(), BigQueryUtil.bigQueryTypeToClass(field.getType())));
+        fields.add(new Field(tableName, field.getName(), BigQueryUtil.bigQueryTypeToClass(field.getType())));
       }
       return fields;
     } catch (Exception e) {

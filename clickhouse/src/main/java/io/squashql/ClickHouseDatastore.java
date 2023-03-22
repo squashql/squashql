@@ -86,7 +86,7 @@ public class ClickHouseDatastore implements Datastore {
         String columnName = (String) columns.getObject("COLUMN_NAME");
         String typeName = (String) columns.getObject("TYPE_NAME");
         ClickHouseColumn column = ClickHouseColumn.of("", typeName);
-        fields.add(new Field(columnName, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())));
+        fields.add(new Field(table, columnName, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())));
       }
 
       return fields;

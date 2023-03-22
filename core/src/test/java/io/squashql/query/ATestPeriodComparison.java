@@ -33,15 +33,15 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<Field>> getFieldsByStore() {
-    Field ean = new Field("ean", String.class);
-    Field category = new Field("category", String.class);
-    Field sales = new Field("sales", double.class);
-    Field qty = new Field("quantity", long.class);
-    Field year = new Field("year_sales", long.class); // Use long to make sure we support also long as type
-    Field semester = new Field("semester_sales", int.class);
-    Field quarter = new Field("quarter_sales", int.class);
-    Field month = new Field("month_sales", int.class);
-    Field date = new Field("date_sales", LocalDate.class);
+    Field ean = new Field(this.storeName, "ean", String.class);
+    Field category = new Field(this.storeName, "category", String.class);
+    Field sales = new Field(this.storeName, "sales", double.class);
+    Field qty = new Field(this.storeName, "quantity", long.class);
+    Field year = new Field(this.storeName, "year_sales", long.class); // Use long to make sure we support also long as type
+    Field semester = new Field(this.storeName, "semester_sales", int.class);
+    Field quarter = new Field(this.storeName, "quarter_sales", int.class);
+    Field month = new Field(this.storeName, "month_sales", int.class);
+    Field date = new Field(this.storeName, "date_sales", LocalDate.class);
     return Map.of(this.storeName, List.of(ean, category, sales, qty, year, semester, quarter, month, date));
   }
 

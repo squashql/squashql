@@ -33,17 +33,17 @@ public class TestITM {
 
   @BeforeAll
   void setup() {
-    Field ean = new Field("ean", String.class);
-    Field pdv = new Field("pdv", String.class);
-    Field price = new Field("price", double.class);
-    Field qty = new Field("quantity", int.class);
-    Field capdv = new Field("capdv", double.class);
+    Field ean = new Field("our_prices", "ean", String.class);
+    Field pdv = new Field("our_prices", "pdv", String.class);
+    Field price = new Field("our_prices", "price", double.class);
+    Field qty = new Field("our_prices", "quantity", int.class);
+    Field capdv = new Field("our_prices", "capdv", double.class);
 
-    Field compEan = new Field("competitor_ean", String.class);
-    Field compConcurrentPdv = new Field("competitor_concurrent_pdv", String.class);
-    Field compBrand = new Field("competitor_brand", String.class);
-    Field compConcurrentEan = new Field("competitor_concurrent_ean", String.class);
-    Field compPrice = new Field("competitor_price", double.class);
+    Field compEan = new Field("their_prices", "competitor_ean", String.class);
+    Field compConcurrentPdv = new Field("their_prices", "competitor_concurrent_pdv", String.class);
+    Field compBrand = new Field("their_prices", "competitor_brand", String.class);
+    Field compConcurrentEan = new Field("their_prices", "competitor_concurrent_ean", String.class);
+    Field compPrice = new Field("their_prices", "competitor_price", double.class);
 
     this.datastore = new SparkDatastore();
 
@@ -51,8 +51,8 @@ public class TestITM {
     tm.createTemporaryTable("our_prices", List.of(ean, pdv, price, qty, capdv));
     tm.createTemporaryTable("their_prices", List.of(compEan, compConcurrentPdv, compBrand, compConcurrentEan, compPrice), false);
     tm.createTemporaryTable("our_stores_their_stores", List.of(
-            new Field("our_store", String.class),
-            new Field("their_store", String.class)
+            new Field("our_stores_their_stores", "our_store", String.class),
+            new Field("our_stores_their_stores", "their_store", String.class)
     ), false);
 
     tm.load(MAIN_SCENARIO_NAME,

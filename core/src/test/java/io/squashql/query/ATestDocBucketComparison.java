@@ -26,9 +26,9 @@ public abstract class ATestDocBucketComparison extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<Field>> getFieldsByStore() {
-    Field salePrice = new Field("saleprice", double.class);
-    Field loavesSold = new Field("loavessold", int.class);
-    Field pos = new Field("pointofsale", String.class);
+    Field salePrice = new Field("store", "saleprice", double.class);
+    Field loavesSold = new Field("store", "loavessold", int.class);
+    Field pos = new Field("store", "pointofsale", String.class);
     return Map.of("store", List.of(salePrice, loavesSold, pos));
   }
 

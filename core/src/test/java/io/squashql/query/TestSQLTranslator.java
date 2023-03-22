@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
@@ -7,10 +8,13 @@ import io.squashql.query.dto.JoinDto;
 import io.squashql.query.dto.JoinMappingDto;
 import io.squashql.query.dto.TableDto;
 import io.squashql.store.Field;
+import io.squashql.store.Store;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static io.squashql.query.Functions.*;
@@ -23,11 +27,13 @@ public class TestSQLTranslator {
   private static final String BASE_STORE_NAME = "baseStore";
   private static final String BASE_STORE_NAME_ESCAPED = SqlUtils.backtickEscape(BASE_STORE_NAME);
 
-  private static final Function<String, Field> fieldProvider = s -> switch (s) {
-    case "pnl" -> new Field(s, double.class);
-    case "delta" -> new Field(s, Double.class);
-    case "type", SCENARIO_FIELD_NAME -> new Field(s, String.class);
-    default -> throw new RuntimeException("not supported " + s);
+  private static final Function<String, Field> fieldProvider = s -> {
+    BiFunction<Class<?>, String, Field> f = (type, name) -> new Field(name.contains(BASE_STORE_NAME) ? BASE_STORE_NAME : null, name.replace(BASE_STORE_NAME + ".", ""), type);
+    return switch (s) {
+      case "pnl", BASE_STORE_NAME + "." + "pnl" -> f.apply(double.class, s);
+      case "delta", BASE_STORE_NAME + "." + "delta" -> f.apply(Double.class, s);
+      default -> f.apply(String.class, s);
+    };
   };
 
   @Test
@@ -57,8 +63,8 @@ public class TestSQLTranslator {
   @Test
   void testGroupBy() {
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect(SCENARIO_FIELD_NAME)
-            .withSelect("type")
+            .withSelect(fieldProvider.apply(SCENARIO_FIELD_NAME))
+            .withSelect(fieldProvider.apply("type"))
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
             .aggregatedMeasure("delta.sum", "delta", "sum")
             .aggregatedMeasure("pnl.avg", "pnl", "avg")
@@ -67,6 +73,20 @@ public class TestSQLTranslator {
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg` from " + BASE_STORE_NAME_ESCAPED + " group by " +
                     "`scenario`, `type`");
+  }
+
+  @Test
+  void testGroupByWithFullName() {
+    DatabaseQuery query = new DatabaseQuery()
+            .withSelect(fieldProvider.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, SCENARIO_FIELD_NAME)))
+            .withSelect(fieldProvider.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, "type")))
+            .aggregatedMeasure("pnl.sum", SqlUtils.getFieldFullName(BASE_STORE_NAME, "pnl"), "sum")
+            .aggregatedMeasure("delta.sum", SqlUtils.getFieldFullName(BASE_STORE_NAME, "delta"), "sum")
+            .table(BASE_STORE_NAME);
+
+    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
+            .isEqualTo("select `baseStore`.`scenario`, `baseStore`.`type`, sum(`baseStore`.`pnl`) as `pnl.sum`, sum(`baseStore`.`delta`) as `delta.sum` from " + BASE_STORE_NAME_ESCAPED + " group by " +
+                    "`baseStore`.`scenario`, `baseStore`.`type`");
   }
 
   @Test
@@ -83,30 +103,55 @@ public class TestSQLTranslator {
   @Test
   void testWithFullRollup() {
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect(SCENARIO_FIELD_NAME)
-            .withSelect("type")
-            .withRollup(SCENARIO_FIELD_NAME)
-            .withRollup("type")
+            .withSelect(fieldProvider.apply(SCENARIO_FIELD_NAME))
+            .withSelect(fieldProvider.apply("type"))
+            .withRollup(fieldProvider.apply(SCENARIO_FIELD_NAME))
+            .withRollup(fieldProvider.apply("type"))
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select `scenario`, `type`, grouping(`scenario`) as `___grouping___scenario___`, grouping(`type`) as `___grouping___type___`, sum(`price`) as `pnl.sum`" +
-                    " from " + BASE_STORE_NAME_ESCAPED + " group by rollup(`scenario`, `type`)");
+            .isEqualTo("""
+                    select `scenario`, `type`,
+                     grouping(`scenario`), grouping(`type`),
+                     sum(`price`) as `pnl.sum`
+                     from `baseStore` group by rollup(`scenario`, `type`)
+                    """.replaceAll(System.lineSeparator(), ""));
+  }
+
+  @Test
+  void testWithFullRollupWithFullName() {
+    DatabaseQuery query = new DatabaseQuery()
+            .withSelect(fieldProvider.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, SCENARIO_FIELD_NAME)))
+            .withSelect(fieldProvider.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, "type")))
+            .withRollup(fieldProvider.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, SCENARIO_FIELD_NAME)))
+            .withRollup(fieldProvider.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, "type")))
+            .aggregatedMeasure("pnl.sum", "price", "sum")
+            .table(BASE_STORE_NAME);
+
+    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
+            .isEqualTo("""
+                    select `baseStore`.`scenario`, `baseStore`.`type`,
+                     grouping(`baseStore`.`scenario`), grouping(`baseStore`.`type`),
+                     sum(`price`) as `pnl.sum`
+                     from `baseStore` group by rollup(`baseStore`.`scenario`, `baseStore`.`type`)
+                    """.replaceAll(System.lineSeparator(), ""));
   }
 
   @Test
   void testWithPartialRollup() {
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect(SCENARIO_FIELD_NAME)
-            .withSelect("type")
-            .withRollup(SCENARIO_FIELD_NAME)
+            .withSelect(fieldProvider.apply(SCENARIO_FIELD_NAME))
+            .withSelect(fieldProvider.apply("type"))
+            .withRollup(fieldProvider.apply(SCENARIO_FIELD_NAME))
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select `scenario`, `type`, grouping(`scenario`) as `___grouping___scenario___`, sum(`price`) as `pnl.sum`" +
-                    " from " + BASE_STORE_NAME_ESCAPED + " group by `type`, rollup(`scenario`)");
+            .isEqualTo("select `scenario`, `type`," +
+                    " grouping(`scenario`)," +
+                    " sum(`price`) as `pnl.sum`" +
+                    " from `baseStore` group by `type`, rollup(`scenario`)");
   }
 
   @Test
@@ -156,20 +201,26 @@ public class TestSQLTranslator {
     a.join(b, INNER, jAToB);
     a.join(c, LEFT, jCToAB);
 
-    DatabaseQuery query = new DatabaseQuery().table(a).withSelect("c.y");
+    Function<String, Field> fieldSupplier = AQueryEngine.createFieldSupplier(Map.of(
+            "A", new Store("A", List.of(new Field("A", "a_id", int.class), new Field("A", "a_f", int.class), new Field("A", "y", int.class))),
+            "B", new Store("B", List.of(new Field("B", "b_id", int.class), new Field("B", "b_other_id", int.class))),
+            "C", new Store("C", List.of(new Field("c", "a_id", int.class), new Field("c", "c_f", int.class), new Field("c", "c_other_id", int.class)))
+    ));
 
-    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
-            .isEqualTo("select `c.y` from `A` " +
+    DatabaseQuery query = new DatabaseQuery().table(a).withSelect(fieldSupplier.apply("A.y"));
+
+    Assertions.assertThat(SQLTranslator.translate(query, fieldSupplier))
+            .isEqualTo("select `A`.`y` from `A` " +
                     "inner join `B` on `A`.`a_id` = `B`.`b_id` " +
                     "left join `C` on `C`.`c_other_id` = `B`.`b_other_id` and `C`.`c_f` = `A`.`a_f` " +
-                    "group by `c.y`");
+                    "group by `A`.`y`");
   }
 
   @Test
   void testConditionsWithValue() {
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect(SCENARIO_FIELD_NAME)
-            .withSelect("type")
+            .withSelect(fieldProvider.apply(SCENARIO_FIELD_NAME))
+            .withSelect(fieldProvider.apply("type"))
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
             .whereCriteria(all(
                     criterion(SCENARIO_FIELD_NAME, and(eq("base"), eq("s1"), eq("s2"))),
@@ -191,13 +242,13 @@ public class TestSQLTranslator {
     TableDto a = new TableDto("a");
     DatabaseQuery subQuery = new DatabaseQuery()
             .table(a)
-            .withSelect("c1")
-            .withSelect("c3")
+            .withSelect(fieldProvider.apply("c1"))
+            .withSelect(fieldProvider.apply("c3"))
             .withMeasure(avg("mean", "c2"));
 
     DatabaseQuery query = new DatabaseQuery()
             .subQuery(subQuery)
-            .withSelect("c3") // c3 needs to be in the subquery
+            .withSelect(fieldProvider.apply("c3")) // c3 needs to be in the subquery
             .withMeasure(sum("sum GT", "mean"))
             .whereCriteria(criterion("type", eq("myType")));
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))

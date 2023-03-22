@@ -1,6 +1,12 @@
 package io.squashql.query.database;
 
+import io.squashql.store.Field;
+
 public interface QueryRewriter {
+
+  default String getFieldFullName(Field f) {
+    return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
+  }
 
   default String fieldName(String field) {
     return field;
@@ -14,21 +20,21 @@ public interface QueryRewriter {
    * Customizes what's written in the SELECT statement AND GROUP BY for the given selected column.
    * See {@link SQLTranslator}.
    *
-   * @param select name of the column
+   * @param f field to use in select
    * @return the customized argument
    */
-  default String select(String select) {
-    return select;
+  default String select(Field f) {
+    return getFieldFullName(f);
   }
 
   /**
    * Customizes what's written within the ROLLUP function as argument for the given column. See {@link SQLTranslator}.
    *
-   * @param rollup name of the column in the rollup
+   * @param f field to use in rollup
    * @return the customized argument
    */
-  default String rollup(String rollup) {
-    return rollup;
+  default String rollup(Field f) {
+    return getFieldFullName(f);
   }
 
   default String measureAlias(String alias) {
@@ -62,12 +68,4 @@ public interface QueryRewriter {
    * </a>.
    */
   boolean useGroupingFunction();
-
-  /**
-   * Returns the name of the column used for grouping(). If it is modified, please modify also
-   * {@link SqlUtils#GROUPING_PATTERN}.
-   */
-  default String groupingAlias(String field) {
-    return String.format("___grouping___%s___", field);
-  }
 }

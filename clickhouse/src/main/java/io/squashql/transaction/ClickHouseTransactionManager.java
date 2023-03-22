@@ -39,7 +39,7 @@ public class ClickHouseTransactionManager implements TransactionManager {
                                                 boolean cjMode) {
     List<Field> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
             .ofAll(fields)
-            .newWith(new Field(SCENARIO_FIELD_NAME, String.class))
+            .newWith(new Field(table, SCENARIO_FIELD_NAME, String.class))
             .castToList() : fields;
 
     try (ClickHouseConnection conn = clickHouseDataSource.getConnection();

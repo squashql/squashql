@@ -3,12 +3,7 @@ package io.squashql.query;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.store.Field;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.IntStream;
+import java.util.*;
 
 public class RowTable implements Table {
 

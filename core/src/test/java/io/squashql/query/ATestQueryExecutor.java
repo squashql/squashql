@@ -2,10 +2,11 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.database.QueryRewriter;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -29,13 +30,13 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<Field>> getFieldsByStore() {
-    Field ean = new Field("ean", String.class);
-    Field eanId = new Field("eanId", int.class);
-    Field category = new Field("category", String.class);
-    Field subcategory = new Field("subcategory", String.class);
-    Field price = new Field("price", double.class);
-    Field qty = new Field("quantity", int.class);
-    Field isFood = new Field("isFood", boolean.class);
+    Field ean = new Field(this.storeName, "ean", String.class);
+    Field eanId = new Field(this.storeName, "eanId", int.class);
+    Field category = new Field(this.storeName, "category", String.class);
+    Field subcategory = new Field(this.storeName, "subcategory", String.class);
+    Field price = new Field(this.storeName, "price", double.class);
+    Field qty = new Field(this.storeName, "quantity", int.class);
+    Field isFood = new Field(this.storeName, "isFood", boolean.class);
     return Map.of(this.storeName, List.of(eanId, ean, category, subcategory, price, qty, isFood));
   }
 
@@ -80,6 +81,26 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .where(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
             .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("p", "price"), sum("q", "quantity")))
             .rollup(SCENARIO_FIELD_NAME, "category")
+            .build();
+    Table result = this.executor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of(GRAND_TOTAL, GRAND_TOTAL, 15d, 33l),
+            List.of(MAIN_SCENARIO_NAME, TOTAL, 15d, 33l),
+            List.of(MAIN_SCENARIO_NAME, "cloth", 10d, 3l),
+            List.of(MAIN_SCENARIO_NAME, "drink", 2d, 10l),
+            List.of(MAIN_SCENARIO_NAME, "food", 3d, 20l));
+  }
+
+  /**
+   * Same as {@link #testQueryWildcardWithFullRollup()} but name of columns are explicit i.e. full name.
+   */
+  @Test
+  void testQueryWildcardWithFullRollupFullName() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME), eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
+            .select(List.of(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME), SqlUtils.getFieldFullName(this.storeName, "category")), List.of(sum("p", "price"), sum("q", "quantity")))
+            .rollup(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME), SqlUtils.getFieldFullName(this.storeName, "category"))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -343,13 +364,16 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
    */
   @Test
   void testSumIf() {
-    Assumptions.assumeFalse(this.queryEngine.getClass().getSimpleName().equals("SnowflakeQueryEngine"));
-
+    QueryRewriter qr = this.queryEngine.queryRewriter();
+    String expression = String.format("sum(case when %s = 'food' OR %s = 'drink' then %s end)",
+            qr.fieldName("category"),
+            qr.fieldName("category"),
+            qr.fieldName("quantity"));
     ConditionDto or = eq("food").or(eq("drink"));
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(SCENARIO_FIELD_NAME),
-                    List.of(new ExpressionMeasure("quantity if food or drink", "sum(case when category = 'food' OR category = 'drink' then quantity end)"),
+                    List.of(new ExpressionMeasure("quantity if food or drink", expression),
                             sumIf("quantity filtered", "quantity", criterion("category", or))))
             .build();
     Table result = this.executor.execute(query);
@@ -517,10 +541,14 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Test
   void testRawQueryExecution() {
-    String tableName = this.executor.queryEngine.queryRewriter().tableName(this.storeName);
-    Table result = this.executor.execute(String.format("select ean, sum(price) as sumprice from %s group by ean order by ean", tableName));
+    QueryRewriter qr = this.executor.queryEngine.queryRewriter();
+    String tableName = qr.tableName(this.storeName);
+    String ean = qr.fieldName("ean");
+    String price = qr.fieldName("price");
+    // Use SUMPRICE in upper case to simplify the test. Indeed, Snowflake converts lower case aliases to upper case...
+    Table result = this.executor.execute(String.format("select %s, sum(%s) as SUMPRICE from %s group by %s order by %s", ean, price, tableName, ean, ean));
     Assertions.assertThat(result.headers().stream().map(header -> header.field().name()).toList())
-            .containsExactly("ean", "sumprice");
+            .containsExactly("ean", "SUMPRICE");
     Assertions.assertThat(result).containsExactly(
             List.of("bottle", 7.5d),
             List.of("cookie", 9.0d),
@@ -653,8 +681,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Test
   void testHavingConditions() {
-    BasicMeasure price_sum = (BasicMeasure) sum("p", "price");
-    BasicMeasure price_sum_expr = new ExpressionMeasure("p_expr", "sum(price)");
+    BasicMeasure price_sum = (BasicMeasure) sum("pricesum", "price");
+    BasicMeasure price_sum_expr = new ExpressionMeasure("p_expr", "sum(" + this.queryEngine.queryRewriter().fieldName("price") + ")");
     // Single condition
     QueryDto query = Query
             .from(this.storeName)

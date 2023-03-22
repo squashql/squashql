@@ -1,9 +1,9 @@
 package io.squashql.query;
 
-import lombok.*;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.dto.Period;
 import io.squashql.store.Field;
+import lombok.*;
 
 import java.util.List;
 import java.util.Map;

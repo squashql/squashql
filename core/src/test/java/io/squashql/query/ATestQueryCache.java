@@ -40,14 +40,14 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<Field>> getFieldsByStore() {
-    Field ean = new Field("ean", String.class);
-    Field category = new Field("category", String.class);
-    Field price = new Field("price", double.class);
-    Field qty = new Field("quantity", int.class);
+    Field ean = new Field(this.storeName, "ean", String.class);
+    Field category = new Field(this.storeName, "category", String.class);
+    Field price = new Field(this.storeName, "price", double.class);
+    Field qty = new Field(this.storeName, "quantity", int.class);
 
-    Field comp_ean = new Field("comp_ean", String.class);
-    Field comp_name = new Field("comp_name", String.class);
-    Field comp_price = new Field("comp_price", double.class);
+    Field comp_ean = new Field(this.competitorStoreName, "comp_ean", String.class);
+    Field comp_name = new Field(this.competitorStoreName, "comp_name", String.class);
+    Field comp_price = new Field(this.competitorStoreName, "comp_price", double.class);
 
     return Map.of(
             this.storeName, List.of(ean, category, price, qty),

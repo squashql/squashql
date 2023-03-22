@@ -86,7 +86,7 @@ public class QueryExecutor {
     ExecutionPlan<QueryPlanNodeKey, Void> prefetchingPlan = new ExecutionPlan<>(dependencyGraph.getOne(), (node, v) -> {
       QueryScope scope = node.queryScope;
       int limit = scope.equals(queryScope) ? queryLimit : queryLimit + 1; // limit + 1 to detect when results can be wrong
-      prefetchQueryByQueryScope.computeIfAbsent(scope, k -> Queries.queryScopeToDatabaseQuery(scope, limit));
+      prefetchQueryByQueryScope.computeIfAbsent(scope, k -> Queries.queryScopeToDatabaseQuery(scope, fieldSupplier, limit));
       measuresByQueryScope.computeIfAbsent(scope, k -> new HashSet<>()).add(node.measure);
     });
     prefetchingPlan.execute(null);
@@ -97,7 +97,7 @@ public class QueryExecutor {
     for (QueryScope scope : prefetchQueryByQueryScope.keySet()) {
       DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
       Set<Measure> measures = measuresByQueryScope.get(scope);
-      QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(scope, prefetchQuery, user, fieldSupplier);
+      QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(scope, prefetchQuery, user);
       QueryCache queryCache = getQueryCache((QueryCacheContextValue) query.context.getOrDefault(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE)));
 
       // Finish to prepare the query
@@ -213,9 +213,8 @@ public class QueryExecutor {
   private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(
           QueryScope queryScope,
           DatabaseQuery prefetchQuery,
-          SquashQLUser user,
-          Function<String, Field> fieldSupplier) {
-    Set<Field> fields = prefetchQuery.select.stream().map(fieldSupplier).collect(Collectors.toSet());
+          SquashQLUser user) {
+    Set<Field> fields = new HashSet<>(prefetchQuery.select);
     if (queryScope.tableDto != null) {
       return new TableScope(queryScope.tableDto, fields, queryScope.whereCriteriaDto, queryScope.havingCriteriaDto, queryScope.rollupColumns, user, prefetchQuery.limit);
     } else {
@@ -279,7 +278,7 @@ public class QueryExecutor {
         // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
         // contains only "raw" fields, it will throw an exception.
         log.info("Cannot find field " + fieldName + " with default field provider, fallback to default type: " + fallbackType.getSimpleName());
-        f = new Field(fieldName, Number.class);
+        f = new Field(null, fieldName, Number.class);
       }
       return f;
     };

@@ -1,8 +1,8 @@
 package io.squashql.query;
 
-import lombok.*;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.store.Field;
+import lombok.*;
 
 import java.util.function.Function;
 

@@ -58,7 +58,6 @@ public abstract class ATestQueryExecutorWithJoins {
   @BeforeAll
   void setup() {
     this.datastore = createDatastore();
-    this.queryExecutor = new QueryExecutor(createQueryEngine(this.datastore));
     this.tm = createTransactionManager();
 
     this.tm.loadCsv(MAIN_SCENARIO_NAME, this.orders, pathFunction.apply("orders.csv").toString(), delimiter, header);
@@ -66,6 +65,8 @@ public abstract class ATestQueryExecutorWithJoins {
     this.tm.loadCsv(MAIN_SCENARIO_NAME, this.products, pathFunction.apply("products.csv").toString(), delimiter, header);
     this.tm.loadCsv(MAIN_SCENARIO_NAME, this.orderDetails, pathFunction.apply("order_details.csv").toString(), delimiter, header);
     this.tm.loadCsv(MAIN_SCENARIO_NAME, this.categories, pathFunction.apply("categories.csv").toString(), delimiter, header);
+
+    this.queryExecutor = new QueryExecutor(createQueryEngine(this.datastore));
   }
 
   @Test

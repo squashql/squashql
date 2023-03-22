@@ -35,7 +35,7 @@ public class BigQueryTransactionManager implements TransactionManager {
   public void dropAndCreateInMemoryTable(String tableName, List<Field> fields) {
     List<Field> list = ImmutableListFactoryImpl.INSTANCE
             .ofAll(fields)
-            .newWith(new Field(SCENARIO_FIELD_NAME, String.class))
+            .newWith(new Field(tableName, SCENARIO_FIELD_NAME, String.class))
             .castToList();
 
     TableId tableId = TableId.of(this.datasetName, tableName);

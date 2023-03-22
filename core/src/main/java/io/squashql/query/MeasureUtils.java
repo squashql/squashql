@@ -1,12 +1,12 @@
 package io.squashql.query;
 
-import lombok.NoArgsConstructor;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.Period;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
+import lombok.NoArgsConstructor;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -32,7 +32,7 @@ public final class MeasureUtils {
   public static String createExpression(Measure m) {
     if (m instanceof AggregatedMeasure a) {
       if (a.criteria != null) {
-        String conditionSt = SQLTranslator.toSql(f -> new Field(f, String.class), a.criteria, BASIC);
+        String conditionSt = SQLTranslator.toSql(f -> new Field(null, f, String.class), a.criteria, BASIC);
         return a.aggregationFunction + "If(" + a.field + ", " + conditionSt + ")";
       } else {
         return a.aggregationFunction + "(" + a.field + ")";

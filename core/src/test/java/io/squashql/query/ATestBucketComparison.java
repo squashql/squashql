@@ -32,10 +32,10 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<Field>> getFieldsByStore() {
-    Field ean = new Field("ean", String.class);
-    Field category = new Field("category", String.class);
-    Field price = new Field("price", double.class);
-    Field qty = new Field("quantity", int.class);
+    Field ean = new Field(this.storeName, "ean", String.class);
+    Field category = new Field(this.storeName, "category", String.class);
+    Field price = new Field(this.storeName, "price", double.class);
+    Field qty = new Field(this.storeName, "quantity", int.class);
     return Map.of(this.storeName, List.of(ean, category, price, qty));
   }
 

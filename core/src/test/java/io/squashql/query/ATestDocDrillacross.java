@@ -20,12 +20,14 @@ public abstract class ATestDocDrillacross extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<Field>> getFieldsByStore() {
-    Field ean = new Field("product", String.class);
-    Field qty = new Field("quantity", int.class);
-    Field reason = new Field("reason", String.class);
+    Field eanShipment = new Field("shipment", "product", String.class);
+    Field eanReturn = new Field("return", "product", String.class);
+    Field qtyShipment = new Field("shipment", "quantity", int.class);
+    Field qtyReturn = new Field("return", "quantity", int.class);
+    Field reason = new Field("return", "reason", String.class);
     return Map.of(
-            "shipment", List.of(ean, qty),
-            "return", List.of(ean, qty, reason));
+            "shipment", List.of(eanShipment, qtyShipment),
+            "return", List.of(eanReturn, qtyReturn, reason));
   }
 
   @Override

@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
+import static io.squashql.query.TableUtils.reorder;
 import static java.util.Comparator.naturalOrder;
 import static java.util.Comparator.nullsLast;
-import static io.squashql.query.TableUtils.reorder;
 
 public class TestMultipleColumnsSorter {
 
@@ -56,7 +56,7 @@ public class TestMultipleColumnsSorter {
     int[] sort = MultipleColumnsSorter.sort(
             Arrays.asList(c1, c2, c3),
             Arrays.asList(o1, o2, naturalOrder()),
-            new int[] {-1, 0, -1});
+            new int[]{-1, 0, -1});
     Assertions.assertThat(sort).containsExactly(3, 2, 1, 0, 5, 6, 4);
   }
 
@@ -76,9 +76,9 @@ public class TestMultipleColumnsSorter {
   // To easily check the result.
   private void print(List<Object> c1, List<Object> c2, List<Object> c3, int[] sort) {
     List<Header> headers = Arrays.asList(
-            new Header(new Field("c1", String.class), false),
-            new Header(new Field("c2", String.class), false),
-            new Header(new Field("c3", String.class), false));
+            new Header(new Field(null, "c1", String.class), false),
+            new Header(new Field(null, "c2", String.class), false),
+            new Header(new Field(null, "c3", String.class), false));
     new ColumnarTable(headers, Collections.emptySet(), List.of(c1, c2, c3))
             .show();
 
@@ -89,8 +89,8 @@ public class TestMultipleColumnsSorter {
 
   private void print(List<Object> c1, List<Object> c2, int[] sort) {
     List<Header> headers = Arrays.asList(
-            new Header(new Field("c1", String.class), false),
-            new Header(new Field("c2", String.class), false));
+            new Header(new Field(null, "c1", String.class), false),
+            new Header(new Field(null, "c2", String.class), false));
     new ColumnarTable(headers, Collections.emptySet(), List.of(c1, c2))
             .show();
 

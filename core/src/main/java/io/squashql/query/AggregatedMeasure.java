@@ -39,8 +39,12 @@ public class AggregatedMeasure implements BasicMeasure {
     if (this.criteria != null) {
       String conditionSt = SQLTranslator.toSql(QueryExecutor.withFallback(fieldProvider, Number.class), this.criteria, queryRewriter);
       sql = this.aggregationFunction + "(case when " + conditionSt + " then " + queryRewriter.fieldName(this.field) + " end)";
+    } else if (this.field.equals("*")) {
+      sql = this.aggregationFunction + "(*)";
     } else {
-      sql = this.aggregationFunction + "(" + (this.field.equals("*") ? this.field : queryRewriter.fieldName(this.field)) + ")";
+      Field f = fieldProvider.apply(this.field);
+      String fieldFullName = queryRewriter.getFieldFullName(f);
+      sql = this.aggregationFunction + "(" + fieldFullName + ")";
     }
     return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.alias) : sql;
   }
