@@ -9,6 +9,29 @@
   <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
+  <name>SquashQL</name>
+  <description>The SQL query engine specialized in what-if analysis and multi-dimensional queries</description>
+  <url>https://www.squashql.io</url>
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>https://github.com/squashql/squashql/blob/main/LICENSE.md</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>paulbares</id>
+      <name>Paul Bares</name>
+      <url>https://github.com/paulbares</url>
+      <organization>SquashQL Labs</organization>
+      <organizationUrl>https://www.squashql.io</organizationUrl>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:https://github.com/squashql/squashql</connection>
+    <url>https://github.com/squashql/squashql</url>
+  </scm>
+
   <properties>
     <java.version>17</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -205,6 +228,32 @@
                 <phase>verify</phase>
                 <goals>
                   <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>3.2.1</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.5.0</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
                 </goals>
               </execution>
             </executions>
