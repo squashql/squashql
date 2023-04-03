@@ -128,7 +128,7 @@ class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
 
   limit(limit: number): CanBeBuildQuery {
     this.queryDto.limit = limit
-    return undefined
+    return this
   }
 
   orderBy(column: string, order: OrderKeyword): HasHaving {
