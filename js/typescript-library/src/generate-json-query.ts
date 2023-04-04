@@ -24,6 +24,7 @@ export function generateFromQuery() {
           .rollup(["a", "b"])
           .having(all([havingCriterion(measure, gt(0)), havingCriterion(measureExpr, lt(10))]))
           .orderBy("f4", OrderKeyword.ASC)
+          .limit(10)
           .build()
 
   console.log(JSON.stringify(q))
