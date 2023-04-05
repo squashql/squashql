@@ -10,7 +10,7 @@ import io.squashql.transaction.TransactionManager;
 /**
  * Do not edit this class, it has been generated automatically by {@link io.squashql.template.SparkClassTemplateGenerator}.
  */
-public class TestSparkQueryWithJoins extends ATestQueryWithJoins {
+public class TestSparkBucketing extends ATestBucketing {
 
   @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {

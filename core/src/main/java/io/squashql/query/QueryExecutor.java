@@ -4,6 +4,7 @@ import io.squashql.PrefetchVisitor;
 import io.squashql.query.QueryCache.SubQueryScope;
 import io.squashql.query.QueryCache.TableScope;
 import io.squashql.query.context.QueryCacheContextValue;
+import io.squashql.query.database.CTE;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
@@ -205,9 +206,24 @@ public class QueryExecutor {
     // If column set, it changes the scope
     List<Field> columns = Stream.concat(
             query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
-            query.columns.stream()).map(fieldSupplier).toList();
+            query.columns.stream()).map(fieldSupplier).collect(Collectors.toCollection(() -> new ArrayList<>()));
     List<Field> rollupColumns = query.rollupColumns.stream().map(fieldSupplier).toList();
-    return new QueryScope(query.table, query.subQuery, columns, query.whereCriteriaDto, query.havingCriteriaDto, rollupColumns);
+
+    // FIXME move in a dedicated class/method???
+    CTE cte = null;
+    TableDto table = query.table;
+    if (query.columnSets.containsKey(ColumnSetKey.ZOB)) {
+      ZobColumnSetDto columnSet = (ZobColumnSetDto) query.columnSets.get(ColumnSetKey.ZOB);
+      cte = new CTE(columnSet.identifier(), columnSet.generateExpression());
+      TableDto copy = new TableDto(table.name);
+      copy.joins.addAll(table.joins);
+      JoinMappingDto lower = new JoinMappingDto(table.name, columnSet.field, columnSet.identifier(), ZobColumnSetDto.lowerBoundName(), ConditionType.GE);
+      JoinMappingDto upper = new JoinMappingDto(table.name, columnSet.field, columnSet.identifier(), ZobColumnSetDto.upperBounderName(), ConditionType.LT);
+      copy.joins.add(new JoinDto(new TableDto(columnSet.identifier()), JoinType.INNER, List.of(lower, upper)));
+      table = copy;
+      columns.addAll(columnSet.getNewColumns());
+    }
+    return new QueryScope(table, query.subQuery, columns, query.whereCriteriaDto, query.havingCriteriaDto, rollupColumns, cte);
   }
 
   private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(
@@ -227,7 +243,8 @@ public class QueryExecutor {
                            List<Field> columns,
                            CriteriaDto whereCriteriaDto,
                            CriteriaDto havingCriteriaDto,
-                           List<Field> rollupColumns) {
+                           List<Field> rollupColumns,
+                           CTE cte) {
   }
 
   public record QueryPlanNodeKey(QueryScope queryScope, Measure measure) {

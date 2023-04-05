@@ -18,7 +18,6 @@ import java.util.List;
 @NoArgsConstructor // For Jackson
 public class DatabaseQuery {
 
-  public TableDto table;
   public DatabaseQuery subQuery;
   public List<Field> select = new ArrayList<>();
   public CriteriaDto whereCriteriaDto = null;
@@ -26,6 +25,8 @@ public class DatabaseQuery {
   public List<Measure> measures = new ArrayList<>();
   public List<Field> rollup = new ArrayList<>();
   public int limit = -1;
+  public CTE cte;
+  public TableDto table;
 
   public DatabaseQuery withSelect(Field field) {
     this.select.add(field);
@@ -79,6 +80,11 @@ public class DatabaseQuery {
 
   public DatabaseQuery limit(int limit) {
     this.limit = limit;
+    return this;
+  }
+
+  public DatabaseQuery cte(CTE cte) {
+    this.cte = cte;
     return this;
   }
 }

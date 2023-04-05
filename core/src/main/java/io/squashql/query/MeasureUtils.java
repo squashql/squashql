@@ -93,7 +93,8 @@ public final class MeasureUtils {
             queryScope.columns(),
             copy.get(),
             queryScope.havingCriteriaDto(),
-            new ArrayList<>(rollupColumns));
+            new ArrayList<>(rollupColumns),
+            queryScope.cte());
   }
 
   private static CriteriaDto removeCriteriaOnField(String field, CriteriaDto root) {

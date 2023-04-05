@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryServiceAccountDatastore;
+import io.squashql.BigQueryUtil;
 import io.squashql.query.database.BigQueryEngine;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.store.Datastore;
@@ -47,10 +48,5 @@ public class TestBigQueryQueryWithJoins extends ATestQueryWithJoins {
   @Override
   protected Object translate(Object o) {
     return BigQueryTestUtil.translate(o);
-  }
-
-  @Override
-  protected String ambiguousNameMessage() {
-    return "Column name name is ambiguous";
   }
 }

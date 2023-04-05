@@ -128,7 +128,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   }
 
   /**
-   * subcategory is null for some rows. The engine needs to be capable of distinguish null values that are returned by
+   * Subcategory is null for some rows. The engine needs to be capable of distinguish null values that are returned by
    * ROLLUP from standard null values.
    */
   @Test

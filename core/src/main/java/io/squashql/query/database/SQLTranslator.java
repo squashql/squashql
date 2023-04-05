@@ -40,6 +40,7 @@ public class SQLTranslator {
     selects.addAll(aggregates);
 
     StringBuilder statement = new StringBuilder();
+    addCte(query.cte, statement);
     statement.append("select ");
     statement.append(String.join(", ", selects));
     statement.append(" from ");
@@ -56,6 +57,15 @@ public class SQLTranslator {
     addHavingConditions(statement, query.havingCriteriaDto, queryRewriter);
     addLimit(query.limit, statement);
     return statement.toString();
+  }
+
+  private static void addCte(CTE cte, StringBuilder statement) {
+    if (cte == null) {
+      return;
+    }
+
+    statement.append("with ").append(cte.identifier())
+            .append(" as (").append(cte.subqueryExpression()).append(") ");
   }
 
   private static void addLimit(int limit, StringBuilder statement) {
@@ -137,13 +147,26 @@ public class SQLTranslator {
               .append(join.type.name().toLowerCase())
               .append(" join ")
               .append(queryRewriter.tableName(join.table.name))
+//              .append(join.table.name)
               .append(" on ");
       for (int i = 0; i < join.mappings.size(); i++) {
         JoinMappingDto mapping = join.mappings.get(i);
+        var op = switch (mapping.conditionType) {
+          case EQ -> " = ";
+          case NEQ -> " <> ";
+          case LT -> " < ";
+          case LE -> " <= ";
+          case GT -> " > ";
+          case GE -> " >= ";
+          default -> throw new IllegalStateException("Unexpected value: " + mapping.conditionType);
+        };
+        // FIXME problem with bigquery with table name. Do not use queryRewriter.tableName for CTE
         statement
                 .append(SqlUtils.getFieldFullName(queryRewriter.tableName(mapping.fromTable), queryRewriter.fieldName(mapping.from)))
-                .append(" = ")
+//                .append(SqlUtils.getFieldFullName(mapping.fromTable, queryRewriter.fieldName(mapping.from)))
+                .append(op)
                 .append(SqlUtils.getFieldFullName(queryRewriter.tableName(mapping.toTable), queryRewriter.fieldName(mapping.to)));
+//                .append(SqlUtils.getFieldFullName(mapping.toTable, queryRewriter.fieldName(mapping.to)));
         if (i < join.mappings.size() - 1) {
           statement.append(" and ");
         }

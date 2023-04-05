@@ -61,6 +61,7 @@ public final class Queries {
     selects.forEach(prefetchQuery::withSelect);
     Optional.ofNullable(queryScope.rollupColumns()).ifPresent(r -> r.forEach(prefetchQuery::withRollup));
     prefetchQuery.limit(limit);
+    prefetchQuery.cte(queryScope.cte());
     return prefetchQuery;
   }
 

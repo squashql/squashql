@@ -2,7 +2,6 @@ package io.squashql.query;
 
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryServiceAccountDatastore;
-import io.squashql.BigQueryUtil;
 import io.squashql.query.database.BigQueryEngine;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.store.Datastore;
@@ -16,7 +15,7 @@ import static io.squashql.query.BigQueryTestUtil.PROJECT_ID;
 /**
  * Do not edit this class, it has been generated automatically by {@link io.squashql.template.BigQueryClassTemplateGenerator}.
  */
-public class TestBigQueryBucketComparison extends ATestBucketComparison {
+public class TestBigQueryBucketing extends ATestBucketing {
 
   @AfterAll
   void tearDown() {

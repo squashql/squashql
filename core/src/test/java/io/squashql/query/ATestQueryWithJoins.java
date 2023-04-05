@@ -138,5 +138,17 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
     }
   }
 
-  protected abstract String ambiguousNameMessage();
+  protected String ambiguousNameMessage() {
+    String ds = this.datastore.getClass().getSimpleName();
+    if (ds.contains(TestClass.Type.SPARK.className)) {
+      return "Reference 'name' is ambiguous";
+    } else if (ds.contains(TestClass.Type.BIGQUERY.className)) {
+      return "Column name name is ambiguous";
+    } else if (ds.contains(TestClass.Type.CLICKHOUSE.className)) {
+      return "Ambiguous column 'name'";
+    } else if (ds.contains(TestClass.Type.SNOWFLAKE.className)) {
+      return "ambiguous column name 'name'";
+    }
+    return null;
+  }
 }

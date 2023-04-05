@@ -13,9 +13,9 @@ import static io.squashql.query.dto.ConditionType.*;
 @NoArgsConstructor // For Jackson
 public final class ConstantConditionDto implements ConditionDto {
 
-  public ConditionType type;
-
   private static final EnumSet<ConditionType> supportedTypes = EnumSet.of(NULL, NOT_NULL, TRUE, FALSE);
+
+  public ConditionType type;
 
   public ConstantConditionDto(ConditionType type) {
     if (!supportedTypes.contains(type)) {
