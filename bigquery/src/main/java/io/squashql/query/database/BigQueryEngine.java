@@ -87,7 +87,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       missingColumnsInRollup.addAll(query.rollup);
       deepCopy.rollup = missingColumnsInRollup;
       return SQLTranslator.translate(deepCopy,
-              QueryExecutor.withFallback(this.fieldSupplier, String.class),
+              QueryExecutor.withFallback(this.fieldSupplier.get(), String.class),
               q -> q.rollup.isEmpty() ? this.queryRewriter : newRewriter);
     }
   }
