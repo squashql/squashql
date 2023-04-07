@@ -59,8 +59,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
       // Special case for BigQuery because it does not support either the grouping function used to identify extra-rows added
       // by rollup or grouping sets for partial rollup.
-//      QueryAwareBigQueryQueryRewriter rewriter = new QueryAwareBigQueryQueryRewriter((BigQueryQueryRewriter) this.queryRewriter, query);
-//      BigQueryQueryRewriter rewriter = (BigQueryQueryRewriter) this.queryRewriter;
+
       /*
        * The trick here is to change what is put in select and rollup:
        * SELECT SUM(amount) as amount_sum, COALESCE(a, "r1"), COALESCE(b, "r2") FROM table
@@ -69,18 +68,6 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
        * result dataset correspond to the subtotals.
        */
       BigQueryQueryRewriter newRewriter = new BigQueryQueryRewriter(rewriter.underlying.projectId, rewriter.underlying.datasetName) {
-
-//        @Override
-//        public String getFieldFullName(Field f) {
-//          CteColumnSetDto columnSet = query.cte.cteColumnSetDto();
-//          if (columnSet != null
-//                  && CteColumnSetDto.identifier().equals(f.store())
-//                  && columnSet.name.equals(f.name())) {
-//            return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
-//          } else {
-//            return super.getFieldFullName(f);
-//          }
-//        }
 
         @Override
         public String select(Field field) {
