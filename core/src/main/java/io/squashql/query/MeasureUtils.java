@@ -77,14 +77,14 @@ public final class MeasureUtils {
     AtomicReference<CriteriaDto> copy = new AtomicReference<>(queryScope.whereCriteriaDto() == null ? null : CriteriaDto.deepCopy(queryScope.whereCriteriaDto()));
     Consumer<String> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
-            .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(criteriaRemover::accept));
+            .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(criteriaRemover));
     Optional.ofNullable(cm.period)
-            .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover::accept));
+            .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover));
     Set<Field> rollupColumns = new LinkedHashSet<>(queryScope.rollupColumns()); // order does matter
     Optional.ofNullable(cm.ancestors)
             .ifPresent(ancestors -> {
-              ancestors.forEach(criteriaRemover::accept);
-              List<Field> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).map(fieldSupplier::apply).collect(Collectors.toList());
+              ancestors.forEach(criteriaRemover);
+              List<Field> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).map(fieldSupplier).collect(Collectors.toList());
               Collections.reverse(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage order".
               rollupColumns.addAll(ancestorFields);
             });

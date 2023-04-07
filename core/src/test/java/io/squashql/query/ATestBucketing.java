@@ -5,13 +5,14 @@ import io.squashql.query.builder.Query;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.dto.CteColumnSetDto;
 import io.squashql.store.Field;
-import org.eclipse.collections.impl.tuple.Tuples;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static io.squashql.query.ComparisonMethod.DIVIDE;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -43,15 +44,17 @@ public abstract class ATestBucketing extends ABaseTestQuery {
   @Test
   void test() {
     CteColumnSetDto bucket = new CteColumnSetDto("bucket", "kvi")
-            .withNewBucket("unsensistive", Tuples.twin(0d, 50d))
-            .withNewBucket("sensistive", Tuples.twin(50d, 80d))
-            .withNewBucket("hypersensistive", Tuples.twin(80d, 100d));
+            .withNewBucket("unsensistive", List.of(0d, 50d))
+            .withNewBucket("sensistive", List.of(50d, 80d))
+            .withNewBucket("hypersensistive", List.of(80d, 100d));
 
     QueryRewriter qr = this.executor.queryEngine.queryRewriter();
     String expression = String.format("sum(%s * %s)", qr.fieldName("unitPrice"), qr.fieldName("qtySold"));
+    ExpressionMeasure sales = new ExpressionMeasure("sales", expression);
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, sales, List.of("shop", "__temp_table_cte__.bucket"));
     var query = Query
             .from(this.storeName)
-            .select(List.of("shop"), List.of(bucket), List.of(new ExpressionMeasure("sales", expression)))
+            .select(List.of("shop"), List.of(bucket), List.of(sales, pOp))
             .rollup("bucket", "shop")
             .build();
 

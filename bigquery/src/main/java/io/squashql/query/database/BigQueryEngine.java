@@ -6,6 +6,7 @@ import io.squashql.BigQueryUtil;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.Table;
 import io.squashql.query.*;
+import io.squashql.query.dto.CteColumnSetDto;
 import io.squashql.store.Field;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.api.tuple.Pair;
@@ -46,8 +47,11 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   @Override
   protected String createSqlStatement(DatabaseQuery query) {
     boolean hasRollup = !query.rollup.isEmpty();
+    QueryAwareBigQueryQueryRewriter rewriter = new QueryAwareBigQueryQueryRewriter((BigQueryQueryRewriter) this.queryRewriter, query);
     if (!hasRollup) {
-      return super.createSqlStatement(query);
+      return SQLTranslator.translate(query,
+              QueryExecutor.withFallback(this.fieldSupplier.get(), String.class),
+              rewriter);
     } else {
       checkRollupIsValid(
               query.select.stream().map(f -> this.queryRewriter.select(f)).toList(),
@@ -55,7 +59,8 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
       // Special case for BigQuery because it does not support either the grouping function used to identify extra-rows added
       // by rollup or grouping sets for partial rollup.
-      BigQueryQueryRewriter rewriter = (BigQueryQueryRewriter) this.queryRewriter;
+//      QueryAwareBigQueryQueryRewriter rewriter = new QueryAwareBigQueryQueryRewriter((BigQueryQueryRewriter) this.queryRewriter, query);
+//      BigQueryQueryRewriter rewriter = (BigQueryQueryRewriter) this.queryRewriter;
       /*
        * The trick here is to change what is put in select and rollup:
        * SELECT SUM(amount) as amount_sum, COALESCE(a, "r1"), COALESCE(b, "r2") FROM table
@@ -63,7 +68,19 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
        * By doing so, null values (not the ones due to rollup) will be changed to "___null___" and null values in the
        * result dataset correspond to the subtotals.
        */
-      BigQueryQueryRewriter newRewriter = new BigQueryQueryRewriter(rewriter.projectId, rewriter.datasetName) {
+      BigQueryQueryRewriter newRewriter = new BigQueryQueryRewriter(rewriter.underlying.projectId, rewriter.underlying.datasetName) {
+
+//        @Override
+//        public String getFieldFullName(Field f) {
+//          CteColumnSetDto columnSet = query.cte.cteColumnSetDto();
+//          if (columnSet != null
+//                  && CteColumnSetDto.identifier().equals(f.store())
+//                  && columnSet.name.equals(f.name())) {
+//            return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
+//          } else {
+//            return super.getFieldFullName(f);
+//          }
+//        }
 
         @Override
         public String select(Field field) {
@@ -227,6 +244,11 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     }
 
     @Override
+    public String getFieldFullName(Field f) {
+      return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
+    }
+
+    @Override
     public String fieldName(String field) {
       return SqlUtils.backtickEscape(field);
     }
@@ -260,6 +282,70 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     public boolean useGroupingFunction() {
       // Not supported https://issuetracker.google.com/issues/205238172
       return false;
+    }
+  }
+
+  private static class QueryAwareBigQueryQueryRewriter implements QueryRewriter {
+
+    private final BigQueryQueryRewriter underlying;
+
+    private final DatabaseQuery query;
+
+    private QueryAwareBigQueryQueryRewriter(BigQueryQueryRewriter underlying, DatabaseQuery query) {
+      this.underlying = underlying;
+      this.query = query;
+    }
+
+    @Override
+    public String getFieldFullName(Field f) {
+      CteColumnSetDto columnSet = this.query.cte.cteColumnSetDto();
+      if (columnSet != null
+              && CteColumnSetDto.identifier().equals(f.store())
+              && columnSet.name.equals(f.name())) {
+        return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
+      } else {
+        return this.underlying.getFieldFullName(f);
+      }
+    }
+
+    @Override
+    public String fieldName(String field) {
+      return this.underlying.fieldName(field);
+    }
+
+    @Override
+    public String tableName(String table) {
+      return this.underlying.tableName(table);
+    }
+
+    @Override
+    public String cteName(String cteName) {
+      return this.underlying.cteName(cteName);
+    }
+
+    @Override
+    public String select(Field f) {
+      return getFieldFullName(f);
+    }
+
+    @Override
+    public String rollup(Field f) {
+      return getFieldFullName(f);
+    }
+
+    @Override
+    public String measureAlias(String alias) {
+      return this.underlying.measureAlias(alias);
+    }
+
+    @Override
+    public boolean usePartialRollupSyntax() {
+      return this.underlying.usePartialRollupSyntax();
+    }
+
+    @Override
+    public boolean useGroupingFunction() {
+      return this.underlying.useGroupingFunction();
     }
   }
 }

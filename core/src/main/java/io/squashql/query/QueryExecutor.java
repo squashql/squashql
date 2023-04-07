@@ -8,6 +8,7 @@ import io.squashql.query.database.CTE;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
+import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.query.monitoring.QueryWatch;
 import io.squashql.store.Field;
 import io.squashql.table.MergeTables;
@@ -78,7 +79,7 @@ public class QueryExecutor {
     queryWatch.stop(QueryWatch.PREPARE_RESOLVE_MEASURES);
 
     queryWatch.start(QueryWatch.EXECUTE_PREFETCH_PLAN);
-    Function<String, Field> fieldSupplier = this.queryEngine.getFieldSupplier();
+    Function<String, Field> fieldSupplier = QueryExecutor.withFallbackCTE(this.queryEngine.getFieldSupplier(), query);
     QueryScope queryScope = createQueryScope(query, fieldSupplier);
     Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> dependencyGraph = computeDependencyGraph(query, queryScope, fieldSupplier);
     // Compute what needs to be prefetched
@@ -221,7 +222,7 @@ public class QueryExecutor {
       JoinMappingDto upper = new JoinMappingDto(table.name, columnSet.field, columnSet.identifier(), CteColumnSetDto.upperBounderName(), ConditionType.LT);
       copy.joins.add(new JoinDto(new TableDto(columnSet.identifier()), JoinType.INNER, List.of(lower, upper)));
       table = copy;
-      columns.addAll(columnSet.getNewColumns());
+//      columns.addAll(columnSet.getNewColumns());
     }
     return new QueryScope(table, query.subQuery, columns, query.whereCriteriaDto, query.havingCriteriaDto, rollupColumns, cte);
   }
@@ -291,11 +292,27 @@ public class QueryExecutor {
       Field f;
       try {
         f = fieldProvider.apply(fieldName);
-      } catch (Exception e) {
+      } catch (FieldNotFoundException e) {
         // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
         // contains only "raw" fields, it will throw an exception.
         log.info("Cannot find field " + fieldName + " with default field provider, fallback to default type: " + fallbackType.getSimpleName());
         f = new Field(null, fieldName, Number.class);
+      }
+      return f;
+    };
+  }
+
+  public static Function<String, Field> withFallbackCTE(Function<String, Field> fieldProvider, QueryDto queryDto) {
+    return fieldName -> {
+      Field f;
+      try {
+        f = fieldProvider.apply(fieldName);
+      } catch (FieldNotFoundException e) {
+        CteColumnSetDto columnSet = (CteColumnSetDto) queryDto.columnSets.get(ColumnSetKey.CTE);
+        if (columnSet != null && fieldName.equals(columnSet.name)) {
+          return new Field(CteColumnSetDto.identifier(), fieldName, String.class);
+        }
+        throw e;
       }
       return f;
     };

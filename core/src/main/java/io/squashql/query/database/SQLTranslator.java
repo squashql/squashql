@@ -3,7 +3,6 @@ package io.squashql.query.database;
 import com.google.common.collect.Ordering;
 import io.squashql.query.dto.*;
 import io.squashql.store.Field;
-import org.eclipse.collections.api.tuple.Pair;
 
 import java.util.*;
 import java.util.function.Function;
@@ -65,16 +64,15 @@ public class SQLTranslator {
       return;
     }
 
-
     CteColumnSetDto setDto = cte.cteColumnSetDto();
     StringBuilder sb = new StringBuilder();
-    Iterator<Map.Entry<String, Pair<Object, Object>>> it = setDto.values.entrySet().iterator();
+    Iterator<Map.Entry<String, List<Object>>> it = setDto.values.entrySet().iterator();
     while (it.hasNext()) {
-      Map.Entry<String, Pair<Object, Object>> entry = it.next();
+      Map.Entry<String, List<Object>> entry = it.next();
       sb.append("select");
       sb.append(" '").append(entry.getKey()).append("' as " + qr.fieldName(setDto.name) + ", ");
-      sb.append(" ").append(entry.getValue().getOne()).append(" as " + qr.fieldName(CteColumnSetDto.lowerBoundName()) + ", ");
-      sb.append(" ").append(entry.getValue().getTwo()).append(" as " + qr.fieldName(CteColumnSetDto.upperBounderName()));
+      sb.append(" ").append(entry.getValue().get(0)).append(" as " + qr.fieldName(CteColumnSetDto.lowerBoundName()) + ", ");
+      sb.append(" ").append(entry.getValue().get(1)).append(" as " + qr.fieldName(CteColumnSetDto.upperBounderName()));
       if (it.hasNext()) {
         sb.append(" union all ");
       }

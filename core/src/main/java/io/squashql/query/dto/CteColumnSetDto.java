@@ -6,9 +6,10 @@ import io.squashql.store.Field;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.eclipse.collections.api.tuple.Pair;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @ToString
 @EqualsAndHashCode
@@ -22,48 +23,31 @@ public class CteColumnSetDto implements ColumnSet {
 
   public String field;
 
-  public Map<String, Pair<Object, Object>> values = new HashMap<>();
+  public Map<String, List<Object>> values = new HashMap<>();
 
   public CteColumnSetDto(String name, String field) {
     this.name = name;
     this.field = field;
   }
 
-  public CteColumnSetDto withNewBucket(String bucketName, Pair<Object, Object> range) {
+  public CteColumnSetDto withNewBucket(String bucketName, List<Object> range) {
     this.values.put(bucketName, range);
     return this;
   }
 
   @Override
   public List<String> getColumnsForPrefetching() {
-    return List.of();
+    return List.of(this.name);
   }
 
   @Override
   public List<Field> getNewColumns() {
-    return List.of(new Field(null, this.name, String.class));
+    return List.of(new Field(identifier(), this.name, String.class));
   }
 
   @Override
   public ColumnSetKey getColumnSetKey() {
     return ColumnSetKey.CTE;
-  }
-
-  public String generateExpression() {
-    StringBuilder sb = new StringBuilder();
-    Iterator<Map.Entry<String, Pair<Object, Object>>> it = this.values.entrySet().iterator();
-    while (it.hasNext()) {
-      Map.Entry<String, Pair<Object, Object>> entry = it.next();
-      sb.append("select");
-      sb.append(" '").append(entry.getKey()).append("' as " + this.name + ", ");
-      sb.append(" ").append(entry.getValue().getOne()).append(" as " + lowerBoundName() + ", ");
-      sb.append(" ").append(entry.getValue().getTwo()).append(" as " + upperBounderName());
-      if (it.hasNext()) {
-        sb.append(" union all ");
-      }
-    }
-
-    return sb.toString();
   }
 
   public static String identifier() {

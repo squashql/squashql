@@ -2,6 +2,7 @@ package io.squashql.query.database;
 
 import com.google.common.base.Suppliers;
 import io.squashql.query.*;
+import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.store.Datastore;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
@@ -64,7 +65,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
       if (fieldName.equals(CountMeasure.INSTANCE.alias())) {
         return new Field(null, CountMeasure.INSTANCE.alias(), long.class);
       }
-      throw new IllegalArgumentException("Cannot find field with name " + fieldName);
+      throw new FieldNotFoundException("Cannot find field with name " + fieldName);
     };
   }
 
@@ -92,7 +93,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
       }
     }
     String sql = createSqlStatement(query);
-    log.info(query + " translated into sql='" + sql + "'");
+    log.info(query + " translated into " + System.lineSeparator() + "sql=" + sql);
     Table aggregates = retrieveAggregates(query, sql);
     return postProcessDataset(aggregates, query);
   }
