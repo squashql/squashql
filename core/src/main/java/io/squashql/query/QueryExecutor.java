@@ -212,13 +212,13 @@ public class QueryExecutor {
     // FIXME move in a dedicated class/method???
     CTE cte = null;
     TableDto table = query.table;
-    if (query.columnSets.containsKey(ColumnSetKey.ZOB)) {
-      ZobColumnSetDto columnSet = (ZobColumnSetDto) query.columnSets.get(ColumnSetKey.ZOB);
-      cte = new CTE(columnSet.identifier(), columnSet.generateExpression());
+    if (query.columnSets.containsKey(ColumnSetKey.CTE)) {
+      CteColumnSetDto columnSet = (CteColumnSetDto) query.columnSets.get(ColumnSetKey.CTE);
+      cte = new CTE(columnSet);
       TableDto copy = new TableDto(table.name);
       copy.joins.addAll(table.joins);
-      JoinMappingDto lower = new JoinMappingDto(table.name, columnSet.field, columnSet.identifier(), ZobColumnSetDto.lowerBoundName(), ConditionType.GE);
-      JoinMappingDto upper = new JoinMappingDto(table.name, columnSet.field, columnSet.identifier(), ZobColumnSetDto.upperBounderName(), ConditionType.LT);
+      JoinMappingDto lower = new JoinMappingDto(table.name, columnSet.field, columnSet.identifier(), CteColumnSetDto.lowerBoundName(), ConditionType.GE);
+      JoinMappingDto upper = new JoinMappingDto(table.name, columnSet.field, columnSet.identifier(), CteColumnSetDto.upperBounderName(), ConditionType.LT);
       copy.joins.add(new JoinDto(new TableDto(columnSet.identifier()), JoinType.INNER, List.of(lower, upper)));
       table = copy;
       columns.addAll(columnSet.getNewColumns());

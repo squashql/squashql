@@ -16,6 +16,10 @@ public interface QueryRewriter {
     return table;
   }
 
+  default String cteName(String cteName) {
+    return cteName;
+  }
+
   /**
    * Customizes what's written in the SELECT statement AND GROUP BY for the given selected column.
    * See {@link SQLTranslator}.

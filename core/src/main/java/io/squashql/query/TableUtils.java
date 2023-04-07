@@ -174,7 +174,7 @@ public class TableUtils {
     Arrays.fill(contextIndices, -1);
     for (ColumnSet columnSet : new HashSet<>(columnSets)) {
       if (columnSet.getColumnSetKey() != ColumnSetKey.BUCKET) {
-        throw new IllegalArgumentException("Unexpected column set type " + columnSet);
+        continue;
       }
       BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
       // cs.field can appear multiple times in the table.

@@ -2,7 +2,8 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
-import io.squashql.query.dto.ZobColumnSetDto;
+import io.squashql.query.database.QueryRewriter;
+import io.squashql.query.dto.CteColumnSetDto;
 import io.squashql.store.Field;
 import org.eclipse.collections.impl.tuple.Tuples;
 import org.junit.jupiter.api.Test;
@@ -41,19 +42,21 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 
   @Test
   void test() {
-    ZobColumnSetDto bucket = new ZobColumnSetDto("bucket", "kvi")
+    CteColumnSetDto bucket = new CteColumnSetDto("bucket", "kvi")
             .withNewBucket("unsensistive", Tuples.twin(0d, 50d))
             .withNewBucket("sensistive", Tuples.twin(50d, 80d))
             .withNewBucket("hypersensistive", Tuples.twin(80d, 100d));
-    String s = bucket.generateExpression();
-    System.out.println(s);
+
+    QueryRewriter qr = this.executor.queryEngine.queryRewriter();
+    String expression = String.format("sum(%s * %s)", qr.fieldName("unitPrice"), qr.fieldName("qtySold"));
     var query = Query
             .from(this.storeName)
-            .select(List.of("shop"), List.of(bucket), List.of(new ExpressionMeasure("sales", "sum(unitPrice * qtySold)")))
+            .select(List.of("shop"), List.of(bucket), List.of(new ExpressionMeasure("sales", expression)))
+            .rollup("bucket", "shop")
             .build();
 
-//    Table dataset = this.executor.execute(query);
-//    dataset.show();
+    Table dataset = this.executor.execute(query);
+    dataset.show();
 
 //    SELECT arrayJoin([
 //            tuple(1, 'A'),
@@ -76,26 +79,26 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 //            SELECT res.first, res.second from res
 //            """);
 //        select "shop", "MYTEMPTABLE"."bucket", sum("unitPrice" * "qtySold") as "sales", count(*) as "_contributors_count_"
-    
+
     // FOR SNOWFLAKE, do not escape anything: "MYTEMPTABLE"."bucket" is not supported but MYTEMPTABLE.bucket is ok.
     // FOR BIGQUERY, do not use full path with dataset name for CTE....
-    Table execute = this.executor.execute("""
-        with MYTEMPTABLE as (
-        select 'unsensistive' as bucket,  0.0 as MYTEMPTABLE_min,  50.0 as MYTEMPTABLE_max
-        union all
-        select 'sensistive' as bucket,  50.0 as MYTEMPTABLE_min,  80.0 as MYTEMPTABLE_max
-        union all
-        select 'hypersensistive' as bucket,  80.0 as MYTEMPTABLE_min,  100.0 as MYTEMPTABLE_max
-        )
-        select "shop", MYTEMPTABLE.bucket, sum("unitPrice" * "qtySold") as "sales", count(*) as "_contributors_count_"
-        from "storetestsnowflakebucketing"
-        inner join "MYTEMPTABLE"
-        on
-        "storetestsnowflakebucketing"."kvi" >= MYTEMPTABLE.MYTEMPTABLE_min
-        and
-        "storetestsnowflakebucketing"."kvi" < MYTEMPTABLE.MYTEMPTABLE_max
-        group by "shop", MYTEMPTABLE.bucket limit 10000
-            """);
-    execute.show();
+//    Table execute = this.executor.execute("""
+//        with "MYTEMPTABLE" as (
+//        select 'unsensistive' as "bucket",  0.0 as "MYTEMPTABLE_min",  50.0 as "MYTEMPTABLE_max"
+//        union all
+//        select 'sensistive' as "bucket",  50.0 as "MYTEMPTABLE_min",  80.0 as "MYTEMPTABLE_max"
+//        union all
+//        select 'hypersensistive' as "bucket",  80.0 as "MYTEMPTABLE_min",  100.0 as "MYTEMPTABLE_max"
+//        )
+//        select "shop", "MYTEMPTABLE"."bucket", sum("unitPrice" * "qtySold") as "sales", count(*) as "_contributors_count_"
+//        from "storetestsnowflakebucketing"
+//        inner join "MYTEMPTABLE"
+//        on
+//        "storetestsnowflakebucketing"."kvi" >= "MYTEMPTABLE"."MYTEMPTABLE_min"
+//        and
+//        "storetestsnowflakebucketing"."kvi" < "MYTEMPTABLE"."MYTEMPTABLE_max"
+//        group by "shop", "MYTEMPTABLE"."bucket" limit 10000
+//            """);
+//    execute.show();
   }
 }

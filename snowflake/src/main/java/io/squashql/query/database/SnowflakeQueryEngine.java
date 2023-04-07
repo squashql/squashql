@@ -189,6 +189,11 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
     }
 
     @Override
+    public String cteName(String cteName) {
+      return SqlUtils.doubleQuoteEscape(cteName);
+    }
+
+    @Override
     public String fieldName(String field) {
       return SqlUtils.doubleQuoteEscape(field);
     }

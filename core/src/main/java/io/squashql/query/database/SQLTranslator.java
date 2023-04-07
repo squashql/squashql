@@ -3,6 +3,7 @@ package io.squashql.query.database;
 import com.google.common.collect.Ordering;
 import io.squashql.query.dto.*;
 import io.squashql.store.Field;
+import org.eclipse.collections.api.tuple.Pair;
 
 import java.util.*;
 import java.util.function.Function;
@@ -40,7 +41,7 @@ public class SQLTranslator {
     selects.addAll(aggregates);
 
     StringBuilder statement = new StringBuilder();
-    addCte(query.cte, statement);
+    addCte(query.cte, statement, queryRewriter);
     statement.append("select ");
     statement.append(String.join(", ", selects));
     statement.append(" from ");
@@ -59,13 +60,29 @@ public class SQLTranslator {
     return statement.toString();
   }
 
-  private static void addCte(CTE cte, StringBuilder statement) {
+  private static void addCte(CTE cte, StringBuilder statement, QueryRewriter qr) {
     if (cte == null) {
       return;
     }
 
-    statement.append("with ").append(cte.identifier())
-            .append(" as (").append(cte.subqueryExpression()).append(") ");
+
+    CteColumnSetDto setDto = cte.cteColumnSetDto();
+    StringBuilder sb = new StringBuilder();
+    Iterator<Map.Entry<String, Pair<Object, Object>>> it = setDto.values.entrySet().iterator();
+    while (it.hasNext()) {
+      Map.Entry<String, Pair<Object, Object>> entry = it.next();
+      sb.append("select");
+      sb.append(" '").append(entry.getKey()).append("' as " + qr.fieldName(setDto.name) + ", ");
+      sb.append(" ").append(entry.getValue().getOne()).append(" as " + qr.fieldName(CteColumnSetDto.lowerBoundName()) + ", ");
+      sb.append(" ").append(entry.getValue().getTwo()).append(" as " + qr.fieldName(CteColumnSetDto.upperBounderName()));
+      if (it.hasNext()) {
+        sb.append(" union all ");
+      }
+    }
+
+    statement
+            .append("with ").append(qr.cteName(CteColumnSetDto.identifier()))
+            .append(" as (").append(sb).append(") ");
   }
 
   private static void addLimit(int limit, StringBuilder statement) {
@@ -140,14 +157,14 @@ public class SQLTranslator {
     }
   }
 
-  private static void addJoins(StringBuilder statement, TableDto tableQuery, QueryRewriter queryRewriter) {
+  private static void addJoins(StringBuilder statement, TableDto tableQuery, QueryRewriter qr) {
+    Function<String, String> tableNameFunc = tableName -> CteColumnSetDto.identifier().equals(tableName) ? qr.cteName(tableName) : qr.tableName(tableName);
     for (JoinDto join : tableQuery.joins) {
       statement
               .append(" ")
               .append(join.type.name().toLowerCase())
               .append(" join ")
-              .append(queryRewriter.tableName(join.table.name))
-//              .append(join.table.name)
+              .append(tableNameFunc.apply(join.table.name))
               .append(" on ");
       for (int i = 0; i < join.mappings.size(); i++) {
         JoinMappingDto mapping = join.mappings.get(i);
@@ -160,20 +177,17 @@ public class SQLTranslator {
           case GE -> " >= ";
           default -> throw new IllegalStateException("Unexpected value: " + mapping.conditionType);
         };
-        // FIXME problem with bigquery with table name. Do not use queryRewriter.tableName for CTE
         statement
-                .append(SqlUtils.getFieldFullName(queryRewriter.tableName(mapping.fromTable), queryRewriter.fieldName(mapping.from)))
-//                .append(SqlUtils.getFieldFullName(mapping.fromTable, queryRewriter.fieldName(mapping.from)))
+                .append(SqlUtils.getFieldFullName(tableNameFunc.apply(mapping.fromTable), qr.fieldName(mapping.from)))
                 .append(op)
-                .append(SqlUtils.getFieldFullName(queryRewriter.tableName(mapping.toTable), queryRewriter.fieldName(mapping.to)));
-//                .append(SqlUtils.getFieldFullName(mapping.toTable, queryRewriter.fieldName(mapping.to)));
+                .append(SqlUtils.getFieldFullName(tableNameFunc.apply(mapping.toTable), qr.fieldName(mapping.to)));
         if (i < join.mappings.size() - 1) {
           statement.append(" and ");
         }
       }
 
       if (!join.table.joins.isEmpty()) {
-        addJoins(statement, join.table, queryRewriter);
+        addJoins(statement, join.table, qr);
       }
     }
   }

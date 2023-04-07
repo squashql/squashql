@@ -13,10 +13,10 @@ import java.util.*;
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
-public class ZobColumnSetDto implements ColumnSet {
+public class CteColumnSetDto implements ColumnSet {
 
-//  private static final String cteIdentifier = "__temp_table_cte__";
-  private static final String cteIdentifier = "MYTEMPTABLE";
+  private static final String cteIdentifier = "__temp_table_cte__";
+//  private static final String cteIdentifier = "MYTEMPTABLE";
 
   public String name;
 
@@ -24,12 +24,12 @@ public class ZobColumnSetDto implements ColumnSet {
 
   public Map<String, Pair<Object, Object>> values = new HashMap<>();
 
-  public ZobColumnSetDto(String name, String field) {
+  public CteColumnSetDto(String name, String field) {
     this.name = name;
     this.field = field;
   }
 
-  public ZobColumnSetDto withNewBucket(String bucketName, Pair<Object, Object> range) {
+  public CteColumnSetDto withNewBucket(String bucketName, Pair<Object, Object> range) {
     this.values.put(bucketName, range);
     return this;
   }
@@ -46,7 +46,7 @@ public class ZobColumnSetDto implements ColumnSet {
 
   @Override
   public ColumnSetKey getColumnSetKey() {
-    return ColumnSetKey.ZOB;
+    return ColumnSetKey.CTE;
   }
 
   public String generateExpression() {
