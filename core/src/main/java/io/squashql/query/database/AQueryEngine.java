@@ -1,5 +1,6 @@
 package io.squashql.query.database;
 
+import com.google.common.base.Suppliers;
 import io.squashql.query.*;
 import io.squashql.store.Datastore;
 import io.squashql.store.Field;
@@ -11,6 +12,7 @@ import org.eclipse.collections.impl.tuple.Tuples;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 @Slf4j
@@ -18,13 +20,13 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   public final T datastore;
 
-  public final Function<String, Field> fieldSupplier;
+  protected final Supplier<Function<String, Field>> fieldSupplier;
 
   protected final QueryRewriter queryRewriter;
 
   protected AQueryEngine(T datastore, QueryRewriter queryRewriter) {
     this.datastore = datastore;
-    this.fieldSupplier = createFieldSupplier(this.datastore.storesByName());
+    this.fieldSupplier = Suppliers.memoize(() -> createFieldSupplier(this.datastore.storesByName()));
     this.queryRewriter = queryRewriter;
   }
 
@@ -68,7 +70,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   @Override
   public Function<String, Field> getFieldSupplier() {
-    return this.fieldSupplier;
+    return this.fieldSupplier.get();
   }
 
   @Override
@@ -97,7 +99,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   protected String createSqlStatement(DatabaseQuery query) {
     return SQLTranslator.translate(query,
-            QueryExecutor.withFallback(this.fieldSupplier, String.class),
+            QueryExecutor.withFallback(this.fieldSupplier.get(), String.class),
             this.queryRewriter);
   }
 

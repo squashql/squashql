@@ -97,7 +97,7 @@ export class Query {
 }
 
 export class Table {
-  private joins: Array<Join> = []
+  joins: Array<Join> = []
 
   constructor(public name: string) {
   }

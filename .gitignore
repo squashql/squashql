@@ -35,5 +35,6 @@ node_modules
 # specific to the project
 build-from-querydto.json
 build-from-query.json
+build-from-query-merge.json
 js/typescript-library/dist
 js/client-typescript-library/build
