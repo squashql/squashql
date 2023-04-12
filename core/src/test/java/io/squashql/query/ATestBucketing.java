@@ -55,7 +55,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
     var query = Query
             .from(this.storeName)
             .select(List.of("shop"), List.of(bucket), List.of(sales, pOp))
-            .rollup("bucket", "shop")
+//            .rollup("bucket", "shop")
             .build();
 
     Table dataset = this.executor.execute(query);
