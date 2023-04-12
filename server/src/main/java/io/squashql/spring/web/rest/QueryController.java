@@ -5,7 +5,6 @@ import io.squashql.query.*;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.monitoring.QueryWatch;
-import io.squashql.store.Field;
 import io.squashql.store.Store;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,7 +43,7 @@ public class QueryController {
     QueryWatch queryWatch = new QueryWatch();
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
     Table table = this.queryExecutor.execute(query, queryWatch, csBuilder, this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(), true);
-    List<String> fields = table.headers().stream().map(Header::field).map(Field::name).collect(Collectors.toList());
+    List<String> fields = table.headers().stream().map(Header::name).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))
             .columns(fields)
@@ -65,7 +64,7 @@ public class QueryController {
             queryMergeDto.first,
             queryMergeDto.second,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get());
-    List<String> fields = table.headers().stream().map(Header::field).map(Field::name).collect(Collectors.toList());
+    List<String> fields = table.headers().stream().map(Header::name).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))
             .columns(fields)
@@ -88,7 +87,7 @@ public class QueryController {
     Table table = this.queryExecutor.execute(sql);
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))
-            .columns(table.headers().stream().map(header -> header.field().name()).collect(Collectors.toList()))
+            .columns(table.headers().stream().map(header -> header.name()).collect(Collectors.toList()))
             .build();
     QueryResultDto result = QueryResultDto.builder()
             .table(simpleTable)
