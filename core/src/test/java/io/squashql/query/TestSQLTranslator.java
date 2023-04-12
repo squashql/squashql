@@ -237,6 +237,21 @@ public class TestSQLTranslator {
   }
 
   @Test
+  void testConditionWithValueFullPath() {
+    Field field = new Field(BASE_STORE_NAME, SCENARIO_FIELD_NAME, String.class);
+    DatabaseQuery query = new DatabaseQuery()
+            .withSelect(field)
+            .aggregatedMeasure("pnl.sum", "pnl", "sum")
+            .whereCriteria(criterion(SqlUtils.getFieldFullName(field), and(eq("base"), eq("s2"))))
+            .table(BASE_STORE_NAME);
+    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
+            .isEqualTo("select `baseStore`.`scenario`, sum(`pnl`) as `pnl.sum` from " + BASE_STORE_NAME_ESCAPED
+                    + " where `baseStore`.`scenario` = 'base' and `baseStore`.`scenario` = 's2'"
+                    + " group by `baseStore`.`scenario`"
+            );
+  }
+
+  @Test
   void testSelectFromSelect() {
     // Kind of leaf agg. !!!
     TableDto a = new TableDto("a");
