@@ -1,7 +1,6 @@
 package io.squashql.query;
 
 import io.squashql.query.comp.BinaryOperations;
-import io.squashql.store.Field;
 import org.eclipse.collections.api.map.primitive.IntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableIntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
@@ -20,7 +19,7 @@ public abstract class AComparisonExecutor {
 
   public static final String REF_POS_FIRST = "first";
 
-  protected abstract BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm,
+  protected abstract BiPredicate<Object[], Header[]> createShiftProcedure(ComparisonMeasureReferencePosition cm,
                                                                          ObjectIntMap<String> indexByColumn);
 
   public List<Object> compare(
@@ -32,19 +31,19 @@ public abstract class AComparisonExecutor {
     int index = 0;
     for (Header header : readFromTable.headers()) {
       if (!header.isMeasure()) {
-        indexByColumn.put(header.field().name(), index++);
+        indexByColumn.put(header.name(), index++);
       }
     }
-    BiPredicate<Object[], Field[]> procedure = createShiftProcedure(cm, indexByColumn);
+    BiPredicate<Object[], Header[]> procedure = createShiftProcedure(cm, indexByColumn);
 
     int readFromTableColumnsCount = (int) readFromTable.headers().stream().filter(header -> !header.isMeasure()).count();
     Object[] buffer = new Object[readFromTableColumnsCount];
-    Field[] fields = new Field[readFromTableColumnsCount];
+    Header[] headers = new Header[readFromTableColumnsCount];
     List<Object> result = new ArrayList<>((int) writeToTable.count());
     List<Object> readAggregateValues = readFromTable.getAggregateValues(cm.measure);
     List<Object> writeAggregateValues = writeToTable.getAggregateValues(cm.measure);
     BiFunction<Number, Number, Number> comparisonBiFunction = BinaryOperations.createComparisonBiFunction(
-            cm.comparisonMethod, readFromTable.getField(cm.measure).type());
+            cm.comparisonMethod, readFromTable.getHeader(cm.measure).type());
     int[] rowIndex = new int[1];
     IntIntMap mapping = buildMapping(writeToTable, readFromTable); // columns might be in a different order
     writeToTable.forEach(row -> {
@@ -52,12 +51,12 @@ public abstract class AComparisonExecutor {
       for (int columnIndex = 0; columnIndex < readFromTableHeaderSize; columnIndex++) {
         Header header = readFromTable.headers().get(columnIndex);
         if (!header.isMeasure()) {
-          fields[i] = header.field();
+          headers[i] = header;
           buffer[i] = row.get(mapping.getIfAbsent(columnIndex, -1));
           i++;
         }
       }
-      boolean success = procedure.test(buffer, fields);
+      boolean success = procedure.test(buffer, headers);
       int readPosition = readFromTable.pointDictionary().getPosition(buffer);
       if (success && readPosition != -1) {
         Object currentValue = writeAggregateValues.get(rowIndex[0]);
@@ -78,7 +77,7 @@ public abstract class AComparisonExecutor {
     for (int index = 0; index < readFromTable.headers().size(); index++) {
       Header header = readFromTable.headers().get(index);
       if (!header.isMeasure()) {
-        int writeToTableIndex = writeToTable.index(header.field());
+        int writeToTableIndex = writeToTable.index(header);
         mapping.put(index, writeToTableIndex);
       }
     }

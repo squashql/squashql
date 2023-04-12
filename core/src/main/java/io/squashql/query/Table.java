@@ -1,7 +1,6 @@
 package io.squashql.query;
 
 import io.squashql.query.dictionary.ObjectArrayDictionary;
-import io.squashql.store.Field;
 import org.eclipse.collections.api.list.primitive.IntList;
 import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.impl.list.mutable.primitive.MutableIntListFactoryImpl;
@@ -18,7 +17,7 @@ public interface Table extends Iterable<List<Object>> {
 
   Set<Measure> measures();
 
-  void addAggregates(Field field, Measure measure, List<Object> values);
+  void addAggregates(Header header, Measure measure, List<Object> values);
 
   default List<Object> getColumn(int columnIndex) {
     List<Object> elements = new ArrayList<>();
@@ -33,26 +32,26 @@ public interface Table extends Iterable<List<Object>> {
   }
 
   default List<Object> getAggregateValues(Measure measure) {
-    int index = headers().indexOf(new Header(getField(measure), true));
+    int index = headers().indexOf(getHeader(measure));
     if (index < 0) {
       throw new IllegalArgumentException("no aggregate values for " + measure);
     }
     return getColumn(index);
   }
 
-  default Field getField(Measure measure) {
-    return headers().stream().map(Header::field).filter(header -> header.name().equals(measure.alias()))
-            .findAny().orElseThrow(() -> new IllegalArgumentException("no field for " + measure));
+  default Header getHeader(Measure measure) {
+    return headers().stream().filter(header -> header.name().equals(measure.alias()))
+            .findAny().orElseThrow(() -> new IllegalArgumentException("no header for " + measure));
   }
 
-  default Field getField(String column) {
-    return headers().get(columnIndex(column)).field();
+  default Header getHeader(String column) {
+    return headers().get(columnIndex(column));
   }
 
   default int columnIndex(String column) {
     int index = -1, i = 0;
     for (Header header : headers()) {
-      if (header.field().name().equals(column)) {
+      if (header.name().equals(column)) {
         index = i;
         break;
       }
@@ -68,7 +67,7 @@ public interface Table extends Iterable<List<Object>> {
     int i = 0;
     MutableIntList list = MutableIntListFactoryImpl.INSTANCE.empty();
     for (Header header : headers()) {
-      if (header.field().name().equals(column)) {
+      if (header.name().equals(column)) {
         list.add(i);
       }
       i++;
@@ -76,10 +75,10 @@ public interface Table extends Iterable<List<Object>> {
     return list;
   }
 
-  default int index(Field field) {
-    int index = headers().stream().map(Header::field).toList().indexOf(field);
+  default int index(Header header) {
+    int index = headers().indexOf(header);
     if (index < 0) {
-      throw new IllegalArgumentException("no field named " + field);
+      throw new IllegalArgumentException("no header named " + header);
     }
     return index;
   }
@@ -97,7 +96,7 @@ public interface Table extends Iterable<List<Object>> {
     List<Object> result = new ArrayList<>();
     headers().forEach(header -> {
       if (!header.isMeasure()) {
-        result.add(getColumnValues(header.field().name()).get(rowIndex));
+        result.add(getColumnValues(header.name()).get(rowIndex));
       }
     });
     return result;

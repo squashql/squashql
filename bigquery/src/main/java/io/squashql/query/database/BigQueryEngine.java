@@ -105,20 +105,20 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
     MutableIntSet rowIndicesToRemove = new IntHashSet();
     for (int i = 0; i < input.headers().size(); i++) {
-      Field field = input.headers().get(i).field();
+      Header h = input.headers().get(i);
       List<Object> columnValues = input.getColumn(i);
       if (i < query.select.size()) {
-        List<Object> baseColumnValues = input.getColumnValues(field.name());
+        List<Object> baseColumnValues = input.getColumnValues(h.name());
         for (int rowIndex = 0; rowIndex < input.count(); rowIndex++) {
           Object value = columnValues.get(rowIndex);
           if (value == null) {
             baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
-            if (isPartialRollup && missingColumnsInRollupSet.contains(SqlUtils.getFieldFullName(field))) {
+            if (isPartialRollup && missingColumnsInRollupSet.contains(h)) {
               // Partial rollup not supported https://issuetracker.google.com/issues/35905909, we let bigquery compute
               // all totals, and we remove here the extra rows.
               rowIndicesToRemove.add(rowIndex);
             }
-          } else if (value.equals(BigQueryUtil.getNullValue(field.type()))) {
+          } else if (value.equals(BigQueryUtil.getNullValue(h.type()))) {
             baseColumnValues.set(rowIndex, null);
           }
         }
@@ -161,7 +161,8 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
               query,
               schema.getFields(),
-              (column, name) -> new Field(null, name, BigQueryUtil.bigQueryTypeToClass(column.getType())),
+              (column, name) -> name,
+              (column, name) -> BigQueryUtil.bigQueryTypeToClass(column.getType()),
               tableResult.iterateAll().iterator(),
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i),
               this.queryRewriter
@@ -183,7 +184,8 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       Schema schema = tableResult.getSchema();
       Pair<List<Header>, List<List<Object>>> result = transformToRowFormat(
               schema.getFields(),
-              column -> new Field(null, column.getName(), BigQueryUtil.bigQueryTypeToClass(column.getType())),
+              column -> column.getName(),
+              column -> BigQueryUtil.bigQueryTypeToClass(column.getType()),
               tableResult.iterateAll().iterator(),
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i));
       return new RowTable(result.getOne(), result.getTwo());

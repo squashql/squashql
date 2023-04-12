@@ -7,7 +7,6 @@ import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.RowTable;
 import io.squashql.query.Table;
-import io.squashql.store.Field;
 import org.eclipse.collections.api.tuple.Pair;
 
 import java.util.HashSet;
@@ -47,15 +46,16 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
   @Override
   protected Table retrieveAggregates(DatabaseQuery query, String sql) {
     try (ClickHouseClient client = ClickHouseClient.newInstance(ClickHouseProtocol.HTTP);
-            ClickHouseResponse response = client.connect(this.node)
-                    .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
-                    .query(sql)
-                    .execute()
-                    .get()) {
+         ClickHouseResponse response = client.connect(this.node)
+                 .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
+                 .query(sql)
+                 .execute()
+                 .get()) {
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
               query,
               response.getColumns(),
-              (column, name) -> new Field(null, name, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())),
+              (column, name) -> name,
+              (column, name) -> ClickHouseUtil.clickHouseTypeToClass(column.getDataType()),
               response.records().iterator(),
               (i, r) -> r.getValue(i).asObject(),
               this.queryRewriter);
@@ -78,7 +78,8 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
                  .get()) {
       Pair<List<Header>, List<List<Object>>> result = transformToRowFormat(
               response.getColumns(),
-              column -> new Field(null, column.getColumnName(), ClickHouseUtil.clickHouseTypeToClass(column.getDataType())),
+              column -> column.getColumnName(),
+              column -> ClickHouseUtil.clickHouseTypeToClass(column.getDataType()),
               response.records().iterator(),
               (i, r) -> r.getValue(i).asObject());
       return new RowTable(result.getOne(), result.getTwo());

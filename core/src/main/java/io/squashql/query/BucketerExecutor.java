@@ -26,7 +26,7 @@ public class BucketerExecutor {
       if (!bucketColumnSetDto.getColumnsForPrefetching().contains(field.name())) {
         indexColsInPrefetch.add(i);
       }
-      Header header = new Header(new Field(null, field.name(), field.type()), false);
+      Header header = new Header(field.name(), field.type(), false);
       if (!table.headers().contains(header)) {
         finalHeaders.add(header); // append to the end
       }
