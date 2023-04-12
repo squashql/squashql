@@ -414,6 +414,23 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     Assertions.assertThat(result.count()).isEqualTo(otherLimit);
   }
 
+  @Test
+  void testCacheWithFullPath() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(this.storeName + "." + SCENARIO_FIELD_NAME), List.of())
+            .build();
+    this.executor.execute(query);
+    assertCacheStats(0, 1);
+
+    query = Query
+            .from(this.storeName)
+            .select(List.of(this.storeName + "." + SCENARIO_FIELD_NAME), List.of())
+            .build();
+    this.executor.execute(query);
+    assertCacheStats(1, 1);
+  }
+
   private void assertCacheStats(int hitCount, int missCount) {
     CacheStatsDto stats = this.queryCache.stats();
     assertCacheStats(stats, hitCount, missCount);
@@ -432,5 +449,4 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             user,
             true);
   }
-
 }

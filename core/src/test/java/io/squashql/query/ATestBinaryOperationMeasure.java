@@ -57,7 +57,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV + salesV, salesV + qtyV, qtyV + qtyV));
     Assertions
-            .assertThat(table.headers().stream().map(Header::field).map(Field::name))
+            .assertThat(table.headers().stream().map(Header::name))
             .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "plus1", "plus2", "plus3");
   }
 
@@ -82,7 +82,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV - salesV, salesV - qtyV, qtyV - qtyV));
     Assertions
-            .assertThat(table.headers().stream().map(Header::field).map(Field::name))
+            .assertThat(table.headers().stream().map(Header::name))
             .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "minus1", "minus2", "minus3");
   }
 
@@ -107,7 +107,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV * salesV, salesV * qtyV, qtyV * qtyV));
     Assertions
-            .assertThat(table.headers().stream().map(Header::field).map(Field::name))
+            .assertThat(table.headers().stream().map(Header::name))
             .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "multiply1", "multiply2", "multiply3");
   }
 
@@ -132,7 +132,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV / salesV, salesV / qtyV, (double) qtyV / qtyV));
     Assertions
-            .assertThat(table.headers().stream().map(Header::field).map(Field::name))
+            .assertThat(table.headers().stream().map(Header::name))
             .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "divide1", "divide2", "divide3");
   }
 }

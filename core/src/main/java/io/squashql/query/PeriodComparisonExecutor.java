@@ -2,7 +2,6 @@ package io.squashql.query;
 
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.Period;
-import io.squashql.store.Field;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
@@ -38,7 +37,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
   }
 
   @Override
-  protected BiPredicate<Object[], Field[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
+  protected BiPredicate<Object[], Header[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
     Map<PeriodUnit, String> referencePosition = new HashMap<>();
     Period period = this.cmrp.period;
     Map<String, PeriodUnit> mapping = mapping(period);
@@ -56,7 +55,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     return new ShiftProcedure(period, referencePosition, indexByPeriodUnit);
   }
 
-  static class ShiftProcedure implements BiPredicate<Object[], Field[]> {
+  static class ShiftProcedure implements BiPredicate<Object[], Header[]> {
 
     final Period period;
     final Map<PeriodUnit, String> referencePosition;
@@ -80,7 +79,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     }
 
     @Override
-    public boolean test(Object[] row, Field[] fields) {
+    public boolean test(Object[] row, Header[] headers) {
       int unknown = -1;
       int yearIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.YEAR, unknown);
       int semesterIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.SEMESTER, unknown);
@@ -97,7 +96,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
           if (year < 0) {
             return false;
           }
-          write(row, yearIndex, fields[yearIndex], year + (int) yearTransformation);
+          write(row, yearIndex, headers[yearIndex], year + (int) yearTransformation);
         }
         if (this.referencePosition.containsKey(PeriodUnit.QUARTER) && quarterTransformation != null) {
           int quarter = readAsLong(row[quarterIndex]);
@@ -106,8 +105,8 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
           }
           LocalDate d = LocalDate.of(readAsLong(row[yearIndex]), quarter * 3, 1);
           LocalDate newDate = d.plusMonths(((int) quarterTransformation) * 3);
-          write(row, quarterIndex, fields[quarterIndex], (int) IsoFields.QUARTER_OF_YEAR.getFrom(newDate));
-          write(row, yearIndex, fields[yearIndex], newDate.getYear());// year might have changed
+          write(row, quarterIndex, headers[quarterIndex], (int) IsoFields.QUARTER_OF_YEAR.getFrom(newDate));
+          write(row, yearIndex, headers[yearIndex], newDate.getYear());// year might have changed
         }
       } else if (this.period instanceof Period.Year) {
         // YEAR
@@ -116,7 +115,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
           if (year < 0) {
             return false;
           }
-          write(row, yearIndex, fields[yearIndex], year + (int) yearTransformation);
+          write(row, yearIndex, headers[yearIndex], year + (int) yearTransformation);
         }
       } else if (this.period instanceof Period.Month) {
         // YEAR, MONTH
@@ -125,7 +124,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
           if (year < 0) {
             return false;
           }
-          write(row, yearIndex, fields[yearIndex], year + (int) yearTransformation);
+          write(row, yearIndex, headers[yearIndex], year + (int) yearTransformation);
         }
         if (this.referencePosition.containsKey(PeriodUnit.MONTH) && monthTransformation != null) {
           int month = readAsLong(row[monthIndex]);
@@ -134,8 +133,8 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
           }
           LocalDate newDate = LocalDate.of(readAsLong(row[yearIndex]), month, 1)
                   .plusMonths((int) monthTransformation);
-          write(row, monthIndex, fields[monthIndex], newDate.getMonthValue());
-          write(row, yearIndex, fields[yearIndex], newDate.getYear()); // year might have changed
+          write(row, monthIndex, headers[monthIndex], newDate.getMonthValue());
+          write(row, yearIndex, headers[yearIndex], newDate.getYear()); // year might have changed
         }
       } else if (this.period instanceof Period.Semester) {
         // YEAR, SEMESTER
@@ -144,7 +143,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
           if (year < 0) {
             return false;
           }
-          write(row, yearIndex, fields[yearIndex], year + (int) yearTransformation);
+          write(row, yearIndex, headers[yearIndex], year + (int) yearTransformation);
         }
         if (this.referencePosition.containsKey(PeriodUnit.SEMESTER) && semesterTransformation != null) {
           int semester = readAsLong(row[semesterIndex]);
@@ -153,8 +152,8 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
           }
           LocalDate d = LocalDate.of(readAsLong(row[yearIndex]), semester * 6, 1);
           LocalDate newDate = d.plusMonths(((int) semesterTransformation) * 6);
-          write(row, semesterIndex, fields[semesterIndex], newDate.getMonthValue() / 6);
-          write(row, yearIndex, fields[yearIndex], newDate.getYear()); // year might have changed
+          write(row, semesterIndex, headers[semesterIndex], newDate.getMonthValue() / 6);
+          write(row, yearIndex, headers[yearIndex], newDate.getYear()); // year might have changed
         }
       } else {
         throw new RuntimeException(this.period + " not supported yet");
@@ -169,13 +168,13 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
       return (int) ((Number) o).longValue(); // with some database, year could be Long object.
     }
 
-    private static void write(Object[] rowIndex, int index, Field field, int number) {
-      if (field.type() == Long.class || field.type() == long.class) {
+    private static void write(Object[] rowIndex, int index, Header header, int number) {
+      if (header.type() == Long.class || header.type() == long.class) {
         rowIndex[index] = (long) number;
-      } else if (field.type() == Integer.class || field.type() == int.class) {
+      } else if (header.type() == Integer.class || header.type() == int.class) {
         rowIndex[index] = number;
       } else {
-        throw new IllegalArgumentException("Unsupported type " + field.type());
+        throw new IllegalArgumentException("Unsupported type " + header.type());
       }
     }
 

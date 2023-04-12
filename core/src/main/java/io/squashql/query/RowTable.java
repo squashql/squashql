@@ -20,7 +20,7 @@ public class RowTable implements Table {
   }
 
   @Override
-  public void addAggregates(Field field, Measure measure, List<Object> values) {
+  public void addAggregates(Header header, Measure measure, List<Object> values) {
     throwNotSupportedException();
   }
 

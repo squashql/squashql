@@ -142,10 +142,12 @@ public class TestBigQueryEngine {
             new ArrayList<>(Arrays.asList(null, null, "A", "B", null, "A", "B")),
             new ArrayList<>(Arrays.asList(4d, 2d, 1d, 1d, 2d, 1d, 1d)));
 
+    Field scenarioField = this.fieldSupplier.apply(scenario);
+    Field categoryField = this.fieldSupplier.apply(category);
     ColumnarTable input = new ColumnarTable(
-            List.of(new Header(this.fieldSupplier.apply(scenario), false),
-                    new Header(this.fieldSupplier.apply(category), false),
-                    new Header(new Field(null, "price.sum", double.class), true)),
+            List.of(new Header(scenarioField.name(), scenarioField.type(), false),
+                    new Header(categoryField.name(), categoryField.type(), false),
+                    new Header("price.sum", double.class, true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             values);
     Table output = bqe.postProcessDataset(input, query);

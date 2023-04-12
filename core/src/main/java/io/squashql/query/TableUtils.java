@@ -7,7 +7,6 @@ import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.Field;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.NullAndTotalComparator;
 
@@ -92,9 +91,8 @@ public class TableUtils {
   public static List<MetadataItem> buildTableMetadata(Table t) {
     List<MetadataItem> metadata = new ArrayList<>();
     for (Header header : t.headers()) {
-      Field field = header.field();
       Optional<Measure> optionalMeasure = t.measures().stream()
-              .filter(m -> m.alias().equals(header.field().name()))
+              .filter(m -> m.alias().equals(header.name()))
               .findAny();
       if (header.isMeasure() && optionalMeasure.isPresent()) {
         Measure measure = optionalMeasure.get();
@@ -102,9 +100,9 @@ public class TableUtils {
         if (expression == null) {
           measure = measure.withExpression(MeasureUtils.createExpression(measure));
         }
-        metadata.add(new MetadataItem(field.name(), measure.expression(), field.type()));
+        metadata.add(new MetadataItem(header.name(), measure.expression(), header.type()));
       } else {
-        metadata.add(new MetadataItem(field.name(), field.name(), field.type()));
+        metadata.add(new MetadataItem(header.name(), header.name(), header.type()));
       }
     }
     return metadata;
@@ -130,11 +128,11 @@ public class TableUtils {
     List<Header> headers = new ArrayList<>();
     List<List<Object>> values = new ArrayList<>();
     for (String finalColumn : columns) {
-      headers.add(new Header(table.getField(finalColumn), false));
+      headers.add(table.getHeader(finalColumn));
       values.add(Objects.requireNonNull(table.getColumnValues(finalColumn)));
     }
     for (Measure measure : measures) {
-      headers.add(new Header(table.getField(measure), true));
+      headers.add(table.getHeader(measure));
       values.add(Objects.requireNonNull(table.getAggregateValues(measure)));
     }
     return new ColumnarTable(headers, new HashSet<>(measures), values);
@@ -150,12 +148,12 @@ public class TableUtils {
     List<Header> headers = table.headers;
     for (Header header : headers) {
       if (header.isMeasure()) {
-        hasComparatorOnMeasure |= comparatorByColumnName.containsKey(header.field().name());
+        hasComparatorOnMeasure |= comparatorByColumnName.containsKey(header.name());
       }
     }
 
     for (int i = 0; i < headers.size(); i++) {
-      String headerName = headers.get(i).field().name();
+      String headerName = headers.get(i).name();
       Comparator<?> queryComp = comparatorByColumnName.get(headerName);
       // Order a column even if not explicitly asked in the query only if no comparator on any measure
       if (queryComp != null || (!headers.get(i).isMeasure() && !hasComparatorOnMeasure)) {
