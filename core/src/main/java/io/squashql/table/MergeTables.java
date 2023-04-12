@@ -63,7 +63,7 @@ public final class MergeTables {
         if (mergedMeasures.contains(rightHeader)) {
           throw new UnsupportedOperationException(String.format(
                   "The two tables both contain the measure %s while they must not share any measure to be merged.",
-                  rightHeader.field().name()));
+                  rightHeader.name()));
         } else {
           mergedMeasures.add(rightHeader);
         }
@@ -93,11 +93,11 @@ public final class MergeTables {
     List<Header> leftHeaders = leftTable.headers();
     List<Header> rightHeaders = rightTable.headers();
     List<String> commonColumns = leftHeaders.stream()
-            .filter(header -> !header.isMeasure() && rightHeaders.contains(header)).map(header -> header.field().name())
+            .filter(header -> !header.isMeasure() && rightHeaders.contains(header)).map(header -> header.name())
             .toList();
 
     List<String> leftColumns = leftHeaders.stream().filter(header -> !header.isMeasure())
-            .map(header -> header.field().name()).toList();
+            .map(header -> header.name()).toList();
     List<String> leftColumnsOrdered = new ArrayList<>(commonColumns.stream().filter(leftColumns::contains).toList());
     leftColumns.forEach(columnName -> {
       if (!leftColumnsOrdered.contains(columnName)) {
@@ -106,7 +106,7 @@ public final class MergeTables {
     });
 
     List<String> rightColumns = rightHeaders.stream().filter(header -> !header.isMeasure())
-            .map(header -> header.field().name()).toList();
+            .map(header -> header.name()).toList();
     List<String> rightColumnsOrdered = new ArrayList<>(commonColumns.stream().filter(rightColumns::contains).toList());
     rightColumns.forEach(columnName -> {
       if (!rightColumnsOrdered.contains(columnName)) {
@@ -218,7 +218,7 @@ public final class MergeTables {
       Header header = headers.get(index);
       Object element = header.isMeasure() ? null : SQLTranslator.TOTAL_CELL;
       if (table.headers().contains(header)) {
-        element = table.getColumnValues(header.field().name()).get(rowToAddIndex);
+        element = table.getColumnValues(header.name()).get(rowToAddIndex);
       }
       values.get(index).add(element);
     }
@@ -230,9 +230,9 @@ public final class MergeTables {
       Object element;
       Header header = headers.get(index);
       if (leftTable.headers().contains(header)) {
-        element = leftTable.getColumnValues(header.field().name()).get(leftRowIndex);
+        element = leftTable.getColumnValues(header.name()).get(leftRowIndex);
       } else {
-        element = rightTable.getColumnValues(header.field().name()).get(rightRowIndex);
+        element = rightTable.getColumnValues(header.name()).get(rightRowIndex);
       }
       values.get(index).add(element);
     }

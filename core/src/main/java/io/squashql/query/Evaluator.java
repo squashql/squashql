@@ -51,14 +51,14 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     List<Object> ro = intermediateResult.getAggregateValues(bom.rightOperand);
     List<Object> r = new ArrayList<>(lo.size());
 
-    Class<?> lType = intermediateResult.getField(bom.leftOperand).type();
-    Class<?> rType = intermediateResult.getField(bom.rightOperand).type();
+    Class<?> lType = intermediateResult.getHeader(bom.leftOperand).type();
+    Class<?> rType = intermediateResult.getHeader(bom.rightOperand).type();
     BiFunction<Number, Number, Number> operation = BinaryOperations.createBiFunction(bom.operator, lType, rType);
     for (int i = 0; i < lo.size(); i++) {
       r.add(operation.apply((Number) lo.get(i), (Number) ro.get(i)));
     }
-    Field field = new Field(null, bom.alias(), BinaryOperations.getOutputType(bom.operator, lType, rType));
-    intermediateResult.addAggregates(field, bom, r);
+    Header header = new Header(bom.alias(), BinaryOperations.getOutputType(bom.operator, lType, rType), true);
+    intermediateResult.addAggregates(header, bom, r);
     return null;
   }
 
@@ -96,8 +96,8 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
 
   private static void executeComparator(ComparisonMeasureReferencePosition cm, Table writeToTable, Table readFromTable, AComparisonExecutor executor) {
     List<Object> agg = executor.compare(cm, writeToTable, readFromTable);
-    Field field = new Field(null, cm.alias(), BinaryOperations.getComparisonOutputType(cm.comparisonMethod, writeToTable.getField(cm.measure).type()));
-    writeToTable.addAggregates(field, cm, agg);
+    Header header = new Header(cm.alias(), BinaryOperations.getComparisonOutputType(cm.comparisonMethod, writeToTable.getHeader(cm.measure).type()), true);
+    writeToTable.addAggregates(header, cm, agg);
   }
 
   @Override
@@ -124,9 +124,9 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     } else {
       throw new IllegalArgumentException("Unexpected type " + cm.getValue().getClass() + ". Only double and long are supported");
     }
-    Field field = new Field(null, cm.alias(), type);
+    Header header = new Header(cm.alias(), type, true);
     List<Object> r = Collections.nCopies((int) intermediateResult.count(), v);
-    intermediateResult.addAggregates(field, cm, r);
+    intermediateResult.addAggregates(header, cm, r);
   }
 
   // The following measures are not evaluated here but in the underlying DB.

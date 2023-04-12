@@ -141,7 +141,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
           newHeaders.add(header);
           newValues.add(columnValues);
         } else {
-          String baseName = Objects.requireNonNull(SqlUtils.extractFieldFromGroupingAlias(header.field().name()));
+          String baseName = Objects.requireNonNull(SqlUtils.extractFieldFromGroupingAlias(header.name()));
           List<Object> baseColumnValues = input.getColumnValues(baseName);
           for (int rowIndex = 0; rowIndex < columnValues.size(); rowIndex++) {
             if (((Number) columnValues.get(rowIndex)).longValue() == 1) {
@@ -165,7 +165,8 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   public static <Column, Record> Pair<List<Header>, List<List<Object>>> transformToColumnFormat(
           DatabaseQuery query,
           List<Column> columns,
-          BiFunction<Column, String, Field> columnToField,
+          BiFunction<Column, String, String> columnNameProvider,
+          BiFunction<Column, String, Class<?>> columnTypeProvider,
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue,
           QueryRewriter queryRewriter) {
@@ -177,7 +178,8 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     query.measures.forEach(m -> fieldNames.add(m.alias()));
     for (int i = 0; i < columns.size(); i++) {
       headers.add(new Header(
-              columnToField.apply(columns.get(i), fieldNames.get(i)),
+              columnNameProvider.apply(columns.get(i), fieldNames.get(i)),
+              columnTypeProvider.apply(columns.get(i), fieldNames.get(i)),
               i >= query.select.size() + (queryRewriter.useGroupingFunction() ? query.rollup.size() : 0)));
     }
     List<List<Object>> values = new ArrayList<>();
@@ -192,10 +194,11 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   public static <Column, Record> Pair<List<Header>, List<List<Object>>> transformToRowFormat(
           List<Column> columns,
-          Function<Column, Field> columnToField,
+          Function<Column, String> columnNameProvider,
+          Function<Column, Class<?>> columnTypeProvider,
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue) {
-    List<Header> headers = columns.stream().map(column -> new Header(columnToField.apply(column), false)).toList();
+    List<Header> headers = columns.stream().map(column -> new Header(columnNameProvider.apply(column), columnTypeProvider.apply(column), false)).toList();
     List<List<Object>> rows = new ArrayList<>();
     recordIterator.forEachRemaining(r -> rows.add(
             IntStream.range(0, headers.size()).mapToObj(i -> recordToFieldValue.apply(i, r)).toList()));

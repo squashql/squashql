@@ -6,7 +6,6 @@ import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.RowTable;
 import io.squashql.query.Table;
-import io.squashql.store.Field;
 import org.eclipse.collections.api.tuple.Pair;
 
 import java.io.Serializable;
@@ -54,7 +53,8 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
               query,
               columnTypes,
-              (columnType, name) -> new Field(null, name, columnType),
+              (columnType, name) -> name,
+              (columnType, name) -> columnType,
               new ResultSetIterator(tableResult),
               (i, fieldValues) -> fieldValues[i],
               this.queryRewriter
@@ -127,9 +127,7 @@ public class SnowflakeQueryEngine extends AQueryEngine<SnowflakeDatastore> {
     // get the column names; column indexes start from 1
     for (int i = 1; i < metadata.getColumnCount() + 1; i++) {
       String fieldName = metadata.getColumnName(i);
-      headers.add(new Header(
-              new Field(null, fieldName, SnowflakeUtil.sqlTypeToClass(metadata.getColumnType(i))),
-              measureNames.contains(fieldName)));
+      headers.add(new Header(fieldName, SnowflakeUtil.sqlTypeToClass(metadata.getColumnType(i)), measureNames.contains(fieldName)));
     }
 
     return headers;

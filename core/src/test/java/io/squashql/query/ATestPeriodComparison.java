@@ -107,7 +107,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(2), 0d, 80d),
             Arrays.asList(2023l, translate(3), 0d, 85d),
             Arrays.asList(2023l, translate(4), 0d, 35d));
-    Assertions.assertThat(finalTable.headers().stream().map(Header::field).map(Field::name))
+    Assertions.assertThat(finalTable.headers().stream().map(Header::name))
             .containsExactlyInAnyOrder(period.year(), period.quarter(), "myMeasure", "sum(sales)");
 
     // Add a condition and make sure condition is cleared during prefetching.s
@@ -158,7 +158,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(3), "base", 5d, 85d),
             Arrays.asList(2023l, translate(4), "base", -50d, 35d));
     Assertions
-            .assertThat(finalTable.headers().stream().map(Header::field).map(Field::name))
+            .assertThat(finalTable.headers().stream().map(Header::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.quarter(), "myMeasure", "sum(sales)");
   }
 
@@ -181,7 +181,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2022l, "base", null, 300d),
             Arrays.asList(2023l, "base", 0d, 300d));
     Assertions
-            .assertThat(finalTable.headers().stream().map(Header::field).map(Field::name))
+            .assertThat(finalTable.headers().stream().map(Header::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), "myMeasure", "sum(sales)");
 
     // Rollup will make Grand Total and Total appear. For this line, we can't make the comparison. Null should be
@@ -221,7 +221,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(1), "base", 60d, 180d),
             Arrays.asList(2023l, translate(2), "base", -60d, 120d));
     Assertions
-            .assertThat(finalTable.headers().stream().map(Header::field).map(Field::name))
+            .assertThat(finalTable.headers().stream().map(Header::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.semester(), "myMeasure", "sum(sales)");
   }
 
@@ -253,7 +253,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(2), "base", 40d, 60d),
             Arrays.asList(2023l, translate(12), "base", -5d, 10d));
     Assertions
-            .assertThat(finalTable.headers().stream().map(Header::field).map(Field::name))
+            .assertThat(finalTable.headers().stream().map(Header::name))
             .containsExactlyInAnyOrder(TransactionManager.SCENARIO_FIELD_NAME, period.year(), period.month(), "myMeasure", "sum(sales)");
   }
 
