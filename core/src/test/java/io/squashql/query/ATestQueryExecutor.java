@@ -374,7 +374,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .from(this.storeName)
             .select(List.of(SCENARIO_FIELD_NAME),
                     List.of(new ExpressionMeasure("quantity if food or drink", expression),
-                            sumIf("quantity filtered", "quantity", criterion("category", or))))
+                            sumIf("quantity filtered", this.storeName + ".quantity", criterion(this.storeName + ".category", or))))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
@@ -384,7 +384,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(SCENARIO_FIELD_NAME, "quantity if food or drink", "quantity filtered");
 
-    // Mutliple fields
+    // Multiple fields
     CriteriaDto category = criterion("category", or);
     query = Query
             .from(this.storeName)
@@ -396,6 +396,23 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of(MAIN_SCENARIO_NAME, 20l),
             List.of("s1", 20l),
             List.of("s2", 20l));
+  }
+
+  @Test
+  void testSumIfWithFullPath() {
+    ConditionDto or = eq("food").or(eq("drink"));
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(SCENARIO_FIELD_NAME),
+                    List.of(sumIf("quantity filtered", this.storeName + ".quantity", criterion(this.storeName + ".category", or))))
+            .build();
+    Table result = this.executor.execute(query);
+    Assertions.assertThat(result).containsExactlyInAnyOrder(
+            List.of(MAIN_SCENARIO_NAME, 30l),
+            List.of("s1", 30l),
+            List.of("s2", 30l));
+    Assertions.assertThat(result.headers().stream().map(Header::name))
+            .containsExactly(SCENARIO_FIELD_NAME, "quantity filtered");
   }
 
   @Test

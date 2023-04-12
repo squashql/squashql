@@ -279,4 +279,25 @@ public class TestSQLTranslator {
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select sum(`pnl`)+avg(`delta`) as `plus` from `a`");
   }
+
+  @Test
+  void testAggregatedMeasures() {
+    TableDto a = new TableDto(BASE_STORE_NAME);
+    DatabaseQuery query = new DatabaseQuery()
+            .table(a)
+            .withMeasure(Functions.sum("pnlSum", "pnl"))
+            .withMeasure(Functions.sumIf("pnlSumFiltered", "pnl", criterion("country", eq("france"))));
+    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
+            .isEqualTo("select sum(`pnl`) as `pnlSum`, sum(case when `country` = 'france' then `pnl` end) as `pnlSumFiltered` from `" + BASE_STORE_NAME + "`");
+
+    // With full path
+    query = new DatabaseQuery()
+            .table(a)
+            .withMeasure(Functions.sum("pnlSum", a.name + ".pnl"))
+            .withMeasure(Functions.sumIf("pnlSumFiltered", a.name + ".pnl", criterion(a.name + ".country", eq("france"))));
+    String format = "select sum(`%1$s`.`pnl`) as `pnlSum`, sum(case when `%1$s`.`country` = 'france' then `%1$s`.`pnl` end) as `pnlSumFiltered` from `%1$s`";
+    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
+            .isEqualTo(String.format(
+                    format, BASE_STORE_NAME));
+  }
 }

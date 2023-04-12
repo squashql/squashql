@@ -37,8 +37,10 @@ public class AggregatedMeasure implements BasicMeasure {
   public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     String sql;
     if (this.criteria != null) {
+      Field f = fieldProvider.apply(this.field);
+      String fieldFullName = queryRewriter.getFieldFullName(f);
       String conditionSt = SQLTranslator.toSql(QueryExecutor.withFallback(fieldProvider, Number.class), this.criteria, queryRewriter);
-      sql = this.aggregationFunction + "(case when " + conditionSt + " then " + queryRewriter.fieldName(this.field) + " end)";
+      sql = this.aggregationFunction + "(case when " + conditionSt + " then " + fieldFullName + " end)";
     } else if (this.field.equals("*")) {
       sql = this.aggregationFunction + "(*)";
     } else {
