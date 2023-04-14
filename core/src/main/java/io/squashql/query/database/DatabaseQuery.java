@@ -1,5 +1,6 @@
 package io.squashql.query.database;
 
+import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.Field;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -25,7 +26,7 @@ public class DatabaseQuery {
   public List<Measure> measures = new ArrayList<>();
   public List<Field> rollup = new ArrayList<>();
   public int limit = -1;
-  public CTE cte;
+  public VirtualTableDto virtualTableDto;
   public TableDto table;
 
   public DatabaseQuery withSelect(Field field) {
@@ -83,8 +84,8 @@ public class DatabaseQuery {
     return this;
   }
 
-  public DatabaseQuery cte(CTE cte) {
-    this.cte = cte;
+  public DatabaseQuery virtualTable(VirtualTableDto virtualTableDto) {
+    this.virtualTableDto = virtualTableDto;
     return this;
   }
 }

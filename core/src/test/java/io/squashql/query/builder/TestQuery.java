@@ -81,11 +81,11 @@ public class TestQuery {
       QueryDto build = Query
               .from("saas")
               .leftOuterJoin("other")
-              .on(other.name, "id", saas.name, "id")
+              .on(criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ))
               .select(List.of("col1", "col2"), List.of(sum))
               .build();
 
-      saas.join(other, JoinType.LEFT, new JoinMappingDto(other.name, "id", saas.name, "id"));
+      saas.join(other, JoinType.LEFT, new JoinMappingDto(other.name + ".id", saas.name + ".id"));
 
       QueryDto q = new QueryDto()
               .table(saas)
@@ -101,8 +101,8 @@ public class TestQuery {
       TableDto other = new TableDto("other");
 
       saas.join(other, JoinType.INNER, List.of(
-              new JoinMappingDto(other.name, "id", saas.name, "id"),
-              new JoinMappingDto(other.name, "a", saas.name, "b")));
+              new JoinMappingDto(other.name + ".id", saas.name + ".id"),
+              new JoinMappingDto(other.name + ".a", saas.name + ".b")));
 
       QueryDto q = new QueryDto()
               .table(saas)
@@ -114,8 +114,10 @@ public class TestQuery {
       QueryDto build = Query
               .from("saas")
               .innerJoin("other")
-              .on(other.name, "id", saas.name, "id")
-              .on(other.name, "a", saas.name, "b")
+              .on(all(
+                      criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ),
+                      criterion(other.name + ".a", saas.name + ".b", ConditionType.EQ)
+              ))
               .select(List.of("col1", "col2"), List.of(sum))
               .build();
 
@@ -133,13 +135,13 @@ public class TestQuery {
               .withMeasure(sum)
               .withCondition("f1", eq("A"));
 
-      saas.join(other, JoinType.INNER, new JoinMappingDto(other.name, "id", saas.name, "id"));
+      saas.join(other, JoinType.INNER, new JoinMappingDto(other.name + ".id", saas.name + ".id"));
 
       // With condition on the "joined" table
       QueryDto build = Query
               .from("saas")
               .innerJoin("other")
-              .on(other.name, "id", saas.name, "id")
+              .on(criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ))
               .where("f1", eq("A"))
               .select(List.of("col1", "col2"), List.of(sum))
               .build();
@@ -161,17 +163,41 @@ public class TestQuery {
             .withColumn("col2")
             .withMeasure(sum);
 
-    saas.join(other, JoinType.LEFT, new JoinMappingDto(other.name, "id", saas.name, "id"));
-    saas.join(another, JoinType.INNER, new JoinMappingDto(another.name, "id", saas.name, "id"));
+    saas.join(other, JoinType.LEFT, new JoinMappingDto(other.name + ".id", saas.name + ".id"));
+    saas.join(another, JoinType.INNER, new JoinMappingDto(another.name + ".id", saas.name + ".id"));
 
     QueryDto build = Query
             .from("saas")
             .leftOuterJoin("other")
-            .on(other.name, "id", saas.name, "id")
+            .on(criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ))
             .innerJoin("another")
-            .on(another.name, "id", saas.name, "id")
+            .on(criterion(another.name + ".id", saas.name + ".id", ConditionType.EQ))
             .select(List.of("col1", "col2"), List.of(sum))
             .build();
+
+    Assertions.assertThat(build).isEqualTo(q);
+  }
+
+  @Test
+  void testJoinWithVirtualTable() {
+    Measure sum = sum("sum", "f2");
+    TableDto saas = new TableDto("saas");
+    VirtualTableDto vt = new VirtualTableDto("vtable", List.of("id", "c"), List.of(List.of("k", "c")));
+    QueryDto build = Query
+            .from("saas")
+            .innerJoin(vt)
+            .on(criterion("saas.id", "vtable.id", ConditionType.EQ))
+            .select(List.of("col1", "col2"), List.of(sum))
+            .build();
+
+    saas.join(new TableDto("vtable"), JoinType.INNER, new JoinMappingDto(saas.name + ".id", vt.name + ".id"));
+
+    QueryDto q = new QueryDto()
+            .table(saas)
+            .withColumn("col1")
+            .withColumn("col2")
+            .withMeasure(sum);
+    q.virtualTableDto = vt;
 
     Assertions.assertThat(build).isEqualTo(q);
   }

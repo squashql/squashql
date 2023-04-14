@@ -16,19 +16,15 @@ public class JoinMappingDto {
 
   public String from;
   public String to;
-  public String fromTable;
-  public String toTable;
   public ConditionType conditionType = defaultConditionType;
 
-  public JoinMappingDto(String fromTable, String from, String toTable, String to) {
-    this(fromTable, from, toTable, to, defaultConditionType);
+  public JoinMappingDto(String from, String to) {
+    this(from, to, defaultConditionType);
   }
 
-  public JoinMappingDto(String fromTable, String from, String toTable, String to, ConditionType conditionType) {
+  public JoinMappingDto(String from, String to, ConditionType conditionType) {
     this.from = from;
     this.to = to;
-    this.fromTable = fromTable;
-    this.toTable = toTable;
     this.conditionType = conditionType;
   }
 }

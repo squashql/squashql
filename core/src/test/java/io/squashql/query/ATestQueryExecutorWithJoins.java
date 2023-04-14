@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.QueryEngine;
+import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Datastore;
 import io.squashql.transaction.TransactionManager;
@@ -17,6 +18,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Function;
 
+import static io.squashql.query.Functions.criterion;
 import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -71,20 +73,20 @@ public abstract class ATestQueryExecutorWithJoins {
 
   @Test
   void testQuerySingleCoordinate() {
-    QueryDto queryDto = Query
+    QueryDto query = Query
             .from(this.orders)
             .innerJoin(this.orderDetails)
-            .on(this.orderDetails, "OrderID", this.orders, "OrderID")
+            .on(criterion(this.orderDetails + ".OrderID", this.orders + ".OrderID", ConditionType.EQ))
             .innerJoin(this.shippers)
-            .on(this.shippers, "ShipperID", this.orders, "ShipperID")
+            .on(criterion(this.shippers + ".ShipperID", this.orders + ".ShipperID", ConditionType.EQ))
             .innerJoin(this.products)
-            .on(this.products, "ProductID", this.orderDetails, "ProductID")
+            .on(criterion(this.products + ".ProductID", this.orderDetails + ".ProductID", ConditionType.EQ))
             .innerJoin(this.categories)
-            .on(this.products, "CategoryID", this.categories, "CategoryID")
+            .on(criterion(this.products + ".CategoryID", this.categories + ".CategoryID", ConditionType.EQ))
             .select(List.of("CategoryName"), List.of(Functions.sum("Q", "Quantity"), CountMeasure.INSTANCE))
             .build();
 
-    Table table = this.queryExecutor.execute(queryDto);
+    Table table = this.queryExecutor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
             List.of("Dairy Products", 2601.0, 100L),
             List.of("Meat/Poultry", 1288.0, 50L),

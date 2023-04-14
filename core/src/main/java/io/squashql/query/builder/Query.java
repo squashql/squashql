@@ -41,18 +41,20 @@ public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
     return this.currentJoinTableBuilder;
   }
 
+  @Override
+  public HasStartedBuildingJoin innerJoin(VirtualTableDto virtualTableDto) {
+    addJoinToQueryDto();
+    this.queryDto.virtualTableDto = virtualTableDto;
+    this.currentJoinTableBuilder = new JoinTableBuilder(this, virtualTableDto.name, JoinType.INNER);
+    return this.currentJoinTableBuilder;
+  }
+
   private void addJoinToQueryDto() {
     JoinTableBuilder jtb = this.currentJoinTableBuilder;
     if (jtb != null) {
       this.queryDto.table.join(new TableDto(jtb.tableName), jtb.joinType, jtb.mappingDtos);
       this.currentJoinTableBuilder = null;
     }
-  }
-
-  @Override
-  public HasJoin on(String fromTable, String from, String toTable, String to) {
-    this.currentJoinTableBuilder.on(fromTable, from, toTable, to);
-    return this;
   }
 
   @Override

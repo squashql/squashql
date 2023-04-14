@@ -6,7 +6,7 @@ import io.squashql.BigQueryUtil;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.Table;
 import io.squashql.query.*;
-import io.squashql.query.dto.CteColumnSetDto;
+import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.Field;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.api.tuple.Pair;
@@ -287,10 +287,18 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
     @Override
     public String getFieldFullName(Field f) {
-      CteColumnSetDto columnSet = this.query.cte.cteColumnSetDto();
-      if (columnSet != null
-              && CteColumnSetDto.identifier().equals(f.store())
-              && columnSet.name.equals(f.name())) {
+//      CteColumnSetDto columnSet = this.query.cte.cteColumnSetDto();
+//      if (columnSet != null
+//              && CteColumnSetDto.identifier().equals(f.store())
+//              && columnSet.name.equals(f.name())) {
+//        return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
+//      } else {
+//        return this.underlying.getFieldFullName(f);
+//      }
+      VirtualTableDto vt = this.query.virtualTableDto;
+      if (vt != null
+              && vt.name.equals(f.store())
+              && vt.fields.contains(equals(f.name()))) {
         return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
       } else {
         return this.underlying.getFieldFullName(f);

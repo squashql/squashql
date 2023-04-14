@@ -97,6 +97,10 @@ export class Criteria {
 export function criterion(field: string, condition: Condition): Criteria {
   return new Criteria(field, undefined, condition, undefined, undefined)
 }
+//
+// export function criterion(field1: string, conditionType: ConditionType, field2: string): Criteria {
+//   return new Criteria(field, undefined, condition, undefined, undefined)
+// }
 
 export function havingCriterion(measure: BasicMeasure, condition: Condition): Criteria {
   return new Criteria(undefined, measure, condition, undefined, undefined)

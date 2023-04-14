@@ -5,6 +5,7 @@ import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.builder.Query;
 import io.squashql.query.context.QueryCacheContextValue;
 import io.squashql.query.dto.CacheStatsDto;
+import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.monitoring.QueryWatch;
 import io.squashql.store.Field;
@@ -170,7 +171,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .innerJoin(competitorStoreName)
-            .on(this.storeName, "ean", this.competitorStoreName, "comp_ean")
+            .on(criterion(this.storeName + ".ean", this.competitorStoreName + ".comp_ean", ConditionType.EQ))
             .select(List.of("category"), List.of(sum("ps", "price")))
             .build();
     Table result = this.executor.execute(query);

@@ -20,6 +20,8 @@ public class QueryDto {
 
   public QueryDto subQuery;
 
+  public VirtualTableDto virtualTableDto; // Only support 1 single virtual for now
+
   public List<String> columns = new ArrayList<>();
 
   public List<String> rollupColumns = new ArrayList<>();
@@ -29,6 +31,7 @@ public class QueryDto {
   public List<Measure> measures = new ArrayList<>();
 
   public CriteriaDto whereCriteriaDto = null;
+
   public CriteriaDto havingCriteriaDto = null;
 
   public Map<String, OrderDto> orders = new HashMap<>();

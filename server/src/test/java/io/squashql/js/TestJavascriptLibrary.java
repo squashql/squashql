@@ -21,8 +21,8 @@ public class TestJavascriptLibrary {
   void testReadJsonBuildFromQueryDto() throws IOException {
     var table = new TableDto("myTable");
     var refTable = new TableDto("refTable");
-    table.innerJoin(refTable, "fromField", "toField");
-    table.join(new TableDto("a"), JoinType.LEFT, new JoinMappingDto("a", "a_id", "myTable", "id"));
+    table.join(refTable, JoinType.INNER, new JoinMappingDto("fromField", "toField"));
+    table.join(new TableDto("a"), JoinType.LEFT, new JoinMappingDto("a" + ".a_id", "myTable" + ".id"));
 
     QueryDto q = new QueryDto()
             .table(table)
@@ -110,8 +110,8 @@ public class TestJavascriptLibrary {
     Measure measureExpr = new ExpressionMeasure("sum_expr", "sum(f1)");
     QueryDto q = Query.from(table.name)
             .innerJoin(refTable.name)
-            .on("myTable", "id", "refTable", "id")
-            .on("myTable", "a", "refTable", "a")
+            .on(all(criterion("myTable" + ".id", "refTable" + ".id", ConditionType.EQ),
+                    criterion("myTable" + ".a", "refTable" + ".a", ConditionType.EQ)))
             .where("f2", gt(659))
             .where("f3", eq(123))
             .select(List.of("a", "b"),

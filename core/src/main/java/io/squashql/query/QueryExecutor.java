@@ -218,13 +218,13 @@ public class QueryExecutor {
       cte = new CTE(columnSet);
       TableDto copy = new TableDto(table.name);
       copy.joins.addAll(table.joins);
-      JoinMappingDto lower = new JoinMappingDto(table.name, columnSet.field, columnSet.identifier(), CteColumnSetDto.lowerBoundName(), ConditionType.GE);
-      JoinMappingDto upper = new JoinMappingDto(table.name, columnSet.field, columnSet.identifier(), CteColumnSetDto.upperBounderName(), ConditionType.LT);
-      copy.joins.add(new JoinDto(new TableDto(columnSet.identifier()), JoinType.INNER, List.of(lower, upper)));
+//      JoinMappingDto lower = new JoinMappingDto(table.name, columnSet.field, columnSet.identifier(), CteColumnSetDto.lowerBoundName(), ConditionType.GE);
+//      JoinMappingDto upper = new JoinMappingDto(table.name, columnSet.field, columnSet.identifier(), CteColumnSetDto.upperBounderName(), ConditionType.LT);
+//      copy.joins.add(new JoinDto(new TableDto(columnSet.identifier()), JoinType.INNER, List.of(lower, upper)));
       table = copy;
 //      columns.addAll(columnSet.getNewColumns());
     }
-    return new QueryScope(table, query.subQuery, columns, query.whereCriteriaDto, query.havingCriteriaDto, rollupColumns, cte);
+    return new QueryScope(table, query.subQuery, columns, query.whereCriteriaDto, query.havingCriteriaDto, rollupColumns, query.virtualTableDto);
   }
 
   private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(
@@ -245,7 +245,7 @@ public class QueryExecutor {
                            CriteriaDto whereCriteriaDto,
                            CriteriaDto havingCriteriaDto,
                            List<Field> rollupColumns,
-                           CTE cte) {
+                           VirtualTableDto virtualTableDto) {
   }
 
   public record QueryPlanNodeKey(QueryScope queryScope, Measure measure) {
@@ -308,9 +308,13 @@ public class QueryExecutor {
       try {
         f = fieldProvider.apply(fieldName);
       } catch (FieldNotFoundException e) {
-        CteColumnSetDto columnSet = (CteColumnSetDto) queryDto.columnSets.get(ColumnSetKey.CTE);
-        if (columnSet != null && fieldName.equals(columnSet.name)) {
-          return new Field(CteColumnSetDto.identifier(), fieldName, String.class);
+//        CteColumnSetDto columnSet = (CteColumnSetDto) queryDto.columnSets.get(ColumnSetKey.CTE);
+//        if (columnSet != null && fieldName.equals(columnSet.name)) {
+//          return new Field(CteColumnSetDto.identifier(), fieldName, String.class);
+//        }
+        VirtualTableDto vt = queryDto.virtualTableDto;
+        if (vt != null && vt.fields.contains(fieldName)) {
+          return new Field(vt.name, fieldName, String.class);
         }
         throw e;
       }

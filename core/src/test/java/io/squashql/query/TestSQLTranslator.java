@@ -158,15 +158,15 @@ public class TestSQLTranslator {
   void testJoins() {
     TableDto baseStore = new TableDto(BASE_STORE_NAME);
     TableDto table1 = new TableDto("table1");
-    JoinMappingDto mappingBaseToTable1 = new JoinMappingDto(baseStore.name, "id", table1.name, "table1_id");
+    JoinMappingDto mappingBaseToTable1 = new JoinMappingDto(baseStore.name + ".id", table1.name + ".table1_id");
     TableDto table2 = new TableDto("table2");
-    JoinMappingDto mappingBaseToTable2 = new JoinMappingDto(baseStore.name, "id", table2.name, "table2_id");
+    JoinMappingDto mappingBaseToTable2 = new JoinMappingDto(baseStore.name + ".id", table2.name + ".table2_id");
     TableDto table3 = new TableDto("table3");
-    JoinMappingDto mappingTable2ToTable3 = new JoinMappingDto(table2.name, "table2_field_1", table3.name, "table3_id");
+    JoinMappingDto mappingTable2ToTable3 = new JoinMappingDto(table2.name + ".table2_field_1", table3.name + ".table3_id");
     TableDto table4 = new TableDto("table4");
     List<JoinMappingDto> mappingTable1ToTable4 = List.of(
-            new JoinMappingDto(table1.name, "table1_field_2", table4.name, "table4_id_1"),
-            new JoinMappingDto(table1.name, "table1_field_3", table4.name, "table4_id_2"));
+            new JoinMappingDto(table1.name + ".table1_field_2", table4.name + ".table4_id_1"),
+            new JoinMappingDto(table1.name + ".table1_field_3", table4.name + ".table4_id_2"));
 
     baseStore.joins.add(new JoinDto(table1, INNER, mappingBaseToTable1));
     baseStore.joins.add(new JoinDto(table2, LEFT, mappingBaseToTable2));
@@ -191,12 +191,12 @@ public class TestSQLTranslator {
   void testJoinsEquijoinsMultipleCondCrossTables() {
     TableDto a = new TableDto("A");
     TableDto b = new TableDto("B");
-    JoinMappingDto jAToB = new JoinMappingDto(a.name, "a_id", b.name, "b_id");
+    JoinMappingDto jAToB = new JoinMappingDto(a.name + ".a_id", b.name + ".b_id");
     TableDto c = new TableDto("C");
     // should be able to ref. both column of A and B in the join.
     List<JoinMappingDto> jCToAB = List.of(
-            new JoinMappingDto(c.name, "c_other_id", b.name, "b_other_id"),
-            new JoinMappingDto(c.name, "c_f", a.name, "a_f"));
+            new JoinMappingDto(c.name + ".c_other_id", b.name + ".b_other_id"),
+            new JoinMappingDto(c.name + ".c_f", a.name + ".a_f"));
 
     a.join(b, INNER, jAToB);
     a.join(c, LEFT, jCToAB);

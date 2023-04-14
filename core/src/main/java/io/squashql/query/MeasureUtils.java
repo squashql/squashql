@@ -94,7 +94,7 @@ public final class MeasureUtils {
             copy.get(),
             queryScope.havingCriteriaDto(),
             new ArrayList<>(rollupColumns),
-            queryScope.cte());
+            queryScope.virtualTableDto());
   }
 
   private static CriteriaDto removeCriteriaOnField(String field, CriteriaDto root) {

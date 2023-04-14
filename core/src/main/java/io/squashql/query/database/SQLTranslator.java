@@ -40,7 +40,7 @@ public class SQLTranslator {
     selects.addAll(aggregates);
 
     StringBuilder statement = new StringBuilder();
-    addCte(query.cte, statement, queryRewriter);
+    addCte(query.virtualTableDto, statement, queryRewriter);
     statement.append("select ");
     statement.append(String.join(", ", selects));
     statement.append(" from ");
@@ -50,7 +50,7 @@ public class SQLTranslator {
       statement.append(")");
     } else {
       statement.append(queryRewriter.tableName(query.table.name));
-      addJoins(statement, query.table, queryRewriter);
+      addJoins(statement, query.table, query.virtualTableDto, fieldProvider, queryRewriter);
     }
     addWhereConditions(statement, query, fieldProvider, queryRewriter);
     addGroupByAndRollup(groupBy, query.rollup.stream().map(f -> queryRewriter.rollup(f)).toList(), queryRewriter.usePartialRollupSyntax(), statement);
@@ -59,27 +59,46 @@ public class SQLTranslator {
     return statement.toString();
   }
 
-  private static void addCte(CTE cte, StringBuilder statement, QueryRewriter qr) {
-    if (cte == null) {
+  private static void addCte(VirtualTableDto virtualTableDto, StringBuilder statement, QueryRewriter qr) {
+    if (virtualTableDto == null) {
       return;
     }
 
-    CteColumnSetDto setDto = cte.cteColumnSetDto();
     StringBuilder sb = new StringBuilder();
-    Iterator<Map.Entry<String, List<Object>>> it = setDto.values.entrySet().iterator();
+    Iterator<List<Object>> it = virtualTableDto.records.iterator();
     while (it.hasNext()) {
-      Map.Entry<String, List<Object>> entry = it.next();
-      sb.append("select");
-      sb.append(" '").append(entry.getKey()).append("' as " + qr.fieldName(setDto.name) + ", ");
-      sb.append(" ").append(entry.getValue().get(0)).append(" as " + qr.fieldName(CteColumnSetDto.lowerBoundName()) + ", ");
-      sb.append(" ").append(entry.getValue().get(1)).append(" as " + qr.fieldName(CteColumnSetDto.upperBounderName()));
+      sb.append("select ");
+      List<Object> row = it.next();
+      for (int i = 0; i < row.size(); i++) {
+        Object obj = row.get(i);
+        sb.append(obj instanceof String ? "'" : "");
+        sb.append(obj);
+        sb.append(obj instanceof String ? "'" : "");
+        sb.append(" as " + qr.fieldName(virtualTableDto.fields.get(i)));
+        if (i < row.size() - 1) {
+          sb.append(", ");
+        }
+      }
       if (it.hasNext()) {
         sb.append(" union all ");
       }
     }
+    //    CteColumnSetDto setDto = cte.cteColumnSetDto();
+//    StringBuilder sb = new StringBuilder();
+//    Iterator<Map.Entry<String, List<Object>>> it = setDto.values.entrySet().iterator();
+//    while (it.hasNext()) {
+//      Map.Entry<String, List<Object>> entry = it.next();
+//      sb.append("select");
+//      sb.append(" '").append(entry.getKey()).append("' as " + qr.fieldName(setDto.name) + ", ");
+//      sb.append(" ").append(entry.getValue().get(0)).append(" as " + qr.fieldName(CteColumnSetDto.lowerBoundName()) + ", ");
+//      sb.append(" ").append(entry.getValue().get(1)).append(" as " + qr.fieldName(CteColumnSetDto.upperBounderName()));
+//      if (it.hasNext()) {
+//        sb.append(" union all ");
+//      }
+//    }
 
     statement
-            .append("with ").append(qr.cteName(CteColumnSetDto.identifier()))
+            .append("with ").append(qr.cteName(virtualTableDto.name))
             .append(" as (").append(sb).append(") ");
   }
 
@@ -155,8 +174,8 @@ public class SQLTranslator {
     }
   }
 
-  private static void addJoins(StringBuilder statement, TableDto tableQuery, QueryRewriter qr) {
-    Function<String, String> tableNameFunc = tableName -> CteColumnSetDto.identifier().equals(tableName) ? qr.cteName(tableName) : qr.tableName(tableName);
+  private static void addJoins(StringBuilder statement, TableDto tableQuery, VirtualTableDto virtualTableDto, Function<String, Field> fieldProvider, QueryRewriter qr) {
+    Function<String, String> tableNameFunc = tableName -> virtualTableDto != null && virtualTableDto.name.equals(tableName) ? qr.cteName(tableName) : qr.tableName(tableName);
     for (JoinDto join : tableQuery.joins) {
       statement
               .append(" ")
@@ -175,17 +194,19 @@ public class SQLTranslator {
           case GE -> " >= ";
           default -> throw new IllegalStateException("Unexpected value: " + mapping.conditionType);
         };
+        Field from = fieldProvider.apply(mapping.from);
+        Field to = fieldProvider.apply(mapping.to);
         statement
-                .append(SqlUtils.getFieldFullName(tableNameFunc.apply(mapping.fromTable), qr.fieldName(mapping.from)))
+                .append(SqlUtils.getFieldFullName(from))
                 .append(op)
-                .append(SqlUtils.getFieldFullName(tableNameFunc.apply(mapping.toTable), qr.fieldName(mapping.to)));
+                .append(SqlUtils.getFieldFullName(to));
         if (i < join.mappings.size() - 1) {
           statement.append(" and ");
         }
       }
 
       if (!join.table.joins.isEmpty()) {
-        addJoins(statement, join.table, qr);
+        addJoins(statement, join.table, virtualTableDto, fieldProvider, qr);
       }
     }
   }

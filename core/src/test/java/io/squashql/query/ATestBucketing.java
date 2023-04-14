@@ -3,7 +3,10 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.QueryRewriter;
+import io.squashql.query.dto.ConditionType;
+import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.CteColumnSetDto;
+import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.Field;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -13,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 import static io.squashql.query.ComparisonMethod.DIVIDE;
+import static io.squashql.query.Functions.all;
+import static io.squashql.query.Functions.criterion;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -103,5 +108,29 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 //        group by "shop", "MYTEMPTABLE"."bucket" limit 10000
 //            """);
 //    execute.show();
+  }
+
+  @Test
+  void testNewSyntax() {
+    QueryRewriter qr = this.executor.queryEngine.queryRewriter();
+    String expression = String.format("sum(%s * %s)", qr.fieldName("unitPrice"), qr.fieldName("qtySold"));
+    ExpressionMeasure sales = new ExpressionMeasure("sales", expression);
+
+    CriteriaDto criteria = all(criterion("kvi", "min", ConditionType.GE), criterion("kvi", "max", ConditionType.LT));
+    VirtualTableDto sensitivities = new VirtualTableDto("sensitivities", List.of("bucket", "min", "max"), List.of(
+            List.of("unsensistive", 0d, 50d),
+            List.of("sensistive", 50d, 80d),
+            List.of("hypersensistive", 80d, 100d)
+    ));
+    var query = Query
+            .from(this.storeName)
+            .innerJoin(sensitivities)
+            .on(criteria)
+            .select(List.of("shop", "bucket"), List.of(sales))
+//            .rollup("bucket", "shop")
+            .build();
+
+    Table dataset = this.executor.execute(query);
+    dataset.show();
   }
 }

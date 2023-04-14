@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import static io.squashql.query.Functions.criterion;
 import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 @TestClass
@@ -90,13 +92,13 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.orders)
             .innerJoin(this.orderDetails)
-            .on(this.orderDetails, "orderId", this.orders, "orderId")
+            .on(criterion(this.orderDetails + ".orderId", this.orders + ".orderId", ConditionType.EQ))
             .innerJoin(this.shippers)
-            .on(this.shippers, "shipperId", this.orders, "shipperId")
+            .on(criterion(this.shippers + ".shipperId", this.orders + ".shipperId", ConditionType.EQ))
             .innerJoin(this.products)
-            .on(this.products, "productId", this.orderDetails, "productId")
+            .on(criterion(this.products + ".productId", this.orderDetails + ".productId", ConditionType.EQ))
             .innerJoin(this.categories)
-            .on(this.products, "categoryId", this.categories, "categoryId")
+            .on(criterion(this.products + ".categoryId", this.categories + ".categoryId", ConditionType.EQ))
             // Select a field that exists in two tables: Products and Categories. If any ambiguity, it has to be solved
             // by the user by indicating the table from which the field should come from.
             .select(List.of(this.categories + ".name", this.products + ".name"), List.of(Functions.sum("quantity_sum", "quantity")))
@@ -119,13 +121,13 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.orders)
             .innerJoin(this.orderDetails)
-            .on(this.orderDetails, "orderId", this.orders, "orderId")
+            .on(criterion(this.orderDetails + ".orderId", this.orders + ".orderId", ConditionType.EQ))
             .innerJoin(this.shippers)
-            .on(this.shippers, "shipperId", this.orders, "shipperId")
+            .on(criterion(this.shippers + ".shipperId", this.orders + ".shipperId", ConditionType.EQ))
             .innerJoin(this.products)
-            .on(this.products, "productId", this.orderDetails, "productId")
+            .on(criterion(this.products + ".productId", this.orderDetails + ".productId", ConditionType.EQ))
             .innerJoin(this.categories)
-            .on(this.products, "categoryId", this.categories, "categoryId")
+            .on(criterion(this.products + ".categoryId", this.categories + ".categoryId", ConditionType.EQ))
             // Select a field that exists in two tables: Products and Categories. If any ambiguity, it has to be solved
             // by the user by indicating the table from which the field should come from.
             .select(List.of("name"), List.of(Functions.sum("quantity_sum", "quantity")))

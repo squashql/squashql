@@ -11,10 +11,17 @@ import static io.squashql.query.dto.ConditionType.OR;
 
 public class Functions {
 
+  // joinCriterion
+  public static CriteriaDto criterion(String field, String fieldOther, ConditionType conditionType) {
+    return new CriteriaDto(field, fieldOther, conditionType);
+  }
+
+  // whereCriterion
   public static CriteriaDto criterion(String field, ConditionDto conditionDto) {
     return new CriteriaDto(field, conditionDto);
   }
 
+  // havingCriterion
   public static CriteriaDto criterion(BasicMeasure measure, ConditionDto conditionDto) {
     return new CriteriaDto(measure, conditionDto);
   }

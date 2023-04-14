@@ -48,7 +48,7 @@ public class TestQueryS13n {
     var orderDetails = new TableDto("orderDetails");
 
     // Join
-    orders.innerJoin(orderDetails, "orderDetailsId", "orderDetailsId");
+    orders.join(orderDetails, JoinType.INNER, new JoinMappingDto("orderDetailsId", "orderDetailsId", ConditionType.EQ));
 
     query.table(orders);
 
