@@ -4,13 +4,18 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import io.squashql.query.*;
 import io.squashql.query.database.SQLTranslator;
+import io.squashql.util.NullAndTotalComparator;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public final class MergeTables {
+
+  // FIXME dirty fix until https://github.com/squashql/squashql/issues/127 is done
+  static final Comparator<?> comp = NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder());
+
+  static <T> int compare(T a , T b) {
+    return ((Comparator<T>) comp).compare(a, b);
+  }
 
   private MergeTables() {
   }
@@ -195,8 +200,7 @@ public final class MergeTables {
       if (!leftRowValue.equals(rightRowValue)) { // The two rows don't have the same values on all the common columns
         // Keep one row ensuring that the merged table will be well sorted
         // Is it enough to compare string values ?
-        return leftRowValue.toString().compareTo(rightRowValue.toString()) < 0 ? MergeRowsStrategy.KEEP_LEFT
-                : MergeRowsStrategy.KEEP_RIGHT;
+        return compare(leftRowValue, rightRowValue) < 0 ? MergeRowsStrategy.KEEP_LEFT : MergeRowsStrategy.KEEP_RIGHT;
       }
     }
     // The two rows have the same values on all the common columns
