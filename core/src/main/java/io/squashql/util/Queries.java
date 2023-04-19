@@ -70,6 +70,10 @@ public final class Queries {
       throw new IllegalArgumentException("sub-query in a sub-query is not supported");
     }
 
+    if (query.virtualTableDto != null) {
+      throw new IllegalArgumentException("virtualTableDto in a sub-query is not supported");
+    }
+
     Set<String> cols = new HashSet<>(query.columns);
     if (query.columnSets != null && !query.columnSets.isEmpty()) {
       throw new IllegalArgumentException("column sets are not expected in sub query: " + query);

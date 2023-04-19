@@ -27,7 +27,7 @@ public class VirtualTableDto {
   public static Store toStore(VirtualTableDto virtualTableDto) {
     List<Field> fields = new ArrayList<>();
     for (int i = 0; i < virtualTableDto.fields.size(); i++) {
-      Class<?> klazz = virtualTableDto.records.get(i).get(0).getClass();
+      Class<?> klazz = virtualTableDto.records.get(0).get(i).getClass(); // take the first row to determine the type
       fields.add(new Field(virtualTableDto.name, virtualTableDto.fields.get(i), klazz));
     }
     return new Store(virtualTableDto.name, fields);

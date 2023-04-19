@@ -218,9 +218,21 @@ public class QueryExecutor {
           SquashQLUser user) {
     Set<Field> fields = new HashSet<>(prefetchQuery.select);
     if (queryScope.tableDto != null) {
-      return new TableScope(queryScope.tableDto, fields, queryScope.whereCriteriaDto, queryScope.havingCriteriaDto, queryScope.rollupColumns, user, prefetchQuery.limit);
+      return new TableScope(queryScope.tableDto,
+              fields,
+              queryScope.whereCriteriaDto,
+              queryScope.havingCriteriaDto,
+              queryScope.rollupColumns,
+              queryScope.virtualTableDto,
+              user,
+              prefetchQuery.limit);
     } else {
-      return new SubQueryScope(queryScope.subQuery, fields, queryScope.whereCriteriaDto, queryScope.havingCriteriaDto, user, prefetchQuery.limit);
+      return new SubQueryScope(queryScope.subQuery,
+              fields,
+              queryScope.whereCriteriaDto,
+              queryScope.havingCriteriaDto,
+              user,
+              prefetchQuery.limit);
     }
   }
 
