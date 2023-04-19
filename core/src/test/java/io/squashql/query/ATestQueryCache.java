@@ -11,6 +11,7 @@ import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.query.monitoring.QueryWatch;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -418,6 +419,9 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
 
   @Test
   void testWithDifferentCte() {
+    // Clickhouse does not support non-equi join.
+    Assumptions.assumeFalse(this.queryEngine.getClass().getSimpleName().contains(TestClass.Type.CLICKHOUSE.className));
+
     VirtualTableDto cte = new VirtualTableDto("cte",
             List.of("min", "max", "bucket"),
             List.of(List.of(0d, 5d, "cheap"), List.of(5d, 100d, "notcheap")));
