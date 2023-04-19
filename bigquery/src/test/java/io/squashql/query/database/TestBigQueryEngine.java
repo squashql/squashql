@@ -8,7 +8,6 @@ import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.Table;
-import io.squashql.query.dto.CteColumnSetDto;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
 import org.assertj.core.api.Assertions;
@@ -162,10 +161,11 @@ public class TestBigQueryEngine {
 
   @Test
   void testSqlGenerationWithCte() {
+    // FIXME replace with virtual tables
     String category = "category";
     String scenario = SCENARIO_FIELD_NAME;
     DatabaseQuery query = new DatabaseQuery()
-            .cte(new CTE(new CteColumnSetDto("bucket", "kvi")))
+//            .cte(new CTE(new CteColumnSetDto("bucket", "kvi")))
             .withSelect(this.fieldSupplier.apply(scenario))
             .withSelect(this.fieldSupplier.apply(category))
 //            .withRollup(this.fieldSupplier.apply(scenario))
