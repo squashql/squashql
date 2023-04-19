@@ -1,7 +1,8 @@
 import {Measure} from "./measures";
-import {Criteria} from "./conditions";
+import {ConditionType, Criteria} from "./conditions";
 import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order";
 import {BucketColumnSet, ColumnSet, ColumnSetKey} from "./columnsets";
+import { VirtualTable } from "./virtualtable";
 
 export class QueryMerge {
   constructor(readonly first: Query, readonly second: Query) {
@@ -14,6 +15,7 @@ export class Query {
   columnSets: Map<string, ColumnSet>
   measures: Array<Measure>
   table: Table
+  virtualTable: VirtualTable
   whereCriteria: Criteria
   havingCriteriaDto: Criteria
   orders: Map<string, Order>
@@ -35,6 +37,7 @@ export class Query {
     return this
   }
 
+  // FIXME rename onSubQuery
   onVirtualTable(query: Query): Query {
     this.subQuery = query
     return this
@@ -107,11 +110,11 @@ export class Table {
   }
 
   innerJoin(other: Table, from: string, to: string) {
-    this.joins.push(new Join(other, JoinType.INNER, [new JoinMapping(this.name, from, other.name, to)]))
+    this.joins.push(new Join(other, JoinType.INNER, [new JoinMapping(from, to, ConditionType.EQ)]))
   }
 
   leftJoin(other: Table, from: string, to: string) {
-    this.joins.push(new Join(other, JoinType.LEFT, [new JoinMapping(this.name, from, other.name, to)]))
+    this.joins.push(new Join(other, JoinType.LEFT, [new JoinMapping(from, to, ConditionType.EQ)]))
   }
 }
 
@@ -126,6 +129,6 @@ class Join {
 }
 
 export class JoinMapping {
-  constructor(private fromTable: string, private from: string, private toTable: string, private to: string) {
+  constructor(private from: string, private to: string, conditionType: ConditionType) {
   }
 }

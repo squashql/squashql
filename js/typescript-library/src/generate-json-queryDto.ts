@@ -13,7 +13,7 @@ import {
   integer,
   sum,
 } from "./measures"
-import {_in, all, and, criterion, eq, ge, gt, havingCriterion, isNotNull, isNull, like, lt, or} from "./conditions"
+import {_in, all, and, criterion, eq, ge, gt, havingCriterion, isNotNull, isNull, like, lt, or, ConditionType} from "./conditions"
 import * as fs from "fs"
 import {OrderKeyword} from "./order";
 import {BucketColumnSet, Month} from "./columnsets";
@@ -22,7 +22,7 @@ export function generateFromQueryDto() {
   const table = new Table("myTable")
   const refTable = new Table("refTable")
   table.innerJoin(refTable, "fromField", "toField")
-  table.join(new Table("a"), JoinType.LEFT, [new JoinMapping("a", "a_id", "myTable", "id")])
+  table.join(new Table("a"), JoinType.LEFT, [new JoinMapping("a.a_id", "myTable.id", ConditionType.EQ)])
 
   const q = new Query()
   q.onTable(table)
