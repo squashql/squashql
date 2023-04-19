@@ -53,7 +53,7 @@ public class SQLTranslator {
       addJoins(statement, query.table, query.virtualTableDto, fieldProvider, queryRewriter);
     }
     addWhereConditions(statement, query, fieldProvider, queryRewriter);
-    addGroupByAndRollup(groupBy, query.rollup.stream().map(f -> queryRewriter.rollup(f)).toList(), queryRewriter.usePartialRollupSyntax(), statement);
+    addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
     addHavingConditions(statement, query.havingCriteriaDto, queryRewriter);
     addLimit(query.limit, statement);
     return statement.toString();
@@ -74,7 +74,7 @@ public class SQLTranslator {
         sb.append(obj instanceof String ? "'" : "");
         sb.append(obj);
         sb.append(obj instanceof String ? "'" : "");
-        sb.append(" as " + qr.fieldName(virtualTableDto.fields.get(i)));
+        sb.append(" as ").append(qr.fieldName(virtualTableDto.fields.get(i)));
         if (i < row.size() - 1) {
           sb.append(", ");
         }
@@ -83,19 +83,6 @@ public class SQLTranslator {
         sb.append(" union all ");
       }
     }
-    //    CteColumnSetDto setDto = cte.cteColumnSetDto();
-//    StringBuilder sb = new StringBuilder();
-//    Iterator<Map.Entry<String, List<Object>>> it = setDto.values.entrySet().iterator();
-//    while (it.hasNext()) {
-//      Map.Entry<String, List<Object>> entry = it.next();
-//      sb.append("select");
-//      sb.append(" '").append(entry.getKey()).append("' as " + qr.fieldName(setDto.name) + ", ");
-//      sb.append(" ").append(entry.getValue().get(0)).append(" as " + qr.fieldName(CteColumnSetDto.lowerBoundName()) + ", ");
-//      sb.append(" ").append(entry.getValue().get(1)).append(" as " + qr.fieldName(CteColumnSetDto.upperBounderName()));
-//      if (it.hasNext()) {
-//        sb.append(" union all ");
-//      }
-//    }
 
     statement
             .append("with ").append(qr.cteName(virtualTableDto.name))

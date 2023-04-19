@@ -58,7 +58,7 @@ public interface Table extends Iterable<List<Object>> {
       i++;
     }
     if (index < 0) {
-      throw new IllegalArgumentException("no column named " + column);
+      throw new IllegalArgumentException("no column named " + column + ". Available columns are " + headers().stream().map(Header::name).toList());
     }
     return index;
   }

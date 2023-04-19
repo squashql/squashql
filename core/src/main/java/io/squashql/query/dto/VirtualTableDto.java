@@ -1,9 +1,12 @@
 package io.squashql.query.dto;
 
+import io.squashql.store.Field;
+import io.squashql.store.Store;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @ToString
@@ -19,5 +22,14 @@ public class VirtualTableDto {
     this.name = name;
     this.fields = fields;
     this.records = records;
+  }
+
+  public static Store toStore(VirtualTableDto virtualTableDto) {
+    List<Field> fields = new ArrayList<>();
+    for (int i = 0; i < virtualTableDto.fields.size(); i++) {
+      Class<?> klazz = virtualTableDto.records.get(i).get(0).getClass();
+      fields.add(new Field(virtualTableDto.name, virtualTableDto.fields.get(i), klazz));
+    }
+    return new Store(virtualTableDto.name, fields);
   }
 }

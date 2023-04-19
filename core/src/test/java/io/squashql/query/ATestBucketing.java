@@ -5,9 +5,9 @@ import io.squashql.query.builder.Query;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.CriteriaDto;
-import io.squashql.query.dto.CteColumnSetDto;
 import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.Field;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -15,9 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static io.squashql.query.ComparisonMethod.DIVIDE;
 import static io.squashql.query.Functions.all;
 import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import static io.squashql.query.database.QueryEngine.TOTAL;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -48,24 +49,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 
   @Test
   void test() {
-    CteColumnSetDto bucket = new CteColumnSetDto("bucket", "kvi")
-            .withNewBucket("unsensistive", List.of(0d, 50d))
-            .withNewBucket("sensistive", List.of(50d, 80d))
-            .withNewBucket("hypersensistive", List.of(80d, 100d));
-
-    QueryRewriter qr = this.executor.queryEngine.queryRewriter();
-    String expression = String.format("sum(%s * %s)", qr.fieldName("unitPrice"), qr.fieldName("qtySold"));
-    ExpressionMeasure sales = new ExpressionMeasure("sales", expression);
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, sales, List.of("shop", "__temp_table_cte__.bucket"));
-    var query = Query
-            .from(this.storeName)
-            .select(List.of("shop"), List.of(bucket), List.of(sales, pOp))
-//            .rollup("bucket", "shop")
-            .build();
-
-    Table dataset = this.executor.execute(query);
-    dataset.show();
-
+    // TODO to delete
 //    SELECT arrayJoin([
 //            tuple(1, 'A'),
 //            tuple(2, 'B'),
@@ -111,7 +95,16 @@ public abstract class ATestBucketing extends ABaseTestQuery {
   }
 
   @Test
-  void testNewSyntax() {
+  void testSimpleFieldName() {
+    test("bucket");
+  }
+
+  @Test
+  void testFullFieldName() {
+    test("sensitivities.bucket"); // this syntax should be supported
+  }
+
+  void test(String bucketFieldName) {
     QueryRewriter qr = this.executor.queryEngine.queryRewriter();
     String expression = String.format("sum(%s * %s)", qr.fieldName("unitPrice"), qr.fieldName("qtySold"));
     ExpressionMeasure sales = new ExpressionMeasure("sales", expression);
@@ -120,17 +113,45 @@ public abstract class ATestBucketing extends ABaseTestQuery {
     VirtualTableDto sensitivities = new VirtualTableDto("sensitivities", List.of("bucket", "min", "max"), List.of(
             List.of("unsensistive", 0d, 50d),
             List.of("sensistive", 50d, 80d),
-            List.of("hypersensistive", 80d, 100d)
+            List.of("hypersensistive", 80d, 101d)
     ));
     var query = Query
             .from(this.storeName)
             .innerJoin(sensitivities)
             .on(criteria)
-            .select(List.of("shop", "bucket"), List.of(sales))
-//            .rollup("bucket", "shop")
+            .select(List.of("shop", bucketFieldName), List.of(sales))
             .build();
 
-    Table dataset = this.executor.execute(query);
-    dataset.show();
+    Table result = this.executor.execute(query);
+    Assertions.assertThat(result.headers().stream().map(Header::name))
+            .containsExactly("shop", bucketFieldName, "sales");
+    Assertions.assertThat(result).containsExactly(
+            List.of(0, "hypersensistive", 240d),
+            List.of(0, "sensistive", 150d),
+            List.of(0, "unsensistive", 60d),
+            List.of(1, "hypersensistive", 240d),
+            List.of(1, "sensistive", 150d),
+            List.of(1, "unsensistive", 60d));
+
+    query = Query
+            .from(this.storeName)
+            .innerJoin(sensitivities)
+            .on(criteria)
+            .select(List.of("shop", bucketFieldName), List.of(sales))
+            .rollup("shop", bucketFieldName)
+            .build();
+    result = this.executor.execute(query);
+    Assertions.assertThat(result.headers().stream().map(Header::name))
+            .containsExactly("shop", bucketFieldName, "sales");
+    Assertions.assertThat(result).containsExactly(
+            List.of(GRAND_TOTAL, GRAND_TOTAL, 900d),
+            List.of(0, TOTAL, 450d),
+            List.of(0, "hypersensistive", 240d),
+            List.of(0, "sensistive", 150d),
+            List.of(0, "unsensistive", 60d),
+            List.of(1, TOTAL, 450d),
+            List.of(1, "hypersensistive", 240d),
+            List.of(1, "sensistive", 150d),
+            List.of(1, "unsensistive", 60d));
   }
 }
