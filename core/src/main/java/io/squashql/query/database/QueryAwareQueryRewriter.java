@@ -3,6 +3,9 @@ package io.squashql.query.database;
 import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.Field;
 
+/**
+ * A {@link QueryRewriter} whose logic depends on the query being executed. See {@link #getFieldFullName(Field)}.
+ */
 public class QueryAwareQueryRewriter implements QueryRewriter {
 
   private final QueryRewriter underlying;

@@ -23,6 +23,9 @@ public class SQLTranslator {
     return translate(query, fieldProvider, __ -> qr);
   }
 
+  /**
+   * Be careful when using this method directly. You may have to leverage {@link QueryAwareQueryRewriter} somehow.
+   */
   public static String translate(DatabaseQuery query,
                                  Function<String, Field> fieldProvider,
                                  Function<DatabaseQuery, QueryRewriter> queryRewriterSupplier) {
@@ -186,12 +189,8 @@ public class SQLTranslator {
         Field to = fieldProvider.apply(mapping.to);
         statement
                 .append(qr.getFieldFullName(from))
-//                .append(SqlUtils.getFieldFullName(tableNameFunc.apply(from.store()), qr.fieldName(from.name())))
-//                .append(SqlUtils.getFieldFullName(from)) // FIXME
                 .append(op)
                 .append(qr.getFieldFullName(to));
-//                .append(SqlUtils.getFieldFullName(tableNameFunc.apply(to.store()), qr.fieldName(to.name())));
-//                .append(SqlUtils.getFieldFullName(to)); // FIXME
         if (i < join.mappings.size() - 1) {
           statement.append(" and ");
         }

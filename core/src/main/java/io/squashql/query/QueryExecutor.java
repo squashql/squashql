@@ -28,7 +28,7 @@ import static io.squashql.query.ColumnSetKey.BUCKET;
 @Slf4j
 public class QueryExecutor {
 
-  public static final int LIMIT_DEFAULT_VALUE = Integer.valueOf(System.getProperty("query.limit", Integer.toString(10_000)));
+  public static final int LIMIT_DEFAULT_VALUE = Integer.parseInt(System.getProperty("query.limit", Integer.toString(10_000)));
   public final QueryEngine<?> queryEngine;
   public final QueryCache queryCache;
 
@@ -271,46 +271,6 @@ public class QueryExecutor {
     table = (ColumnarTable) TableUtils.orderRows(table, comparators, columnSets);
     return TableUtils.replaceTotalCellValues(table, true);
   }
-
-//  // TODO check what can be done with that...
-//  public static Function<String, Field> withFallback(Function<String, Field> fieldProvider, Class<?> fallbackType) {
-//    return fieldName -> {
-//      Field f;
-//      try {
-//        f = fieldProvider.apply(fieldName);
-//      } catch (FieldNotFoundException e) {
-//        // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
-//        // contains only "raw" fields, it will throw an exception.
-////        log.info("Cannot find field " + fieldName + " with default field provider, fallback to default type: " + fallbackType.getSimpleName());
-////        f = new Field(null, fieldName, fallbackType);
-//        throw e;
-//      }
-//      return f;
-//    };
-//  }
-
-//  public static Function<String, Field> withFallbackCTE(Function<String, Field> fieldProvider, QueryDto queryDto) {
-//    return fieldName -> {
-//      Field f;
-//      try {
-//        f = fieldProvider.apply(fieldName);
-//      } catch (FieldNotFoundException e) {
-//        VirtualTableDto vt = queryDto.virtualTableDto;
-//        if (vt != null && vt.fields.contains(fieldName)) {
-//          String[] split = fieldName.split("\\.");
-//          if (split.length > 1) {
-//            String tableName = split[0];
-//            String fieldNameInTable = split[1];
-//          } else {
-//
-//          }
-//          return new Field(vt.name, fieldName, String.class);
-//        }
-//        throw e;
-//      }
-//      return f;
-//    };
-//  }
 
   public static Function<String, Field> createQueryFieldSupplier(QueryEngine<?> queryEngine, VirtualTableDto vt) {
     Map<String, Store> storesByName = new HashMap<>(queryEngine.datastore().storesByName());

@@ -100,7 +100,6 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   protected String createSqlStatement(DatabaseQuery query) {
     return SQLTranslator.translate(query,
             QueryExecutor.createQueryFieldSupplier(this, query.virtualTableDto),
-//            QueryExecutor.withFallback(this.fieldSupplier.get(), String.class),
             this.queryRewriter);
   }
 

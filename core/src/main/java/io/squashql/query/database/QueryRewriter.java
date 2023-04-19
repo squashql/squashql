@@ -16,6 +16,12 @@ public interface QueryRewriter {
     return table;
   }
 
+  /**
+   * Customizes how to refer to a Common Table Expression (CTE) in the SQL statement.
+   *
+   * @param cteName the name of the CTE
+   * @return the customized argument
+   */
   default String cteName(String cteName) {
     return cteName;
   }

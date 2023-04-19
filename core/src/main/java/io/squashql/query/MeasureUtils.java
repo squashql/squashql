@@ -5,6 +5,7 @@ import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.Period;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.store.Field;
 import lombok.NoArgsConstructor;
 
@@ -138,5 +139,17 @@ public final class MeasureUtils {
     } else {
       throw new RuntimeException(period + " not supported yet");
     }
+  }
+
+  public static Function<String, Field> withFallback(Function<String, Field> fieldProvider, Class<?> fallbackType) {
+    return fieldName -> {
+      try {
+        return fieldProvider.apply(fieldName);
+      } catch (FieldNotFoundException e) {
+        // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
+        // contains only "raw" fields, it will throw an exception.
+        return new Field(null, fieldName, fallbackType);
+      }
+    };
   }
 }

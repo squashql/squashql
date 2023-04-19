@@ -158,38 +158,4 @@ public class TestBigQueryEngine {
             List.of("1", "A", 1d),
             List.of("1", "B", 1d));
   }
-
-  @Test
-  void testSqlGenerationWithCte() {
-    // FIXME replace with virtual tables
-    String category = "category";
-    String scenario = SCENARIO_FIELD_NAME;
-    DatabaseQuery query = new DatabaseQuery()
-//            .cte(new CTE(new CteColumnSetDto("bucket", "kvi")))
-            .withSelect(this.fieldSupplier.apply(scenario))
-            .withSelect(this.fieldSupplier.apply(category))
-//            .withRollup(this.fieldSupplier.apply(scenario))
-//            .withRollup(this.fieldSupplier.apply(category))
-            .aggregatedMeasure("price.sum", "price", "sum")
-            .aggregatedMeasure("price.avg", "price", "avg")
-            .table("baseStore");
-
-    BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName") {
-      @Override
-      public Map<String, Store> storesByName() {
-        return Map.of("baseStore", new Store("baseStore", List.of(
-                TestBigQueryEngine.this.fieldSupplier.apply(SCENARIO_FIELD_NAME),
-                TestBigQueryEngine.this.fieldSupplier.apply(category),
-                TestBigQueryEngine.this.fieldSupplier.apply("price")
-        )));
-      }
-    };
-    BigQueryEngine bqe = new BigQueryEngine(datastore);
-    String sqlStatement = bqe.createSqlStatement(query);
-    Assertions.assertThat(sqlStatement)
-            .isEqualTo("select coalesce(`myProjectId.myDatasetName.baseStore`.`scenario`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`category`, " + BigQueryUtil.getNullValue(long.class) + ")," +
-                    " sum(`price`) as `price.sum`, avg(`price`) as `price.avg`" +
-                    " from `myProjectId.myDatasetName.baseStore`" +
-                    " group by rollup(coalesce(`myProjectId.myDatasetName.baseStore`.`scenario`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`category`, " + BigQueryUtil.getNullValue(long.class) + "))");
-  }
 }
