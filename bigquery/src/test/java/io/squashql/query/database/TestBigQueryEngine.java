@@ -144,8 +144,8 @@ public class TestBigQueryEngine {
     Field scenarioField = this.fieldSupplier.apply(scenario);
     Field categoryField = this.fieldSupplier.apply(category);
     ColumnarTable input = new ColumnarTable(
-            List.of(new Header(scenarioField.name(), scenarioField.type(), false),
-                    new Header(categoryField.name(), categoryField.type(), false),
+            List.of(new Header(SqlUtils.getFieldFullName(scenarioField), scenarioField.type(), false),
+                    new Header(SqlUtils.getFieldFullName(categoryField), categoryField.type(), false),
                     new Header("price.sum", double.class, true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             values);

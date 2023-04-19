@@ -10,6 +10,7 @@ import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -108,6 +109,17 @@ public class ClickHouseTransactionManager implements TransactionManager {
               path);
       load.get();
     } catch (InterruptedException | ExecutionException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public void dropTables(Collection<String> tables) {
+    try (ClickHouseConnection conn = this.clickHouseDataSource.getConnection();
+         ClickHouseStatement stmt = conn.createStatement()) {
+      for (String table : tables) {
+        stmt.execute("drop table if exists " + table);
+      }
+    } catch (SQLException e) {
       throw new RuntimeException(e);
     }
   }

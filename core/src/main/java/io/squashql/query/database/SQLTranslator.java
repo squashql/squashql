@@ -19,7 +19,8 @@ public class SQLTranslator {
   public static String translate(DatabaseQuery query,
                                  Function<String, Field> fieldProvider,
                                  QueryRewriter queryRewriter) {
-    return translate(query, fieldProvider, __ -> queryRewriter);
+    QueryAwareQueryRewriter qr = new QueryAwareQueryRewriter(queryRewriter, query);
+    return translate(query, fieldProvider, __ -> qr);
   }
 
   public static String translate(DatabaseQuery query,
@@ -184,9 +185,13 @@ public class SQLTranslator {
         Field from = fieldProvider.apply(mapping.from);
         Field to = fieldProvider.apply(mapping.to);
         statement
-                .append(SqlUtils.getFieldFullName(from))
+                .append(qr.getFieldFullName(from))
+//                .append(SqlUtils.getFieldFullName(tableNameFunc.apply(from.store()), qr.fieldName(from.name())))
+//                .append(SqlUtils.getFieldFullName(from)) // FIXME
                 .append(op)
-                .append(SqlUtils.getFieldFullName(to));
+                .append(qr.getFieldFullName(to));
+//                .append(SqlUtils.getFieldFullName(tableNameFunc.apply(to.store()), qr.fieldName(to.name())));
+//                .append(SqlUtils.getFieldFullName(to)); // FIXME
         if (i < join.mappings.size() - 1) {
           statement.append(" and ");
         }

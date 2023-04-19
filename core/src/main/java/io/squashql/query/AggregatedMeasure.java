@@ -4,6 +4,7 @@ import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.CriteriaDto;
+import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.store.Field;
 import lombok.*;
 
@@ -36,19 +37,35 @@ public class AggregatedMeasure implements BasicMeasure {
   @Override
   public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     String sql;
+    Function<String, Field> fp = withFallback(fieldProvider, Number.class);
+    Field f = fp.apply(this.field);
+    String fieldFullName = queryRewriter.getFieldFullName(f);
     if (this.criteria != null) {
-      Field f = fieldProvider.apply(this.field);
-      String fieldFullName = queryRewriter.getFieldFullName(f);
-      String conditionSt = SQLTranslator.toSql(QueryExecutor.withFallback(fieldProvider, Number.class), this.criteria, queryRewriter);
+      String conditionSt = SQLTranslator.toSql(fp, this.criteria, queryRewriter);
       sql = this.aggregationFunction + "(case when " + conditionSt + " then " + fieldFullName + " end)";
     } else if (this.field.equals("*")) {
       sql = this.aggregationFunction + "(*)";
     } else {
-      Field f = fieldProvider.apply(this.field);
-      String fieldFullName = queryRewriter.getFieldFullName(f);
       sql = this.aggregationFunction + "(" + fieldFullName + ")";
     }
     return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.alias) : sql;
+  }
+
+  // TODO check what can be done with that...
+  public static Function<String, Field> withFallback(Function<String, Field> fieldProvider, Class<?> fallbackType) {
+    return fieldName -> {
+      Field f;
+      try {
+        f = fieldProvider.apply(fieldName);
+      } catch (FieldNotFoundException e) {
+        // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
+        // contains only "raw" fields, it will throw an exception.
+//        log.info("Cannot find field " + fieldName + " with default field provider, fallback to default type: " + fallbackType.getSimpleName());
+        f = new Field(null, fieldName, fallbackType);
+//        throw e;
+      }
+      return f;
+    };
   }
 
   @Override

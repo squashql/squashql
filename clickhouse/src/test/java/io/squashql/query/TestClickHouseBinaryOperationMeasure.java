@@ -27,6 +27,7 @@ public class TestClickHouseBinaryOperationMeasure extends ATestBinaryOperationMe
   @AfterAll
   void tearDown() {
     // we do not stop the container to be able to reuse it between tests.
+    ((ClickHouseTransactionManager) this.tm).dropTables(this.fieldsByStore.keySet());
   }
 
   @Override

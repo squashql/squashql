@@ -6,7 +6,6 @@ import io.squashql.BigQueryUtil;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.Table;
 import io.squashql.query.*;
-import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.Field;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.api.tuple.Pair;
@@ -47,10 +46,11 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   @Override
   protected String createSqlStatement(DatabaseQuery query) {
     boolean hasRollup = !query.rollup.isEmpty();
-    QueryAwareBigQueryQueryRewriter rewriter = new QueryAwareBigQueryQueryRewriter((BigQueryQueryRewriter) this.queryRewriter, query);
+    BigQueryQueryRewriter rewriter = (BigQueryQueryRewriter) this.queryRewriter;
+    Function<String, Field> queryFieldSupplier = QueryExecutor.createQueryFieldSupplier(this, query.virtualTableDto);
     if (!hasRollup) {
       return SQLTranslator.translate(query,
-              QueryExecutor.withFallback(this.fieldSupplier.get(), String.class),
+              queryFieldSupplier,
               rewriter);
     } else {
       checkRollupIsValid(
@@ -67,19 +67,20 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
        * By doing so, null values (not the ones due to rollup) will be changed to "___null___" and null values in the
        * result dataset correspond to the subtotals.
        */
-      BigQueryQueryRewriter newRewriter = new BigQueryQueryRewriter(rewriter.underlying.projectId, rewriter.underlying.datasetName) {
+      QueryAwareQueryRewriter qr = new QueryAwareQueryRewriter(rewriter, query);
+      BigQueryQueryRewriter newRewriter = new BigQueryQueryRewriter(rewriter.projectId, rewriter.datasetName) {
 
         @Override
         public String select(Field field) {
           Function<Object, String> quoter = SQLTranslator.getQuoteFn(field);
-          return String.format("coalesce(%s, %s)", rewriter.select(field),
+          return String.format("coalesce(%s, %s)", qr.select(field),
                   quoter.apply(BigQueryUtil.getNullValue(field.type())));
         }
 
         @Override
         public String rollup(Field field) {
           Function<Object, String> quoter = SQLTranslator.getQuoteFn(field);
-          return String.format("coalesce(%s, %s)", rewriter.rollup(field),
+          return String.format("coalesce(%s, %s)", qr.rollup(field),
                   quoter.apply(BigQueryUtil.getNullValue(field.type())));
         }
       };
@@ -91,7 +92,8 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       missingColumnsInRollup.addAll(query.rollup);
       deepCopy.rollup = missingColumnsInRollup;
       return SQLTranslator.translate(deepCopy,
-              QueryExecutor.withFallback(this.fieldSupplier.get(), String.class),
+              queryFieldSupplier,
+              // The condition on rollup is to handle subquery
               q -> q.rollup.isEmpty() ? this.queryRewriter : newRewriter);
     }
   }
@@ -117,7 +119,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
           Object value = columnValues.get(rowIndex);
           if (value == null) {
             baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
-            if (isPartialRollup && missingColumnsInRollupSet.contains(h)) {
+            if (isPartialRollup && missingColumnsInRollupSet.contains(h.name())) {
               // Partial rollup not supported https://issuetracker.google.com/issues/35905909, we let bigquery compute
               // all totals, and we remove here the extra rows.
               rowIndicesToRemove.add(rowIndex);
@@ -271,78 +273,6 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     public boolean useGroupingFunction() {
       // Not supported https://issuetracker.google.com/issues/205238172
       return false;
-    }
-  }
-
-  private static class QueryAwareBigQueryQueryRewriter implements QueryRewriter {
-
-    private final BigQueryQueryRewriter underlying;
-
-    private final DatabaseQuery query;
-
-    private QueryAwareBigQueryQueryRewriter(BigQueryQueryRewriter underlying, DatabaseQuery query) {
-      this.underlying = underlying;
-      this.query = query;
-    }
-
-    @Override
-    public String getFieldFullName(Field f) {
-//      CteColumnSetDto columnSet = this.query.cte.cteColumnSetDto();
-//      if (columnSet != null
-//              && CteColumnSetDto.identifier().equals(f.store())
-//              && columnSet.name.equals(f.name())) {
-//        return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
-//      } else {
-//        return this.underlying.getFieldFullName(f);
-//      }
-      VirtualTableDto vt = this.query.virtualTableDto;
-      if (vt != null
-              && vt.name.equals(f.store())
-              && vt.fields.contains(equals(f.name()))) {
-        return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
-      } else {
-        return this.underlying.getFieldFullName(f);
-      }
-    }
-
-    @Override
-    public String fieldName(String field) {
-      return this.underlying.fieldName(field);
-    }
-
-    @Override
-    public String tableName(String table) {
-      return this.underlying.tableName(table);
-    }
-
-    @Override
-    public String cteName(String cteName) {
-      return this.underlying.cteName(cteName);
-    }
-
-    @Override
-    public String select(Field f) {
-      return getFieldFullName(f);
-    }
-
-    @Override
-    public String rollup(Field f) {
-      return getFieldFullName(f);
-    }
-
-    @Override
-    public String measureAlias(String alias) {
-      return this.underlying.measureAlias(alias);
-    }
-
-    @Override
-    public boolean usePartialRollupSyntax() {
-      return this.underlying.usePartialRollupSyntax();
-    }
-
-    @Override
-    public boolean useGroupingFunction() {
-      return this.underlying.useGroupingFunction();
     }
   }
 }
