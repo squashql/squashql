@@ -81,7 +81,7 @@ export function generateFromQueryDto() {
   subQ.onTable(table)
           .withColumn("aa")
           .withMeasure(sum("sum_aa", "f"))
-  q.onVirtualTable(subQ)
+  q.onSubQuery(subQ)
 
   console.log(JSON.stringify(q))
   const data = JSON.stringify(q)

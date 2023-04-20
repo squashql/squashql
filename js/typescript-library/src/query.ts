@@ -38,7 +38,7 @@ export class Query {
   }
 
   // FIXME rename onSubQuery
-  onVirtualTable(query: Query): Query {
+  onSubQuery(query: Query): Query {
     this.subQuery = query
     return this
   }
