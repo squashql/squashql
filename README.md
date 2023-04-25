@@ -9,6 +9,9 @@
   <a>
     <img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/squashql/squashql">
   </a>
+  <a>
+    <img alt="Discord chat" src="https://img.shields.io/discord/1051535068637700196?label=discord">
+  </a> 
 </p>
 
 ---
