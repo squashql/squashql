@@ -1,6 +1,8 @@
 package io.squashql.query.builder;
 
+import io.squashql.query.dto.CriteriaDto;
+
 public interface HasStartedBuildingJoin {
 
-  HasJoin on(String fromTable, String from, String toTable, String to);
+  HasJoin on(CriteriaDto joinCriteriaDto);
 }

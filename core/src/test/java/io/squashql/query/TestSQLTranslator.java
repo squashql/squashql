@@ -4,9 +4,7 @@ import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
-import io.squashql.query.dto.JoinDto;
-import io.squashql.query.dto.JoinMappingDto;
-import io.squashql.query.dto.TableDto;
+import io.squashql.query.dto.*;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
 import org.assertj.core.api.Assertions;
@@ -14,7 +12,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static io.squashql.query.Functions.*;
@@ -27,13 +24,24 @@ public class TestSQLTranslator {
   private static final String BASE_STORE_NAME = "baseStore";
   private static final String BASE_STORE_NAME_ESCAPED = SqlUtils.backtickEscape(BASE_STORE_NAME);
 
+  /**
+   * A simple implementation that has the same logic as {@link AQueryEngine#createFieldSupplier(Map)} but does not verify
+   * a store/field does exist.
+   */
   private static final Function<String, Field> fieldProvider = s -> {
-    BiFunction<Class<?>, String, Field> f = (type, name) -> new Field(name.contains(BASE_STORE_NAME) ? BASE_STORE_NAME : null, name.replace(BASE_STORE_NAME + ".", ""), type);
-    return switch (s) {
-      case "pnl", BASE_STORE_NAME + "." + "pnl" -> f.apply(double.class, s);
-      case "delta", BASE_STORE_NAME + "." + "delta" -> f.apply(Double.class, s);
-      default -> f.apply(String.class, s);
+    Function<String, Class<?>> type = f -> switch (f) {
+      case "pnl", BASE_STORE_NAME + "." + "pnl" -> double.class;
+      case "delta", BASE_STORE_NAME + "." + "delta" -> Double.class;
+      default -> String.class;
     };
+    String[] split = s.split("\\.");
+    if (split.length > 1) {
+      String tableName = split[0];
+      String fieldNameInTable = split[1];
+      return new Field(tableName, fieldNameInTable, type.apply(fieldNameInTable));
+    } else {
+      return new Field(null, s, type.apply(s));
+    }
   };
 
   @Test
@@ -158,15 +166,15 @@ public class TestSQLTranslator {
   void testJoins() {
     TableDto baseStore = new TableDto(BASE_STORE_NAME);
     TableDto table1 = new TableDto("table1");
-    JoinMappingDto mappingBaseToTable1 = new JoinMappingDto(baseStore.name, "id", table1.name, "table1_id");
+    JoinMappingDto mappingBaseToTable1 = new JoinMappingDto(baseStore.name + ".id", table1.name + ".table1_id");
     TableDto table2 = new TableDto("table2");
-    JoinMappingDto mappingBaseToTable2 = new JoinMappingDto(baseStore.name, "id", table2.name, "table2_id");
+    JoinMappingDto mappingBaseToTable2 = new JoinMappingDto(baseStore.name + ".id", table2.name + ".table2_id");
     TableDto table3 = new TableDto("table3");
-    JoinMappingDto mappingTable2ToTable3 = new JoinMappingDto(table2.name, "table2_field_1", table3.name, "table3_id");
+    JoinMappingDto mappingTable2ToTable3 = new JoinMappingDto(table2.name + ".table2_field_1", table3.name + ".table3_id");
     TableDto table4 = new TableDto("table4");
     List<JoinMappingDto> mappingTable1ToTable4 = List.of(
-            new JoinMappingDto(table1.name, "table1_field_2", table4.name, "table4_id_1"),
-            new JoinMappingDto(table1.name, "table1_field_3", table4.name, "table4_id_2"));
+            new JoinMappingDto(table1.name + ".table1_field_2", table4.name + ".table4_id_1"),
+            new JoinMappingDto(table1.name + ".table1_field_3", table4.name + ".table4_id_2"));
 
     baseStore.joins.add(new JoinDto(table1, INNER, mappingBaseToTable1));
     baseStore.joins.add(new JoinDto(table2, LEFT, mappingBaseToTable2));
@@ -191,12 +199,12 @@ public class TestSQLTranslator {
   void testJoinsEquijoinsMultipleCondCrossTables() {
     TableDto a = new TableDto("A");
     TableDto b = new TableDto("B");
-    JoinMappingDto jAToB = new JoinMappingDto(a.name, "a_id", b.name, "b_id");
+    JoinMappingDto jAToB = new JoinMappingDto(a.name + ".a_id", b.name + ".b_id");
     TableDto c = new TableDto("C");
     // should be able to ref. both column of A and B in the join.
     List<JoinMappingDto> jCToAB = List.of(
-            new JoinMappingDto(c.name, "c_other_id", b.name, "b_other_id"),
-            new JoinMappingDto(c.name, "c_f", a.name, "a_f"));
+            new JoinMappingDto(c.name + ".c_other_id", b.name + ".b_other_id"),
+            new JoinMappingDto(c.name + ".c_f", a.name + ".a_f"));
 
     a.join(b, INNER, jAToB);
     a.join(c, LEFT, jCToAB);
@@ -204,7 +212,7 @@ public class TestSQLTranslator {
     Function<String, Field> fieldSupplier = AQueryEngine.createFieldSupplier(Map.of(
             "A", new Store("A", List.of(new Field("A", "a_id", int.class), new Field("A", "a_f", int.class), new Field("A", "y", int.class))),
             "B", new Store("B", List.of(new Field("B", "b_id", int.class), new Field("B", "b_other_id", int.class))),
-            "C", new Store("C", List.of(new Field("c", "a_id", int.class), new Field("c", "c_f", int.class), new Field("c", "c_other_id", int.class)))
+            "C", new Store("C", List.of(new Field("c", "a_id", int.class), new Field("C", "c_f", int.class), new Field("C", "c_other_id", int.class)))
     ));
 
     DatabaseQuery query = new DatabaseQuery().table(a).withSelect(fieldSupplier.apply("A.y"));
@@ -285,19 +293,64 @@ public class TestSQLTranslator {
     TableDto a = new TableDto(BASE_STORE_NAME);
     DatabaseQuery query = new DatabaseQuery()
             .table(a)
-            .withMeasure(Functions.sum("pnlSum", "pnl"))
-            .withMeasure(Functions.sumIf("pnlSumFiltered", "pnl", criterion("country", eq("france"))));
+            .withMeasure(sum("pnlSum", "pnl"))
+            .withMeasure(sumIf("pnlSumFiltered", "pnl", criterion("country", eq("france"))));
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select sum(`pnl`) as `pnlSum`, sum(case when `country` = 'france' then `pnl` end) as `pnlSumFiltered` from `" + BASE_STORE_NAME + "`");
 
     // With full path
     query = new DatabaseQuery()
             .table(a)
-            .withMeasure(Functions.sum("pnlSum", a.name + ".pnl"))
-            .withMeasure(Functions.sumIf("pnlSumFiltered", a.name + ".pnl", criterion(a.name + ".country", eq("france"))));
+            .withMeasure(sum("pnlSum", a.name + ".pnl"))
+            .withMeasure(sumIf("pnlSumFiltered", a.name + ".pnl", criterion(a.name + ".country", eq("france"))));
     String format = "select sum(`%1$s`.`pnl`) as `pnlSum`, sum(case when `%1$s`.`country` = 'france' then `%1$s`.`pnl` end) as `pnlSumFiltered` from `%1$s`";
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo(String.format(
                     format, BASE_STORE_NAME));
+  }
+
+  @Test
+  void testVirtualTable() {
+    TableDto main = new TableDto(BASE_STORE_NAME);
+    VirtualTableDto virtualTable = new VirtualTableDto(
+            "virtual",
+            List.of("a", "b"),
+            List.of(List.of(0, "0"), List.of(1, "1")));
+    main.join(new TableDto(virtualTable.name), INNER, new JoinMappingDto("id", "a", ConditionType.EQ));
+    DatabaseQuery query = new DatabaseQuery()
+            .table(main)
+            .virtualTable(virtualTable)
+            .withMeasure(sum("pnl.sum", "pnl"))
+            .withSelect(fieldProvider.apply("id"))
+            .withSelect(fieldProvider.apply("b"));
+    String expected = String.format("with %2$s as (select 0 as `a`, '0' as `b` union all select 1 as `a`, '1' as `b`) " +
+                    "select `id`, `b`, sum(`pnl`) as `pnl.sum` from `%1$s` " +
+                    "inner join %2$s on `id` = `a` group by `id`, `b`",
+            BASE_STORE_NAME, virtualTable.name);
+    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
+            .isEqualTo(expected);
+  }
+
+  @Test
+  void testVirtualTableFullName() {
+    TableDto main = new TableDto(BASE_STORE_NAME);
+    VirtualTableDto virtualTable = new VirtualTableDto(
+            "virtual",
+            List.of("a", "b"),
+            List.of(List.of(0, "0"), List.of(1, "1")));
+    main.join(new TableDto(virtualTable.name), INNER, new JoinMappingDto(BASE_STORE_NAME + ".id", virtualTable.name + ".a", ConditionType.EQ));
+    DatabaseQuery query = new DatabaseQuery()
+            .table(main)
+            .virtualTable(virtualTable)
+            .withMeasure(sum("pnl.sum", "pnl"))
+            .withSelect(fieldProvider.apply("id"))
+            .withSelect(fieldProvider.apply("b"));
+    String expected = String.format("with %2$s as (select 0 as `a`, '0' as `b` union all select 1 as `a`, '1' as `b`) " +
+                    "select `id`, `b`, sum(`pnl`) as `pnl.sum` from `%1$s` " +
+                    "inner join %2$s on `%1$s`.`id` = %2$s.`a` group by `id`, `b`",
+            BASE_STORE_NAME, virtualTable.name);
+    // IMPORTANT: No backtick in the join condition for the field belonging to the virtual table.
+    Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
+            .isEqualTo(expected);
   }
 }

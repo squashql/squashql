@@ -19,9 +19,13 @@ public class SQLTranslator {
   public static String translate(DatabaseQuery query,
                                  Function<String, Field> fieldProvider,
                                  QueryRewriter queryRewriter) {
-    return translate(query, fieldProvider, __ -> queryRewriter);
+    QueryAwareQueryRewriter qr = new QueryAwareQueryRewriter(queryRewriter, query);
+    return translate(query, fieldProvider, __ -> qr);
   }
 
+  /**
+   * Be careful when using this method directly. You may have to leverage {@link QueryAwareQueryRewriter} somehow.
+   */
   public static String translate(DatabaseQuery query,
                                  Function<String, Field> fieldProvider,
                                  Function<DatabaseQuery, QueryRewriter> queryRewriterSupplier) {
@@ -40,6 +44,7 @@ public class SQLTranslator {
     selects.addAll(aggregates);
 
     StringBuilder statement = new StringBuilder();
+    addCte(query.virtualTableDto, statement, queryRewriter);
     statement.append("select ");
     statement.append(String.join(", ", selects));
     statement.append(" from ");
@@ -49,13 +54,43 @@ public class SQLTranslator {
       statement.append(")");
     } else {
       statement.append(queryRewriter.tableName(query.table.name));
-      addJoins(statement, query.table, queryRewriter);
+      addJoins(statement, query.table, query.virtualTableDto, fieldProvider, queryRewriter);
     }
     addWhereConditions(statement, query, fieldProvider, queryRewriter);
-    addGroupByAndRollup(groupBy, query.rollup.stream().map(f -> queryRewriter.rollup(f)).toList(), queryRewriter.usePartialRollupSyntax(), statement);
+    addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
     addHavingConditions(statement, query.havingCriteriaDto, queryRewriter);
     addLimit(query.limit, statement);
     return statement.toString();
+  }
+
+  private static void addCte(VirtualTableDto virtualTableDto, StringBuilder statement, QueryRewriter qr) {
+    if (virtualTableDto == null) {
+      return;
+    }
+
+    StringBuilder sb = new StringBuilder();
+    Iterator<List<Object>> it = virtualTableDto.records.iterator();
+    while (it.hasNext()) {
+      sb.append("select ");
+      List<Object> row = it.next();
+      for (int i = 0; i < row.size(); i++) {
+        Object obj = row.get(i);
+        sb.append(obj instanceof String ? "'" : "");
+        sb.append(obj);
+        sb.append(obj instanceof String ? "'" : "");
+        sb.append(" as ").append(qr.fieldName(virtualTableDto.fields.get(i)));
+        if (i < row.size() - 1) {
+          sb.append(", ");
+        }
+      }
+      if (it.hasNext()) {
+        sb.append(" union all ");
+      }
+    }
+
+    statement
+            .append("with ").append(qr.cteName(virtualTableDto.name))
+            .append(" as (").append(sb).append(") ");
   }
 
   private static void addLimit(int limit, StringBuilder statement) {
@@ -130,27 +165,39 @@ public class SQLTranslator {
     }
   }
 
-  private static void addJoins(StringBuilder statement, TableDto tableQuery, QueryRewriter queryRewriter) {
+  private static void addJoins(StringBuilder statement, TableDto tableQuery, VirtualTableDto virtualTableDto, Function<String, Field> fieldProvider, QueryRewriter qr) {
+    Function<String, String> tableNameFunc = tableName -> virtualTableDto != null && virtualTableDto.name.equals(tableName) ? qr.cteName(tableName) : qr.tableName(tableName);
     for (JoinDto join : tableQuery.joins) {
       statement
               .append(" ")
               .append(join.type.name().toLowerCase())
               .append(" join ")
-              .append(queryRewriter.tableName(join.table.name))
+              .append(tableNameFunc.apply(join.table.name))
               .append(" on ");
       for (int i = 0; i < join.mappings.size(); i++) {
         JoinMappingDto mapping = join.mappings.get(i);
+        var op = switch (mapping.conditionType) {
+          case EQ -> " = ";
+          case NEQ -> " <> ";
+          case LT -> " < ";
+          case LE -> " <= ";
+          case GT -> " > ";
+          case GE -> " >= ";
+          default -> throw new IllegalStateException("Unexpected value: " + mapping.conditionType);
+        };
+        Field from = fieldProvider.apply(mapping.from);
+        Field to = fieldProvider.apply(mapping.to);
         statement
-                .append(SqlUtils.getFieldFullName(queryRewriter.tableName(mapping.fromTable), queryRewriter.fieldName(mapping.from)))
-                .append(" = ")
-                .append(SqlUtils.getFieldFullName(queryRewriter.tableName(mapping.toTable), queryRewriter.fieldName(mapping.to)));
+                .append(qr.getFieldFullName(from))
+                .append(op)
+                .append(qr.getFieldFullName(to));
         if (i < join.mappings.size() - 1) {
           statement.append(" and ");
         }
       }
 
       if (!join.table.joins.isEmpty()) {
-        addJoins(statement, join.table, queryRewriter);
+        addJoins(statement, join.table, virtualTableDto, fieldProvider, qr);
       }
     }
   }

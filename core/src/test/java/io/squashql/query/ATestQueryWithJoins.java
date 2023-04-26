@@ -2,6 +2,8 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.dto.ConditionType;
+import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import static io.squashql.query.Functions.criterion;
 import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 
 @TestClass
@@ -89,14 +92,14 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
   void testSelectFullPath() {
     QueryDto query = Query
             .from(this.orders)
-            .innerJoin(this.orderDetails)
-            .on(this.orderDetails, "orderId", this.orders, "orderId")
-            .innerJoin(this.shippers)
-            .on(this.shippers, "shipperId", this.orders, "shipperId")
-            .innerJoin(this.products)
-            .on(this.products, "productId", this.orderDetails, "productId")
-            .innerJoin(this.categories)
-            .on(this.products, "categoryId", this.categories, "categoryId")
+            .join(this.orderDetails, JoinType.INNER)
+            .on(criterion(this.orderDetails + ".orderId", this.orders + ".orderId", ConditionType.EQ))
+            .join(this.shippers, JoinType.INNER)
+            .on(criterion(this.shippers + ".shipperId", this.orders + ".shipperId", ConditionType.EQ))
+            .join(this.products, JoinType.INNER)
+            .on(criterion(this.products + ".productId", this.orderDetails + ".productId", ConditionType.EQ))
+            .join(this.categories, JoinType.INNER)
+            .on(criterion(this.products + ".categoryId", this.categories + ".categoryId", ConditionType.EQ))
             // Select a field that exists in two tables: Products and Categories. If any ambiguity, it has to be solved
             // by the user by indicating the table from which the field should come from.
             .select(List.of(this.categories + ".name", this.products + ".name"), List.of(Functions.sum("quantity_sum", "quantity")))
@@ -118,14 +121,14 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
   void testAmbiguousColumnName() {
     QueryDto query = Query
             .from(this.orders)
-            .innerJoin(this.orderDetails)
-            .on(this.orderDetails, "orderId", this.orders, "orderId")
-            .innerJoin(this.shippers)
-            .on(this.shippers, "shipperId", this.orders, "shipperId")
-            .innerJoin(this.products)
-            .on(this.products, "productId", this.orderDetails, "productId")
-            .innerJoin(this.categories)
-            .on(this.products, "categoryId", this.categories, "categoryId")
+            .join(this.orderDetails, JoinType.INNER)
+            .on(criterion(this.orderDetails + ".orderId", this.orders + ".orderId", ConditionType.EQ))
+            .join(this.shippers, JoinType.INNER)
+            .on(criterion(this.shippers + ".shipperId", this.orders + ".shipperId", ConditionType.EQ))
+            .join(this.products, JoinType.INNER)
+            .on(criterion(this.products + ".productId", this.orderDetails + ".productId", ConditionType.EQ))
+            .join(this.categories, JoinType.INNER)
+            .on(criterion(this.products + ".categoryId", this.categories + ".categoryId", ConditionType.EQ))
             // Select a field that exists in two tables: Products and Categories. If any ambiguity, it has to be solved
             // by the user by indicating the table from which the field should come from.
             .select(List.of("name"), List.of(Functions.sum("quantity_sum", "quantity")))
@@ -138,5 +141,17 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
     }
   }
 
-  protected abstract String ambiguousNameMessage();
+  protected String ambiguousNameMessage() {
+    String ds = this.datastore.getClass().getSimpleName();
+    if (ds.contains(TestClass.Type.SPARK.className)) {
+      return "Reference 'name' is ambiguous";
+    } else if (ds.contains(TestClass.Type.BIGQUERY.className)) {
+      return "Column name name is ambiguous";
+    } else if (ds.contains(TestClass.Type.CLICKHOUSE.className)) {
+      return "Ambiguous column 'name'";
+    } else if (ds.contains(TestClass.Type.SNOWFLAKE.className)) {
+      return "ambiguous column name 'name'";
+    }
+    return null;
+  }
 }

@@ -11,8 +11,8 @@ public class SnowflakeTestUtil {
   public static final Properties properties = new Properties();
 
   static {
-    properties.put("user", System.getenv().getOrDefault("SNOWFLAKE_USER", System.getProperty("snowflake.test.user")));
-    properties.put("password", System.getenv().getOrDefault("SNOWFLAKE_PASSWORD", System.getProperty("snowflake.test.password")));
+    properties.put("user", System.getenv().getOrDefault("SNOWFLAKE_USER", System.getProperty("snowflake.test.user", "")));
+    properties.put("password", System.getenv().getOrDefault("SNOWFLAKE_PASSWORD", System.getProperty("snowflake.test.password", "")));
     properties.put("warehouse", "COMPUTE_WH");
     properties.put("role", "ACCOUNTADMIN");
   }

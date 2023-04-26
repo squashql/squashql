@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import static io.squashql.query.Functions.criterion;
 import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -40,10 +41,10 @@ public class QueryControllerTest {
   void testQuery() throws Exception {
     var query = Query
             .from("our_prices")
-            .innerJoin("our_stores_their_stores")
-            .on("our_prices", "pdv", "our_stores_their_stores", "our_store")
-            .innerJoin("their_prices")
-            .on("their_prices", "competitor_concurrent_pdv", "our_stores_their_stores", "their_store")
+            .join("our_stores_their_stores", JoinType.INNER)
+            .on(criterion("our_prices" + ".pdv", "our_stores_their_stores" + ".our_store", ConditionType.EQ))
+            .join("their_prices", JoinType.INNER)
+            .on(criterion("their_prices" + ".competitor_concurrent_pdv", "our_stores_their_stores" + ".their_store", ConditionType.EQ))
             .select(List.of(SCENARIO_FIELD_NAME, "ean"), List.of(
                     Functions.sum("capdv", "capdv"),
                     new ExpressionMeasure("capdv_concurrents", "sum(competitor_price * quantity)"),
@@ -153,10 +154,10 @@ public class QueryControllerTest {
 
     var query = Query
             .from("our_prices")
-            .innerJoin("our_stores_their_stores")
-            .on("our_prices", "pdv", "our_stores_their_stores", "our_store")
-            .innerJoin("their_prices")
-            .on("their_prices", "competitor_concurrent_pdv", "our_stores_their_stores", "their_store")
+            .join("our_stores_their_stores", JoinType.INNER)
+            .on(criterion("our_prices" + ".pdv", "our_stores_their_stores" + ".our_store", ConditionType.EQ))
+            .join("their_prices", JoinType.INNER)
+            .on(criterion("their_prices" + ".competitor_concurrent_pdv", "our_stores_their_stores" + ".their_store", ConditionType.EQ))
             .select_(List.of(bucketCS), List.of(aggregatedMeasureDiff, indicePrixDiff))
             .build();
 

@@ -1,7 +1,6 @@
 package io.squashql.query;
 
 import io.squashql.query.dictionary.ObjectArrayDictionary;
-import io.squashql.store.Field;
 
 import java.util.*;
 
@@ -58,7 +57,7 @@ public class RowTable implements Table {
 
   @Override
   public String toString() {
-    return TableUtils.toString(this.headers, this, f -> ((Field) f).name(), String::valueOf);
+    return TableUtils.toString(this.headers, this, h -> ((Header) h).name(), String::valueOf);
   }
 
   @Override

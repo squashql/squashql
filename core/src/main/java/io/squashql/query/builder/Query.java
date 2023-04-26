@@ -26,18 +26,17 @@ public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
   }
 
   @Override
-  public HasStartedBuildingJoin leftOuterJoin(String tableName) {
-    return join(tableName, JoinType.LEFT);
+  public HasStartedBuildingJoin join(String tableName, JoinType joinType) {
+    addJoinToQueryDto();
+    this.currentJoinTableBuilder = new JoinTableBuilder(this, tableName, joinType);
+    return this.currentJoinTableBuilder;
   }
 
   @Override
-  public HasStartedBuildingJoin innerJoin(String tableName) {
-    return join(tableName, JoinType.INNER);
-  }
-
-  private HasStartedBuildingJoin join(String tableName, JoinType joinType) {
+  public HasStartedBuildingJoin join(VirtualTableDto virtualTableDto, JoinType joinType) {
     addJoinToQueryDto();
-    this.currentJoinTableBuilder = new JoinTableBuilder(this, tableName, joinType);
+    this.queryDto.virtualTableDto = virtualTableDto;
+    this.currentJoinTableBuilder = new JoinTableBuilder(this, virtualTableDto.name, JoinType.INNER);
     return this.currentJoinTableBuilder;
   }
 
@@ -47,12 +46,6 @@ public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
       this.queryDto.table.join(new TableDto(jtb.tableName), jtb.joinType, jtb.mappingDtos);
       this.currentJoinTableBuilder = null;
     }
-  }
-
-  @Override
-  public HasJoin on(String fromTable, String from, String toTable, String to) {
-    this.currentJoinTableBuilder.on(fromTable, from, toTable, to);
-    return this;
   }
 
   @Override

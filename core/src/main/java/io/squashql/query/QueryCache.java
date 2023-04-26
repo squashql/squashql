@@ -1,9 +1,6 @@
 package io.squashql.query;
 
-import io.squashql.query.dto.CacheStatsDto;
-import io.squashql.query.dto.CriteriaDto;
-import io.squashql.query.dto.QueryDto;
-import io.squashql.query.dto.TableDto;
+import io.squashql.query.dto.*;
 import io.squashql.store.Field;
 
 import java.util.List;
@@ -28,6 +25,7 @@ public interface QueryCache {
                     CriteriaDto whereCriteriaDto,
                     CriteriaDto havingCriteriaDto,
                     List<Field> rollupColumns,
+                    VirtualTableDto virtualTableDto,
                     SquashQLUser user,
                     int limit) implements PrefetchQueryScope {
   }

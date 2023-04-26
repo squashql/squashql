@@ -1,5 +1,6 @@
 package io.squashql.query.builder;
 
+import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.JoinMappingDto;
 import io.squashql.query.dto.JoinType;
 
@@ -20,8 +21,19 @@ public class JoinTableBuilder implements HasStartedBuildingJoin {
   }
 
   @Override
-  public HasJoin on(String fromTable, String from, String toTable, String to) {
-    this.mappingDtos.add(new JoinMappingDto(fromTable, from, toTable, to));
+  public HasJoin on(CriteriaDto joinCriteriaDto) {
+    if (joinCriteriaDto.isCriteria()) {
+      joinCriteriaDto.children.forEach(this::add);
+    } else {
+      add(joinCriteriaDto);
+    }
     return this.parent;
+  }
+
+  private void add(CriteriaDto joinCriteriaDto) {
+    if (!joinCriteriaDto.isJoinCriterion()) {
+      throw new IllegalArgumentException("Unexpected criterion :" + joinCriteriaDto);
+    }
+    this.mappingDtos.add(new JoinMappingDto(joinCriteriaDto.field, joinCriteriaDto.fieldOther, joinCriteriaDto.conditionType));
   }
 }

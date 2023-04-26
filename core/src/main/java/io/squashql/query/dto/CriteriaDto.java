@@ -20,6 +20,7 @@ public class CriteriaDto {
   public static final CriteriaDto NO_CRITERIA = new CriteriaDto(AND, Collections.emptyList());
 
   public String field;
+  public String fieldOther;
   public BasicMeasure measure;
   public ConditionDto condition;
   public ConditionType conditionType;
@@ -40,11 +41,19 @@ public class CriteriaDto {
     this.children = criteriaDtos;
   }
 
+  public CriteriaDto(String field, String fieldOther, ConditionType conditionType) {
+    this.field = field;
+    this.fieldOther = fieldOther;
+    this.conditionType = conditionType;
+  }
+
   public static CriteriaDto deepCopy(CriteriaDto criteriaDto) {
-    if (criteriaDto.field != null) {
+    if (criteriaDto.isWhereCriterion()) {
       return new CriteriaDto(criteriaDto.field, criteriaDto.condition);
-    } else if (criteriaDto.measure != null) {
+    } else if (criteriaDto.isHavingCriterion()) {
       return new CriteriaDto(criteriaDto.measure, criteriaDto.condition);
+    } else if (criteriaDto.isJoinCriterion()) {
+      return new CriteriaDto(criteriaDto.field, criteriaDto.fieldOther, criteriaDto.conditionType);
     } else {
       List<CriteriaDto> list = new ArrayList<>(criteriaDto.children.size());
       for (CriteriaDto dto : criteriaDto.children) {
@@ -57,11 +66,21 @@ public class CriteriaDto {
 
   @JsonIgnore
   public boolean isWhereCriterion() {
-    return this.field != null;
+    return this.field != null && this.condition != null;
   }
 
   @JsonIgnore
   public boolean isHavingCriterion() {
-    return this.measure != null;
+    return this.measure != null && this.condition != null;
+  }
+
+  @JsonIgnore
+  public boolean isJoinCriterion() {
+    return this.field != null && this.fieldOther != null && this.conditionType != null;
+  }
+
+  @JsonIgnore
+  public boolean isCriteria() {
+    return this.conditionType != null && this.children != null && !this.children.isEmpty();
   }
 }

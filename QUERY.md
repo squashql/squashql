@@ -182,48 +182,70 @@ ORDER BY col2
 
 ## Joining Tables
 
-Tables can be joined with other tables by using `innerJoin` and `leftOuterJoin` immediately followed by `on` operator (
-equivalent to `ON` clause in SQL)
+Tables can be joined with other tables by using `join` immediately followed by `on` operator (equivalent to `ON` clause
+in SQL) with a criterion to define the join condition i.e. the way the two tables are related
+in the query.
+Two types of join are supported: `INNER` and `LEFT`.
 
 ### Single join / Single join condition
 
 ```typescript
 import {
-  from
+  from, JoinType, ConditionType, joinCriterion
 } from "@squashql/squashql-js"
 
 const q = from("myTable")
-        .innerJoin("refTable")
-        .on("myTable", "id", "refTable", "id")
+        .join("refTable", JoinType.INNER)
+        .on(joinCriterion("myTable.id", "refTable.id", ConditionType.EQ))
         .select(["myTable.col", "refTable.col"], [], [])
         .build()
 ```
 
 ```sql
 SELECT myTable.col, refTable.col
-FROM myTable
-       INNER JOIN refTable ON myTable.id = refTable.id
+FROM myTable INNER JOIN refTable ON myTable.id = refTable.id
 ```
 
 ### Single join / Multiple join condition
 
+For multiple condition, chain the criteria with `all`.
+
 ```typescript
 import {
-  from
+  from, JoinType, ConditionType, joinCriterion, all
 } from "@squashql/squashql-js"
 
 const q = from("myTable")
-        .innerJoin("refTable")
-        .on("myTable", "id1", "refTable", "id1")
-        .on("myTable", "id2", "refTable", "id2")
+        .join("refTable", JoinType.INNER)
+        .on(all([
+          joinCriterion("myTable.id1", "refTable.id1", ConditionType.EQ),
+          joinCriterion("myTable.id2", "refTable.id2", ConditionType.EQ)
+        ]))
         .select(["myTable.col", "refTable.col"], [], [])
         .build()
 ```
 
 ```sql
 SELECT myTable.col, refTable.col
-FROM myTable
-       INNER JOIN refTable ON myTable.id1 = refTable.id1 AND myTable.id2 = refTable.id2 
+FROM myTable INNER JOIN refTable ON myTable.id1 = refTable.id1 AND myTable.id2 = refTable.id2 
+```
+
+If your database supports non-equi joins, the `ConditionType` can be changed in the query. For instance:
+
+```typescript
+const q = from("myTable")
+        .join("refTable", JoinType.LEFT)
+        .on(all([
+          joinCriterion("myTable.kpi", "refTable.min", ConditionType.GE),
+          joinCriterion("myTable.kpi", "refTable.max", ConditionType.LT)
+        ]))
+        .select(["myTable.col", "refTable.col"], [], [])
+        .build()
+```
+
+```sql
+SELECT myTable.col, refTable.col
+FROM myTable LEFT JOIN refTable ON myTable.kpi >= refTable.min AND myTable.kpi < refTable.max 
 ```
 
 ### Multiple join
@@ -248,6 +270,50 @@ SELECT myTable.col, refTable.col
 FROM myTable
        INNER JOIN refTable ON myTable.id = refTable.id
        LEFT OUTER JOIN otherTable ON myTable.id = otherTable.key1 AND refTable.id = otherTable.key2
+```
+
+### Joining on virtual created on-the-fly at query time
+
+You can define and use a virtual table in the query by joining it to an existing table. Such table is not materialized
+in the database and only exists during the query execution time. Note the join operation is performed by the underlying
+database.
+
+Start by describing your virtual table in Typescript along with the data it contains. For instance, to define a table
+named prioryLevels with 3 columns named priority, min and max and three rows:
+
+```typescript
+const records = [
+  ["low", 0, 3],
+  ["medium", 3, 7],
+  ["high", 7, 11],
+];
+const prioryLevels = new VirtualTable("prioryLevels", ["priority", "min", "max"], records)
+```
+
+Once defined, you can use the `VirtualTable` object in the query by joining it to another table with the `joinVirtual` 
+operator that takes a `VirtualTable` object as argument.
+
+```typescript
+const q = from("tasks")
+        .joinVirtual(prioryLevels, JoinType.INNER)
+        .on(all([
+          joinCriterion("tasks.priority", "prioryLevels.min", ConditionType.GE),
+          joinCriterion("tasks.priority", "prioryLevels.max", ConditionType.LT)
+        ]))
+        .select(["prioryLevels.priority"], [], [count])
+        .build()
+```
+
+```sql
+WITH prioryLevels AS (
+  SELECT 'low' AS `priority`, 0 AS `min`, 3 AS `max` 
+  UNION ALL
+  SELECT 'medium' AS `priority`, 3 AS `min`, 7 AS `max` 
+  UNION ALL
+  SELECT 'high' AS `priority`, 7 AS `min`, 11 AS `max`
+)
+SELECT prioryLevels.priority
+FROM tasks INNER JOIN prioryLevels ON tasks.priority >= prioryLevels.min AND tasks.priority < prioryLevels.max 
 ```
 
 ## Rollup

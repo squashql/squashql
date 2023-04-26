@@ -46,8 +46,12 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   @Override
   protected String createSqlStatement(DatabaseQuery query) {
     boolean hasRollup = !query.rollup.isEmpty();
+    BigQueryQueryRewriter rewriter = (BigQueryQueryRewriter) this.queryRewriter;
+    Function<String, Field> queryFieldSupplier = QueryExecutor.createQueryFieldSupplier(this, query.virtualTableDto);
     if (!hasRollup) {
-      return super.createSqlStatement(query);
+      return SQLTranslator.translate(query,
+              queryFieldSupplier,
+              rewriter);
     } else {
       checkRollupIsValid(
               query.select.stream().map(f -> this.queryRewriter.select(f)).toList(),
@@ -55,7 +59,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
       // Special case for BigQuery because it does not support either the grouping function used to identify extra-rows added
       // by rollup or grouping sets for partial rollup.
-      BigQueryQueryRewriter rewriter = (BigQueryQueryRewriter) this.queryRewriter;
+
       /*
        * The trick here is to change what is put in select and rollup:
        * SELECT SUM(amount) as amount_sum, COALESCE(a, "r1"), COALESCE(b, "r2") FROM table
@@ -63,19 +67,20 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
        * By doing so, null values (not the ones due to rollup) will be changed to "___null___" and null values in the
        * result dataset correspond to the subtotals.
        */
+      QueryAwareQueryRewriter qr = new QueryAwareQueryRewriter(rewriter, query);
       BigQueryQueryRewriter newRewriter = new BigQueryQueryRewriter(rewriter.projectId, rewriter.datasetName) {
 
         @Override
         public String select(Field field) {
           Function<Object, String> quoter = SQLTranslator.getQuoteFn(field);
-          return String.format("coalesce(%s, %s)", rewriter.select(field),
+          return String.format("coalesce(%s, %s)", qr.select(field),
                   quoter.apply(BigQueryUtil.getNullValue(field.type())));
         }
 
         @Override
         public String rollup(Field field) {
           Function<Object, String> quoter = SQLTranslator.getQuoteFn(field);
-          return String.format("coalesce(%s, %s)", rewriter.rollup(field),
+          return String.format("coalesce(%s, %s)", qr.rollup(field),
                   quoter.apply(BigQueryUtil.getNullValue(field.type())));
         }
       };
@@ -87,7 +92,8 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       missingColumnsInRollup.addAll(query.rollup);
       deepCopy.rollup = missingColumnsInRollup;
       return SQLTranslator.translate(deepCopy,
-              QueryExecutor.withFallback(this.fieldSupplier.get(), String.class),
+              queryFieldSupplier,
+              // The condition on rollup is to handle subquery
               q -> q.rollup.isEmpty() ? this.queryRewriter : newRewriter);
     }
   }
@@ -113,7 +119,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
           Object value = columnValues.get(rowIndex);
           if (value == null) {
             baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
-            if (isPartialRollup && missingColumnsInRollupSet.contains(h)) {
+            if (isPartialRollup && missingColumnsInRollupSet.contains(h.name())) {
               // Partial rollup not supported https://issuetracker.google.com/issues/35905909, we let bigquery compute
               // all totals, and we remove here the extra rows.
               rowIndicesToRemove.add(rowIndex);
@@ -226,6 +232,11 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     BigQueryQueryRewriter(String projectId, String datasetName) {
       this.projectId = projectId;
       this.datasetName = datasetName;
+    }
+
+    @Override
+    public String getFieldFullName(Field f) {
+      return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
     }
 
     @Override

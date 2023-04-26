@@ -1,7 +1,7 @@
 package io.squashql.query.database;
 
-import com.google.common.base.Suppliers;
 import io.squashql.query.*;
+import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.store.Datastore;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
@@ -26,7 +26,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   protected AQueryEngine(T datastore, QueryRewriter queryRewriter) {
     this.datastore = datastore;
-    this.fieldSupplier = Suppliers.memoize(() -> createFieldSupplier(this.datastore.storesByName()));
+    this.fieldSupplier = () -> createFieldSupplier(this.datastore.storesByName());
     this.queryRewriter = queryRewriter;
   }
 
@@ -64,7 +64,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
       if (fieldName.equals(CountMeasure.INSTANCE.alias())) {
         return new Field(null, CountMeasure.INSTANCE.alias(), long.class);
       }
-      throw new IllegalArgumentException("Cannot find field with name " + fieldName);
+      throw new FieldNotFoundException("Cannot find field with name " + fieldName);
     };
   }
 
@@ -92,14 +92,14 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
       }
     }
     String sql = createSqlStatement(query);
-    log.info(query + " translated into sql='" + sql + "'");
+    log.info(query + " translated into " + System.lineSeparator() + "sql=" + sql);
     Table aggregates = retrieveAggregates(query, sql);
     return postProcessDataset(aggregates, query);
   }
 
   protected String createSqlStatement(DatabaseQuery query) {
     return SQLTranslator.translate(query,
-            QueryExecutor.withFallback(this.fieldSupplier.get(), String.class),
+            QueryExecutor.createQueryFieldSupplier(this, query.virtualTableDto),
             this.queryRewriter);
   }
 
@@ -176,14 +176,14 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
       query.rollup.forEach(r -> fieldNames.add(SqlUtils.groupingAlias(SqlUtils.getFieldFullName(r))));
     }
     query.measures.forEach(m -> fieldNames.add(m.alias()));
+    List<List<Object>> values = new ArrayList<>(columns.size());
     for (int i = 0; i < columns.size(); i++) {
       headers.add(new Header(
               columnNameProvider.apply(columns.get(i), fieldNames.get(i)),
               columnTypeProvider.apply(columns.get(i), fieldNames.get(i)),
               i >= query.select.size() + (queryRewriter.useGroupingFunction() ? query.rollup.size() : 0)));
+      values.add(new ArrayList<>());
     }
-    List<List<Object>> values = new ArrayList<>();
-    headers.forEach(f -> values.add(new ArrayList<>()));
     recordIterator.forEachRemaining(r -> {
       for (int i = 0; i < headers.size(); i++) {
         values.get(i).add(recordToFieldValue.apply(i, r));

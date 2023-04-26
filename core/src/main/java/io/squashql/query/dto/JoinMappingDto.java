@@ -4,6 +4,9 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+/**
+ * Mapping to perform an equi-join.
+ */
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
@@ -11,13 +14,15 @@ public class JoinMappingDto {
 
   public String from;
   public String to;
-  public String fromTable;
-  public String toTable;
+  public ConditionType conditionType;
 
-  public JoinMappingDto(String fromTable, String from, String toTable, String to) {
+  public JoinMappingDto(String from, String to) {
+    this(from, to, ConditionType.EQ);
+  }
+
+  public JoinMappingDto(String from, String to, ConditionType conditionType) {
     this.from = from;
     this.to = to;
-    this.fromTable = fromTable;
-    this.toTable = toTable;
+    this.conditionType = conditionType;
   }
 }

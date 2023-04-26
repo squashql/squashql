@@ -5,6 +5,7 @@ import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.Period;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.store.Field;
 import lombok.NoArgsConstructor;
 
@@ -77,14 +78,14 @@ public final class MeasureUtils {
     AtomicReference<CriteriaDto> copy = new AtomicReference<>(queryScope.whereCriteriaDto() == null ? null : CriteriaDto.deepCopy(queryScope.whereCriteriaDto()));
     Consumer<String> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
-            .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(criteriaRemover::accept));
+            .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(criteriaRemover));
     Optional.ofNullable(cm.period)
-            .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover::accept));
+            .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover));
     Set<Field> rollupColumns = new LinkedHashSet<>(queryScope.rollupColumns()); // order does matter
     Optional.ofNullable(cm.ancestors)
             .ifPresent(ancestors -> {
-              ancestors.forEach(criteriaRemover::accept);
-              List<Field> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).map(fieldSupplier::apply).collect(Collectors.toList());
+              ancestors.forEach(criteriaRemover);
+              List<Field> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).map(fieldSupplier).collect(Collectors.toList());
               Collections.reverse(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage order".
               rollupColumns.addAll(ancestorFields);
             });
@@ -93,7 +94,8 @@ public final class MeasureUtils {
             queryScope.columns(),
             copy.get(),
             queryScope.havingCriteriaDto(),
-            new ArrayList<>(rollupColumns));
+            new ArrayList<>(rollupColumns),
+            queryScope.virtualTableDto());
   }
 
   private static CriteriaDto removeCriteriaOnField(String field, CriteriaDto root) {
@@ -137,5 +139,17 @@ public final class MeasureUtils {
     } else {
       throw new RuntimeException(period + " not supported yet");
     }
+  }
+
+  public static Function<String, Field> withFallback(Function<String, Field> fieldProvider, Class<?> fallbackType) {
+    return fieldName -> {
+      try {
+        return fieldProvider.apply(fieldName);
+      } catch (FieldNotFoundException e) {
+        // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
+        // contains only "raw" fields, it will throw an exception.
+        return new Field(null, fieldName, fallbackType);
+      }
+    };
   }
 }

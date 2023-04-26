@@ -1,5 +1,6 @@
 package io.squashql.query.database;
 
+import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.Field;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.List;
 @NoArgsConstructor // For Jackson
 public class DatabaseQuery {
 
+  public VirtualTableDto virtualTableDto; // CTE
   public TableDto table;
   public DatabaseQuery subQuery;
   public List<Field> select = new ArrayList<>();
@@ -79,6 +81,11 @@ public class DatabaseQuery {
 
   public DatabaseQuery limit(int limit) {
     this.limit = limit;
+    return this;
+  }
+
+  public DatabaseQuery virtualTable(VirtualTableDto virtualTableDto) {
+    this.virtualTableDto = virtualTableDto;
     return this;
   }
 }

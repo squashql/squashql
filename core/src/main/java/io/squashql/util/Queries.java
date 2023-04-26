@@ -61,12 +61,17 @@ public final class Queries {
     selects.forEach(prefetchQuery::withSelect);
     Optional.ofNullable(queryScope.rollupColumns()).ifPresent(r -> r.forEach(prefetchQuery::withRollup));
     prefetchQuery.limit(limit);
+    prefetchQuery.virtualTable(queryScope.virtualTableDto());
     return prefetchQuery;
   }
 
   public static DatabaseQuery toSubDatabaseQuery(QueryDto query, Function<String, Field> fieldSupplier) {
     if (query.subQuery != null) {
       throw new IllegalArgumentException("sub-query in a sub-query is not supported");
+    }
+
+    if (query.virtualTableDto != null) {
+      throw new IllegalArgumentException("virtualTableDto in a sub-query is not supported");
     }
 
     Set<String> cols = new HashSet<>(query.columns);

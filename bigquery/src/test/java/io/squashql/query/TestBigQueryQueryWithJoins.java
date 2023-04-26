@@ -48,9 +48,4 @@ public class TestBigQueryQueryWithJoins extends ATestQueryWithJoins {
   protected Object translate(Object o) {
     return BigQueryTestUtil.translate(o);
   }
-
-  @Override
-  protected String ambiguousNameMessage() {
-    return "Column name name is ambiguous";
-  }
 }

@@ -1,8 +1,11 @@
 package io.squashql.query.builder;
 
+import io.squashql.query.dto.JoinType;
+import io.squashql.query.dto.VirtualTableDto;
+
 public interface CanStartBuildingJoin {
 
-  HasStartedBuildingJoin leftOuterJoin(String tableName);
+  HasStartedBuildingJoin join(String tableName, JoinType joinType);
 
-  HasStartedBuildingJoin innerJoin(String tableName);
+  HasStartedBuildingJoin join(VirtualTableDto virtualTableDto, JoinType joinType);
 }

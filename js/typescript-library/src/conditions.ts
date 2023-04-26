@@ -5,7 +5,7 @@ export interface Condition {
   readonly type: ConditionType
 }
 
-enum ConditionType {
+export enum ConditionType {
   EQ = "EQ",
   NEQ = "NEQ",
   LT = "LT",
@@ -86,28 +86,33 @@ class LogicalCondition implements Condition {
 
 export class Criteria {
 
-  constructor(private field: string,
+  constructor(public field: string,
+              public fieldOther: string,
               private measure: BasicMeasure,
               private condition: Condition,
-              private conditionType: ConditionType,
+              public conditionType: ConditionType,
               public children: Criteria[]) {
   }
 }
 
 export function criterion(field: string, condition: Condition): Criteria {
-  return new Criteria(field, undefined, condition, undefined, undefined)
+  return new Criteria(field, undefined, undefined, condition, undefined, undefined)
+}
+
+export function joinCriterion(field: string, fieldOther: string, conditionType: ConditionType): Criteria {
+  return new Criteria(field, fieldOther, undefined, undefined, conditionType, undefined)
 }
 
 export function havingCriterion(measure: BasicMeasure, condition: Condition): Criteria {
-  return new Criteria(undefined, measure, condition, undefined, undefined)
+  return new Criteria(undefined, undefined, measure, condition, undefined, undefined)
 }
 
 export function all(criteria: Criteria[]): Criteria {
-  return new Criteria(undefined, undefined, undefined, ConditionType.AND, criteria)
+  return new Criteria(undefined, undefined, undefined, undefined, ConditionType.AND, criteria)
 }
 
 export function any(criteria: Criteria[]): Criteria {
-  return new Criteria(undefined, undefined, undefined, ConditionType.OR, criteria)
+  return new Criteria(undefined, undefined, undefined, undefined, ConditionType.OR, criteria)
 }
 
 export function and(left: Condition, right: Condition): Condition {

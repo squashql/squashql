@@ -27,12 +27,4 @@ public class TableDto {
   public void join(TableDto other, JoinType joinType, List<JoinMappingDto> JoinMappingDtos) {
     this.joins.add(new JoinDto(other, joinType, JoinMappingDtos));
   }
-
-  public void innerJoin(TableDto other, String from, String to) {
-    this.joins.add(new JoinDto(other, JoinType.INNER, new JoinMappingDto(this.name, from, other.name, to)));
-  }
-
-  public void leftJoin(TableDto other, String from, String to) {
-    this.joins.add(new JoinDto(other, JoinType.LEFT, new JoinMappingDto(this.name, from, other.name, to)));
-  }
 }

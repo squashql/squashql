@@ -4,11 +4,11 @@ import io.squashql.TestClass;
 import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.builder.Query;
 import io.squashql.query.context.QueryCacheContextValue;
-import io.squashql.query.dto.CacheStatsDto;
-import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.*;
 import io.squashql.query.monitoring.QueryWatch;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -169,8 +169,8 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   void testQueryWithJoin() {
     QueryDto query = Query
             .from(this.storeName)
-            .innerJoin(competitorStoreName)
-            .on(this.storeName, "ean", this.competitorStoreName, "comp_ean")
+            .join(competitorStoreName, JoinType.INNER)
+            .on(criterion(this.storeName + ".ean", this.competitorStoreName + ".comp_ean", ConditionType.EQ))
             .select(List.of("category"), List.of(sum("ps", "price")))
             .build();
     Table result = this.executor.execute(query);
@@ -412,6 +412,50 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     result = this.executor.execute(query);
     assertCacheStats(2, 6);
     Assertions.assertThat(result.count()).isEqualTo(otherLimit);
+  }
+
+  @Test
+  void testWithDifferentCte() {
+    // Clickhouse does not support non-equi join.
+    Assumptions.assumeFalse(this.queryEngine.getClass().getSimpleName().contains(TestClass.Type.CLICKHOUSE.className));
+
+    VirtualTableDto cte = new VirtualTableDto("cte",
+            List.of("min", "max", "bucket"),
+            List.of(List.of(0d, 5d, "cheap"), List.of(5d, 100d, "notcheap")));
+    QueryDto query = Query
+            .from(this.storeName)
+            .join(cte, JoinType.INNER)
+            .on(all(criterion("price", "min", ConditionType.GE),
+                    criterion("price", "max", ConditionType.LT)))
+            .select(List.of("ean", "bucket"), List.of())
+            .build();
+    Table result = this.executor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of("bottle", "cheap"),
+            List.of("cookie", "cheap"),
+            List.of("shirt", "notcheap"));
+    assertCacheStats(0, 1);
+
+    this.executor.execute(query);
+    assertCacheStats(1, 1);
+
+    // Change cte
+    cte = new VirtualTableDto("cte",
+            List.of("min", "max", "bucket"),
+            List.of(List.of(0d, 3d, "cheap"), List.of(3d, 100d, "notcheap")));
+    query = Query
+            .from(this.storeName)
+            .join(cte, JoinType.INNER)
+            .on(all(criterion("price", "min", ConditionType.GE),
+                    criterion("price", "max", ConditionType.LT)))
+            .select(List.of("ean", "bucket"), List.of())
+            .build();
+    result = this.executor.execute(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of("bottle", "cheap"),
+            List.of("cookie", "notcheap"),
+            List.of("shirt", "notcheap"));
+    assertCacheStats(1, 2);
   }
 
   @Test

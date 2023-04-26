@@ -3,6 +3,7 @@ import {ColumnSet} from "./columnsets";
 import {JoinMapping, JoinType, Query, Table} from "./query";
 import {Criteria} from "./conditions";
 import {OrderKeyword} from "./order";
+import {VirtualTable} from "./virtualtable";
 
 export interface CanAddOrderBy {
   orderBy(column: string, order: OrderKeyword): HasHaving
@@ -15,9 +16,9 @@ export interface CanBeBuildQuery {
 }
 
 export interface CanStartBuildingJoin {
-  leftOuterJoin(tableName: string): HasStartedBuildingJoin
+  join(tableName: string, joinType: JoinType): HasStartedBuildingJoin
 
-  innerJoin(tableName: string): HasStartedBuildingJoin
+  joinVirtual(virtualTable: VirtualTable, joinType: JoinType): HasStartedBuildingJoin
 }
 
 export interface HasCondition {
@@ -29,7 +30,7 @@ export interface HasCondition {
   select(columns: string[], columnSets: ColumnSet[], measures: Measure[]): CanAddRollup
 }
 
-export type HasJoin = HasTable & HasStartedBuildingJoin & CanStartBuildingJoin
+export type HasJoin = HasTable & CanStartBuildingJoin
 
 export interface HasOrderBy extends CanBeBuildQuery {
   limit(limit: number): CanBeBuildQuery;
@@ -38,7 +39,7 @@ export interface HasOrderBy extends CanBeBuildQuery {
 export type HasHaving = HasOrderBy & CanAddOrderBy
 
 export interface HasStartedBuildingJoin {
-  on(fromTable: string, from: string, toTable: string, to: string): HasJoin
+  on(joinCriterion: Criteria): HasJoin
 }
 
 export type HasStartedBuildingTable = HasTable & CanStartBuildingJoin
@@ -71,20 +72,14 @@ class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
   readonly queryDto: Query = new Query()
   private currentJoinTableBuilder: JoinTableBuilder = null;
 
-  on(fromTable: string, from: string, toTable: string, to: string): HasJoin {
-    this.currentJoinTableBuilder.on(fromTable, from, toTable, to)
-    return this
+  joinVirtual(virtualTable: VirtualTable, joinType: JoinType): HasStartedBuildingJoin {
+    this.addJoinToQueryDto()
+    this.queryDto.virtualTable = virtualTable
+    this.currentJoinTableBuilder = new JoinTableBuilder(this, virtualTable.name, joinType)
+    return this.currentJoinTableBuilder
   }
 
-  innerJoin(tableName: string): HasStartedBuildingJoin {
-    return this.join(tableName, JoinType.INNER)
-  }
-
-  leftOuterJoin(tableName: string): HasStartedBuildingJoin {
-    return this.join(tableName, JoinType.LEFT)
-  }
-
-  private join(tableName: string, joinType: JoinType): HasStartedBuildingJoin {
+  join(tableName: string, joinType: JoinType): HasStartedBuildingJoin {
     this.addJoinToQueryDto()
     this.currentJoinTableBuilder = new JoinTableBuilder(this, tableName, joinType)
     return this.currentJoinTableBuilder
@@ -149,8 +144,12 @@ class JoinTableBuilder implements HasStartedBuildingJoin {
   constructor(public parent: QueryBuilder, public tableName: string, public joinType: JoinType) {
   }
 
-  on(fromTable: string, from: string, toTable: string, to: string): HasJoin {
-    this.mappings.push(new JoinMapping(fromTable, from, toTable, to))
+  on(joinCriterion: Criteria): HasJoin {
+    if (joinCriterion.children?.length > 0) {
+      joinCriterion.children.forEach(c => this.on(c))
+    } else {
+      this.mappings.push(new JoinMapping(joinCriterion.field, joinCriterion.fieldOther, joinCriterion.conditionType))
+    }
     return this.parent
   }
 }

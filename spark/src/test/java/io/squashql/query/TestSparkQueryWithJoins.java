@@ -6,11 +6,17 @@ import io.squashql.query.database.SparkQueryEngine;
 import io.squashql.store.Datastore;
 import io.squashql.transaction.SparkTransactionManager;
 import io.squashql.transaction.TransactionManager;
+import org.junit.jupiter.api.AfterAll;
 
 /**
  * Do not edit this class, it has been generated automatically by {@link io.squashql.template.SparkClassTemplateGenerator}.
  */
 public class TestSparkQueryWithJoins extends ATestQueryWithJoins {
+
+  @AfterAll
+  void tearDown() {
+    this.fieldsByStore.keySet().forEach(storeName -> ((SparkDatastore) this.datastore).spark.catalog().dropTempView(storeName));
+  }
 
   @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {
@@ -32,10 +38,5 @@ public class TestSparkQueryWithJoins extends ATestQueryWithJoins {
   protected void createTables() {
     SparkTransactionManager tm = (SparkTransactionManager) this.tm;
     this.fieldsByStore.forEach((store, fields) -> tm.createTemporaryTable(store, fields));
-  }
-
-  @Override
-  protected String ambiguousNameMessage() {
-    return "Reference 'name' is ambiguous";
   }
 }
