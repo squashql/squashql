@@ -108,14 +108,6 @@ export class Table {
   join(other: Table, type: JoinType, mappings: Array<JoinMapping>) {
     this.joins.push(new Join(other, type, mappings))
   }
-
-  innerJoin(other: Table, from: string, to: string) {
-    this.joins.push(new Join(other, JoinType.INNER, [new JoinMapping(from, to, ConditionType.EQ)]))
-  }
-
-  leftJoin(other: Table, from: string, to: string) {
-    this.joins.push(new Join(other, JoinType.LEFT, [new JoinMapping(from, to, ConditionType.EQ)]))
-  }
 }
 
 export enum JoinType {
