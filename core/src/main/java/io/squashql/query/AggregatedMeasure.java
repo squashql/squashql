@@ -50,7 +50,7 @@ public class AggregatedMeasure implements BasicMeasure {
     return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.alias) : sql;
   }
 
-@Override
+  @Override
   public String alias() {
     return this.alias;
   }
