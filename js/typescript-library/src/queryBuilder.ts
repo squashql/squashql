@@ -72,7 +72,7 @@ class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
   readonly queryDto: Query = new Query()
   private currentJoinTableBuilder: JoinTableBuilder = null;
 
-  joinV(virtualTable: VirtualTable, joinType: JoinType): HasStartedBuildingJoin {
+  joinVirtual(virtualTable: VirtualTable, joinType: JoinType): HasStartedBuildingJoin {
     this.addJoinToQueryDto()
     this.queryDto.virtualTable = virtualTable
     this.currentJoinTableBuilder = new JoinTableBuilder(this, virtualTable.name, joinType)
