@@ -87,6 +87,7 @@ export class Query {
     return {
       "table": this.table,
       "subQuery": this.subQuery,
+      "virtualTableDto": this.virtualTable,
       "columns": this.columns,
       "rollupColumns": this.rollupColumns,
       "columnSets": Object.fromEntries(this.columnSets),
@@ -129,6 +130,6 @@ class Join {
 }
 
 export class JoinMapping {
-  constructor(private from: string, private to: string, conditionType: ConditionType) {
+  constructor(private from: string, private to: string, private conditionType: ConditionType) {
   }
 }

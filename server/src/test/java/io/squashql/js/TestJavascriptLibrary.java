@@ -17,6 +17,9 @@ import static io.squashql.query.Functions.*;
 
 public class TestJavascriptLibrary {
 
+  /**
+   * This is test is building the {@link QueryDto} wo. the help of the query builder {@link Query}.
+   */
   @Test
   void testReadJsonBuildFromQueryDto() throws IOException {
     var table = new TableDto("myTable");
@@ -97,10 +100,15 @@ public class TestJavascriptLibrary {
     Assertions.assertThat(q).isEqualTo(qjs);
   }
 
+
+  /**
+   * This is test is building the {@link QueryDto} <b>with</b> by using the query builder {@link Query}.
+   */
   @Test
   void testReadJsonBuildFromQuery() throws IOException {
     var table = new TableDto("myTable");
     var refTable = new TableDto("refTable");
+    var cte = new VirtualTableDto("myCte", List.of("id", "min", "max", "other"), List.of(List.of(0, 0, 1, "x"), List.of(1, 2, 3, "y")));
 
     BucketColumnSetDto bucketColumnSet = new BucketColumnSetDto("group", "scenario")
             .withNewBucket("a", List.of("a1", "a2"))
@@ -112,6 +120,8 @@ public class TestJavascriptLibrary {
             .innerJoin(refTable.name)
             .on(all(criterion("myTable" + ".id", "refTable" + ".id", ConditionType.EQ),
                     criterion("myTable" + ".a", "refTable" + ".a", ConditionType.EQ)))
+            .innerJoin(cte)
+            .on(all(criterion("myTable.value", "myCte.min", ConditionType.GE), criterion("myTable.value", "myCte.max", ConditionType.LT)))
             .where("f2", gt(659))
             .where("f3", eq(123))
             .select(List.of("a", "b"),
@@ -136,6 +146,7 @@ public class TestJavascriptLibrary {
     Assertions.assertThat(q.table).isEqualTo(qjs.table);
     Assertions.assertThat(q.subQuery).isEqualTo(qjs.subQuery);
     Assertions.assertThat(q.limit).isEqualTo(qjs.limit);
+    Assertions.assertThat(q.virtualTableDto).isEqualTo(qjs.virtualTableDto);
     Assertions.assertThat(q).isEqualTo(qjs);
   }
 

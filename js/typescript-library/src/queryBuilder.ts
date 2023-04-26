@@ -3,7 +3,7 @@ import {ColumnSet} from "./columnsets";
 import {JoinMapping, JoinType, Query, Table} from "./query";
 import {Criteria} from "./conditions";
 import {OrderKeyword} from "./order";
-import { VirtualTable } from "./virtualtable";
+import {VirtualTable} from "./virtualtable";
 
 export interface CanAddOrderBy {
   orderBy(column: string, order: OrderKeyword): HasHaving
@@ -87,7 +87,7 @@ class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
     this.addJoinToQueryDto()
     this.queryDto.virtualTable = virtualTable
     this.currentJoinTableBuilder = new JoinTableBuilder(this, virtualTable.name, JoinType.INNER)
-    return this.currentJoinTableBuilder 
+    return this.currentJoinTableBuilder
   }
 
   private join(tableName: string, joinType: JoinType): HasStartedBuildingJoin {

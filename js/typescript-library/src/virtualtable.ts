@@ -1,5 +1,5 @@
 export class VirtualTable {
-    readonly name: string
-    readonly fields: string[]
-    readonly records: any[][]
+
+  constructor(public name: string, public fields: string[], public records: any[][]) {
+  }
 }

@@ -12,14 +12,12 @@ import lombok.ToString;
 @NoArgsConstructor // For Jackson
 public class JoinMappingDto {
 
-  private static final ConditionType defaultConditionType = ConditionType.EQ;
-
   public String from;
   public String to;
-  public ConditionType conditionType = defaultConditionType;
+  public ConditionType conditionType;
 
   public JoinMappingDto(String from, String to) {
-    this(from, to, defaultConditionType);
+    this(from, to, ConditionType.EQ);
   }
 
   public JoinMappingDto(String from, String to, ConditionType conditionType) {
