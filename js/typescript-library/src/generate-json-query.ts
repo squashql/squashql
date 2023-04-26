@@ -19,7 +19,7 @@ export function generateFromQuery() {
   const q = from("myTable")
           .join("refTable", JoinType.INNER)
           .on(all([joinCriterion("myTable.id", "refTable.id", ConditionType.EQ), joinCriterion("myTable.a", "refTable.a", ConditionType.EQ)]))
-          .joinV(cte, JoinType.INNER)
+          .joinVirtual(cte, JoinType.INNER)
           .on(all([joinCriterion("myTable.value", "myCte.min", ConditionType.GE), joinCriterion("myTable.value", "myCte.max", ConditionType.LT)]))
           .where(all([criterion("f2", gt(659)), criterion("f3", eq(123))]))
           .select(["a", "b"],

@@ -18,7 +18,7 @@ export interface CanBeBuildQuery {
 export interface CanStartBuildingJoin {
   join(tableName: string, joinType: JoinType): HasStartedBuildingJoin
 
-  joinV(virtualTable: VirtualTable, joinType: JoinType): HasStartedBuildingJoin
+  joinVirtual(virtualTable: VirtualTable, joinType: JoinType): HasStartedBuildingJoin
 }
 
 export interface HasCondition {
