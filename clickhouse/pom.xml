@@ -20,23 +20,29 @@
       <version>${project.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>com.clickhouse</groupId>
-      <artifactId>clickhouse-grpc-client</artifactId>
-      <version>${clickhouse.version}</version>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>com.clickhouse</groupId>-->
+<!--      <artifactId>clickhouse-grpc-client</artifactId>-->
+<!--      <version>${clickhouse.version}</version>-->
+<!--    </dependency>-->
     <dependency>
       <groupId>com.clickhouse</groupId>
       <artifactId>clickhouse-jdbc</artifactId>
       <version>${clickhouse.version}</version>
+<!--      <scope>test</scope>-->
       <!-- use uber jar with all dependencies included, change classifier to http for smaller jar -->
       <classifier>all</classifier>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
+<!--      <exclusions>-->
+<!--        <exclusion>-->
+<!--          <groupId>*</groupId>-->
+<!--          <artifactId>*</artifactId>-->
+<!--        </exclusion>-->
+<!--      </exclusions>-->
+    </dependency>
+    <dependency>
+      <groupId>com.clickhouse</groupId>
+      <artifactId>clickhouse-grpc-client</artifactId>
+      <version>${clickhouse.version}</version>
     </dependency>
 
     <dependency>

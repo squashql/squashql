@@ -1,6 +1,7 @@
 package io.squashql;
 
-import com.clickhouse.client.ClickHouseDataType;
+
+import com.clickhouse.data.ClickHouseDataType;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

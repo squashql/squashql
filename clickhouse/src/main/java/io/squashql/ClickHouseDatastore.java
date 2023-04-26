@@ -1,10 +1,12 @@
 package io.squashql;
 
-import com.clickhouse.client.ClickHouseColumn;
+import com.clickhouse.client.ClickHouseNodes;
 import com.clickhouse.client.config.ClickHouseDefaults;
+import com.clickhouse.data.ClickHouseColumn;
 import com.clickhouse.jdbc.ClickHouseConnection;
 import com.clickhouse.jdbc.ClickHouseDataSource;
 import com.clickhouse.jdbc.ClickHouseStatement;
+import com.clickhouse.jdbc.internal.ClickHouseJdbcUrlParser;
 import com.google.common.base.Suppliers;
 import io.squashql.store.Datastore;
 import io.squashql.store.Field;
@@ -22,7 +24,14 @@ public class ClickHouseDatastore implements Datastore {
 
   public final ClickHouseDataSource dataSource;
 
+  public final ClickHouseNodes servers;
+
   public ClickHouseDatastore(String jdbc, String databaseName) {
+    try {
+      this.servers = ClickHouseJdbcUrlParser.parse(jdbc, null).getNodes();
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
     this.dataSource = newDataSource(jdbc, null);
 
     if (databaseName != null) {

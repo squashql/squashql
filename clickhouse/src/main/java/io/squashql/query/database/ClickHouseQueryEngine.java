@@ -1,6 +1,10 @@
 package io.squashql.query.database;
 
-import com.clickhouse.client.*;
+import com.clickhouse.client.ClickHouseClient;
+import com.clickhouse.client.ClickHouseNodes;
+import com.clickhouse.client.ClickHouseProtocol;
+import com.clickhouse.client.ClickHouseResponse;
+import com.clickhouse.data.*;
 import io.squashql.ClickHouseDatastore;
 import io.squashql.ClickHouseUtil;
 import io.squashql.query.ColumnarTable;
@@ -33,20 +37,17 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
           "covarPop",
           "covarSamp");
 
-  protected final ClickHouseNode node;
+  protected final ClickHouseNodes nodes;
 
   public ClickHouseQueryEngine(ClickHouseDatastore datastore) {
     super(datastore, new ClickHouseQueryRewriter());
-    this.node = ClickHouseNode.builder()
-            .host(this.datastore.dataSource.getHost())
-            .port(ClickHouseProtocol.HTTP, this.datastore.dataSource.getPort())
-            .build();
+    this.nodes = datastore.servers;
   }
 
   @Override
   protected Table retrieveAggregates(DatabaseQuery query, String sql) {
     try (ClickHouseClient client = ClickHouseClient.newInstance(ClickHouseProtocol.HTTP);
-         ClickHouseResponse response = client.connect(this.node)
+         ClickHouseResponse response = client.read(this.nodes)
                  .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
                  .query(sql)
                  .execute()
@@ -57,7 +58,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
               (column, name) -> name,
               (column, name) -> ClickHouseUtil.clickHouseTypeToClass(column.getDataType()),
               response.records().iterator(),
-              (i, r) -> r.getValue(i).asObject(),
+              (i, r) -> getValue(r, i, response.getColumns()),
               this.queryRewriter);
       return new ColumnarTable(
               result.getOne(),
@@ -71,7 +72,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
   @Override
   public Table executeRawSql(String sql) {
     try (ClickHouseClient client = ClickHouseClient.newInstance(ClickHouseProtocol.HTTP);
-         ClickHouseResponse response = client.connect(this.node)
+         ClickHouseResponse response = client.read(this.nodes)
                  .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
                  .query(sql)
                  .execute()
@@ -86,6 +87,28 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  /**
+   * Gets the value with the correct type, otherwise everything is read as String.
+   */
+  public static Object getValue(ClickHouseRecord record, int index, List<ClickHouseColumn> columns) {
+    ClickHouseValue fieldValue = record.getValue(index);
+    ClickHouseColumn column = columns.get(index);
+    Object object = fieldValue.asObject();
+    if (object == null) {
+      // There is a check in BQ client when trying to access the value and throw if null.
+      return null;
+    }
+    return switch (column.getDataType()) {
+      case Bool -> fieldValue.asBoolean();
+      case Date -> fieldValue.asDate();
+      case Int8, UInt32, Int32, UInt16, Int16, UInt8 -> fieldValue.asInteger();
+      case Int64, UInt64 -> fieldValue.asLong();
+      case Float64, Float32 -> fieldValue.asDouble();
+      case String, FixedString -> fieldValue.asString();
+      default -> throw new RuntimeException("Unexpected type " + column.getDataType());
+    };
   }
 
   @Override

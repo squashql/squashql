@@ -273,7 +273,8 @@ public class SQLTranslator {
             || field.type().equals(int.class)
             || field.type().equals(long.class)
             || field.type().equals(float.class)
-            || field.type().equals(boolean.class)) {
+            || field.type().equals(boolean.class)
+            || field.type().equals(Boolean.class)) {
       // no quote
       return String::valueOf;
     } else if (field.type().equals(String.class)) {
