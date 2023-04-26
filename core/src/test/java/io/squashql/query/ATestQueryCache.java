@@ -4,10 +4,7 @@ import io.squashql.TestClass;
 import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.builder.Query;
 import io.squashql.query.context.QueryCacheContextValue;
-import io.squashql.query.dto.CacheStatsDto;
-import io.squashql.query.dto.ConditionType;
-import io.squashql.query.dto.QueryDto;
-import io.squashql.query.dto.VirtualTableDto;
+import io.squashql.query.dto.*;
 import io.squashql.query.monitoring.QueryWatch;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
@@ -172,7 +169,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   void testQueryWithJoin() {
     QueryDto query = Query
             .from(this.storeName)
-            .innerJoin(competitorStoreName)
+            .join(competitorStoreName, JoinType.INNER)
             .on(criterion(this.storeName + ".ean", this.competitorStoreName + ".comp_ean", ConditionType.EQ))
             .select(List.of("category"), List.of(sum("ps", "price")))
             .build();
@@ -427,7 +424,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             List.of(List.of(0d, 5d, "cheap"), List.of(5d, 100d, "notcheap")));
     QueryDto query = Query
             .from(this.storeName)
-            .innerJoin(cte)
+            .join(cte, JoinType.INNER)
             .on(all(criterion("price", "min", ConditionType.GE),
                     criterion("price", "max", ConditionType.LT)))
             .select(List.of("ean", "bucket"), List.of())
@@ -448,7 +445,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             List.of(List.of(0d, 3d, "cheap"), List.of(3d, 100d, "notcheap")));
     query = Query
             .from(this.storeName)
-            .innerJoin(cte)
+            .join(cte, JoinType.INNER)
             .on(all(criterion("price", "min", ConditionType.GE),
                     criterion("price", "max", ConditionType.LT)))
             .select(List.of("ean", "bucket"), List.of())

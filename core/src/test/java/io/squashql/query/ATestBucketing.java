@@ -6,6 +6,7 @@ import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.CriteriaDto;
+import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
@@ -49,53 +50,6 @@ public abstract class ATestBucketing extends ABaseTestQuery {
     this.tm.load(this.storeName, tuples);
   }
 
-  @Test
-  void test() {
-    // TODO to delete
-//    SELECT arrayJoin([
-//            tuple(1, 'A'),
-//            tuple(2, 'B'),
-//            tuple(3, 'C')
-//            ]) AS res
-    // arrayJoin: like unnest or explode
-//    Table execute = this.executor.execute("""
-//            SELECT 1, 'A'
-//            UNION ALL
-//            SELECT 2, 'B'
-//            AS res
-//            """);
-//    Table execute = this.executor.execute("""
-//            WITH res as (
-//            SELECT 1 as first, 'A' as second
-//            UNION ALL
-//            SELECT 2 as first, 'B' as second
-//            )
-//            SELECT res.first, res.second from res
-//            """);
-//        select "shop", "MYTEMPTABLE"."bucket", sum("unitPrice" * "qtySold") as "sales", count(*) as "_contributors_count_"
-
-    // FOR SNOWFLAKE, do not escape anything: "MYTEMPTABLE"."bucket" is not supported but MYTEMPTABLE.bucket is ok.
-    // FOR BIGQUERY, do not use full path with dataset name for CTE....
-//    Table execute = this.executor.execute("""
-//        with "MYTEMPTABLE" as (
-//        select 'unsensistive' as "bucket",  0.0 as "MYTEMPTABLE_min",  50.0 as "MYTEMPTABLE_max"
-//        union all
-//        select 'sensistive' as "bucket",  50.0 as "MYTEMPTABLE_min",  80.0 as "MYTEMPTABLE_max"
-//        union all
-//        select 'hypersensistive' as "bucket",  80.0 as "MYTEMPTABLE_min",  100.0 as "MYTEMPTABLE_max"
-//        )
-//        select "shop", "MYTEMPTABLE"."bucket", sum("unitPrice" * "qtySold") as "sales", count(*) as "_contributors_count_"
-//        from "storetestsnowflakebucketing"
-//        inner join "MYTEMPTABLE"
-//        on
-//        "storetestsnowflakebucketing"."kvi" >= "MYTEMPTABLE"."MYTEMPTABLE_min"
-//        and
-//        "storetestsnowflakebucketing"."kvi" < "MYTEMPTABLE"."MYTEMPTABLE_max"
-//        group by "shop", "MYTEMPTABLE"."bucket" limit 10000
-//            """);
-//    execute.show();
-  }
-
   static VirtualTableDto sensitivities = new VirtualTableDto("sensitivities", List.of("bucket", "min", "max"), List.of(
           List.of("unsensistive", 0d, 50d),
           List.of("sensistive", 50d, 80d),
@@ -124,7 +78,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
     String shop = fieldNameGenerator.apply(this.storeName, "shop");
     var query = Query
             .from(this.storeName)
-            .innerJoin(sensitivities)
+            .join(sensitivities, JoinType.INNER)
             .on(criteria)
             .select(List.of(shop, bucket), List.of(sales))
             .build();
@@ -142,7 +96,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 
     query = Query
             .from(this.storeName)
-            .innerJoin(sensitivities)
+            .join(sensitivities, JoinType.INNER)
             .on(criteria)
             .select(List.of(shop, bucket), List.of(sales))
             .rollup(shop, bucket)

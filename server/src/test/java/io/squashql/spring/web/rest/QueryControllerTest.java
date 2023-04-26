@@ -41,9 +41,9 @@ public class QueryControllerTest {
   void testQuery() throws Exception {
     var query = Query
             .from("our_prices")
-            .innerJoin("our_stores_their_stores")
+            .join("our_stores_their_stores", JoinType.INNER)
             .on(criterion("our_prices" + ".pdv", "our_stores_their_stores" + ".our_store", ConditionType.EQ))
-            .innerJoin("their_prices")
+            .join("their_prices", JoinType.INNER)
             .on(criterion("their_prices" + ".competitor_concurrent_pdv", "our_stores_their_stores" + ".their_store", ConditionType.EQ))
             .select(List.of(SCENARIO_FIELD_NAME, "ean"), List.of(
                     Functions.sum("capdv", "capdv"),
@@ -154,9 +154,9 @@ public class QueryControllerTest {
 
     var query = Query
             .from("our_prices")
-            .innerJoin("our_stores_their_stores")
+            .join("our_stores_their_stores", JoinType.INNER)
             .on(criterion("our_prices" + ".pdv", "our_stores_their_stores" + ".our_store", ConditionType.EQ))
-            .innerJoin("their_prices")
+            .join("their_prices", JoinType.INNER)
             .on(criterion("their_prices" + ".competitor_concurrent_pdv", "our_stores_their_stores" + ".their_store", ConditionType.EQ))
             .select_(List.of(bucketCS), List.of(aggregatedMeasureDiff, indicePrixDiff))
             .build();

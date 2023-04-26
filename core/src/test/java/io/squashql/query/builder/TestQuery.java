@@ -80,7 +80,7 @@ public class TestQuery {
 
       QueryDto build = Query
               .from("saas")
-              .leftOuterJoin("other")
+              .join("other", JoinType.LEFT)
               .on(criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ))
               .select(List.of("col1", "col2"), List.of(sum))
               .build();
@@ -113,7 +113,7 @@ public class TestQuery {
       // With two join conditions
       QueryDto build = Query
               .from("saas")
-              .innerJoin("other")
+              .join("other", JoinType.INNER)
               .on(all(
                       criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ),
                       criterion(other.name + ".a", saas.name + ".b", ConditionType.EQ)
@@ -140,7 +140,7 @@ public class TestQuery {
       // With condition on the "joined" table
       QueryDto build = Query
               .from("saas")
-              .innerJoin("other")
+              .join("other", JoinType.INNER)
               .on(criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ))
               .where("f1", eq("A"))
               .select(List.of("col1", "col2"), List.of(sum))
@@ -168,9 +168,9 @@ public class TestQuery {
 
     QueryDto build = Query
             .from("saas")
-            .leftOuterJoin("other")
+            .join("other", JoinType.LEFT)
             .on(criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ))
-            .innerJoin("another")
+            .join("another", JoinType.INNER)
             .on(criterion(another.name + ".id", saas.name + ".id", ConditionType.EQ))
             .select(List.of("col1", "col2"), List.of(sum))
             .build();
@@ -185,7 +185,7 @@ public class TestQuery {
     VirtualTableDto vt = new VirtualTableDto("vtable", List.of("id", "c"), List.of(List.of("k", "c")));
     QueryDto build = Query
             .from("saas")
-            .innerJoin(vt)
+            .join(vt, JoinType.INNER)
             .on(criterion("saas.id", "vtable.id", ConditionType.EQ))
             .select(List.of("col1", "col2"), List.of(sum))
             .build();

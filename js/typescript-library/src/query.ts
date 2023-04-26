@@ -37,7 +37,6 @@ export class Query {
     return this
   }
 
-  // FIXME rename onSubQuery
   onSubQuery(query: Query): Query {
     this.subQuery = query
     return this

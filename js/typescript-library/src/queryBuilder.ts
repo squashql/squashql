@@ -16,11 +16,9 @@ export interface CanBeBuildQuery {
 }
 
 export interface CanStartBuildingJoin {
-  leftOuterJoin(tableName: string): HasStartedBuildingJoin
+  join(tableName: string, joinType: JoinType): HasStartedBuildingJoin
 
-  innerJoin(tableName: string): HasStartedBuildingJoin
-
-  innerJoinV(virtualTable: VirtualTable): HasStartedBuildingJoin
+  joinV(virtualTable: VirtualTable, joinType: JoinType): HasStartedBuildingJoin
 }
 
 export interface HasCondition {
@@ -74,23 +72,14 @@ class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
   readonly queryDto: Query = new Query()
   private currentJoinTableBuilder: JoinTableBuilder = null;
 
-  innerJoin(tableName: string): HasStartedBuildingJoin {
-    return this.join(tableName, JoinType.INNER)
-  }
-
-  leftOuterJoin(tableName: string): HasStartedBuildingJoin {
-    return this.join(tableName, JoinType.LEFT)
-  }
-
-
-  innerJoinV(virtualTable: VirtualTable): HasStartedBuildingJoin {
+  joinV(virtualTable: VirtualTable, joinType: JoinType): HasStartedBuildingJoin {
     this.addJoinToQueryDto()
     this.queryDto.virtualTable = virtualTable
-    this.currentJoinTableBuilder = new JoinTableBuilder(this, virtualTable.name, JoinType.INNER)
+    this.currentJoinTableBuilder = new JoinTableBuilder(this, virtualTable.name, joinType)
     return this.currentJoinTableBuilder
   }
 
-  private join(tableName: string, joinType: JoinType): HasStartedBuildingJoin {
+  join(tableName: string, joinType: JoinType): HasStartedBuildingJoin {
     this.addJoinToQueryDto()
     this.currentJoinTableBuilder = new JoinTableBuilder(this, tableName, joinType)
     return this.currentJoinTableBuilder

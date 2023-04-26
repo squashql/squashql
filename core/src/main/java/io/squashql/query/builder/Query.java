@@ -26,23 +26,14 @@ public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
   }
 
   @Override
-  public HasStartedBuildingJoin leftOuterJoin(String tableName) {
-    return join(tableName, JoinType.LEFT);
-  }
-
-  @Override
-  public HasStartedBuildingJoin innerJoin(String tableName) {
-    return join(tableName, JoinType.INNER);
-  }
-
-  private HasStartedBuildingJoin join(String tableName, JoinType joinType) {
+  public HasStartedBuildingJoin join(String tableName, JoinType joinType) {
     addJoinToQueryDto();
     this.currentJoinTableBuilder = new JoinTableBuilder(this, tableName, joinType);
     return this.currentJoinTableBuilder;
   }
 
   @Override
-  public HasStartedBuildingJoin innerJoin(VirtualTableDto virtualTableDto) {
+  public HasStartedBuildingJoin join(VirtualTableDto virtualTableDto, JoinType joinType) {
     addJoinToQueryDto();
     this.queryDto.virtualTableDto = virtualTableDto;
     this.currentJoinTableBuilder = new JoinTableBuilder(this, virtualTableDto.name, JoinType.INNER);

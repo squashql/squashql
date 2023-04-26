@@ -3,6 +3,7 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.ConditionType;
+import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
@@ -91,13 +92,13 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
   void testSelectFullPath() {
     QueryDto query = Query
             .from(this.orders)
-            .innerJoin(this.orderDetails)
+            .join(this.orderDetails, JoinType.INNER)
             .on(criterion(this.orderDetails + ".orderId", this.orders + ".orderId", ConditionType.EQ))
-            .innerJoin(this.shippers)
+            .join(this.shippers, JoinType.INNER)
             .on(criterion(this.shippers + ".shipperId", this.orders + ".shipperId", ConditionType.EQ))
-            .innerJoin(this.products)
+            .join(this.products, JoinType.INNER)
             .on(criterion(this.products + ".productId", this.orderDetails + ".productId", ConditionType.EQ))
-            .innerJoin(this.categories)
+            .join(this.categories, JoinType.INNER)
             .on(criterion(this.products + ".categoryId", this.categories + ".categoryId", ConditionType.EQ))
             // Select a field that exists in two tables: Products and Categories. If any ambiguity, it has to be solved
             // by the user by indicating the table from which the field should come from.
@@ -120,13 +121,13 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
   void testAmbiguousColumnName() {
     QueryDto query = Query
             .from(this.orders)
-            .innerJoin(this.orderDetails)
+            .join(this.orderDetails, JoinType.INNER)
             .on(criterion(this.orderDetails + ".orderId", this.orders + ".orderId", ConditionType.EQ))
-            .innerJoin(this.shippers)
+            .join(this.shippers, JoinType.INNER)
             .on(criterion(this.shippers + ".shipperId", this.orders + ".shipperId", ConditionType.EQ))
-            .innerJoin(this.products)
+            .join(this.products, JoinType.INNER)
             .on(criterion(this.products + ".productId", this.orderDetails + ".productId", ConditionType.EQ))
-            .innerJoin(this.categories)
+            .join(this.categories, JoinType.INNER)
             .on(criterion(this.products + ".categoryId", this.categories + ".categoryId", ConditionType.EQ))
             // Select a field that exists in two tables: Products and Categories. If any ambiguity, it has to be solved
             // by the user by indicating the table from which the field should come from.

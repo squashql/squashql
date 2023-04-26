@@ -117,10 +117,10 @@ public class TestJavascriptLibrary {
     Measure measure = sum("sum", "f1");
     Measure measureExpr = new ExpressionMeasure("sum_expr", "sum(f1)");
     QueryDto q = Query.from(table.name)
-            .innerJoin(refTable.name)
+            .join(refTable.name, JoinType.INNER)
             .on(all(criterion("myTable" + ".id", "refTable" + ".id", ConditionType.EQ),
                     criterion("myTable" + ".a", "refTable" + ".a", ConditionType.EQ)))
-            .innerJoin(cte)
+            .join(cte, JoinType.INNER)
             .on(all(criterion("myTable.value", "myCte.min", ConditionType.GE), criterion("myTable.value", "myCte.max", ConditionType.LT)))
             .where("f2", gt(659))
             .where("f3", eq(123))

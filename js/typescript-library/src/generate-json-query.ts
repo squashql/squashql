@@ -5,6 +5,7 @@ import {avg, ExpressionMeasure, sum} from "./measures";
 import {OrderKeyword} from "./order";
 import * as fs from "fs"
 import {VirtualTable} from "./virtualtable";
+import {JoinType} from "./query";
 
 export function generateFromQuery() {
   const values = new Map(Object.entries({
@@ -16,9 +17,9 @@ export function generateFromQuery() {
   const measure = sum("sum", "f1");
   const measureExpr = new ExpressionMeasure("sum_expr", "sum(f1)");
   const q = from("myTable")
-          .innerJoin("refTable")
+          .join("refTable", JoinType.INNER)
           .on(all([joinCriterion("myTable.id", "refTable.id", ConditionType.EQ), joinCriterion("myTable.a", "refTable.a", ConditionType.EQ)]))
-          .innerJoinV(cte)
+          .joinV(cte, JoinType.INNER)
           .on(all([joinCriterion("myTable.value", "myCte.min", ConditionType.GE), joinCriterion("myTable.value", "myCte.max", ConditionType.LT)]))
           .where(all([criterion("f2", gt(659)), criterion("f3", eq(123))]))
           .select(["a", "b"],

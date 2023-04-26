@@ -3,6 +3,7 @@ package io.squashql.query;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.ConditionType;
+import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Datastore;
 import io.squashql.transaction.TransactionManager;
@@ -75,13 +76,13 @@ public abstract class ATestQueryExecutorWithJoins {
   void testQuerySingleCoordinate() {
     QueryDto query = Query
             .from(this.orders)
-            .innerJoin(this.orderDetails)
+            .join(this.orderDetails, JoinType.INNER)
             .on(criterion(this.orderDetails + ".OrderID", this.orders + ".OrderID", ConditionType.EQ))
-            .innerJoin(this.shippers)
+            .join(this.shippers, JoinType.INNER)
             .on(criterion(this.shippers + ".ShipperID", this.orders + ".ShipperID", ConditionType.EQ))
-            .innerJoin(this.products)
+            .join(this.products, JoinType.INNER)
             .on(criterion(this.products + ".ProductID", this.orderDetails + ".ProductID", ConditionType.EQ))
-            .innerJoin(this.categories)
+            .join(this.categories, JoinType.INNER)
             .on(criterion(this.products + ".CategoryID", this.categories + ".CategoryID", ConditionType.EQ))
             .select(List.of("CategoryName"), List.of(Functions.sum("Q", "Quantity"), CountMeasure.INSTANCE))
             .build();
