@@ -7,6 +7,7 @@ import io.squashql.query.Header;
 import io.squashql.query.Measure;
 import io.squashql.query.Table;
 import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.dto.JoinType;
 import org.eclipse.collections.api.list.primitive.IntList;
 import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
@@ -23,6 +24,13 @@ class MergeTablesPaul {
   }
 
   /**
+   * Same as {@link #mergeTables(Table, Table, JoinType)} but with {@code JoinType = FULL}
+   */
+  public static Table mergeTables(Table leftTable, Table rightTable) {
+    return mergeTables(leftTable, rightTable, JoinType.FULL);
+  }
+
+  /**
    * Merge two tables into only one resulting table. We choose to first get all columns and then all measures.
    * Hypothesis:
    * <ul>
@@ -31,7 +39,7 @@ class MergeTablesPaul {
    *   <li>the input tables must not share any measure</li>
    * </ul>
    */
-  public static Table mergeTables(Table leftTable, Table rightTable) {
+  public static Table mergeTables(Table leftTable, Table rightTable, JoinType joinType) {
     final Holder mergedTableHeaders = mergeHeaders(leftTable, rightTable);
     final Set<Measure> mergedTableMeasures = mergeMeasures(leftTable.measures(), rightTable.measures());
     final List<List<Object>> mergedValues = mergeValues(mergedTableHeaders, leftTable, rightTable);
