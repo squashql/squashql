@@ -50,14 +50,14 @@ abstract class ATestMergeTables {
                     new ArrayList<>(Arrays.asList(6, 2.3, 3))));
 
     Table expectedTable = getMergeTablesWithSameColumnsButDifferentValues();
-    Table mergedTable = MergeTablesPaul.mergeTables(leftTable, rightTable, getJoinType());
+    Table mergedTable = MergeTables.mergeTables(leftTable, rightTable, getJoinType());
     Assertions.assertThat(mergedTable.headers()).containsExactlyElementsOf(expectedTable.headers());
     Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
 
     if (getJoinType() == JoinType.FULL) {
       // Inverse right and left tables. This is only valid for FULL OUTER JOIN
       expectedTable = reorderColumns((ColumnarTable) expectedTable, List.of("typology", "category", "price.avg", "price.sum"));
-      mergedTable = MergeTablesPaul.mergeTables(rightTable, leftTable);
+      mergedTable = MergeTables.mergeTables(rightTable, leftTable);
       Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
     }
   }
@@ -102,14 +102,14 @@ abstract class ATestMergeTables {
                     new ArrayList<>(Arrays.asList(2.3, 3., 6., 5.))));
 
     Table expectedTable = getMergeTablesWithSameColumns();
-    Table mergedTable = MergeTablesPaul.mergeTables(leftTable, rightTable, getJoinType());
+    Table mergedTable = MergeTables.mergeTables(leftTable, rightTable, getJoinType());
     Assertions.assertThat(mergedTable.headers()).containsExactlyElementsOf(expectedTable.headers());
     Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
 
     if (getJoinType() == JoinType.FULL) {
       // Inverse right and left tables. This is only valid for FULL OUTER JOIN
       expectedTable = reorderColumns((ColumnarTable) expectedTable, List.of("typology", "category", "price.avg", "price.sum"));
-      mergedTable = MergeTablesPaul.mergeTables(rightTable, leftTable);
+      mergedTable = MergeTables.mergeTables(rightTable, leftTable);
       Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
     }
   }
@@ -155,14 +155,14 @@ abstract class ATestMergeTables {
                     new ArrayList<>(Arrays.asList(6, 2.3, 4, 3))));
 
     Table expectedTable = getMergeTablesWithDifferentColumns();
-    Table mergedTable = MergeTablesPaul.mergeTables(leftTable, rightTable, getJoinType());
+    Table mergedTable = MergeTables.mergeTables(leftTable, rightTable, getJoinType());
     Assertions.assertThat(mergedTable.headers()).containsExactlyElementsOf(expectedTable.headers());
     Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
 
     if (getJoinType() == JoinType.FULL) {
       // Inverse right and left tables. This is only valid for FULL OUTER JOIN
       expectedTable = reorderColumns((ColumnarTable) expectedTable, List.of("typology", "category", "company", "price.avg", "price.sum"));
-      mergedTable = MergeTablesPaul.mergeTables(rightTable, leftTable);
+      mergedTable = MergeTables.mergeTables(rightTable, leftTable);
       Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
     }
   }
@@ -208,14 +208,14 @@ abstract class ATestMergeTables {
                     new ArrayList<>(Arrays.asList(6.3, 1, 2.3, 3))));
 
     Table expectedTable = getMergeTablesWithDifferentColumnsAndTotalValues();
-    Table mergedTable = MergeTablesPaul.mergeTables(leftTable, rightTable, getJoinType());
+    Table mergedTable = MergeTables.mergeTables(leftTable, rightTable, getJoinType());
     Assertions.assertThat(mergedTable.headers()).containsExactlyElementsOf(expectedTable.headers());
     Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
 
     if (getJoinType() == JoinType.FULL) {
       // Inverse right and left tables. This is only valid for FULL OUTER JOIN
       expectedTable = reorderColumns((ColumnarTable) expectedTable, List.of("typology", "category", "company", "price.avg", "price.sum"));
-      mergedTable = MergeTablesPaul.mergeTables(rightTable, leftTable);
+      mergedTable = MergeTables.mergeTables(rightTable, leftTable);
       Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
     }
   }
@@ -265,14 +265,14 @@ abstract class ATestMergeTables {
                     new ArrayList<>(Arrays.asList(6.3, 1, 2.3, 3))));
 
     Table expectedTable = getMergeTablesWithDifferentColumnsAndTotalValues();
-    Table mergedTable = MergeTablesPaul.mergeTables(leftTable, rightTable, getJoinType());
+    Table mergedTable = MergeTables.mergeTables(leftTable, rightTable, getJoinType());
     Assertions.assertThat(mergedTable.headers()).containsExactlyElementsOf(expectedTable.headers());
     Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
 
     if (getJoinType() == JoinType.FULL) {
       // Inverse right and left tables. This is only valid for FULL OUTER JOIN
       expectedTable = reorderColumns((ColumnarTable) expectedTable, List.of("company", "category", "typology", "price.avg", "price.sum"));
-      mergedTable = MergeTablesPaul.mergeTables(rightTable, leftTable);
+      mergedTable = MergeTables.mergeTables(rightTable, leftTable);
       Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
     }
   }
@@ -316,14 +316,14 @@ abstract class ATestMergeTables {
                     new ArrayList<>(Arrays.asList(6.8, 4., 2.3, 3., 42))));
 
     Table expectedTable = getMergeTablesWithBothCommonAndDifferentColumns();
-    Table mergedTable = MergeTablesPaul.mergeTables(leftTable, rightTable, getJoinType());
+    Table mergedTable = MergeTables.mergeTables(leftTable, rightTable, getJoinType());
     Assertions.assertThat(mergedTable.headers()).containsExactlyElementsOf(expectedTable.headers());
     Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
 
     if (getJoinType() == JoinType.FULL) {
       // Inverse right and left tables. This is only valid for FULL OUTER JOIN
       expectedTable = reorderColumns((ColumnarTable) expectedTable, List.of("typology", "company", "category", "price.avg", "price.sum"));
-      mergedTable = MergeTablesPaul.mergeTables(rightTable, leftTable);
+      mergedTable = MergeTables.mergeTables(rightTable, leftTable);
       Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
     }
   }
@@ -366,14 +366,14 @@ abstract class ATestMergeTables {
                     new ArrayList<>(Arrays.asList(5.3, 2.3, 3.))));
 
     Table expectedTable = getMergeTablesWithTotals();
-    Table mergedTable = MergeTablesPaul.mergeTables(leftTable, rightTable, getJoinType());
+    Table mergedTable = MergeTables.mergeTables(leftTable, rightTable, getJoinType());
     Assertions.assertThat(mergedTable.headers()).containsExactlyElementsOf(expectedTable.headers());
     Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
 
     if (getJoinType() == JoinType.FULL) {
       // Inverse right and left tables. This is only valid for FULL OUTER JOIN
       expectedTable = reorderColumns((ColumnarTable) expectedTable, List.of("typology", "category", "price.avg", "price.sum"));
-      mergedTable = MergeTablesPaul.mergeTables(rightTable, leftTable);
+      mergedTable = MergeTables.mergeTables(rightTable, leftTable);
       Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
     }
   }
@@ -413,14 +413,14 @@ abstract class ATestMergeTables {
                     new ArrayList<>(Arrays.asList(5.3, 2.3, 3))));
 
     Table expectedTable = getMergeTablesWithoutCommonColumns();
-    Table mergedTable = MergeTablesPaul.mergeTables(leftTable, rightTable, getJoinType());
+    Table mergedTable = MergeTables.mergeTables(leftTable, rightTable, getJoinType());
     Assertions.assertThat(mergedTable.headers()).containsExactlyElementsOf(expectedTable.headers());
     Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
 
     if (getJoinType() == JoinType.FULL) {
       // Inverse right and left tables. This is only valid for FULL OUTER JOIN
       expectedTable = reorderColumns((ColumnarTable) expectedTable, List.of("category", "typology", "price.avg", "price.sum"));
-      mergedTable = MergeTablesPaul.mergeTables(rightTable, leftTable);
+      mergedTable = MergeTables.mergeTables(rightTable, leftTable);
       Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
     }
   }
@@ -442,7 +442,7 @@ abstract class ATestMergeTables {
     return new ColumnarTable(newHeaders, table.measures(), newValues);
   }
 
-  private static Table orderRows(Table table) {
+  protected static Table orderRows(Table table) {
     return TableUtils.orderRows((ColumnarTable) table);
   }
 }
