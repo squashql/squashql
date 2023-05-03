@@ -83,7 +83,7 @@ class MergeTablesPaul {
 
     List<Header> mergedTableHeaders = new ArrayList<>(mergedColumns);
     mergedTableHeaders.addAll(mergedMeasures);
-    return new Holder(mergedTableHeaders, leftMappingList, rightMappingList);
+    return new Holder(leftTable, rightTable, mergedTableHeaders, leftMappingList, rightMappingList);
   }
 
   private static Set<Measure> mergeMeasures(Set<Measure> leftMeasures, Set<Measure> rightMeasures) {
@@ -118,8 +118,7 @@ class MergeTablesPaul {
         mergedBuffer[leftMapping[i]] = point[i];
       }
 
-      boolean commonPointExistInRightTable = zob(holder, rightTable, rightMapping, mergedBuffer);
-      if (!commonPointExistInRightTable && joinType == JoinType.INNER) {
+      if (joinType == JoinType.INNER && !holder.doesGlobalPointExistInRightTable(mergedBuffer)) {
         return; // abort
       }
 
@@ -165,8 +164,7 @@ class MergeTablesPaul {
         mergedBuffer[rightMapping[i]] = point[i];
       }
 
-      boolean pointExistInLeftTable = zob(holder, leftTable, leftMapping, mergedBuffer);
-      if (!pointExistInLeftTable && (joinType == JoinType.LEFT || joinType == JoinType.INNER)) {
+      if ((joinType == JoinType.LEFT || joinType == JoinType.INNER) && !holder.doesGlobalPointExistInLeftTable(mergedBuffer)) {
         return; // abort
       }
 
@@ -201,12 +199,59 @@ class MergeTablesPaul {
     final int[] leftMapping;
     final int[] rightMapping;
     final boolean leftIsIncludeInRight;
+    final int[] intersection;
+    final Table leftTable;
+    final Table rightTable;
+    ObjectArrayDictionary leftTableCommonPointDic; // computed on demand
+    ObjectArrayDictionary rightTableCommonPointDic; // computed on demand
 
-    public Holder(List<Header> headers, IntList leftMapping, IntList rightMapping) {
+    public Holder(Table leftTable, Table rightTable, List<Header> headers, IntList leftMapping, IntList rightMapping) {
+      this.leftTable = leftTable;
+      this.rightTable = rightTable;
       this.headers = headers;
       this.leftMapping = leftMapping.toArray();
       this.rightMapping = rightMapping.toArray();
       this.leftIsIncludeInRight = isLeftListIncludeInRightList(leftMapping, rightMapping);
+      this.intersection = intersection(this.leftMapping, this.rightMapping);
+    }
+
+    private ObjectArrayDictionary buildIntersectionPointDictionary(Table table, int[] mapping) {
+      ObjectArrayDictionary dictionary = new ObjectArrayDictionary(this.intersection.length);
+      int[] interMapping = new int[this.intersection.length];
+      for (int i = 0; i < this.intersection.length; i++) {
+        interMapping[i] = indexOf(mapping, this.intersection[i]);
+      }
+
+      table.forEach(row -> {
+        Object[] columnValues = new Object[this.intersection.length];
+        for (int i = 0; i < this.intersection.length; i++) {
+          columnValues[i] = row.get(interMapping[i]);
+        }
+        dictionary.map(columnValues);
+      });
+      return dictionary;
+    }
+
+    public boolean doesGlobalPointExistInLeftTable(Object[] globalPoint) {
+      if (this.leftTableCommonPointDic == null) {
+        this.leftTableCommonPointDic = buildIntersectionPointDictionary(this.leftTable, this.leftMapping);
+      }
+      return doesGlobalPointExist(globalPoint, this.leftTableCommonPointDic);
+    }
+
+    public boolean doesGlobalPointExistInRightTable(Object[] globalPoint) {
+      if (this.rightTableCommonPointDic == null) {
+        this.rightTableCommonPointDic = buildIntersectionPointDictionary(this.rightTable, this.rightMapping);
+      }
+      return doesGlobalPointExist(globalPoint, this.rightTableCommonPointDic);
+    }
+
+    private boolean doesGlobalPointExist(Object[] globalPoint, ObjectArrayDictionary dictionary) {
+      Object[] array = new Object[this.intersection.length];
+      for (int i = 0; i < this.intersection.length; i++) {
+        array[i] = globalPoint[this.intersection[i]];
+      }
+      return dictionary.getPosition(array) >= 0;
     }
   }
 
@@ -228,26 +273,6 @@ class MergeTablesPaul {
     MutableIntSet s2 = MutableIntSetFactoryImpl.INSTANCE.of(b);
     s1.retainAll(s2);
     return s1.toArray();
-  }
-
-  public static boolean zob(Holder holder, Table table, int[] mapping, Object[] mergedBuffer) {
-    // FIXME review this part and test with more than 1 column in common + shuffle order of columns
-    int[] intersection = intersection(holder.leftMapping, holder.rightMapping);
-    ObjectArrayDictionary dictionary = new ObjectArrayDictionary(intersection.length);
-    table.forEach(row -> {
-      Object[] columnValues = new Object[intersection.length];
-      for (int i = 0; i < intersection.length; i++) {
-        columnValues[i] = row.get(indexOf(mapping, intersection[i]));
-      }
-      dictionary.map(columnValues);
-    });
-
-    Object[] array = new Object[intersection.length];
-    for (int i = 0; i < intersection.length; i++) {
-      array[i] = mergedBuffer[intersection[i]];
-    }
-
-    return dictionary.getPosition(array) >= 0;
   }
 
   private static int indexOf(int[] a, int i) {
