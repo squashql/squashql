@@ -8,6 +8,7 @@ import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.Table;
+import io.squashql.query.dto.*;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
 import org.assertj.core.api.Assertions;
@@ -17,6 +18,7 @@ import org.mockito.Mockito;
 import java.util.*;
 import java.util.function.Function;
 
+import static io.squashql.query.dto.JoinType.INNER;
 import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
 
 public class TestBigQueryEngine {
@@ -157,5 +159,39 @@ public class TestBigQueryEngine {
             List.of("1", SQLTranslator.TOTAL_CELL, 2d),
             List.of("1", "A", 1d),
             List.of("1", "B", 1d));
+  }
+
+  @Test
+  void testSqlGenerationWithRollupAndCte() {
+    String category = "category";
+    DatabaseQuery query = new DatabaseQuery()
+            .withSelect(this.fieldSupplier.apply(category))
+            .withRollup(this.fieldSupplier.apply(category))
+            .aggregatedMeasure("price.sum", "price", "sum")
+            .table("baseStore");
+    VirtualTableDto virtual = new VirtualTableDto(
+            "virtual",
+            List.of("a", "b"),
+            List.of(List.of(0, "0"), List.of(1, "1")));
+    query.virtualTableDto = virtual;
+    query.table.joins.add(new JoinDto(new TableDto(virtual.name), INNER, new JoinMappingDto("baseStore.category", virtual.name + ".a", ConditionType.EQ)));
+
+    BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName") {
+      @Override
+      public Map<String, Store> storesByName() {
+        return Map.of("baseStore", new Store("baseStore", List.of(
+                TestBigQueryEngine.this.fieldSupplier.apply(category),
+                TestBigQueryEngine.this.fieldSupplier.apply("price")
+        )));
+      }
+    };
+    BigQueryEngine bqe = new BigQueryEngine(datastore);
+    String sqlStatement = bqe.createSqlStatement(query);
+    Assertions.assertThat(sqlStatement)
+            .isEqualTo("with virtual as (select 0 as `a`, '0' as `b` union all select 1 as `a`, '1' as `b`) " +
+                    "select coalesce(`myProjectId.myDatasetName.baseStore`.`category`, -9223372036854775808), sum(`price`) as `price.sum` " +
+                    "from `myProjectId.myDatasetName.baseStore` " +
+                    "inner join virtual on `myProjectId.myDatasetName.baseStore`.`category` = virtual.`a` " +
+                    "group by rollup(coalesce(`myProjectId.myDatasetName.baseStore`.`category`, -9223372036854775808))");
   }
 }

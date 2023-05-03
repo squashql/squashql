@@ -83,6 +83,11 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
           return String.format("coalesce(%s, %s)", qr.rollup(field),
                   quoter.apply(BigQueryUtil.getNullValue(field.type())));
         }
+
+        @Override
+        public String getFieldFullName(Field f) {
+          return qr.getFieldFullName(f);
+        }
       };
 
       List<Field> missingColumnsInRollup = new ArrayList<>(query.select);

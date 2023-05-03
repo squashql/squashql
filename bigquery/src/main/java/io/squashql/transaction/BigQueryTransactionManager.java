@@ -103,22 +103,25 @@ public class BigQueryTransactionManager implements TransactionManager {
         }
         return;
       } catch (BigQueryException exception) {
-        if (exception.getCode() == 404 && exception.getReason().equals("notFound")) {
-          try {
-            Thread.sleep(sleepTime * 1000);
-          } catch (InterruptedException e) {
-            log.error("", e);
-            Thread.currentThread().interrupt();
-          }
-          if (attempt < MAX_SLEEPS) {
-            sleepTime <<= 1;
-            attempt++;
-            log.info("Table not found, retry " + attempt);
-          } else {
-            log.info("Table not found after " + MAX_SLEEPS + " attempts. Abort.");
-            throw exception;
-          }
+        /*
+         * See SLA https://cloud.google.com/bigquery/sla
+         * "Back-off Requirements" means, when an error occurs, the Customer Application is responsible for waiting for
+         * a period of time before issuing another request. This means that after the first error, there is a minimum
+         * back-off interval of 1 second and for each consecutive error, the back-off interval increases exponentially
+         * up to 32 seconds.
+         */
+        try {
+          Thread.sleep(sleepTime * 1000);
+        } catch (InterruptedException e) {
+          log.error("", e);
+          Thread.currentThread().interrupt();
+        }
+        if (attempt < MAX_SLEEPS) {
+          sleepTime <<= 1;
+          attempt++;
+          log.info("table.insert, retry " + attempt);
         } else {
+          log.info("table.insert after " + MAX_SLEEPS + " attempts. Abort.");
           throw exception;
         }
       }
