@@ -7,7 +7,6 @@ import io.squashql.ClickHouseDatastore;
 import io.squashql.store.Field;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
-import java.net.URI;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -63,13 +62,6 @@ public class ClickHouseTransactionManager implements TransactionManager {
 
   @Override
   public void load(String scenario, String store, List<Object[]> tuples) {
-    try {
-      URI uri = clickHouseDataSource.getConnection().getUri();
-      System.out.println();
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-
     // Check the table contains a column scenario.
     ensureScenarioColumnIsPresent(store);
     String join = String.join(",", IntStream.range(0, tuples.get(0).length + 1).mapToObj(i -> "?").toList());
@@ -101,33 +93,6 @@ public class ClickHouseTransactionManager implements TransactionManager {
   @Override
   public void loadCsv(String scenario, String store, String path, String delimiter, boolean header) {
     throw new RuntimeException("not implemented");
-//    try {
-//      URI uri = clickHouseDataSource.getConnection().getUri();
-//      System.out.println();
-//    } catch (SQLException e) {
-//      throw new RuntimeException(e);
-//    }
-//    System.out.println();
-//    ClickHouseNode.builder()
-//            .address(this.clickHouseDataSource)
-//    clickHouseDataSource.getConnection().
-//    ClickHouseJdbcUrlParser.parse(url, properties);
-//    ClickHouseNode clickHouseNode = ClickHouseNode.of(this.clickHouseDataSource.getHost(),
-//            ClickHouseProtocol.HTTP,
-//            this.clickHouseDataSource.getPort(),
-//            null);
-//
-//    try {
-//      CompletableFuture<ClickHouseResponseSummary> load = ClickHouseClient.load(
-//              clickHouseNode,
-//              store,
-//              header ? ClickHouseFormat.CSVWithNames : ClickHouseFormat.CSV,
-//              ClickHouseCompression.LZ4,
-//              path);
-//      load.get();
-//    } catch (InterruptedException | ExecutionException e) {
-//      throw new RuntimeException(e);
-//    }
   }
 
   public void dropTables(Collection<String> tables) {

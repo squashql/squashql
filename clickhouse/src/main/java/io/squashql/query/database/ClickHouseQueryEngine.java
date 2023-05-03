@@ -58,7 +58,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
               (column, name) -> name,
               (column, name) -> ClickHouseUtil.clickHouseTypeToClass(column.getDataType()),
               response.records().iterator(),
-              (i, r) -> getValue(r, i, response.getColumns()),
+              (index, r) -> getValue(r, index, response.getColumns()),
               this.queryRewriter);
       return new ColumnarTable(
               result.getOne(),
@@ -82,7 +82,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
               column -> column.getColumnName(),
               column -> ClickHouseUtil.clickHouseTypeToClass(column.getDataType()),
               response.records().iterator(),
-              (i, r) -> r.getValue(i).asObject());
+              (i, r) -> getValue(r, i, response.getColumns()));
       return new RowTable(result.getOne(), result.getTwo());
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);
@@ -90,7 +90,9 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
   }
 
   /**
-   * Gets the value with the correct type, otherwise everything is read as String.
+   * Gets the value with the correct type. We can't directly call {@link ClickHouseValue#asObject()} because in some cases
+   * it could return an object from ClickHouse like a {@link com.clickhouse.data.value.UnsignedLong}.
+   * See {@code com.clickhouse.data.value.ClickHouseLongValue$UnsignedLong}.
    */
   public static Object getValue(ClickHouseRecord record, int index, List<ClickHouseColumn> columns) {
     ClickHouseValue fieldValue = record.getValue(index);
@@ -105,7 +107,8 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
       case Date -> fieldValue.asDate();
       case Int8, UInt32, Int32, UInt16, Int16, UInt8 -> fieldValue.asInteger();
       case Int64, UInt64 -> fieldValue.asLong();
-      case Float64, Float32 -> fieldValue.asDouble();
+      case Float32 -> fieldValue.asFloat();
+      case Float64 -> fieldValue.asDouble();
       case String, FixedString -> fieldValue.asString();
       default -> throw new RuntimeException("Unexpected type " + column.getDataType());
     };
