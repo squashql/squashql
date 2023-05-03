@@ -237,7 +237,7 @@ public class QueryControllerTest {
             .build();
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_MERGE)
-                    .content(JacksonUtil.serialize(new QueryMergeDto(query1, query2)))
+                    .content(JacksonUtil.serialize(new QueryMergeDto(query1, query2, JoinType.FULL)))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();

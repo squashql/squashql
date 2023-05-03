@@ -259,7 +259,7 @@ public class QueryExecutor {
     // Deactivate for now.
   }
 
-  public Table execute(QueryDto first, QueryDto second, SquashQLUser user) {
+  public Table execute(QueryDto first, QueryDto second, JoinType joinType, SquashQLUser user) {
     Map<String, Comparator<?>> firstComparators = Queries.getComparators(first);
     Map<String, Comparator<?>> secondComparators = Queries.getComparators(second);
     secondComparators.putAll(firstComparators); // the comparators of the first query take precedence over the second's
@@ -275,11 +275,11 @@ public class QueryExecutor {
             false);
     CompletableFuture<Table> f1 = CompletableFuture.supplyAsync(() -> execute.apply(first));
     CompletableFuture<Table> f2 = CompletableFuture.supplyAsync(() -> execute.apply(second));
-    return CompletableFuture.allOf(f1, f2).thenApply(__ -> merge(f1.join(), f2.join(), secondComparators, columnSets)).join();
+    return CompletableFuture.allOf(f1, f2).thenApply(__ -> merge(f1.join(), f2.join(), joinType, secondComparators, columnSets)).join();
   }
 
-  public static Table merge(Table table1, Table table2, Map<String, Comparator<?>> comparators, Set<ColumnSet> columnSets) {
-    ColumnarTable table = (ColumnarTable) MergeTables.mergeTables(table1, table2);
+  public static Table merge(Table table1, Table table2, JoinType joinType, Map<String, Comparator<?>> comparators, Set<ColumnSet> columnSets) {
+    ColumnarTable table = (ColumnarTable) MergeTables.mergeTables(table1, table2, joinType);
     table = (ColumnarTable) TableUtils.orderRows(table, comparators, columnSets);
     return TableUtils.replaceTotalCellValues(table, true);
   }

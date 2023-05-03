@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
 import org.junit.jupiter.api.Test;
@@ -52,14 +53,13 @@ public abstract class ATestDocDrillacross extends ABaseTestQuery {
             .rollup(List.of("product"))
             .build();
 
-
     QueryDto query2 = Query
             .from("return")
             .select(List.of("product", "reason"), List.of(sum("quantity returned", "quantity")))
             .rollup(List.of("product", "reason"))
             .build();
 
-    BiConsumer<QueryDto, QueryDto> runnable = (q1, q2) -> this.executor.execute(q1, q2, null).show();
+    BiConsumer<QueryDto, QueryDto> runnable = (q1, q2) -> this.executor.execute(q1, q2, JoinType.FULL, null).show();
     runnable.accept(query1, query2);
   }
 }

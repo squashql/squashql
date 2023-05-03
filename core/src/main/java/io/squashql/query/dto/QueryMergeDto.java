@@ -13,4 +13,5 @@ public class QueryMergeDto {
 
   public QueryDto first;
   public QueryDto second;
+  public JoinType joinType;
 }

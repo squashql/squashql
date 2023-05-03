@@ -5,7 +5,7 @@ import {BucketColumnSet, ColumnSet, ColumnSetKey} from "./columnsets";
 import { VirtualTable } from "./virtualtable";
 
 export class QueryMerge {
-  constructor(readonly first: Query, readonly second: Query) {
+  constructor(readonly first: Query, readonly second: Query, readonly joinType: JoinType) {
   }
 }
 

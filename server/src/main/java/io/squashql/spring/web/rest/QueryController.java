@@ -63,6 +63,7 @@ public class QueryController {
     Table table = this.queryExecutor.execute(
             queryMergeDto.first,
             queryMergeDto.second,
+            queryMergeDto.joinType,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get());
     List<String> fields = table.headers().stream().map(Header::name).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
