@@ -135,8 +135,7 @@ Maven
 Java
 ```
 String jdbcUrl = ...; // to be defined
-String databaseName = ...;// to be defined
-ClickHouseDatastore ds = new ClickHouseDatastore(jdbcUrl, databaseName);
+ClickHouseDatastore ds = new ClickHouseDatastore(jdbcUrl);
 ClickHouseQueryEngine qe = new ClickHouseQueryEngine(ds);
 ```
 
