@@ -11,11 +11,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-class LeftJoinTestMergeTables extends ATestMergeTables {
+class InnerJoinTestMergeTables extends ATestMergeTables {
 
   @Override
   JoinType getJoinType() {
-    return JoinType.LEFT;
+    return JoinType.INNER;
   }
 
   @Override
@@ -23,7 +23,6 @@ class LeftJoinTestMergeTables extends ATestMergeTables {
     /*
     | typology | category | price.sum | price.avg |
     |----------|----------|-----------|-----------|
-    | MDD      | C        | 5         | null      |
     | MN       | A        | 20        | 2.3       |
     | MN       | B        | 25        | 3         |
     */
@@ -35,10 +34,10 @@ class LeftJoinTestMergeTables extends ATestMergeTables {
             Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
-                    new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
-                    new ArrayList<>(Arrays.asList("C", "A", "B")),
-                    new ArrayList<>(Arrays.asList(5, 20, 25)),
-                    new ArrayList<>(Arrays.asList(null, 2.3, 3))));
+                    new ArrayList<>(Arrays.asList("MN", "MN")),
+                    new ArrayList<>(Arrays.asList("A", "B")),
+                    new ArrayList<>(Arrays.asList(20, 25)),
+                    new ArrayList<>(Arrays.asList(2.3, 3))));
   }
 
   @Override
@@ -70,7 +69,6 @@ class LeftJoinTestMergeTables extends ATestMergeTables {
     /*
     | typology | category | company     | price.sum | price.avg |
     |----------|----------|-------------|-----------|-----------|
-    | MDD      | C        | ___total___ | 5         | null      |
     | MN       | A        | ___total___ | 20        | null      |
     | MN       | A        | LECLERC     | null      | 2.3       |
     | MN       | A        | null        | null      | 4         |
@@ -86,12 +84,12 @@ class LeftJoinTestMergeTables extends ATestMergeTables {
             Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
-                    new ArrayList<>(Arrays.asList("MDD", "MN", "MN", "MN", "MN", "MN")),
-                    new ArrayList<>(Arrays.asList("C", "A", "A", "A", "B", "B")),
-                    new ArrayList<>(Arrays.asList("___total___", "___total___", "LECLERC", null, "___total___",
+                    new ArrayList<>(Arrays.asList("MN", "MN", "MN", "MN", "MN")),
+                    new ArrayList<>(Arrays.asList("A", "A", "A", "B", "B")),
+                    new ArrayList<>(Arrays.asList("___total___", "LECLERC", null, "___total___",
                             "SUPER U")),
-                    new ArrayList<>(Arrays.asList(5, 20, null, null, 25, null)),
-                    new ArrayList<>(Arrays.asList(null, null, 2.3, 4, null, 3))));
+                    new ArrayList<>(Arrays.asList(20, null, null, 25, null)),
+                    new ArrayList<>(Arrays.asList(null, 2.3, 4, null, 3))));
   }
 
   @Override
@@ -99,7 +97,6 @@ class LeftJoinTestMergeTables extends ATestMergeTables {
     /*
     | typology | category | company     | price.sum | price.avg |
     |----------|----------|-------------|-----------|-----------|
-    | MDD      | C        | ___total___ | 5         | null      |
     | MN       | A        | ___total___ | 20        | 4         |
     | MN       | A        | LECLERC     | null      | 2.3       |
     | MN       | B        | ___total___ | 25        | null      |
@@ -114,11 +111,11 @@ class LeftJoinTestMergeTables extends ATestMergeTables {
             Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
-                    new ArrayList<>(Arrays.asList("MDD", "MN", "MN", "MN", "MN")),
-                    new ArrayList<>(Arrays.asList("C", "A", "A", "B", "B")),
-                    new ArrayList<>(Arrays.asList("___total___", "___total___", "LECLERC", "___total___", "SUPER U")),
-                    new ArrayList<>(Arrays.asList(5, 20, null, 25, null)),
-                    new ArrayList<>(Arrays.asList(null, 6.3, 2.3, null, 3))));
+                    new ArrayList<>(Arrays.asList("MN", "MN", "MN", "MN")),
+                    new ArrayList<>(Arrays.asList("A", "A", "B", "B")),
+                    new ArrayList<>(Arrays.asList("___total___", "LECLERC", "___total___", "SUPER U")),
+                    new ArrayList<>(Arrays.asList(20, null, 25, null)),
+                    new ArrayList<>(Arrays.asList(6.3, 2.3, null, 3))));
   }
 
   @Override
@@ -133,7 +130,6 @@ class LeftJoinTestMergeTables extends ATestMergeTables {
     | MN       | ___total___ | SUPER U     | null      | 3         |
     | MN       | A           | ___total___ | 20        | null      |
     | MN       | B           | ___total___ | 25        | null      |
-    | ZZ       | B           | ___total___ | 15        | null      |
     */
     return new ColumnarTable(
             List.of(new Header("typology", String.class, false),
@@ -144,12 +140,12 @@ class LeftJoinTestMergeTables extends ATestMergeTables {
             Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
-                    new ArrayList<>(Arrays.asList("MDD", "MDD", "MN", "MN", "MN", "MN", "MN", "ZZ")),
+                    new ArrayList<>(Arrays.asList("MDD", "MDD", "MN", "MN", "MN", "MN", "MN")),
                     new ArrayList<>(
-                            Arrays.asList("___total___", "A", "___total___", "___total___", "___total___", "A", "B", "B")),
-                    new ArrayList<>(Arrays.asList("CARREFOUR", "___total___", "___total___", "LECLERC", "SUPER U", "___total___", "___total___", "___total___")),
-                    new ArrayList<>(Arrays.asList(null, 5, null, null, null, 20, 25, 15)),
-                    new ArrayList<>(Arrays.asList(6.8, null, 4., 2.3, 3., null, null, null))));
+                            Arrays.asList("___total___", "A", "___total___", "___total___", "___total___", "A", "B")),
+                    new ArrayList<>(Arrays.asList("CARREFOUR", "___total___", "___total___", "LECLERC", "SUPER U", "___total___", "___total___")),
+                    new ArrayList<>(Arrays.asList(null, 5, null, null, null, 20, 25)),
+                    new ArrayList<>(Arrays.asList(6.8, null, 4., 2.3, 3., null, null))));
   }
 
   @Override
@@ -160,8 +156,6 @@ class LeftJoinTestMergeTables extends ATestMergeTables {
     | ___total___ | ___total___ | 27        | 5.3       |
     | MDD         | ___total___ | 15        | 2.3       |
     | MDD         | B           | 15        | null      |
-    | MN          | ___total___ | 12        | null      |
-    | MN          | A           | 12        | null      |
     */
     return new ColumnarTable(
             List.of(new Header("typology", String.class, false),
@@ -171,10 +165,10 @@ class LeftJoinTestMergeTables extends ATestMergeTables {
             Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
                     new AggregatedMeasure("price.avg", "price", "avg")),
             List.of(
-                    new ArrayList<>(Arrays.asList("___total___", "MDD", "MDD", "MN", "MN")),
-                    new ArrayList<>(Arrays.asList("___total___", "___total___", "B", "___total___", "A")),
-                    new ArrayList<>(Arrays.asList(27, 15, 15, 12, 12)),
-                    new ArrayList<>(Arrays.asList(5.3, 2.3, null, null, null))));
+                    new ArrayList<>(Arrays.asList("___total___", "MDD", "MDD")),
+                    new ArrayList<>(Arrays.asList("___total___", "___total___", "B")),
+                    new ArrayList<>(Arrays.asList(27, 15, 15)),
+                    new ArrayList<>(Arrays.asList(5.3, 2.3, null))));
   }
 
   @Override

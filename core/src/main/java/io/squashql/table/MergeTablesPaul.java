@@ -7,6 +7,7 @@ import io.squashql.query.Header;
 import io.squashql.query.Measure;
 import io.squashql.query.Table;
 import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.JoinType;
 import org.eclipse.collections.api.list.primitive.IntList;
 import org.eclipse.collections.api.list.primitive.MutableIntList;
@@ -92,7 +93,7 @@ class MergeTablesPaul {
   private static List<List<Object>> mergeValues(Holder holder, Table leftTable, Table rightTable, JoinType joinType) {
     List<Header> mergedTableHeaders = holder.headers;
     Object[] mergedBuffer = new Object[(int) mergedTableHeaders.stream().filter(h -> !h.isMeasure()).count()];
-    Object[] leftBuffer = new Object[(int) leftTable.headers().stream().filter(h -> !h.isMeasure()).count()];
+//    Object[] leftBuffer = new Object[(int) leftTable.headers().stream().filter(h -> !h.isMeasure()).count()];
     Object[] rightBuffer = new Object[(int) rightTable.headers().stream().filter(h -> !h.isMeasure()).count()];
 
     int[] leftMapping = holder.leftMapping;
@@ -117,6 +118,11 @@ class MergeTablesPaul {
         mergedBuffer[leftMapping[i]] = point[i];
       }
 
+      boolean commonPointExistInRightTable = zob(holder, rightTable, rightMapping, mergedBuffer);
+      if (!commonPointExistInRightTable && joinType == JoinType.INNER) {
+        return; // abort
+      }
+
       for (int i = 0; i < rightMapping.length; i++) {
         rightBuffer[i] = mergedBuffer[rightMapping[i]];
       }
@@ -135,7 +141,8 @@ class MergeTablesPaul {
         missingColumnsAreTotal &= SQLTranslator.TOTAL_CELL.equals(mergedBuffer[c]);
       }
 
-      boolean condition = (holder.leftIsIncludeInRight || missingColumnsAreTotal) && (position[0] = rightTable.pointDictionary().getPosition(rightBuffer)) >= 0;
+      boolean pointExistInRightTable = (position[0] = rightTable.pointDictionary().getPosition(rightBuffer)) >= 0;
+      boolean condition = (holder.leftIsIncludeInRight || missingColumnsAreTotal) && pointExistInRightTable;
       for (int i = 0; i < rightCountMeasure; i++) {
         Object value = null;
         if (condition) {
@@ -158,8 +165,9 @@ class MergeTablesPaul {
         mergedBuffer[rightMapping[i]] = point[i];
       }
 
-      for (int i = 0; i < leftMapping.length; i++) {
-        leftBuffer[i] = mergedBuffer[leftMapping[i]];
+      boolean pointExistInLeftTable = zob(holder, leftTable, leftMapping, mergedBuffer);
+      if (!pointExistInLeftTable && (joinType == JoinType.LEFT || joinType == JoinType.INNER)) {
+        return; // abort
       }
 
       for (int i = 0; i < mergedBuffer.length; i++) {
@@ -213,5 +221,41 @@ class MergeTablesPaul {
     MutableIntSet s2 = MutableIntSetFactoryImpl.INSTANCE.of(b);
     s1.removeAll(s2);
     return s1.toArray();
+  }
+
+  public static int[] intersection(int[] a, int[] b) {
+    MutableIntSet s1 = MutableIntSetFactoryImpl.INSTANCE.of(a);
+    MutableIntSet s2 = MutableIntSetFactoryImpl.INSTANCE.of(b);
+    s1.retainAll(s2);
+    return s1.toArray();
+  }
+
+  public static boolean zob(Holder holder, Table table, int[] mapping, Object[] mergedBuffer) {
+    // FIXME review this part and test with more than 1 column in common + shuffle order of columns
+    int[] intersection = intersection(holder.leftMapping, holder.rightMapping);
+    ObjectArrayDictionary dictionary = new ObjectArrayDictionary(intersection.length);
+    table.forEach(row -> {
+      Object[] columnValues = new Object[intersection.length];
+      for (int i = 0; i < intersection.length; i++) {
+        columnValues[i] = row.get(indexOf(mapping, intersection[i]));
+      }
+      dictionary.map(columnValues);
+    });
+
+    Object[] array = new Object[intersection.length];
+    for (int i = 0; i < intersection.length; i++) {
+      array[i] = mergedBuffer[intersection[i]];
+    }
+
+    return dictionary.getPosition(array) >= 0;
+  }
+
+  private static int indexOf(int[] a, int i) {
+    for (int j = 0; j < a.length; j++) {
+      if (a[j] == i) {
+        return j;
+      }
+    }
+    throw new IllegalArgumentException();
   }
 }

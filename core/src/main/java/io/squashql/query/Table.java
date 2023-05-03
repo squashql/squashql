@@ -89,6 +89,7 @@ public interface Table extends Iterable<List<Object>> {
    * @param rowIndex the index of the row to retrieve
    * @return the list of column values for this row or null if the rowIndex is outside the table
    */
+  // FIXME to remove?
   default List<Object> getFactRow(int rowIndex) {
     if (rowIndex >= count()) {
       return null;

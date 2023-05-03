@@ -222,6 +222,61 @@ abstract class ATestMergeTables {
 
   abstract Table getMergeTablesWithDifferentColumnsAndTotalValues();
 
+  /**
+   * Same as {@link #merge_tables_with_different_columns_and_total_values()} but columns are not in the same order in
+   * the tables. Ideally, all the tests should shuffle the order of the columns.
+   */
+  @Test
+  void merge_tables_with_different_columns_different_order_and_total_values() {
+    /*
+    | typology | category | price.sum |
+    |----------|----------|-----------|
+    | MDD      | C        | 5         |
+    | MN       | A        | 20        |
+    | MN       | B        | 25        |
+    */
+    Table leftTable = new ColumnarTable(
+            List.of(new Header("typology", String.class, false),
+                    new Header("category", String.class, false),
+                    new Header("price.sum", int.class, true)),
+            Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
+            List.of(
+                    new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
+                    new ArrayList<>(Arrays.asList("C", "A", "B")),
+                    new ArrayList<>(Arrays.asList(5, 20, 25))));
+    /*
+    | company     | category | typology | price.avg |
+    |-------------|----------|----------|-----------|
+    | ___total___ | A        | MN       | 6.3       |
+    | AUCHAN      | A        | MDD      | 1         |
+    | LECLERC     | A        | MN       | 2.3       |
+    | SUPER U     | B        | MN       | 3         |
+    */
+    Table rightTable = new ColumnarTable(
+            List.of(new Header("company", String.class, false),
+                    new Header("category", String.class, false),
+                    new Header("typology", String.class, false),
+                    new Header("price.avg", int.class, true)),
+            Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
+            List.of(
+                    new ArrayList<>(Arrays.asList("___total___", "AUCHAN", "LECLERC", "SUPER U")),
+                    new ArrayList<>(Arrays.asList("A", "A", "A", "B")),
+                    new ArrayList<>(Arrays.asList("MN", "MDD", "MN", "MN")),
+                    new ArrayList<>(Arrays.asList(6.3, 1, 2.3, 3))));
+
+    Table expectedTable = getMergeTablesWithDifferentColumnsAndTotalValues();
+    Table mergedTable = MergeTablesPaul.mergeTables(leftTable, rightTable, getJoinType());
+    Assertions.assertThat(mergedTable.headers()).containsExactlyElementsOf(expectedTable.headers());
+    Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
+
+    if (getJoinType() == JoinType.FULL) {
+      // Inverse right and left tables. This is only valid for FULL OUTER JOIN
+      expectedTable = reorderColumns((ColumnarTable) expectedTable, List.of("company", "category", "typology", "price.avg", "price.sum"));
+      mergedTable = MergeTablesPaul.mergeTables(rightTable, leftTable);
+      Assertions.assertThat(orderRows(mergedTable)).containsExactlyInAnyOrderElementsOf(orderRows(expectedTable));
+    }
+  }
+
   @Test
   void merge_tables_with_both_common_and_different_columns() {
     /*
