@@ -1,10 +1,10 @@
 package io.squashql;
 
-import com.clickhouse.client.ClickHouseColumn;
+import com.clickhouse.client.ClickHouseNodes;
 import com.clickhouse.client.config.ClickHouseDefaults;
-import com.clickhouse.jdbc.ClickHouseConnection;
+import com.clickhouse.data.ClickHouseColumn;
 import com.clickhouse.jdbc.ClickHouseDataSource;
-import com.clickhouse.jdbc.ClickHouseStatement;
+import com.clickhouse.jdbc.internal.ClickHouseJdbcUrlParser;
 import com.google.common.base.Suppliers;
 import io.squashql.store.Datastore;
 import io.squashql.store.Field;
@@ -22,18 +22,15 @@ public class ClickHouseDatastore implements Datastore {
 
   public final ClickHouseDataSource dataSource;
 
-  public ClickHouseDatastore(String jdbc, String databaseName) {
-    this.dataSource = newDataSource(jdbc, null);
+  public final ClickHouseNodes servers;
 
-    if (databaseName != null) {
-      try (ClickHouseConnection conn = this.dataSource.getConnection();
-           ClickHouseStatement stmt = conn.createStatement()) {
-        stmt.execute("CREATE DATABASE IF NOT EXISTS " + databaseName);
-      } catch (SQLException e) {
-        throw new RuntimeException(e);
-      }
+  public ClickHouseDatastore(String jdbc) {
+    try {
+      this.servers = ClickHouseJdbcUrlParser.parse(jdbc, null).getNodes();
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
     }
-
+    this.dataSource = newDataSource(jdbc, null);
     this.stores = Suppliers.memoize(
             () -> getTableNames(this.dataSource)
                     .stream()

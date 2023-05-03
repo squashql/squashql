@@ -43,7 +43,7 @@ public class TestClickHouseParentComparison extends ATestParentComparison {
 
   @Override
   protected Datastore createDatastore() {
-    return new ClickHouseDatastore(TestUtils.jdbcUrl.apply(this.container), null);
+    return new ClickHouseDatastore(TestUtils.jdbcUrl.apply(this.container));
   }
 
   @Override

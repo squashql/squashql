@@ -15,7 +15,7 @@ public class TestUtils {
 
   protected static final boolean printAll = true;
 
-  protected static final Function<GenericContainer, String> jdbcUrl = c -> String.format("jdbc:clickhouse://%s:%d",
+  protected static final Function<GenericContainer, String> jdbcUrl = c -> String.format("jdbc:ch:http://%s:%d",
           c.getHost(),
           c.getMappedPort(ClickHouseProtocol.HTTP.getDefaultPort()));
 

@@ -43,7 +43,7 @@ public class TestClickHouse{{classSuffix}} extends {{parentTestClass}} {
 
   @Override
   protected Datastore createDatastore() {
-    return new ClickHouseDatastore(TestUtils.jdbcUrl.apply(this.container), null);
+    return new ClickHouseDatastore(TestUtils.jdbcUrl.apply(this.container));
   }
 
   @Override
