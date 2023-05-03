@@ -42,7 +42,7 @@ class MergeTablesPaul {
   public static Table mergeTables(Table leftTable, Table rightTable, JoinType joinType) {
     final Holder mergedTableHeaders = mergeHeaders(leftTable, rightTable);
     final Set<Measure> mergedTableMeasures = mergeMeasures(leftTable.measures(), rightTable.measures());
-    final List<List<Object>> mergedValues = mergeValues(mergedTableHeaders, leftTable, rightTable);
+    final List<List<Object>> mergedValues = mergeValues(mergedTableHeaders, leftTable, rightTable, joinType);
 
     return new ColumnarTable(
             mergedTableHeaders.headers,
@@ -89,10 +89,7 @@ class MergeTablesPaul {
     return Sets.newHashSet(Iterables.concat(leftMeasures, rightMeasures));
   }
 
-  private static List<List<Object>> mergeValues(
-          Holder holder,
-          Table leftTable,
-          Table rightTable) {
+  private static List<List<Object>> mergeValues(Holder holder, Table leftTable, Table rightTable, JoinType joinType) {
     List<Header> mergedTableHeaders = holder.headers;
     Object[] mergedBuffer = new Object[(int) mergedTableHeaders.stream().filter(h -> !h.isMeasure()).count()];
     Object[] leftBuffer = new Object[(int) leftTable.headers().stream().filter(h -> !h.isMeasure()).count()];
