@@ -58,8 +58,8 @@
 
     <clickhouse.version>0.4.5</clickhouse.version>
     <spark.version>3.4.0</spark.version>
-    <bigquery.version>26.1.5</bigquery.version>
-    <snowflake-jdbc.version>3.13.25</snowflake-jdbc.version>
+    <bigquery.version>26.13.0</bigquery.version>
+    <snowflake-jdbc.version>3.13.30</snowflake-jdbc.version>
   </properties>
 
   <modules>
