@@ -19,7 +19,8 @@ public @interface TestClass {
     SPARK("Spark"),
     CLICKHOUSE("ClickHouse"),
     BIGQUERY("BigQuery"),
-    SNOWFLAKE("Snowflake");
+    SNOWFLAKE("Snowflake"),
+    DUCKDB("DuckDB");
 
     public final String className;
 

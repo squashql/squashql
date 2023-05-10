@@ -71,6 +71,7 @@
     <module>server</module>
     <module>java-client</module>
     <module>js/typescript-library</module>
+    <module>duckdb</module>
   </modules>
 
   <distributionManagement>
