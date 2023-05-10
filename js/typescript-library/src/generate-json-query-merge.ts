@@ -1,7 +1,7 @@
 import {from} from "./queryBuilder";
 import {avg, sum} from "./measures";
 import * as fs from "fs"
-import {QueryMerge} from "./query";
+import {JoinType, QueryMerge} from "./query";
 
 export function generateFromQueryMerge() {
   const query1 = from("myTable")
@@ -12,7 +12,7 @@ export function generateFromQueryMerge() {
           .select(["a", "b"], [], [avg("sum", "f1")])
           .build()
 
-  const q = new QueryMerge(query1, query2)
+  const q = new QueryMerge(query1, query2, JoinType.LEFT)
 
   console.log(JSON.stringify(q))
   const data = JSON.stringify(q)

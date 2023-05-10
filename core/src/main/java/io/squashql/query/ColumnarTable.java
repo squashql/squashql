@@ -127,11 +127,11 @@ public class ColumnarTable implements Table {
       return false;
     }
     ColumnarTable lists = (ColumnarTable) o;
-    return headers.equals(lists.headers) && measures.equals(lists.measures) && values.equals(lists.values);
+    return this.headers.equals(lists.headers) && this.measures.equals(lists.measures) && this.values.equals(lists.values);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(headers, measures, values);
+    return Objects.hash(this.headers, this.measures, this.values);
   }
 }

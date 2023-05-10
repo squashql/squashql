@@ -84,25 +84,6 @@ public interface Table extends Iterable<List<Object>> {
   }
 
   /**
-   * Retrieve the column values for a given row index.
-   *
-   * @param rowIndex the index of the row to retrieve
-   * @return the list of column values for this row or null if the rowIndex is outside the table
-   */
-  default List<Object> getFactRow(int rowIndex) {
-    if (rowIndex >= count()) {
-      return null;
-    }
-    List<Object> result = new ArrayList<>();
-    headers().forEach(header -> {
-      if (!header.isMeasure()) {
-        result.add(getColumnValues(header.name()).get(rowIndex));
-      }
-    });
-    return result;
-  }
-
-  /**
    * Returns the number of rows in the table.
    *
    * @return the number of rows

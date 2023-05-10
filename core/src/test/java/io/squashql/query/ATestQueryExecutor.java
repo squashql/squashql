@@ -369,7 +369,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             qr.fieldName("category"),
             qr.fieldName("category"),
             qr.fieldName("quantity"));
-    ConditionDto or = eq("food").or(eq("drink"));
+    ConditionDto or = or(eq("food"), eq("drink"));
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(SCENARIO_FIELD_NAME),
@@ -400,7 +400,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Test
   void testSumIfWithFullPath() {
-    ConditionDto or = eq("food").or(eq("drink"));
+    ConditionDto or = or(eq("food"), eq("drink"));
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(SCENARIO_FIELD_NAME),
@@ -586,7 +586,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .rollup(List.of("category", SCENARIO_FIELD_NAME))
             .build();
 
-    Table result = this.executor.execute(query1, query2, null);
+    Table result = this.executor.execute(query1, query2, JoinType.FULL, null);
 
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly("category", SCENARIO_FIELD_NAME, "p_sum", "p_min");
@@ -623,7 +623,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .orderBy(SCENARIO_FIELD_NAME, List.of("s1", MAIN_SCENARIO_NAME, "s2"))
             .build();
 
-    Table result = this.executor.execute(query1, query2, null);
+    Table result = this.executor.execute(query1, query2, JoinType.FULL, null);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, 46.5d, 1.5d),
             Arrays.asList("food", TOTAL, 9d, 3d),
@@ -675,7 +675,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .select_(List.of(group2), List.of(avg("p_avg", "price")))
             .build();
 
-    Table result = this.executor.execute(query1, query2, null);
+    Table result = this.executor.execute(query1, query2, JoinType.FULL, null);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("Food & Drink", "food", TOTAL, TOTAL, 9d, null),
             Arrays.asList("Food & Drink", "drink", TOTAL, TOTAL, 7.5d, null),

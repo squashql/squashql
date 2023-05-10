@@ -79,7 +79,7 @@ public class HttpClientQuerierTest {
             .withColumn(SCENARIO_FIELD_NAME)
             .aggregatedMeasure("qa", "quantity", "avg");
 
-    QueryResultDto response = querier.queryMerge(new QueryMergeDto(query1, query2));
+    QueryResultDto response = querier.queryMerge(new QueryMergeDto(query1, query2, JoinType.FULL));
     Assertions.assertThat(response.table.rows).containsExactlyInAnyOrder(List.of("MDD up", 4000, 1000d),
             List.of("MN & MDD down", 4000, 1000d),
             List.of("MN & MDD up", 4000, 1000d),

@@ -138,6 +138,13 @@ public class TableUtils {
     return new ColumnarTable(headers, new HashSet<>(measures), values);
   }
 
+  /**
+   * Naturally order the rows from left to right.
+   */
+  public static Table orderRows(ColumnarTable table) {
+    return orderRows(table, Collections.emptyMap(), Collections.emptySet());
+  }
+
   public static Table orderRows(ColumnarTable table,
                                 Map<String, Comparator<?>> comparatorByColumnName,
                                 Collection<ColumnSet> columnSets) {
