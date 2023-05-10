@@ -104,7 +104,6 @@ public class MergeTables {
   private static List<List<Object>> mergeValues(Holder holder, Table leftTable, Table rightTable, JoinType joinType) {
     List<Header> mergedTableHeaders = holder.headers;
     Object[] mergedBuffer = new Object[(int) mergedTableHeaders.stream().filter(h -> !h.isMeasure()).count()];
-//    Object[] leftBuffer = new Object[(int) leftTable.headers().stream().filter(h -> !h.isMeasure()).count()];
     Object[] rightBuffer = new Object[(int) rightTable.headers().stream().filter(h -> !h.isMeasure()).count()];
 
     int[] leftMapping = holder.leftMapping;

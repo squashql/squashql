@@ -18,28 +18,4 @@ public sealed interface ConditionDto permits ConstantConditionDto, InConditionDt
   ConditionDto NOT_NULL_CONDITION = new ConstantConditionDto(NOT_NULL);
 
   ConditionType type();
-
-  /**
-   * Creates a new condition that represents the result of a logical <b>and</b> between this condition and another
-   * condition.
-   *
-   * @param other the condition to combine to this one
-   * @return the new condition representing the result of the and
-   */
-  // FIXME might delete it
-  default ConditionDto and(ConditionDto other) {
-    return new LogicalConditionDto(AND, this, other);
-  }
-
-  /**
-   * Creates a new condition that represents the result of a logical <b>and</b> between this condition and another
-   * condition.
-   *
-   * @param other the condition to combine to this one
-   * @return the new condition representing the result of the and
-   */
-  // FIXME might delete it
-  default ConditionDto or(ConditionDto other) {
-    return new LogicalConditionDto(OR, this, other);
-  }
 }

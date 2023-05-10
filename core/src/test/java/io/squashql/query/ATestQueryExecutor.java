@@ -369,7 +369,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             qr.fieldName("category"),
             qr.fieldName("category"),
             qr.fieldName("quantity"));
-    ConditionDto or = eq("food").or(eq("drink"));
+    ConditionDto or = or(eq("food"), eq("drink"));
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(SCENARIO_FIELD_NAME),
@@ -400,7 +400,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Test
   void testSumIfWithFullPath() {
-    ConditionDto or = eq("food").or(eq("drink"));
+    ConditionDto or = or(eq("food"), eq("drink"));
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(SCENARIO_FIELD_NAME),
