@@ -4,6 +4,7 @@ import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.Table;
+import io.squashql.query.dto.JoinType;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -37,10 +38,10 @@ class TestMergeTablesEdgeCases {
 
     Table emptyTable = Mockito.mock(Table.class);
     Mockito.when(emptyTable.count()).thenReturn(0L);
-    Table mergedTable = MergeTables.mergeTables(emptyTable, table);
+    Table mergedTable = MergeTables.mergeTables(emptyTable, table, JoinType.LEFT);
     Assertions.assertThat(mergedTable).isEqualTo(table);
 
-    mergedTable = MergeTables.mergeTables(table, emptyTable);
+    mergedTable = MergeTables.mergeTables(table, emptyTable, JoinType.LEFT);
     Assertions.assertThat(mergedTable).isEqualTo(table);
   }
 
@@ -74,7 +75,7 @@ class TestMergeTablesEdgeCases {
                     new ArrayList<>(Arrays.asList("A", "B", "C")),
                     new ArrayList<>(Arrays.asList(2.3, 3, 5))));
 
-    Assertions.assertThatThrownBy(() -> MergeTables.mergeTables(leftTable, rightTable))
+    Assertions.assertThatThrownBy(() -> MergeTables.mergeTables(leftTable, rightTable, JoinType.LEFT))
             .isExactlyInstanceOf(UnsupportedOperationException.class);
   }
 }

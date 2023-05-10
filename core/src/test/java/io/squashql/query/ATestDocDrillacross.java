@@ -41,7 +41,8 @@ public abstract class ATestDocDrillacross extends ABaseTestQuery {
 
     this.tm.load(MAIN_SCENARIO_NAME, "return", List.of(
             new Object[]{"A", 1, "defective"},
-            new Object[]{"C", 3, "unwanted"}
+            new Object[]{"C", 3, "unwanted"},
+            new Object[]{"D", 1, "unwanted"}
     ));
   }
 
@@ -59,7 +60,7 @@ public abstract class ATestDocDrillacross extends ABaseTestQuery {
             .rollup(List.of("product", "reason"))
             .build();
 
-    BiConsumer<QueryDto, QueryDto> runnable = (q1, q2) -> this.executor.execute(q1, q2, JoinType.FULL, null).show();
+    BiConsumer<QueryDto, QueryDto> runnable = (q1, q2) -> this.executor.execute(q1, q2, JoinType.LEFT, null).show();
     runnable.accept(query1, query2);
   }
 }

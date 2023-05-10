@@ -113,6 +113,7 @@ export class Table {
 export enum JoinType {
   INNER = "INNER",
   LEFT = "LEFT",
+  FULL = "FULL",
 }
 
 class Join {

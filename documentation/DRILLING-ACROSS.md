@@ -67,14 +67,16 @@ Result:
 +-------------+-------------------+
 |     product | quantity returned |
 +-------------+-------------------+
-| Grand Total |                 4 |
+| Grand Total |                 5 |
 |           A |                 1 |
 |           C |                 3 |
+|           D |                 1 |
 +-------------+-------------------+
 ```
 
 To see both aggregate values quantity returned and quantity sold in the same table, we can use drilling across feature
-of SquashQL:
+of SquashQL. Two queries need to be defined and how results of those queries should be joined. Three join strategies are
+possible: FULL, INNER, LEFT.
 
 ```typescript
 const queryShipment = from("shipment")
@@ -85,22 +87,71 @@ const queryReturn = from("return")
         .select(["product"], [], [sum("quantity returned", "quantity")])
         .rollup(["product"])
         .build()
+```
 
-querier.executeQueryMerge(new QueryMerge(queryShipment, queryReturn))
+The results will be *merged* or *stitched* together on their common columns that are not aggregated values. In this case: product.
+Missing values will be filled with `null`.
+
+##### FULL
+
+```typescript
+querier.executeQueryMerge(new QueryMerge(queryShipment, queryReturn, JoinType.FULL))
         .then(result => console.log(result))
 ```
 
-The results will be *merged* or *stitched* together on their common columns that are not aggregated values. In this case: product. 
-Missing values will be filled with `null`. In `return` table, there is no entry for product `B` so the quantity returned value is 
-set to `null`.
+In `return` table, there is no entry for product `B` so the quantity returned value is set to `null`. In `shipment` 
+table, there is no entry for product `D` so the quantity sold value is set to `null`. The type of join is `FULL` so both
+entries are kept.
 
 ```
 +-------------+---------------+-------------------+
 |     product | quantity sold | quantity returned |
 +-------------+---------------+-------------------+
-| Grand Total |            54 |                 4 |
+| Grand Total |            54 |                 5 |
 |           A |            15 |                 1 |
 |           B |            23 |              null |
+|           C |            16 |                 3 |
+|           D |          null |                 1 |
++-------------+---------------+-------------------+
+```
+
+##### LEFT
+
+```typescript
+querier.executeQueryMerge(new QueryMerge(queryShipment, queryReturn, JoinType.LEFT))
+        .then(result => console.log(result))
+```
+
+In `return` table, there is no entry for product `B` so the quantity returned value is set to `null`. In `shipment`
+table, there is no entry for product `D` but the join type is `LEFT` so this entry is discarded.
+
+```
++-------------+---------------+-------------------+
+|     product | quantity sold | quantity returned |
++-------------+---------------+-------------------+
+| Grand Total |            54 |                 5 |
+|           A |            15 |                 1 |
+|           B |            23 |              null |
+|           C |            16 |                 3 |
++-------------+---------------+-------------------+
+```
+
+##### INNER
+
+```typescript
+querier.executeQueryMerge(new QueryMerge(queryShipment, queryReturn, JoinType.INNER))
+        .then(result => console.log(result))
+```
+
+In `return` table, there is no entry for product `B` and in `shipment` table, there is no entry for product `D` and the 
+join type is `INNER` so both entries are discarded.
+
+```
++-------------+---------------+-------------------+
+|     product | quantity sold | quantity returned |
++-------------+---------------+-------------------+
+| Grand Total |            54 |                 5 |
+|           A |            15 |                 1 |
 |           C |            16 |                 3 |
 +-------------+---------------+-------------------+
 ```
@@ -139,7 +190,7 @@ const queryReturnWithReason = from("return")
         .rollup(["product", "reason"])
         .build()
 
-querier.executeQueryMerge(new QueryMerge(queryShipment, queryReturnWithReason))
+querier.executeQueryMerge(new QueryMerge(queryShipment, queryReturnWithReason, JoinType.FULL))
         .then(result => console.log(result))
 ```
 

@@ -24,19 +24,12 @@ public class MergeTables {
   private MergeTables() {
   }
 
-  public static Table mergeTables(List<Table> tables) {
+  public static Table mergeTables(List<Table> tables, JoinType joinType) {
     Table result = null;
     for (Table table : tables) {
-      result = result == null ? table : mergeTables(result, table);
+      result = result == null ? table : mergeTables(result, table, joinType);
     }
     return result;
-  }
-
-  /**
-   * Same as {@link #mergeTables(Table, Table, JoinType)} but with {@code JoinType = FULL}
-   */
-  public static Table mergeTables(Table leftTable, Table rightTable) {
-    return mergeTables(leftTable, rightTable, JoinType.FULL);
   }
 
   /**
