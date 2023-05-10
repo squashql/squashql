@@ -1,10 +1,11 @@
 package io.squashql.query.database;
 
 import io.squashql.DuckDBDatastore;
-import io.squashql.SnowflakeUtil;
+import io.squashql.DuckDBUtil;
 import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.Table;
+import org.duckdb.DuckDBColumnType;
 import org.eclipse.collections.api.tuple.Pair;
 
 import java.io.Serializable;
@@ -13,7 +14,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 
 public class DuckDBQueryEngine extends AQueryEngine<DuckDBDatastore> {
 
@@ -26,7 +30,15 @@ public class DuckDBQueryEngine extends AQueryEngine<DuckDBDatastore> {
     return executeQuery(sql, tableResult -> {
       List<Class<?>> columnTypes = new ArrayList<>();
       for (int i = 0; i < tableResult.getMetaData().getColumnCount(); i++) {
-        columnTypes.add(SnowflakeUtil.sqlTypeToClass(tableResult.getMetaData().getColumnType(i + 1)));
+        Class<?> klass = DuckDBUtil.sqlTypeToClass(tableResult.getMetaData().getColumnType(i + 1));
+        // Special case for HUGEINT. See also #getTypeValue
+        if (klass == Object.class) {
+          String columnTypeName = tableResult.getMetaData().getColumnTypeName(i + 1);
+          if (columnTypeName.equals(DuckDBColumnType.HUGEINT.name())) {
+            klass = long.class;
+          }
+        }
+        columnTypes.add(klass);
       }
 
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(

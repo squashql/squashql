@@ -2,9 +2,9 @@ package io.squashql;
 
 import java.sql.Types;
 
-public final class SnowflakeUtil {
+public final class DuckDBUtil {
 
-  private SnowflakeUtil() {
+  private DuckDBUtil() {
   }
 
   public static Class<?> sqlTypeToClass(int dataType) {

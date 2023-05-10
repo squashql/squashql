@@ -1,7 +1,7 @@
 package io.squashql.transaction;
 
 import io.squashql.DuckDBDatastore;
-import io.squashql.SnowflakeUtil;
+import io.squashql.DuckDBUtil;
 import io.squashql.store.Field;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
@@ -38,7 +38,7 @@ public class DuckDBTransactionManager implements TransactionManager {
       int size = list.size();
       for (int i = 0; i < size; i++) {
         Field field = list.get(i);
-        sb.append("\"").append(field.name()).append("\" ").append(SnowflakeUtil.classToSqlType(field.type()));
+        sb.append("\"").append(field.name()).append("\" ").append(DuckDBUtil.classToSqlType(field.type()));
         if (i < size - 1) {
           sb.append(", ");
         }

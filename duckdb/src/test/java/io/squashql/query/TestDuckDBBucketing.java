@@ -1,7 +1,6 @@
 package io.squashql.query;
 
 import io.squashql.DuckDBDatastore;
-import io.squashql.query.ATestQueryExecutor;
 import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.store.Datastore;
@@ -11,7 +10,7 @@ import io.squashql.transaction.TransactionManager;
 /**
  * Do not edit this class, it has been generated automatically by {@link io.squashql.template.DuckDBClassTemplateGenerator}.
  */
-public class TestDuckDB{{classSuffix}} extends {{parentTestClass}} {
+public class TestDuckDBBucketing extends ATestBucketing {
 
   @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {

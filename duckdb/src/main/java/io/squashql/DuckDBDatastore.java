@@ -44,7 +44,7 @@ public class DuckDBDatastore implements Datastore {
           if (value == null) {
             value = new Store(key, new ArrayList<>());
           }
-          value.fields().add(new Field(tableName, columnName, SnowflakeUtil.sqlTypeToClass(dataType)));
+          value.fields().add(new Field(tableName, columnName, DuckDBUtil.sqlTypeToClass(dataType)));
           return value;
         });
       }

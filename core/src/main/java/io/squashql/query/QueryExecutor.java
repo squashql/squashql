@@ -42,15 +42,14 @@ public class QueryExecutor {
   }
 
   private QueryCache getQueryCache(QueryCacheContextValue queryCacheContextValue) {
-//    return switch (queryCacheContextValue.action) {
-//      case USE -> this.queryCache;
-//      case NOT_USE -> EmptyQueryCache.INSTANCE;
-//      case INVALIDATE -> {
-//        this.queryCache.clear();
-//        yield this.queryCache;
-//      }
-//    };
-    return EmptyQueryCache.INSTANCE;
+    return switch (queryCacheContextValue.action) {
+      case USE -> this.queryCache;
+      case NOT_USE -> EmptyQueryCache.INSTANCE;
+      case INVALIDATE -> {
+        this.queryCache.clear();
+        yield this.queryCache;
+      }
+    };
   }
 
   public Table execute(String rawSqlQuery) {

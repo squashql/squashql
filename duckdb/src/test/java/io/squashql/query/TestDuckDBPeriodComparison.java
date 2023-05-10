@@ -11,7 +11,7 @@ import io.squashql.transaction.TransactionManager;
 /**
  * Do not edit this class, it has been generated automatically by {@link io.squashql.template.DuckDBClassTemplateGenerator}.
  */
-public class TestDuckDB{{classSuffix}} extends {{parentTestClass}} {
+public class TestDuckDBPeriodComparison extends ATestPeriodComparison {
 
   @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {
