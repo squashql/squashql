@@ -3,10 +3,10 @@ package io.squashql.query.context;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
-public interface ContextValue {
+public interface Parameter {
 
   /**
-   * Returns the key of the context value used to uniquely identify it.
+   * Returns the key of the parameter used to uniquely identify it.
    *
    * @return the key.
    */

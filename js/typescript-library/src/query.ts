@@ -3,6 +3,7 @@ import {ConditionType, Criteria} from "./conditions";
 import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order";
 import {BucketColumnSet, ColumnSet, ColumnSetKey} from "./columnsets";
 import { VirtualTable } from "./virtualtable";
+import {Parameter} from "./parameters";
 
 export class QueryMerge {
   constructor(readonly first: Query, readonly second: Query, readonly joinType: JoinType) {
@@ -13,6 +14,7 @@ export class Query {
   columns: Array<string>
   rollupColumns: Array<string>
   columnSets: Map<string, ColumnSet>
+  parameters: Map<string, Parameter>
   measures: Array<Measure>
   table: Table
   virtualTable: VirtualTable
@@ -30,6 +32,7 @@ export class Query {
     this.havingCriteriaDto = undefined
     this.orders = new Map<string, Order>()
     this.columnSets = new Map<string, ColumnSet>()
+    this.parameters = new Map<string, Parameter>()
   }
 
   onTable(table: Table): Query {
@@ -67,6 +70,11 @@ export class Query {
     return this
   }
 
+  withParameter(parameter: Parameter): Query {
+    this.parameters.set(parameter.key, parameter)
+    return this
+  }
+
   withMeasure(measure: Measure): Query {
     this.measures.push(measure)
     return this
@@ -90,6 +98,7 @@ export class Query {
       "columns": this.columns,
       "rollupColumns": this.rollupColumns,
       "columnSets": Object.fromEntries(this.columnSets),
+      "parameters": Object.fromEntries(this.parameters),
       "measures": this.measures,
       "whereCriteriaDto": this.whereCriteria,
       "havingCriteriaDto": this.havingCriteriaDto,
