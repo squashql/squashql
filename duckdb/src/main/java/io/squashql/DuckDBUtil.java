@@ -1,64 +1,36 @@
 package io.squashql;
 
-import java.sql.Types;
+import io.squashql.jdbc.JdbcUtil;
+import org.duckdb.DuckDBColumnType;
+
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 
 public final class DuckDBUtil {
 
   private DuckDBUtil() {
   }
 
-  public static Class<?> sqlTypeToClass(int dataType) {
-    return switch (dataType) {
-      case Types.CHAR, Types.NVARCHAR, Types.VARCHAR, Types.LONGVARCHAR -> String.class;
-      case Types.BOOLEAN, Types.BIT -> boolean.class;
-      case Types.TINYINT -> byte.class;
-      case Types.SMALLINT -> short.class;
-      case Types.INTEGER -> int.class;
-      case Types.BIGINT -> long.class;
-      case Types.REAL, Types.FLOAT -> float.class;
-      case Types.DECIMAL, Types.DOUBLE -> double.class;
-      case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> byte[].class;
-      case Types.DATE -> java.sql.Date.class;
-      case Types.TIME -> java.sql.Time.class;
-      case Types.TIMESTAMP -> java.sql.Timestamp.class;
-      default -> Object.class;
-    };
-  }
-
-  public static String classToSqlType(Class<?> clazz) {
-    if (clazz.equals(String.class)) {
-      return "STRING";
+  /**
+   * Specialized {@link JdbcUtil#sqlTypeToClass(int)} to handle specific DuckDB cases like {@link DuckDBColumnType#HUGEINT}.
+   *
+   * @param metaData {@link ResultSetMetaData}
+   * @param column   the first column is 1, the second is 2, ...
+   * @return the equivalent java class.
+   */
+  public static Class<?> sqlTypeToClass(ResultSetMetaData metaData, int column) {
+    try {
+      Class<?> klass = JdbcUtil.sqlTypeToClass(metaData.getColumnType(column));
+      // Special case for DuckDBColumnType.HUGEINT (128 bits integer). See also #getTypeValue
+      if (klass == Object.class) {
+        String columnTypeName = metaData.getColumnTypeName(column);
+        if (columnTypeName.equals(DuckDBColumnType.HUGEINT.name())) {
+          klass = long.class;
+        }
+      }
+      return klass;
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
     }
-    if (clazz.equals(Byte.class) || clazz.equals(byte.class)) {
-      return "TINYINT";
-    }
-    if (clazz.equals(Short.class) || clazz.equals(short.class)) {
-      return "SMALLINT";
-    }
-    if (clazz.equals(Integer.class) || clazz.equals(int.class)) {
-      return "INTEGER";
-    }
-    if (clazz.equals(Long.class) || clazz.equals(long.class)) {
-      return "BIGINT";
-    }
-    if (clazz.equals(Float.class) || clazz.equals(float.class)) {
-      return "FLOAT";
-    }
-    if (clazz.equals(Double.class) || clazz.equals(double.class)) {
-      return "DOUBLE";
-    }
-    if (clazz.equals(Boolean.class) || clazz.equals(boolean.class)) {
-      return "BOOLEAN";
-    }
-    if (clazz.equals(java.sql.Date.class) || clazz.equals(java.time.LocalDate.class)) {
-      return "DATE";
-    }
-    if (clazz.equals(java.sql.Time.class) || clazz.equals(java.time.LocalDateTime.class)) {
-      return "TIME";
-    }
-    if (clazz.equals(java.sql.Timestamp.class)) {
-      return "TIMESTAMP";
-    }
-    throw new IllegalArgumentException("Unsupported field type " + clazz);
   }
 }

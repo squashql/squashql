@@ -1,7 +1,7 @@
 package io.squashql.transaction;
 
 import io.squashql.DuckDBDatastore;
-import io.squashql.DuckDBUtil;
+import io.squashql.jdbc.JdbcUtil;
 import io.squashql.store.Field;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
@@ -38,7 +38,7 @@ public class DuckDBTransactionManager implements TransactionManager {
       int size = list.size();
       for (int i = 0; i < size; i++) {
         Field field = list.get(i);
-        sb.append("\"").append(field.name()).append("\" ").append(DuckDBUtil.classToSqlType(field.type()));
+        sb.append("\"").append(field.name()).append("\" ").append(JdbcUtil.classToSqlType(field.type()));
         if (i < size - 1) {
           sb.append(", ");
         }
@@ -54,9 +54,7 @@ public class DuckDBTransactionManager implements TransactionManager {
   public void load(String scenario, String store, List<Object[]> tuples) {
     // Check the table contains a column scenario.
     ensureScenarioColumnIsPresent(store);
-//    String join = String.join(",", IntStream.range(0, tuples.get(0).length + 1).mapToObj(i -> "%s").toList());
     String sql = "insert into \"" + store + "\" values ";
-//    String pattern = "(" + join + ")";
     try (Connection conn = this.datastore.getConnection();
          Statement stmt = conn.createStatement()) {
       for (Object[] tuple : tuples) {

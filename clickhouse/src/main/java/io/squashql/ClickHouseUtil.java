@@ -3,8 +3,6 @@ package io.squashql;
 
 import com.clickhouse.data.ClickHouseDataType;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDate;
 
 public final class ClickHouseUtil {
@@ -36,22 +34,5 @@ public final class ClickHouseUtil {
 
   public static Class<?> clickHouseTypeToClass(ClickHouseDataType dataType) {
     return dataType.getObjectClass();
-  }
-
-  public static void show(ResultSet set) {
-    StringBuilder sb = new StringBuilder();
-    try {
-      int columnCount = set.getMetaData().getColumnCount();
-
-      while (set.next()) {
-        for (int i = 0; i < columnCount; i++) {
-          sb.append(set.getObject(i + 1)).append(",");
-        }
-        sb.append(System.lineSeparator());
-      }
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
-    System.out.println(sb.toString());
   }
 }

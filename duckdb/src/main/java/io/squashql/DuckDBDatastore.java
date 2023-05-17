@@ -1,27 +1,40 @@
 package io.squashql;
 
-import io.squashql.store.Datastore;
-import io.squashql.store.Field;
+import com.google.common.base.Suppliers;
+import io.squashql.jdbc.JdbcDatastore;
+import io.squashql.jdbc.JdbcUtil;
 import io.squashql.store.Store;
+import org.duckdb.DuckDBConnection;
 
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Map;
+import java.util.function.Supplier;
 
-public class DuckDBDatastore implements Datastore {
+public class DuckDBDatastore implements JdbcDatastore {
+
+  private final DuckDBConnection connection;
+  public final Supplier<Map<String, Store>> stores;
 
   public DuckDBDatastore() {
     try {
       Class.forName("org.duckdb.DuckDBDriver");
+      // Create an in-memory db.
+      this.connection = (DuckDBConnection) DriverManager.getConnection("jdbc:duckdb:");
+      String schema = this.connection.getSchema();
+      String catalog = this.connection.getCatalog();
+      this.stores = Suppliers.memoize(() -> JdbcUtil.getStores(catalog, schema, getConnection(), JdbcUtil::sqlTypeToClass));
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
 
+  @Override
   public Connection getConnection() {
     try {
-      return DriverManager.getConnection("jdbc:duckdb:data.db");
+      // Duplicate the connection to increase the count in DuckDBDatabase. Once it reaches 0, the db is deleted.
+      return this.connection.duplicate();
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
@@ -29,28 +42,6 @@ public class DuckDBDatastore implements Datastore {
 
   @Override
   public Map<String, Store> storesByName() {
-    // FIXME
-    try (Connection connection = getConnection()) {
-      DatabaseMetaData metadata = connection.getMetaData();
-      String schema = connection.getSchema();
-      String catalog = connection.getCatalog();
-      Map<String, Store> stores = new HashMap<>();
-      ResultSet resultSet = metadata.getColumns(catalog, schema, "%", null);
-      while (resultSet.next()) {
-        String tableName = resultSet.getString("TABLE_NAME");
-        String columnName = resultSet.getString("COLUMN_NAME");
-        int dataType = resultSet.getInt("DATA_TYPE");
-        stores.compute(tableName, (key, value) -> {
-          if (value == null) {
-            value = new Store(key, new ArrayList<>());
-          }
-          value.fields().add(new Field(tableName, columnName, DuckDBUtil.sqlTypeToClass(dataType)));
-          return value;
-        });
-      }
-      return stores;
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
+    return this.stores.get();
   }
 }
