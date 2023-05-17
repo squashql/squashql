@@ -151,19 +151,12 @@ public class TableUtils {
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
 
-    boolean hasComparatorOnMeasure = false;
     List<Header> headers = table.headers;
-    for (Header header : headers) {
-      if (header.isMeasure()) {
-        hasComparatorOnMeasure |= comparatorByColumnName.containsKey(header.name());
-      }
-    }
-
     for (int i = 0; i < headers.size(); i++) {
       String headerName = headers.get(i).name();
       Comparator<?> queryComp = comparatorByColumnName.get(headerName);
-      // Order a column even if not explicitly asked in the query only if no comparator on any measure
-      if (queryComp != null || (!headers.get(i).isMeasure() && !hasComparatorOnMeasure)) {
+      // Order by default if not explicitly asked in the query. Otherwise, respect the order.
+      if (queryComp != null || comparatorByColumnName.isEmpty()) {
         args.add(table.getColumnValues(headerName));
         // Always order table. If not defined, use natural order comp.
         comparators.add(queryComp == null ? NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder())
