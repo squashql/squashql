@@ -433,13 +433,15 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
     query.orderBy("category", OrderKeywordDto.DESC);
     result = this.executor.execute(query);
-    Assertions.assertThat(result).containsExactly(
-            List.of(MAIN_SCENARIO_NAME, "drink", 1l),
-            List.of(MAIN_SCENARIO_NAME, "cloth", 1l),
-            List.of("s1", "drink", 1l),
-            List.of("s1", "cloth", 1l),
-            List.of("s2", "drink", 1l),
-            List.of("s2", "cloth", 1l));
+    // The order is enforced by the user on category, but we can't know the order of the scenario column, this is why
+    // only the category column is checked
+    Assertions.assertThat(result.getColumnValues("category")).containsExactly(
+            "drink",
+            "drink",
+            "drink",
+            "cloth",
+            "cloth",
+            "cloth");
 
     List<String> elements = List.of("s2", MAIN_SCENARIO_NAME, "s1");
     query.orderBy(SCENARIO_FIELD_NAME, elements);
@@ -526,7 +528,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of("drink", 7.5d),
             List.of("food", 9d));
 
-    query.orderBy(result.getHeader(sum("p", "price")).name(), OrderKeywordDto.DESC);
+    query.orderBy("p", OrderKeywordDto.DESC);
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             List.of("cloth", 30d),
