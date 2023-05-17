@@ -31,7 +31,7 @@ public class DuckDBQueryEngine extends AQueryEngine<DuckDBDatastore> {
       List<Class<?>> columnTypes = new ArrayList<>();
       for (int i = 0; i < tableResult.getMetaData().getColumnCount(); i++) {
         Class<?> klass = DuckDBUtil.sqlTypeToClass(tableResult.getMetaData().getColumnType(i + 1));
-        // Special case for HUGEINT. See also #getTypeValue
+        // Special case for HUGEINT (128 bits integer). See also #getTypeValue
         if (klass == Object.class) {
           String columnTypeName = tableResult.getMetaData().getColumnTypeName(i + 1);
           if (columnTypeName.equals(DuckDBColumnType.HUGEINT.name())) {
@@ -61,13 +61,9 @@ public class DuckDBQueryEngine extends AQueryEngine<DuckDBDatastore> {
 
     private final ResultSet resultSet;
     private final Object[] buffer;
-    private boolean isEmpty;
-    private boolean isFirst = true;
-    private boolean isLast = false;
 
     private ResultSetIterator(ResultSet resultSet) throws SQLException {
       this.resultSet = resultSet;
-//      this.isEmpty = !this.resultSet.next(); // the only way to know if it is empty, but we will have to ignore next() once to not miss the first row.
       this.buffer = new Object[this.resultSet.getMetaData().getColumnCount()];
     }
 

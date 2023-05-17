@@ -46,7 +46,7 @@ public class QueryExecutor {
       case USE -> this.queryCache;
       case NOT_USE -> EmptyQueryCache.INSTANCE;
       case INVALIDATE -> {
-        this.queryCache.clear();
+        this.queryCache.clear(); // FIXME this should be user based.
         yield this.queryCache;
       }
     };
