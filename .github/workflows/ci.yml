@@ -64,6 +64,22 @@ jobs:
         env:
           TESTCONTAINERS_REUSE_ENABLE: true
 
+  duckdb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: Build with Maven
+        run: mvn -pl :squashql-duckdb -am clean install --no-transfer-progress -DskipTests
+      - name: Run duckdb tests
+        run: mvn -pl :squashql-duckdb --no-transfer-progress test
+
   bigquery:
     runs-on: ubuntu-latest
     timeout-minutes: 10

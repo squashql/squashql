@@ -33,7 +33,9 @@ You can try SquashQL directly from your web browser with [our showcase project](
 
 ## Compatibility
 
-SquashQL is currently compatible with the following SQL databases: [Apache Spark](https://spark.apache.org/), [ClickHouse](https://clickhouse.com/), [BigQuery](https://cloud.google.com/bigquery/) and [Snowflake](https://www.snowflake.com/en/). 
+SquashQL is currently compatible with the following SQL databases: [Apache Spark](https://spark.apache.org/), 
+[ClickHouse](https://clickhouse.com/), [BigQuery](https://cloud.google.com/bigquery/), [Snowflake](https://www.snowflake.com/en/) 
+and [DuckDB](https://duckdb.org/). 
 
 ## API
 
@@ -115,6 +117,23 @@ java project a `QueryEngine` and `Datasatore` by picking the correct implementat
 the `QueryEngine` instance.
 
 Find a ready-to-use example with Apache Spark and Spring Boot [here](https://github.com/squashql/squashql-showcase).
+
+#### DuckDB
+
+Maven
+```xml
+<dependency>
+  <groupId>io.squashql</groupId>
+  <artifactId>squashql-duckdb</artifactId>
+  <version>${squashql.version}</version>
+</dependency>
+```
+
+Java
+```
+DuckDBDatastore ds = new DuckDBDatastore();
+DuckDBQueryEngine qe = new DuckDBQueryEngine(ds);
+```
 
 #### Apache Spark
 

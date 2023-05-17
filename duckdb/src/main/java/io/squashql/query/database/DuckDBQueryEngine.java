@@ -1,29 +1,24 @@
 package io.squashql.query.database;
 
-import io.squashql.SnowflakeDatastore;
+import io.squashql.DuckDBDatastore;
+import io.squashql.DuckDBUtil;
 import io.squashql.jdbc.JdbcQueryEngine;
-import io.squashql.jdbc.JdbcUtil;
 
 import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.function.BiFunction;
 
-public class SnowflakeQueryEngine extends JdbcQueryEngine<SnowflakeDatastore> {
+public class DuckDBQueryEngine extends JdbcQueryEngine<DuckDBDatastore> {
 
   /**
-   * https://docs.snowflake.com/en/sql-reference/functions-aggregation.html. NOTE there is more but only a subset is
-   * proposed here.
+   * https://duckdb.org/docs/sql/aggregates. NOTE there is more but only a subset is proposed here.
    */
   public static final List<String> SUPPORTED_AGGREGATION_FUNCTIONS = List.of(
           "ANY_VALUE",
           "AVG",
           "CORR",
           "COUNT",
-          "COUNT_IF",
           "COVAR_POP",
-          "COVAR_SAMP",
-          "LISTAGG",
           "MAX",
           "MEDIAN",
           "MIN",
@@ -34,19 +29,13 @@ public class SnowflakeQueryEngine extends JdbcQueryEngine<SnowflakeDatastore> {
           "VAR_POP",
           "VAR_SAMP");
 
-  public SnowflakeQueryEngine(SnowflakeDatastore datastore) {
-    super(datastore, new SnowflakeQueryRewriter());
+  public DuckDBQueryEngine(DuckDBDatastore datastore) {
+    super(datastore, new DuckDBQueryRewriter());
   }
 
   @Override
   protected BiFunction<ResultSetMetaData, Integer, Class<?>> typeToClassConverter() {
-    return (metaData, column) -> {
-      try {
-        return JdbcUtil.sqlTypeToClass(metaData.getColumnType(column));
-      } catch (SQLException e) {
-        throw new RuntimeException(e);
-      }
-    };
+    return DuckDBUtil::sqlTypeToClass;
   }
 
   @Override
