@@ -31,11 +31,11 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
   protected String competitorStoreName = "competitor" + getClass().getSimpleName().toLowerCase();
 
-  protected CaffeineQueryCache queryCache;
+  protected GlobalCache queryCache;
 
   @Override
   protected void afterSetup() {
-    this.queryCache = (CaffeineQueryCache) this.executor.queryCache;
+    this.queryCache = (GlobalCache) this.executor.queryCache;
   }
 
   @Override
@@ -304,7 +304,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
       c.getAndIncrement();
       latch.countDown();
     });
-    QueryExecutor executor = new QueryExecutor(this.createQueryEngine(this.datastore), cache);
+    QueryExecutor executor = new QueryExecutor(this.createQueryEngine(this.datastore), new GlobalCache(() -> cache));
 
     Supplier<QueryDto> querySupplier = () -> new QueryDto()
             .table(this.storeName)
@@ -338,17 +338,26 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .build();
     Table result = execute(this.executor, query, paul);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
-    assertCacheStats(0, 3);
+    assertCacheStats(0, 3, paul);
+    assertCacheStats(0, 0, peter);
 
     // Execute the same query, same user
     result = execute(this.executor, query, paul);
-    assertCacheStats(3, 3);
+    assertCacheStats(3, 3, paul);
+    assertCacheStats(0, 0, peter);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
 
     // Execute the same query, but different user
     result = execute(this.executor, query, peter);
-    assertCacheStats(3, 6);
+    assertCacheStats(0, 3, peter);
+    assertCacheStats(3, 3, paul);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
+
+    /// Test invalid cache for a given user
+    query.withParameter(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.INVALIDATE));
+    execute(this.executor, query, paul);
+    assertCacheStats(0, 3, paul); // reset for paul
+    assertCacheStats(0, 3, peter); // same for peter
   }
 
   @Test
@@ -370,15 +379,15 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .build();
     Table result = execute(this.executor, queryDto, paul);
     Assertions.assertThat(result).containsExactly(List.of(5d));
-    assertCacheStats(0, 2);
+    assertCacheStats(0, 2, paul);
 
     // Same query, same user
     execute(this.executor, queryDto, paul);
-    assertCacheStats(2, 2);
+    assertCacheStats(2, 2, paul);
 
     // Same query, different user
     execute(this.executor, queryDto, peter);
-    assertCacheStats(2, 4);
+    assertCacheStats(0, 2, peter);
   }
 
   @Test
@@ -476,7 +485,12 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   }
 
   private void assertCacheStats(int hitCount, int missCount) {
-    CacheStatsDto stats = this.queryCache.stats();
+    CacheStatsDto stats = this.queryCache.stats(null);
+    assertCacheStats(stats, hitCount, missCount);
+  }
+
+  private void assertCacheStats(int hitCount, int missCount, SquashQLUser user) {
+    CacheStatsDto stats = this.queryCache.stats(user);
     assertCacheStats(stats, hitCount, missCount);
   }
 

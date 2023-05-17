@@ -33,7 +33,7 @@ public class QueryExecutor {
   public final QueryCache queryCache;
 
   public QueryExecutor(QueryEngine<?> queryEngine) {
-    this(queryEngine, new CaffeineQueryCache());
+    this(queryEngine, new GlobalCache(() -> new CaffeineQueryCache()));
   }
 
   public QueryExecutor(QueryEngine<?> queryEngine, QueryCache cache) {
@@ -41,12 +41,12 @@ public class QueryExecutor {
     this.queryCache = cache;
   }
 
-  private QueryCache getQueryCache(QueryCacheParameter queryCacheParameter) {
+  private QueryCache getQueryCache(QueryCacheParameter queryCacheParameter, SquashQLUser user) {
     return switch (queryCacheParameter.action) {
       case USE -> this.queryCache;
       case NOT_USE -> EmptyQueryCache.INSTANCE;
       case INVALIDATE -> {
-        this.queryCache.clear(); // FIXME this should be user based.
+        this.queryCache.clear(user);
         yield this.queryCache;
       }
     };
@@ -100,7 +100,7 @@ public class QueryExecutor {
       DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
       Set<Measure> measures = measuresByQueryScope.get(scope);
       QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(scope, prefetchQuery, user);
-      QueryCache queryCache = getQueryCache((QueryCacheParameter) query.parameters.getOrDefault(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.USE)));
+      QueryCache queryCache = getQueryCache((QueryCacheParameter) query.parameters.getOrDefault(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.USE)), user);
 
       // Finish to prepare the query
       Set<Measure> cached = new HashSet<>();
@@ -164,7 +164,7 @@ public class QueryExecutor {
     queryWatch.stop(QueryWatch.ORDER);
     queryWatch.stop(QueryWatch.GLOBAL);
 
-    CacheStatsDto stats = this.queryCache.stats();
+    CacheStatsDto stats = this.queryCache.stats(user);
     cacheStatsDtoBuilder
             .hitCount(stats.hitCount)
             .evictionCount(stats.evictionCount)

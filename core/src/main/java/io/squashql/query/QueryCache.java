@@ -16,9 +16,14 @@ public interface QueryCache {
 
   void contributeToResult(Table result, Set<Measure> measures, PrefetchQueryScope scope);
 
+  void clear(SquashQLUser user);
+
+  /**
+   * For testing purpose.
+   */
   void clear();
 
-  CacheStatsDto stats();
+  CacheStatsDto stats(SquashQLUser user);
 
   record TableScope(TableDto tableDto,
                     Set<Field> columns,
@@ -43,5 +48,7 @@ public interface QueryCache {
    */
   interface PrefetchQueryScope {
     Set<Field> columns();
+
+    SquashQLUser user();
   }
 }

@@ -32,11 +32,15 @@ public class EmptyQueryCache implements QueryCache {
   }
 
   @Override
+  public void clear(SquashQLUser user) {
+  }
+
+  @Override
   public void clear() {
   }
 
   @Override
-  public CacheStatsDto stats() {
+  public CacheStatsDto stats(SquashQLUser user) {
     return new CacheStatsDto(-1, -1, -1);
   }
 }
