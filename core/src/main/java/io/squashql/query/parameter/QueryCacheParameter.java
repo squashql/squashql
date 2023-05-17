@@ -1,4 +1,4 @@
-package io.squashql.query.context;
+package io.squashql.query.parameter;
 
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

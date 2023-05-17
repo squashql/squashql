@@ -3,7 +3,7 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.builder.Query;
-import io.squashql.query.context.QueryCacheContextValue;
+import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.query.dto.*;
 import io.squashql.query.monitoring.QueryWatch;
 import io.squashql.store.Field;
@@ -268,7 +268,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   }
 
   @Test
-  void testUseCacheContextValue() {
+  void testUseCacheParameter() {
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(), List.of(sum("ps", "price")))
@@ -278,17 +278,17 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     assertCacheStats(0, 2);
 
     // Execute the same
-    result = this.executor.execute(query.context(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.NOT_USE)));
+    result = this.executor.execute(query.withParameter(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.NOT_USE)));
     // No cache so no hitCount, no missCount changes
     assertCacheStats(0, 2);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15d));
 
-    query.context(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.USE));
+    query.withParameter(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.USE));
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15d));
     assertCacheStats(2, 2);
 
-    query.context(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.INVALIDATE));
+    query.withParameter(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.INVALIDATE));
     // Invalidate should empty the cache and fill it with new values.
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15d));
@@ -309,7 +309,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     Supplier<QueryDto> querySupplier = () -> new QueryDto()
             .table(this.storeName)
             .withColumn(SCENARIO_FIELD_NAME)
-            .aggregatedMeasure("ps", "price", AggregationFunction.SUM);
+            .withMeasure(new AggregatedMeasure("ps", "price", AggregationFunction.SUM));
     // Scope 1 added to the cache
     executor.execute(querySupplier.get());
     assertCacheStats(cache.stats(), 0, 2);
