@@ -220,7 +220,7 @@ public class QueryControllerTest {
 
     // different user
     DatasetTestConfig.squashQLUserSupplier.set(new BasicUser("peter"));
-    checker.accept(1l, 2l);
+    checker.accept(0l, 1l);
 
     DatasetTestConfig.squashQLUserSupplier.set(null); // reset
   }
