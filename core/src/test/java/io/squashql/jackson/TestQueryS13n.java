@@ -12,8 +12,8 @@ import java.util.Map;
 
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.Functions.*;
-import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
-import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
 public class TestQueryS13n {
 

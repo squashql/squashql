@@ -4,8 +4,8 @@ import io.squashql.SnowflakeDatastore;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SnowflakeQueryEngine;
 import io.squashql.store.Datastore;
-import io.squashql.transaction.SnowflakeTransactionManager;
-import io.squashql.transaction.TransactionManager;
+import io.squashql.transaction.DataLoader;
+import io.squashql.transaction.SnowflakeDataLoader;
 import org.junit.jupiter.api.AfterAll;
 
 /**
@@ -15,13 +15,13 @@ public class TestSnowflakeBucketComparison extends ATestBucketComparison {
 
   @AfterAll
   void tearDown() {
-    SnowflakeTransactionManager tm = (SnowflakeTransactionManager) this.tm;
+    SnowflakeDataLoader tm = (SnowflakeDataLoader) this.tm;
     this.fieldsByStore.forEach((storeName, storeFields) -> tm.dropTable(storeName));
   }
 
   @Override
   protected void createTables() {
-    SnowflakeTransactionManager tm = (SnowflakeTransactionManager) this.tm;
+    SnowflakeDataLoader tm = (SnowflakeDataLoader) this.tm;
     this.fieldsByStore.forEach(tm::createOrReplaceTable);
   }
 
@@ -41,8 +41,8 @@ public class TestSnowflakeBucketComparison extends ATestBucketComparison {
   }
 
   @Override
-  protected TransactionManager createTransactionManager() {
-    return new SnowflakeTransactionManager((SnowflakeDatastore) this.datastore);
+  protected DataLoader createDataLoader() {
+    return new SnowflakeDataLoader((SnowflakeDatastore) this.datastore);
   }
 
   @Override

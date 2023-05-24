@@ -16,7 +16,7 @@ import static io.squashql.query.ComparisonMethod.DIVIDE;
 import static io.squashql.query.Functions.*;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
-import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

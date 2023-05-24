@@ -21,8 +21,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import static io.squashql.query.Functions.*;
-import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
-import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import static io.squashql.query.Functions.criterion;
-import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

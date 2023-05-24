@@ -9,7 +9,7 @@ import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.SparkQueryEngine;
 import io.squashql.store.Datastore;
 import io.squashql.store.Field;
-import io.squashql.transaction.SparkTransactionManager;
+import io.squashql.transaction.SparkDataLoader;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparkSession;
 import org.assertj.core.api.Assertions;
@@ -35,8 +35,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
-import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
-import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 import static org.testcontainers.containers.output.OutputFrame.OutputType.STDERR;
 import static org.testcontainers.containers.output.OutputFrame.OutputType.STDOUT;
 
@@ -87,7 +87,7 @@ public class TestQueryRemote {
     String storeName = "storeName";
     SparkDatastore datastore = (SparkDatastore) createDatastore();
     SparkQueryEngine queryEngine = new SparkQueryEngine(datastore);
-    SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
+    SparkDataLoader tm = new SparkDataLoader(datastore.spark);
 
     Field ean = new Field(storeName, "ean", String.class);
     Field category = new Field(storeName, "category", String.class);

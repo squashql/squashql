@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public class BigQueryTransactionManager implements TransactionManager {
+public class BigQueryDataLoader implements DataLoader {
 
   // 1, 2, 4, 8, 16
   private static final int MAX_SLEEPS = 5;
@@ -23,7 +23,7 @@ public class BigQueryTransactionManager implements TransactionManager {
   final BigQuery bigquery;
   final String datasetName;
 
-  public BigQueryTransactionManager(BigQuery bigquery, String datasetName) {
+  public BigQueryDataLoader(BigQuery bigquery, String datasetName) {
     this.bigquery = bigquery;
     this.datasetName = datasetName;
   }

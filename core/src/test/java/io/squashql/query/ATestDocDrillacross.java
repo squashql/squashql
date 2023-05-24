@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 import static io.squashql.query.Functions.sum;
-import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestClass(ignore = {TestClass.Type.SPARK, TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE})
