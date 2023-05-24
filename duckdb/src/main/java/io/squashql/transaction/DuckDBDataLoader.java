@@ -2,6 +2,7 @@ package io.squashql.transaction;
 
 import io.squashql.DuckDBDatastore;
 import io.squashql.jdbc.JdbcUtil;
+import io.squashql.query.Table;
 import io.squashql.store.Field;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
@@ -10,6 +11,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 public class DuckDBDataLoader implements DataLoader {
@@ -20,15 +23,21 @@ public class DuckDBDataLoader implements DataLoader {
     this.datastore = datastore;
   }
 
-  public void createOrReplaceTable(String table, List<Field> fields) {
-    createOrReplaceTable(this.datastore, table, fields, true);
+  public void createOrReplaceTable(String tableName, Table table) {
+    List<Field> fields = table.headers().stream().map(h -> new Field(tableName, h.name(), h.type())).toList();
+    createOrReplaceTable(this.datastore, tableName, fields, false);
+    loadWithOrWithoutScenario(null, tableName, table.iterator());
   }
 
-  public static void createOrReplaceTable(DuckDBDatastore datastore, String table, List<Field> fields,
+  public void createOrReplaceTable(String tableName, List<Field> fields) {
+    createOrReplaceTable(this.datastore, tableName, fields, true);
+  }
+
+  public static void createOrReplaceTable(DuckDBDatastore datastore, String tableName, List<Field> fields,
                                           boolean cjMode) {
     List<Field> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
             .ofAll(fields)
-            .newWith(new Field(table, SCENARIO_FIELD_NAME, String.class))
+            .newWith(new Field(tableName, SCENARIO_FIELD_NAME, String.class))
             .castToList() : fields;
 
     try (Connection conn = datastore.getConnection();
@@ -44,24 +53,31 @@ public class DuckDBDataLoader implements DataLoader {
         }
       }
       sb.append(")");
-      stmt.execute("create or replace table \"" + table + "\"" + sb + ";"); // REMOVE or replace
+      stmt.execute("create or replace table \"" + tableName + "\"" + sb + ";"); // REMOVE or replace
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
   }
 
   @Override
-  public void load(String scenario, String store, List<Object[]> tuples) {
+  public void load(String scenario, String table, List<Object[]> tuples) {
+    loadWithOrWithoutScenario(scenario, table, tuples.stream().map(t -> Arrays.asList(t)).toList().iterator());
+  }
+
+  private void loadWithOrWithoutScenario(String scenario, String table, Iterator<List<Object>> tuplesIterator) {
     // Check the table contains a column scenario.
-    ensureScenarioColumnIsPresent(store);
-    String sql = "insert into \"" + store + "\" values ";
+    if (scenario != null) {
+      ensureScenarioColumnIsPresent(table);
+    }
+    String sql = "insert into \"" + table + "\" values ";
     try (Connection conn = this.datastore.getConnection();
          Statement stmt = conn.createStatement()) {
-      for (Object[] tuple : tuples) {
+      while (tuplesIterator.hasNext()) {
+        List<Object> tuple = tuplesIterator.next();
         StringBuilder sb = new StringBuilder();
         sb.append('(');
-        for (int i = 0; i < tuple.length; i++) {
-          Object o = tuple[i];
+        for (int i = 0; i < tuple.size(); i++) {
+          Object o = tuple.get(i);
           if (o != null && (o.getClass().equals(LocalDate.class) || o.getClass().equals(LocalDateTime.class))) {
             o = o.toString();
           }
@@ -73,8 +89,14 @@ public class DuckDBDataLoader implements DataLoader {
           }
           sb.append(",");
         }
-        sb.append('\'').append(scenario).append('\'').append("),");
-        sql += sb.toString();
+
+        if (scenario != null) {
+          sb.append('\'').append(scenario).append('\'').append("),");
+          sql += sb.toString();
+        } else {
+          String s = sb.toString();
+          sql += s.substring(0, s.length() - 1) + "),";
+        }
       }
       // addBatch is Not supported.
       stmt.execute(sql.substring(0, sql.length() - 1));
@@ -92,7 +114,7 @@ public class DuckDBDataLoader implements DataLoader {
   }
 
   @Override
-  public void loadCsv(String scenario, String store, String path, String delimiter, boolean header) {
+  public void loadCsv(String scenario, String table, String path, String delimiter, boolean header) {
     throw new RuntimeException("Not implemented");
   }
 }
