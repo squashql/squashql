@@ -902,3 +902,45 @@ Result
 | group4 |       s3 |   350.0 |              50.0 |
 +--------+----------+---------+-------------------+
 ```
+
+## Parameters
+
+Once built, a query can accept additional parameters to change the way the query will be executed. Here's 
+below the list of parameters that exist in SquashQL.
+
+```typescript
+const query = from("table")
+        .select(...)
+        .build()
+```
+
+### Query cache
+
+Usage:
+```typescript
+const parameter = new QueryCacheParameter(Action.USE)
+query.withParameter(parameter)
+```
+
+The query cache parameter can have three values.
+
+```typescript
+const parameter = new QueryCacheParameter(Action.USE)
+```
+`USE`: This is the default value when the parameter is not set in the query object. In that case
+the [query cache](./README.md#under-the-hood) is used when executing the query. Intermediate results are retrieved
+from the cache if they exist. If not, they are put in the cache when returned from the database.
+
+```typescript
+const parameter = new QueryCacheParameter(Action.NOT_USE)
+```
+`NOT_USE`: The cache won't be used. Intermediate results are retrieved from the database, and they are not put in the cache. 
+
+```typescript
+const parameter = new QueryCacheParameter(Action.INVALIDATE)
+```
+`INVALIDATE`: The cache is cleared. Intermediate results are retrieved from the database, and they are put in the cache. 
+
+
+
+

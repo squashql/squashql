@@ -1,4 +1,4 @@
-package io.squashql.query.context;
+package io.squashql.query.parameter;
 
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -7,11 +7,11 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
-public class QueryCacheContextValue implements ContextValue {
+public class QueryCacheParameter implements Parameter {
 
   public static final String KEY = "cache";
 
-  public QueryCacheContextValue(Action action) {
+  public QueryCacheParameter(Action action) {
     this.action = action;
   }
 

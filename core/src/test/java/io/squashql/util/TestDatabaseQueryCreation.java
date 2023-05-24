@@ -1,7 +1,7 @@
 package io.squashql.util;
 
 import io.squashql.query.*;
-import io.squashql.query.context.ContextValue;
+import io.squashql.query.parameter.Parameter;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
@@ -46,14 +46,14 @@ public class TestDatabaseQueryCreation {
   }
 
   @Test
-  void testContextValuesInSubQuery() {
+  void testParametersInSubQuery() {
     QueryDto subQuery = new QueryDto().table("table");
-    subQuery.context("any", Mockito.mock(ContextValue.class));
+    subQuery.withParameter("any", Mockito.mock(Parameter.class));
     QueryDto queryDto = new QueryDto().table(subQuery);
 
     Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier), this.fieldSupplier, -1))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("context values are not expected");
+            .hasMessageContaining("parameters are not expected");
   }
 
   @Test

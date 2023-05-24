@@ -11,10 +11,7 @@ import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.store.Field;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class CaffeineQueryCache implements QueryCache {
 
@@ -102,6 +99,12 @@ public class CaffeineQueryCache implements QueryCache {
     }
   }
 
+  @Override
+  public CacheStatsDto stats(SquashQLUser user) {
+    // Not supposed to be called.
+    throw new IllegalStateException();
+  }
+
   public CacheStatsDto stats() {
     CacheStats snapshot = this.measureCounter.snapshot();
     CacheStats of = CacheStats.of(
@@ -113,6 +116,12 @@ public class CaffeineQueryCache implements QueryCache {
             this.scopeCounter.snapshot().evictionCount(),
             0);
     return new CacheStatsDto(of.hitCount(), of.missCount(), this.scopeCounter.snapshot().evictionCount());
+  }
+
+  @Override
+  public void clear(SquashQLUser user) {
+    // Not supposed to be called.
+    throw new IllegalStateException();
   }
 
   @Override

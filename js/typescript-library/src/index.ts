@@ -1,3 +1,5 @@
+import exp = require("constants");
+
 export const PACKAGE = "io.squashql.query."
 
 export {
@@ -28,6 +30,10 @@ export {
   ColumnSet, BucketColumnSet,
   Period, Month, Year, Quarter, Semester,
 } from './columnsets'
+
+export {
+  Parameter, QueryCacheParameter,
+} from './parameters'
 
 export {
   Querier, QueryResult, MetadataResult, StoreMetadata, MetadataItem, SimpleTable

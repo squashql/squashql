@@ -1,8 +1,8 @@
 package io.squashql.jackson;
 
 import io.squashql.query.*;
-import io.squashql.query.context.ContextValue;
-import io.squashql.query.context.QueryCacheContextValue;
+import io.squashql.query.parameter.Parameter;
+import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.query.dto.*;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -23,16 +23,16 @@ public class TestQueryS13n {
             .table("myTable")
             .withColumn(SCENARIO_FIELD_NAME)
             .withColumn("ean")
-            .aggregatedMeasure("p", "price", "sum")
-            .aggregatedMeasure("q", "quantity", "sum")
-            .aggregatedMeasure("priceAlias", "price", "sum", Functions.criterion("category", Functions.eq("food")))
-            .expressionMeasure("alias1", "firstMyExpression")
-            .expressionMeasure("alias2", "secondMyExpression")
+            .withMeasure(new AggregatedMeasure("p", "price", "sum"))
+            .withMeasure(new AggregatedMeasure("q", "quantity", "sum"))
+            .withMeasure(new AggregatedMeasure("priceAlias", "price", "sum", Functions.criterion("category", Functions.eq("food"))))
+            .withMeasure(new ExpressionMeasure("alias1", "firstMyExpression"))
+            .withMeasure(new ExpressionMeasure("alias2", "secondMyExpression"))
             .withMeasure(new BinaryOperationMeasure("plus1",
                     BinaryOperator.PLUS,
                     new AggregatedMeasure("p", "price", "sum"),
                     new AggregatedMeasure("p", "price", "sum")))
-            .context(QueryCacheContextValue.KEY, new QueryCacheContextValue(QueryCacheContextValue.Action.NOT_USE));
+            .withParameter(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.NOT_USE));
 
     String serialize = query.json();
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
@@ -57,8 +57,8 @@ public class TestQueryS13n {
     query.withColumn("categoryName");
 
     // Measures
-    query.aggregatedMeasure("p", "price", "sum");
-    query.expressionMeasure("alias", "expression");
+    query.withMeasure(new AggregatedMeasure("p", "price", "sum"));
+    query.withMeasure(new ExpressionMeasure("alias", "expression"));
 
     // Conditions
     ConditionDto december = and(gt("1/12/1996"), lt("31/12/1996"));
@@ -170,9 +170,9 @@ public class TestQueryS13n {
   }
 
   @Test
-  void testContextValues() {
-    ContextValue cv = new QueryCacheContextValue(QueryCacheContextValue.Action.USE);
-    ContextValue deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(cv), ContextValue.class);
+  void testParameter() {
+    Parameter cv = new QueryCacheParameter(QueryCacheParameter.Action.USE);
+    Parameter deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(cv), Parameter.class);
     Assertions.assertThat(deserialize).isEqualTo(cv);
   }
 }

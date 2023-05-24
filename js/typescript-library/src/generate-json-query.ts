@@ -6,6 +6,7 @@ import {OrderKeyword} from "./order";
 import * as fs from "fs"
 import {VirtualTable} from "./virtualtable";
 import {JoinType} from "./query";
+import {Action, QueryCacheParameter} from "./parameters";
 
 export function generateFromQuery() {
   const values = new Map(Object.entries({
@@ -30,6 +31,8 @@ export function generateFromQuery() {
           .orderBy("f4", OrderKeyword.ASC)
           .limit(10)
           .build()
+
+  q.withParameter(new QueryCacheParameter(Action.NOT_USE))
 
   console.log(JSON.stringify(q))
   const data = JSON.stringify(q)

@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
-import io.squashql.query.context.ContextValue;
+import io.squashql.query.parameter.Parameter;
 
 import java.util.*;
 
@@ -36,7 +36,7 @@ public class QueryDto {
 
   public Map<String, OrderDto> orders = new HashMap<>();
 
-  public Map<String, ContextValue> context = new HashMap<>();
+  public Map<String, Parameter> parameters = new HashMap<>();
 
   public int limit = -1;
 
@@ -55,28 +55,13 @@ public class QueryDto {
     return this;
   }
 
-  public QueryDto aggregatedMeasure(String alias, String field, String agg) {
-    withMeasure(new AggregatedMeasure(alias, field, agg));
-    return this;
-  }
-
-  public QueryDto aggregatedMeasure(String alias, String field, String agg, CriteriaDto criteriaDto) {
-    withMeasure(new AggregatedMeasure(alias, field, agg, criteriaDto));
-    return this;
-  }
-
-  public QueryDto expressionMeasure(String alias, String expression) {
-    withMeasure(new ExpressionMeasure(alias, expression));
-    return this;
-  }
-
   public QueryDto withMeasure(Measure m) {
     this.measures.add(m);
     return this;
   }
 
-  public QueryDto context(String key, ContextValue value) {
-    this.context.put(key, value);
+  public QueryDto withParameter(String key, Parameter value) {
+    this.parameters.put(key, value);
     return this;
   }
 

@@ -78,8 +78,8 @@ public final class Queries {
     if (query.columnSets != null && !query.columnSets.isEmpty()) {
       throw new IllegalArgumentException("column sets are not expected in sub query: " + query);
     }
-    if (query.context != null && !query.context.isEmpty()) {
-      throw new IllegalArgumentException("context values are not expected in sub query: " + query);
+    if (query.parameters != null && !query.parameters.isEmpty()) {
+      throw new IllegalArgumentException("parameters are not expected in sub query: " + query);
     }
 
     for (Measure measure : query.measures) {
