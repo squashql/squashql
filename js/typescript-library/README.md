@@ -6,7 +6,7 @@
 
 ### Documentation
 
-Usage of the library is described in [this document](https://github.com/squashql/squashql/blob/main/QUERY.md).
+Usage of the library is described in [this document](../../documentation/QUERY.md).
 
 ### Installation
 

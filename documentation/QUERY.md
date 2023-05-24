@@ -928,7 +928,7 @@ The query cache parameter can have three values.
 const parameter = new QueryCacheParameter(Action.USE)
 ```
 `USE`: This is the default value when the parameter is not set in the query object. In that case
-the [query cache](./README.md#under-the-hood) is used when executing the query. Intermediate results are retrieved
+the [query cache](../README.md#under-the-hood) is used when executing the query. Intermediate results are retrieved
 from the cache if they exist. If not, they are put in the cache when returned from the database.
 
 ```typescript
