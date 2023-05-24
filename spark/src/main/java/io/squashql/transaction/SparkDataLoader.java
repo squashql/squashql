@@ -42,13 +42,13 @@ public class SparkDataLoader implements DataLoader {
   }
 
   @Override
-  public void load(String scenario, String store, List<Object[]> tuples) {
+  public void load(String scenario, String table, List<Object[]> tuples) {
     // Check the table contains a column scenario.
     if (!scenario.equals(DataLoader.MAIN_SCENARIO_NAME)) {
-      ensureScenarioColumnIsPresent(store);
+      ensureScenarioColumnIsPresent(table);
     }
 
-    boolean addScenario = scenarioColumnIsPresent(store);
+    boolean addScenario = scenarioColumnIsPresent(table);
     List<Row> rows = tuples.stream().map(tuple -> {
       Object[] copy = tuple;
       if (addScenario) {
@@ -60,8 +60,8 @@ public class SparkDataLoader implements DataLoader {
 
     Dataset<Row> dataFrame = this.spark.createDataFrame(
             rows,
-            SparkUtil.createSchema(SparkDatastore.getFields(this.spark, store)));// to load pojo
-    appendDataset(this.spark, store, dataFrame);
+            SparkUtil.createSchema(SparkDatastore.getFields(this.spark, table)));// to load pojo
+    appendDataset(this.spark, table, dataFrame);
   }
 
   static void appendDataset(SparkSession spark, String store, Dataset<Row> dataset) {

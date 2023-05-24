@@ -137,7 +137,7 @@ public class BigQueryDataLoader implements DataLoader {
   }
 
   @Override
-  public void loadCsv(String scenario, String store, String path, String delimiter, boolean header) {
+  public void loadCsv(String scenario, String table, String path, String delimiter, boolean header) {
     throw new RuntimeException("not impl. yet");
   }
 }

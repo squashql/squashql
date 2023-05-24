@@ -8,11 +8,11 @@ public interface DataLoader {
 
   String SCENARIO_FIELD_NAME = "scenario";
 
-  void load(String scenario, String store, List<Object[]> tuples);
+  void load(String scenario, String table, List<Object[]> tuples);
 
-  default void load(String store, List<Object[]> tuples) {
-    load(MAIN_SCENARIO_NAME, store, tuples);
+  default void load(String table, List<Object[]> tuples) {
+    load(MAIN_SCENARIO_NAME, table, tuples);
   }
 
-  void loadCsv(String scenario, String store, String path, String delimiter, boolean header);
+  void loadCsv(String scenario, String table, String path, String delimiter, boolean header);
 }
