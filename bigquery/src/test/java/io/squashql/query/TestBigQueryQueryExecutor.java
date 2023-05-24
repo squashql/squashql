@@ -5,8 +5,8 @@ import io.squashql.BigQueryServiceAccountDatastore;
 import io.squashql.query.database.BigQueryEngine;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.store.Datastore;
-import io.squashql.transaction.BigQueryTransactionManager;
-import io.squashql.transaction.TransactionManager;
+import io.squashql.transaction.BigQueryDataLoader;
+import io.squashql.transaction.DataLoader;
 import org.junit.jupiter.api.AfterAll;
 
 import static io.squashql.query.BigQueryTestUtil.DATASET_NAME;
@@ -24,7 +24,7 @@ public class TestBigQueryQueryExecutor extends ATestQueryExecutor {
 
   @Override
   protected void createTables() {
-    BigQueryTransactionManager tm = (BigQueryTransactionManager) this.tm;
+    BigQueryDataLoader tm = (BigQueryDataLoader) this.tm;
     BigQueryTestUtil.createDatasetIfDoesNotExist(tm.getBigQuery(), DATASET_NAME);
     this.fieldsByStore.forEach((store, fields) -> tm.dropAndCreateInMemoryTable(store, fields));
   }
@@ -40,8 +40,8 @@ public class TestBigQueryQueryExecutor extends ATestQueryExecutor {
   }
 
   @Override
-  protected TransactionManager createTransactionManager() {
-    return new BigQueryTransactionManager(((BigQueryDatastore) this.datastore).getBigquery(), DATASET_NAME);
+  protected DataLoader createDataLoader() {
+    return new BigQueryDataLoader(((BigQueryDatastore) this.datastore).getBigquery(), DATASET_NAME);
   }
 
   @Override

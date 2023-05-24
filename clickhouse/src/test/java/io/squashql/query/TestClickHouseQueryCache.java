@@ -5,8 +5,8 @@ import io.squashql.query.database.ClickHouseQueryEngine;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.store.Datastore;
 import io.squashql.template.ClickHouseClassTemplateGenerator;
-import io.squashql.transaction.ClickHouseTransactionManager;
-import io.squashql.transaction.TransactionManager;
+import io.squashql.transaction.ClickHouseDataLoader;
+import io.squashql.transaction.DataLoader;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
@@ -27,12 +27,12 @@ public class TestClickHouseQueryCache extends ATestQueryCache {
   @AfterAll
   void tearDown() {
     // we do not stop the container to be able to reuse it between tests.
-    ((ClickHouseTransactionManager) this.tm).dropTables(this.fieldsByStore.keySet());
+    ((ClickHouseDataLoader) this.tm).dropTables(this.fieldsByStore.keySet());
   }
 
   @Override
   protected void createTables() {
-    ClickHouseTransactionManager tm = (ClickHouseTransactionManager) this.tm;
+    ClickHouseDataLoader tm = (ClickHouseDataLoader) this.tm;
     this.fieldsByStore.forEach((store, fields) -> tm.dropAndCreateInMemoryTable(store, fields));
   }
 
@@ -47,7 +47,7 @@ public class TestClickHouseQueryCache extends ATestQueryCache {
   }
 
   @Override
-  protected TransactionManager createTransactionManager() {
-    return new ClickHouseTransactionManager(((ClickHouseDatastore) this.datastore).dataSource);
+  protected DataLoader createDataLoader() {
+    return new ClickHouseDataLoader(((ClickHouseDatastore) this.datastore).dataSource);
   }
 }

@@ -15,11 +15,11 @@ import java.util.stream.IntStream;
 
 import static io.squashql.ClickHouseUtil.classToClickHouseType;
 
-public class ClickHouseTransactionManager implements TransactionManager {
+public class ClickHouseDataLoader implements DataLoader {
 
   protected final ClickHouseDataSource clickHouseDataSource;
 
-  public ClickHouseTransactionManager(ClickHouseDataSource clickHouseDataSource) {
+  public ClickHouseDataLoader(ClickHouseDataSource clickHouseDataSource) {
     this.clickHouseDataSource = clickHouseDataSource;
   }
 

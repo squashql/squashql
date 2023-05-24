@@ -4,8 +4,8 @@ import io.squashql.SparkDatastore;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SparkQueryEngine;
 import io.squashql.store.Datastore;
-import io.squashql.transaction.SparkTransactionManager;
-import io.squashql.transaction.TransactionManager;
+import io.squashql.transaction.DataLoader;
+import io.squashql.transaction.SparkDataLoader;
 import org.junit.jupiter.api.AfterAll;
 
 /**
@@ -29,14 +29,14 @@ public class TestSparkParentComparisonWithOtherColumn extends ATestParentCompari
   }
 
   @Override
-  protected TransactionManager createTransactionManager() {
+  protected DataLoader createDataLoader() {
     SparkDatastore ds = (SparkDatastore) this.datastore;
-    return new SparkTransactionManager(ds.spark);
+    return new SparkDataLoader(ds.spark);
   }
 
   @Override
   protected void createTables() {
-    SparkTransactionManager tm = (SparkTransactionManager) this.tm;
+    SparkDataLoader tm = (SparkDataLoader) this.tm;
     this.fieldsByStore.forEach((store, fields) -> tm.createTemporaryTable(store, fields));
   }
 }

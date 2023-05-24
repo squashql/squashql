@@ -19,7 +19,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import static io.squashql.query.dto.JoinType.INNER;
-import static io.squashql.transaction.TransactionManager.SCENARIO_FIELD_NAME;
+import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
 public class TestBigQueryEngine {
 

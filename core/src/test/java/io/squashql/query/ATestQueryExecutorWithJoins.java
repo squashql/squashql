@@ -6,7 +6,7 @@ import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Datastore;
-import io.squashql.transaction.TransactionManager;
+import io.squashql.transaction.DataLoader;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static io.squashql.query.Functions.criterion;
-import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestQueryExecutorWithJoins {
@@ -42,7 +42,7 @@ public abstract class ATestQueryExecutorWithJoins {
 
   protected Datastore datastore;
 
-  protected TransactionManager tm;
+  protected DataLoader tm;
 
   protected QueryExecutor queryExecutor;
 
@@ -56,12 +56,12 @@ public abstract class ATestQueryExecutorWithJoins {
 
   protected abstract Datastore createDatastore();
 
-  protected abstract TransactionManager createTransactionManager();
+  protected abstract DataLoader createDataLoader();
 
   @BeforeAll
   void setup() {
     this.datastore = createDatastore();
-    this.tm = createTransactionManager();
+    this.tm = createDataLoader();
 
     this.tm.loadCsv(MAIN_SCENARIO_NAME, this.orders, pathFunction.apply("orders.csv").toString(), delimiter, header);
     this.tm.loadCsv(MAIN_SCENARIO_NAME, this.shippers, pathFunction.apply("shippers.csv").toString(), delimiter, header);

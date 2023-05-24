@@ -4,8 +4,8 @@ import io.squashql.SparkDatastore;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SparkQueryEngine;
 import io.squashql.store.Datastore;
-import io.squashql.transaction.SparkTransactionManager;
-import io.squashql.transaction.TransactionManager;
+import io.squashql.transaction.SparkDataLoader;
+import io.squashql.transaction.DataLoader;
 
 public class TestSparkQueryExecutorWithJoins extends ATestQueryExecutorWithJoins {
 
@@ -20,7 +20,7 @@ public class TestSparkQueryExecutorWithJoins extends ATestQueryExecutorWithJoins
   }
 
   @Override
-  protected TransactionManager createTransactionManager() {
-    return new SparkTransactionManager(((SparkDatastore) this.datastore).spark);
+  protected DataLoader createDataLoader() {
+    return new SparkDataLoader(((SparkDatastore) this.datastore).spark);
   }
 }

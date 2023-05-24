@@ -5,7 +5,7 @@ import io.squashql.query.SquashQLUser;
 import io.squashql.query.database.SparkQueryEngine;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
-import io.squashql.transaction.SparkTransactionManager;
+import io.squashql.transaction.SparkDataLoader;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestConfiguration
 public class DatasetTestConfig {
@@ -52,7 +52,7 @@ public class DatasetTestConfig {
     ));
 
     SparkDatastore datastore = new SparkDatastore();
-    SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
+    SparkDataLoader tm = new SparkDataLoader(datastore.spark);
 
     tm.createTemporaryTable(our_price_store.name(), our_price_store.fields());
     tm.createTemporaryTable(datastore.spark, their_prices_store.name(), their_prices_store.fields(), false);

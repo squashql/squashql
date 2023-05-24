@@ -15,7 +15,7 @@ import java.util.Map;
 import static io.squashql.query.Functions.*;
 import static io.squashql.query.agg.AggregationFunction.AVG;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
-import static io.squashql.transaction.TransactionManager.MAIN_SCENARIO_NAME;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

@@ -1,8 +1,8 @@
 package io.squashql.data;
 
 import io.squashql.SparkDatastore;
-import io.squashql.transaction.SparkTransactionManager;
-import io.squashql.transaction.TransactionManager;
+import io.squashql.transaction.SparkDataLoader;
+import io.squashql.transaction.DataLoader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.assertj.core.api.Assertions;
@@ -38,10 +38,10 @@ public class TestLoadingFromCSV {
     String customersStore = "customersStore";
     String ordersStore = "ordersStore";
     SparkDatastore datastore = new SparkDatastore();
-    SparkTransactionManager tm = new SparkTransactionManager(datastore.spark);
+    SparkDataLoader tm = new SparkDataLoader(datastore.spark);
 
-    tm.loadCsv(TransactionManager.MAIN_SCENARIO_NAME, customersStore, pathFunction.apply("customers.csv").toString(), delimiter, header);
-    tm.loadCsv(TransactionManager.MAIN_SCENARIO_NAME, ordersStore, pathFunction.apply("orders.csv").toString(), delimiter, header);
+    tm.loadCsv(DataLoader.MAIN_SCENARIO_NAME, customersStore, pathFunction.apply("customers.csv").toString(), delimiter, header);
+    tm.loadCsv(DataLoader.MAIN_SCENARIO_NAME, ordersStore, pathFunction.apply("orders.csv").toString(), delimiter, header);
 
     Dataset<Row> customersDS = datastore.get(customersStore);
     Dataset<Row> ordersDS = datastore.get(ordersStore);

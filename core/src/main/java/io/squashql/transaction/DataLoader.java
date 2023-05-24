@@ -2,7 +2,7 @@ package io.squashql.transaction;
 
 import java.util.List;
 
-public interface TransactionManager {
+public interface DataLoader {
 
   String MAIN_SCENARIO_NAME = "base";
 
