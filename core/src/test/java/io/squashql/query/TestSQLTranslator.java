@@ -231,15 +231,16 @@ public class TestSQLTranslator {
             .withSelect(fieldProvider.apply("type"))
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
             .whereCriteria(all(
-                    criterion(SCENARIO_FIELD_NAME, and(eq("base"), eq("s1"), eq("s2"))),
+                    criterion(SCENARIO_FIELD_NAME, or(eq("base"), eq("s1"), eq("s2"))),
                     criterion("delta", ge(123d)),
                     criterion("type", or(eq("A"), eq("B"))),
-                    criterion("pnl", lt(10d))))
+                    criterion("pnl", lt(10d)))
+            )
             .table(BASE_STORE_NAME);
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum` from " + BASE_STORE_NAME_ESCAPED
-                    + " where (`scenario` = 'base' and `scenario` = 's1' and `scenario` = 's2'"
-                    + " and `delta` >= 123.0 and `type` = 'A' or `type` = 'B' and `pnl` < 10.0)"
+                    + " where (((`scenario` = 'base' or `scenario` = 's1') or `scenario` = 's2')"
+                    + " and `delta` >= 123.0 and (`type` = 'A' or `type` = 'B') and `pnl` < 10.0)"
                     + " group by `scenario`, `type`"
             );
   }
@@ -254,7 +255,7 @@ public class TestSQLTranslator {
             .table(BASE_STORE_NAME);
     Assertions.assertThat(SQLTranslator.translate(query, fieldProvider))
             .isEqualTo("select `baseStore`.`scenario`, sum(`pnl`) as `pnl.sum` from " + BASE_STORE_NAME_ESCAPED
-                    + " where `baseStore`.`scenario` = 'base' and `baseStore`.`scenario` = 's2'"
+                    + " where (`baseStore`.`scenario` = 'base' and `baseStore`.`scenario` = 's2')"
                     + " group by `baseStore`.`scenario`"
             );
   }
