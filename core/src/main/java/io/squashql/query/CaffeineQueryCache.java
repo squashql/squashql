@@ -120,7 +120,8 @@ public class CaffeineQueryCache implements QueryCache {
 
   @Override
   public void clear(SquashQLUser user) {
-    clear();
+    // Not supposed to be called.
+    throw new IllegalStateException();
   }
 
   @Override

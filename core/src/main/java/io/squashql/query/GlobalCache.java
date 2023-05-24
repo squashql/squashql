@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 
 public class GlobalCache implements QueryCache {
 
-  private static final SquashQLUser NULL_USER = new SquashQLUser() {
+  private static final SquashQLUser ANONYMOUS = new SquashQLUser() {
   };
 
   protected final Map<SquashQLUser, CaffeineQueryCache> cacheByUser = new ConcurrentHashMap<>();
@@ -21,7 +21,7 @@ public class GlobalCache implements QueryCache {
   }
 
   private static SquashQLUser user(SquashQLUser user) {
-    return user == null ? NULL_USER : user;
+    return user == null ? ANONYMOUS : user;
   }
 
   protected CaffeineQueryCache getCache(PrefetchQueryScope scope) {

@@ -19,7 +19,7 @@ public interface QueryCache {
   void clear(SquashQLUser user);
 
   /**
-   * For testing purpose.
+   * For testing purpose only.
    */
   void clear();
 
