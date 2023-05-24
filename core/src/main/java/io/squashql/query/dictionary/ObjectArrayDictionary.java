@@ -63,7 +63,7 @@ public class ObjectArrayDictionary {
 
     @Override
     public int computeHashCode(Object[] object) {
-      return Arrays.hashCode(object); // FIXME poor hash function
+      return Arrays.hashCode(object);
     }
 
     @Override

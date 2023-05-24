@@ -225,11 +225,11 @@ public class SQLTranslator {
       String first = toSql(field, logical.one, queryRewriter);
       String second = toSql(field, logical.two, queryRewriter);
       String typeString = switch (dto.type()) {
-        case AND -> " and "; // TODO unnest nested and (and (and (and...))) = (and and and)
-        case OR -> " or "; // TODO unnest nested or
+        case AND -> " and ";
+        case OR -> " or ";
         default -> throw new IllegalStateException("Incorrect type " + logical.type);
       };
-      return first + typeString + second;
+      return "(" + first + typeString + second + ")";
     } else if (dto instanceof ConstantConditionDto cc) {
       String formattedFieldName = queryRewriter.fieldName(field.name());
       return switch (cc.type()) {
