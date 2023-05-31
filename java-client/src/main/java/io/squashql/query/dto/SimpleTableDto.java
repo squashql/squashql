@@ -1,5 +1,6 @@
 package io.squashql.query.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import io.squashql.query.TableUtils;
@@ -8,15 +9,11 @@ import java.util.List;
 
 @Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class SimpleTableDto {
 
   public List<String> columns;
   public List<List<Object>> rows;
-
-  public SimpleTableDto(List<String> columns, List<List<Object>> rows) {
-    this.columns = columns;
-    this.rows = rows;
-  }
 
   public void show() {
     System.out.println(this);
