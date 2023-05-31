@@ -24,18 +24,18 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Measu
     this.fieldSupplier = fieldSupplier;
   }
 
-  private Map<QueryScope, Set<Measure>> original() {
+  private Map<QueryScope, Set<Measure>> empty() {
     return Collections.emptyMap();
   }
 
   @Override
   public Map<QueryScope, Set<Measure>> visit(AggregatedMeasure measure) {
-    return original();
+    return empty();
   }
 
   @Override
   public Map<QueryScope, Set<Measure>> visit(ExpressionMeasure measure) {
-    return original();
+    return empty();
   }
 
   @Override
@@ -53,11 +53,11 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Measu
 
   @Override
   public Map<QueryScope, Set<Measure>> visit(LongConstantMeasure measure) {
-    return Collections.emptyMap();
+    return empty();
   }
 
   @Override
   public Map<QueryScope, Set<Measure>> visit(DoubleConstantMeasure measure) {
-    return Collections.emptyMap();
+    return empty();
   }
 }

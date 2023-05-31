@@ -3,12 +3,12 @@ package io.squashql.query;
 import io.squashql.PrefetchVisitor;
 import io.squashql.query.QueryCache.SubQueryScope;
 import io.squashql.query.QueryCache.TableScope;
-import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.monitoring.QueryWatch;
+import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
 import io.squashql.table.MergeTables;
@@ -28,7 +28,7 @@ import static io.squashql.query.ColumnSetKey.BUCKET;
 @Slf4j
 public class QueryExecutor {
 
-  public static final int LIMIT_DEFAULT_VALUE = Integer.parseInt(System.getProperty("query.limit", Integer.toString(10_000)));
+  public static final int LIMIT_DEFAULT_VALUE = Integer.parseInt(System.getProperty("squashql.query.limit", Integer.toString(10_000)));
   public final QueryEngine<?> queryEngine;
   public final QueryCache queryCache;
 
@@ -51,6 +51,40 @@ public class QueryExecutor {
       }
     };
   }
+
+  public Table execute(QueryDto queryDto, List<String> rows, List<String> columns, boolean showTotals) {
+    // What about with column sets?
+    if (!showTotals) {
+      return execute(queryDto);
+    } else {
+      // FIXME check rows and columns
+      List<List<String>> groupingSets = new ArrayList<>();
+      groupingSets.add(List.of(""));// GT
+      // Rows
+      for (int i = rows.size(); i >= 1; i--) {
+        groupingSets.add(rows.subList(0, i));
+      }
+
+      // Cols
+      for (int i = columns.size(); i >= 1; i--) {
+        groupingSets.add(columns.subList(0, i));
+      }
+
+      // all combinations
+      for (int i = rows.size(); i >= 1; i--) {
+        for (int j = columns.size(); j >= 1; j--) {
+          List<String> all = new ArrayList<>(rows.subList(0, i));
+          all.addAll(columns.subList(0, j));
+          groupingSets.add(all);
+        }
+      }
+
+      // TODO
+      // If showTotals is false, nothing to do => regular execution. rows and columns are useless
+      return null;
+    }
+  }
+
 
   public Table execute(String rawSqlQuery) {
     return this.queryEngine.executeRawSql(rawSqlQuery);

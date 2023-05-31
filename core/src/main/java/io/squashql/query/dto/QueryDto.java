@@ -26,6 +26,9 @@ public class QueryDto {
 
   public List<String> rollupColumns = new ArrayList<>();
 
+  // internal
+  public List<List<String>> groupingSets = new ArrayList<>();
+
   public Map<ColumnSetKey, ColumnSet> columnSets = new LinkedHashMap<>();
 
   public List<Measure> measures = new ArrayList<>();
