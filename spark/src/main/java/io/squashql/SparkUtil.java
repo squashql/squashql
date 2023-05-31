@@ -5,6 +5,7 @@ import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public final class SparkUtil {
@@ -28,6 +29,8 @@ public final class SparkUtil {
       klass = byte.class;
     } else if (type.equals(DataTypes.BooleanType)) {
       klass = boolean.class;
+    } else if (type.equals(DataTypes.DateType)) {
+      klass = LocalDate.class;
     } else {
       throw new IllegalArgumentException("Unsupported field type " + type);
     }
@@ -50,6 +53,8 @@ public final class SparkUtil {
       type = DataTypes.ByteType;
     } else if (clazz.equals(Boolean.class) || clazz.equals(boolean.class)) {
       type = DataTypes.BooleanType;
+    } else if (clazz.equals(LocalDate.class)) {
+      type = DataTypes.DateType;
     } else {
       throw new IllegalArgumentException("Unsupported field type " + clazz);
     }
