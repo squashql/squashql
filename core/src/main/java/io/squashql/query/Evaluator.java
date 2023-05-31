@@ -87,8 +87,8 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(
             this.executionContext.query(), cm, this.executionContext.queryScope(), this.fieldSupplier);
     Table readFromTable = this.executionContext.tableByScope().get(readScope); // Table where to read the aggregates
-    if (readFromTable.count() == this.executionContext.query().limit) {
-      throw new RuntimeException("Too many rows, some intermediate results exceed the limit " + this.executionContext.query().limit);
+    if (readFromTable.count() == this.executionContext.queryLimit()) {
+      throw new RuntimeException("Too many rows, some intermediate results exceed the limit " + this.executionContext.queryLimit());
     }
     executeComparator(cm, this.executionContext.writeToTable(), readFromTable, executor);
     return null;

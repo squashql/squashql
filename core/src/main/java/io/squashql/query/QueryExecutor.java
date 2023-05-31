@@ -20,6 +20,7 @@ import org.eclipse.collections.impl.tuple.Tuples;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -62,14 +63,16 @@ public class QueryExecutor {
             new QueryWatch(),
             CacheStatsDto.builder(),
             null,
-            true);
+            true,
+            null);
   }
 
   public Table execute(QueryDto query,
                        QueryWatch queryWatch,
                        CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
                        SquashQLUser user,
-                       boolean replaceTotalCellsAndOrderRows) {
+                       boolean replaceTotalCellsAndOrderRows,
+                       IntConsumer limitNotifier) {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
     queryWatch.start(QueryWatch.GLOBAL);
     queryWatch.start(QueryWatch.PREPARE_PLAN);
@@ -146,7 +149,7 @@ public class QueryExecutor {
     // is given by the graph itself.
     ExecutionPlan<QueryScope, Void> globalPlan = new ExecutionPlan<>(dependencyGraph.getTwo(), (scope, context) -> {
       ExecutionPlan<QueryPlanNodeKey, ExecutionContext> scopedPlan = new ExecutionPlan<>(dependencyGraph.getOne(), new Evaluator(fieldSupplier));
-      scopedPlan.execute(new ExecutionContext(tableByScope.get(scope), scope, tableByScope, query, queryWatch));
+      scopedPlan.execute(new ExecutionContext(tableByScope.get(scope), scope, tableByScope, query, queryLimit, queryWatch));
     });
     globalPlan.execute(null);
 
@@ -155,6 +158,11 @@ public class QueryExecutor {
     queryWatch.start(QueryWatch.ORDER);
 
     Table result = tableByScope.get(queryScope);
+
+    if (limitNotifier != null && result.count() == queryLimit) {
+      limitNotifier.accept(queryLimit);
+    }
+
     result = TableUtils.selectAndOrderColumns((ColumnarTable) result, query);
     if (replaceTotalCellsAndOrderRows) {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result, !query.rollupColumns.isEmpty());
@@ -252,6 +260,7 @@ public class QueryExecutor {
                                  QueryScope queryScope,
                                  Map<QueryScope, Table> tableByScope,
                                  QueryDto query,
+                                 int queryLimit,
                                  QueryWatch queryWatch) {
   }
 
@@ -272,7 +281,10 @@ public class QueryExecutor {
             new QueryWatch(),
             CacheStatsDto.builder(),
             user,
-            false);
+            false,
+            limit -> {
+              throw new RuntimeException("Result of " + q + " is too big (limit=" + limit + ")");
+            });
     CompletableFuture<Table> f1 = CompletableFuture.supplyAsync(() -> execute.apply(first));
     CompletableFuture<Table> f2 = CompletableFuture.supplyAsync(() -> execute.apply(second));
     return CompletableFuture.allOf(f1, f2).thenApply(__ -> merge(f1.join(), f2.join(), joinType, secondComparators, columnSets)).join();
