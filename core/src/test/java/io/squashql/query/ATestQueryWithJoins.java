@@ -6,8 +6,8 @@ import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
+import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
-import org.assertj.core.util.Throwables;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -133,12 +133,7 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
             // by the user by indicating the table from which the field should come from.
             .select(List.of("name"), List.of(Functions.sum("quantity_sum", "quantity")))
             .build();
-    try {
-      this.executor.execute(query);
-    } catch (Exception e) {
-      Throwable rootCause = e.getCause() == null ? e : Throwables.getRootCause(e);
-      Assertions.assertThat(rootCause).hasMessageContaining(ambiguousNameMessage());
-    }
+    TestUtil.assertThatThrownBy(() -> this.executor.execute(query)).hasMessageContaining(ambiguousNameMessage());
   }
 
   protected String ambiguousNameMessage() {
