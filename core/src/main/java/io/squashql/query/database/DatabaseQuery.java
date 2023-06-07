@@ -27,6 +27,7 @@ public class DatabaseQuery {
   public CriteriaDto havingCriteriaDto = null;
   public List<Measure> measures = new ArrayList<>();
   public List<Field> rollup = new ArrayList<>();
+  public List<List<Field>> groupingSets = new ArrayList<>();
   public int limit = -1;
 
   public DatabaseQuery withSelect(Field field) {
@@ -34,8 +35,13 @@ public class DatabaseQuery {
     return this;
   }
 
-  public DatabaseQuery withRollup(Field field) {
-    this.rollup.add(field);
+  public DatabaseQuery rollup(List<Field> rollup) {
+    this.rollup = rollup;
+    return this;
+  }
+
+  public DatabaseQuery groupingSets(List<List<Field>> groupingSets) {
+    this.groupingSets = groupingSets;
     return this;
   }
 

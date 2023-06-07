@@ -201,8 +201,8 @@ public class TableUtils {
    * Replaces cell values containing {@link SQLTranslator#TOTAL_CELL} with {@link QueryEngine#GRAND_TOTAL} or
    * {@link QueryEngine#TOTAL}.
    */
-  public static Table replaceTotalCellValues(ColumnarTable table, boolean hasRollup) {
-    if (!hasRollup) {
+  public static Table replaceTotalCellValues(ColumnarTable table, boolean hasTotal) {
+    if (!hasTotal) {
       // Quick escape
       return table;
     }
@@ -234,6 +234,60 @@ public class TableUtils {
       if (grandTotal) {
         for (int i = 0; i < table.headers().size(); i++) {
           if (!table.headers().get(i).isMeasure()) {
+            finalTable.get().getColumn(i).set(rowIndex, QueryEngine.GRAND_TOTAL);
+          }
+        }
+      }
+    }
+
+    return lazilyCreated[0] ? finalTable.get() : table;
+  }
+
+  public static Table replaceTotalCellValues(ColumnarTable table, List<String> rows, List<String> columns) {
+    // To lazily copy the table when needed.
+    boolean[] lazilyCreated = new boolean[1];
+    Supplier<Table> finalTable = Suppliers.memoize(() -> {
+      List<List<Object>> newValues = new ArrayList<>();
+      for (int i = 0; i < table.headers.size(); i++) {
+        newValues.add(new ArrayList<>(table.getColumn(i)));
+      }
+      lazilyCreated[0] = true;
+      return new ColumnarTable(table.headers, table.measures, newValues);
+    });
+
+    for (int rowIndex = 0; rowIndex < table.count(); rowIndex++) {
+      boolean grandTotalRow = true;
+      boolean grandTotalCol = true;
+      String total = QueryEngine.TOTAL;
+      for (int i = 0; i < table.headers().size(); i++) {
+        Header header = table.headers().get(i);
+        if (!header.isMeasure()) {
+          boolean isTotalCell = SQLTranslator.TOTAL_CELL.equals(table.getColumn(i).get(rowIndex));
+          if (isTotalCell) {
+            finalTable.get().getColumn(i).set(rowIndex, total);
+          }
+
+          if (rows.contains(header.name())) {
+            grandTotalRow &= isTotalCell;
+          }
+          if (columns.contains(header.name())) {
+            grandTotalCol &= isTotalCell;
+          }
+        }
+      }
+
+      if (grandTotalRow) {
+        for (int i = 0; i < table.headers().size(); i++) {
+          Header header = table.headers().get(i);
+          if (!header.isMeasure() && rows.contains(header.name())) {
+            finalTable.get().getColumn(i).set(rowIndex, QueryEngine.GRAND_TOTAL);
+          }
+        }
+      }
+      if (grandTotalCol) {
+        for (int i = 0; i < table.headers().size(); i++) {
+          Header header = table.headers().get(i);
+          if (!header.isMeasure() && columns.contains(header.name())) {
             finalTable.get().getColumn(i).set(rowIndex, QueryEngine.GRAND_TOTAL);
           }
         }

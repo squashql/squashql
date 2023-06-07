@@ -7,6 +7,7 @@ import io.squashql.store.Field;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static io.squashql.query.dto.OrderKeywordDto.DESC;
 
@@ -56,10 +57,11 @@ public final class Queries {
     } else {
       throw new IllegalArgumentException("A table or sub-query was expected in " + queryScope);
     }
-    prefetchQuery.whereCriteriaDto = queryScope.whereCriteriaDto();
-    prefetchQuery.havingCriteriaDto = queryScope.havingCriteriaDto();
+    prefetchQuery.whereCriteria(queryScope.whereCriteriaDto());
+    prefetchQuery.havingCriteria(queryScope.havingCriteriaDto());
     selects.forEach(prefetchQuery::withSelect);
-    Optional.ofNullable(queryScope.rollupColumns()).ifPresent(r -> r.forEach(prefetchQuery::withRollup));
+    prefetchQuery.rollup(queryScope.rollupColumns());
+    prefetchQuery.groupingSets(queryScope.groupingSets());
     prefetchQuery.limit(limit);
     prefetchQuery.virtualTable(queryScope.virtualTableDto());
     return prefetchQuery;
@@ -101,5 +103,16 @@ public final class Queries {
     cols.stream().map(fieldSupplier).forEach(prefetchQuery::withSelect);
     query.measures.forEach(prefetchQuery::withMeasure);
     return prefetchQuery;
+  }
+
+  public static List<Field> generateGroupingSelect(DatabaseQuery query) {
+    List<Field> selects = new ArrayList<>();
+    selects.addAll(query.rollup);
+    // order matters, this is why a LinkedHashSet is used.
+    selects.addAll(query.groupingSets
+            .stream()
+            .flatMap(Collection::stream)
+            .collect(Collectors.toCollection(LinkedHashSet::new)));
+    return selects;
   }
 }

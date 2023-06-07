@@ -113,8 +113,7 @@ public class TestSQLTranslator {
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(fieldProvider.apply(SCENARIO_FIELD_NAME))
             .withSelect(fieldProvider.apply("type"))
-            .withRollup(fieldProvider.apply(SCENARIO_FIELD_NAME))
-            .withRollup(fieldProvider.apply("type"))
+            .rollup(List.of(fieldProvider.apply(SCENARIO_FIELD_NAME), fieldProvider.apply("type")))
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
@@ -132,8 +131,9 @@ public class TestSQLTranslator {
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(fieldProvider.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, SCENARIO_FIELD_NAME)))
             .withSelect(fieldProvider.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, "type")))
-            .withRollup(fieldProvider.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, SCENARIO_FIELD_NAME)))
-            .withRollup(fieldProvider.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, "type")))
+            .rollup(List.of(
+                    fieldProvider.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, SCENARIO_FIELD_NAME)),
+                    fieldProvider.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, "type"))))
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
@@ -151,7 +151,7 @@ public class TestSQLTranslator {
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(fieldProvider.apply(SCENARIO_FIELD_NAME))
             .withSelect(fieldProvider.apply("type"))
-            .withRollup(fieldProvider.apply(SCENARIO_FIELD_NAME))
+            .rollup(List.of(fieldProvider.apply(SCENARIO_FIELD_NAME)))
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 

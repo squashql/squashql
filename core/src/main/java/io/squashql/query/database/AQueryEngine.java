@@ -5,6 +5,7 @@ import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.store.Datastore;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
+import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -131,13 +132,14 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
    * </pre>
    */
   protected Table postProcessDataset(Table input, DatabaseQuery query) {
-    if (!query.rollup.isEmpty()) {
+    List<Field> groupingSelects = Queries.generateGroupingSelect(query);
+    if (this.queryRewriter.useGroupingFunction() && !groupingSelects.isEmpty()) {
       List<Header> newHeaders = new ArrayList<>();
       List<List<Object>> newValues = new ArrayList<>();
       for (int i = 0; i < input.headers().size(); i++) {
         Header header = input.headers().get(i);
         List<Object> columnValues = input.getColumn(i);
-        if (i < query.select.size() || i >= query.select.size() + query.rollup.size()) {
+        if (i < query.select.size() || i >= query.select.size() + groupingSelects.size()) {
           newHeaders.add(header);
           newValues.add(columnValues);
         } else {
@@ -172,8 +174,9 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
           QueryRewriter queryRewriter) {
     List<Header> headers = new ArrayList<>();
     List<String> fieldNames = new ArrayList<>(query.select.stream().map(SqlUtils::getFieldFullName).toList());
+    List<Field> groupingSelects = Queries.generateGroupingSelect(query);
     if (queryRewriter.useGroupingFunction()) {
-      query.rollup.forEach(r -> fieldNames.add(SqlUtils.groupingAlias(SqlUtils.getFieldFullName(r))));
+      groupingSelects.forEach(r -> fieldNames.add(SqlUtils.groupingAlias(SqlUtils.getFieldFullName(r))));
     }
     query.measures.forEach(m -> fieldNames.add(m.alias()));
     List<List<Object>> values = new ArrayList<>(columns.size());
@@ -181,7 +184,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
       headers.add(new Header(
               columnNameProvider.apply(columns.get(i), fieldNames.get(i)),
               columnTypeProvider.apply(columns.get(i), fieldNames.get(i)),
-              i >= query.select.size() + (queryRewriter.useGroupingFunction() ? query.rollup.size() : 0)));
+              i >= query.select.size() + (queryRewriter.useGroupingFunction() ? groupingSelects.size() : 0)));
       values.add(new ArrayList<>());
     }
     recordIterator.forEachRemaining(r -> {

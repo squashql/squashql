@@ -52,14 +52,18 @@ public class QueryExecutor {
     };
   }
 
-  public Table execute(QueryDto queryDto, List<String> rows, List<String> columns, boolean showTotals) {
-    // What about with column sets?
+  public Table execute(QueryDto query, List<String> rows, List<String> columns, boolean showTotals) {
     if (!showTotals) {
-      return execute(queryDto);
+      return execute(query);
     } else {
+      if (!query.rollupColumns.isEmpty()) {
+        // TODO throw?
+        new IllegalArgumentException();
+      }
+
       // FIXME check rows and columns
       List<List<String>> groupingSets = new ArrayList<>();
-      groupingSets.add(List.of(""));// GT
+      groupingSets.add(List.of());// GT use an empty list instead of list of size 1 with an empty string because could cause issue later on with FieldSupplier
       // Rows
       for (int i = rows.size(); i >= 1; i--) {
         groupingSets.add(rows.subList(0, i));
@@ -79,12 +83,17 @@ public class QueryExecutor {
         }
       }
 
+      query.groupingSets = groupingSets;
+
       // TODO
+      // FIXME what if usage of ColumnSets?
       // If showTotals is false, nothing to do => regular execution. rows and columns are useless
-      return null;
+      Table result = execute(query, new QueryWatch(), CacheStatsDto.builder(), null, false);
+      result = TableUtils.replaceTotalCellValues((ColumnarTable) result, rows, columns);
+      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
+      return result;
     }
   }
-
 
   public Table execute(String rawSqlQuery) {
     return this.queryEngine.executeRawSql(rawSqlQuery);
@@ -243,7 +252,15 @@ public class QueryExecutor {
             query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
             query.columns.stream()).map(fieldSupplier).collect(Collectors.toCollection(ArrayList::new));
     List<Field> rollupColumns = query.rollupColumns.stream().map(fieldSupplier).toList();
-    return new QueryScope(query.table, query.subQuery, columns, query.whereCriteriaDto, query.havingCriteriaDto, rollupColumns, query.virtualTableDto);
+    List<List<Field>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(fieldSupplier).toList()).toList();
+    return new QueryScope(query.table,
+            query.subQuery,
+            columns,
+            query.whereCriteriaDto,
+            query.havingCriteriaDto,
+            rollupColumns,
+            groupingSets,
+            query.virtualTableDto);
   }
 
   private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(
@@ -276,6 +293,7 @@ public class QueryExecutor {
                            CriteriaDto whereCriteriaDto,
                            CriteriaDto havingCriteriaDto,
                            List<Field> rollupColumns,
+                           List<List<Field>> groupingSets,
                            VirtualTableDto virtualTableDto) {
   }
 

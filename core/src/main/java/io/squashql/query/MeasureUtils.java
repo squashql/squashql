@@ -95,6 +95,7 @@ public final class MeasureUtils {
             copy.get(),
             queryScope.havingCriteriaDto(),
             new ArrayList<>(rollupColumns),
+            new ArrayList<>(), // FIXME should handle groupingSets
             queryScope.virtualTableDto());
   }
 

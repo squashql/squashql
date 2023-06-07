@@ -3,6 +3,7 @@ package io.squashql.query.database;
 import com.google.common.collect.Ordering;
 import io.squashql.query.dto.*;
 import io.squashql.store.Field;
+import io.squashql.util.Queries;
 
 import java.util.*;
 import java.util.function.Function;
@@ -39,7 +40,8 @@ public class SQLTranslator {
 
     selects.addAll(groupBy); // coord first, then aggregates
     if (queryRewriter.useGroupingFunction()) {
-      query.rollup.forEach(f -> selects.add(String.format("grouping(%s)", queryRewriter.select(f)))); // use grouping to identify totals
+      // use grouping to identify totals
+      Queries.generateGroupingSelect(query).forEach(f -> selects.add(String.format("grouping(%s)", queryRewriter.select(f))));
     }
     selects.addAll(aggregates);
 
@@ -57,7 +59,11 @@ public class SQLTranslator {
       addJoins(statement, query.table, query.virtualTableDto, fieldProvider, queryRewriter);
     }
     addWhereConditions(statement, query, fieldProvider, queryRewriter);
-    addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
+    if (!query.groupingSets.isEmpty()) {
+      addGroupingSets(query.groupingSets.stream().map(g -> g.stream().map(queryRewriter::rollup).toList()).toList(), statement);
+    } else {
+      addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
+    }
     addHavingConditions(statement, query.havingCriteriaDto, queryRewriter);
     addLimit(query.limit, statement);
     return statement.toString();
@@ -152,6 +158,21 @@ public class SQLTranslator {
         statement.append(rollupOnly.stream().collect(Collectors.joining(", ", "rollup(", ")")));
       }
     }
+  }
+
+  private static void addGroupingSets(List<List<String>> groupingSets, StringBuilder statement) {
+    statement.append(" group by grouping sets(");
+
+    for (int i = 0; i < groupingSets.size(); i++) {
+      statement.append('(');
+      statement.append(String.join(",", groupingSets.get(i)));
+      statement.append(')');
+      if (i < groupingSets.size() - 1) {
+        statement.append(", ");
+      }
+    }
+
+    statement.append(")");
   }
 
   protected static void addWhereConditions(StringBuilder statement, DatabaseQuery query, Function<String, Field> fieldProvider, QueryRewriter queryRewriter) {

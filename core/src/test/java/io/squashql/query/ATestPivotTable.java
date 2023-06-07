@@ -63,37 +63,39 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 //            .rollup(List.of("spending_category", "continent", "country", "city"))
             .build();
 
-    this.executor.execute(query, List.of("continent", "country", "city"), List.of("spending_category", "spending_subcategory"), true);
+    Table result = this.executor.execute(query, List.of("continent", "country", "city"), List.of("spending_category", "spending_subcategory"), true);
+    result.show();
 
-    Table result = this.executor.execute("select \"country\", \"spending_category\", \"spending_subcategory\", \"continent\", \"city\", sum(\"amount\") as \"amount\" " +
-//            "from \"storetestduckdbparentcomparisonwithothercolumn\" group by cube(" + String.join(",", "continent", "country", "city", "spending_category") +
-            "from " + this.storeName + " group by grouping sets(" +
-            // Details most granular
+//    this.executor.execute("select \"country\", \"spending_category\", \"spending_subcategory\", \"continent\", \"city\", sum(\"amount\") as \"amount\" " +
+////            "from \"storetestduckdbparentcomparisonwithothercolumn\" group by cube(" + String.join(",", "continent", "country", "city", "spending_category") +
+//            "from " + this.storeName + " group by grouping sets(" +
+//            // Details most granular
+//
+//            // Rows = List.of("continent", "country", "city")
+//            // Total on rows
+//            "(" + String.join(",", "continent", "country", "city") + ")," +
+//            "(" + String.join(",", "continent", "country") + ")," +
+//            "(" + String.join(",", "continent") + ")," +
+//
+//            // Cols = List.of("spending_category", "spending_subcategory")
+//            "(" + String.join(",", "spending_category", "spending_subcategory") + ")," +
+//            "(" + String.join(",", "spending_category") + ")," +
+//
+//            // all combinations
+//            "(" + String.join(",", "continent", "country", "city", "spending_category", "spending_subcategory") + ")," + // all concatenate
+//            "(" + String.join(",", "continent", "country", "city", "spending_category") + ")," + // remove col
+//            "(" + String.join(",", "continent", "country", "spending_category", "spending_subcategory") + ")," + // remove row
+//            "(" + String.join(",", "continent", "spending_category", "spending_subcategory") + ")," + // remove row
+//
+//            "(" + String.join(",", "continent", "country", "spending_category") + ")," + // remove col and row
+//            "(" + String.join(",", "continent", "spending_category") + ")," + // remove col and row until 1 each
+//
+//            // GT
+//            "()" +
+//
+//            ") limit 10000");
 
-            // Rows
-            "(" + String.join(",", "continent", "country", "city") + ")," +
-            "(" + String.join(",", "continent", "country") + ")," +
-            "(" + String.join(",", "continent") + ")," +
-
-            // Cols
-            "(" + String.join(",", "spending_category", "spending_subcategory") + ")," +
-            "(" + String.join(",", "spending_category") + ")," +
-
-            // all combinations
-            "(" + String.join(",", "continent", "country", "city", "spending_category", "spending_subcategory") + ")," + // all concatenate
-            "(" + String.join(",", "continent", "country", "city", "spending_category") + ")," + // remove col
-            "(" + String.join(",", "continent", "country", "spending_category", "spending_subcategory") + ")," + // remove row
-            "(" + String.join(",", "continent", "spending_category", "spending_subcategory") + ")," + // remove row
-
-            "(" + String.join(",", "continent", "country", "spending_category") + ")," + // remove col and row
-            "(" + String.join(",", "continent", "spending_category") + ")," + // remove col and row until 1 each
-
-            // GT
-            "()" +
-
-            ") limit 10000");
-
-    result = this.executor.execute(query);
+//    result = this.executor.execute(query);
 //    Assertions.assertThat(result).containsExactly(
 //            Arrays.asList("car", "eu", "france", "lyon", 0.1d, 0.1d / (0.1d + 1d)),
 //            Arrays.asList("car", "eu", "france", "paris", 1d, 1d / (0.1d + 1d)),
@@ -105,7 +107,6 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 //            Arrays.asList("home", "eu", "france", "paris", 2d, 2d / (2 + 2)),
 //            Arrays.asList("home", "eu", "uk", "london", 2d, 1d));
 
-    result.show();
     List<String> list = result.headers().stream().map(Header::name).toList();
     Map<String, Object>[] m = new Map[(int) result.count()];
     AtomicInteger index = new AtomicInteger();

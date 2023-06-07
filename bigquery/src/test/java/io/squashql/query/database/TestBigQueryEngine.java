@@ -36,8 +36,7 @@ public class TestBigQueryEngine {
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(this.fieldSupplier.apply(scenario))
             .withSelect(this.fieldSupplier.apply(category))
-            .withRollup(this.fieldSupplier.apply(scenario))
-            .withRollup(this.fieldSupplier.apply(category))
+            .rollup(List.of(this.fieldSupplier.apply(scenario), this.fieldSupplier.apply(category)))
             .aggregatedMeasure("price.sum", "price", "sum")
             .aggregatedMeasure("price.avg", "price", "avg")
             .table("baseStore");
@@ -67,7 +66,7 @@ public class TestBigQueryEngine {
             .withSelect(this.fieldSupplier.apply("col1"))
             .withSelect(this.fieldSupplier.apply("col2"))
             .withSelect(this.fieldSupplier.apply("col3"))
-            .withRollup(this.fieldSupplier.apply("col2"))
+            .rollup(List.of(this.fieldSupplier.apply("col2")))
             .aggregatedMeasure("price.sum", "price", "sum")
             .table("baseStore");
 
@@ -95,8 +94,7 @@ public class TestBigQueryEngine {
             .withSelect(this.fieldSupplier.apply("col1"))
             .withSelect(this.fieldSupplier.apply("col2"))
             .withSelect(this.fieldSupplier.apply("col3"))
-            .withRollup(this.fieldSupplier.apply("col3"))
-            .withRollup(this.fieldSupplier.apply("col2"))
+            .rollup(List.of(this.fieldSupplier.apply("col3"), this.fieldSupplier.apply("col2")))
             .aggregatedMeasure("price.sum", "price", "sum")
             .table("baseStore");
     sqlStatement = bqe.createSqlStatement(query);
@@ -115,7 +113,7 @@ public class TestBigQueryEngine {
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(this.fieldSupplier.apply(scenario))
             .withSelect(this.fieldSupplier.apply(category))
-            .withRollup(this.fieldSupplier.apply(category))
+            .rollup(List.of(this.fieldSupplier.apply(category)))
             .aggregatedMeasure("price.sum", "price", "sum")
             .table("baseStore");
 
@@ -166,7 +164,7 @@ public class TestBigQueryEngine {
     String category = "category";
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(this.fieldSupplier.apply(category))
-            .withRollup(this.fieldSupplier.apply(category))
+            .rollup(List.of(this.fieldSupplier.apply(category)))
             .aggregatedMeasure("price.sum", "price", "sum")
             .table("baseStore");
     VirtualTableDto virtual = new VirtualTableDto(
