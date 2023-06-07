@@ -52,6 +52,7 @@ public class QueryExecutor {
     };
   }
 
+  // FIXME this API only makes senses if showTotals = true
   public Table execute(QueryDto query, List<String> rows, List<String> columns, boolean showTotals) {
     if (!showTotals) {
       return execute(query);

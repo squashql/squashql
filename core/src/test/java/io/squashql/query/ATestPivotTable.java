@@ -2,15 +2,16 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.jackson.JacksonUtil;
+import io.squashql.query.builder.CanAddRollup;
 import io.squashql.query.builder.Query;
+import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @TestClass(ignore = {TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE})
@@ -51,6 +52,74 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             new Object[]{"la", "usa", "am", "minimum expenditure", "housing", 2d},
             new Object[]{"la", "usa", "am", "extra", "hobbies", 4d}
     ));
+  }
+
+  @Test
+  void testRollupEquivalent() {
+    Measure amount = Functions.sum("amount", "amount");
+
+    CanAddRollup base = Query
+            .from(this.storeName)
+            .select(List.of("continent", "country", "city"), List.of(amount));
+    QueryDto queryRollup = base
+            .rollup(List.of("continent", "country", "city"))
+            .build();
+    Table resultRollup = this.executor.execute(queryRollup);
+
+    {
+      Table result = this.executor.execute(base.build(), List.of("continent", "country", "city"), List.of(), true);
+      Assertions.assertThat(result).containsExactlyInAnyOrderElementsOf(resultRollup);
+    }
+
+    {
+      Table result = this.executor.execute(base.build(), List.of(), List.of("continent", "country", "city"), true);
+      Assertions.assertThat(result).containsExactlyInAnyOrderElementsOf(resultRollup);
+    }
+  }
+
+  /**
+   * Simple case.
+   */
+  @Test
+  void testOneColumnEachAxis() {
+    Measure amount = Functions.sum("amount", "amount");
+
+    CanAddRollup base = Query
+            .from(this.storeName)
+            .select(List.of("spending_category", "city"), List.of(amount));
+    List<String> rows = List.of("city");
+    List<String> columns = List.of("spending_category");
+    Table result = this.executor.execute(base.build(), rows, columns, true);
+
+    result.show();
+    toJson(result);
+    pivot(result, rows, columns);
+//    QueryDto queryRollup = base
+//            .rollup(List.of("continent", "country", "city"))
+//            .build();
+//    Table resultRollup = this.executor.execute(queryRollup);
+//    Assertions.assertThat(result).containsExactlyInAnyOrderElementsOf(resultRollup);
+  }
+
+  @Test
+  void testDrawPT() {
+    Measure amount = Functions.sum("amount", "amount");
+
+    CanAddRollup base = Query
+            .from(this.storeName)
+            .select(List.of("spending_category", "spending_subcategory", "country", "city"), List.of(amount));
+    List<String> rows = List.of("country", "city");
+    List<String> columns = List.of("spending_category", "spending_subcategory");
+    Table result = this.executor.execute(base.build(), rows, columns, true);
+
+    result.show();
+    toJson(result);
+    pivot(result, rows, columns);
+//    QueryDto queryRollup = base
+//            .rollup(List.of("continent", "country", "city"))
+//            .build();
+//    Table resultRollup = this.executor.execute(queryRollup);
+//    Assertions.assertThat(result).containsExactlyInAnyOrderElementsOf(resultRollup);
   }
 
   @Test
@@ -107,6 +176,10 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 //            Arrays.asList("home", "eu", "france", "paris", 2d, 2d / (2 + 2)),
 //            Arrays.asList("home", "eu", "uk", "london", 2d, 1d));
 
+    toJson(result);
+  }
+
+  private static void toJson(Table result) {
     List<String> list = result.headers().stream().map(Header::name).toList();
     Map<String, Object>[] m = new Map[(int) result.count()];
     AtomicInteger index = new AtomicInteger();
@@ -117,5 +190,85 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
       }
     });
     System.out.println(JacksonUtil.serialize(m));
+  }
+
+  public static void pivot(Table table, List<String> rows, List<String> columns) {
+    ObjectArrayDictionary columnDictionary = buildIntersectionPointDictionary(table, columns);
+    List<List<Object>> headerColumns = new ArrayList<>(); // The header values for the columns
+    int size = columnDictionary.size();
+    for (String column : columns) {
+      List<Object> r = new ArrayList<>(size);
+      for (int i = 0; i < size; i++) {
+        r.add(null);
+      }
+      headerColumns.add(r);
+    }
+
+    columnDictionary.forEach((point, index) -> {
+      for (int i = 0; i < point.length; i++) {
+        headerColumns.get(i).set(index, point[i]);
+      }
+    });
+
+    ObjectArrayDictionary rowDictionary = buildIntersectionPointDictionary(table, rows);
+    List<List<Object>> headerRows = new ArrayList<>(); // The header values for the rows
+    rowDictionary.forEach((point, index) -> headerRows.add(Arrays.asList(point)));
+
+    int[] rowMapping = getMapping(table, rows);
+    int[] colMapping = getMapping(table, columns);
+    List<List<Object>> cells = new ArrayList<>(); // The values of the cells.
+    headerRows.forEach(rowPoint -> {
+      Object[] buffer = new Object[rows.size() + columns.size()];
+      List<Object> r = new ArrayList<>();
+      cells.add(r);
+      for (int i = 0; i < rowMapping.length; i++) {
+        buffer[rowMapping[i]] = rowPoint.get(i);
+      }
+
+      for (int i = 0; i < size; i++) {
+        List<Object> cols = new ArrayList<>(columns.size());
+        for (int j = 0; j < columns.size(); j++) {
+          cols.add(headerColumns.get(j).get(i));
+        }
+        for (int j = 0; j < colMapping.length; j++) {
+          buffer[colMapping[j]] = cols.get(j);
+        }
+        int position = ((ColumnarTable) table).pointDictionary.get().getPosition(buffer);
+        Object amount = table.getColumnValues("amount").get(position);
+        r.add(amount);
+      }
+    });
+
+    // TODO need to combine cells + header[Columns/Rows] to create a RowTable
+    // And order that table because the dictionaries mixed everything up
+    System.out.println();
+  }
+
+  private static ObjectArrayDictionary buildIntersectionPointDictionary(Table table, List<String> columns) {
+    ObjectArrayDictionary dictionary = new ObjectArrayDictionary(columns.size());
+    int[] mapping = getMapping(table, columns);
+
+    table.forEach(row -> {
+      Object[] columnValues = new Object[columns.size()];
+      for (int i = 0; i < columns.size(); i++) {
+        columnValues[i] = row.get(mapping[i]);
+      }
+      dictionary.map(columnValues);
+    });
+    return dictionary;
+  }
+
+  private static int[] getMapping(Table table, List<String> columns) {
+    int[] mapping = new int[columns.size()];
+    Arrays.fill(mapping, -1);
+    for (int i = 0; i < columns.size(); i++) {
+      for (int j = 0; j < table.headers().size(); j++) {
+        if (table.headers().get(j).name().equals(columns.get(i))) {
+          mapping[i] = j;
+          break;
+        }
+      }
+    }
+    return mapping;
   }
 }
