@@ -85,9 +85,7 @@ public class QueryExecutor {
 
       query.groupingSets = groupingSets;
 
-      // TODO
       // FIXME what if usage of ColumnSets?
-      // If showTotals is false, nothing to do => regular execution. rows and columns are useless
       Table result = execute(query, new QueryWatch(), CacheStatsDto.builder(), null, false);
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result, rows, columns);
       result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());

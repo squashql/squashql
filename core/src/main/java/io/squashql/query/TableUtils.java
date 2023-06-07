@@ -11,6 +11,7 @@ import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.NullAndTotalComparator;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -202,47 +203,12 @@ public class TableUtils {
    * {@link QueryEngine#TOTAL}.
    */
   public static Table replaceTotalCellValues(ColumnarTable table, boolean hasTotal) {
-    if (!hasTotal) {
-      // Quick escape
-      return table;
-    }
-
-    // To lazily copy the table when needed.
-    boolean[] lazilyCreated = new boolean[1];
-    Supplier<Table> finalTable = Suppliers.memoize(() -> {
-      List<List<Object>> newValues = new ArrayList<>();
-      for (int i = 0; i < table.headers.size(); i++) {
-        newValues.add(new ArrayList<>(table.getColumn(i)));
-      }
-      lazilyCreated[0] = true;
-      return new ColumnarTable(table.headers, table.measures, newValues);
-    });
-
-    for (int rowIndex = 0; rowIndex < table.count(); rowIndex++) {
-      boolean grandTotal = true;
-      String total = QueryEngine.TOTAL;
-      for (int i = 0; i < table.headers().size(); i++) {
-        if (!table.headers().get(i).isMeasure()) {
-          boolean isTotalCell = SQLTranslator.TOTAL_CELL.equals(table.getColumn(i).get(rowIndex));
-          if (isTotalCell) {
-            finalTable.get().getColumn(i).set(rowIndex, total);
-          }
-          grandTotal &= isTotalCell;
-        }
-      }
-
-      if (grandTotal) {
-        for (int i = 0; i < table.headers().size(); i++) {
-          if (!table.headers().get(i).isMeasure()) {
-            finalTable.get().getColumn(i).set(rowIndex, QueryEngine.GRAND_TOTAL);
-          }
-        }
-      }
-    }
-
-    return lazilyCreated[0] ? finalTable.get() : table;
+    return !hasTotal ? table : replaceTotalCellValues(table, table.headers().stream().map(Header::name).toList(), List.of());
   }
 
+  /**
+   * Same as {@link #replaceTotalCellValues(ColumnarTable, boolean)} but for adapted to pivot table.
+   */
   public static Table replaceTotalCellValues(ColumnarTable table, List<String> rows, List<String> columns) {
     // To lazily copy the table when needed.
     boolean[] lazilyCreated = new boolean[1];
@@ -270,28 +236,26 @@ public class TableUtils {
           if (rows.contains(header.name())) {
             grandTotalRow &= isTotalCell;
           }
+
           if (columns.contains(header.name())) {
             grandTotalCol &= isTotalCell;
           }
         }
       }
 
-      if (grandTotalRow) {
-        for (int i = 0; i < table.headers().size(); i++) {
-          Header header = table.headers().get(i);
-          if (!header.isMeasure() && rows.contains(header.name())) {
-            finalTable.get().getColumn(i).set(rowIndex, QueryEngine.GRAND_TOTAL);
+      int finalRowIndex = rowIndex;
+      BiConsumer<Boolean, List<String>> consumer = (grandTotal, axis) -> {
+        if (grandTotal) {
+          for (int i = 0; i < table.headers().size(); i++) {
+            Header header = table.headers().get(i);
+            if (!header.isMeasure() && axis.contains(header.name())) {
+              finalTable.get().getColumn(i).set(finalRowIndex, QueryEngine.GRAND_TOTAL);
+            }
           }
         }
-      }
-      if (grandTotalCol) {
-        for (int i = 0; i < table.headers().size(); i++) {
-          Header header = table.headers().get(i);
-          if (!header.isMeasure() && columns.contains(header.name())) {
-            finalTable.get().getColumn(i).set(rowIndex, QueryEngine.GRAND_TOTAL);
-          }
-        }
-      }
+      };
+      consumer.accept(grandTotalRow, rows);
+      consumer.accept(grandTotalCol, columns);
     }
 
     return lazilyCreated[0] ? finalTable.get() : table;
