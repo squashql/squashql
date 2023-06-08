@@ -4,7 +4,6 @@ import io.squashql.TestClass;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.builder.CanAddRollup;
 import io.squashql.query.builder.Query;
-import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
@@ -193,9 +192,9 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
   }
 
   public static void pivot(Table table, List<String> rows, List<String> columns) {
-    ObjectArrayDictionary columnDictionary = buildIntersectionPointDictionary(table, columns);
+    Set<ObjectArrayKey> columnHeaderValues = buildIntersectionPointDictionary(table, columns);
     List<List<Object>> headerColumns = new ArrayList<>(); // The header values for the columns
-    int size = columnDictionary.size();
+    int size = columnHeaderValues.size();
     for (String column : columns) {
       List<Object> r = new ArrayList<>(size);
       for (int i = 0; i < size; i++) {
@@ -204,25 +203,24 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
       headerColumns.add(r);
     }
 
-    columnDictionary.forEach((point, index) -> {
-      for (int i = 0; i < point.length; i++) {
-        headerColumns.get(i).set(index, point[i]);
+    int columnIndex = 0;
+    for (ObjectArrayKey columnHeaderValue : columnHeaderValues) {
+      for (int rowIndex = 0; rowIndex < columnHeaderValue.a.length; rowIndex++) {
+        headerColumns.get(rowIndex).set(columnIndex, columnHeaderValue.a[rowIndex]);
       }
-    });
-
-    ObjectArrayDictionary rowDictionary = buildIntersectionPointDictionary(table, rows);
-    List<List<Object>> headerRows = new ArrayList<>(); // The header values for the rows
-    rowDictionary.forEach((point, index) -> headerRows.add(Arrays.asList(point)));
+      columnIndex++;
+    }
+    Set<ObjectArrayKey> rowHeaderValues = buildIntersectionPointDictionary(table, rows);
 
     int[] rowMapping = getMapping(table, rows);
     int[] colMapping = getMapping(table, columns);
     List<List<Object>> cells = new ArrayList<>(); // The values of the cells.
-    headerRows.forEach(rowPoint -> {
+    rowHeaderValues.forEach(rowPoint -> {
       Object[] buffer = new Object[rows.size() + columns.size()];
       List<Object> r = new ArrayList<>();
       cells.add(r);
       for (int i = 0; i < rowMapping.length; i++) {
-        buffer[rowMapping[i]] = rowPoint.get(i);
+        buffer[rowMapping[i]] = rowPoint.a[i];
       }
 
       for (int i = 0; i < size; i++) {
@@ -244,18 +242,18 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     System.out.println();
   }
 
-  private static ObjectArrayDictionary buildIntersectionPointDictionary(Table table, List<String> columns) {
-    ObjectArrayDictionary dictionary = new ObjectArrayDictionary(columns.size());
+  private static Set<ObjectArrayKey> buildIntersectionPointDictionary(Table table, List<String> columns) {
     int[] mapping = getMapping(table, columns);
 
+    LinkedHashSet<ObjectArrayKey> result = new LinkedHashSet<>();
     table.forEach(row -> {
       Object[] columnValues = new Object[columns.size()];
       for (int i = 0; i < columns.size(); i++) {
         columnValues[i] = row.get(mapping[i]);
       }
-      dictionary.map(columnValues);
+      result.add(new ObjectArrayKey(columnValues));
     });
-    return dictionary;
+    return result;
   }
 
   private static int[] getMapping(Table table, List<String> columns) {
@@ -270,5 +268,31 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
       }
     }
     return mapping;
+  }
+
+  private static class ObjectArrayKey {
+    final Object[] a;
+
+    private ObjectArrayKey(Object[] a) {
+      this.a = a;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      ObjectArrayKey that = (ObjectArrayKey) o;
+      return Arrays.equals(this.a, that.a);
+    }
+
+    @Override
+    public int hashCode() {
+      return Arrays.hashCode(this.a);
+    }
+
+    @Override
+    public String toString() {
+      return Arrays.toString(this.a);
+    }
   }
 }
