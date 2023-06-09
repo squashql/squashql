@@ -12,6 +12,7 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 @TestClass(ignore = {TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -92,7 +93,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
     result.show();
     toJson(result);
-    pivot(result, rows, columns);
+//    pivot(result, rows, columns, List.of("amount"));
 //    QueryDto queryRollup = base
 //            .rollup(List.of("continent", "country", "city"))
 //            .build();
@@ -103,17 +104,19 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
   @Test
   void testDrawPT() {
     Measure amount = Functions.sum("amount", "amount");
+    Measure mean = Functions.avg("mean", "amount");
 
+    List<Measure> measures = List.of(amount, mean);
     CanAddRollup base = Query
             .from(this.storeName)
-            .select(List.of("spending_category", "spending_subcategory", "country", "city"), List.of(amount));
+            .select(List.of("spending_category", "spending_subcategory", "country", "city"), measures);
     List<String> rows = List.of("country", "city");
     List<String> columns = List.of("spending_category", "spending_subcategory");
     Table result = this.executor.execute(base.build(), rows, columns, true);
 
     result.show();
     toJson(result);
-    pivot(result, rows, columns);
+    pivot(result, rows, columns, measures.stream().map(Measure::alias).toList());
 //    QueryDto queryRollup = base
 //            .rollup(List.of("continent", "country", "city"))
 //            .build();
@@ -191,30 +194,36 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     System.out.println(JacksonUtil.serialize(m));
   }
 
-  public static void pivot(Table table, List<String> rows, List<String> columns) {
-    Set<ObjectArrayKey> columnHeaderValues = buildIntersectionPointDictionary(table, columns);
+  public static void pivot(Table table, List<String> rows, List<String> columns, List<String> values) {
+    Set<ObjectArrayKey> columnHeaderValues = getHeaderValues(table, columns);
+
     List<List<Object>> headerColumns = new ArrayList<>(); // The header values for the columns
-    int size = columnHeaderValues.size();
-    for (String column : columns) {
+    int size = columnHeaderValues.size() * values.size();
+    // Prepare the lists
+    columns.forEach(__ -> {
       List<Object> r = new ArrayList<>(size);
       for (int i = 0; i < size; i++) {
         r.add(null);
       }
       headerColumns.add(r);
-    }
+    });
 
+    // Fill the lists
     int columnIndex = 0;
     for (ObjectArrayKey columnHeaderValue : columnHeaderValues) {
-      for (int rowIndex = 0; rowIndex < columnHeaderValue.a.length; rowIndex++) {
-        headerColumns.get(rowIndex).set(columnIndex, columnHeaderValue.a[rowIndex]);
+      for (int __ = 0; __ < values.size(); __++) {
+        for (int rowIndex = 0; rowIndex < columnHeaderValue.a.length; rowIndex++) {
+          headerColumns.get(rowIndex).set(columnIndex, columnHeaderValue.a[rowIndex]);
+        }
+        columnIndex++;
       }
-      columnIndex++;
     }
-    Set<ObjectArrayKey> rowHeaderValues = buildIntersectionPointDictionary(table, rows);
+
+    Set<ObjectArrayKey> rowHeaderValues = getHeaderValues(table, rows);
 
     int[] rowMapping = getMapping(table, rows);
     int[] colMapping = getMapping(table, columns);
-    List<List<Object>> cells = new ArrayList<>(); // The values of the cells.
+    List<List<Object>> cells = new ArrayList<>(rowHeaderValues.size() * size); // The values of the cells.
     rowHeaderValues.forEach(rowPoint -> {
       Object[] buffer = new Object[rows.size() + columns.size()];
       List<Object> r = new ArrayList<>();
@@ -223,26 +232,50 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
         buffer[rowMapping[i]] = rowPoint.a[i];
       }
 
-      for (int i = 0; i < size; i++) {
-        List<Object> cols = new ArrayList<>(columns.size());
-        for (int j = 0; j < columns.size(); j++) {
-          cols.add(headerColumns.get(j).get(i));
-        }
+      for (int i = 0; i < columnHeaderValues.size(); i++) {
         for (int j = 0; j < colMapping.length; j++) {
-          buffer[colMapping[j]] = cols.get(j);
+          buffer[colMapping[j]] = headerColumns.get(j).get(i * values.size());
         }
         int position = ((ColumnarTable) table).pointDictionary.get().getPosition(buffer);
-        Object amount = table.getColumnValues("amount").get(position);
-        r.add(amount);
+
+        for (String value : values) {
+          r.add(table.getColumnValues(value).get(position));
+        }
       }
     });
 
-    // TODO need to combine cells + header[Columns/Rows] to create a RowTable
-    // And order that table because the dictionaries mixed everything up
-    System.out.println();
+    List<List<Object>> finalRows = new ArrayList<>();
+    Supplier<List<Object>> listSpwaner = () -> {
+      finalRows.add(new ArrayList<>(rows.size() + size));
+      return finalRows.get(finalRows.size() - 1);
+    };
+    for (int i = 0; i < columns.size(); i++) {
+      List<Object> r = listSpwaner.get();
+      for (int j = 0; j < rows.size(); j++) {
+        r.add(columns.get(i)); // recopy name of the column
+      }
+      r.addAll(headerColumns.get(i));
+    }
+
+    List<Object> r = listSpwaner.get();
+    r.addAll(rows);
+    for (int i = 0; i < columnHeaderValues.size(); i++) {
+      for (String value : values) {
+        r.add(value);
+      }
+    }
+
+    int[] index = new int[1];
+    rowHeaderValues.forEach(a -> {
+      List<Object> rr = listSpwaner.get();
+      rr.addAll(Arrays.asList(a.a));
+      rr.addAll(cells.get(index[0]++));
+    });
+
+    System.out.println(TableUtils.toString(finalRows, String::valueOf, line -> line.equals(columns.size())));
   }
 
-  private static Set<ObjectArrayKey> buildIntersectionPointDictionary(Table table, List<String> columns) {
+  private static Set<ObjectArrayKey> getHeaderValues(Table table, List<String> columns) {
     int[] mapping = getMapping(table, columns);
 
     LinkedHashSet<ObjectArrayKey> result = new LinkedHashSet<>();

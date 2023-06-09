@@ -13,15 +13,30 @@ import io.squashql.util.NullAndTotalComparator;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class TableUtils {
 
+  public static String toString(Iterable<List<Object>> rows,
+                                Function<Object, String> rowElementPrinters,
+                                Predicate<Integer> predicate) {
+    return toString(null, rows, null, rowElementPrinters, predicate);
+  }
+
   public static String toString(List<? extends Object> columns,
                                 Iterable<List<Object>> rows,
                                 Function<Object, String> columnElementPrinters,
                                 Function<Object, String> rowElementPrinters) {
+    return toString(columns, rows, columnElementPrinters, rowElementPrinters, __ -> false);
+  }
+
+  public static String toString(List<? extends Object> columns,
+                                Iterable<List<Object>> rows,
+                                Function<Object, String> columnElementPrinters,
+                                Function<Object, String> rowElementPrinters,
+                                Predicate<Integer> predicate) {
     /*
      * leftJustifiedRows - If true, it will add "-" as a flag to format string to
      * make it left justified. Otherwise, right justified.
@@ -35,11 +50,13 @@ public class TableUtils {
      * Map columnLengths is <column_number, column_length>
      */
     Map<Integer, Integer> columnLengths = new HashMap<>();
-    String[] headers = new String[columns.size()];
-    for (int h = 0; h < columns.size(); h++) {
-      String header = columnElementPrinters.apply(columns.get(h));
-      headers[h] = header;
-      columnLengths.put(h, header.length());
+    String[] headers = new String[columns != null ? columns.size() : 0];
+    if (columns != null) {
+      for (int h = 0; h < columns.size(); h++) {
+        String header = columnElementPrinters.apply(columns.get(h));
+        headers[h] = header;
+        columnLengths.put(h, header.length());
+      }
     }
 
     Iterator<List<Object>> it = rows.iterator();
@@ -47,7 +64,7 @@ public class TableUtils {
       List<Object> row = it.next();
       for (int i = 0; i < row.size(); i++) {
         int length = rowElementPrinters.apply(row.get(i)).length();
-        if (columnLengths.get(i) < length) {
+        if (columnLengths.computeIfAbsent(i, __ -> 0) < length) {
           columnLengths.put(i, length);
         }
       }
@@ -58,7 +75,7 @@ public class TableUtils {
      */
     final StringBuilder formatString = new StringBuilder();
     String flag = leftJustifiedRows ? "-" : "";
-    columnLengths.entrySet().stream().forEach(e -> formatString.append("| %" + flag + e.getValue() + "s "));
+    columnLengths.entrySet().forEach(e -> formatString.append("| %" + flag + e.getValue() + "s "));
     formatString.append("|\n");
 
     /*
@@ -73,17 +90,23 @@ public class TableUtils {
     }, (a, b) -> a + b);
     line = line + "+\n";
 
-    StringBuilder sb = new StringBuilder()
-            .append(line)
-            .append(String.format(formatString.toString(), headers))
-            .append(line);
+    StringBuilder sb = new StringBuilder().append(line);
+    if (columns != null) {
+      sb.append(String.format(formatString.toString(), headers))
+              .append(line);
+    }
 
     it = rows.iterator();
+    int count = 0;
     while (it.hasNext()) {
       List<Object> row = it.next();
       sb.append(String.format(
               formatString.toString(),
               row.stream().map(rowElementPrinters).toList().toArray(new String[0])));
+      if (predicate.test(count)) {
+        sb.append(line);
+      }
+      count++;
     }
     sb.append(line);
     return sb.toString();
