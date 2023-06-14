@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
 
-public class TestUtils {
+public class ClickHouseTestUtil {
 
   protected static final boolean printAll = true;
 

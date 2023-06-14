@@ -5,17 +5,23 @@ import io.squashql.TestClass;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.builder.CanAddRollup;
 import io.squashql.query.builder.Query;
+import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.dto.SimpleTableDto;
 import io.squashql.store.Field;
+import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+
+import static io.squashql.query.Functions.*;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 
 @TestClass(ignore = {TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -57,6 +63,14 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     ));
   }
 
+  private static Table tableFromFile(TestInfo testInfo) {
+    return TestUtil.deserializeTableFromFile(Paths.get("queryresults", "pivottable", testInfo.getTestMethod().get().getName() + ".tabular.json"));
+  }
+
+  private static List<List<Object>> pivotTableFromFile(TestInfo testInfo) {
+    return TestUtil.deserializeFromFile(Paths.get("queryresults", "pivottable", testInfo.getTestMethod().get().getName() + ".pivottable.json"), List.class);
+  }
+
   @Test
   void testRollupEquivalent() {
     Measure amount = Functions.sum("amount", "amount");
@@ -69,11 +83,12 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .build();
     Table resultRollup = this.executor.execute(queryRollup);
 
+    // NO COLUMNS
     {
       Table result = this.executor.execute(base.build(), List.of("continent", "country", "city"), List.of(), true);
       Assertions.assertThat(result).containsExactlyInAnyOrderElementsOf(resultRollup);
     }
-
+    // NO ROWS
     {
       Table result = this.executor.execute(base.build(), List.of(), List.of("continent", "country", "city"), true);
       Assertions.assertThat(result).containsExactlyInAnyOrderElementsOf(resultRollup);
@@ -84,52 +99,153 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
    * Simple case.
    */
   @Test
-  void  testOneColumnEachAxis() {
+  void testOneColumnEachAxis() {
     Measure amount = Functions.sum("amount", "amount");
 
     CanAddRollup base = Query
             .from(this.storeName)
+            .where(criterion("city", in("la", "london"))) // to reduce size of the output
             .select(List.of("spending category", "city"), List.of(amount));
     List<String> rows = List.of("city");
     List<String> columns = List.of("spending category");
     Table result = this.executor.execute(base.build(), rows, columns, true);
 
-    result.show();
-    toJson(result, rows, columns, List.of("amount"));
-//    pivot(result, rows, columns, List.of("amount"));
-//    QueryDto queryRollup = base
-//            .rollup(List.of("continent", "country", "city"))
-//            .build();
-//    Table resultRollup = this.executor.execute(queryRollup);
-//    Assertions.assertThat(result).containsExactlyInAnyOrderElementsOf(resultRollup);
+    Assertions.assertThat(result).containsExactly(
+            List.of(GRAND_TOTAL, GRAND_TOTAL, 22d),
+            List.of(GRAND_TOTAL, "la", 13d),
+            List.of(GRAND_TOTAL, "london", 9d),
+
+            List.of("extra", GRAND_TOTAL, 9d),
+            List.of("extra", "la", 4d),
+            List.of("extra", "london", 5d),
+
+            List.of("minimum expenditure", GRAND_TOTAL, 13d),
+            List.of("minimum expenditure", "la", 9d),
+            List.of("minimum expenditure", "london", 4d)
+    );
+
+    List<List<Object>> pivotTableRows = pivot(result, rows, columns, List.of("amount"));
+    Assertions.assertThat(pivotTableRows).containsExactly(
+            List.of("spending category", GRAND_TOTAL, "extra", "minimum expenditure"),
+            List.of("city", "amount", "amount", "amount"),
+            List.of(GRAND_TOTAL, 22d, 9d, 13d),
+            List.of("la", 13d, 4d, 9d),
+            List.of("london", 9d, 5d, 4d)
+    );
   }
 
   @Test
-  void testDrawPT() {
+  void testComplexPivotTableSingleMeasure(TestInfo testInfo) {
     Measure amount = Functions.sum("amount", "amount");
-    Measure mean = Functions.avg("mean", "amount");
 
-    List<Measure> measures = List.of(amount, mean);
+    List<Measure> measures = List.of(amount);
     CanAddRollup base = Query
             .from(this.storeName)
+            .where(all(
+                    criterion("city", in("paris", "lyon", "london")),
+                    criterion("country", in("france", "uk"))
+            )) // to reduce size of the output
             .select(List.of("spending category", "spending subcategory", "country", "city"), measures);
     List<String> rows = List.of("country", "city");
     List<String> columns = List.of("spending category", "spending subcategory");
-    Table result = this.executor.execute(base.build(), rows, columns, true);
-
-    result.show();
-    List<String> values = measures.stream().map(Measure::alias).toList();
-    toJson(result, rows, columns, values);
-    pivot(result, rows, columns, values);
-//    QueryDto queryRollup = base
-//            .rollup(List.of("continent", "country", "city"))
-//            .build();
-//    Table resultRollup = this.executor.execute(queryRollup);
-//    Assertions.assertThat(result).containsExactlyInAnyOrderElementsOf(resultRollup);
+    verifyResults(testInfo, base.build(), rows, columns);
   }
 
   @Test
-  void test() {
+  void testComplexPivotTableTwoMeasures(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", "amount");
+    Measure min = Functions.min("min", "amount");
+
+    List<Measure> measures = List.of(amount, min);
+    CanAddRollup base = Query
+            .from(this.storeName)
+            .select(List.of("spending category", "spending subcategory", "continent", "country", "city"), measures);
+    List<String> rows = List.of("continent", "country", "city");
+    List<String> columns = List.of("spending category", "spending subcategory");
+    verifyResults(testInfo, base.build(), rows, columns);
+  }
+
+  @Test
+  void testSimpleGroupingOneColumnEachAxis() {
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", "country")
+            .withNewBucket("european", List.of("uk", "france"))
+            .withNewBucket("anglophone", List.of("usa", "uk"))
+            .withNewBucket("all", List.of("usa", "uk", "france"));
+    Measure amount = Functions.sum("amount", "amount");
+    ComparisonMeasureReferencePosition amountComp = new ComparisonMeasureReferencePosition(
+            "amountComp",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            amount,
+            Map.of("country", "c-1", "group", "g"),
+            ColumnSetKey.BUCKET);
+
+    List<Measure> measures = List.of(amountComp);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(), List.of(bucketCS), measures)
+            .build();
+    Table result = this.executor.execute(query, List.of("country"), List.of("group"), true);
+    Assertions.assertThat(result).containsExactly(
+            List.of("european", "uk", 0d),
+            List.of("european", "france", -1d),
+            List.of("anglophone", "usa", 0d),
+            List.of("anglophone", "uk", -30d),
+            List.of("all", "usa", 0d),
+            List.of("all", "uk", -30d),
+            List.of("all", "france", -1d)
+    );
+
+    List<List<Object>> pivotTableRows = pivot(result, List.of("country"), List.of("group"), List.of(amountComp.alias));
+    Assertions.assertThat(pivotTableRows).containsExactly(
+            Arrays.asList("group", "european", "anglophone", "all"),
+            Arrays.asList("country", "amountComp", "amountComp", "amountComp"),
+            Arrays.asList("uk", 0d, -30d, -30d),
+            Arrays.asList("france", -1d, null, -1d),
+            Arrays.asList("usa", null, 0d, 0d)
+    );
+  }
+
+  @Test
+  void testGroupingMultipleColumns(TestInfo testInfo) {
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", "country")
+            .withNewBucket("european", List.of("uk", "france"))
+            .withNewBucket("anglophone", List.of("usa", "uk"))
+            .withNewBucket("all", List.of("usa", "uk", "france"));
+    Measure amount = Functions.sum("amount", "amount");
+    ComparisonMeasureReferencePosition amountComp = new ComparisonMeasureReferencePosition(
+            "amountComp",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            amount,
+            Map.of("country", "c-1", "group", "g"),
+            ColumnSetKey.BUCKET);
+
+    List<Measure> measures = List.of(amountComp);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("spending category"), List.of(bucketCS), measures)
+            .build();
+    verifyResults(testInfo, query, List.of("group", "country"), List.of("spending category"));
+  }
+
+  private void verifyResults(TestInfo testInfo, QueryDto queryDto, List<String> rows, List<String> columns) {
+    Table table = this.executor.execute(queryDto, rows, columns, true);
+    System.out.println(TestUtil.tableToJson(table));
+    Table expectedTabular = tableFromFile(testInfo);
+
+    Assertions.assertThat(table).containsExactlyElementsOf(ImmutableList.copyOf(expectedTabular.iterator()));
+    Assertions.assertThat(table.headers()).containsExactlyElementsOf(expectedTabular.headers());
+
+    List<String> values = queryDto.measures.stream().map(Measure::alias).toList();
+    List<List<Object>> pivotTableRows = pivot(table, rows, columns, values);
+    System.out.println(JacksonUtil.serialize(pivotTableRows));
+    toJson(table, rows, columns, values);
+
+    List<List<Object>> expectedPivotTable = pivotTableFromFile(testInfo);
+    Assertions.assertThat(pivotTableRows).containsExactlyElementsOf(expectedPivotTable);
+  }
+
+  @Test
+  void testToDelete() {
     Measure amount = Functions.sum("amount", "amount");
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
     QueryDto query = Query
@@ -189,16 +305,16 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
   private static void toJson(Table result, List<String> rows, List<String> columns, List<String> values) {
     List<String> list = result.headers().stream().map(Header::name).toList();
-    Map<String, Object>[] m = new Map[(int) result.count()];
-    AtomicInteger index = new AtomicInteger();
-    result.forEach(r -> {
-      Map<String, Object> mm = (m[index.getAndIncrement()] = new HashMap<>(r.size()));
-      for (int i = 0; i < r.size(); i++) {
-        mm.put(list.get(i), r.get(i));
-      }
-    });
-    String serialize = JacksonUtil.serialize(m);
-    System.out.println(serialize);
+//    Map<String, Object>[] m = new Map[(int) result.count()];
+//    AtomicInteger index = new AtomicInteger();
+//    result.forEach(r -> {
+//      Map<String, Object> mm = (m[index.getAndIncrement()] = new HashMap<>(r.size()));
+//      for (int i = 0; i < r.size(); i++) {
+//        mm.put(list.get(i), r.get(i));
+//      }
+//    });
+//    String serialize = JacksonUtil.serialize(m);
+//    System.out.println(serialize);
 
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(result.iterator()))
@@ -210,7 +326,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     System.out.println("http://localhost:3000?data=" + encodedString);
   }
 
-  public static void pivot(Table table, List<String> rows, List<String> columns, List<String> values) {
+  public static List<List<Object>> pivot(Table table, List<String> rows, List<String> columns, List<String> values) {
     Set<ObjectArrayKey> columnHeaderValues = getHeaderValues(table, columns);
 
     List<List<Object>> headerColumns = new ArrayList<>(); // The header values for the columns
@@ -255,7 +371,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
         int position = ((ColumnarTable) table).pointDictionary.get().getPosition(buffer);
 
         for (String value : values) {
-          r.add(table.getColumnValues(value).get(position));
+          r.add(position >= 0 ? table.getColumnValues(value).get(position) : null);
         }
       }
     });
@@ -289,6 +405,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     });
 
     System.out.println(TableUtils.toString(finalRows, String::valueOf, line -> line.equals(columns.size())));
+    return finalRows;
   }
 
   private static Set<ObjectArrayKey> getHeaderValues(Table table, List<String> columns) {

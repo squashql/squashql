@@ -63,6 +63,21 @@ public class QueryExecutor {
         new IllegalArgumentException();
       }
 
+      // TODO remove column set.
+      ColumnSet columnSet = query.columnSets.get(BUCKET);
+      if (columnSet != null) {
+        String name = ((BucketColumnSetDto) columnSet).name;
+        if (rows.contains(name)) {
+          rows = new ArrayList<>(rows);
+          rows.remove(name);
+        }
+
+        if (columns.contains(name)) {
+          columns = new ArrayList<>(columns);
+          columns.remove(name);
+        }
+      }
+
       // FIXME check rows and columns
       List<List<String>> groupingSets = new ArrayList<>();
       groupingSets.add(List.of());// GT use an empty list instead of list of size 1 with an empty string because could cause issue later on with FieldSupplier

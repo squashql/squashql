@@ -15,7 +15,7 @@ import org.junit.jupiter.api.BeforeAll;
  */
 public class TestClickHouseQueryWithJoins extends ATestQueryWithJoins {
 
-  public org.testcontainers.containers.GenericContainer container = TestUtils.createClickHouseContainer();
+  public org.testcontainers.containers.GenericContainer container = ClickHouseTestUtil.createClickHouseContainer();
 
   @BeforeAll
   @Override
@@ -43,7 +43,7 @@ public class TestClickHouseQueryWithJoins extends ATestQueryWithJoins {
 
   @Override
   protected Datastore createDatastore() {
-    return new ClickHouseDatastore(TestUtils.jdbcUrl.apply(this.container));
+    return new ClickHouseDatastore(ClickHouseTestUtil.jdbcUrl.apply(this.container));
   }
 
   @Override

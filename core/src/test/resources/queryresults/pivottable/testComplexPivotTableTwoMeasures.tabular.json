@@ -1,0 +1,99 @@
+{
+  "rows": [
+    ["Grand Total", "Grand Total", "Grand Total", "Grand Total", "Grand Total", 56.0, 1.0],
+    ["Grand Total", "Grand Total", "am", "Total", "Total", 39.0, 2.0],
+    ["Grand Total", "Grand Total", "am", "usa", "Total", 39.0, 2.0],
+    ["Grand Total", "Grand Total", "am", "usa", "la", 13.0, 2.0],
+    ["Grand Total", "Grand Total", "am", "usa", "nyc", 26.0, 6.0],
+    ["Grand Total", "Grand Total", "eu", "Total", "Total", 17.0, 1.0],
+    ["Grand Total", "Grand Total", "eu", "france", "Total", 8.0, 1.0],
+    ["Grand Total", "Grand Total", "eu", "france", "lyon", 4.0, 1.0],
+    ["Grand Total", "Grand Total", "eu", "france", "paris", 4.0, 1.0],
+    ["Grand Total", "Grand Total", "eu", "uk", "Total", 9.0, 2.0],
+    ["Grand Total", "Grand Total", "eu", "uk", "london", 9.0, 2.0],
+    ["extra", "Total", "Grand Total", "Grand Total", "Grand Total", 17.0, 1.0],
+    ["extra", "Total", "am", "Total", "Total", 10.0, 4.0],
+    ["extra", "Total", "am", "usa", "Total", 10.0, 4.0],
+    ["extra", "Total", "am", "usa", "la", 4.0, 4.0],
+    ["extra", "Total", "am", "usa", "nyc", 6.0, 6.0],
+    ["extra", "Total", "eu", "Total", "Total", 7.0, 1.0],
+    ["extra", "Total", "eu", "france", "Total", 2.0, 1.0],
+    ["extra", "Total", "eu", "france", "lyon", 1.0, 1.0],
+    ["extra", "Total", "eu", "france", "paris", 1.0, 1.0],
+    ["extra", "Total", "eu", "uk", "Total", 5.0, 5.0],
+    ["extra", "Total", "eu", "uk", "london", 5.0, 5.0],
+    ["extra", "hobbies", "Grand Total", "Grand Total", "Grand Total", 17.0, 1.0],
+    ["extra", "hobbies", "am", "Total", "Total", 10.0, 4.0],
+    ["extra", "hobbies", "am", "usa", "Total", 10.0, 4.0],
+    ["extra", "hobbies", "am", "usa", "la", 4.0, 4.0],
+    ["extra", "hobbies", "am", "usa", "nyc", 6.0, 6.0],
+    ["extra", "hobbies", "eu", "Total", "Total", 7.0, 1.0],
+    ["extra", "hobbies", "eu", "france", "Total", 2.0, 1.0],
+    ["extra", "hobbies", "eu", "france", "lyon", 1.0, 1.0],
+    ["extra", "hobbies", "eu", "france", "paris", 1.0, 1.0],
+    ["extra", "hobbies", "eu", "uk", "Total", 5.0, 5.0],
+    ["extra", "hobbies", "eu", "uk", "london", 5.0, 5.0],
+    ["minimum expenditure", "Total", "Grand Total", "Grand Total", "Grand Total", 39.0, 1.0],
+    ["minimum expenditure", "Total", "am", "Total", "Total", 29.0, 2.0],
+    ["minimum expenditure", "Total", "am", "usa", "Total", 29.0, 2.0],
+    ["minimum expenditure", "Total", "am", "usa", "la", 9.0, 2.0],
+    ["minimum expenditure", "Total", "am", "usa", "nyc", 20.0, 8.0],
+    ["minimum expenditure", "Total", "eu", "Total", "Total", 10.0, 1.0],
+    ["minimum expenditure", "Total", "eu", "france", "Total", 6.0, 1.0],
+    ["minimum expenditure", "Total", "eu", "france", "lyon", 3.0, 1.0],
+    ["minimum expenditure", "Total", "eu", "france", "paris", 3.0, 1.0],
+    ["minimum expenditure", "Total", "eu", "uk", "Total", 4.0, 2.0],
+    ["minimum expenditure", "Total", "eu", "uk", "london", 4.0, 2.0],
+    ["minimum expenditure", "car", "Grand Total", "Grand Total", "Grand Total", 19.0, 1.0],
+    ["minimum expenditure", "car", "am", "Total", "Total", 15.0, 7.0],
+    ["minimum expenditure", "car", "am", "usa", "Total", 15.0, 7.0],
+    ["minimum expenditure", "car", "am", "usa", "la", 7.0, 7.0],
+    ["minimum expenditure", "car", "am", "usa", "nyc", 8.0, 8.0],
+    ["minimum expenditure", "car", "eu", "Total", "Total", 4.0, 1.0],
+    ["minimum expenditure", "car", "eu", "france", "Total", 2.0, 1.0],
+    ["minimum expenditure", "car", "eu", "france", "lyon", 1.0, 1.0],
+    ["minimum expenditure", "car", "eu", "france", "paris", 1.0, 1.0],
+    ["minimum expenditure", "car", "eu", "uk", "Total", 2.0, 2.0],
+    ["minimum expenditure", "car", "eu", "uk", "london", 2.0, 2.0],
+    ["minimum expenditure", "housing", "Grand Total", "Grand Total", "Grand Total", 20.0, 2.0],
+    ["minimum expenditure", "housing", "am", "Total", "Total", 14.0, 2.0],
+    ["minimum expenditure", "housing", "am", "usa", "Total", 14.0, 2.0],
+    ["minimum expenditure", "housing", "am", "usa", "la", 2.0, 2.0],
+    ["minimum expenditure", "housing", "am", "usa", "nyc", 12.0, 12.0],
+    ["minimum expenditure", "housing", "eu", "Total", "Total", 6.0, 2.0],
+    ["minimum expenditure", "housing", "eu", "france", "Total", 4.0, 2.0],
+    ["minimum expenditure", "housing", "eu", "france", "lyon", 2.0, 2.0],
+    ["minimum expenditure", "housing", "eu", "france", "paris", 2.0, 2.0],
+    ["minimum expenditure", "housing", "eu", "uk", "Total", 2.0, 2.0],
+    ["minimum expenditure", "housing", "eu", "uk", "london", 2.0, 2.0]
+  ],
+  "headers": [{
+    "name": "spending category",
+    "type": "java.lang.String",
+    "isMeasure": false
+  }, {
+    "name": "spending subcategory",
+    "type": "java.lang.String",
+    "isMeasure": false
+  }, {
+    "name": "continent",
+    "type": "java.lang.String",
+    "isMeasure": false
+  }, {
+    "name": "country",
+    "type": "java.lang.String",
+    "isMeasure": false
+  }, {
+    "name": "city",
+    "type": "java.lang.String",
+    "isMeasure": false
+  }, {
+    "name": "amount",
+    "type": "double",
+    "isMeasure": true
+  }, {
+    "name": "min",
+    "type": "double",
+    "isMeasure": true
+  }]
+}

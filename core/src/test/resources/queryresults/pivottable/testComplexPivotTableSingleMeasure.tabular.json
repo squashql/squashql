@@ -1,0 +1,61 @@
+{
+  "rows": [
+    ["Grand Total", "Grand Total", "Grand Total", "Grand Total", 17.0],
+    ["Grand Total", "Grand Total", "france", "Total", 8.0],
+    ["Grand Total", "Grand Total", "france", "lyon", 4.0],
+    ["Grand Total", "Grand Total", "france", "paris", 4.0],
+    ["Grand Total", "Grand Total", "uk", "Total", 9.0],
+    ["Grand Total", "Grand Total", "uk", "london", 9.0],
+    ["extra", "Total", "Grand Total", "Grand Total", 7.0],
+    ["extra", "Total", "france", "Total", 2.0],
+    ["extra", "Total", "france", "lyon", 1.0],
+    ["extra", "Total", "france", "paris", 1.0],
+    ["extra", "Total", "uk", "Total", 5.0],
+    ["extra", "Total", "uk", "london", 5.0],
+    ["extra", "hobbies", "Grand Total", "Grand Total", 7.0],
+    ["extra", "hobbies", "france", "Total", 2.0],
+    ["extra", "hobbies", "france", "lyon", 1.0],
+    ["extra", "hobbies", "france", "paris", 1.0],
+    ["extra", "hobbies", "uk", "Total", 5.0],
+    ["extra", "hobbies", "uk", "london", 5.0],
+    ["minimum expenditure", "Total", "Grand Total", "Grand Total", 10.0],
+    ["minimum expenditure", "Total", "france", "Total", 6.0],
+    ["minimum expenditure", "Total", "france", "lyon", 3.0],
+    ["minimum expenditure", "Total", "france", "paris", 3.0],
+    ["minimum expenditure", "Total", "uk", "Total", 4.0],
+    ["minimum expenditure", "Total", "uk", "london", 4.0],
+    ["minimum expenditure", "car", "Grand Total", "Grand Total", 4.0],
+    ["minimum expenditure", "car", "france", "Total", 2.0],
+    ["minimum expenditure", "car", "france", "lyon", 1.0],
+    ["minimum expenditure", "car", "france", "paris", 1.0],
+    ["minimum expenditure", "car", "uk", "Total", 2.0],
+    ["minimum expenditure", "car", "uk", "london", 2.0],
+    ["minimum expenditure", "housing", "Grand Total", "Grand Total", 6.0],
+    ["minimum expenditure", "housing", "france", "Total", 4.0],
+    ["minimum expenditure", "housing", "france", "lyon", 2.0],
+    ["minimum expenditure", "housing", "france", "paris", 2.0],
+    ["minimum expenditure", "housing", "uk", "Total", 2.0],
+    ["minimum expenditure", "housing", "uk", "london", 2.0]
+  ],
+  "headers": [{
+    "name": "spending category",
+    "type": "java.lang.String",
+    "isMeasure": false
+  }, {
+    "name": "spending subcategory",
+    "type": "java.lang.String",
+    "isMeasure": false
+  }, {
+    "name": "country",
+    "type": "java.lang.String",
+    "isMeasure": false
+  }, {
+    "name": "city",
+    "type": "java.lang.String",
+    "isMeasure": false
+  }, {
+    "name": "amount",
+    "type": "double",
+    "isMeasure": true
+  }]
+}
