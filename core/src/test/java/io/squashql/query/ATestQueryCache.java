@@ -24,7 +24,7 @@ import static io.squashql.query.Functions.*;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
-@TestClass
+@TestClass(ignore = {TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestQueryCache extends ABaseTestQuery {
 

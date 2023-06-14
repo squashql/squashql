@@ -270,65 +270,6 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     Assertions.assertThat(pivotTableRows).containsExactlyElementsOf(expectedPivotTable);
   }
 
-  @Test
-  void testToDelete() {
-    Measure amount = Functions.sum("amount", "amount");
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
-    QueryDto query = Query
-            .from(this.storeName)
-            .select(List.of("spending category", "spending subcategory", "continent", "country", "city"), List.of(amount))
-//            .rollup(List.of("spending category", "continent", "country", "city"))
-            .build();
-
-    List<String> rows = List.of("continent", "country", "city");
-    List<String> values = List.of("spending category", "spending subcategory");
-    Table result = this.executor.execute(query, rows, values, true);
-    result.show();
-
-//    this.executor.execute("select \"country\", \"spending category\", \"spending subcategory\", \"continent\", \"city\", sum(\"amount\") as \"amount\" " +
-////            "from \"storetestduckdbparentcomparisonwithothercolumn\" group by cube(" + String.join(",", "continent", "country", "city", "spending category") +
-//            "from " + this.storeName + " group by grouping sets(" +
-//            // Details most granular
-//
-//            // Rows = List.of("continent", "country", "city")
-//            // Total on rows
-//            "(" + String.join(",", "continent", "country", "city") + ")," +
-//            "(" + String.join(",", "continent", "country") + ")," +
-//            "(" + String.join(",", "continent") + ")," +
-//
-//            // Cols = List.of("spending category", "spending subcategory")
-//            "(" + String.join(",", "spending category", "spending subcategory") + ")," +
-//            "(" + String.join(",", "spending category") + ")," +
-//
-//            // all combinations
-//            "(" + String.join(",", "continent", "country", "city", "spending category", "spending subcategory") + ")," + // all concatenate
-//            "(" + String.join(",", "continent", "country", "city", "spending category") + ")," + // remove col
-//            "(" + String.join(",", "continent", "country", "spending category", "spending subcategory") + ")," + // remove row
-//            "(" + String.join(",", "continent", "spending category", "spending subcategory") + ")," + // remove row
-//
-//            "(" + String.join(",", "continent", "country", "spending category") + ")," + // remove col and row
-//            "(" + String.join(",", "continent", "spending category") + ")," + // remove col and row until 1 each
-//
-//            // GT
-//            "()" +
-//
-//            ") limit 10000");
-
-//    result = this.executor.execute(query);
-//    Assertions.assertThat(result).containsExactly(
-//            Arrays.asList("car", "eu", "france", "lyon", 0.1d, 0.1d / (0.1d + 1d)),
-//            Arrays.asList("car", "eu", "france", "paris", 1d, 1d / (0.1d + 1d)),
-//            Arrays.asList("car", "eu", "uk", "london", 2d, 1d),
-//            Arrays.asList("hobbies", "eu", "france", "lyon", 1d, 1d / (1 + 1)),
-//            Arrays.asList("hobbies", "eu", "france", "paris", 1d, 1d / (1 + 1)),
-//            Arrays.asList("hobbies", "eu", "uk", "london", 5d, 1d),
-//            Arrays.asList("home", "eu", "france", "lyon", 2d, 2d / (2 + 2)),
-//            Arrays.asList("home", "eu", "france", "paris", 2d, 2d / (2 + 2)),
-//            Arrays.asList("home", "eu", "uk", "london", 2d, 1d));
-
-    toJson(result, null, null, null);
-  }
-
   private static void toJson(Table result, List<String> rows, List<String> columns, List<String> values) {
     List<String> list = result.headers().stream().map(Header::name).toList();
 //    Map<String, Object>[] m = new Map[(int) result.count()];

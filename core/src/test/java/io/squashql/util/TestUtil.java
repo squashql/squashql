@@ -7,13 +7,14 @@ import io.squashql.query.RowTable;
 import io.squashql.query.Table;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.ThrowableAssert;
 import org.assertj.core.util.Throwables;
 
-import java.io.File;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -45,12 +46,24 @@ public class TestUtil {
   }
 
   public static <T> T deserializeFromFile(Path path, Class<T> target) {
-    File file = new File(TestUtil.class.getClassLoader().getResource(path.toString()).getFile());
-    try {
-      return JacksonUtil.deserialize(FileUtils.readFileToString(file, "UTF-8"), target);
-    } catch (IOException e) {
+    try (InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(path.toString());
+         BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+      return JacksonUtil.deserialize(readAllLines(reader), target);
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public static String readAllLines(BufferedReader reader) throws IOException {
+    StringBuilder content = new StringBuilder();
+    String line;
+
+    while ((line = reader.readLine()) != null) {
+      content.append(line);
+      content.append(System.lineSeparator());
+    }
+
+    return content.toString();
   }
 
   @NoArgsConstructor // for Jackson
