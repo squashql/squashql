@@ -20,6 +20,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Supplier;
 
+import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.Functions.*;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 
@@ -102,13 +103,14 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
   void testOneColumnEachAxis() {
     Measure amount = Functions.sum("amount", "amount");
 
-    CanAddRollup base = Query
+    QueryDto query = Query
             .from(this.storeName)
             .where(criterion("city", in("la", "london"))) // to reduce size of the output
-            .select(List.of("spending category", "city"), List.of(amount));
+            .select(List.of("spending category", "city"), List.of(amount))
+            .build();
     List<String> rows = List.of("city");
     List<String> columns = List.of("spending category");
-    Table result = this.executor.execute(base.build(), rows, columns, true);
+    Table result = this.executor.execute(query, rows, columns, true);
 
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, GRAND_TOTAL, 22d),
@@ -139,16 +141,17 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     Measure amount = Functions.sum("amount", "amount");
 
     List<Measure> measures = List.of(amount);
-    CanAddRollup base = Query
+    QueryDto query = Query
             .from(this.storeName)
             .where(all(
                     criterion("city", in("paris", "lyon", "london")),
                     criterion("country", in("france", "uk"))
             )) // to reduce size of the output
-            .select(List.of("spending category", "spending subcategory", "country", "city"), measures);
+            .select(List.of("spending category", "spending subcategory", "country", "city"), measures)
+            .build();
     List<String> rows = List.of("country", "city");
     List<String> columns = List.of("spending category", "spending subcategory");
-    verifyResults(testInfo, base.build(), rows, columns);
+    verifyResults(testInfo, query, rows, columns);
   }
 
   @Test
@@ -157,16 +160,17 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     Measure min = Functions.min("min", "amount");
 
     List<Measure> measures = List.of(amount, min);
-    CanAddRollup base = Query
+    QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("spending category", "spending subcategory", "continent", "country", "city"), measures);
+            .select(List.of("spending category", "spending subcategory", "continent", "country", "city"), measures)
+            .build();
     List<String> rows = List.of("continent", "country", "city");
     List<String> columns = List.of("spending category", "spending subcategory");
-    verifyResults(testInfo, base.build(), rows, columns);
+    verifyResults(testInfo, query, rows, columns);
   }
 
   @Test
-  void testSimpleGroupingOneColumnEachAxis() {
+  void testGroupingOneColumnEachAxis() {
     BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", "country")
             .withNewBucket("european", List.of("uk", "france"))
             .withNewBucket("anglophone", List.of("usa", "uk"))
@@ -174,7 +178,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     Measure amount = Functions.sum("amount", "amount");
     ComparisonMeasureReferencePosition amountComp = new ComparisonMeasureReferencePosition(
             "amountComp",
-            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            ABSOLUTE_DIFFERENCE,
             amount,
             Map.of("country", "c-1", "group", "g"),
             ColumnSetKey.BUCKET);
@@ -214,7 +218,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     Measure amount = Functions.sum("amount", "amount");
     ComparisonMeasureReferencePosition amountComp = new ComparisonMeasureReferencePosition(
             "amountComp",
-            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            ABSOLUTE_DIFFERENCE,
             amount,
             Map.of("country", "c-1", "group", "g"),
             ColumnSetKey.BUCKET);
@@ -225,6 +229,28 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .select(List.of("spending category"), List.of(bucketCS), measures)
             .build();
     verifyResults(testInfo, query, List.of("group", "country"), List.of("spending category"));
+  }
+
+  @Test
+  void testComplexPivotTableParentComparisonMeasure(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", "amount");
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent",
+            ABSOLUTE_DIFFERENCE, // use this method instead of DIVIDE to have round figures
+            amount,
+            List.of("city", "country", "continent"));
+
+    List<Measure> measures = List.of(amount, pOp);
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(all(
+                    criterion("city", in("paris", "lyon", "london")),
+                    criterion("country", in("france", "uk"))
+            )) // to reduce size of the output
+            .select(List.of("spending category", "spending subcategory", "continent", "country", "city"), measures)
+            .build();
+    List<String> rows = List.of("continent", "country", "city");
+    List<String> columns = List.of("spending category", "spending subcategory");
+    verifyResults(testInfo, query, rows, columns);
   }
 
   private void verifyResults(TestInfo testInfo, QueryDto queryDto, List<String> rows, List<String> columns) {
