@@ -1,7 +1,7 @@
 package io.squashql.query.dto;
 
-import lombok.*;
 import io.squashql.query.monitoring.QueryTimings;
+import lombok.*;
 
 @Builder
 @ToString
