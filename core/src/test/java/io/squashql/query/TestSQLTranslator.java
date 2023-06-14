@@ -2,7 +2,6 @@ package io.squashql.query;
 
 import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
-import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.store.Field;
