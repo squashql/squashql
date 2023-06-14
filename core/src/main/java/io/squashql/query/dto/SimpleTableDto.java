@@ -1,9 +1,9 @@
 package io.squashql.query.dto;
 
+import io.squashql.query.TableUtils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
-import io.squashql.query.TableUtils;
 
 import java.util.List;
 
