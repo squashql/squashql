@@ -1,15 +1,18 @@
 package io.squashql.query;
 
+import com.google.common.collect.ImmutableList;
 import io.squashql.TestClass;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.builder.CanAddRollup;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.SimpleTableDto;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -25,8 +28,8 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     Field city = new Field(this.storeName, "city", String.class);
     Field country = new Field(this.storeName, "country", String.class);
     Field continent = new Field(this.storeName, "continent", String.class);
-    Field spendingCategory = new Field(this.storeName, "spending_category", String.class);
-    Field spendingSubcategory = new Field(this.storeName, "spending_subcategory", String.class);
+    Field spendingCategory = new Field(this.storeName, "spending category", String.class);
+    Field spendingSubcategory = new Field(this.storeName, "spending subcategory", String.class);
     Field amount = new Field(this.storeName, "amount", double.class);
     return Map.of(this.storeName, List.of(city, country, continent, spendingCategory, spendingSubcategory, amount));
   }
@@ -81,18 +84,18 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
    * Simple case.
    */
   @Test
-  void testOneColumnEachAxis() {
+  void  testOneColumnEachAxis() {
     Measure amount = Functions.sum("amount", "amount");
 
     CanAddRollup base = Query
             .from(this.storeName)
-            .select(List.of("spending_category", "city"), List.of(amount));
+            .select(List.of("spending category", "city"), List.of(amount));
     List<String> rows = List.of("city");
-    List<String> columns = List.of("spending_category");
+    List<String> columns = List.of("spending category");
     Table result = this.executor.execute(base.build(), rows, columns, true);
 
     result.show();
-    toJson(result);
+    toJson(result, rows, columns, List.of("amount"));
 //    pivot(result, rows, columns, List.of("amount"));
 //    QueryDto queryRollup = base
 //            .rollup(List.of("continent", "country", "city"))
@@ -109,14 +112,15 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     List<Measure> measures = List.of(amount, mean);
     CanAddRollup base = Query
             .from(this.storeName)
-            .select(List.of("spending_category", "spending_subcategory", "country", "city"), measures);
+            .select(List.of("spending category", "spending subcategory", "country", "city"), measures);
     List<String> rows = List.of("country", "city");
-    List<String> columns = List.of("spending_category", "spending_subcategory");
+    List<String> columns = List.of("spending category", "spending subcategory");
     Table result = this.executor.execute(base.build(), rows, columns, true);
 
     result.show();
-    toJson(result);
-    pivot(result, rows, columns, measures.stream().map(Measure::alias).toList());
+    List<String> values = measures.stream().map(Measure::alias).toList();
+    toJson(result, rows, columns, values);
+    pivot(result, rows, columns, values);
 //    QueryDto queryRollup = base
 //            .rollup(List.of("continent", "country", "city"))
 //            .build();
@@ -130,15 +134,17 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("spending_category", "spending_subcategory", "continent", "country", "city"), List.of(amount))
-//            .rollup(List.of("spending_category", "continent", "country", "city"))
+            .select(List.of("spending category", "spending subcategory", "continent", "country", "city"), List.of(amount))
+//            .rollup(List.of("spending category", "continent", "country", "city"))
             .build();
 
-    Table result = this.executor.execute(query, List.of("continent", "country", "city"), List.of("spending_category", "spending_subcategory"), true);
+    List<String> rows = List.of("continent", "country", "city");
+    List<String> values = List.of("spending category", "spending subcategory");
+    Table result = this.executor.execute(query, rows, values, true);
     result.show();
 
-//    this.executor.execute("select \"country\", \"spending_category\", \"spending_subcategory\", \"continent\", \"city\", sum(\"amount\") as \"amount\" " +
-////            "from \"storetestduckdbparentcomparisonwithothercolumn\" group by cube(" + String.join(",", "continent", "country", "city", "spending_category") +
+//    this.executor.execute("select \"country\", \"spending category\", \"spending subcategory\", \"continent\", \"city\", sum(\"amount\") as \"amount\" " +
+////            "from \"storetestduckdbparentcomparisonwithothercolumn\" group by cube(" + String.join(",", "continent", "country", "city", "spending category") +
 //            "from " + this.storeName + " group by grouping sets(" +
 //            // Details most granular
 //
@@ -148,18 +154,18 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 //            "(" + String.join(",", "continent", "country") + ")," +
 //            "(" + String.join(",", "continent") + ")," +
 //
-//            // Cols = List.of("spending_category", "spending_subcategory")
-//            "(" + String.join(",", "spending_category", "spending_subcategory") + ")," +
-//            "(" + String.join(",", "spending_category") + ")," +
+//            // Cols = List.of("spending category", "spending subcategory")
+//            "(" + String.join(",", "spending category", "spending subcategory") + ")," +
+//            "(" + String.join(",", "spending category") + ")," +
 //
 //            // all combinations
-//            "(" + String.join(",", "continent", "country", "city", "spending_category", "spending_subcategory") + ")," + // all concatenate
-//            "(" + String.join(",", "continent", "country", "city", "spending_category") + ")," + // remove col
-//            "(" + String.join(",", "continent", "country", "spending_category", "spending_subcategory") + ")," + // remove row
-//            "(" + String.join(",", "continent", "spending_category", "spending_subcategory") + ")," + // remove row
+//            "(" + String.join(",", "continent", "country", "city", "spending category", "spending subcategory") + ")," + // all concatenate
+//            "(" + String.join(",", "continent", "country", "city", "spending category") + ")," + // remove col
+//            "(" + String.join(",", "continent", "country", "spending category", "spending subcategory") + ")," + // remove row
+//            "(" + String.join(",", "continent", "spending category", "spending subcategory") + ")," + // remove row
 //
-//            "(" + String.join(",", "continent", "country", "spending_category") + ")," + // remove col and row
-//            "(" + String.join(",", "continent", "spending_category") + ")," + // remove col and row until 1 each
+//            "(" + String.join(",", "continent", "country", "spending category") + ")," + // remove col and row
+//            "(" + String.join(",", "continent", "spending category") + ")," + // remove col and row until 1 each
 //
 //            // GT
 //            "()" +
@@ -178,10 +184,10 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 //            Arrays.asList("home", "eu", "france", "paris", 2d, 2d / (2 + 2)),
 //            Arrays.asList("home", "eu", "uk", "london", 2d, 1d));
 
-    toJson(result);
+    toJson(result, null, null, null);
   }
 
-  private static void toJson(Table result) {
+  private static void toJson(Table result, List<String> rows, List<String> columns, List<String> values) {
     List<String> list = result.headers().stream().map(Header::name).toList();
     Map<String, Object>[] m = new Map[(int) result.count()];
     AtomicInteger index = new AtomicInteger();
@@ -191,7 +197,17 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
         mm.put(list.get(i), r.get(i));
       }
     });
-    System.out.println(JacksonUtil.serialize(m));
+    String serialize = JacksonUtil.serialize(m);
+    System.out.println(serialize);
+
+    SimpleTableDto simpleTable = SimpleTableDto.builder()
+            .rows(ImmutableList.copyOf(result.iterator()))
+            .columns(list)
+            .build();
+
+    Map<String, Object> data = Map.of("rows", rows, "columns", columns, "values", values, "table", simpleTable);
+    String encodedString = Base64.getEncoder().encodeToString(JacksonUtil.serialize(data).getBytes(StandardCharsets.UTF_8));
+    System.out.println("http://localhost:3000?data=" + encodedString);
   }
 
   public static void pivot(Table table, List<String> rows, List<String> columns, List<String> values) {

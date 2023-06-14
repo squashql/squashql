@@ -88,7 +88,7 @@ public class QueryExecutor {
       query.groupingSets = groupingSets;
 
       // FIXME what if usage of ColumnSets?
-      Table result = execute(query, new QueryWatch(), CacheStatsDto.builder(), null, false);
+      Table result = execute(query, new QueryWatch(), CacheStatsDto.builder(), null, false, null);
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result, rows, columns);
       result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
       return result;
