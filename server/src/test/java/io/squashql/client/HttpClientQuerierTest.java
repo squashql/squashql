@@ -63,7 +63,6 @@ public class HttpClientQuerierTest {
             new MetadataItem("qs", "sum(quantity)", long.class));
 
     Assertions.assertThat(response.debug.cache).isNotNull();
-    Assertions.assertThat(response.debug.timings).isNotNull();
   }
 
   @Test

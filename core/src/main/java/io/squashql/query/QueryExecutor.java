@@ -7,7 +7,6 @@ import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
-import io.squashql.query.monitoring.QueryWatch;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
@@ -34,7 +33,7 @@ public class QueryExecutor {
   public final QueryCache queryCache;
 
   public QueryExecutor(QueryEngine<?> queryEngine) {
-    this(queryEngine, new GlobalCache(() -> new CaffeineQueryCache()));
+    this(queryEngine, new GlobalCache(CaffeineQueryCache::new));
   }
 
   public QueryExecutor(QueryEngine<?> queryEngine, QueryCache cache) {
@@ -53,8 +52,15 @@ public class QueryExecutor {
     };
   }
 
-  // FIXME this API only makes senses if showTotals = true
   public Table execute(QueryDto query, List<String> rows, List<String> columns) {
+    return execute(query, null, null, rows, columns);
+  }
+
+  public Table execute(QueryDto query,
+                       SquashQLUser user,
+                       IntConsumer limitNotifier,
+                       List<String> rows,
+                       List<String> columns) {
     if (!query.rollupColumns.isEmpty()) {
       throw new IllegalArgumentException("Rollup is not supported by this API");
     }
@@ -115,7 +121,7 @@ public class QueryExecutor {
 
     query.groupingSets = groupingSets;
 
-    Table result = execute(query, new QueryWatch(), CacheStatsDto.builder(), null, false, null);
+    Table result = execute(query, CacheStatsDto.builder(), user, false, limitNotifier);
     result = TableUtils.replaceTotalCellValues((ColumnarTable) result, rows, columns);
     result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
     return result;
@@ -128,7 +134,6 @@ public class QueryExecutor {
   public Table execute(QueryDto query) {
     return execute(
             query,
-            new QueryWatch(),
             CacheStatsDto.builder(),
             null,
             true,
@@ -136,20 +141,12 @@ public class QueryExecutor {
   }
 
   public Table execute(QueryDto query,
-                       QueryWatch queryWatch,
                        CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
                        SquashQLUser user,
                        boolean replaceTotalCellsAndOrderRows,
                        IntConsumer limitNotifier) {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
-    queryWatch.start(QueryWatch.GLOBAL);
-    queryWatch.start(QueryWatch.PREPARE_PLAN);
 
-    queryWatch.start(QueryWatch.PREPARE_RESOLVE_MEASURES);
-    resolveMeasures(query);
-    queryWatch.stop(QueryWatch.PREPARE_RESOLVE_MEASURES);
-
-    queryWatch.start(QueryWatch.EXECUTE_PREFETCH_PLAN);
     Function<String, Field> fieldSupplier = createQueryFieldSupplier(this.queryEngine, query.virtualTableDto);
     QueryScope queryScope = createQueryScope(query, fieldSupplier);
     Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> dependencyGraph = computeDependencyGraph(query, queryScope, fieldSupplier);
@@ -163,9 +160,7 @@ public class QueryExecutor {
       measuresByQueryScope.computeIfAbsent(scope, k -> new HashSet<>()).add(node.measure);
     });
     prefetchingPlan.execute(null);
-    queryWatch.stop(QueryWatch.EXECUTE_PREFETCH_PLAN);
 
-    queryWatch.start(QueryWatch.PREFETCH);
     Map<QueryScope, Table> tableByScope = new HashMap<>();
     for (QueryScope scope : prefetchQueryByQueryScope.keySet()) {
       DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
@@ -200,30 +195,21 @@ public class QueryExecutor {
 
       tableByScope.put(scope, result);
     }
-    queryWatch.stop(QueryWatch.PREFETCH);
 
-    queryWatch.start(QueryWatch.BUCKET);
     if (query.columnSets.containsKey(BUCKET)) {
       // Apply this as it modifies the "shape" of the result
       BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(BUCKET);
       // Reshape all results
       tableByScope.replaceAll((scope, table) -> BucketerExecutor.bucket(table, columnSet));
     }
-    queryWatch.stop(QueryWatch.BUCKET);
-
-    queryWatch.start(QueryWatch.EXECUTE_EVALUATION_PLAN);
 
     // Here we take the global plan and execute the plans for a given scope one by one, in dependency order. The order
     // is given by the graph itself.
     ExecutionPlan<QueryScope, Void> globalPlan = new ExecutionPlan<>(dependencyGraph.getTwo(), (scope, context) -> {
       ExecutionPlan<QueryPlanNodeKey, ExecutionContext> scopedPlan = new ExecutionPlan<>(dependencyGraph.getOne(), new Evaluator(fieldSupplier));
-      scopedPlan.execute(new ExecutionContext(tableByScope.get(scope), scope, tableByScope, query, queryLimit, queryWatch));
+      scopedPlan.execute(new ExecutionContext(tableByScope.get(scope), scope, tableByScope, query, queryLimit));
     });
     globalPlan.execute(null);
-
-    queryWatch.stop(QueryWatch.EXECUTE_EVALUATION_PLAN);
-
-    queryWatch.start(QueryWatch.ORDER);
 
     Table result = tableByScope.get(queryScope);
 
@@ -236,9 +222,6 @@ public class QueryExecutor {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result, !query.rollupColumns.isEmpty());
       result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
     }
-
-    queryWatch.stop(QueryWatch.ORDER);
-    queryWatch.stop(QueryWatch.GLOBAL);
 
     CacheStatsDto stats = this.queryCache.stats(user);
     cacheStatsDtoBuilder
@@ -338,12 +321,7 @@ public class QueryExecutor {
                                  QueryScope queryScope,
                                  Map<QueryScope, Table> tableByScope,
                                  QueryDto query,
-                                 int queryLimit,
-                                 QueryWatch queryWatch) {
-  }
-
-  protected static void resolveMeasures(QueryDto queryDto) {
-    // Deactivate for now.
+                                 int queryLimit) {
   }
 
   public Table execute(QueryDto first, QueryDto second, JoinType joinType, SquashQLUser user) {
@@ -356,7 +334,6 @@ public class QueryExecutor {
 
     Function<QueryDto, Table> execute = q -> execute(
             q,
-            new QueryWatch(),
             CacheStatsDto.builder(),
             user,
             false,

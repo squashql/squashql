@@ -39,9 +39,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     }
 
     this.executionContext = executionContext;
-    executionContext.queryWatch().start(queryPlanNodeKey);
     measure.accept(this);
-    executionContext.queryWatch().stop(queryPlanNodeKey);
   }
 
   @Override

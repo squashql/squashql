@@ -3,9 +3,8 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.builder.Query;
-import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.query.dto.*;
-import io.squashql.query.monitoring.QueryWatch;
+import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.store.Field;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
@@ -522,7 +521,6 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   private static Table execute(QueryExecutor executor, QueryDto query, SquashQLUser user) {
     return executor.execute(
             query,
-            new QueryWatch(),
             CacheStatsDto.builder(),
             user,
             true,

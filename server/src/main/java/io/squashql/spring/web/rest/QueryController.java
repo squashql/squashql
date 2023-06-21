@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import io.squashql.query.*;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
-import io.squashql.query.monitoring.QueryWatch;
 import io.squashql.store.Store;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,10 +39,8 @@ public class QueryController {
 
   @PostMapping(MAPPING_QUERY)
   public ResponseEntity<QueryResultDto> execute(@RequestBody QueryDto query) {
-    QueryWatch queryWatch = new QueryWatch();
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
     Table table = this.queryExecutor.execute(query,
-            queryWatch,
             csBuilder,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(),
             true,
@@ -56,9 +53,7 @@ public class QueryController {
     QueryResultDto result = QueryResultDto.builder()
             .table(simpleTable)
             .metadata(TableUtils.buildTableMetadata(table))
-            .debug(DebugInfoDto.builder()
-                    .cache(csBuilder.build())
-                    .timings(queryWatch.toQueryTimings()).build())
+            .debug(DebugInfoDto.builder().cache(csBuilder.build()).build())
             .build();
     return ResponseEntity.ok(result);
   }
@@ -93,7 +88,7 @@ public class QueryController {
     Table table = this.queryExecutor.execute(sql);
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))
-            .columns(table.headers().stream().map(header -> header.name()).collect(Collectors.toList()))
+            .columns(table.headers().stream().map(Header::name).collect(Collectors.toList()))
             .build();
     QueryResultDto result = QueryResultDto.builder()
             .table(simpleTable)

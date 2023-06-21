@@ -86,7 +86,6 @@ public class QueryControllerTest {
               );
 
               Assertions.assertThat(queryResult.debug.cache).isNotNull();
-              Assertions.assertThat(queryResult.debug.timings.total).isGreaterThan(0);
             });
   }
 
