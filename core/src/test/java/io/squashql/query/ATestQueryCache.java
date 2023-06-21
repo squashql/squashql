@@ -24,7 +24,7 @@ import static io.squashql.query.Functions.*;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
-@TestClass(ignore = {TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE})
+@TestClass(ignore = {TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE, TestClass.Type.CLICKHOUSE, TestClass.Type.SPARK})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestQueryCache extends ABaseTestQuery {
 
@@ -482,6 +482,26 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .build();
     this.executor.execute(query);
     assertCacheStats(1, 1);
+  }
+
+  @Test
+  void testQueryPivotTable() {
+    QueryDto q = Query
+            .from(this.storeName)
+            .select(List.of("category", "ean"), List.of(sum("ca", "price")))
+            .build();
+    int base = 0;
+    this.executor.execute(q, List.of("category"), List.of("ean"));
+    assertCacheStats(0, (base = base + 2));
+    this.executor.execute(q, List.of("category", "ean"), List.of());
+    assertCacheStats(0, (base = base + 2));
+    this.executor.execute(q, List.of(), List.of("category", "ean"));
+    assertCacheStats(2, base); // same as the previous
+    this.executor.execute(q, List.of("ean"), List.of("category"));
+    assertCacheStats(2, (base = base + 2));
+    // Same as the first query
+    this.executor.execute(q, List.of("category"), List.of("ean"));
+    assertCacheStats(4, base);
   }
 
   private void assertCacheStats(int hitCount, int missCount) {

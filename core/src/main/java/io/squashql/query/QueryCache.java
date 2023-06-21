@@ -30,6 +30,7 @@ public interface QueryCache {
                     CriteriaDto whereCriteriaDto,
                     CriteriaDto havingCriteriaDto,
                     List<Field> rollupColumns,
+                    List<List<Field>> groupingSets,
                     VirtualTableDto virtualTableDto,
                     SquashQLUser user,
                     int limit) implements PrefetchQueryScope {

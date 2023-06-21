@@ -307,6 +307,7 @@ public class QueryExecutor {
               queryScope.whereCriteriaDto,
               queryScope.havingCriteriaDto,
               queryScope.rollupColumns,
+              queryScope.groupingSets,
               queryScope.virtualTableDto,
               user,
               prefetchQuery.limit);
