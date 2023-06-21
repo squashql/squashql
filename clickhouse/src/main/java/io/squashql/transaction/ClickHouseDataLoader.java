@@ -4,6 +4,7 @@ import com.clickhouse.jdbc.ClickHouseConnection;
 import com.clickhouse.jdbc.ClickHouseDataSource;
 import com.clickhouse.jdbc.ClickHouseStatement;
 import io.squashql.ClickHouseDatastore;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.store.Field;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
@@ -48,7 +49,7 @@ public class ClickHouseDataLoader implements DataLoader {
       int size = list.size();
       for (int i = 0; i < size; i++) {
         Field field = list.get(i);
-        sb.append(field.name()).append(" Nullable(").append(classToClickHouseType(field.type())).append(')');
+        sb.append(SqlUtils.backtickEscape(field.name())).append(" Nullable(").append(classToClickHouseType(field.type())).append(')');
         if (i < size - 1) {
           sb.append(", ");
         }

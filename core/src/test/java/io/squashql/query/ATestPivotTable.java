@@ -158,7 +158,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
   @Test
   void testComplexPivotTableTwoMeasures(TestInfo testInfo) {
-    Measure amount = Functions.sum("amount", "amount");
+    Measure amount = Functions.sum("sum", "amount");
     Measure min = Functions.min("min", "amount");
 
     List<Measure> measures = List.of(amount, min);
@@ -325,16 +325,6 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
   private static void toJson(Table result, List<String> rows, List<String> columns, List<String> values) {
     List<String> list = result.headers().stream().map(Header::name).toList();
-//    Map<String, Object>[] m = new Map[(int) result.count()];
-//    AtomicInteger index = new AtomicInteger();
-//    result.forEach(r -> {
-//      Map<String, Object> mm = (m[index.getAndIncrement()] = new HashMap<>(r.size()));
-//      for (int i = 0; i < r.size(); i++) {
-//        mm.put(list.get(i), r.get(i));
-//      }
-//    });
-//    String serialize = JacksonUtil.serialize(m);
-//    System.out.println(serialize);
 
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(result.iterator()))

@@ -174,13 +174,24 @@ public class TableUtils {
                                 Collection<ColumnSet> columnSets) {
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
+    Map<String, Comparator<?>> copy = new HashMap<>(comparatorByColumnName);
+
+    columnSets.forEach(columnSet -> {
+      if (columnSet.getColumnSetKey() != ColumnSetKey.BUCKET) {
+        throw new IllegalArgumentException("Unexpected column set type " + columnSet);
+      }
+      BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
+      // Remove from the map of comparators to use default one when only none is defined for regular column
+      copy.remove(cs.name);
+      copy.remove(cs.field);
+    });
 
     List<Header> headers = table.headers;
     for (int i = 0; i < headers.size(); i++) {
       String headerName = headers.get(i).name();
       Comparator<?> queryComp = comparatorByColumnName.get(headerName);
       // Order by default if not explicitly asked in the query. Otherwise, respect the order.
-      if (queryComp != null || comparatorByColumnName.isEmpty()) {
+      if (queryComp != null || copy.isEmpty()) {
         args.add(table.getColumnValues(headerName));
         // Always order table. If not defined, use natural order comp.
         comparators.add(queryComp == null ? NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder())
@@ -192,12 +203,10 @@ public class TableUtils {
       return table;
     }
 
+    // Special case for the CS comparators.
     int[] contextIndices = new int[args.size()];
     Arrays.fill(contextIndices, -1);
     for (ColumnSet columnSet : new HashSet<>(columnSets)) {
-      if (columnSet.getColumnSetKey() != ColumnSetKey.BUCKET) {
-        throw new IllegalArgumentException("Unexpected column set type " + columnSet);
-      }
       BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
       // cs.field can appear multiple times in the table.
       table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(cs.name));

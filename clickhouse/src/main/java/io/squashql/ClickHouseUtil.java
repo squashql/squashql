@@ -33,6 +33,6 @@ public final class ClickHouseUtil {
   }
 
   public static Class<?> clickHouseTypeToClass(ClickHouseDataType dataType) {
-    return dataType.getObjectClass();
+    return dataType.getPrimitiveClass();
   }
 }
