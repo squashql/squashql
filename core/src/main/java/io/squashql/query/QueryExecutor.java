@@ -54,60 +54,71 @@ public class QueryExecutor {
   }
 
   // FIXME this API only makes senses if showTotals = true
-  public Table execute(QueryDto query, List<String> rows, List<String> columns, boolean showTotals) {
-    if (!showTotals) {
-      return execute(query);
-    } else {
-      if (!query.rollupColumns.isEmpty()) {
-        // TODO throw?
-        new IllegalArgumentException();
-      }
-
-      // TODO remove column set.
-      ColumnSet columnSet = query.columnSets.get(BUCKET);
-      if (columnSet != null) {
-        String name = ((BucketColumnSetDto) columnSet).name;
-        if (rows.contains(name)) {
-          rows = new ArrayList<>(rows);
-          rows.remove(name);
-        }
-
-        if (columns.contains(name)) {
-          columns = new ArrayList<>(columns);
-          columns.remove(name);
-        }
-      }
-
-      // FIXME check rows and columns
-      List<List<String>> groupingSets = new ArrayList<>();
-      groupingSets.add(List.of());// GT use an empty list instead of list of size 1 with an empty string because could cause issue later on with FieldSupplier
-      // Rows
-      for (int i = rows.size(); i >= 1; i--) {
-        groupingSets.add(rows.subList(0, i));
-      }
-
-      // Cols
-      for (int i = columns.size(); i >= 1; i--) {
-        groupingSets.add(columns.subList(0, i));
-      }
-
-      // all combinations
-      for (int i = rows.size(); i >= 1; i--) {
-        for (int j = columns.size(); j >= 1; j--) {
-          List<String> all = new ArrayList<>(rows.subList(0, i));
-          all.addAll(columns.subList(0, j));
-          groupingSets.add(all);
-        }
-      }
-
-      query.groupingSets = groupingSets;
-
-      // FIXME what if usage of ColumnSets?
-      Table result = execute(query, new QueryWatch(), CacheStatsDto.builder(), null, false, null);
-      result = TableUtils.replaceTotalCellValues((ColumnarTable) result, rows, columns);
-      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
-      return result;
+  public Table execute(QueryDto query, List<String> rows, List<String> columns) {
+    if (!query.rollupColumns.isEmpty()) {
+      throw new IllegalArgumentException("Rollup is not supported by this API");
     }
+
+    Set<String> axes = new HashSet<>(rows);
+    axes.addAll(columns);
+    Set<String> select = new HashSet<>(query.columns);
+    select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream().map(Field::name)).collect(Collectors.toSet()));
+    axes.removeAll(select);
+
+    if (!axes.isEmpty()) {
+      throw new IllegalArgumentException(axes + " on rows or columns by not in select. Please add those fields in select");
+    }
+    axes = new HashSet<>(rows);
+    axes.addAll(columns);
+    select.removeAll(axes);
+    if (!select.isEmpty()) {
+      throw new IllegalArgumentException(select + " in select but not on rows or columns. Please add those fields on one axis");
+    }
+
+    // ColumnSet is a special type of column that does not exist in the database but only in SquashQL. Totals can't be
+    // computed. This is why it is removed from the axes.
+    ColumnSet columnSet = query.columnSets.get(BUCKET);
+    if (columnSet != null) {
+      String name = ((BucketColumnSetDto) columnSet).name;
+      if (rows.contains(name)) {
+        rows = new ArrayList<>(rows);
+        rows.remove(name);
+      }
+
+      if (columns.contains(name)) {
+        columns = new ArrayList<>(columns);
+        columns.remove(name);
+      }
+    }
+
+    List<List<String>> groupingSets = new ArrayList<>();
+    // GT use an empty list instead of list of size 1 with an empty string because could cause issue later on with FieldSupplier
+    groupingSets.add(List.of());
+    // Rows
+    for (int i = rows.size(); i >= 1; i--) {
+      groupingSets.add(rows.subList(0, i));
+    }
+
+    // Cols
+    for (int i = columns.size(); i >= 1; i--) {
+      groupingSets.add(columns.subList(0, i));
+    }
+
+    // all combinations
+    for (int i = rows.size(); i >= 1; i--) {
+      for (int j = columns.size(); j >= 1; j--) {
+        List<String> all = new ArrayList<>(rows.subList(0, i));
+        all.addAll(columns.subList(0, j));
+        groupingSets.add(all);
+      }
+    }
+
+    query.groupingSets = groupingSets;
+
+    Table result = execute(query, new QueryWatch(), CacheStatsDto.builder(), null, false, null);
+    result = TableUtils.replaceTotalCellValues((ColumnarTable) result, rows, columns);
+    result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
+    return result;
   }
 
   public Table execute(String rawSqlQuery) {

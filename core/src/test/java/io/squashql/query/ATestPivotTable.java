@@ -3,7 +3,6 @@ package io.squashql.query;
 import com.google.common.collect.ImmutableList;
 import io.squashql.TestClass;
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.builder.CanAddRollup;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.QueryDto;
@@ -76,22 +75,25 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
   void testRollupEquivalent() {
     Measure amount = Functions.sum("amount", "amount");
 
-    CanAddRollup base = Query
+    QueryDto queryWithoutRollup = Query
             .from(this.storeName)
-            .select(List.of("continent", "country", "city"), List.of(amount));
-    QueryDto queryRollup = base
+            .select(List.of("continent", "country", "city"), List.of(amount))
+            .build();
+    QueryDto queryRollup = Query
+            .from(this.storeName)
+            .select(List.of("continent", "country", "city"), List.of(amount))
             .rollup(List.of("continent", "country", "city"))
             .build();
     Table resultRollup = this.executor.execute(queryRollup);
 
     // NO COLUMNS
     {
-      Table result = this.executor.execute(base.build(), List.of("continent", "country", "city"), List.of(), true);
+      Table result = this.executor.execute(queryWithoutRollup, List.of("continent", "country", "city"), List.of());
       Assertions.assertThat(result).containsExactlyInAnyOrderElementsOf(resultRollup);
     }
     // NO ROWS
     {
-      Table result = this.executor.execute(base.build(), List.of(), List.of("continent", "country", "city"), true);
+      Table result = this.executor.execute(queryWithoutRollup, List.of(), List.of("continent", "country", "city"));
       Assertions.assertThat(result).containsExactlyInAnyOrderElementsOf(resultRollup);
     }
   }
@@ -110,7 +112,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .build();
     List<String> rows = List.of("city");
     List<String> columns = List.of("spending category");
-    Table result = this.executor.execute(query, rows, columns, true);
+    Table result = this.executor.execute(query, rows, columns);
 
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, GRAND_TOTAL, 22d),
@@ -188,7 +190,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .from(this.storeName)
             .select(List.of(), List.of(bucketCS), measures)
             .build();
-    Table result = this.executor.execute(query, List.of("country"), List.of("group"), true);
+    Table result = this.executor.execute(query, List.of("country"), List.of("group"));
     Assertions.assertThat(result).containsExactly(
             List.of("european", "uk", 0d),
             List.of("european", "france", -1d),
@@ -253,17 +255,68 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     verifyResults(testInfo, query, rows, columns);
   }
 
-  private void verifyResults(TestInfo testInfo, QueryDto queryDto, List<String> rows, List<String> columns) {
-    Table table = this.executor.execute(queryDto, rows, columns, true);
-    System.out.println(TestUtil.tableToJson(table));
+  @Test
+  void testIncorrectQueryRollup() {
+    Measure amount = Functions.sum("amount", "amount");
+    List<Measure> measures = List.of(amount);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("spending category", "spending subcategory", "continent", "country", "city"), measures)
+            .rollup("spending category") // rollup is not supported with the pivot table API
+            .build();
+    List<String> rows = List.of("continent", "country", "city");
+    List<String> columns = List.of("spending category", "spending subcategory");
+    Assertions.assertThatThrownBy(() -> this.executor.execute(query, rows, columns))
+            .hasMessage("Rollup is not supported by this API");
+  }
+
+  @Test
+  void testMissingFieldOnAxis() {
+    Measure amount = Functions.sum("amount", "amount");
+    List<Measure> measures = List.of(amount);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("spending category", "spending subcategory", "continent", "country", "city"), measures)
+            .build();
+    List<String> rowsWithoutContinent = List.of("country", "city");
+    List<String> columns = List.of("spending category", "spending subcategory");
+    // continent is missing despite the fact it is in the select
+    Assertions.assertThatThrownBy(() -> this.executor.execute(query, rowsWithoutContinent, columns))
+            .hasMessage("[continent] in select but not on rows or columns. Please add those fields on one axis");
+
+    List<String> rows = List.of("continent", "country", "city");
+    List<String> columnsWithoutContinent = List.of("spending category");
+    // spending subcategory is missing despite the fact it is in the select
+    Assertions.assertThatThrownBy(() -> this.executor.execute(query, rows, columnsWithoutContinent))
+            .hasMessage("[spending subcategory] in select but not on rows or columns. Please add those fields on one axis");
+  }
+
+  @Test
+  void testUnknownFieldOnAxis() {
+    Measure amount = Functions.sum("amount", "amount");
+    List<Measure> measures = List.of(amount);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("spending category", "spending subcategory", "continent", "country", "city"), measures)
+            .build();
+    List<String> rows = List.of("unknown", "continent", "country", "city");
+    List<String> columns = List.of("spending category", "spending subcategory");
+    // continent is missing despite the fact it is in the select
+    Assertions.assertThatThrownBy(() -> this.executor.execute(query, rows, columns))
+            .hasMessage("[unknown] on rows or columns by not in select. Please add those fields in select");
+  }
+
+  private void verifyResults(TestInfo testInfo, QueryDto query, List<String> rows, List<String> columns) {
+    Table table = this.executor.execute(query, rows, columns);
+    System.out.println(TestUtil.tableToJson(table)); // FIXME to delete
     Table expectedTabular = tableFromFile(testInfo);
 
     Assertions.assertThat(table).containsExactlyElementsOf(ImmutableList.copyOf(expectedTabular.iterator()));
     Assertions.assertThat(table.headers()).containsExactlyElementsOf(expectedTabular.headers());
 
-    List<String> values = queryDto.measures.stream().map(Measure::alias).toList();
+    List<String> values = query.measures.stream().map(Measure::alias).toList();
     List<List<Object>> pivotTableRows = pivot(table, rows, columns, values);
-    System.out.println(JacksonUtil.serialize(pivotTableRows));
+    System.out.println(JacksonUtil.serialize(pivotTableRows)); // FIXME to delete
     toJson(table, rows, columns, values);
 
     List<List<Object>> expectedPivotTable = pivotTableFromFile(testInfo);
@@ -288,6 +341,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .columns(list)
             .build();
 
+    // FIXME to delete
     Map<String, Object> data = Map.of("rows", rows, "columns", columns, "values", values, "table", simpleTable);
     String encodedString = Base64.getEncoder().encodeToString(JacksonUtil.serialize(data).getBytes(StandardCharsets.UTF_8));
     System.out.println("http://localhost:3000?data=" + encodedString);
@@ -403,12 +457,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     return mapping;
   }
 
-  private static class ObjectArrayKey {
-    final Object[] a;
-
-    private ObjectArrayKey(Object[] a) {
-      this.a = a;
-    }
+  private record ObjectArrayKey(Object[] a) {
 
     @Override
     public boolean equals(Object o) {

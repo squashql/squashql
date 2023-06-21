@@ -19,7 +19,7 @@ import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
  * why it is @{@link Disabled}.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestClass(ignore = {TestClass.Type.SPARK, TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE})
+@TestClass(ignore = {TestClass.Type.SPARK, TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE, TestClass.Type.CLICKHOUSE})
 public abstract class ATestDocPeriodComparison extends ABaseTestQuery {
 
   @Override
