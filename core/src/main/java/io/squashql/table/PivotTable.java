@@ -4,11 +4,11 @@ import java.util.List;
 
 public class PivotTable {
 
-  final List<List<Object>> pivotTableRows;
-  final Table table;
-  final List<String> rows;
-  final List<String> columns;
-  final List<String> values;
+  public final List<List<Object>> pivotTableRows;
+  public final Table table;
+  public final List<String> rows;
+  public final List<String> columns;
+  public final List<String> values;
 
   public PivotTable(Table table, List<String> rows, List<String> columns, List<String> values) {
     this.table = table;
@@ -16,10 +16,6 @@ public class PivotTable {
     this.columns = columns;
     this.values = values;
     this.pivotTableRows = PivotTableUtils.pivot(table, rows, columns, values);
-  }
-
-  public List<List<Object>> getPivotTableRows() {
-    return this.pivotTableRows;
   }
 
   public void show() {

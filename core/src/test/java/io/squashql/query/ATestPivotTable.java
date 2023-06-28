@@ -128,8 +128,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     );
 
     PivotTable pivotTable = new PivotTable(result, rows, columns, List.of("amount"));
-    List<List<Object>> pivotTableRows = pivotTable.getPivotTableRows();
-    Assertions.assertThat(pivotTableRows).containsExactly(
+    Assertions.assertThat(pivotTable.pivotTableRows).containsExactly(
             List.of("spending category", GRAND_TOTAL, "extra", "minimum expenditure"),
             List.of("city", "amount", "amount", "amount"),
             List.of(GRAND_TOTAL, 22d, 9d, 13d),
@@ -202,8 +201,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     );
 
     PivotTable pivotTable = new PivotTable(result, List.of("country"), List.of("group"), List.of(amountComp.alias));
-    List<List<Object>> pivotTableRows = pivotTable.getPivotTableRows();
-    Assertions.assertThat(pivotTableRows).containsExactly(
+    Assertions.assertThat(pivotTable.pivotTableRows).containsExactly(
             Arrays.asList("group", "european", "anglophone", "all"),
             Arrays.asList("country", "amountComp", "amountComp", "amountComp"),
             Arrays.asList("uk", 0d, -30d, -30d),
@@ -363,6 +361,6 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     List<String> values = query.measures.stream().map(Measure::alias).toList();
     PivotTable pivotTable = new PivotTable(table, rows, columns, values);
     List<List<Object>> expectedPivotTable = pivotTableFromFile(testInfo);
-    Assertions.assertThat(pivotTable.getPivotTableRows()).containsExactlyElementsOf(expectedPivotTable);
+    Assertions.assertThat(pivotTable.pivotTableRows).containsExactlyElementsOf(expectedPivotTable);
   }
 }

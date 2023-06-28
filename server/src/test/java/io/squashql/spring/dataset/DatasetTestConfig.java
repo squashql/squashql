@@ -1,15 +1,25 @@
 package io.squashql.spring.dataset;
 
+import com.google.common.collect.ImmutableList;
 import io.squashql.DuckDBDatastore;
-import io.squashql.query.SquashQLUser;
+import io.squashql.jackson.JacksonUtil;
+import io.squashql.query.*;
+import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
+import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.SimpleTableDto;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
+import io.squashql.table.PivotTable;
+import io.squashql.table.Table;
 import io.squashql.transaction.DuckDBDataLoader;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -21,6 +31,49 @@ public class DatasetTestConfig {
   @Bean
   public DuckDBQueryEngine queryEngine() {
     return new DuckDBQueryEngine(createTestDatastoreWithData());
+  }
+
+  /**
+   * Display the result of the query in a pivot table accessible in the browser at this address http://localhost:8080.
+   */
+  @Bean
+  public void displayPivotTable() {
+    QueryExecutor queryExecutor = new QueryExecutor(queryEngine());
+    QueryDto query = Query.from("our_prices")
+            .select(List.of("ean", "pdv", "scenario"), List.of(CountMeasure.INSTANCE))
+            .build();
+    Table table = queryExecutor.execute(query, List.of("pdv", "ean"), List.of("scenario"));
+    PivotTable pt = new PivotTable(table, List.of("pdv", "ean"), List.of("scenario"), query.measures.stream().map(Measure::alias).toList());
+    toJson(pt);
+  }
+
+  /**
+   * Adapt to antvis/s2 format. See examples https://s2.antv.vision/en/examples/basic/pivot/#grid.
+   *
+   * +------------------------+--------------+----------------------+----------------------+----------------------+----------------------+----------------------+----------------------+
+   * |               scenario |     scenario |          Grand Total |               MDD up |        MN & MDD down |          MN & MDD up |                MN up |                 base |
+   * |                    pdv |          ean | _contributors_count_ | _contributors_count_ | _contributors_count_ | _contributors_count_ | _contributors_count_ | _contributors_count_ |
+   * +------------------------+--------------+----------------------+----------------------+----------------------+----------------------+----------------------+----------------------+
+   * |            Grand Total |  Grand Total |                   20 |                    4 |                    4 |                    4 |                    4 |                    4 |
+   * |              ITM Balma |        Total |                   10 |                    2 |                    2 |                    2 |                    2 |                    2 |
+   * | ITM Toulouse and Drive |        Total |                   10 |                    2 |                    2 |                    2 |                    2 |                    2 |
+   * |              ITM Balma | ITMella 250g |                    5 |                    1 |                    1 |                    1 |                    1 |                    1 |
+   * | ITM Toulouse and Drive | ITMella 250g |                    5 |                    1 |                    1 |                    1 |                    1 |                    1 |
+   * |              ITM Balma | Nutella 250g |                    5 |                    1 |                    1 |                    1 |                    1 |                    1 |
+   * | ITM Toulouse and Drive | Nutella 250g |                    5 |                    1 |                    1 |                    1 |                    1 |                    1 |
+   * +------------------------+--------------+----------------------+----------------------+----------------------+----------------------+----------------------+----------------------+
+   */
+  public static void toJson(PivotTable pivotTable) {
+    List<String> list = pivotTable.table.headers().stream().map(Header::name).toList();
+
+    SimpleTableDto simpleTable = SimpleTableDto.builder()
+            .rows(ImmutableList.copyOf(pivotTable.table.iterator()))
+            .columns(list)
+            .build();
+
+    Map<String, Object> data = Map.of("rows", pivotTable.rows, "columns", pivotTable.columns, "values", pivotTable.values, "table", simpleTable);
+    String encodedString = Base64.getEncoder().encodeToString(JacksonUtil.serialize(data).getBytes(StandardCharsets.UTF_8));
+    System.out.println("http://localhost:8080?data=" + encodedString);
   }
 
   public static final AtomicReference<SquashQLUser> squashQLUserSupplier = new AtomicReference<>();

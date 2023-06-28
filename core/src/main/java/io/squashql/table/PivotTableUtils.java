@@ -1,31 +1,11 @@
 package io.squashql.table;
 
-import com.google.common.collect.ImmutableList;
-import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.Header;
-import io.squashql.query.dto.SimpleTableDto;
-
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Supplier;
 
 public final class PivotTableUtils {
 
   private PivotTableUtils() {
-  }
-
-  // FIXME where to put this?
-  public static void toJson(PivotTable pivotTable) {
-    List<String> list = pivotTable.table.headers().stream().map(Header::name).toList();
-
-    SimpleTableDto simpleTable = SimpleTableDto.builder()
-            .rows(ImmutableList.copyOf(pivotTable.table.iterator()))
-            .columns(list)
-            .build();
-
-    Map<String, Object> data = Map.of("rows", pivotTable.rows, "columns", pivotTable.columns, "values", pivotTable.values, "table", simpleTable);
-    String encodedString = Base64.getEncoder().encodeToString(JacksonUtil.serialize(data).getBytes(StandardCharsets.UTF_8));
-    System.out.println("http://localhost:8080?data=" + encodedString);
   }
 
   static List<List<Object>> pivot(Table table, List<String> rows, List<String> columns, List<String> values) {
