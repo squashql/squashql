@@ -2,6 +2,8 @@ package io.squashql;
 
 import io.squashql.query.*;
 import io.squashql.query.database.DuckDBQueryEngine;
+import io.squashql.table.ColumnarTable;
+import io.squashql.table.Table;
 import io.squashql.transaction.DuckDBDataLoader;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;

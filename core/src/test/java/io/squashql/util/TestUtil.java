@@ -3,18 +3,22 @@ package io.squashql.util;
 import com.google.common.collect.ImmutableList;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
+import io.squashql.table.ColumnarTable;
+import io.squashql.table.RowTable;
+import io.squashql.table.Table;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.ThrowableAssert;
 import org.assertj.core.util.Throwables;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.Path;
-import java.util.*;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class TestUtil {
@@ -47,6 +51,15 @@ public class TestUtil {
     try (InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(path.toString());
          BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
       return JacksonUtil.deserialize(readAllLines(reader), target);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static String readAllLines(String fileName) {
+    try (InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(Paths.get(fileName).toString());
+         BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
+      return readAllLines(reader);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

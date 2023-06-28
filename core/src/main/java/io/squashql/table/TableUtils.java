@@ -1,6 +1,7 @@
-package io.squashql.query;
+package io.squashql.table;
 
 import com.google.common.base.Suppliers;
+import io.squashql.query.*;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;

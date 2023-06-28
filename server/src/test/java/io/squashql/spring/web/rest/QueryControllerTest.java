@@ -3,7 +3,7 @@ package io.squashql.spring.web.rest;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
-import io.squashql.query.database.SparkQueryEngine;
+import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.spring.dataset.DatasetTestConfig;
 import org.assertj.core.api.Assertions;
@@ -124,7 +124,7 @@ public class QueryControllerTest {
             new MetadataItem("their_store", "their_store", String.class)
     );
 
-    Assertions.assertThat(metadataResultDto.aggregationFunctions).containsExactlyInAnyOrder(SparkQueryEngine.SUPPORTED_AGGREGATION_FUNCTIONS.toArray(new String[0]));
+    Assertions.assertThat(metadataResultDto.aggregationFunctions).containsExactlyInAnyOrder(DuckDBQueryEngine.SUPPORTED_AGGREGATION_FUNCTIONS.toArray(new String[0]));
   }
 
   @Test

@@ -9,6 +9,8 @@ import io.squashql.query.builder.Query;
 import io.squashql.query.dto.*;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
+import io.squashql.table.ColumnarTable;
+import io.squashql.table.Table;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

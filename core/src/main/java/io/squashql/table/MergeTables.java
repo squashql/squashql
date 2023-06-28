@@ -2,10 +2,8 @@ package io.squashql.table;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.query.Measure;
-import io.squashql.query.Table;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.JoinType;

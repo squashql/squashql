@@ -4,6 +4,7 @@ import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.Period;
 import io.squashql.store.Field;
+import io.squashql.table.Table;
 import io.squashql.transaction.DataLoader;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;

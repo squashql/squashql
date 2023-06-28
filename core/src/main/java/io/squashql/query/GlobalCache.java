@@ -1,6 +1,8 @@
 package io.squashql.query;
 
 import io.squashql.query.dto.CacheStatsDto;
+import io.squashql.table.ColumnarTable;
+import io.squashql.table.Table;
 
 import java.util.Map;
 import java.util.Set;

@@ -1,11 +1,11 @@
 package io.squashql.spring.dataset;
 
-import io.squashql.SparkDatastore;
+import io.squashql.DuckDBDatastore;
 import io.squashql.query.SquashQLUser;
-import io.squashql.query.database.SparkQueryEngine;
+import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
-import io.squashql.transaction.SparkDataLoader;
+import io.squashql.transaction.DuckDBDataLoader;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
@@ -19,8 +19,8 @@ import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 public class DatasetTestConfig {
 
   @Bean
-  public SparkQueryEngine queryEngine() {
-    return new SparkQueryEngine(createTestDatastoreWithData());
+  public DuckDBQueryEngine queryEngine() {
+    return new DuckDBQueryEngine(createTestDatastoreWithData());
   }
 
   public static final AtomicReference<SquashQLUser> squashQLUserSupplier = new AtomicReference<>();
@@ -30,7 +30,7 @@ public class DatasetTestConfig {
     return () -> squashQLUserSupplier.get();
   }
 
-  public static SparkDatastore createTestDatastoreWithData() {
+  public static DuckDBDatastore createTestDatastoreWithData() {
     Field ean = new Field("our_prices", "ean", String.class);
     Field pdv = new Field("our_prices", "pdv", String.class);
     Field price = new Field("our_prices", "price", double.class);
@@ -51,12 +51,12 @@ public class DatasetTestConfig {
             new Field("our_stores_their_stores", "their_store", String.class)
     ));
 
-    SparkDatastore datastore = new SparkDatastore();
-    SparkDataLoader tm = new SparkDataLoader(datastore.spark);
+    DuckDBDatastore datastore = new DuckDBDatastore();
+    DuckDBDataLoader tm = new DuckDBDataLoader(datastore);
 
-    tm.createTemporaryTable(our_price_store.name(), our_price_store.fields());
-    tm.createTemporaryTable(datastore.spark, their_prices_store.name(), their_prices_store.fields(), false);
-    tm.createTemporaryTable(datastore.spark, our_stores_their_stores_store.name(), our_stores_their_stores_store.fields(), false);
+    tm.createOrReplaceTable(our_price_store.name(), our_price_store.fields());
+    tm.createOrReplaceTable(their_prices_store.name(), their_prices_store.fields());
+    tm.createOrReplaceTable(our_stores_their_stores_store.name(), our_stores_their_stores_store.fields());
 
     tm.load(MAIN_SCENARIO_NAME,
             "our_prices", List.of(

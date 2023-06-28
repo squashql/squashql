@@ -9,6 +9,8 @@ import com.github.benmanes.caffeine.cache.stats.StatsCounter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.store.Field;
+import io.squashql.table.ColumnarTable;
+import io.squashql.table.Table;
 
 import java.time.Duration;
 import java.util.*;

@@ -2,7 +2,7 @@ package io.squashql.transaction;
 
 import io.squashql.DuckDBDatastore;
 import io.squashql.jdbc.JdbcUtil;
-import io.squashql.query.Table;
+import io.squashql.table.Table;
 import io.squashql.store.Field;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 

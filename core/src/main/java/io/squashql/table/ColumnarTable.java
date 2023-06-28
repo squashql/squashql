@@ -1,6 +1,8 @@
-package io.squashql.query;
+package io.squashql.table;
 
 import com.google.common.base.Suppliers;
+import io.squashql.query.Header;
+import io.squashql.query.Measure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 
 import java.util.*;
@@ -11,7 +13,7 @@ public class ColumnarTable implements Table {
   protected final List<Header> headers;
   protected final Set<Measure> measures;
 
-  protected final Supplier<ObjectArrayDictionary> pointDictionary;
+  public final Supplier<ObjectArrayDictionary> pointDictionary;
   protected final List<List<Object>> values;
 
   public ColumnarTable(List<Header> headers, Set<Measure> measures, List<List<Object>> values) {

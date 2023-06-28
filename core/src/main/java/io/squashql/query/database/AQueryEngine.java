@@ -5,6 +5,8 @@ import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.store.Datastore;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
+import io.squashql.table.ColumnarTable;
+import io.squashql.table.Table;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;

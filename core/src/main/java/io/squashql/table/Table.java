@@ -1,5 +1,7 @@
-package io.squashql.query;
+package io.squashql.table;
 
+import io.squashql.query.Header;
+import io.squashql.query.Measure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import org.eclipse.collections.api.list.primitive.IntList;
 import org.eclipse.collections.api.list.primitive.MutableIntList;

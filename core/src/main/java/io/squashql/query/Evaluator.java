@@ -5,6 +5,7 @@ import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import io.squashql.query.comp.BinaryOperations;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.store.Field;
+import io.squashql.table.Table;
 
 import java.util.ArrayList;
 import java.util.Collections;

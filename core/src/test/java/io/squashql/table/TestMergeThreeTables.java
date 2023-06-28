@@ -1,9 +1,7 @@
 package io.squashql.table;
 
 import io.squashql.query.AggregatedMeasure;
-import io.squashql.query.ColumnarTable;
 import io.squashql.query.Header;
-import io.squashql.query.Table;
 import io.squashql.query.dto.JoinType;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;

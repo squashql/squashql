@@ -1,13 +1,13 @@
 package io.squashql.util;
 
-import io.squashql.query.ColumnarTable;
+import io.squashql.table.ColumnarTable;
 import io.squashql.query.Header;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
-import static io.squashql.query.TableUtils.reorder;
+import static io.squashql.table.TableUtils.reorder;
 import static java.util.Comparator.naturalOrder;
 import static java.util.Comparator.nullsLast;
 

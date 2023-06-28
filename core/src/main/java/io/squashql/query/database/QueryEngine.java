@@ -1,7 +1,7 @@
 package io.squashql.query.database;
 
 import io.squashql.query.QueryExecutor;
-import io.squashql.query.Table;
+import io.squashql.table.Table;
 import io.squashql.store.Datastore;
 import io.squashql.store.Field;
 

@@ -2,6 +2,8 @@ package io.squashql.query;
 
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.store.Field;
+import io.squashql.table.ColumnarTable;
+import io.squashql.table.Table;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 
