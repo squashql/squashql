@@ -521,6 +521,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   private static Table execute(QueryExecutor executor, QueryDto query, SquashQLUser user) {
     return executor.execute(
             query,
+            null,
             CacheStatsDto.builder(),
             user,
             true,

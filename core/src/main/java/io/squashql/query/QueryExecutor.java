@@ -1,6 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.PrefetchVisitor;
+import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.QueryCache.SubQueryScope;
 import io.squashql.query.QueryCache.TableScope;
 import io.squashql.query.database.AQueryEngine;
@@ -65,6 +66,14 @@ public class QueryExecutor {
       throw new IllegalArgumentException("Rollup is not supported by this API");
     }
 
+    QueryDto preparedQuery = prepareQuery(query, rows, columns);
+    Table result = execute(preparedQuery, new PivotTableContext(rows, columns), CacheStatsDto.builder(), user, false, limitNotifier);
+    result = TableUtils.replaceTotalCellValues((ColumnarTable) result, rows, columns);
+    result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
+    return result;
+  }
+
+  public static QueryDto prepareQuery(QueryDto query, List<String> rows, List<String> columns) {
     Set<String> axes = new HashSet<>(rows);
     axes.addAll(columns);
     Set<String> select = new HashSet<>(query.columns);
@@ -119,12 +128,9 @@ public class QueryExecutor {
       }
     }
 
-    query.groupingSets = groupingSets;
-
-    Table result = execute(query, CacheStatsDto.builder(), user, false, limitNotifier);
-    result = TableUtils.replaceTotalCellValues((ColumnarTable) result, rows, columns);
-    result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
-    return result;
+    QueryDto deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), QueryDto.class);
+    deepCopy.groupingSets = groupingSets;
+    return deepCopy;
   }
 
   public Table execute(String rawSqlQuery) {
@@ -134,6 +140,7 @@ public class QueryExecutor {
   public Table execute(QueryDto query) {
     return execute(
             query,
+            null,
             CacheStatsDto.builder(),
             null,
             true,
@@ -141,6 +148,7 @@ public class QueryExecutor {
   }
 
   public Table execute(QueryDto query,
+                       PivotTableContext pivotTableContext,
                        CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
                        SquashQLUser user,
                        boolean replaceTotalCellsAndOrderRows,
@@ -148,6 +156,9 @@ public class QueryExecutor {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
 
     Function<String, Field> fieldSupplier = createQueryFieldSupplier(this.queryEngine, query.virtualTableDto);
+    if (pivotTableContext != null) {
+      pivotTableContext.init(fieldSupplier);
+    }
     QueryScope queryScope = createQueryScope(query, fieldSupplier);
     Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> dependencyGraph = computeDependencyGraph(query, queryScope, fieldSupplier);
     // Compute what needs to be prefetched
@@ -184,7 +195,7 @@ public class QueryExecutor {
       if (!notCached.isEmpty()) {
         notCached.add(CountMeasure.INSTANCE); // Always add count
         notCached.forEach(prefetchQuery::withMeasure);
-        result = this.queryEngine.execute(prefetchQuery);
+        result = this.queryEngine.execute(prefetchQuery, pivotTableContext);
       } else {
         // Create an empty result that will be populated by the query cache
         result = queryCache.createRawResult(prefetchQueryScope);
@@ -324,6 +335,33 @@ public class QueryExecutor {
                                  int queryLimit) {
   }
 
+
+  public static class PivotTableContext {
+    private final List<String> rows;
+    private final List<String> columns;
+
+    private List<Field> rowFields;
+    private List<Field> columnFields;
+
+    public PivotTableContext(List<String> rows, List<String> columns) {
+      this.rows = rows;
+      this.columns = columns;
+    }
+
+    public void init(Function<String, Field> fieldSupplier) {
+      this.rowFields = this.rows.stream().map(fieldSupplier).toList();
+      this.columnFields = this.columns.stream().map(fieldSupplier).toList();
+    }
+
+    public List<Field> getRowFields() {
+      return this.rowFields;
+    }
+
+    public List<Field> getColumnFields() {
+      return this.columnFields;
+    }
+  }
+
   public Table execute(QueryDto first, QueryDto second, JoinType joinType, SquashQLUser user) {
     Map<String, Comparator<?>> firstComparators = Queries.getComparators(first);
     Map<String, Comparator<?>> secondComparators = Queries.getComparators(second);
@@ -334,6 +372,7 @@ public class QueryExecutor {
 
     Function<QueryDto, Table> execute = q -> execute(
             q,
+            null,
             CacheStatsDto.builder(),
             user,
             false,

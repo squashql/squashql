@@ -2,9 +2,7 @@ package io.squashql.util;
 
 import com.google.common.collect.ImmutableList;
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.Header;
-import io.squashql.query.RowTable;
-import io.squashql.query.Table;
+import io.squashql.query.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.assertj.core.api.Assertions;
@@ -16,8 +14,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class TestUtil {
 
@@ -64,6 +62,28 @@ public class TestUtil {
     }
 
     return content.toString();
+  }
+
+  public static ColumnarTable convert(RowTable rowTable, Set<Measure> measures) {
+    List<List<Object>> values = new ArrayList<>(rowTable.headers().size());
+    for (int i = 0; i < rowTable.headers().size(); i++) {
+      values.add(new ArrayList<>());
+    }
+    rowTable.forEach(row -> {
+      for (int h = 0; h < row.size(); h++) {
+        values.get(h).add(row.get(h));
+      }
+    });
+    List<Header> headers = new ArrayList<>();
+    Set<String> measureNames = measures.stream().map(Measure::alias).collect(Collectors.toSet());
+    for (Header header : rowTable.headers()) {
+      if (measureNames.contains(header.name())) {
+        headers.add(new Header(header.name(), header.type(), true));
+      } else {
+        headers.add(header);
+      }
+    }
+    return new ColumnarTable(headers, measures, values);
   }
 
   @NoArgsConstructor // for Jackson

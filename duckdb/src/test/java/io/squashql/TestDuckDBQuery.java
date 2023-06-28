@@ -63,12 +63,12 @@ public class TestDuckDBQuery {
             .build();
 
     AtomicInteger limitCapture = new AtomicInteger(-1);
-    this.executor.execute(query, CacheStatsDto.builder(), null, true, limitCapture::set);
+    this.executor.execute(query, null, CacheStatsDto.builder(), null, true, limitCapture::set);
     Assertions.assertThat(limitCapture.get()).isEqualTo(-1);
 
     int limit = 2;
     query.limit = limit;
-    this.executor.execute(query, CacheStatsDto.builder(), null, true, limitCapture::set);
+    this.executor.execute(query, null, CacheStatsDto.builder(), null, true, limitCapture::set);
     Assertions.assertThat(limitCapture.get()).isEqualTo(limit);
   }
 
