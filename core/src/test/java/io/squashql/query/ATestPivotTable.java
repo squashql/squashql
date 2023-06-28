@@ -25,7 +25,7 @@ import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.Functions.*;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 
-@TestClass(ignore = {TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE})
+@TestClass(ignore = {TestClass.Type.SNOWFLAKE})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestPivotTable extends ABaseTestQuery {
 

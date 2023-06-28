@@ -66,16 +66,17 @@ public class QueryExecutor {
       throw new IllegalArgumentException("Rollup is not supported by this API");
     }
 
-    QueryDto preparedQuery = prepareQuery(query, rows, columns);
-    Table result = execute(preparedQuery, new PivotTableContext(rows, columns), CacheStatsDto.builder(), user, false, limitNotifier);
+    PivotTableContext pivotTableContext = new PivotTableContext(query, rows, columns);
+    QueryDto preparedQuery = prepareQuery(query, pivotTableContext);
+    Table result = execute(preparedQuery, pivotTableContext, CacheStatsDto.builder(), user, false, limitNotifier);
     result = TableUtils.replaceTotalCellValues((ColumnarTable) result, rows, columns);
     result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
     return result;
   }
 
-  public static QueryDto prepareQuery(QueryDto query, List<String> rows, List<String> columns) {
-    Set<String> axes = new HashSet<>(rows);
-    axes.addAll(columns);
+  public static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
+    Set<String> axes = new HashSet<>(context.rows);
+    axes.addAll(context.columns);
     Set<String> select = new HashSet<>(query.columns);
     select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream().map(Field::name)).collect(Collectors.toSet()));
     axes.removeAll(select);
@@ -83,29 +84,15 @@ public class QueryExecutor {
     if (!axes.isEmpty()) {
       throw new IllegalArgumentException(axes + " on rows or columns by not in select. Please add those fields in select");
     }
-    axes = new HashSet<>(rows);
-    axes.addAll(columns);
+    axes = new HashSet<>(context.rows);
+    axes.addAll(context.columns);
     select.removeAll(axes);
     if (!select.isEmpty()) {
       throw new IllegalArgumentException(select + " in select but not on rows or columns. Please add those fields on one axis");
     }
 
-    // ColumnSet is a special type of column that does not exist in the database but only in SquashQL. Totals can't be
-    // computed. This is why it is removed from the axes.
-    ColumnSet columnSet = query.columnSets.get(BUCKET);
-    if (columnSet != null) {
-      String name = ((BucketColumnSetDto) columnSet).name;
-      if (rows.contains(name)) {
-        rows = new ArrayList<>(rows);
-        rows.remove(name);
-      }
-
-      if (columns.contains(name)) {
-        columns = new ArrayList<>(columns);
-        columns.remove(name);
-      }
-    }
-
+    List<String> rows = context.cleansedRows;
+    List<String> columns = context.cleansedColumns;
     List<List<String>> groupingSets = new ArrayList<>();
     // GT use an empty list instead of list of size 1 with an empty string because could cause issue later on with FieldSupplier
     groupingSets.add(List.of());
@@ -338,19 +325,37 @@ public class QueryExecutor {
 
   public static class PivotTableContext {
     private final List<String> rows;
+    private final List<String> cleansedRows;
     private final List<String> columns;
+    private final List<String> cleansedColumns;
 
     private List<Field> rowFields;
     private List<Field> columnFields;
 
-    public PivotTableContext(List<String> rows, List<String> columns) {
+    public PivotTableContext(QueryDto queryDto, List<String> rows, List<String> columns) {
       this.rows = rows;
+      this.cleansedRows = cleanse(queryDto, rows);
       this.columns = columns;
+      this.cleansedColumns = cleanse(queryDto, columns);
+    }
+
+    public static List<String> cleanse(QueryDto query, List<String> rows) {
+      // ColumnSet is a special type of column that does not exist in the database but only in SquashQL. Totals can't be
+      // computed. This is why it is removed from the axes.
+      ColumnSet columnSet = query.columnSets.get(BUCKET);
+      if (columnSet != null) {
+        String name = ((BucketColumnSetDto) columnSet).name;
+        if (rows.contains(name)) {
+          rows = new ArrayList<>(rows);
+          rows.remove(name);
+        }
+      }
+      return rows;
     }
 
     public void init(Function<String, Field> fieldSupplier) {
-      this.rowFields = this.rows.stream().map(fieldSupplier).toList();
-      this.columnFields = this.columns.stream().map(fieldSupplier).toList();
+      this.rowFields = this.cleansedRows.stream().map(fieldSupplier).toList();
+      this.columnFields = this.cleansedColumns.stream().map(fieldSupplier).toList();
     }
 
     public List<Field> getRowFields() {

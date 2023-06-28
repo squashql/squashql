@@ -73,8 +73,12 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
         deepCopy.groupingSets = Collections.emptyList();
         deepCopy.rollup = rollups.get(i);
 
+        boolean isNotLast = i < rollups.size() - 1;
+        if (isNotLast) {
+          deepCopy.limit = -1; // only for the last one.
+        }
         sb.append(createSqlStatement(deepCopy, null));
-        if (i < rollups.size() - 1) {
+        if (isNotLast) {
           sb.append(unionDistinct);
         }
       }
@@ -138,7 +142,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
   @Override
   protected Table postProcessDataset(Table input, DatabaseQuery query) {
-    if (query.rollup.isEmpty()) {
+    if (query.rollup.isEmpty() && query.groupingSets.isEmpty()) {
       return input;
     }
 
@@ -157,7 +161,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
           Object value = columnValues.get(rowIndex);
           if (value == null) {
             baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
-            if (isPartialRollup && missingColumnsInRollupSet.contains(h.name())) {
+            if (query.groupingSets.isEmpty() && isPartialRollup && missingColumnsInRollupSet.contains(h.name())) {
               // Partial rollup not supported https://issuetracker.google.com/issues/35905909, we let bigquery compute
               // all totals, and we remove here the extra rows.
               rowIndicesToRemove.add(rowIndex);

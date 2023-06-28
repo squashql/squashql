@@ -198,12 +198,13 @@ public class TestBigQueryEngine {
     String continent = "continent";
     String country = "country";
     String city = "city";
-    QueryDto queryDto = QueryExecutor.prepareQuery(
-            Query
-                    .from("baseStore")
-                    .select(List.of(continent, country, city, sc, ssc), List.of())
-                    .build(),
-            List.of(continent, country, city), List.of(sc, ssc));
+    QueryDto queryDto = Query
+            .from("baseStore")
+            .select(List.of(continent, country, city, sc, ssc), List.of())
+            .build();
+    queryDto = QueryExecutor.prepareQuery(
+            queryDto,
+            new QueryExecutor.PivotTableContext(queryDto, List.of(continent, country, city), List.of(sc, ssc)));
     List<List<String>> groupingSets = List.of(List.of(),
             List.of(sc),
             List.of(sc, ssc),
@@ -256,7 +257,7 @@ public class TestBigQueryEngine {
     BigQueryEngine bqe = new BigQueryEngine(datastore);
     List<String> rows = List.of("continent", "country", "city");
     List<String> columns = List.of("spending category", "spending subcategory");
-    QueryExecutor.PivotTableContext context = new QueryExecutor.PivotTableContext(rows, columns);
+    QueryExecutor.PivotTableContext context = new QueryExecutor.PivotTableContext(queryDto, rows, columns);
     context.init(this.fp);
     String sqlStatement = bqe.createSqlStatement(query, context);
 
