@@ -323,6 +323,9 @@ public class QueryExecutor {
   }
 
 
+  /**
+   * This object is temporary until BigQuery supports the grouping sets. See https://issuetracker.google.com/issues/35905909
+   */
   public static class PivotTableContext {
     private final List<String> rows;
     private final List<String> cleansedRows;
@@ -339,18 +342,18 @@ public class QueryExecutor {
       this.cleansedColumns = cleanse(queryDto, columns);
     }
 
-    public static List<String> cleanse(QueryDto query, List<String> rows) {
+    public static List<String> cleanse(QueryDto query, List<String> fields) {
       // ColumnSet is a special type of column that does not exist in the database but only in SquashQL. Totals can't be
       // computed. This is why it is removed from the axes.
       ColumnSet columnSet = query.columnSets.get(BUCKET);
       if (columnSet != null) {
         String name = ((BucketColumnSetDto) columnSet).name;
-        if (rows.contains(name)) {
-          rows = new ArrayList<>(rows);
-          rows.remove(name);
+        if (fields.contains(name)) {
+          fields = new ArrayList<>(fields);
+          fields.remove(name);
         }
       }
-      return rows;
+      return fields;
     }
 
     public void init(Function<String, Field> fieldSupplier) {
