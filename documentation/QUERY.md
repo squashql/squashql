@@ -1,5 +1,7 @@
 ## Summary
 
+The library is available here [https://www.npmjs.com/package/@squashql/squashql-js](https://www.npmjs.com/package/@squashql/squashql-js).
+
 SquashQL provides a simple interface in Typescript for building SQL-like queries specifically made for SquashQL. In each section, 
 a Typescript code snippet is shown along with a SQL query to fix ideas, but it does not mean that this will be the SQL 
 query executed because the generated SQL query depends on the underlying database and the type of computation to perform. 
