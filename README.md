@@ -41,6 +41,8 @@ and [DuckDB](https://duckdb.org/).
 
 SquashQL provides an easy-to-use Typescript library to write SQL-like queries. See the [full documentation here](documentation/QUERY.md).
 
+The library can be downloaded [here](https://www.npmjs.com/package/@squashql/squashql-js).
+
 ```typescript
 import {
     from, avg
@@ -60,7 +62,7 @@ array representing the result table of the computation.
 3. `POST /query-merge`: to execute *Drilling across* query i.e. querying two fact tables. The two results are aligned by 
 performing a sort-merge operation on the common attribute column headers. More on [Drilling across](./documentation/DRILLING-ACROSS.md).
 
-To use those endpoints, you can use the `Querier` object from squashql-js library.
+To use those endpoints, you can use the `Querier` object from [squashql-js](https://www.npmjs.com/package/@squashql/squashql-js) library.
 
 ```typescript
 import {count, sum, from, Querier, QueryMerge} from "@squashql/squashql-js"
@@ -116,7 +118,7 @@ To connect SquashQL to your database you will first have to import the associate
 java project a `QueryEngine` and `Datasatore` by picking the correct implementations. Then declare a bean that returns 
 the `QueryEngine` instance.
 
-Find a ready-to-use example with Apache Spark and Spring Boot [here](https://github.com/squashql/squashql-showcase).
+Find a ready-to-use example with DuckDB and Spring Boot [here](https://github.com/squashql/squashql-showcase).
 
 #### DuckDB
 
