@@ -3,10 +3,7 @@ package io.squashql.spring.dataset;
 import com.google.common.collect.ImmutableList;
 import io.squashql.DuckDBDatastore;
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.CountMeasure;
-import io.squashql.query.Header;
-import io.squashql.query.QueryExecutor;
-import io.squashql.query.SquashQLUser;
+import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.dto.PivotTableQueryDto;
@@ -43,7 +40,7 @@ public class DatasetTestConfig {
   public void displayPivotTable() {
     QueryExecutor queryExecutor = new QueryExecutor(queryEngine());
     QueryDto query = Query.from("our_prices")
-            .select(List.of("ean", "pdv", "scenario"), List.of(CountMeasure.INSTANCE))
+            .select(List.of("ean", "pdv", "scenario"), List.of(new AggregatedMeasure("count", "*", "count")))
             .build();
     PivotTable pt = queryExecutor.execute(new PivotTableQueryDto(query, List.of("pdv", "ean"), List.of("scenario")));
     pt.show();
