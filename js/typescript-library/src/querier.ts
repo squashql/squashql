@@ -22,15 +22,16 @@ export class Querier {
             .then(r => r.data)
   }
 
-  async execute(query: Query, pivotConfig?: PivotConfig): Promise<QueryResult | PivotTableQueryResult> {
+  async execute(query: Query, pivotConfig?: PivotConfig, beautify = false): Promise<QueryResult | PivotTableQueryResult> {
     let promise
+    const urlSuffix = beautify ? "-beautify" : ""
     if (typeof pivotConfig === 'undefined') {
       promise = this.axiosInstance
-              .post("/query", query)
+              .post(`/query${urlSuffix}`, query)
               .then(r => r.data);
     } else {
       promise = this.axiosInstance
-              .post("/query-pivot", createPivotTableQuery(query, pivotConfig));
+              .post(`/query-pivot${urlSuffix}`, createPivotTableQuery(query, pivotConfig));
     }
     return promise.then(r => r.data);
   }
@@ -38,12 +39,6 @@ export class Querier {
   async executeQueryMerge(query: QueryMerge): Promise<QueryResult> {
     return this.axiosInstance
             .post("/query-merge", query)
-            .then(r => r.data)
-  }
-
-  async execute0(query: Query): Promise<QueryResult> {
-    return this.axiosInstance
-            .post("/query-beautify", query)
             .then(r => r.data)
   }
 
