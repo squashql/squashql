@@ -8,7 +8,12 @@ public final class PivotTableUtils {
   private PivotTableUtils() {
   }
 
-  static List<List<Object>> pivot(Table table, List<String> rows, List<String> columns, List<String> values) {
+  static List<List<Object>> pivot(PivotTable pivotTable) {
+    Table table = pivotTable.table;
+    List<String> rows = pivotTable.rows;
+    List<String> columns = pivotTable.columns;
+    List<String> values = pivotTable.values;
+
     Set<ObjectArrayKey> columnHeaderValues = getHeaderValues(table, columns);
 
     List<List<Object>> headerColumns = new ArrayList<>(); // The header values for the columns

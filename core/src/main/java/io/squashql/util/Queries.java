@@ -36,8 +36,7 @@ public final class Queries {
       BucketColumnSetDto cs = (BucketColumnSetDto) bucket;
       Map<Object, List<Object>> m = new LinkedHashMap<>();
       cs.values.forEach((k, v) -> {
-        List<Object> l = new ArrayList<>();
-        l.addAll(v);
+        List<Object> l = new ArrayList<>(v);
         m.put(k, l);
       });
       res.put(cs.name, new CustomExplicitOrdering(new ArrayList<>(m.keySet())));

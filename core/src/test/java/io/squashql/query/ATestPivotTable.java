@@ -5,6 +5,7 @@ import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.dto.PivotTableQueryDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
 import io.squashql.table.*;
@@ -87,13 +88,13 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
     // NO COLUMNS
     {
-      Table result = this.executor.execute(queryWithoutRollup, List.of("continent", "country", "city"), List.of());
-      Assertions.assertThat(result).containsExactlyInAnyOrderElementsOf(resultRollup);
+      PivotTable result = this.executor.execute(new PivotTableQueryDto(queryWithoutRollup, List.of("continent", "country", "city"), List.of()));
+      Assertions.assertThat(result.table).containsExactlyInAnyOrderElementsOf(resultRollup);
     }
     // NO ROWS
     {
-      Table result = this.executor.execute(queryWithoutRollup, List.of(), List.of("continent", "country", "city"));
-      Assertions.assertThat(result).containsExactlyInAnyOrderElementsOf(resultRollup);
+      PivotTable result = this.executor.execute(new PivotTableQueryDto(queryWithoutRollup, List.of(), List.of("continent", "country", "city")));
+      Assertions.assertThat(result.table).containsExactlyInAnyOrderElementsOf(resultRollup);
     }
   }
 
@@ -111,9 +112,9 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .build();
     List<String> rows = List.of("city");
     List<String> columns = List.of("spending category");
-    Table result = this.executor.execute(query, rows, columns);
+    PivotTable result = this.executor.execute(new PivotTableQueryDto(query, rows, columns));
 
-    Assertions.assertThat(result).containsExactly(
+    Assertions.assertThat(result.table).containsExactly(
             List.of(GRAND_TOTAL, GRAND_TOTAL, 22d),
             List.of(GRAND_TOTAL, "la", 13d),
             List.of(GRAND_TOTAL, "london", 9d),
@@ -127,8 +128,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             List.of("minimum expenditure", "london", 4d)
     );
 
-    PivotTable pivotTable = new PivotTable(result, rows, columns, List.of("amount"));
-    Assertions.assertThat(pivotTable.pivotTableRows).containsExactly(
+    Assertions.assertThat(result.pivotTableRows).containsExactly(
             List.of("spending category", GRAND_TOTAL, "extra", "minimum expenditure"),
             List.of("city", "amount", "amount", "amount"),
             List.of(GRAND_TOTAL, 22d, 9d, 13d),
@@ -189,8 +189,8 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .from(this.storeName)
             .select(List.of(), List.of(bucketCS), measures)
             .build();
-    Table result = this.executor.execute(query, List.of("country"), List.of("group"));
-    Assertions.assertThat(result).containsExactly(
+    PivotTable result = this.executor.execute(new PivotTableQueryDto(query, List.of("country"), List.of("group")));
+    Assertions.assertThat(result.table).containsExactly(
             List.of("european", "uk", 0d),
             List.of("european", "france", -1d),
             List.of("anglophone", "usa", 0d),
@@ -200,8 +200,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             List.of("all", "france", -1d)
     );
 
-    PivotTable pivotTable = new PivotTable(result, List.of("country"), List.of("group"), List.of(amountComp.alias));
-    Assertions.assertThat(pivotTable.pivotTableRows).containsExactly(
+    Assertions.assertThat(result.pivotTableRows).containsExactly(
             Arrays.asList("group", "european", "anglophone", "all"),
             Arrays.asList("country", "amountComp", "amountComp", "amountComp"),
             Arrays.asList("uk", 0d, -30d, -30d),
@@ -265,7 +264,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .build();
     List<String> rows = List.of("continent", "country", "city");
     List<String> columns = List.of("spending category", "spending subcategory");
-    Assertions.assertThatThrownBy(() -> this.executor.execute(query, rows, columns))
+    Assertions.assertThatThrownBy(() -> this.executor.execute(new PivotTableQueryDto(query, rows, columns)))
             .hasMessage("Rollup is not supported by this API");
   }
 
@@ -280,13 +279,13 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     List<String> rowsWithoutContinent = List.of("country", "city");
     List<String> columns = List.of("spending category", "spending subcategory");
     // continent is missing despite the fact it is in the select
-    Assertions.assertThatThrownBy(() -> this.executor.execute(query, rowsWithoutContinent, columns))
+    Assertions.assertThatThrownBy(() -> this.executor.execute(new PivotTableQueryDto(query, rowsWithoutContinent, columns)))
             .hasMessage("[continent] in select but not on rows or columns. Please add those fields on one axis");
 
     List<String> rows = List.of("continent", "country", "city");
     List<String> columnsWithoutContinent = List.of("spending category");
     // spending subcategory is missing despite the fact it is in the select
-    Assertions.assertThatThrownBy(() -> this.executor.execute(query, rows, columnsWithoutContinent))
+    Assertions.assertThatThrownBy(() -> this.executor.execute(new PivotTableQueryDto(query, rows, columnsWithoutContinent)))
             .hasMessage("[spending subcategory] in select but not on rows or columns. Please add those fields on one axis");
   }
 
@@ -301,7 +300,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     List<String> rows = List.of("unknown", "continent", "country", "city");
     List<String> columns = List.of("spending category", "spending subcategory");
     // continent is missing despite the fact it is in the select
-    Assertions.assertThatThrownBy(() -> this.executor.execute(query, rows, columns))
+    Assertions.assertThatThrownBy(() -> this.executor.execute(new PivotTableQueryDto(query, rows, columns)))
             .hasMessage("[unknown] on rows or columns by not in select. Please add those fields in select");
   }
 
@@ -316,7 +315,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .build();
     List<String> rows = List.of("continent", "country", "city");
     List<String> columns = List.of("spending category", "spending subcategory");
-    Table expectedTable = this.executor.execute(query, rows, columns);
+    PivotTable expectedPivotTable = this.executor.execute(new PivotTableQueryDto(query, rows, columns));
 
     String base = "select continent, country, city, \"spending category\", \"spending subcategory\", count(*) as \"_contributors_count_\" from \"" + this.storeName + "\" group by";
 
@@ -334,33 +333,30 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     ColumnarTable actualColumnarTable = TestUtil.convert(actualTable, Set.of(CountMeasure.INSTANCE));
 
     actualColumnarTable = TableUtils.selectAndOrderColumns(actualColumnarTable,
-            expectedTable.headers().stream().filter(h -> !h.isMeasure()).map(Header::name).toList(),
+            expectedPivotTable.table.headers().stream().filter(h -> !h.isMeasure()).map(Header::name).toList(),
             List.of(CountMeasure.INSTANCE));
     actualColumnarTable = (ColumnarTable) TableUtils.orderRows(actualColumnarTable);
 
-    for (int rowIndex = 0; rowIndex < expectedTable.count(); rowIndex++) {
-      for (int i = 0; i < expectedTable.headers().size(); i++) {
-        Object cell = expectedTable.getColumn(i).get(rowIndex);
+    for (int rowIndex = 0; rowIndex < expectedPivotTable.table.count(); rowIndex++) {
+      for (int i = 0; i < expectedPivotTable.table.headers().size(); i++) {
+        Object cell = expectedPivotTable.table.getColumn(i).get(rowIndex);
         if (cell.equals(QueryEngine.TOTAL) || cell.equals(QueryEngine.GRAND_TOTAL)) {
-          expectedTable.getColumn(i).set(rowIndex, null);
+          expectedPivotTable.table.getColumn(i).set(rowIndex, null);
         }
       }
     }
-    expectedTable = TableUtils.orderRows((ColumnarTable) expectedTable);
-
+    Table expectedTable = TableUtils.orderRows((ColumnarTable) expectedPivotTable.table);
     Assertions.assertThat(actualColumnarTable).containsExactlyElementsOf(expectedTable);
   }
 
   private void verifyResults(TestInfo testInfo, QueryDto query, List<String> rows, List<String> columns) {
-    Table table = this.executor.execute(query, rows, columns);
+    PivotTable pt = this.executor.execute(new PivotTableQueryDto(query, rows, columns));
     Table expectedTabular = tableFromFile(testInfo);
 
-    Assertions.assertThat(table).containsExactlyElementsOf(ImmutableList.copyOf(expectedTabular.iterator()));
-    Assertions.assertThat(table.headers()).containsExactlyElementsOf(expectedTabular.headers());
+    Assertions.assertThat(pt.table).containsExactlyElementsOf(ImmutableList.copyOf(expectedTabular.iterator()));
+    Assertions.assertThat(pt.table.headers()).containsExactlyElementsOf(expectedTabular.headers());
 
-    List<String> values = query.measures.stream().map(Measure::alias).toList();
-    PivotTable pivotTable = new PivotTable(table, rows, columns, values);
     List<List<Object>> expectedPivotTable = pivotTableFromFile(testInfo);
-    Assertions.assertThat(pivotTable.pivotTableRows).containsExactlyElementsOf(expectedPivotTable);
+    Assertions.assertThat(pt.pivotTableRows).containsExactlyElementsOf(expectedPivotTable);
   }
 }

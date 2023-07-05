@@ -15,7 +15,7 @@ public class PivotTable {
     this.rows = rows;
     this.columns = columns;
     this.values = values;
-    this.pivotTableRows = PivotTableUtils.pivot(table, rows, columns, values);
+    this.pivotTableRows = PivotTableUtils.pivot(this);
   }
 
   public void show() {

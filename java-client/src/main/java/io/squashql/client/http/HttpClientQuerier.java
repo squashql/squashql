@@ -5,10 +5,7 @@ import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.Measure;
-import io.squashql.query.dto.MetadataResultDto;
-import io.squashql.query.dto.QueryDto;
-import io.squashql.query.dto.QueryMergeDto;
-import io.squashql.query.dto.QueryResultDto;
+import io.squashql.query.dto.*;
 import okhttp3.OkHttpClient;
 
 import java.util.List;
@@ -33,6 +30,11 @@ public class HttpClientQuerier {
     return target.run(query);
   }
 
+  public PivotTableQueryResultDto run(PivotTableQueryDto query) {
+    QueryApi target = builder.target(QueryApi.class, this.url);
+    return target.run(query);
+  }
+
   public QueryResultDto queryMerge(QueryMergeDto query) {
     QueryApi target = builder.target(QueryApi.class, this.url);
     return target.queryMerge(query);
@@ -52,6 +54,10 @@ public class HttpClientQuerier {
     @RequestLine("POST /query")
     @Headers("Content-Type: application/json")
     QueryResultDto run(QueryDto query);
+
+    @RequestLine("POST /query-pivot")
+    @Headers("Content-Type: application/json")
+    PivotTableQueryResultDto run(PivotTableQueryDto query);
 
     @RequestLine("POST /query-merge")
     @Headers("Content-Type: application/json")

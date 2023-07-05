@@ -30,7 +30,11 @@ public class DuckDBDataLoader implements DataLoader {
   }
 
   public void createOrReplaceTable(String tableName, List<Field> fields) {
-    createOrReplaceTable(this.datastore, tableName, fields, true);
+    createOrReplaceTable(tableName, fields, true);
+  }
+
+  public void createOrReplaceTable(String tableName, List<Field> fields, boolean cjMode) {
+    createOrReplaceTable(this.datastore, tableName, fields, cjMode);
   }
 
   public static void createOrReplaceTable(DuckDBDatastore datastore, String tableName, List<Field> fields,
@@ -66,9 +70,11 @@ public class DuckDBDataLoader implements DataLoader {
 
   private void loadWithOrWithoutScenario(String scenario, String table, Iterator<List<Object>> tuplesIterator) {
     // Check the table contains a column scenario.
-    if (scenario != null) {
+    if (scenario != null && !scenario.equals(MAIN_SCENARIO_NAME)) {
       ensureScenarioColumnIsPresent(table);
     }
+
+    boolean addScenario = scenarioColumnIsPresent(table);
     String sql = "insert into \"" + table + "\" values ";
     try (Connection conn = this.datastore.getConnection();
          Statement stmt = conn.createStatement()) {
@@ -90,7 +96,7 @@ public class DuckDBDataLoader implements DataLoader {
           sb.append(",");
         }
 
-        if (scenario != null) {
+        if (addScenario) {
           sb.append('\'').append(scenario).append('\'').append("),");
           sql += sb.toString();
         } else {
@@ -111,6 +117,11 @@ public class DuckDBDataLoader implements DataLoader {
     if (!found) {
       throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));
     }
+  }
+
+  private boolean scenarioColumnIsPresent(String store) {
+    List<Field> fields = this.datastore.storesByName().get(store).fields();
+    return fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
   }
 
   @Override

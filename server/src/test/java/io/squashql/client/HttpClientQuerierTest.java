@@ -9,6 +9,7 @@ import io.squashql.spring.dataset.DatasetTestConfig;
 import io.squashql.spring.web.rest.QueryControllerTest;
 import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
@@ -34,29 +35,29 @@ public class HttpClientQuerierTest {
     TomcatURLStreamHandlerFactory.disable();
   }
 
+  HttpClientQuerier querier;
+
   @LocalServerPort
   int port;
 
-  String url() {
-    return "http://127.0.0.1:" + this.port;
+  @BeforeEach
+  void before() {
+    this.querier = new HttpClientQuerier("http://127.0.0.1:" + this.port);
   }
 
   @Test
   void testGetMetadata() {
-    var querier = new HttpClientQuerier(url());
-    QueryControllerTest.assertMetadataResult(querier.metadata());
+    QueryControllerTest.assertMetadataResult(this.querier.metadata());
   }
 
   @Test
   void testRunQuery() {
-    var querier = new HttpClientQuerier(url());
-
     QueryDto query = new QueryDto()
             .table("our_prices")
             .withColumn(SCENARIO_FIELD_NAME)
             .withMeasure(new AggregatedMeasure("qs", "quantity", "sum"));
 
-    QueryResultDto response = querier.run(query);
+    QueryResultDto response = this.querier.run(query);
     assertQuery(response.table);
     Assertions.assertThat(response.metadata).containsExactly(
             new MetadataItem(SCENARIO_FIELD_NAME, SCENARIO_FIELD_NAME, String.class),
@@ -67,8 +68,6 @@ public class HttpClientQuerierTest {
 
   @Test
   void testMergeQuery() {
-    var querier = new HttpClientQuerier(url());
-
     QueryDto query1 = new QueryDto()
             .table("our_prices")
             .withColumn(SCENARIO_FIELD_NAME)
@@ -78,7 +77,7 @@ public class HttpClientQuerierTest {
             .withColumn(SCENARIO_FIELD_NAME)
             .withMeasure(new AggregatedMeasure(("qa"), "quantity", "avg"));
 
-    QueryResultDto response = querier.queryMerge(new QueryMergeDto(query1, query2, JoinType.FULL));
+    QueryResultDto response = this.querier.queryMerge(new QueryMergeDto(query1, query2, JoinType.FULL));
     Assertions.assertThat(response.table.rows).containsExactlyInAnyOrder(List.of("MDD up", 4000, 1000d),
             List.of("MN & MDD down", 4000, 1000d),
             List.of("MN & MDD up", 4000, 1000d),
@@ -95,8 +94,6 @@ public class HttpClientQuerierTest {
 
   @Test
   void testRunGroupingScenarioQuery() {
-    var querier = new HttpClientQuerier(url());
-
     BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", SCENARIO_FIELD_NAME)
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
@@ -117,7 +114,7 @@ public class HttpClientQuerierTest {
             .select_(List.of(bucketCS), List.of(capdvDiff, aggregatedMeasure))
             .build();
 
-    QueryResultDto response = querier.run(query);
+    QueryResultDto response = this.querier.run(query);
     SimpleTableDto table = response.table;
     double baseValue = 40_000d;
     double mnValue = 42_000d;
@@ -143,9 +140,7 @@ public class HttpClientQuerierTest {
             .select(List.of(SCENARIO_FIELD_NAME, "pdv"), List.of(Functions.sum("ps", "price")))
             .build();
 
-    var querier = new HttpClientQuerier(url());
-
-    QueryResultDto response = querier.run(query);
+    QueryResultDto response = this.querier.run(query);
     SimpleTableDto table = response.table;
     Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
             List.of(MAIN_SCENARIO_NAME, "ITM Balma", 20d),
@@ -172,9 +167,21 @@ public class HttpClientQuerierTest {
 
     List<Measure> input = Stream.of(a, b, plus).map(m -> m.withExpression(null)).toList(); // Expression should not be defined but computed and set by the server
 
-    var querier = new HttpClientQuerier(url());
-
-    List<Measure> expression = querier.expression(input);
+    List<Measure> expression = this.querier.expression(input);
     Assertions.assertThat(expression.stream().map(Measure::expression)).containsExactly("sum(a)", "sum(b)", "a + b");
+  }
+
+  @Test
+  void testPivotTable() {
+    QueryDto query = Query.from("our_prices")
+            .select(List.of("ean", "pdv"), List.of(CountMeasure.INSTANCE))
+            .build();
+    PivotTableQueryDto pivotTableQuery = new PivotTableQueryDto(query, List.of("pdv"), List.of("ean"));
+    PivotTableQueryResultDto response = this.querier.run(pivotTableQuery);
+
+    Assertions.assertThat(response.rows).containsExactlyElementsOf(pivotTableQuery.rows);
+    Assertions.assertThat(response.columns).containsExactlyElementsOf(pivotTableQuery.columns);
+    Assertions.assertThat(response.values).containsExactlyElementsOf(List.of(CountMeasure.INSTANCE.alias));
+    Assertions.assertThat(response.rows).containsExactlyElementsOf(pivotTableQuery.rows);
   }
 }

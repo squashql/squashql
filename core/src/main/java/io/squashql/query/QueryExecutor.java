@@ -11,10 +11,7 @@ import io.squashql.query.dto.*;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
-import io.squashql.table.ColumnarTable;
-import io.squashql.table.MergeTables;
-import io.squashql.table.Table;
-import io.squashql.table.TableUtils;
+import io.squashql.table.*;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
@@ -56,25 +53,26 @@ public class QueryExecutor {
     };
   }
 
-  public Table execute(QueryDto query, List<String> rows, List<String> columns) {
-    return execute(query, null, null, rows, columns);
+  public PivotTable execute(PivotTableQueryDto pivotTableQueryDto) {
+    return execute(pivotTableQueryDto, CacheStatsDto.builder(), null, null);
   }
 
-  public Table execute(QueryDto query,
-                       SquashQLUser user,
-                       IntConsumer limitNotifier,
-                       List<String> rows,
-                       List<String> columns) {
-    if (!query.rollupColumns.isEmpty()) {
+  public PivotTable execute(PivotTableQueryDto pivotTableQueryDto,
+                            CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
+                            SquashQLUser user,
+                            IntConsumer limitNotifier) {
+    if (!pivotTableQueryDto.query.rollupColumns.isEmpty()) {
       throw new IllegalArgumentException("Rollup is not supported by this API");
     }
 
-    PivotTableContext pivotTableContext = new PivotTableContext(query, rows, columns);
-    QueryDto preparedQuery = prepareQuery(query, pivotTableContext);
-    Table result = execute(preparedQuery, pivotTableContext, CacheStatsDto.builder(), user, false, limitNotifier);
-    result = TableUtils.replaceTotalCellValues((ColumnarTable) result, rows, columns);
+    PivotTableContext pivotTableContext = new PivotTableContext(pivotTableQueryDto);
+    QueryDto preparedQuery = prepareQuery(pivotTableQueryDto.query, pivotTableContext);
+    Table result = execute(preparedQuery, pivotTableContext, cacheStatsDtoBuilder, user, false, limitNotifier);
+    result = TableUtils.replaceTotalCellValues((ColumnarTable) result, pivotTableQueryDto.rows, pivotTableQueryDto.columns);
     result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
-    return result;
+
+    List<String> values = pivotTableQueryDto.query.measures.stream().map(Measure::alias).toList();
+    return new PivotTable(result, pivotTableQueryDto.rows, pivotTableQueryDto.columns, values);
   }
 
   public static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
@@ -327,22 +325,21 @@ public class QueryExecutor {
 
 
   /**
-   * This object is temporary until BigQuery supports the grouping sets. See https://issuetracker.google.com/issues/35905909
+   * This object is temporary until BigQuery supports the grouping sets. See <a href="https://issuetracker.google.com/issues/35905909">issue</a>
    */
   public static class PivotTableContext {
     private final List<String> rows;
     private final List<String> cleansedRows;
     private final List<String> columns;
     private final List<String> cleansedColumns;
-
     private List<Field> rowFields;
     private List<Field> columnFields;
 
-    public PivotTableContext(QueryDto queryDto, List<String> rows, List<String> columns) {
-      this.rows = rows;
-      this.cleansedRows = cleanse(queryDto, rows);
-      this.columns = columns;
-      this.cleansedColumns = cleanse(queryDto, columns);
+    public PivotTableContext(PivotTableQueryDto pivotTableQueryDto) {
+      this.rows = pivotTableQueryDto.rows;
+      this.cleansedRows = cleanse(pivotTableQueryDto.query, pivotTableQueryDto.rows);
+      this.columns = pivotTableQueryDto.columns;
+      this.cleansedColumns = cleanse(pivotTableQueryDto.query, pivotTableQueryDto.columns);
     }
 
     public static List<String> cleanse(QueryDto query, List<String> fields) {
