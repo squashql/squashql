@@ -4,8 +4,8 @@ import java.util.List;
 
 public class PivotTable {
 
-  public final List<List<Object>> pivotTableRows;
   public final Table table;
+  public final List<List<Object>> pivotTableCells;
   public final List<String> rows;
   public final List<String> columns;
   public final List<String> values;
@@ -15,7 +15,7 @@ public class PivotTable {
     this.rows = rows;
     this.columns = columns;
     this.values = values;
-    this.pivotTableRows = PivotTableUtils.pivot(this);
+    this.pivotTableCells = PivotTableUtils.pivot(this);
   }
 
   public void show() {
@@ -24,6 +24,6 @@ public class PivotTable {
 
   @Override
   public String toString() {
-    return TableUtils.toString(this.pivotTableRows, String::valueOf, line -> line.equals(this.columns.size()));
+    return TableUtils.toString(this.pivotTableCells, String::valueOf, line -> line.equals(this.columns.size()));
   }
 }

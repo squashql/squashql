@@ -128,7 +128,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             List.of("minimum expenditure", "london", 4d)
     );
 
-    Assertions.assertThat(result.pivotTableRows).containsExactly(
+    Assertions.assertThat(result.pivotTableCells).containsExactly(
             List.of("spending category", GRAND_TOTAL, "extra", "minimum expenditure"),
             List.of("city", "amount", "amount", "amount"),
             List.of(GRAND_TOTAL, 22d, 9d, 13d),
@@ -200,7 +200,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             List.of("all", "france", -1d)
     );
 
-    Assertions.assertThat(result.pivotTableRows).containsExactly(
+    Assertions.assertThat(result.pivotTableCells).containsExactly(
             Arrays.asList("group", "european", "anglophone", "all"),
             Arrays.asList("country", "amountComp", "amountComp", "amountComp"),
             Arrays.asList("uk", 0d, -30d, -30d),
@@ -357,6 +357,6 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     Assertions.assertThat(pt.table.headers()).containsExactlyElementsOf(expectedTabular.headers());
 
     List<List<Object>> expectedPivotTable = pivotTableFromFile(testInfo);
-    Assertions.assertThat(pt.pivotTableRows).containsExactlyElementsOf(expectedPivotTable);
+    Assertions.assertThat(pt.pivotTableCells).containsExactlyElementsOf(expectedPivotTable);
   }
 }

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
@@ -182,6 +183,17 @@ public class HttpClientQuerierTest {
     Assertions.assertThat(response.rows).containsExactlyElementsOf(pivotTableQuery.rows);
     Assertions.assertThat(response.columns).containsExactlyElementsOf(pivotTableQuery.columns);
     Assertions.assertThat(response.values).containsExactlyElementsOf(List.of(CountMeasure.INSTANCE.alias));
-    Assertions.assertThat(response.rows).containsExactlyElementsOf(pivotTableQuery.rows);
+    Assertions.assertThat(response.queryResult.table.rows)
+            .containsExactly(
+                    List.of(GRAND_TOTAL, GRAND_TOTAL, 20),
+                    List.of(GRAND_TOTAL, "ITM Balma", 10),
+                    List.of(GRAND_TOTAL, "ITM Toulouse and Drive", 10),
+                    List.of("ITMella 250g", GRAND_TOTAL, 10),
+                    List.of("ITMella 250g", "ITM Balma", 5),
+                    List.of("ITMella 250g", "ITM Toulouse and Drive", 5),
+
+                    List.of("Nutella 250g", GRAND_TOTAL, 10),
+                    List.of("Nutella 250g", "ITM Balma", 5),
+                    List.of("Nutella 250g", "ITM Toulouse and Drive", 5));
   }
 }
