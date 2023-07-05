@@ -22,16 +22,13 @@ export class Querier {
             .then(r => r.data)
   }
 
-  async execute(query: Query, pivotConfig?: PivotConfig, beautify = false): Promise<QueryResult | PivotTableQueryResult> {
+  async execute(query: Query, pivotConfig?: PivotConfig, stringify = false): Promise<QueryResult | PivotTableQueryResult | string> {
     let promise
-    const urlSuffix = beautify ? "-beautify" : ""
+    const urlSuffix = stringify ? "-stringify" : ""
     if (typeof pivotConfig === 'undefined') {
-      promise = this.axiosInstance
-              .post(`/query${urlSuffix}`, query)
-              .then(r => r.data);
+      promise = this.axiosInstance.post(`/query${urlSuffix}`, query)
     } else {
-      promise = this.axiosInstance
-              .post(`/query-pivot${urlSuffix}`, createPivotTableQuery(query, pivotConfig));
+      promise = this.axiosInstance.post(`/query-pivot${urlSuffix}`, createPivotTableQuery(query, pivotConfig));
     }
     return promise.then(r => r.data);
   }

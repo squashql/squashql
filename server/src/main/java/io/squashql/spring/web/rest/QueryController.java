@@ -28,8 +28,8 @@ public class QueryController {
   public static final String MAPPING_QUERY_MERGE = "/query-merge";
   public static final String MAPPING_QUERY_PIVOT = "/query-pivot";
   public static final String MAPPING_QUERY_RAW = "/query-raw";
-  public static final String MAPPING_QUERY_BEAUTIFY = "/query-beautify";
-  public static final String MAPPING_QUERY_PIVOT_BEAUTIFY = "/query-pivot-beautify";
+  public static final String MAPPING_QUERY_STRINGIFY = "/query-stringify";
+  public static final String MAPPING_QUERY_PIVOT_STRINGIFY = "/query-pivot-stringify";
   public static final String MAPPING_METADATA = "/metadata";
   public static final String MAPPING_EXPRESSION = "/expression";
   protected final QueryEngine<?> queryEngine;
@@ -103,14 +103,14 @@ public class QueryController {
     return ResponseEntity.ok(result);
   }
 
-  @PostMapping(MAPPING_QUERY_BEAUTIFY)
-  public ResponseEntity<String> executeBeautify(@RequestBody QueryDto query) {
+  @PostMapping(MAPPING_QUERY_STRINGIFY)
+  public ResponseEntity<String> executeStringify(@RequestBody QueryDto query) {
     Table table = this.queryExecutor.execute(query);
     return ResponseEntity.ok(table.toString());
   }
 
-  @PostMapping(MAPPING_QUERY_PIVOT_BEAUTIFY)
-  public ResponseEntity<String> executePivotBeautify(@RequestBody PivotTableQueryDto query) {
+  @PostMapping(MAPPING_QUERY_PIVOT_STRINGIFY)
+  public ResponseEntity<String> executePivotStringify(@RequestBody PivotTableQueryDto query) {
     PivotTable table = this.queryExecutor.execute(query);
     return ResponseEntity.ok(table.toString());
   }
