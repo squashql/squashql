@@ -29,6 +29,7 @@ public class QueryController {
   public static final String MAPPING_QUERY_PIVOT = "/query-pivot";
   public static final String MAPPING_QUERY_RAW = "/query-raw";
   public static final String MAPPING_QUERY_BEAUTIFY = "/query-beautify";
+  public static final String MAPPING_QUERY_PIVOT_BEAUTIFY = "/query-pivot-beautify";
   public static final String MAPPING_METADATA = "/metadata";
   public static final String MAPPING_EXPRESSION = "/expression";
   protected final QueryEngine<?> queryEngine;
@@ -105,6 +106,12 @@ public class QueryController {
   @PostMapping(MAPPING_QUERY_BEAUTIFY)
   public ResponseEntity<String> executeBeautify(@RequestBody QueryDto query) {
     Table table = this.queryExecutor.execute(query);
+    return ResponseEntity.ok(table.toString());
+  }
+
+  @PostMapping(MAPPING_QUERY_PIVOT_BEAUTIFY)
+  public ResponseEntity<String> executePivotBeautify(@RequestBody PivotTableQueryDto query) {
+    PivotTable table = this.queryExecutor.execute(query);
     return ResponseEntity.ok(table.toString());
   }
 
