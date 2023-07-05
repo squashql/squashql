@@ -54,42 +54,12 @@ const q = from("Orders")
 ```
 
 SquashQL comes with a [Spring Controller](./server/src/main/java/io/squashql/spring/web/rest/QueryController.java) to expose 
-http endpoints.
+http endpoints for metadata discovery and query execution. 
 
-1. `GET  /metadata`: it returns the list of tables and fields available
-2. `POST /query`: to execute a query. It accepts a json object built with the Typescript library and returns a two-dimensional
-array representing the result table of the computation. 
-3. `POST /query-merge`: to execute *Drilling across* query i.e. querying two fact tables. The two results are aligned by 
-performing a sort-merge operation on the common attribute column headers. More on [Drilling across](./documentation/DRILLING-ACROSS.md).
+To use those endpoints, you can use the `Querier` object from [squashql-js](https://www.npmjs.com/package/@squashql/squashql-js) Typescript library.
 
-To use those endpoints, you can use the `Querier` object from [squashql-js](https://www.npmjs.com/package/@squashql/squashql-js) library.
-
-```typescript
-import {count, sum, from, Querier, QueryMerge} from "@squashql/squashql-js"
-
-const serverUrl = "http://localhost:8080";
-const querier = new Querier(serverUrl)
-
-// Calling GET  /metadata
-querier.getMetadata().then(response => console.log(response))
-
-const myFirstQuery = from("myTable")
-        .select(["col1"], [], [count])
-        .build()
-
-// POST /query with myFirstQuery as payload
-querier.execute(myFirstQuery).then(response => console.log(response))
-
-// POST /query-merge
-const mySecondQuery = from("otherTable")
-        .select(["col1", "col2"], [], [sum("alias", "field")])
-        .build()
-querier.executeQueryMerge(new QueryMerge(myFirstQuery, mySecondQuery)).then(response => console.log(response))
-```
-
-The object `Querier` uses [Axios](https://axios-http.com/) under the hood as HTTP
-Client. [Additional configuration](https://axios-http.com/docs/req_config) can be
-provided like this:
+The object `Querier` uses [Axios](https://axios-http.com/) under the hood as HTTP Client. 
+[Optional configuration](https://axios-http.com/docs/req_config) can be provided like this:
 
 ```typescript
 const axiosConfig = {
@@ -98,6 +68,134 @@ const axiosConfig = {
 const serverUrl = "http://localhost:8080";
 const querier = new Querier(serverUrl, axiosConfig)
 ```
+
+### Metadata
+`querier.getMetadata()`: to return the list of tables and fields available
+
+```json
+{
+  "stores": [{
+    "name": "budget",
+    "fields": [{
+      "name": "Income / Expenditure",
+      "expression": "Income / Expenditure",
+      "type": "java.lang.String"
+    },
+      {
+        "name": "Category",
+        "expression": "Category",
+        "type": "java.lang.String"
+      }
+      ...
+    ],
+    ...
+  }],
+  "aggregationFunctions": ["ANY_VALUE", "AVG", "CORR", "COUNT", "COVAR_POP", "MAX", "MEDIAN", "MIN", "MODE", "STDDEV_POP", "STDDEV_SAMP", "SUM", "VAR_POP", "VAR_SAMP"],
+  "measures": []
+}
+```
+
+### QUERY
+
+#### Regular query
+
+To execute a query. It accepts a json object built with the Typescript library and returns a JSON
+object representing the result table of the computation. The object returns is of type [QueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts#L53)
+
+```typescript
+const income = sumIf("Income", "Amount", criterion("Income / Expenditure", eq("Income")))
+const expenditure = sumIf("Expenditure", "Amount", criterion("Income / Expenditure", neq("Income")))
+const query = from("budget")
+        .where(criterion("Scenario", eq("b")))
+        .select(["Year", "Month", "Category"], [], [income, expenditure])
+        .build()
+querier.execute(query).then(r => console.log(JSON.stringify(r)));
+```
+ 
+The `execute` method accepts two other arguments:
+- `PivotConfig` (detailed [below](#pivot-table-query))
+- `stringify` default value is false. If true, it returns the result as a string instead of a JSON object that can be printed 
+to display the result table:
+
+```typescript
+querier.execute(query, undefined, true).then(r => console.log(r));
+```
+
+```
++------+-------+---------------------------------+--------+--------------------+
+| Year | Month |                        Category | Income |        Expenditure |
++------+-------+---------------------------------+--------+--------------------+
+| 2022 |     1 |            Cigarettes & Alcohol |    NaN | 54.870000000000005 |
+| 2022 |     1 |                  Current Income | 1930.0 |                NaN |
+| 2022 |     1 | Media & Clothes & Food Delivery |    NaN |             118.75 |
+| 2022 |     1 |             Minimum expenditure |    NaN |            1383.87 |
+....
+```
+
+#### Pivot table query
+
+To execute a query whose result will be enriched with totals and subtotals to be able to display the result as a pivot table.
+It accepts a json object built with the Typescript library and returns a JSON object representing the result table of the computation. 
+The object returns is of type [PivotTableQueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts#L59).
+
+To enable the pivot table feature, a `PivotConfig` parameter needs to be pass to the `execute` method: 
+```typescript
+const pivotConfig: PivotConfig = {
+  rows: ["Category"],
+  columns: ["Year", "Month"]
+}
+```
+It is used by SquashQL to know which totals and subtotals needs to be computed. The union of the two lists rows and columns
+must be exactly equal to the list of columns provided in the select.  
+
+```typescript
+const income = sumIf("Income", "Amount", criterion("Income / Expenditure", eq("Income")))
+const expenditure = sumIf("Expenditure", "Amount", criterion("Income / Expenditure", neq("Income")))
+const query = from("budget")
+        .where(criterion("Scenario", eq("b")))
+        .select(["Year", "Month", "Category"], [], [income, expenditure])
+        .build()
+querier.execute(query, pivotConfig).then(r => console.log(JSON.stringify(r)));
+```
+
+With `stringify = true`
+```typescript
+querier.execute(query, pivotConfig, true).then(r => console.log(r));
+```
+
+```
++---------------------------------+-------------+--------------------+--------+--------------------+--------+--------------------+--------+ ...
+|                            Year | Grand Total |        Grand Total |   2022 |               2022 |   2022 |               2022 |   2022 | ...
+|                           Month | Grand Total |        Grand Total |  Total |              Total |      1 |                  1 |      2 | ...
+|                        Category |      Income |        Expenditure | Income |        Expenditure | Income |        Expenditure | Income | ...
++---------------------------------+-------------+--------------------+--------+--------------------+--------+--------------------+--------+ ...
+|                     Grand Total |     11820.0 | 11543.240000000005 | 5790.0 |  5599.740000000005 | 1930.0 | 1823.0399999999997 | 1930.0 | ...
+|            Cigarettes & Alcohol |         NaN | 335.82000000000005 |    NaN | 161.82000000000002 |    NaN | 54.870000000000005 |    NaN | ...
+|                  Current Income |     11820.0 |                NaN | 5790.0 |                NaN | 1930.0 |                NaN | 1930.0 | ...
+| Media & Clothes & Food Delivery |         NaN |             813.91 |    NaN | 393.90999999999997 |    NaN |             118.75 |    NaN | ...
+|             Minimum expenditure |         NaN |  8573.500000000002 |    NaN |  4159.000000000002 |    NaN |            1383.87 |    NaN | ...
+|                Outing Lifestyle |         NaN |             1057.7 |    NaN |              509.7 |    NaN |             141.38 |    NaN | ...
+|             Sport & Game & misc |         NaN |             762.31 |    NaN |             375.31 |    NaN | 124.17000000000002 |    NaN | ...
++---------------------------------+-------------+--------------------+--------+--------------------+--------+--------------------+--------+ ...
+```
+
+#### Drilling across query
+
+To execute *Drilling across* query i.e. querying two fact tables. The two results are aligned by
+performing a sort-merge operation on the common attribute column headers. 
+The object returns is of type [QueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts#L53).
+
+```typescript
+const myFirstQuery = from("myTable")
+        .select(["col1"], [], [count])
+        .build()
+const mySecondQuery = from("otherTable")
+        .select(["col1", "col2"], [], [sum("alias", "field")])
+        .build()
+querier.executeQueryMerge(new QueryMerge(myFirstQuery, mySecondQuery)).then(response => console.log(response))
+```
+
+Full documentation of [Drilling across in the dedicated page](./documentation/DRILLING-ACROSS.md).
 
 ### Under the hood
 

@@ -27,7 +27,6 @@ public class QueryController {
   public static final String MAPPING_QUERY = "/query";
   public static final String MAPPING_QUERY_MERGE = "/query-merge";
   public static final String MAPPING_QUERY_PIVOT = "/query-pivot";
-  public static final String MAPPING_QUERY_RAW = "/query-raw";
   public static final String MAPPING_QUERY_STRINGIFY = "/query-stringify";
   public static final String MAPPING_QUERY_PIVOT_STRINGIFY = "/query-pivot-stringify";
   public static final String MAPPING_METADATA = "/metadata";
@@ -113,19 +112,6 @@ public class QueryController {
   public ResponseEntity<String> executePivotStringify(@RequestBody PivotTableQueryDto query) {
     PivotTable table = this.queryExecutor.execute(query);
     return ResponseEntity.ok(table.toString());
-  }
-
-  @PostMapping(MAPPING_QUERY_RAW)
-  public ResponseEntity<QueryResultDto> executeRaw(@RequestBody String sql) {
-    Table table = this.queryExecutor.execute(sql);
-    SimpleTableDto simpleTable = SimpleTableDto.builder()
-            .rows(ImmutableList.copyOf(table.iterator()))
-            .columns(table.headers().stream().map(Header::name).collect(Collectors.toList()))
-            .build();
-    QueryResultDto result = QueryResultDto.builder()
-            .table(simpleTable)
-            .build();
-    return ResponseEntity.ok(result);
   }
 
   @GetMapping(MAPPING_METADATA)
