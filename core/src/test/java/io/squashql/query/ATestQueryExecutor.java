@@ -554,7 +554,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
                     decimal))
             .build();
     Table result = this.executor.execute(query);
-    Assertions.assertThat(result).containsExactly(List.of(4650d, 4650d, 9900l, 9900d, 100l, 100d));
+    Assertions.assertThat(result).containsExactly(List.of(4650d, 4650d, 9900l, 9900d, 100, 100d));
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly("a1", "a2", "b1", "b2", "constant(100)", "constant(100.0)");
   }

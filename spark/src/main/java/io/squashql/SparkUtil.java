@@ -1,10 +1,12 @@
 package io.squashql;
 
 import io.squashql.store.Field;
+import io.squashql.util.Types;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -32,6 +34,9 @@ public final class SparkUtil {
     } else if (type.equals(DataTypes.DateType)) {
       klass = LocalDate.class;
     } else {
+      if (type.sql().contains("DECIMAL")) {
+        return BigDecimal.class;
+      }
       throw new IllegalArgumentException("Unsupported field type " + type);
     }
     return klass;
@@ -60,6 +65,15 @@ public final class SparkUtil {
     }
     return type;
   }
+
+  public static Object getTypeValue(Object o) {
+    if (o instanceof BigDecimal bd) {
+      return Types.castToDouble(bd);
+    } else {
+      return o;
+    }
+  }
+
 
   public static StructType createSchema(List<Field> fields) {
     StructType schema = new StructType();
