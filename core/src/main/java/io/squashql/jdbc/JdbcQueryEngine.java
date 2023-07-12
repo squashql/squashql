@@ -1,9 +1,9 @@
 package io.squashql.jdbc;
 
-import io.squashql.query.ColumnarTable;
+import io.squashql.table.ColumnarTable;
 import io.squashql.query.Header;
-import io.squashql.query.RowTable;
-import io.squashql.query.Table;
+import io.squashql.table.RowTable;
+import io.squashql.table.Table;
 import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryRewriter;

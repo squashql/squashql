@@ -1,17 +1,17 @@
 package io.squashql.query;
 
 import io.squashql.PrefetchVisitor;
+import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.QueryCache.SubQueryScope;
 import io.squashql.query.QueryCache.TableScope;
-import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
-import io.squashql.query.monitoring.QueryWatch;
+import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
-import io.squashql.table.MergeTables;
+import io.squashql.table.*;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
@@ -29,12 +29,12 @@ import static io.squashql.query.ColumnSetKey.BUCKET;
 @Slf4j
 public class QueryExecutor {
 
-  public static final int LIMIT_DEFAULT_VALUE = Integer.parseInt(System.getProperty("query.limit", Integer.toString(10_000)));
+  public static final int LIMIT_DEFAULT_VALUE = Integer.parseInt(System.getProperty("squashql.query.limit", Integer.toString(10_000)));
   public final QueryEngine<?> queryEngine;
   public final QueryCache queryCache;
 
   public QueryExecutor(QueryEngine<?> queryEngine) {
-    this(queryEngine, new GlobalCache(() -> new CaffeineQueryCache()));
+    this(queryEngine, new GlobalCache(CaffeineQueryCache::new));
   }
 
   public QueryExecutor(QueryEngine<?> queryEngine, QueryCache cache) {
@@ -53,6 +53,74 @@ public class QueryExecutor {
     };
   }
 
+  public PivotTable execute(PivotTableQueryDto pivotTableQueryDto) {
+    return execute(pivotTableQueryDto, CacheStatsDto.builder(), null, null);
+  }
+
+  public PivotTable execute(PivotTableQueryDto pivotTableQueryDto,
+                            CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
+                            SquashQLUser user,
+                            IntConsumer limitNotifier) {
+    if (!pivotTableQueryDto.query.rollupColumns.isEmpty()) {
+      throw new IllegalArgumentException("Rollup is not supported by this API");
+    }
+
+    PivotTableContext pivotTableContext = new PivotTableContext(pivotTableQueryDto);
+    QueryDto preparedQuery = prepareQuery(pivotTableQueryDto.query, pivotTableContext);
+    Table result = execute(preparedQuery, pivotTableContext, cacheStatsDtoBuilder, user, false, limitNotifier);
+    result = TableUtils.replaceTotalCellValues((ColumnarTable) result, pivotTableQueryDto.rows, pivotTableQueryDto.columns);
+    result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
+
+    List<String> values = pivotTableQueryDto.query.measures.stream().map(Measure::alias).toList();
+    return new PivotTable(result, pivotTableQueryDto.rows, pivotTableQueryDto.columns, values);
+  }
+
+  public static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
+    Set<String> axes = new HashSet<>(context.rows);
+    axes.addAll(context.columns);
+    Set<String> select = new HashSet<>(query.columns);
+    select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream().map(Field::name)).collect(Collectors.toSet()));
+    axes.removeAll(select);
+
+    if (!axes.isEmpty()) {
+      throw new IllegalArgumentException(axes + " on rows or columns by not in select. Please add those fields in select");
+    }
+    axes = new HashSet<>(context.rows);
+    axes.addAll(context.columns);
+    select.removeAll(axes);
+    if (!select.isEmpty()) {
+      throw new IllegalArgumentException(select + " in select but not on rows or columns. Please add those fields on one axis");
+    }
+
+    List<String> rows = context.cleansedRows;
+    List<String> columns = context.cleansedColumns;
+    List<List<String>> groupingSets = new ArrayList<>();
+    // GT use an empty list instead of list of size 1 with an empty string because could cause issue later on with FieldSupplier
+    groupingSets.add(List.of());
+    // Rows
+    for (int i = rows.size(); i >= 1; i--) {
+      groupingSets.add(rows.subList(0, i));
+    }
+
+    // Cols
+    for (int i = columns.size(); i >= 1; i--) {
+      groupingSets.add(columns.subList(0, i));
+    }
+
+    // all combinations
+    for (int i = rows.size(); i >= 1; i--) {
+      for (int j = columns.size(); j >= 1; j--) {
+        List<String> all = new ArrayList<>(rows.subList(0, i));
+        all.addAll(columns.subList(0, j));
+        groupingSets.add(all);
+      }
+    }
+
+    QueryDto deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), QueryDto.class);
+    deepCopy.groupingSets = groupingSets;
+    return deepCopy;
+  }
+
   public Table execute(String rawSqlQuery) {
     return this.queryEngine.executeRawSql(rawSqlQuery);
   }
@@ -60,7 +128,7 @@ public class QueryExecutor {
   public Table execute(QueryDto query) {
     return execute(
             query,
-            new QueryWatch(),
+            null,
             CacheStatsDto.builder(),
             null,
             true,
@@ -68,21 +136,17 @@ public class QueryExecutor {
   }
 
   public Table execute(QueryDto query,
-                       QueryWatch queryWatch,
+                       PivotTableContext pivotTableContext,
                        CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
                        SquashQLUser user,
                        boolean replaceTotalCellsAndOrderRows,
                        IntConsumer limitNotifier) {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
-    queryWatch.start(QueryWatch.GLOBAL);
-    queryWatch.start(QueryWatch.PREPARE_PLAN);
 
-    queryWatch.start(QueryWatch.PREPARE_RESOLVE_MEASURES);
-    resolveMeasures(query);
-    queryWatch.stop(QueryWatch.PREPARE_RESOLVE_MEASURES);
-
-    queryWatch.start(QueryWatch.EXECUTE_PREFETCH_PLAN);
     Function<String, Field> fieldSupplier = createQueryFieldSupplier(this.queryEngine, query.virtualTableDto);
+    if (pivotTableContext != null) {
+      pivotTableContext.init(fieldSupplier);
+    }
     QueryScope queryScope = createQueryScope(query, fieldSupplier);
     Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> dependencyGraph = computeDependencyGraph(query, queryScope, fieldSupplier);
     // Compute what needs to be prefetched
@@ -95,9 +159,7 @@ public class QueryExecutor {
       measuresByQueryScope.computeIfAbsent(scope, k -> new HashSet<>()).add(node.measure);
     });
     prefetchingPlan.execute(null);
-    queryWatch.stop(QueryWatch.EXECUTE_PREFETCH_PLAN);
 
-    queryWatch.start(QueryWatch.PREFETCH);
     Map<QueryScope, Table> tableByScope = new HashMap<>();
     for (QueryScope scope : prefetchQueryByQueryScope.keySet()) {
       DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
@@ -121,7 +183,7 @@ public class QueryExecutor {
       if (!notCached.isEmpty()) {
         notCached.add(CountMeasure.INSTANCE); // Always add count
         notCached.forEach(prefetchQuery::withMeasure);
-        result = this.queryEngine.execute(prefetchQuery);
+        result = this.queryEngine.execute(prefetchQuery, pivotTableContext);
       } else {
         // Create an empty result that will be populated by the query cache
         result = queryCache.createRawResult(prefetchQueryScope);
@@ -132,30 +194,21 @@ public class QueryExecutor {
 
       tableByScope.put(scope, result);
     }
-    queryWatch.stop(QueryWatch.PREFETCH);
 
-    queryWatch.start(QueryWatch.BUCKET);
     if (query.columnSets.containsKey(BUCKET)) {
       // Apply this as it modifies the "shape" of the result
       BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(BUCKET);
       // Reshape all results
       tableByScope.replaceAll((scope, table) -> BucketerExecutor.bucket(table, columnSet));
     }
-    queryWatch.stop(QueryWatch.BUCKET);
-
-    queryWatch.start(QueryWatch.EXECUTE_EVALUATION_PLAN);
 
     // Here we take the global plan and execute the plans for a given scope one by one, in dependency order. The order
     // is given by the graph itself.
     ExecutionPlan<QueryScope, Void> globalPlan = new ExecutionPlan<>(dependencyGraph.getTwo(), (scope, context) -> {
       ExecutionPlan<QueryPlanNodeKey, ExecutionContext> scopedPlan = new ExecutionPlan<>(dependencyGraph.getOne(), new Evaluator(fieldSupplier));
-      scopedPlan.execute(new ExecutionContext(tableByScope.get(scope), scope, tableByScope, query, queryLimit, queryWatch));
+      scopedPlan.execute(new ExecutionContext(tableByScope.get(scope), scope, tableByScope, query, queryLimit));
     });
     globalPlan.execute(null);
-
-    queryWatch.stop(QueryWatch.EXECUTE_EVALUATION_PLAN);
-
-    queryWatch.start(QueryWatch.ORDER);
 
     Table result = tableByScope.get(queryScope);
 
@@ -168,9 +221,6 @@ public class QueryExecutor {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result, !query.rollupColumns.isEmpty());
       result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
     }
-
-    queryWatch.stop(QueryWatch.ORDER);
-    queryWatch.stop(QueryWatch.GLOBAL);
 
     CacheStatsDto stats = this.queryCache.stats(user);
     cacheStatsDtoBuilder
@@ -217,7 +267,15 @@ public class QueryExecutor {
             query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
             query.columns.stream()).map(fieldSupplier).collect(Collectors.toCollection(ArrayList::new));
     List<Field> rollupColumns = query.rollupColumns.stream().map(fieldSupplier).toList();
-    return new QueryScope(query.table, query.subQuery, columns, query.whereCriteriaDto, query.havingCriteriaDto, rollupColumns, query.virtualTableDto);
+    List<List<Field>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(fieldSupplier).toList()).toList();
+    return new QueryScope(query.table,
+            query.subQuery,
+            columns,
+            query.whereCriteriaDto,
+            query.havingCriteriaDto,
+            rollupColumns,
+            groupingSets,
+            query.virtualTableDto);
   }
 
   private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(
@@ -231,6 +289,7 @@ public class QueryExecutor {
               queryScope.whereCriteriaDto,
               queryScope.havingCriteriaDto,
               queryScope.rollupColumns,
+              queryScope.groupingSets,
               queryScope.virtualTableDto,
               user,
               prefetchQuery.limit);
@@ -250,6 +309,7 @@ public class QueryExecutor {
                            CriteriaDto whereCriteriaDto,
                            CriteriaDto havingCriteriaDto,
                            List<Field> rollupColumns,
+                           List<List<Field>> groupingSets,
                            VirtualTableDto virtualTableDto) {
   }
 
@@ -260,12 +320,54 @@ public class QueryExecutor {
                                  QueryScope queryScope,
                                  Map<QueryScope, Table> tableByScope,
                                  QueryDto query,
-                                 int queryLimit,
-                                 QueryWatch queryWatch) {
+                                 int queryLimit) {
   }
 
-  protected static void resolveMeasures(QueryDto queryDto) {
-    // Deactivate for now.
+
+  /**
+   * This object is temporary until BigQuery supports the grouping sets. See <a href="https://issuetracker.google.com/issues/35905909">issue</a>
+   */
+  public static class PivotTableContext {
+    private final List<String> rows;
+    private final List<String> cleansedRows;
+    private final List<String> columns;
+    private final List<String> cleansedColumns;
+    private List<Field> rowFields;
+    private List<Field> columnFields;
+
+    public PivotTableContext(PivotTableQueryDto pivotTableQueryDto) {
+      this.rows = pivotTableQueryDto.rows;
+      this.cleansedRows = cleanse(pivotTableQueryDto.query, pivotTableQueryDto.rows);
+      this.columns = pivotTableQueryDto.columns;
+      this.cleansedColumns = cleanse(pivotTableQueryDto.query, pivotTableQueryDto.columns);
+    }
+
+    public static List<String> cleanse(QueryDto query, List<String> fields) {
+      // ColumnSet is a special type of column that does not exist in the database but only in SquashQL. Totals can't be
+      // computed. This is why it is removed from the axes.
+      ColumnSet columnSet = query.columnSets.get(BUCKET);
+      if (columnSet != null) {
+        String name = ((BucketColumnSetDto) columnSet).name;
+        if (fields.contains(name)) {
+          fields = new ArrayList<>(fields);
+          fields.remove(name);
+        }
+      }
+      return fields;
+    }
+
+    public void init(Function<String, Field> fieldSupplier) {
+      this.rowFields = this.cleansedRows.stream().map(fieldSupplier).toList();
+      this.columnFields = this.cleansedColumns.stream().map(fieldSupplier).toList();
+    }
+
+    public List<Field> getRowFields() {
+      return this.rowFields;
+    }
+
+    public List<Field> getColumnFields() {
+      return this.columnFields;
+    }
   }
 
   public Table execute(QueryDto first, QueryDto second, JoinType joinType, SquashQLUser user) {
@@ -278,7 +380,7 @@ public class QueryExecutor {
 
     Function<QueryDto, Table> execute = q -> execute(
             q,
-            new QueryWatch(),
+            null,
             CacheStatsDto.builder(),
             user,
             false,

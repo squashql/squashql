@@ -1,10 +1,10 @@
 package io.squashql.query.database;
 
 import io.squashql.SparkDatastore;
-import io.squashql.query.ColumnarTable;
+import io.squashql.table.ColumnarTable;
 import io.squashql.query.Header;
-import io.squashql.query.RowTable;
-import io.squashql.query.Table;
+import io.squashql.table.RowTable;
+import io.squashql.table.Table;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.eclipse.collections.api.tuple.Pair;

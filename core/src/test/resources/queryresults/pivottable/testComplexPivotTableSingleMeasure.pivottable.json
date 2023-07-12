@@ -1,0 +1,11 @@
+[
+  ["spending category", "spending category", "Grand Total", "extra", "extra", "minimum expenditure", "minimum expenditure", "minimum expenditure"],
+  ["spending subcategory", "spending subcategory", "Grand Total", "Total", "hobbies", "Total", "car", "housing"],
+  ["country", "city", "amount", "amount", "amount", "amount", "amount", "amount"],
+  ["Grand Total", "Grand Total", 17.0, 7.0, 7.0, 10.0, 4.0, 6.0],
+  ["france", "Total", 8.0, 2.0, 2.0, 6.0, 2.0, 4.0],
+  ["france", "lyon", 4.0, 1.0, 1.0, 3.0, 1.0, 2.0],
+  ["france", "paris", 4.0, 1.0, 1.0, 3.0, 1.0, 2.0],
+  ["uk", "Total", 9.0, 5.0, 5.0, 4.0, 2.0, 2.0],
+  ["uk", "london", 9.0, 5.0, 5.0, 4.0, 2.0, 2.0]
+]

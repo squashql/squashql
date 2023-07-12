@@ -5,6 +5,7 @@ import io.squashql.query.builder.Query;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
+import io.squashql.table.Table;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -229,6 +230,37 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             List.of("C", MAIN_SCENARIO_NAME, 3l),
             List.of("C", "s2", 3l),
             List.of("C", "s1", 3l));
+  }
+
+  @Test
+  void testOrderIsPreservedAndNaturallyOrderOnOtherColumns() {
+    // The following order should be respected even if columns are ordered by default.
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, SCENARIO_FIELD_NAME)
+            .withNewBucket("B", List.of("s1", MAIN_SCENARIO_NAME))
+            .withNewBucket("A", List.of("s2", MAIN_SCENARIO_NAME));
+
+    // Add category in the query. The table should be ordered first according the implicit order of the buckets and then
+    // by category.
+    var query = Query
+            .from(this.storeName)
+            .select(List.of("category"), List.of(bucketCS), List.of(CountMeasure.INSTANCE))
+            .build();
+
+    Table dataset = this.executor.execute(query);
+    Assertions.assertThat(dataset).containsExactly(
+            List.of("B", "s1", "cloth", 1l),
+            List.of("B", "s1", "drink", 1l),
+            List.of("B", "s1", "food", 1l),
+            List.of("B", "base", "cloth", 1l),
+            List.of("B", "base", "drink", 1l),
+            List.of("B", "base", "food", 1l),
+
+            List.of("A", "s2", "cloth", 1l),
+            List.of("A", "s2", "drink", 1l),
+            List.of("A", "s2", "food", 1l),
+            List.of("A", "base", "cloth", 1l),
+            List.of("A", "base", "drink", 1l),
+            List.of("A", "base", "food", 1l));
   }
 
   @Test

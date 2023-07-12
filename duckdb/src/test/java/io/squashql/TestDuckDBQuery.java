@@ -6,7 +6,6 @@ import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.query.monitoring.QueryWatch;
 import io.squashql.store.Field;
 import io.squashql.transaction.DuckDBDataLoader;
 import io.squashql.util.TestUtil;
@@ -64,12 +63,12 @@ public class TestDuckDBQuery {
             .build();
 
     AtomicInteger limitCapture = new AtomicInteger(-1);
-    this.executor.execute(query, new QueryWatch(), CacheStatsDto.builder(), null, true, limitCapture::set);
+    this.executor.execute(query, null, CacheStatsDto.builder(), null, true, limitCapture::set);
     Assertions.assertThat(limitCapture.get()).isEqualTo(-1);
 
     int limit = 2;
     query.limit = limit;
-    this.executor.execute(query, new QueryWatch(), CacheStatsDto.builder(), null, true, limitCapture::set);
+    this.executor.execute(query, null, CacheStatsDto.builder(), null, true, limitCapture::set);
     Assertions.assertThat(limitCapture.get()).isEqualTo(limit);
   }
 

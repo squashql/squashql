@@ -1,8 +1,8 @@
 package io.squashql.jdbc;
 
 import io.squashql.query.Header;
-import io.squashql.query.RowTable;
-import io.squashql.query.Table;
+import io.squashql.table.RowTable;
+import io.squashql.table.Table;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
 

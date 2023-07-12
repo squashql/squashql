@@ -1,0 +1,42 @@
+{
+  "headers": [{
+    "name": "group",
+    "type": "java.lang.String",
+    "isMeasure": false
+  }, {
+    "name": "country",
+    "type": "java.lang.String",
+    "isMeasure": false
+  }, {
+    "name": "spending category",
+    "type": "java.lang.String",
+    "isMeasure": false
+  }, {
+    "name": "amountComp",
+    "type": "double",
+    "isMeasure": true
+  }],
+  "rows": [
+    ["european", "uk", "Grand Total", 0.0],
+    ["european", "uk", "extra", 0.0],
+    ["european", "uk", "minimum expenditure", 0.0],
+    ["european", "france", "Grand Total", -1.0],
+    ["european", "france", "extra", -3.0],
+    ["european", "france", "minimum expenditure", 2.0],
+    ["anglophone", "usa", "Grand Total", 0.0],
+    ["anglophone", "usa", "extra", 0.0],
+    ["anglophone", "usa", "minimum expenditure", 0.0],
+    ["anglophone", "uk", "Grand Total", -30.0],
+    ["anglophone", "uk", "extra", -5.0],
+    ["anglophone", "uk", "minimum expenditure", -25.0],
+    ["all", "usa", "Grand Total", 0.0],
+    ["all", "usa", "extra", 0.0],
+    ["all", "usa", "minimum expenditure", 0.0],
+    ["all", "uk", "Grand Total", -30.0],
+    ["all", "uk", "extra", -5.0],
+    ["all", "uk", "minimum expenditure", -25.0],
+    ["all", "france", "Grand Total", -1.0],
+    ["all", "france", "extra", -3.0],
+    ["all", "france", "minimum expenditure", 2.0]
+  ]
+}

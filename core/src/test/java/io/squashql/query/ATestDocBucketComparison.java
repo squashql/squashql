@@ -5,6 +5,7 @@ import io.squashql.query.builder.Query;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
+import io.squashql.table.Table;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -20,7 +21,7 @@ import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
  * why it is @{@link Disabled}.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestClass(ignore = {TestClass.Type.SPARK, TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE})
+@TestClass(ignore = {TestClass.Type.SPARK, TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE, TestClass.Type.CLICKHOUSE})
 @Disabled
 public abstract class ATestDocBucketComparison extends ABaseTestQuery {
 

@@ -1,0 +1,16 @@
+[
+  ["spending category", "spending category", "spending category", "Grand Total", "Grand Total", "extra", "extra", "extra", "extra", "minimum expenditure", "minimum expenditure", "minimum expenditure", "minimum expenditure", "minimum expenditure", "minimum expenditure"],
+  ["spending subcategory", "spending subcategory", "spending subcategory", "Grand Total", "Grand Total", "Total", "Total", "hobbies", "hobbies", "Total", "Total", "car", "car", "housing", "housing"],
+  ["continent", "country", "city", "sum", "min", "sum", "min", "sum", "min", "sum", "min", "sum", "min", "sum", "min"],
+  ["Grand Total", "Grand Total", "Grand Total", 56.0, 1.0, 17.0, 1.0, 17.0, 1.0, 39.0, 1.0, 19.0, 1.0, 20.0, 2.0],
+  ["am", "Total", "Total", 39.0, 2.0, 10.0, 4.0, 10.0, 4.0, 29.0, 2.0, 15.0, 7.0, 14.0, 2.0],
+  ["am", "usa", "Total", 39.0, 2.0, 10.0, 4.0, 10.0, 4.0, 29.0, 2.0, 15.0, 7.0, 14.0, 2.0],
+  ["am", "usa", "la", 13.0, 2.0, 4.0, 4.0, 4.0, 4.0, 9.0, 2.0, 7.0, 7.0, 2.0, 2.0],
+  ["am", "usa", "nyc", 26.0, 6.0, 6.0, 6.0, 6.0, 6.0, 20.0, 8.0, 8.0, 8.0, 12.0, 12.0],
+  ["eu", "Total", "Total", 17.0, 1.0, 7.0, 1.0, 7.0, 1.0, 10.0, 1.0, 4.0, 1.0, 6.0, 2.0],
+  ["eu", "france", "Total", 8.0, 1.0, 2.0, 1.0, 2.0, 1.0, 6.0, 1.0, 2.0, 1.0, 4.0, 2.0],
+  ["eu", "france", "lyon", 4.0, 1.0, 1.0, 1.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0, 2.0, 2.0],
+  ["eu", "france", "paris", 4.0, 1.0, 1.0, 1.0, 1.0, 1.0, 3.0, 1.0, 1.0, 1.0, 2.0, 2.0],
+  ["eu", "uk", "Total", 9.0, 2.0, 5.0, 5.0, 5.0, 5.0, 4.0, 2.0, 2.0, 2.0, 2.0, 2.0],
+  ["eu", "uk", "london", 9.0, 2.0, 5.0, 5.0, 5.0, 5.0, 4.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+]

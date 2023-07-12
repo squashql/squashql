@@ -6,6 +6,7 @@ import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
+import io.squashql.table.Table;
 import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;

@@ -26,6 +26,11 @@ public class QueryDto {
 
   public List<String> rollupColumns = new ArrayList<>();
 
+  /**
+   * Internal ONLY! This field is not supposed to be set by the external API and is incompatible with {@link #rollupColumns}
+   */
+  public List<List<String>> groupingSets = new ArrayList<>();
+
   public Map<ColumnSetKey, ColumnSet> columnSets = new LinkedHashMap<>();
 
   public List<Measure> measures = new ArrayList<>();

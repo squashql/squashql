@@ -1,6 +1,5 @@
 package io.squashql.query.dto;
 
-import io.squashql.query.monitoring.QueryTimings;
 import lombok.*;
 
 @Builder
@@ -11,5 +10,4 @@ import lombok.*;
 public class DebugInfoDto {
 
   public CacheStatsDto cache;
-  public QueryTimings timings;
 }

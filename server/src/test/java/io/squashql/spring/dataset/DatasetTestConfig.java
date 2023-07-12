@@ -1,15 +1,25 @@
 package io.squashql.spring.dataset;
 
-import io.squashql.SparkDatastore;
-import io.squashql.query.SquashQLUser;
-import io.squashql.query.database.SparkQueryEngine;
+import com.google.common.collect.ImmutableList;
+import io.squashql.DuckDBDatastore;
+import io.squashql.jackson.JacksonUtil;
+import io.squashql.query.*;
+import io.squashql.query.builder.Query;
+import io.squashql.query.database.DuckDBQueryEngine;
+import io.squashql.query.dto.PivotTableQueryDto;
+import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.SimpleTableDto;
 import io.squashql.store.Field;
 import io.squashql.store.Store;
-import io.squashql.transaction.SparkDataLoader;
+import io.squashql.table.PivotTable;
+import io.squashql.transaction.DuckDBDataLoader;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -19,8 +29,51 @@ import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 public class DatasetTestConfig {
 
   @Bean
-  public SparkQueryEngine queryEngine() {
-    return new SparkQueryEngine(createTestDatastoreWithData());
+  public DuckDBQueryEngine queryEngine() {
+    return new DuckDBQueryEngine(createTestDatastoreWithData());
+  }
+
+  /**
+   * Display the result of the query in a pivot table accessible in the browser at this address http://localhost:8080.
+   */
+  @Bean
+  public void displayPivotTable() {
+    QueryExecutor queryExecutor = new QueryExecutor(queryEngine());
+    QueryDto query = Query.from("our_prices")
+            .select(List.of("ean", "pdv", "scenario"), List.of(new AggregatedMeasure("count", "*", "count")))
+            .build();
+    PivotTable pt = queryExecutor.execute(new PivotTableQueryDto(query, List.of("pdv", "ean"), List.of("scenario")));
+    pt.show();
+    toJson(pt);
+  }
+
+  /**
+   * Adapt to antvis/s2 format. See examples https://s2.antv.vision/en/examples/basic/pivot/#grid.
+   * <p>
+   * +------------------------+--------------+----------------------+----------------------+----------------------+----------------------+----------------------+----------------------+
+   * |               scenario |     scenario |          Grand Total |               MDD up |        MN & MDD down |          MN & MDD up |                MN up |                 base |
+   * |                    pdv |          ean | _contributors_count_ | _contributors_count_ | _contributors_count_ | _contributors_count_ | _contributors_count_ | _contributors_count_ |
+   * +------------------------+--------------+----------------------+----------------------+----------------------+----------------------+----------------------+----------------------+
+   * |            Grand Total |  Grand Total |                   20 |                    4 |                    4 |                    4 |                    4 |                    4 |
+   * |              ITM Balma |        Total |                   10 |                    2 |                    2 |                    2 |                    2 |                    2 |
+   * | ITM Toulouse and Drive |        Total |                   10 |                    2 |                    2 |                    2 |                    2 |                    2 |
+   * |              ITM Balma | ITMella 250g |                    5 |                    1 |                    1 |                    1 |                    1 |                    1 |
+   * | ITM Toulouse and Drive | ITMella 250g |                    5 |                    1 |                    1 |                    1 |                    1 |                    1 |
+   * |              ITM Balma | Nutella 250g |                    5 |                    1 |                    1 |                    1 |                    1 |                    1 |
+   * | ITM Toulouse and Drive | Nutella 250g |                    5 |                    1 |                    1 |                    1 |                    1 |                    1 |
+   * +------------------------+--------------+----------------------+----------------------+----------------------+----------------------+----------------------+----------------------+
+   */
+  public static void toJson(PivotTable pivotTable) {
+    List<String> list = pivotTable.table.headers().stream().map(Header::name).toList();
+
+    SimpleTableDto simpleTable = SimpleTableDto.builder()
+            .rows(ImmutableList.copyOf(pivotTable.table.iterator()))
+            .columns(list)
+            .build();
+
+    Map<String, Object> data = Map.of("rows", pivotTable.rows, "columns", pivotTable.columns, "values", pivotTable.values, "table", simpleTable);
+    String encodedString = Base64.getEncoder().encodeToString(JacksonUtil.serialize(data).getBytes(StandardCharsets.UTF_8));
+    System.out.println("http://localhost:8080?data=" + encodedString);
   }
 
   public static final AtomicReference<SquashQLUser> squashQLUserSupplier = new AtomicReference<>();
@@ -30,7 +83,7 @@ public class DatasetTestConfig {
     return () -> squashQLUserSupplier.get();
   }
 
-  public static SparkDatastore createTestDatastoreWithData() {
+  public static DuckDBDatastore createTestDatastoreWithData() {
     Field ean = new Field("our_prices", "ean", String.class);
     Field pdv = new Field("our_prices", "pdv", String.class);
     Field price = new Field("our_prices", "price", double.class);
@@ -51,12 +104,12 @@ public class DatasetTestConfig {
             new Field("our_stores_their_stores", "their_store", String.class)
     ));
 
-    SparkDatastore datastore = new SparkDatastore();
-    SparkDataLoader tm = new SparkDataLoader(datastore.spark);
+    DuckDBDatastore datastore = new DuckDBDatastore();
+    DuckDBDataLoader tm = new DuckDBDataLoader(datastore);
 
-    tm.createTemporaryTable(our_price_store.name(), our_price_store.fields());
-    tm.createTemporaryTable(datastore.spark, their_prices_store.name(), their_prices_store.fields(), false);
-    tm.createTemporaryTable(datastore.spark, our_stores_their_stores_store.name(), our_stores_their_stores_store.fields(), false);
+    tm.createOrReplaceTable(our_price_store.name(), our_price_store.fields());
+    tm.createOrReplaceTable(their_prices_store.name(), their_prices_store.fields(), false);
+    tm.createOrReplaceTable(our_stores_their_stores_store.name(), our_stores_their_stores_store.fields(), false);
 
     tm.load(MAIN_SCENARIO_NAME,
             "our_prices", List.of(
@@ -94,26 +147,24 @@ public class DatasetTestConfig {
                     new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 9d, 1000, 9_000d}
             ));
 
-    tm.load(MAIN_SCENARIO_NAME,
-            "their_prices", List.of(
-                    new Object[]{"Nutella 250g", "Leclerc Rouffiac", "Leclerc", "Nutella 250g", 9d},
-                    new Object[]{"Nutella 250g", "Auchan Toulouse", "Auchan", "Nutella 250g", 11d},
-                    new Object[]{"Nutella 250g", "Auchan Ponts Jumeaux", "Auchan", "Nutella 250g", 11d},
-                    new Object[]{"Nutella 250g", "Auchan Launaguet", "Auchan", "Nutella 250g", 9d},
-                    new Object[]{"ITMella 250g", "Leclerc Rouffiac", "Leclerc", "LeclercElla", 9d},
-                    new Object[]{"ITMella 250g", "Auchan Toulouse", "Auchan", "AuchanElla", 11d},
-                    new Object[]{"ITMella 250g", "Auchan Launaguet", "Auchan", "AuchanElla", 9d}
-            ));
+    tm.load("their_prices", List.of(
+            new Object[]{"Nutella 250g", "Leclerc Rouffiac", "Leclerc", "Nutella 250g", 9d},
+            new Object[]{"Nutella 250g", "Auchan Toulouse", "Auchan", "Nutella 250g", 11d},
+            new Object[]{"Nutella 250g", "Auchan Ponts Jumeaux", "Auchan", "Nutella 250g", 11d},
+            new Object[]{"Nutella 250g", "Auchan Launaguet", "Auchan", "Nutella 250g", 9d},
+            new Object[]{"ITMella 250g", "Leclerc Rouffiac", "Leclerc", "LeclercElla", 9d},
+            new Object[]{"ITMella 250g", "Auchan Toulouse", "Auchan", "AuchanElla", 11d},
+            new Object[]{"ITMella 250g", "Auchan Launaguet", "Auchan", "AuchanElla", 9d}
+    ));
 
-    tm.load(MAIN_SCENARIO_NAME,
-            "our_stores_their_stores", List.of(
-                    new Object[]{"ITM Balma", "Leclerc Rouffiac"},
-                    new Object[]{"ITM Balma", "Auchan Toulouse"},
-                    new Object[]{"ITM Balma", "Auchan Ponts Jumeaux"},
-                    new Object[]{"ITM Toulouse and Drive", "Auchan Launaguet"},
-                    new Object[]{"ITM Toulouse and Drive", "Auchan Toulouse"},
-                    new Object[]{"ITM Toulouse and Drive", "Auchan Ponts Jumeaux"}
-            ));
+    tm.load("our_stores_their_stores", List.of(
+            new Object[]{"ITM Balma", "Leclerc Rouffiac"},
+            new Object[]{"ITM Balma", "Auchan Toulouse"},
+            new Object[]{"ITM Balma", "Auchan Ponts Jumeaux"},
+            new Object[]{"ITM Toulouse and Drive", "Auchan Launaguet"},
+            new Object[]{"ITM Toulouse and Drive", "Auchan Toulouse"},
+            new Object[]{"ITM Toulouse and Drive", "Auchan Ponts Jumeaux"}
+    ));
     return datastore;
   }
 }

@@ -3,10 +3,10 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.builder.Query;
-import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.query.dto.*;
-import io.squashql.query.monitoring.QueryWatch;
+import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.store.Field;
+import io.squashql.table.Table;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +24,7 @@ import static io.squashql.query.Functions.*;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
-@TestClass
+@TestClass(ignore = {TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE, TestClass.Type.CLICKHOUSE, TestClass.Type.SPARK})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestQueryCache extends ABaseTestQuery {
 
@@ -484,6 +484,26 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     assertCacheStats(1, 1);
   }
 
+  @Test
+  void testQueryPivotTable() {
+    QueryDto q = Query
+            .from(this.storeName)
+            .select(List.of("category", "ean"), List.of(sum("ca", "price")))
+            .build();
+    int base = 0;
+    this.executor.execute(new PivotTableQueryDto(q, List.of("category"), List.of("ean")));
+    assertCacheStats(0, (base = base + 2));
+    this.executor.execute(new PivotTableQueryDto(q, List.of("category", "ean"), List.of()));
+    assertCacheStats(0, (base = base + 2));
+    this.executor.execute(new PivotTableQueryDto(q, List.of(), List.of("category", "ean")));
+    assertCacheStats(2, base); // same as the previous
+    this.executor.execute(new PivotTableQueryDto(q, List.of("ean"), List.of("category")));
+    assertCacheStats(2, (base = base + 2));
+    // Same as the first query
+    this.executor.execute(new PivotTableQueryDto(q, List.of("category"), List.of("ean")));
+    assertCacheStats(4, base);
+  }
+
   private void assertCacheStats(int hitCount, int missCount) {
     CacheStatsDto stats = this.queryCache.stats(null);
     assertCacheStats(stats, hitCount, missCount);
@@ -502,7 +522,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   private static Table execute(QueryExecutor executor, QueryDto query, SquashQLUser user) {
     return executor.execute(
             query,
-            new QueryWatch(),
+            null,
             CacheStatsDto.builder(),
             user,
             true,

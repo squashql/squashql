@@ -1,0 +1,11 @@
+[
+  ["spending category", "spending category", "Grand Total", "extra", "minimum expenditure"],
+  ["group", "country", "amountComp", "amountComp", "amountComp"],
+  ["european", "uk", 0.0, 0.0, 0.0],
+  ["european", "france", -1.0, -3.0, 2.0],
+  ["anglophone", "usa", 0.0, 0.0, 0.0],
+  ["anglophone", "uk", -30.0, -5.0, -25.0],
+  ["all", "usa", 0.0, 0.0, 0.0],
+  ["all", "uk", -30.0, -5.0, -25.0],
+  ["all", "france", -1.0, -3.0, 2.0]
+]

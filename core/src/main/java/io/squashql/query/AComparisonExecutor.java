@@ -1,6 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.comp.BinaryOperations;
+import io.squashql.table.Table;
 import org.eclipse.collections.api.map.primitive.IntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableIntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;

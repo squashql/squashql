@@ -1,5 +1,3 @@
-import exp = require("constants");
-
 export const PACKAGE = "io.squashql.query."
 
 export {
@@ -36,8 +34,12 @@ export {
 } from './parameters'
 
 export {
-  Querier, QueryResult, MetadataResult, StoreMetadata, MetadataItem, SimpleTable
+  Querier, QueryResult, PivotTableQueryResult, MetadataResult, StoreMetadata, MetadataItem, SimpleTable
 } from './querier'
+
+export {
+  PivotConfig, PivotTableQuery
+} from './pivotTableQuery'
 
 export {
   CanAddOrderBy, CanBeBuildQuery, CanStartBuildingJoin, HasCondition, HasJoin,

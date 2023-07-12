@@ -15,7 +15,7 @@ import org.junit.jupiter.api.BeforeAll;
  */
 public class TestClickHouse{{classSuffix}} extends {{parentTestClass}} {
 
-  public org.testcontainers.containers.GenericContainer container = TestUtils.createClickHouseContainer();
+  public org.testcontainers.containers.GenericContainer container = ClickHouseTestUtil.createClickHouseContainer();
 
   @BeforeAll
   @Override
@@ -43,7 +43,7 @@ public class TestClickHouse{{classSuffix}} extends {{parentTestClass}} {
 
   @Override
   protected Datastore createDatastore() {
-    return new ClickHouseDatastore(TestUtils.jdbcUrl.apply(this.container));
+    return new ClickHouseDatastore(ClickHouseTestUtil.jdbcUrl.apply(this.container));
   }
 
   @Override

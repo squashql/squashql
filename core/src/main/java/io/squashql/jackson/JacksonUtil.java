@@ -3,11 +3,6 @@ package io.squashql.jackson;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import io.squashql.query.Header;
-import io.squashql.query.Table;
-
-import java.util.List;
-import java.util.Map;
 
 public class JacksonUtil {
 

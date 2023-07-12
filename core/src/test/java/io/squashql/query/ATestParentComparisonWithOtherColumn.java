@@ -4,6 +4,7 @@ import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Field;
+import io.squashql.table.Table;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -71,7 +72,7 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
             .build();
 
     Table result = this.executor.execute(query);
-    // Note: contrary to what you might expect, the result here is the same than having List.of("city", "country","continent")
+    // Note: contrary to what you might expect, the result here is the same as having List.of("city", "country","continent")
     // and it is not meant to compute the percent of the grandparent.
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("eu", "france", "lyon", 3.1d, 3.1d / (4d + 3.1d)),

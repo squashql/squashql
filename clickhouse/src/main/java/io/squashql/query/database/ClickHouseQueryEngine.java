@@ -7,10 +7,10 @@ import com.clickhouse.client.ClickHouseResponse;
 import com.clickhouse.data.*;
 import io.squashql.ClickHouseDatastore;
 import io.squashql.ClickHouseUtil;
-import io.squashql.query.ColumnarTable;
+import io.squashql.table.ColumnarTable;
 import io.squashql.query.Header;
-import io.squashql.query.RowTable;
-import io.squashql.query.Table;
+import io.squashql.table.RowTable;
+import io.squashql.table.Table;
 import org.eclipse.collections.api.tuple.Pair;
 
 import java.util.HashSet;

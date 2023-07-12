@@ -3,7 +3,7 @@ package io.squashql.spring.web.rest;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
-import io.squashql.query.database.SparkQueryEngine;
+import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.spring.dataset.DatasetTestConfig;
 import org.assertj.core.api.Assertions;
@@ -86,7 +86,6 @@ public class QueryControllerTest {
               );
 
               Assertions.assertThat(queryResult.debug.cache).isNotNull();
-              Assertions.assertThat(queryResult.debug.timings.total).isGreaterThan(0);
             });
   }
 
@@ -125,7 +124,7 @@ public class QueryControllerTest {
             new MetadataItem("their_store", "their_store", String.class)
     );
 
-    Assertions.assertThat(metadataResultDto.aggregationFunctions).containsExactlyInAnyOrder(SparkQueryEngine.SUPPORTED_AGGREGATION_FUNCTIONS.toArray(new String[0]));
+    Assertions.assertThat(metadataResultDto.aggregationFunctions).containsExactlyInAnyOrder(DuckDBQueryEngine.SUPPORTED_AGGREGATION_FUNCTIONS.toArray(new String[0]));
   }
 
   @Test
@@ -246,22 +245,6 @@ public class QueryControllerTest {
                       List.of("ITMella 250g", 102000d, 10200d),
                       List.of("Nutella 250g", 102000d, 10200d));
               Assertions.assertThat(queryResult.table.columns).containsExactly("ean", "capdv-sum", "capdv-avg");
-            });
-  }
-
-  @Test
-  void testQueryRaw() throws Exception {
-    this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_RAW)
-                    .content("select count(*) as numberOfPrices from our_prices")
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(result -> {
-              String contentAsString = result.getResponse().getContentAsString();
-              QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
-              Assertions.assertThat(queryResult.table.rows).containsExactly(List.of(20));
-              Assertions.assertThat(queryResult.table.columns).containsExactly("numberOfPrices");
-              Assertions.assertThat(queryResult.metadata).isNull();
-              Assertions.assertThat(queryResult.debug).isNull();
             });
   }
 }
