@@ -150,8 +150,8 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   void testWithCalculatedMeasure() {
     // Note this calculation may look weird but the goal of this test is to make sure we can compute the percent of
     // parent with a measure computed by SquashQL.
-    Measure pop = Functions.sum("population", "population");
-    Measure pop2 = Functions.plus("pop2", Functions.sum("population", "population"), Functions.integer(2));
+    Measure pop = Functions.sum("populationsum", "population");
+    Measure pop2 = Functions.plus("pop2", pop, Functions.integer(2));
     List<String> ancestors = List.of("city", "country", "continent");
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, ancestors);
     ComparisonMeasureReferencePosition pOp2 = new ComparisonMeasureReferencePosition("percentOfParent2", DIVIDE, pop2, ancestors);
