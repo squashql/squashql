@@ -1,5 +1,6 @@
 package io.squashql.util;
 
+import io.squashql.PrimitiveMeasureVisitor;
 import io.squashql.query.*;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.dto.*;
@@ -84,16 +85,11 @@ public final class Queries {
     }
 
     for (Measure measure : query.measures) {
-      if (measure instanceof AggregatedMeasure
-              || measure instanceof ExpressionMeasure
-              || measure instanceof BinaryOperationMeasure) {
+      if (measure.accept(new PrimitiveMeasureVisitor())) {
         continue;
       }
-      throw new IllegalArgumentException("Only "
-              + AggregatedMeasure.class.getSimpleName() + ", "
-              + ExpressionMeasure.class.getSimpleName() + " or "
-              + BinaryOperationMeasure.class.getSimpleName() + " can be used in a sub-query but "
-              + measure + " was provided");
+      throw new IllegalArgumentException("Only measures that can be computed by the underlying database can be used" +
+              " in a sub-query but " + measure + " was provided");
     }
 
     DatabaseQuery prefetchQuery = new DatabaseQuery().table(query.table);

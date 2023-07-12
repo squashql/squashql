@@ -1,6 +1,10 @@
 package io.squashql.query;
 
+import io.squashql.query.database.QueryRewriter;
+import io.squashql.store.Field;
 import lombok.*;
+
+import java.util.function.Function;
 
 @ToString
 @EqualsAndHashCode(callSuper = true)
@@ -17,10 +21,15 @@ public class DoubleConstantMeasure extends ConstantMeasure<Double> {
   }
 
   @Override
+  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
+    return Double.toString(this.value);
+  }
+
+  @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder(getClass().getSimpleName() + "{");
-    sb.append("value=").append(value);
-    sb.append(", expression='").append(expression).append('\'');
+    sb.append("value=").append(this.value);
+    sb.append(", expression='").append(this.expression).append('\'');
     sb.append('}');
     return sb.toString();
   }
