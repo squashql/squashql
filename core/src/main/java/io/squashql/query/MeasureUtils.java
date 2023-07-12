@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import io.squashql.PrimitiveMeasureVisitor;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.CriteriaDto;
@@ -125,7 +126,7 @@ public final class MeasureUtils {
   }
 
   public static boolean isPrimitive(Measure m) {
-    return m instanceof AggregatedMeasure || m instanceof ExpressionMeasure;
+    return m.accept(new PrimitiveMeasureVisitor());
   }
 
   public static List<String> getColumnsForPrefetching(Period period) {

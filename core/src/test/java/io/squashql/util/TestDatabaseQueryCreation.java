@@ -64,6 +64,6 @@ public class TestDatabaseQueryCreation {
 
     Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier), this.fieldSupplier, -1))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Only AggregatedMeasure, ExpressionMeasure or BinaryOperationMeasure can be used in a sub-query");
+            .hasMessageContaining("Only measures that can be computed by the underlying database can be used in a sub-query");
   }
 }

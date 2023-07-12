@@ -1,6 +1,7 @@
 package io.squashql.query.database;
 
 import io.squashql.SparkDatastore;
+import io.squashql.SparkUtil;
 import io.squashql.table.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.table.RowTable;
@@ -49,7 +50,7 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
             (column, name) -> name,
             (column, name) -> datatypeToClass(column.dataType()),
             ds.toLocalIterator(),
-            (i, r) -> r.get(i),
+            (i, r) -> SparkUtil.getTypeValue(r.get(i)),
             this.queryRewriter);
     return new ColumnarTable(
             result.getOne(),

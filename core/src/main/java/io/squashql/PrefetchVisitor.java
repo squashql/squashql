@@ -40,7 +40,11 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Measu
 
   @Override
   public Map<QueryScope, Set<Measure>> visit(BinaryOperationMeasure measure) {
-    return Map.of(this.originalQueryScope, MutableSetFactoryImpl.INSTANCE.of(measure.leftOperand, measure.rightOperand));
+    if (new PrimitiveMeasureVisitor().visit(measure)) {
+      return empty();
+    } else {
+      return Map.of(this.originalQueryScope, MutableSetFactoryImpl.INSTANCE.of(measure.leftOperand, measure.rightOperand));
+    }
   }
 
   @Override
