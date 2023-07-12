@@ -129,7 +129,7 @@ querier.execute(query, undefined, true).then(r => console.log(r));
 | 2022 |     1 |                  Current Income | 1930.0 |                NaN |
 | 2022 |     1 | Media & Clothes & Food Delivery |    NaN |             118.75 |
 | 2022 |     1 |             Minimum expenditure |    NaN |            1383.87 |
-....
+...
 ```
 
 #### Pivot table query
