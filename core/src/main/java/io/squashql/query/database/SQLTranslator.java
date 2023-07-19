@@ -224,9 +224,9 @@ public class SQLTranslator {
   }
 
   public static String toSql(Field field, ConditionDto dto, QueryRewriter queryRewriter) {
+    String formattedFieldName = queryRewriter.getFieldFullName(field);
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
       Function<Object, String> sqlMapper = getQuoteFn(field);
-      String formattedFieldName = queryRewriter.getFieldFullName(field);
       return switch (dto.type()) {
         case IN -> formattedFieldName + " in (" +
                 ((InConditionDto) dto).values
@@ -252,7 +252,6 @@ public class SQLTranslator {
       };
       return "(" + first + typeString + second + ")";
     } else if (dto instanceof ConstantConditionDto cc) {
-      String formattedFieldName = queryRewriter.fieldName(field.name());
       return switch (cc.type()) {
         case NULL -> formattedFieldName + " is null";
         case NOT_NULL -> formattedFieldName + " is not null";

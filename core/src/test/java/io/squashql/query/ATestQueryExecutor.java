@@ -303,14 +303,14 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   @Test
   void testConditionsNullNotNull() {
     QueryDto query = Query.from(this.storeName)
-            .where(Functions.criterion("subcategory", Functions.isNotNull()))
+            .where(criterion("subcategory", isNotNull()))
             .select(List.of("ean"), List.of(CountMeasure.INSTANCE))
             .build();
     Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(List.of("cookie", 3l));
 
     query = Query.from(this.storeName)
-            .where(Functions.criterion("subcategory", Functions.isNull()))
+            .where(criterion("subcategory", isNull()))
             .select(List.of("ean"), List.of(CountMeasure.INSTANCE))
             .build();
     table = this.executor.execute(query);

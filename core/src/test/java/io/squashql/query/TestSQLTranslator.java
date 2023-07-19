@@ -251,11 +251,14 @@ public class TestSQLTranslator {
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(field)
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
-            .whereCriteria(criterion(SqlUtils.getFieldFullName(field), and(eq("base"), eq("s2"))))
+            .whereCriteria(criterion(SqlUtils.getFieldFullName(field), or(
+                    eq("base"),
+                    eq("s2"),
+                    isNull())))
             .table(BASE_STORE_NAME);
     Assertions.assertThat(translate(query, fp))
             .isEqualTo("select `baseStore`.`scenario`, sum(`pnl`) as `pnl.sum` from " + BASE_STORE_NAME_ESCAPED
-                    + " where (`baseStore`.`scenario` = 'base' and `baseStore`.`scenario` = 's2')"
+                    + " where ((`baseStore`.`scenario` = 'base' or `baseStore`.`scenario` = 's2') or `baseStore`.`scenario` is null)"
                     + " group by `baseStore`.`scenario`"
             );
   }
