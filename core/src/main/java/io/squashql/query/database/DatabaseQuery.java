@@ -1,7 +1,7 @@
 package io.squashql.query.database;
 
 import io.squashql.query.dto.VirtualTableDto;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -22,25 +22,25 @@ public class DatabaseQuery {
   public VirtualTableDto virtualTableDto; // CTE
   public TableDto table;
   public DatabaseQuery subQuery;
-  public List<Field> select = new ArrayList<>();
+  public List<TypedField> select = new ArrayList<>();
   public CriteriaDto whereCriteriaDto = null;
   public CriteriaDto havingCriteriaDto = null;
   public List<Measure> measures = new ArrayList<>();
-  public List<Field> rollup = new ArrayList<>();
-  public List<List<Field>> groupingSets = new ArrayList<>();
+  public List<TypedField> rollup = new ArrayList<>();
+  public List<List<TypedField>> groupingSets = new ArrayList<>();
   public int limit = -1;
 
-  public DatabaseQuery withSelect(Field field) {
+  public DatabaseQuery withSelect(TypedField field) {
     this.select.add(field);
     return this;
   }
 
-  public DatabaseQuery rollup(List<Field> rollup) {
+  public DatabaseQuery rollup(List<TypedField> rollup) {
     this.rollup = rollup;
     return this;
   }
 
-  public DatabaseQuery groupingSets(List<List<Field>> groupingSets) {
+  public DatabaseQuery groupingSets(List<List<TypedField>> groupingSets) {
     this.groupingSets = groupingSets;
     return this;
   }

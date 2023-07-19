@@ -1,7 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.dto.*;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 
@@ -28,18 +28,18 @@ public interface QueryCache {
   CacheStatsDto stats(SquashQLUser user);
 
   record TableScope(TableDto tableDto,
-                    Set<Field> columns,
+                    Set<TypedField> columns,
                     CriteriaDto whereCriteriaDto,
                     CriteriaDto havingCriteriaDto,
-                    List<Field> rollupColumns,
-                    List<List<Field>> groupingSets,
+                    List<TypedField> rollupColumns,
+                    List<List<TypedField>> groupingSets,
                     VirtualTableDto virtualTableDto,
                     SquashQLUser user,
                     int limit) implements PrefetchQueryScope {
   }
 
   record SubQueryScope(QueryDto subQueryDto,
-                       Set<Field> columns,
+                       Set<TypedField> columns,
                        CriteriaDto whereCriteriaDto,
                        CriteriaDto havingCriteriaDto,
                        SquashQLUser user,
@@ -50,7 +50,7 @@ public interface QueryCache {
    * Marker interface.
    */
   interface PrefetchQueryScope {
-    Set<Field> columns();
+    Set<TypedField> columns();
 
     SquashQLUser user();
   }

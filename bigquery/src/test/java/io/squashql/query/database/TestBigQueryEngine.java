@@ -7,7 +7,7 @@ import io.squashql.BigQueryUtil;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.*;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import io.squashql.store.Store;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
@@ -23,10 +23,10 @@ import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
 public class TestBigQueryEngine {
 
-  final Function<String, Field> fp = name -> switch (name) {
-    case "category" -> new Field("baseStore", name, long.class);
-    case "price" -> new Field("baseStore", name, double.class);
-    default -> new Field("baseStore", name, String.class);
+  final Function<String, TypedField> fp = name -> switch (name) {
+    case "category" -> new TypedField("baseStore", name, long.class);
+    case "price" -> new TypedField("baseStore", name, double.class);
+    default -> new TypedField("baseStore", name, String.class);
   };
 
   @Test
@@ -141,8 +141,8 @@ public class TestBigQueryEngine {
             new ArrayList<>(Arrays.asList(null, null, "A", "B", null, "A", "B")),
             new ArrayList<>(Arrays.asList(4d, 2d, 1d, 1d, 2d, 1d, 1d)));
 
-    Field scenarioField = this.fp.apply(scenario);
-    Field categoryField = this.fp.apply(category);
+    TypedField scenarioField = this.fp.apply(scenario);
+    TypedField categoryField = this.fp.apply(category);
     ColumnarTable input = new ColumnarTable(
             List.of(new Header(SqlUtils.getFieldFullName(scenarioField), scenarioField.type(), false),
                     new Header(SqlUtils.getFieldFullName(categoryField), categoryField.type(), false),
@@ -222,9 +222,9 @@ public class TestBigQueryEngine {
     // Make sure the list of grouping sets makes sense and correspond to the real world use case (pivot table)
     Assertions.assertThat(queryDto.groupingSets).containsExactlyInAnyOrderElementsOf(groupingSets);
 
-    List<List<Field>> gp = new ArrayList<>();
+    List<List<TypedField>> gp = new ArrayList<>();
     for (List<String> groupingSet : groupingSets) {
-      List<Field> l = new ArrayList<>();
+      List<TypedField> l = new ArrayList<>();
       gp.add(l);
       if (groupingSet.size() == 0) {
         continue; // GT

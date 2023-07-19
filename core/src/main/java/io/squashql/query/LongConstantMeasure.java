@@ -1,7 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.database.QueryRewriter;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -19,7 +19,7 @@ public class LongConstantMeasure extends ConstantMeasure<Long> {
   }
 
   @Override
-  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
+  public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     return Long.toString(this.value);
   }
 

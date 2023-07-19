@@ -1,7 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.dto.BucketColumnSetDto;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
@@ -21,10 +21,10 @@ public class BucketerExecutor {
     }
 
     MutableIntSet indexColsInPrefetch = new IntHashSet();
-    List<Field> newColumns = bucketColumnSetDto.getNewColumns();
+    List<TypedField> newColumns = bucketColumnSetDto.getNewColumns();
     List<Header> finalHeaders = new ArrayList<>(table.headers());
     for (int i = 0; i < newColumns.size(); i++) {
-      Field field = newColumns.get(i);
+      TypedField field = newColumns.get(i);
       if (!bucketColumnSetDto.getColumnsForPrefetching().contains(field.name())) {
         indexColsInPrefetch.add(i);
       }

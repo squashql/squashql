@@ -7,7 +7,7 @@ import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.Period;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.exception.FieldNotFoundException;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import lombok.NoArgsConstructor;
 
 import java.util.*;
@@ -34,7 +34,7 @@ public final class MeasureUtils {
   public static String createExpression(Measure m) {
     if (m instanceof AggregatedMeasure a) {
       if (a.criteria != null) {
-        String conditionSt = SQLTranslator.toSql(f -> new Field(null, f, String.class), a.criteria, BASIC);
+        String conditionSt = SQLTranslator.toSql(f -> new TypedField(null, f, String.class), a.criteria, BASIC);
         return a.aggregationFunction + "If(" + a.field + ", " + conditionSt + ")";
       } else {
         return a.aggregationFunction + "(" + a.field + ")";
@@ -75,18 +75,18 @@ public final class MeasureUtils {
           QueryDto query,
           ComparisonMeasureReferencePosition cm,
           QueryExecutor.QueryScope queryScope,
-          Function<String, Field> fieldSupplier) {
+          Function<String, TypedField> fieldSupplier) {
     AtomicReference<CriteriaDto> copy = new AtomicReference<>(queryScope.whereCriteriaDto() == null ? null : CriteriaDto.deepCopy(queryScope.whereCriteriaDto()));
     Consumer<String> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(criteriaRemover));
     Optional.ofNullable(cm.period)
             .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover));
-    Set<Field> rollupColumns = new LinkedHashSet<>(queryScope.rollupColumns()); // order does matter
+    Set<TypedField> rollupColumns = new LinkedHashSet<>(queryScope.rollupColumns()); // order does matter
     Optional.ofNullable(cm.ancestors)
             .ifPresent(ancestors -> {
               ancestors.forEach(criteriaRemover);
-              List<Field> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).map(fieldSupplier).collect(Collectors.toList());
+              List<TypedField> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).map(fieldSupplier).collect(Collectors.toList());
               Collections.reverse(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage order".
               rollupColumns.addAll(ancestorFields);
             });
@@ -143,14 +143,14 @@ public final class MeasureUtils {
     }
   }
 
-  public static Function<String, Field> withFallback(Function<String, Field> fieldProvider, Class<?> fallbackType) {
+  public static Function<String, TypedField> withFallback(Function<String, TypedField> fieldProvider, Class<?> fallbackType) {
     return fieldName -> {
       try {
         return fieldProvider.apply(fieldName);
       } catch (FieldNotFoundException e) {
         // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
         // contains only "raw" fields, it will throw an exception.
-        return new Field(null, fieldName, fallbackType);
+        return new TypedField(null, fieldName, fallbackType);
       }
     };
   }

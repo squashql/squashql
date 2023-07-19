@@ -6,7 +6,7 @@ import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import io.squashql.transaction.DuckDBDataLoader;
 import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
@@ -25,7 +25,7 @@ public class TestDuckDBQuery {
   protected DuckDBDataLoader dl;
   protected QueryExecutor executor;
 
-  void setup(Map<String, List<Field>> fieldsByStore, Runnable dataLoading) {
+  void setup(Map<String, List<TypedField>> fieldsByStore, Runnable dataLoading) {
     this.datastore = new DuckDBDatastore();
     this.dl = new DuckDBDataLoader(this.datastore);
     fieldsByStore.forEach(this.dl::createOrReplaceTable);
@@ -34,14 +34,14 @@ public class TestDuckDBQuery {
     dataLoading.run();
   }
 
-  protected Map<String, List<Field>> getFieldsByStore() {
-    Field ean = new Field(this.storeName, "ean", String.class);
-    Field eanId = new Field(this.storeName, "eanId", int.class);
-    Field category = new Field(this.storeName, "category", String.class);
-    Field subcategory = new Field(this.storeName, "subcategory", String.class);
-    Field price = new Field(this.storeName, "price", double.class);
-    Field qty = new Field(this.storeName, "quantity", int.class);
-    Field isFood = new Field(this.storeName, "isFood", boolean.class);
+  protected Map<String, List<TypedField>> getFieldsByStore() {
+    TypedField ean = new TypedField(this.storeName, "ean", String.class);
+    TypedField eanId = new TypedField(this.storeName, "eanId", int.class);
+    TypedField category = new TypedField(this.storeName, "category", String.class);
+    TypedField subcategory = new TypedField(this.storeName, "subcategory", String.class);
+    TypedField price = new TypedField(this.storeName, "price", double.class);
+    TypedField qty = new TypedField(this.storeName, "quantity", int.class);
+    TypedField isFood = new TypedField(this.storeName, "isFood", boolean.class);
     return Map.of(this.storeName, List.of(eanId, ean, category, subcategory, price, qty, isFood));
   }
 

@@ -9,7 +9,7 @@ import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.dto.PivotTableQueryDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.dto.SimpleTableDto;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import io.squashql.store.Store;
 import io.squashql.table.PivotTable;
 import io.squashql.transaction.DuckDBDataLoader;
@@ -84,24 +84,24 @@ public class DatasetTestConfig {
   }
 
   public static DuckDBDatastore createTestDatastoreWithData() {
-    Field ean = new Field("our_prices", "ean", String.class);
-    Field pdv = new Field("our_prices", "pdv", String.class);
-    Field price = new Field("our_prices", "price", double.class);
-    Field qty = new Field("our_prices", "quantity", int.class);
-    Field capdv = new Field("our_prices", "capdv", double.class);
+    TypedField ean = new TypedField("our_prices", "ean", String.class);
+    TypedField pdv = new TypedField("our_prices", "pdv", String.class);
+    TypedField price = new TypedField("our_prices", "price", double.class);
+    TypedField qty = new TypedField("our_prices", "quantity", int.class);
+    TypedField capdv = new TypedField("our_prices", "capdv", double.class);
 
-    Field compEan = new Field("their_prices", "competitor_ean", String.class);
-    Field compConcurrentPdv = new Field("their_prices", "competitor_concurrent_pdv", String.class);
-    Field compBrand = new Field("their_prices", "competitor_brand", String.class);
-    Field compConcurrentEan = new Field("their_prices", "competitor_concurrent_ean", String.class);
-    Field compPrice = new Field("their_prices", "competitor_price", double.class);
+    TypedField compEan = new TypedField("their_prices", "competitor_ean", String.class);
+    TypedField compConcurrentPdv = new TypedField("their_prices", "competitor_concurrent_pdv", String.class);
+    TypedField compBrand = new TypedField("their_prices", "competitor_brand", String.class);
+    TypedField compConcurrentEan = new TypedField("their_prices", "competitor_concurrent_ean", String.class);
+    TypedField compPrice = new TypedField("their_prices", "competitor_price", double.class);
 
     Store our_price_store = new Store("our_prices", List.of(ean, pdv, price, qty, capdv));
     Store their_prices_store = new Store("their_prices", List.of(compEan, compConcurrentPdv, compBrand,
             compConcurrentEan, compPrice));
     Store our_stores_their_stores_store = new Store("our_stores_their_stores", List.of(
-            new Field("our_stores_their_stores", "our_store", String.class),
-            new Field("our_stores_their_stores", "their_store", String.class)
+            new TypedField("our_stores_their_stores", "our_store", String.class),
+            new TypedField("our_stores_their_stores", "their_store", String.class)
     ));
 
     DuckDBDatastore datastore = new DuckDBDatastore();

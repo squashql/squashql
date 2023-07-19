@@ -5,7 +5,7 @@ import com.clickhouse.jdbc.ClickHouseDataSource;
 import com.clickhouse.jdbc.ClickHouseStatement;
 import io.squashql.ClickHouseDatastore;
 import io.squashql.query.database.SqlUtils;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
 import java.sql.PreparedStatement;
@@ -24,21 +24,21 @@ public class ClickHouseDataLoader implements DataLoader {
     this.clickHouseDataSource = clickHouseDataSource;
   }
 
-  public void dropAndCreateInMemoryTable(String table, List<Field> fields) {
+  public void dropAndCreateInMemoryTable(String table, List<TypedField> fields) {
     dropAndCreateInMemoryTable(this.clickHouseDataSource, table, fields, true);
   }
 
-  public void dropAndCreateInMemoryTableWithoutScenarioColumn(String table, List<Field> fields) {
+  public void dropAndCreateInMemoryTableWithoutScenarioColumn(String table, List<TypedField> fields) {
     dropAndCreateInMemoryTable(this.clickHouseDataSource, table, fields, false);
   }
 
   public static void dropAndCreateInMemoryTable(ClickHouseDataSource clickHouseDataSource,
                                                 String table,
-                                                List<Field> fields,
+                                                List<TypedField> fields,
                                                 boolean cjMode) {
-    List<Field> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
+    List<TypedField> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
             .ofAll(fields)
-            .newWith(new Field(table, SCENARIO_FIELD_NAME, String.class))
+            .newWith(new TypedField(table, SCENARIO_FIELD_NAME, String.class))
             .castToList() : fields;
 
     try (ClickHouseConnection conn = clickHouseDataSource.getConnection();
@@ -48,7 +48,7 @@ public class ClickHouseDataLoader implements DataLoader {
       sb.append("(");
       int size = list.size();
       for (int i = 0; i < size; i++) {
-        Field field = list.get(i);
+        TypedField field = list.get(i);
         sb.append(SqlUtils.backtickEscape(field.name())).append(" Nullable(").append(classToClickHouseType(field.type())).append(')');
         if (i < size - 1) {
           sb.append(", ");
@@ -84,7 +84,7 @@ public class ClickHouseDataLoader implements DataLoader {
   }
 
   private void ensureScenarioColumnIsPresent(String store) {
-    List<Field> fields = ClickHouseDatastore.getFields(this.clickHouseDataSource, store);
+    List<TypedField> fields = ClickHouseDatastore.getFields(this.clickHouseDataSource, store);
     boolean found = fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
     if (!found) {
       throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));

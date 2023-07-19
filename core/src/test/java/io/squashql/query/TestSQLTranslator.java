@@ -4,7 +4,7 @@ import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import io.squashql.store.Store;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ public class TestSQLTranslator {
    * A simple implementation that has the same logic as {@link AQueryEngine#createFieldSupplier(Map)} but does not verify
    * a store/field does exist.
    */
-  private static final Function<String, Field> fp = s -> {
+  private static final Function<String, TypedField> fp = s -> {
     Function<String, Class<?>> type = f -> switch (f) {
       case "pnl", BASE_STORE_NAME + "." + "pnl" -> double.class;
       case "delta", BASE_STORE_NAME + "." + "delta" -> Double.class;
@@ -38,9 +38,9 @@ public class TestSQLTranslator {
     if (split.length > 1) {
       String tableName = split[0];
       String fieldNameInTable = split[1];
-      return new Field(tableName, fieldNameInTable, type.apply(fieldNameInTable));
+      return new TypedField(tableName, fieldNameInTable, type.apply(fieldNameInTable));
     } else {
-      return new Field(null, s, type.apply(s));
+      return new TypedField(null, s, type.apply(s));
     }
   };
 
@@ -209,10 +209,10 @@ public class TestSQLTranslator {
     a.join(b, INNER, jAToB);
     a.join(c, LEFT, jCToAB);
 
-    Function<String, Field> fieldSupplier = AQueryEngine.createFieldSupplier(Map.of(
-            "A", new Store("A", List.of(new Field("A", "a_id", int.class), new Field("A", "a_f", int.class), new Field("A", "y", int.class))),
-            "B", new Store("B", List.of(new Field("B", "b_id", int.class), new Field("B", "b_other_id", int.class))),
-            "C", new Store("C", List.of(new Field("c", "a_id", int.class), new Field("C", "c_f", int.class), new Field("C", "c_other_id", int.class)))
+    Function<String, TypedField> fieldSupplier = AQueryEngine.createFieldSupplier(Map.of(
+            "A", new Store("A", List.of(new TypedField("A", "a_id", int.class), new TypedField("A", "a_f", int.class), new TypedField("A", "y", int.class))),
+            "B", new Store("B", List.of(new TypedField("B", "b_id", int.class), new TypedField("B", "b_other_id", int.class))),
+            "C", new Store("C", List.of(new TypedField("c", "a_id", int.class), new TypedField("C", "c_f", int.class), new TypedField("C", "c_other_id", int.class)))
     ));
 
     DatabaseQuery query = new DatabaseQuery().table(a).withSelect(fieldSupplier.apply("A.y"));
@@ -247,7 +247,7 @@ public class TestSQLTranslator {
 
   @Test
   void testConditionWithValueFullPath() {
-    Field field = new Field(BASE_STORE_NAME, SCENARIO_FIELD_NAME, String.class);
+    TypedField field = new TypedField(BASE_STORE_NAME, SCENARIO_FIELD_NAME, String.class);
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(field)
             .aggregatedMeasure("pnl.sum", "pnl", "sum")

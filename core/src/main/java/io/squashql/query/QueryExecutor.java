@@ -9,7 +9,7 @@ import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.parameter.QueryCacheParameter;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import io.squashql.store.Store;
 import io.squashql.table.*;
 import io.squashql.util.Queries;
@@ -79,7 +79,7 @@ public class QueryExecutor {
     Set<String> axes = new HashSet<>(context.rows);
     axes.addAll(context.columns);
     Set<String> select = new HashSet<>(query.columns);
-    select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream().map(Field::name)).collect(Collectors.toSet()));
+    select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream().map(TypedField::name)).collect(Collectors.toSet()));
     axes.removeAll(select);
 
     if (!axes.isEmpty()) {
@@ -143,7 +143,7 @@ public class QueryExecutor {
                        IntConsumer limitNotifier) {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
 
-    Function<String, Field> fieldSupplier = createQueryFieldSupplier(this.queryEngine, query.virtualTableDto);
+    Function<String, TypedField> fieldSupplier = createQueryFieldSupplier(this.queryEngine, query.virtualTableDto);
     if (pivotTableContext != null) {
       pivotTableContext.init(fieldSupplier);
     }
@@ -233,7 +233,7 @@ public class QueryExecutor {
   private static Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> computeDependencyGraph(
           QueryDto query,
           QueryScope queryScope,
-          Function<String, Field> fieldSupplier) {
+          Function<String, TypedField> fieldSupplier) {
     // This graph is used to keep track of dependency between execution plans. An Execution Plan is bound to a given scope.
     DependencyGraph<QueryScope> executionGraph = new DependencyGraph<>();
 
@@ -261,13 +261,13 @@ public class QueryExecutor {
             executionGraph);
   }
 
-  public static QueryScope createQueryScope(QueryDto query, Function<String, Field> fieldSupplier) {
+  public static QueryScope createQueryScope(QueryDto query, Function<String, TypedField> fieldSupplier) {
     // If column set, it changes the scope
-    List<Field> columns = Stream.concat(
+    List<TypedField> columns = Stream.concat(
             query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
             query.columns.stream()).map(fieldSupplier).collect(Collectors.toCollection(ArrayList::new));
-    List<Field> rollupColumns = query.rollupColumns.stream().map(fieldSupplier).toList();
-    List<List<Field>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(fieldSupplier).toList()).toList();
+    List<TypedField> rollupColumns = query.rollupColumns.stream().map(fieldSupplier).toList();
+    List<List<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(fieldSupplier).toList()).toList();
     return new QueryScope(query.table,
             query.subQuery,
             columns,
@@ -282,7 +282,7 @@ public class QueryExecutor {
           QueryScope queryScope,
           DatabaseQuery prefetchQuery,
           SquashQLUser user) {
-    Set<Field> fields = new HashSet<>(prefetchQuery.select);
+    Set<TypedField> fields = new HashSet<>(prefetchQuery.select);
     if (queryScope.tableDto != null) {
       return new TableScope(queryScope.tableDto,
               fields,
@@ -305,11 +305,11 @@ public class QueryExecutor {
 
   public record QueryScope(TableDto tableDto,
                            QueryDto subQuery,
-                           List<Field> columns,
+                           List<TypedField> columns,
                            CriteriaDto whereCriteriaDto,
                            CriteriaDto havingCriteriaDto,
-                           List<Field> rollupColumns,
-                           List<List<Field>> groupingSets,
+                           List<TypedField> rollupColumns,
+                           List<List<TypedField>> groupingSets,
                            VirtualTableDto virtualTableDto) {
   }
 
@@ -332,8 +332,8 @@ public class QueryExecutor {
     private final List<String> cleansedRows;
     private final List<String> columns;
     private final List<String> cleansedColumns;
-    private List<Field> rowFields;
-    private List<Field> columnFields;
+    private List<TypedField> rowFields;
+    private List<TypedField> columnFields;
 
     public PivotTableContext(PivotTableQueryDto pivotTableQueryDto) {
       this.rows = pivotTableQueryDto.rows;
@@ -356,16 +356,16 @@ public class QueryExecutor {
       return fields;
     }
 
-    public void init(Function<String, Field> fieldSupplier) {
+    public void init(Function<String, TypedField> fieldSupplier) {
       this.rowFields = this.cleansedRows.stream().map(fieldSupplier).toList();
       this.columnFields = this.cleansedColumns.stream().map(fieldSupplier).toList();
     }
 
-    public List<Field> getRowFields() {
+    public List<TypedField> getRowFields() {
       return this.rowFields;
     }
 
-    public List<Field> getColumnFields() {
+    public List<TypedField> getColumnFields() {
       return this.columnFields;
     }
   }
@@ -398,7 +398,7 @@ public class QueryExecutor {
     return TableUtils.replaceTotalCellValues(table, true);
   }
 
-  public static Function<String, Field> createQueryFieldSupplier(QueryEngine<?> queryEngine, VirtualTableDto vt) {
+  public static Function<String, TypedField> createQueryFieldSupplier(QueryEngine<?> queryEngine, VirtualTableDto vt) {
     Map<String, Store> storesByName = new HashMap<>(queryEngine.datastore().storesByName());
     if (vt != null) {
       storesByName.put(vt.name, VirtualTableDto.toStore(vt));

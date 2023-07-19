@@ -1,6 +1,6 @@
 package io.squashql.query.database;
 
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,7 +25,7 @@ public class SqlUtils {
     return store == null ? name : store + '.' + name;
   }
 
-  public static String getFieldFullName(Field field) {
+  public static String getFieldFullName(TypedField field) {
     return field.store() == null ? field.name() : field.store() + '.' + field.name();
   }
 

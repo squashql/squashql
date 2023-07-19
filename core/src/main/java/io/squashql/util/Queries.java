@@ -4,7 +4,7 @@ import io.squashql.PrimitiveMeasureVisitor;
 import io.squashql.query.*;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.dto.*;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 
 import java.util.*;
 import java.util.function.Function;
@@ -47,8 +47,8 @@ public final class Queries {
     return res;
   }
 
-  public static DatabaseQuery queryScopeToDatabaseQuery(QueryExecutor.QueryScope queryScope, Function<String, Field> fieldSupplier, int limit) {
-    Set<Field> selects = new HashSet<>(queryScope.columns());
+  public static DatabaseQuery queryScopeToDatabaseQuery(QueryExecutor.QueryScope queryScope, Function<String, TypedField> fieldSupplier, int limit) {
+    Set<TypedField> selects = new HashSet<>(queryScope.columns());
     DatabaseQuery prefetchQuery = new DatabaseQuery();
     if (queryScope.tableDto() != null) {
       prefetchQuery.table(queryScope.tableDto());
@@ -67,7 +67,7 @@ public final class Queries {
     return prefetchQuery;
   }
 
-  public static DatabaseQuery toSubDatabaseQuery(QueryDto query, Function<String, Field> fieldSupplier) {
+  public static DatabaseQuery toSubDatabaseQuery(QueryDto query, Function<String, TypedField> fieldSupplier) {
     if (query.subQuery != null) {
       throw new IllegalArgumentException("sub-query in a sub-query is not supported");
     }
@@ -100,8 +100,8 @@ public final class Queries {
     return prefetchQuery;
   }
 
-  public static List<Field> generateGroupingSelect(DatabaseQuery query) {
-    List<Field> selects = new ArrayList<>();
+  public static List<TypedField> generateGroupingSelect(DatabaseQuery query) {
+    List<TypedField> selects = new ArrayList<>();
     selects.addAll(query.rollup);
     // order matters, this is why a LinkedHashSet is used.
     selects.addAll(query.groupingSets

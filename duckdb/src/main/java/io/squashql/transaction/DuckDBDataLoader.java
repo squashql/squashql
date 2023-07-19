@@ -3,7 +3,7 @@ package io.squashql.transaction;
 import io.squashql.DuckDBDatastore;
 import io.squashql.jdbc.JdbcUtil;
 import io.squashql.table.Table;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
 import java.sql.Connection;
@@ -24,24 +24,24 @@ public class DuckDBDataLoader implements DataLoader {
   }
 
   public void createOrReplaceTable(String tableName, Table table) {
-    List<Field> fields = table.headers().stream().map(h -> new Field(tableName, h.name(), h.type())).toList();
+    List<TypedField> fields = table.headers().stream().map(h -> new TypedField(tableName, h.name(), h.type())).toList();
     createOrReplaceTable(this.datastore, tableName, fields, false);
     loadWithOrWithoutScenario(null, tableName, table.iterator());
   }
 
-  public void createOrReplaceTable(String tableName, List<Field> fields) {
+  public void createOrReplaceTable(String tableName, List<TypedField> fields) {
     createOrReplaceTable(tableName, fields, true);
   }
 
-  public void createOrReplaceTable(String tableName, List<Field> fields, boolean cjMode) {
+  public void createOrReplaceTable(String tableName, List<TypedField> fields, boolean cjMode) {
     createOrReplaceTable(this.datastore, tableName, fields, cjMode);
   }
 
-  public static void createOrReplaceTable(DuckDBDatastore datastore, String tableName, List<Field> fields,
+  public static void createOrReplaceTable(DuckDBDatastore datastore, String tableName, List<TypedField> fields,
                                           boolean cjMode) {
-    List<Field> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
+    List<TypedField> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
             .ofAll(fields)
-            .newWith(new Field(tableName, SCENARIO_FIELD_NAME, String.class))
+            .newWith(new TypedField(tableName, SCENARIO_FIELD_NAME, String.class))
             .castToList() : fields;
 
     try (Connection conn = datastore.getConnection();
@@ -50,7 +50,7 @@ public class DuckDBDataLoader implements DataLoader {
       sb.append("(");
       int size = list.size();
       for (int i = 0; i < size; i++) {
-        Field field = list.get(i);
+        TypedField field = list.get(i);
         sb.append("\"").append(field.name()).append("\" ").append(JdbcUtil.classToSqlType(field.type()));
         if (i < size - 1) {
           sb.append(", ");
@@ -112,7 +112,7 @@ public class DuckDBDataLoader implements DataLoader {
   }
 
   private void ensureScenarioColumnIsPresent(String store) {
-    List<Field> fields = this.datastore.storesByName().get(store).fields();
+    List<TypedField> fields = this.datastore.storesByName().get(store).fields();
     boolean found = fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
     if (!found) {
       throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));
@@ -120,7 +120,7 @@ public class DuckDBDataLoader implements DataLoader {
   }
 
   private boolean scenarioColumnIsPresent(String store) {
-    List<Field> fields = this.datastore.storesByName().get(store).fields();
+    List<TypedField> fields = this.datastore.storesByName().get(store).fields();
     return fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
   }
 

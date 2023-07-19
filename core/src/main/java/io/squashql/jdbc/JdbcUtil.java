@@ -3,7 +3,7 @@ package io.squashql.jdbc;
 import io.squashql.query.Header;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import io.squashql.store.Store;
 
 import java.sql.*;
@@ -102,7 +102,7 @@ public final class JdbcUtil {
         int dataType = resultSet.getInt("DATA_TYPE");
         stores.computeIfAbsent(tableName, k -> new Store(k, new ArrayList<>()))
                 .fields()
-                .add(new Field(tableName, columnName, typeToClass.apply(dataType)));
+                .add(new TypedField(tableName, columnName, typeToClass.apply(dataType)));
       }
       return stores;
     } catch (SQLException e) {

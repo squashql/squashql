@@ -1,7 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.database.QueryRewriter;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import lombok.*;
 
 import java.util.function.Function;
@@ -21,7 +21,7 @@ public class DoubleConstantMeasure extends ConstantMeasure<Double> {
   }
 
   @Override
-  public String sqlExpression(Function<String, Field> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
+  public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     return Double.toString(this.value);
   }
 

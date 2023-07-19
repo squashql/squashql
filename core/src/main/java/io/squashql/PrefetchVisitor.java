@@ -3,7 +3,7 @@ package io.squashql;
 import io.squashql.query.*;
 import io.squashql.query.QueryExecutor.QueryScope;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import org.eclipse.collections.impl.set.mutable.MutableSetFactoryImpl;
 
 import java.util.Collections;
@@ -16,9 +16,9 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Measu
 
   private final QueryDto query;
   private final QueryScope originalQueryScope;
-  private final Function<String, Field> fieldSupplier;
+  private final Function<String, TypedField> fieldSupplier;
 
-  public PrefetchVisitor(QueryDto query, QueryScope originalQueryScope, Function<String, Field> fieldSupplier) {
+  public PrefetchVisitor(QueryDto query, QueryScope originalQueryScope, Function<String, TypedField> fieldSupplier) {
     this.query = query;
     this.originalQueryScope = originalQueryScope;
     this.fieldSupplier = fieldSupplier;

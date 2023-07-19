@@ -1,10 +1,10 @@
 package io.squashql.query.database;
 
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 
 public interface QueryRewriter {
 
-  default String getFieldFullName(Field f) {
+  default String getFieldFullName(TypedField f) {
     return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
   }
 
@@ -33,7 +33,7 @@ public interface QueryRewriter {
    * @param f field to use in select
    * @return the customized argument
    */
-  default String select(Field f) {
+  default String select(TypedField f) {
     return getFieldFullName(f);
   }
 
@@ -43,7 +43,7 @@ public interface QueryRewriter {
    * @param f field to use in rollup
    * @return the customized argument
    */
-  default String rollup(Field f) {
+  default String rollup(TypedField f) {
     return getFieldFullName(f);
   }
 

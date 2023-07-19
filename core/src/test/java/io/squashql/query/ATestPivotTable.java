@@ -7,7 +7,7 @@ import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.PivotTableQueryDto;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import io.squashql.table.*;
 import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
@@ -30,13 +30,13 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
   protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
-  protected Map<String, List<Field>> getFieldsByStore() {
-    Field city = new Field(this.storeName, "city", String.class);
-    Field country = new Field(this.storeName, "country", String.class);
-    Field continent = new Field(this.storeName, "continent", String.class);
-    Field spendingCategory = new Field(this.storeName, "spending category", String.class);
-    Field spendingSubcategory = new Field(this.storeName, "spending subcategory", String.class);
-    Field amount = new Field(this.storeName, "amount", double.class);
+  protected Map<String, List<TypedField>> getFieldsByStore() {
+    TypedField city = new TypedField(this.storeName, "city", String.class);
+    TypedField country = new TypedField(this.storeName, "country", String.class);
+    TypedField continent = new TypedField(this.storeName, "continent", String.class);
+    TypedField spendingCategory = new TypedField(this.storeName, "spending category", String.class);
+    TypedField spendingSubcategory = new TypedField(this.storeName, "spending subcategory", String.class);
+    TypedField amount = new TypedField(this.storeName, "amount", double.class);
     return Map.of(this.storeName, List.of(city, country, continent, spendingCategory, spendingSubcategory, amount));
   }
 

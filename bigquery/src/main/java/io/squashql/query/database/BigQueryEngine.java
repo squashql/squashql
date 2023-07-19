@@ -7,7 +7,7 @@ import io.squashql.jackson.JacksonUtil;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
 import io.squashql.query.*;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import io.squashql.table.ColumnarTable;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.api.tuple.Pair;
@@ -50,19 +50,19 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   protected String createSqlStatement(DatabaseQuery query, QueryExecutor.PivotTableContext context) {
     boolean hasRollup = !query.rollup.isEmpty();
     BigQueryQueryRewriter rewriter = (BigQueryQueryRewriter) this.queryRewriter;
-    Function<String, Field> queryFieldSupplier = QueryExecutor.createQueryFieldSupplier(this, query.virtualTableDto);
+    Function<String, TypedField> queryFieldSupplier = QueryExecutor.createQueryFieldSupplier(this, query.virtualTableDto);
     if (!query.groupingSets.isEmpty()) {
       // rows = a,b,c; columns = x,y
       // (a,b,c,x,y)
       // (a,b,x,y,c)
       // (a,x,y,b,c)
       // (x,y,a,b,c)
-      List<Field> l = new ArrayList<>(context.getRowFields());
+      List<TypedField> l = new ArrayList<>(context.getRowFields());
       l.addAll(context.getColumnFields());
-      List<List<Field>> rollups = new ArrayList<>();
+      List<List<TypedField>> rollups = new ArrayList<>();
       rollups.add(l);
       for (int i = 0; i < context.getRowFields().size(); i++) {
-        List<Field> copy = new ArrayList<>(context.getRowFields());
+        List<TypedField> copy = new ArrayList<>(context.getRowFields());
         copy.addAll(i, context.getColumnFields());
         rollups.add(copy);
       }
@@ -110,26 +110,26 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       BigQueryQueryRewriter newRewriter = new BigQueryQueryRewriter(rewriter.projectId, rewriter.datasetName) {
 
         @Override
-        public String select(Field field) {
+        public String select(TypedField field) {
           Function<Object, String> quoter = SQLTranslator.getQuoteFn(field);
           return String.format("coalesce(%s, %s)", qr.select(field),
                   quoter.apply(BigQueryUtil.getNullValue(field.type())));
         }
 
         @Override
-        public String rollup(Field field) {
+        public String rollup(TypedField field) {
           Function<Object, String> quoter = SQLTranslator.getQuoteFn(field);
           return String.format("coalesce(%s, %s)", qr.rollup(field),
                   quoter.apply(BigQueryUtil.getNullValue(field.type())));
         }
 
         @Override
-        public String getFieldFullName(Field f) {
+        public String getFieldFullName(TypedField f) {
           return qr.getFieldFullName(f);
         }
       };
 
-      List<Field> missingColumnsInRollup = new ArrayList<>(query.select);
+      List<TypedField> missingColumnsInRollup = new ArrayList<>(query.select);
       missingColumnsInRollup.removeAll(query.rollup);
       DatabaseQuery deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), DatabaseQuery.class);
       // Missing columns needs to be added at the beginning to have the correct sub-totals
@@ -149,7 +149,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     }
 
     boolean isPartialRollup = !Set.copyOf(query.select).equals(Set.copyOf(query.rollup));
-    List<Field> missingColumnsInRollup = new ArrayList<>(query.select);
+    List<TypedField> missingColumnsInRollup = new ArrayList<>(query.select);
     missingColumnsInRollup.removeAll(query.rollup);
     Set<String> missingColumnsInRollupSet = missingColumnsInRollup.stream().map(SqlUtils::getFieldFullName).collect(Collectors.toSet());
 
@@ -275,7 +275,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     }
 
     @Override
-    public String getFieldFullName(Field f) {
+    public String getFieldFullName(TypedField f) {
       return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
     }
 

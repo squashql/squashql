@@ -3,7 +3,7 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.Period;
-import io.squashql.store.Field;
+import io.squashql.store.TypedField;
 import io.squashql.table.Table;
 import io.squashql.transaction.DataLoader;
 import org.assertj.core.api.Assertions;
@@ -33,16 +33,16 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
-  protected Map<String, List<Field>> getFieldsByStore() {
-    Field ean = new Field(this.storeName, "ean", String.class);
-    Field category = new Field(this.storeName, "category", String.class);
-    Field sales = new Field(this.storeName, "sales", double.class);
-    Field qty = new Field(this.storeName, "quantity", long.class);
-    Field year = new Field(this.storeName, "year_sales", long.class); // Use long to make sure we support also long as type
-    Field semester = new Field(this.storeName, "semester_sales", int.class);
-    Field quarter = new Field(this.storeName, "quarter_sales", int.class);
-    Field month = new Field(this.storeName, "month_sales", int.class);
-    Field date = new Field(this.storeName, "date_sales", LocalDate.class);
+  protected Map<String, List<TypedField>> getFieldsByStore() {
+    TypedField ean = new TypedField(this.storeName, "ean", String.class);
+    TypedField category = new TypedField(this.storeName, "category", String.class);
+    TypedField sales = new TypedField(this.storeName, "sales", double.class);
+    TypedField qty = new TypedField(this.storeName, "quantity", long.class);
+    TypedField year = new TypedField(this.storeName, "year_sales", long.class); // Use long to make sure we support also long as type
+    TypedField semester = new TypedField(this.storeName, "semester_sales", int.class);
+    TypedField quarter = new TypedField(this.storeName, "quarter_sales", int.class);
+    TypedField month = new TypedField(this.storeName, "month_sales", int.class);
+    TypedField date = new TypedField(this.storeName, "date_sales", LocalDate.class);
     return Map.of(this.storeName, List.of(ean, category, sales, qty, year, semester, quarter, month, date));
   }
 
