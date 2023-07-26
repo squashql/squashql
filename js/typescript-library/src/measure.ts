@@ -1,6 +1,8 @@
 import {PACKAGE, Period} from "./index"
-import {Condition, Criteria} from "./conditions"
+import {Criteria} from "./conditions"
 import {ColumnSetKey} from "./columnsets"
+import {Field, TableField} from "./field";
+import {toField} from "./util";
 
 // Marker type
 export type BasicMeasure = Measure
@@ -13,13 +15,13 @@ export interface Measure {
 
 export class AggregatedMeasure implements BasicMeasure {
   readonly class: string = PACKAGE + "AggregatedMeasure"
-  readonly field: string
+  readonly field: Field
   readonly aggregationFunction: string
   readonly alias: string
   readonly expression?: string
   readonly criteria?: Criteria
 
-  constructor(alias: string, field: string, aggregationFunction: string, criterion?: Criteria) {
+  constructor(alias: string, field: Field, aggregationFunction: string, criterion?: Criteria) {
     this.alias = alias
     this.field = field
     this.aggregationFunction = aggregationFunction
@@ -92,7 +94,7 @@ class CountMeasure extends AggregatedMeasure {
   private static _instance: CountMeasure
 
   public static get instance() {
-    return this._instance || (this._instance = new this("_contributors_count_", "*", "count"));
+    return this._instance || (this._instance = new this("_contributors_count_", new TableField("*"), "count"));
   }
 }
 
@@ -165,29 +167,47 @@ class DoubleConstantMeasure implements Measure {
 
 // Helpers
 
-export function sum(alias: string, field: string): Measure {
-  return new AggregatedMeasure(alias, field, "sum")
+// BASIC agg
+
+export function sum(alias: string, field: Field | string): Measure {
+  return new AggregatedMeasure(alias, toField(field), "sum")
 }
 
 export function min(alias: string, field: string): Measure {
-  return new AggregatedMeasure(alias, field, "min")
+  return new AggregatedMeasure(alias, toField(field), "min")
 }
 
 export function max(alias: string, field: string): Measure {
-  return new AggregatedMeasure(alias, field, "max")
+  return new AggregatedMeasure(alias, toField(field), "max")
 }
 
 export function avg(alias: string, field: string): Measure {
-  return new AggregatedMeasure(alias, field, "avg")
+  return new AggregatedMeasure(alias, toField(field), "avg")
 }
 
-export function sumIf(alias: string, field: string, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, field, "sum", criterion)
+// aggIf
+
+export function sumIf(alias: string, field: Field | string, criterion: Criteria): Measure {
+  return new AggregatedMeasure(alias, toField(field), "sum", criterion)
 }
 
-export function countIf(alias: string, field: string, criterion?: Criteria): Measure {
-  return new AggregatedMeasure(alias, field, "count", criterion)
+export function avgIf(alias: string, field: Field | string, criterion: Criteria): Measure {
+  return new AggregatedMeasure(alias, toField(field), "avg", criterion)
 }
+
+export function minIf(alias: string, field: Field | string, criterion: Criteria): Measure {
+  return new AggregatedMeasure(alias, toField(field), "min", criterion)
+}
+
+export function maxIf(alias: string, field: Field | string, criterion: Criteria): Measure {
+  return new AggregatedMeasure(alias, toField(field), "max", criterion)
+}
+
+export function countIf(alias: string, field: Field | string, criterion?: Criteria): Measure {
+  return new AggregatedMeasure(alias, toField(field), "count", criterion)
+}
+
+// BINARY
 
 export function plus(alias: string, measure1: Measure, measure2: Measure): Measure {
   return new BinaryOperationMeasure(alias, BinaryOperator.PLUS, measure1, measure2)
@@ -205,6 +225,8 @@ export function divide(alias: string, measure1: Measure, measure2: Measure): Mea
   return new BinaryOperationMeasure(alias, BinaryOperator.DIVIDE, measure1, measure2)
 }
 
+// CONSTANT
+
 export function integer(value: Number): Measure {
   return new LongConstantMeasure(value);
 }
@@ -212,6 +234,8 @@ export function integer(value: Number): Measure {
 export function decimal(value: Number): Measure {
   return new DoubleConstantMeasure(value);
 }
+
+// COMPARISON
 
 export function comparisonMeasureWithPeriod(alias: string,
                                             comparisonMethod: ComparisonMethod,

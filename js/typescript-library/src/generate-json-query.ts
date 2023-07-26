@@ -1,7 +1,7 @@
 import {from} from "./queryBuilder";
 import {all, ConditionType, criterion, eq, gt, havingCriterion, joinCriterion, lt} from "./conditions";
 import {BucketColumnSet} from "./columnsets";
-import {avg, ExpressionMeasure, sum} from "./measures";
+import {avg, ExpressionMeasure, sum} from "./measure";
 import {OrderKeyword} from "./order";
 import * as fs from "fs"
 import {VirtualTable} from "./virtualtable";

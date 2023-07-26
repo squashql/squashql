@@ -1,4 +1,5 @@
-import {AggregatedMeasure, BasicMeasure, PACKAGE} from "./index";
+import {AggregatedMeasure, BasicMeasure, Field, PACKAGE, TableField} from "./index";
+import {toField} from "./util";
 
 export interface Condition {
   readonly class: string
@@ -86,8 +87,8 @@ class LogicalCondition implements Condition {
 
 export class Criteria {
 
-  constructor(public field: string,
-              public fieldOther: string,
+  constructor(public field: Field,
+              public fieldOther: Field,
               private measure: BasicMeasure,
               private condition: Condition,
               public conditionType: ConditionType,
@@ -95,12 +96,12 @@ export class Criteria {
   }
 }
 
-export function criterion(field: string, condition: Condition): Criteria {
-  return new Criteria(field, undefined, undefined, condition, undefined, undefined)
+export function criterion(field: Field | string, condition: Condition): Criteria {
+  return new Criteria(toField(field), undefined, undefined, condition, undefined, undefined)
 }
 
-export function joinCriterion(field: string, fieldOther: string, conditionType: ConditionType): Criteria {
-  return new Criteria(field, fieldOther, undefined, undefined, conditionType, undefined)
+export function joinCriterion(field: Field | string, fieldOther: Field | string, conditionType: ConditionType): Criteria {
+  return new Criteria(toField(field), toField(fieldOther), undefined, undefined, conditionType, undefined)
 }
 
 export function havingCriterion(measure: BasicMeasure, condition: Condition): Criteria {

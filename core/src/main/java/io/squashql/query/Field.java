@@ -1,4 +1,4 @@
-package io.squashql.query.api;
+package io.squashql.query;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.squashql.query.database.QueryRewriter;

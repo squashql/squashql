@@ -1,7 +1,5 @@
 package io.squashql.query;
 
-import io.squashql.query.api.Field;
-import io.squashql.query.api.TableField;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;

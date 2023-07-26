@@ -1,6 +1,5 @@
-package io.squashql.query.api;
+package io.squashql.query;
 
-import io.squashql.query.BinaryOperator;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.store.TypedField;
 import lombok.AllArgsConstructor;

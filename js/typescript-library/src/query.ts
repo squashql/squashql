@@ -1,4 +1,4 @@
-import {Measure} from "./measures";
+import {Measure} from "./measure";
 import {ConditionType, Criteria} from "./conditions";
 import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order";
 import {BucketColumnSet, ColumnSet, ColumnSetKey} from "./columnsets";

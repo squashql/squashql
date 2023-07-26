@@ -1,9 +1,10 @@
-import {Measure} from "./measures";
+import {Measure} from "./measure";
 import {ColumnSet} from "./columnsets";
 import {JoinMapping, JoinType, Query, Table} from "./query";
 import {Criteria} from "./conditions";
 import {OrderKeyword} from "./order";
 import {VirtualTable} from "./virtualtable";
+import {TableField} from "./field";
 
 export interface CanAddOrderBy {
   orderBy(column: string, order: OrderKeyword): HasHaving
@@ -148,7 +149,10 @@ class JoinTableBuilder implements HasStartedBuildingJoin {
     if (joinCriterion.children?.length > 0) {
       joinCriterion.children.forEach(c => this.on(c))
     } else {
-      this.mappings.push(new JoinMapping(joinCriterion.field, joinCriterion.fieldOther, joinCriterion.conditionType))
+      this.mappings.push(new JoinMapping(
+              (joinCriterion.field as TableField).name,
+              (joinCriterion.fieldOther as TableField).name,
+              joinCriterion.conditionType))
     }
     return this.parent
   }

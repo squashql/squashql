@@ -1,9 +1,6 @@
 package io.squashql.query;
 
 import io.squashql.query.agg.AggregationFunction;
-import io.squashql.query.api.BinaryOperationField;
-import io.squashql.query.api.Field;
-import io.squashql.query.api.TableField;
 import io.squashql.query.dto.*;
 
 import java.util.List;
@@ -149,6 +146,10 @@ public class Functions {
 
   public static Measure avg(String alias, String field) {
     return new AggregatedMeasure(alias, field, AggregationFunction.AVG);
+  }
+
+  public static Measure avgIf(String alias, Field field, CriteriaDto criteriaDto) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.AVG, criteriaDto);
   }
 
   public static Field divide(Field a, Field b) {

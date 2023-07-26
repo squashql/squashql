@@ -1,8 +1,5 @@
 package io.squashql.query;
 
-import io.squashql.query.api.ConstantField;
-import io.squashql.query.api.Field;
-import io.squashql.query.api.TableField;
 import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.DefaultQueryRewriter;
@@ -403,6 +400,5 @@ public class TestSQLTranslator {
     Measure whatever = sum("whatever", divide(initial_price, plus(one, tvaRate)));
     Assertions.assertThat(whatever.sqlExpression(fp, DefaultQueryRewriter.INSTANCE, true))
             .isEqualTo("sum((`recommendation`.`initial_price`/(1+`product`.`tva_rate`))) as `whatever`");
-
   }
 }

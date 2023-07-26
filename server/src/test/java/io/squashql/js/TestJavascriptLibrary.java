@@ -2,6 +2,8 @@ package io.squashql.js;
 
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
+import io.squashql.query.ConstantField;
+import io.squashql.query.TableField;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.*;
 import io.squashql.query.parameter.QueryCacheParameter;
@@ -42,6 +44,12 @@ public class TestJavascriptLibrary {
     q.withMeasure(CountMeasure.INSTANCE);
     q.withMeasure(integer(123));
     q.withMeasure(decimal(1.23));
+
+    var f1 = new TableField("f1");
+    var f2 = new TableField("f2");
+    var rate = new TableField("rate");
+    var one = new ConstantField(1);
+    q.withMeasure(avgIf("whatever", divide(f1, plus(one, rate)), criterion(plus(f1, f2), one, ConditionType.GT)));
 
     q.withMeasure(new ComparisonMeasureReferencePosition("comp bucket",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,

@@ -1,6 +1,7 @@
 import {JoinMapping, JoinType, Query, Table} from "./query"
 import {
   AggregatedMeasure,
+  avgIf,
   BinaryOperationMeasure,
   BinaryOperator,
   comparisonMeasureWithBucket,
@@ -12,7 +13,7 @@ import {
   ExpressionMeasure,
   integer,
   sum,
-} from "./measures"
+} from "./measure"
 import {
   _in,
   all,
@@ -25,6 +26,7 @@ import {
   havingCriterion,
   isNotNull,
   isNull,
+  joinCriterion,
   like,
   lt,
   or
@@ -32,6 +34,7 @@ import {
 import * as fs from "fs"
 import {OrderKeyword} from "./order";
 import {BucketColumnSet, Month} from "./columnsets";
+import {ConstantField, TableField} from "./field";
 
 export function generateFromQueryDto() {
   const table = new Table("myTable")
@@ -44,9 +47,9 @@ export function generateFromQueryDto() {
           .withColumn("a")
           .withColumn("b")
 
-  const price = new AggregatedMeasure("price.sum", "price", "sum")
+  const price = new AggregatedMeasure("price.sum", new TableField("price"), "sum")
   q.withMeasure(price)
-  const priceFood = new AggregatedMeasure("alias", "price", "sum", criterion("category", eq("food")))
+  const priceFood = new AggregatedMeasure("alias", new TableField("price"), "sum", criterion("category", eq("food")))
   q.withMeasure(priceFood)
   const plus = new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood)
   q.withMeasure(plus)
@@ -55,6 +58,12 @@ export function generateFromQueryDto() {
   q.withMeasure(count)
   q.withMeasure(integer(123))
   q.withMeasure(decimal(1.23))
+
+  const f1 = new TableField("f1")
+  const f2 = new TableField("f2")
+  const rate = new TableField("rate")
+  const one = new ConstantField(1)
+  q.withMeasure(avgIf("whatever", f1.divide(one.plus(rate)), joinCriterion(f1.plus(f2), one, ConditionType.GT)))
 
   q.withMeasure(comparisonMeasureWithBucket("comp bucket", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, new Map(Object.entries({
     "group": "g",

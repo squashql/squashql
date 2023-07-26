@@ -1,6 +1,6 @@
 package io.squashql.query.dto;
 
-import io.squashql.query.api.TableField;
+import io.squashql.query.TableField;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;

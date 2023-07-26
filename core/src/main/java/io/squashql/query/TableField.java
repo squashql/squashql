@@ -1,4 +1,4 @@
-package io.squashql.query.api;
+package io.squashql.query;
 
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.store.TypedField;
@@ -7,19 +7,24 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import java.util.Objects;
 import java.util.function.Function;
 
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
 @AllArgsConstructor
-public class ConstantField implements Field {
+public class TableField implements Field {
 
-  public Object value;
+  public String name;
 
   @Override
   public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter) {
-    return Objects.toString(this.value);
+    if (CountMeasure.FIELD_NAME.equals(this.name)) {
+      return CountMeasure.FIELD_NAME;
+    } else {
+      Function<String, TypedField> fp = MeasureUtils.withFallback(fieldProvider, String.class);
+      TypedField f = fp.apply(this.name);
+      return queryRewriter.getFieldFullName(f);
+    }
   }
 }

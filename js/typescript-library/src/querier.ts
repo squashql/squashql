@@ -1,6 +1,6 @@
 import axios, {AxiosInstance} from "axios";
 import {Query, QueryMerge} from "./query";
-import {Measure} from "./measures";
+import {Measure} from "./measure";
 import {CreateAxiosDefaults} from "axios/index";
 import {PivotConfig, PivotTableQuery} from "./pivotTableQuery";
 

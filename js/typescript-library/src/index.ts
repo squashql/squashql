@@ -15,7 +15,7 @@ export {
   comparisonMeasureWithPeriod, comparisonMeasureWithBucket, comparisonMeasureWithParent,
   count,
   ComparisonMethod,
-} from './measures'
+} from './measure'
 
 export {
   Condition,
@@ -47,3 +47,7 @@ export {
   HasTable, CanAddRollup,
   from, fromSubQuery
 } from './queryBuilder'
+
+export {
+  Field, TableField, ConstantField
+} from './field'
