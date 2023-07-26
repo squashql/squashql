@@ -1,60 +1,67 @@
 package io.squashql.query.dto;
 
 public enum ConditionType {
+
   /**
    * Logical AND condition.
    */
-  AND,
+  AND("and"),
   /**
    * Logical OR condition.
    */
-  OR,
+  OR("or"),
   /**
    * In comparison.
    */
-  IN,
+  IN("in"),
   /**
    * Equal.
    */
-  EQ,
+  EQ("="),
   /**
    * Not Equal.
    */
-  NEQ,
+  NEQ("<>"),
   /**
    * Lower than.
    */
-  LT,
+  LT("<"),
   /**
    * Lower.
    */
-  LE,
+  LE("<="),
   /**
    * Greater than.
    */
-  GT,
+  GT(">"),
   /**
    * Greater.
    */
-  GE,
+  GE(">="),
   /**
    * Like.
    */
-  LIKE,
+  LIKE("like"),
   /**
    * Static condition, true only.
    */
-  TRUE,
+  TRUE("true"),
   /**
    * Static condition, false only.
    */
-  FALSE,
+  FALSE("false"),
   /**
    * Is Null
    */
-  NULL,
+  NULL("is null"),
   /**
    * Is Not Null
    */
-  NOT_NULL,
+  NOT_NULL("is not null");
+
+  public final String sqlInfix;
+
+  ConditionType(String sqlInfix) {
+    this.sqlInfix = sqlInfix;
+  }
 }

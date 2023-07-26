@@ -1,6 +1,9 @@
 package io.squashql.query;
 
 import io.squashql.query.agg.AggregationFunction;
+import io.squashql.query.api.BinaryOperationField;
+import io.squashql.query.api.Field;
+import io.squashql.query.api.TableField;
 import io.squashql.query.dto.*;
 
 import java.util.List;
@@ -13,11 +16,19 @@ public class Functions {
 
   // joinCriterion
   public static CriteriaDto criterion(String field, String fieldOther, ConditionType conditionType) {
+    return new CriteriaDto(new TableField(field), new TableField(fieldOther), conditionType);
+  }
+
+  public static CriteriaDto criterion(Field field, Field fieldOther, ConditionType conditionType) {
     return new CriteriaDto(field, fieldOther, conditionType);
   }
 
   // whereCriterion
   public static CriteriaDto criterion(String field, ConditionDto conditionDto) {
+    return new CriteriaDto(new TableField(field), conditionDto);
+  }
+
+  public static CriteriaDto criterion(Field field, ConditionDto conditionDto) {
     return new CriteriaDto(field, conditionDto);
   }
 
@@ -116,16 +127,44 @@ public class Functions {
     return new AggregatedMeasure(alias, field, AggregationFunction.MIN);
   }
 
+  public static Measure min(String alias, Field field) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.MIN, null);
+  }
+
   public static Measure sum(String alias, String field) {
     return new AggregatedMeasure(alias, field, AggregationFunction.SUM);
   }
 
+  public static Measure sum(String alias, Field field) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.SUM, null);
+  }
+
   public static Measure sumIf(String alias, String field, CriteriaDto criteriaDto) {
+    return new AggregatedMeasure(alias, new TableField(field), AggregationFunction.SUM, criteriaDto);
+  }
+
+  public static Measure sumIf(String alias, Field field, CriteriaDto criteriaDto) {
     return new AggregatedMeasure(alias, field, AggregationFunction.SUM, criteriaDto);
   }
 
   public static Measure avg(String alias, String field) {
     return new AggregatedMeasure(alias, field, AggregationFunction.AVG);
+  }
+
+  public static Field divide(Field a, Field b) {
+    return new BinaryOperationField(DIVIDE, a, b);
+  }
+
+  public static Field multiply(Field a, Field b) {
+    return new BinaryOperationField(MULTIPLY, a, b);
+  }
+
+  public static Field minus(Field a, Field b) {
+    return new BinaryOperationField(MINUS, a, b);
+  }
+
+  public static Field plus(Field a, Field b) {
+    return new BinaryOperationField(PLUS, a, b);
   }
 
   public static Measure integer(long value) {

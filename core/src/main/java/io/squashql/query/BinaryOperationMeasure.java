@@ -33,9 +33,11 @@ public class BinaryOperationMeasure implements Measure {
   @Override
   public String sqlExpression(Function<String, TypedField> fp, QueryRewriter qr, boolean withAlias) {
     String sql = new StringBuilder()
+            .append("(")
             .append(this.leftOperand.sqlExpression(fp, qr, false))
             .append(this.operator.infix)
             .append(this.rightOperand.sqlExpression(fp, qr, false))
+            .append(")")
             .toString();
     return withAlias ? SqlUtils.appendAlias(sql, qr, this.alias) : sql;
   }

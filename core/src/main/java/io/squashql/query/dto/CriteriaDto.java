@@ -2,6 +2,7 @@ package io.squashql.query.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.squashql.query.BasicMeasure;
+import io.squashql.query.api.Field;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -19,14 +20,14 @@ public class CriteriaDto {
 
   public static final CriteriaDto NO_CRITERIA = new CriteriaDto(AND, Collections.emptyList());
 
-  public String field;
-  public String fieldOther;
+  public Field field;
+  public Field fieldOther;
   public BasicMeasure measure;
   public ConditionDto condition;
   public ConditionType conditionType;
   public List<CriteriaDto> children;
 
-  public CriteriaDto(String field, ConditionDto condition) {
+  public CriteriaDto(Field field, ConditionDto condition) {
     this.field = field;
     this.condition = condition;
   }
@@ -41,7 +42,7 @@ public class CriteriaDto {
     this.children = criteriaDtos;
   }
 
-  public CriteriaDto(String field, String fieldOther, ConditionType conditionType) {
+  public CriteriaDto(Field field, Field fieldOther, ConditionType conditionType) {
     this.field = field;
     this.fieldOther = fieldOther;
     this.conditionType = conditionType;
