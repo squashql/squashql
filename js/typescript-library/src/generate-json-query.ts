@@ -1,5 +1,5 @@
 import {from} from "./queryBuilder";
-import {all, ConditionType, criterion, eq, gt, havingCriterion, joinCriterion, lt} from "./conditions";
+import {all, ConditionType, criterion, eq, gt, havingCriterion, criterion_, lt} from "./conditions";
 import {BucketColumnSet} from "./columnsets";
 import {avg, ExpressionMeasure, sum} from "./measure";
 import {OrderKeyword} from "./order";
@@ -19,9 +19,9 @@ export function generateFromQuery() {
   const measureExpr = new ExpressionMeasure("sum_expr", "sum(f1)");
   const q = from("myTable")
           .join("refTable", JoinType.INNER)
-          .on(all([joinCriterion("myTable.id", "refTable.id", ConditionType.EQ), joinCriterion("myTable.a", "refTable.a", ConditionType.EQ)]))
+          .on(all([criterion_("myTable.id", "refTable.id", ConditionType.EQ), criterion_("myTable.a", "refTable.a", ConditionType.EQ)]))
           .joinVirtual(cte, JoinType.INNER)
-          .on(all([joinCriterion("myTable.value", "myCte.min", ConditionType.GE), joinCriterion("myTable.value", "myCte.max", ConditionType.LT)]))
+          .on(all([criterion_("myTable.value", "myCte.min", ConditionType.GE), criterion_("myTable.value", "myCte.max", ConditionType.LT)]))
           .where(all([criterion("f2", gt(659)), criterion("f3", eq(123))]))
           .select(["a", "b"],
                   [bucketColumnSet],

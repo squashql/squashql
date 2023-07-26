@@ -26,7 +26,7 @@ import {
   havingCriterion,
   isNotNull,
   isNull,
-  joinCriterion,
+  criterion_,
   like,
   lt,
   or
@@ -63,7 +63,7 @@ export function generateFromQueryDto() {
   const f2 = new TableField("f2")
   const rate = new TableField("rate")
   const one = new ConstantField(1)
-  q.withMeasure(avgIf("whatever", f1.divide(one.plus(rate)), joinCriterion(f1.plus(f2), one, ConditionType.GT)))
+  q.withMeasure(avgIf("whatever", f1.divide(one.plus(rate)), criterion_(f1.plus(f2), one, ConditionType.GT)))
 
   q.withMeasure(comparisonMeasureWithBucket("comp bucket", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, new Map(Object.entries({
     "group": "g",

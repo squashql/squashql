@@ -100,7 +100,7 @@ export function criterion(field: Field | string, condition: Condition): Criteria
   return new Criteria(toField(field), undefined, undefined, condition, undefined, undefined)
 }
 
-export function joinCriterion(field: Field | string, fieldOther: Field | string, conditionType: ConditionType): Criteria {
+export function criterion_(field: Field | string, fieldOther: Field | string, conditionType: ConditionType): Criteria {
   return new Criteria(toField(field), toField(fieldOther), undefined, undefined, conditionType, undefined)
 }
 
