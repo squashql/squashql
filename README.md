@@ -134,6 +134,8 @@ querier.execute(query, undefined, true).then(r => console.log(r));
 
 #### Pivot table query
 
+SquashQL brings the ability to execute any SQL queries and transform their results into a format suitable for pivot table visualization. Check out [this example](https://github.com/squashql/squashql-showcase/blob/main/TUTORIAL.md#pivot-table) in our tutorial.
+
 To execute a query whose result will be enriched with totals and subtotals to be able to display the result as a pivot table.
 It accepts a json object built with the Typescript library and returns a JSON object representing the result table of the computation. 
 The object returns is of type [PivotTableQueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts#L59).
