@@ -289,8 +289,8 @@ Java
 ServiceAccountCredentials credentials = ...; // to be defined
 String projectId = ...; // to be defined
 String datasetName = ...;// to be defined
-BigQueryDatastore ds = new BigQueryDatastore(credentials, projectId, datasetName);
-BigQueryQueryEngine qe = new BigQueryQueryEngine(ds);
+BigQueryDatastore ds = new BigQueryServiceAccountDatastore(credentials, projectId, datasetName);
+BigQueryEngine qe = new BigQueryEngine(ds);
 ```
 
 See how to create a [credentials object in BigQuery documentation](https://cloud.google.com/bigquery/docs/authentication/service-account-file)
