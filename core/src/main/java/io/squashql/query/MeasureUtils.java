@@ -33,11 +33,12 @@ public final class MeasureUtils {
 
   public static String createExpression(Measure m) {
     if (m instanceof AggregatedMeasure a) {
+      Function<String, TypedField> fieldProvider = s -> new TypedField(null, s, String.class);
       if (a.criteria != null) {
-        String conditionSt = SQLTranslator.toSql(f -> new TypedField(null, f, String.class), a.criteria, BASIC);
-        return a.aggregationFunction + "If(" + a.field + ", " + conditionSt + ")";
+        String conditionSt = SQLTranslator.toSql(fieldProvider, a.criteria, BASIC);
+        return a.aggregationFunction + "If(" + a.field.sqlExpression(fieldProvider, BASIC) + ", " + conditionSt + ")";
       } else {
-        return a.aggregationFunction + "(" + a.field + ")";
+        return a.aggregationFunction + "(" + a.field.sqlExpression(fieldProvider, BASIC) + ")";
       }
     } else if (m instanceof BinaryOperationMeasure bom) {
       return quoteExpression(bom.leftOperand) + " " + bom.operator.infix + " " + quoteExpression(bom.rightOperand);
@@ -104,7 +105,7 @@ public final class MeasureUtils {
     if (root == null) {
       return null;
     } else if (root.isWhereCriterion()) {
-      return root.field.equals(field) ? null : root;
+      return (((TableField) root.field).name).equals(field) ? null : root;
     } else {
       removeCriteriaOnField(field, root.children);
       return root;
@@ -116,7 +117,7 @@ public final class MeasureUtils {
     while (iterator.hasNext()) {
       CriteriaDto criteriaDto = iterator.next();
       if (criteriaDto.isWhereCriterion()) {
-        if (criteriaDto.field.equals(field)) {
+        if (((TableField) criteriaDto.field).name.equals(field)) {
           iterator.remove();
         }
       } else {

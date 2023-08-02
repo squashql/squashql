@@ -1,5 +1,5 @@
 import {from} from "./queryBuilder";
-import {avg, sum} from "./measures";
+import {avg, sum} from "./measure";
 import * as fs from "fs"
 import {JoinType, QueryMerge} from "./query";
 

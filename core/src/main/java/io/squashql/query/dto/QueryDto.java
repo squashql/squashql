@@ -1,5 +1,6 @@
 package io.squashql.query.dto;
 
+import io.squashql.query.TableField;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -89,7 +90,7 @@ public class QueryDto {
     if (this.whereCriteriaDto == null) {
       this.whereCriteriaDto = new CriteriaDto(AND, new ArrayList<>());
     }
-    this.whereCriteriaDto.children.add(new CriteriaDto(field, conditionDto));
+    this.whereCriteriaDto.children.add(new CriteriaDto(new TableField(field), conditionDto));
     return this;
   }
 

@@ -10,12 +10,14 @@ export {
 
 export {
   Measure, AggregatedMeasure, ExpressionMeasure, BasicMeasure,
-  sum, min, max, avg, sumIf, countIf, plus, minus, multiply, divide,
+  sum, min, max, avg,
+  sumIf, minIf, maxIf, avgIf, countIf,
+  plus, minus, multiply, divide,
   integer, decimal,
   comparisonMeasureWithPeriod, comparisonMeasureWithBucket, comparisonMeasureWithParent,
   count,
   ComparisonMethod,
-} from './measures'
+} from './measure'
 
 export {
   Condition,
@@ -47,3 +49,7 @@ export {
   HasTable, CanAddRollup,
   from, fromSubQuery
 } from './queryBuilder'
+
+export {
+  Field, TableField, ConstantField
+} from './field'

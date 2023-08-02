@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
+import io.squashql.query.database.DefaultQueryRewriter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.store.TypedField;
@@ -285,11 +286,14 @@ public class TestSQLTranslator {
   @Test
   void testBinaryOperationMeasure() {
     TableDto a = new TableDto("a");
+    Measure plus = plus("plus", sum("pnl.sum", "pnl"), avg("delta.avg", "delta"));
+    Measure divide = divide("divide", plus, Functions.decimal(100));
     DatabaseQuery query = new DatabaseQuery()
             .table(a)
-            .withMeasure(plus("plus", sum("pnl.sum", "pnl"), avg("delta.avg", "delta")));
+            .withMeasure(plus)
+            .withMeasure(divide);
     Assertions.assertThat(translate(query, fp))
-            .isEqualTo("select sum(`pnl`)+avg(`delta`) as `plus` from `a`");
+            .isEqualTo("select (sum(`pnl`)+avg(`delta`)) as `plus`, ((sum(`pnl`)+avg(`delta`))/100.0) as `divide` from `a`");
   }
 
   @Test
@@ -373,5 +377,28 @@ public class TestSQLTranslator {
 
     Assertions.assertThat(translate(query, fp))
             .isEqualTo("select `a`, `b`, grouping(`a`), grouping(`b`), sum(`pnl`) as `pnl.sum` from `baseStore` group by grouping sets((), (`a`), (`a`,`b`))");
+  }
+
+  @Test
+  void testComplexAggregatedMeasures() {
+    Field finalPrice = new TableField("recommendation.finalprice");
+    Field recoPrice = new TableField("recommendation.recoprice");
+    Measure measure = sumIf("increase_sum", minus(finalPrice, recoPrice), all(
+            criterion(finalPrice, recoPrice, ConditionType.GT),
+            criterion(recoPrice, gt(0))
+    ));
+
+    String expression = measure.sqlExpression(fp, DefaultQueryRewriter.INSTANCE, true);
+    Assertions.assertThat(expression)
+            .isEqualTo("sum(case when (`recommendation`.`finalprice` > `recommendation`.`recoprice` and `recommendation`.`recoprice` > '0')" +
+                    " then (`recommendation`.`finalprice`-`recommendation`.`recoprice`) end)" +
+                    " as `increase_sum`");
+
+    Field initial_price = new TableField("recommendation.initial_price");
+    Field one = new ConstantField(1);
+    Field tvaRate = new TableField("product.tva_rate");
+    Measure whatever = sum("whatever", divide(initial_price, plus(one, tvaRate)));
+    Assertions.assertThat(whatever.sqlExpression(fp, DefaultQueryRewriter.INSTANCE, true))
+            .isEqualTo("sum((`recommendation`.`initial_price`/(1+`product`.`tva_rate`))) as `whatever`");
   }
 }
