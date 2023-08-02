@@ -198,7 +198,7 @@ import {
 
 const q = from("myTable")
         .join("refTable", JoinType.INNER)
-        .on(joinCriterion("myTable.id", "refTable.id", ConditionType.EQ))
+        .on(criterion_("myTable.id", "refTable.id", ConditionType.EQ))
         .select(["myTable.col", "refTable.col"], [], [])
         .build()
 ```
@@ -214,14 +214,14 @@ For multiple condition, chain the criteria with `all`.
 
 ```typescript
 import {
-  from, JoinType, ConditionType, joinCriterion, all
+  from, JoinType, ConditionType, criterion_, all
 } from "@squashql/squashql-js"
 
 const q = from("myTable")
         .join("refTable", JoinType.INNER)
         .on(all([
-          joinCriterion("myTable.id1", "refTable.id1", ConditionType.EQ),
-          joinCriterion("myTable.id2", "refTable.id2", ConditionType.EQ)
+          criterion_("myTable.id1", "refTable.id1", ConditionType.EQ),
+          criterion_("myTable.id2", "refTable.id2", ConditionType.EQ)
         ]))
         .select(["myTable.col", "refTable.col"], [], [])
         .build()
@@ -238,8 +238,8 @@ If your database supports non-equi joins, the `ConditionType` can be changed in 
 const q = from("myTable")
         .join("refTable", JoinType.LEFT)
         .on(all([
-          joinCriterion("myTable.kpi", "refTable.min", ConditionType.GE),
-          joinCriterion("myTable.kpi", "refTable.max", ConditionType.LT)
+          criterion_("myTable.kpi", "refTable.min", ConditionType.GE),
+          criterion_("myTable.kpi", "refTable.max", ConditionType.LT)
         ]))
         .select(["myTable.col", "refTable.col"], [], [])
         .build()
@@ -299,8 +299,8 @@ operator that takes a `VirtualTable` object as argument.
 const q = from("tasks")
         .joinVirtual(prioryLevels, JoinType.INNER)
         .on(all([
-          joinCriterion("tasks.priority", "prioryLevels.min", ConditionType.GE),
-          joinCriterion("tasks.priority", "prioryLevels.max", ConditionType.LT)
+          criterion_("tasks.priority", "prioryLevels.min", ConditionType.GE),
+          criterion_("tasks.priority", "prioryLevels.max", ConditionType.LT)
         ]))
         .select(["prioryLevels.priority"], [], [count])
         .build()
@@ -442,6 +442,37 @@ FROM (SELECT SUM(score) AS score_sum FROM student GROUP BY name)
 
 (from [https://mariadb.com/kb/en/subqueries-in-a-from-clause/](https://mariadb.com/kb/en/subqueries-in-a-from-clause/))
 
+## Fields
+
+The interface `Field` can be used to represent either:
+- A column/field of a table: `TableField` e.g. `const a = new TableField("myTable.a")`
+- A constant value: `ConstantField` e.g. `const one = new ConstantField(1)`
+
+Fields can be combined to produce other fields to be used in calculations. 
+
+```typescript
+import {
+  TableField,
+  ConstantField,
+  avg,
+  from,
+} from "@squashql/squashql-js"
+
+const a = new TableField("myTable.a")
+const rate = new TableField("myTable.rate")
+const one = new ConstantField(1)
+const myMeasure = avg("myMeasure", a.divide(one.plus(rate)))
+
+const query = from("myTable")
+        .select([], [], [myMeasure])
+        .build()
+```
+
+```sql
+SELECT AVG(myTable.a / (1 + myTable.rate)) AS myMeasure
+FROM myTable
+```
+
 ## Measures
 
 A Measure represents aggregated values and is usually numeric. Measure can be split into two categories depending on 
@@ -461,9 +492,9 @@ A basic measure **is always computed by the underlying database**.
 
 #### Aggregate measure
 
-An aggregate measure is computed by applying an aggregation function over a list of field values such as avg, count, sum, min, max...
+An aggregate measure is computed by applying an aggregation function over a list of field values such as `count`, `sum`, `min`, `max`, `avg`...
 
-Aggregation can also be applied to only the rows matching a [condition](#filtering) with `sumIf`, `countIf`...
+Aggregation can also be applied to only the rows matching a [condition](#filtering) with `sumIf`, `minIf`, `maxIf`, `avgIf`, `countIf`...
 
 ```typescript
 import {

@@ -173,15 +173,15 @@ export function sum(alias: string, field: Field | string): Measure {
   return new AggregatedMeasure(alias, toField(field), "sum")
 }
 
-export function min(alias: string, field: string): Measure {
+export function min(alias: string, field: Field | string): Measure {
   return new AggregatedMeasure(alias, toField(field), "min")
 }
 
-export function max(alias: string, field: string): Measure {
+export function max(alias: string, field: Field | string): Measure {
   return new AggregatedMeasure(alias, toField(field), "max")
 }
 
-export function avg(alias: string, field: string): Measure {
+export function avg(alias: string, field: Field | string): Measure {
   return new AggregatedMeasure(alias, toField(field), "avg")
 }
 
