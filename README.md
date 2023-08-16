@@ -37,6 +37,12 @@ SquashQL is currently compatible with the following SQL databases: [Apache Spark
 [ClickHouse](https://clickhouse.com/), [BigQuery](https://cloud.google.com/bigquery/), [Snowflake](https://www.snowflake.com/en/) 
 and [DuckDB](https://duckdb.org/). 
 
+## Documentation
+
+- [Typescript API](documentation/QUERY.md)
+- [Drilling across](documentation/DRILLING-ACROSS.md)
+- [Cache](documentation/CACHE.md)
+
 ## API
 
 SquashQL provides an easy-to-use Typescript library to write SQL-like queries. See the [full documentation here](documentation/QUERY.md).
