@@ -51,7 +51,7 @@ export class ConstantField extends AField {
 export class TableField extends AField {
   readonly class: string = PACKAGE + "TableField"
 
-  constructor(readonly name: any) {
+  constructor(readonly name: string) {
     super();
   }
 
