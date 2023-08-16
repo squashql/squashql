@@ -32,7 +32,7 @@ public class QueryController {
   public static final String MAPPING_METADATA = "/metadata";
   public static final String MAPPING_EXPRESSION = "/expression";
   protected final QueryEngine<?> queryEngine;
-  protected final QueryExecutor queryExecutor;
+  public final QueryExecutor queryExecutor;
   protected final Supplier<SquashQLUser> squashQLUserSupplier;
 
   public QueryController(QueryEngine<?> queryEngine, Optional<Supplier<SquashQLUser>> squashQLUserSupplier) {

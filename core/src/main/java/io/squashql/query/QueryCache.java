@@ -18,10 +18,15 @@ public interface QueryCache {
 
   void contributeToResult(Table result, Set<Measure> measures, PrefetchQueryScope scope);
 
+  /**
+   * Invalidates the cache associated to the given user.
+   *
+   * @param user the user identifier
+   */
   void clear(SquashQLUser user);
 
   /**
-   * For testing purpose only.
+   * Invalidate the whole cache.
    */
   void clear();
 
