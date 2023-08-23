@@ -401,4 +401,18 @@ public class TestSQLTranslator {
     Assertions.assertThat(whatever.sqlExpression(fp, DefaultQueryRewriter.INSTANCE, true))
             .isEqualTo("sum((`recommendation`.`initial_price`/(1+`product`.`tva_rate`))) as `whatever`");
   }
+
+  @Test
+  void testComplexFieldCalculation() {
+    Field f1 = new TableField("f1");
+    Field f2 = new TableField("f2");
+    Field f3 = new TableField("f3");
+
+    BinaryOperationField f1_minus_f2 = new BinaryOperationField(BinaryOperator.MINUS, f1, f2);
+    BinaryOperationField divide = new BinaryOperationField(BinaryOperator.DIVIDE, f1_minus_f2, f1);
+    BinaryOperationField multiply = new BinaryOperationField(BinaryOperator.MULTIPLY, divide, f3);
+    BinaryOperationField plus = new BinaryOperationField(BinaryOperator.PLUS, multiply, new ConstantField(2));
+    Assertions.assertThat(plus.sqlExpression(fp, DefaultQueryRewriter.INSTANCE))
+            .isEqualTo("((((`f1`-`f2`)/`f1`)*`f3`)+2)");
+  }
 }
