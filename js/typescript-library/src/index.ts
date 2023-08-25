@@ -5,7 +5,7 @@ export {
 } from './query'
 
 export {
-  OrderKeyword,
+  Order, OrderKeyword, SimpleOrder,
 } from './order'
 
 export {
@@ -21,6 +21,8 @@ export {
 
 export {
   Condition,
+  ConditionType,
+  Criteria,
   eq, neq, lt, le, gt, ge, _in, like, isNull, isNotNull,
   and, or,
   all, any, criterion, havingCriterion,
@@ -32,7 +34,7 @@ export {
 } from './columnsets'
 
 export {
-  Parameter, QueryCacheParameter,
+  Action, Parameter, QueryCacheParameter,
 } from './parameters'
 
 export {
