@@ -175,4 +175,17 @@ public class TestQueryS13n {
     Parameter deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(cv), Parameter.class);
     Assertions.assertThat(deserialize).isEqualTo(cv);
   }
+
+  @Test
+  void testTableField() {
+    TableField fieldFullName = new TableField("table.name");
+    TableField simpleNameField = new TableField("name");
+    TableField field = new TableField("table","name");
+    TableField fieldFullNameDeserialize = JacksonUtil.deserialize(JacksonUtil.serialize(fieldFullName), TableField.class);
+    Assertions.assertThat(fieldFullNameDeserialize).isEqualTo(fieldFullName);
+    TableField fieldDeserialize = JacksonUtil.deserialize(JacksonUtil.serialize(field), TableField.class);
+    Assertions.assertThat(fieldDeserialize).isEqualTo(field);
+    TableField simpleFieldDeserialize = JacksonUtil.deserialize(JacksonUtil.serialize(simpleNameField), TableField.class);
+    Assertions.assertThat(simpleFieldDeserialize).isEqualTo(simpleNameField);
+  }
 }

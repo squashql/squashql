@@ -59,8 +59,8 @@ export function generateFromQueryDto() {
   q.withMeasure(integer(123))
   q.withMeasure(decimal(1.23))
 
-  const f1 = new TableField("f1")
-  const f2 = new TableField("f2")
+  const f1 = new TableField("myTable.f1")
+  const f2 = new TableField("myTable.f2")
   const rate = new TableField("rate")
   const one = new ConstantField(1)
   q.withMeasure(avgIf("whatever", f1.divide(one.plus(rate)), criterion_(f1.plus(f2), one, ConditionType.GT)))

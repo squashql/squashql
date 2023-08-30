@@ -45,8 +45,8 @@ public class TestJavascriptLibrary {
     q.withMeasure(integer(123));
     q.withMeasure(decimal(1.23));
 
-    var f1 = new TableField("f1");
-    var f2 = new TableField("f2");
+    var f1 = new TableField("myTable.f1");
+    var f2 = new TableField("myTable.f2");
     var rate = new TableField("rate");
     var one = new ConstantField(1);
     q.withMeasure(avgIf("whatever", divide(f1, plus(one, rate)), criterion(plus(f1, f2), one, ConditionType.GT)));

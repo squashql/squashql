@@ -37,7 +37,7 @@ export class ConstantField extends AField {
   readonly class: string = PACKAGE + "ConstantField"
 
   constructor(readonly value: any) {
-    super();
+    super()
   }
 
   toJSON() {
@@ -50,15 +50,32 @@ export class ConstantField extends AField {
 
 export class TableField extends AField {
   readonly class: string = PACKAGE + "TableField"
+  tableName: string
+  fieldName: string
 
-  constructor(readonly name: string) {
-    super();
+  constructor(readonly fullName: string) {
+    super()
+    this.setAttributes()
+  }
+
+  private setAttributes(): void {
+    if (this.fullName != null) {
+      const split = this.fullName.split(".")
+      if (split.length > 1) {
+        this.tableName = split[0];
+        this.fieldName = split[1];
+      } else {
+        this.fieldName = split[0];
+      }
+    }
   }
 
   toJSON() {
     return {
       "@class": this.class,
-      "name": this.name,
+      "fullName": this.fullName,
+      "tableName": this.tableName,
+      "fieldName": this.fieldName,
     }
   }
 }
