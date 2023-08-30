@@ -35,6 +35,7 @@ public class SparkDatastore implements Datastore {
             .builder()
             .appName("Java Spark SQL Example")
             .config("spark.master", "local")
+            .config("spark.driver.bindAddress", "127.0.0.1")
             .getOrCreate());
   }
 

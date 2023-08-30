@@ -39,8 +39,8 @@ import {ConstantField, TableField} from "./field";
 export function generateFromQueryDto() {
   const table = new Table("myTable")
   const refTable = new Table("refTable")
-  table.join(refTable, JoinType.INNER, [new JoinMapping("fromField", "toField", ConditionType.EQ)])
-  table.join(new Table("a"), JoinType.LEFT, [new JoinMapping("a.a_id", "myTable.id", ConditionType.EQ)])
+  table.join(refTable, JoinType.INNER, [new JoinMapping(new TableField("fromField"), new TableField("toField"), ConditionType.EQ)])
+  table.join(new Table("a"), JoinType.LEFT, [new JoinMapping(new TableField("a.a_id"), new TableField("myTable.id"), ConditionType.EQ)])
 
   const q = new Query()
   q.onTable(table)
