@@ -15,16 +15,44 @@ import java.util.function.Function;
 @AllArgsConstructor
 public class TableField implements Field {
 
-  public String name;
+  public String tableName;
+
+  public String fieldName;
+
+  /**
+   * Should be "tableName.fieldName"
+   */
+  public String fullName;
+
+  public TableField(String fullName) {
+    this.fullName = fullName;
+    setAttributes();
+  }
+
+  public TableField(String tableName, String fieldName) {
+    this.tableName = tableName;
+    this.fieldName = fieldName;
+  }
+
+  private void setAttributes() {
+    if (this.fullName != null) {
+      String[] split = this.fullName.split("\\.");
+      if (split.length > 1) {
+        this.tableName = split[0];
+        this.fieldName = split[1];
+      } else {
+        this.fieldName = split[0];
+      }
+    }
+  }
 
   @Override
   public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter) {
-    if (CountMeasure.FIELD_NAME.equals(this.name)) {
+    setAttributes();
+    if (CountMeasure.FIELD_NAME.equals(this.fieldName)) {
       return CountMeasure.FIELD_NAME;
     } else {
-      Function<String, TypedField> fp = MeasureUtils.withFallback(fieldProvider, String.class);
-      TypedField f = fp.apply(this.name);
-      return queryRewriter.getFieldFullName(f);
+      return queryRewriter.getFieldFullName(new TypedField(this.tableName, this.fieldName, Object.class));
     }
   }
 }

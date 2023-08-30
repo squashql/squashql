@@ -253,11 +253,11 @@ public class SQLTranslator {
 
   public static String toSql(Function<String, TypedField> fieldProvider, CriteriaDto criteriaDto, QueryRewriter queryRewriter) {
     if (criteriaDto.isWhereCriterion()) {
-      return toSql(fieldProvider.apply(((TableField) criteriaDto.field).name), criteriaDto.condition, queryRewriter);
+      return toSql(fieldProvider.apply(((TableField) criteriaDto.field).fullName), criteriaDto.condition, queryRewriter);
     } else if (criteriaDto.isHavingCriterion()) {
       return toSql(fieldProvider.apply(criteriaDto.measure.alias()), criteriaDto.condition, queryRewriter);
     } else if (criteriaDto.isJoinCriterion()) {
-      JoinMappingDto mapping = new JoinMappingDto(((TableField) criteriaDto.field).name, ((TableField) criteriaDto.fieldOther).name, criteriaDto.conditionType);
+      JoinMappingDto mapping = new JoinMappingDto(criteriaDto.field, criteriaDto.fieldOther, criteriaDto.conditionType);
       return joinMappingToSql(mapping, fieldProvider, queryRewriter);
     } else if (!criteriaDto.children.isEmpty()) {
       String sep = switch (criteriaDto.conditionType) {
