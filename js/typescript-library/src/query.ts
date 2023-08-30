@@ -4,6 +4,7 @@ import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order";
 import {BucketColumnSet, ColumnSet, ColumnSetKey} from "./columnsets";
 import { VirtualTable } from "./virtualtable";
 import {Parameter} from "./parameters";
+import {Field} from "./field";
 
 export class QueryMerge {
   constructor(readonly first: Query, readonly second: Query, readonly joinType: JoinType) {
@@ -131,6 +132,6 @@ class Join {
 }
 
 export class JoinMapping {
-  constructor(private from: string, private to: string, private conditionType: ConditionType) {
+  constructor(private from: Field, private to: Field, private conditionType: ConditionType) {
   }
 }

@@ -214,9 +214,9 @@ public class SQLTranslator {
       case EQ, NEQ, LT, LE, GT, GE -> " " + mapping.conditionType.sqlInfix + " ";
       default -> throw new IllegalStateException("Unexpected value: " + mapping.conditionType);
     };
-    TypedField from = fieldProvider.apply(mapping.from);
-    TypedField to = fieldProvider.apply(mapping.to);
-    return qr.getFieldFullName(from) + op + qr.getFieldFullName(to);
+    String from = mapping.from.sqlExpression(fieldProvider, qr);
+    String to = mapping.to.sqlExpression(fieldProvider, qr);
+    return from + op + to;
   }
 
   public static String toSql(TypedField field, ConditionDto dto, QueryRewriter queryRewriter) {
