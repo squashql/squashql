@@ -1,7 +1,5 @@
 package io.squashql.query.builder;
 
-import io.squashql.query.Field;
-import io.squashql.query.TableField;
 import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.JoinMappingDto;
 import io.squashql.query.dto.JoinType;
@@ -36,13 +34,6 @@ public class JoinTableBuilder implements HasStartedBuildingJoin {
     if (!joinCriteriaDto.isJoinCriterion()) {
       throw new IllegalArgumentException("Unexpected criterion :" + joinCriteriaDto);
     }
-    Field f1 = joinCriteriaDto.field;
-    Field f2 = joinCriteriaDto.fieldOther;
-    if (f1 instanceof TableField tf1 && f2 instanceof TableField tf2) {
-      this.mappingDtos.add(new JoinMappingDto(tf1.name, tf2.name, joinCriteriaDto.conditionType));
-    } else {
-      throw new IllegalArgumentException("Unexpected field types in join condition. Only regular fields can be used not: "
-              + f1 + " - " + f2);
-    }
+    this.mappingDtos.add(new JoinMappingDto(joinCriteriaDto.field, joinCriteriaDto.fieldOther, joinCriteriaDto.conditionType));
   }
 }

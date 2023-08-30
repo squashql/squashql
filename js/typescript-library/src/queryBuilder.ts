@@ -149,10 +149,7 @@ class JoinTableBuilder implements HasStartedBuildingJoin {
     if (joinCriterion.children?.length > 0) {
       joinCriterion.children.forEach(c => this.on(c))
     } else {
-      this.mappings.push(new JoinMapping(
-              (joinCriterion.field as TableField).name,
-              (joinCriterion.fieldOther as TableField).name,
-              joinCriterion.conditionType))
+      this.mappings.push(new JoinMapping(joinCriterion.field, joinCriterion.fieldOther, joinCriterion.conditionType))
     }
     return this.parent
   }
