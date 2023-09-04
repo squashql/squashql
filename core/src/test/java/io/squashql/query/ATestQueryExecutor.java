@@ -22,6 +22,7 @@ import static io.squashql.query.dto.OrderKeywordDto.ASC;
 import static io.squashql.query.dto.OrderKeywordDto.DESC;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -232,6 +233,21 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     Assertions.assertThatThrownBy(() -> this.executor.execute(query))
             // The columns contain in rollup [`subcategory`] must be a subset of the columns contain in the select [`category`]
             .hasMessageContaining("must be a subset of the columns contain in the select");
+  }
+
+  @Test
+  void testQueryWithTotalCount() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(SCENARIO_FIELD_NAME), List.of(TotalCountMeasure.INSTANCE))
+            .limit(2)
+            .build();
+    Table result = this.executor.execute(query);
+
+    Assertions.assertThat(result).hasSize(2)
+            .allMatch(row -> (Long) row.get(1) == 3L);
+    Assertions.assertThat(result.headers().stream().map(Header::name))
+            .containsExactly(SCENARIO_FIELD_NAME, TotalCountMeasure.ALIAS);
   }
 
   @Test

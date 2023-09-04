@@ -3,6 +3,7 @@ package io.squashql.table;
 import io.squashql.query.Header;
 import io.squashql.query.Measure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
+import io.squashql.query.dto.QueryDto;
 import org.eclipse.collections.api.list.primitive.IntList;
 import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.impl.list.mutable.primitive.MutableIntListFactoryImpl;
@@ -91,6 +92,11 @@ public interface Table extends Iterable<List<Object>> {
    * @return the number of rows
    */
   long count();
+
+  /**
+   * Returns the total number of rows before applying the query limit as in {@link QueryDto#limit}.
+   */
+//  long totalCount();
 
   void show(int numRows);
 

@@ -30,6 +30,7 @@ import static io.squashql.query.ColumnSetKey.BUCKET;
 public class QueryExecutor {
 
   public static final int LIMIT_DEFAULT_VALUE = Integer.parseInt(System.getProperty("squashql.query.limit", Integer.toString(10_000)));
+  static final String TOTAL_COUNT_ALIAS = "_total_count";
   public final QueryEngine<?> queryEngine;
   public final QueryCache queryCache;
 
