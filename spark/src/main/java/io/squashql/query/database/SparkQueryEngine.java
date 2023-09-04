@@ -3,12 +3,10 @@ package io.squashql.query.database;
 import io.squashql.SparkDatastore;
 import io.squashql.SparkUtil;
 import io.squashql.table.ColumnarTable;
-import io.squashql.query.Header;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.eclipse.collections.api.tuple.Pair;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -44,7 +42,7 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
   @Override
   protected Table retrieveAggregates(DatabaseQuery query, String sql) {
     Dataset<Row> ds = this.datastore.spark.sql(sql);
-    Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
+    QueryResultData result = transformToColumnFormat(
             query,
             Arrays.stream(ds.schema().fields()).toList(),
             (column, name) -> name,
@@ -53,21 +51,22 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
             (i, r) -> SparkUtil.getTypeValue(r.get(i)),
             this.queryRewriter);
     return new ColumnarTable(
-            result.getOne(),
+            result.getHeaders(),
             new HashSet<>(query.measures),
-            result.getTwo());
+            result.getValues(),
+            result.getTotalCount());
   }
 
   @Override
   public Table executeRawSql(String sql) {
     Dataset<Row> ds = this.datastore.spark.sql(sql);
-    Pair<List<Header>, List<List<Object>>> result = transformToRowFormat(
+    QueryResultData result = transformToRowFormat(
             Arrays.stream(ds.schema().fields()).toList(),
             c -> c.name(),
             c -> datatypeToClass(c.dataType()),
             ds.toLocalIterator(),
             (i, r) -> r.get(i));
-    return new RowTable(result.getOne(), result.getTwo());
+    return new RowTable(result.getHeaders(), result.getValues(), result.getTotalCount());
   }
 
   @Override

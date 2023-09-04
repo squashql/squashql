@@ -8,6 +8,8 @@ import io.squashql.query.dictionary.ObjectArrayDictionary;
 import java.util.*;
 import java.util.function.Supplier;
 
+import static io.squashql.query.database.AQueryEngine.TOTAL_COUNT_DEFAULT_VALUE;
+
 public class ColumnarTable implements Table {
 
   protected final List<Header> headers;
@@ -15,8 +17,9 @@ public class ColumnarTable implements Table {
 
   public final Supplier<ObjectArrayDictionary> pointDictionary;
   protected final List<List<Object>> values;
+  private final long totalCount;
 
-  public ColumnarTable(List<Header> headers, Set<Measure> measures, List<List<Object>> values) {
+  public ColumnarTable(List<Header> headers, Set<Measure> measures, List<List<Object>> values, long totalCount) {
     if (headers.stream().filter(Header::isMeasure)
             .anyMatch(measureHeader -> !measures.stream().map(Measure::alias).toList()
                     .contains(measureHeader.name()))) {
@@ -26,6 +29,14 @@ public class ColumnarTable implements Table {
     this.measures = new HashSet<>(measures);
     this.values = new ArrayList<>(values);
     this.pointDictionary = Suppliers.memoize(() -> createPointDictionary(this));
+    this.totalCount = totalCount;
+  }
+
+  /**
+   * For tests.
+   */
+  public ColumnarTable(List<Header> headers, Set<Measure> measures, List<List<Object>> values) {
+    this(headers, measures, values, TOTAL_COUNT_DEFAULT_VALUE);
   }
 
   public static ObjectArrayDictionary createPointDictionary(Table table) {
@@ -63,6 +74,11 @@ public class ColumnarTable implements Table {
   @Override
   public long count() {
     return this.values.get(0).size();
+  }
+
+  @Override
+  public long totalCount() {
+    return this.totalCount;
   }
 
   @Override

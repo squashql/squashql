@@ -1,18 +1,24 @@
 package io.squashql.query.database;
 
-import io.squashql.query.*;
+import io.squashql.query.CountMeasure;
+import io.squashql.query.Header;
+import io.squashql.query.QueryExecutor;
+import io.squashql.query.TotalCountMeasure;
+import io.squashql.query.database.AQueryEngine.QueryResultData;
 import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.store.Datastore;
-import io.squashql.store.TypedField;
 import io.squashql.store.Store;
+import io.squashql.store.TypedField;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.util.Queries;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -21,6 +27,7 @@ import java.util.stream.IntStream;
 @Slf4j
 public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T> {
 
+  public static long TOTAL_COUNT_DEFAULT_VALUE = -1;
   public final T datastore;
 
   protected final Supplier<Function<String, TypedField>> fieldSupplier;
@@ -160,13 +167,14 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
       return new ColumnarTable(
               newHeaders,
               input.measures(),
-              newValues);
+              newValues,
+              input.totalCount());
     } else {
       return input;
     }
   }
 
-  public static <Column, Record> Pair<List<Header>, List<List<Object>>> transformToColumnFormat(
+  public static <Column, Record> QueryResultData transformToColumnFormat(
           DatabaseQuery query,
           List<Column> columns,
           BiFunction<Column, String, String> columnNameProvider,
@@ -182,31 +190,76 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     }
     query.measures.forEach(m -> fieldNames.add(m.alias()));
     List<List<Object>> values = new ArrayList<>(columns.size());
+    int totalCountIdx = -1;
     for (int i = 0; i < columns.size(); i++) {
+      final String name = columnNameProvider.apply(columns.get(i), fieldNames.get(i));
+      if (TotalCountMeasure.ALIAS.equals(name)) {
+        totalCountIdx = i;
+      }
       headers.add(new Header(
-              columnNameProvider.apply(columns.get(i), fieldNames.get(i)),
+              name,
               columnTypeProvider.apply(columns.get(i), fieldNames.get(i)),
               i >= query.select.size() + (queryRewriter.useGroupingFunction() ? groupingSelects.size() : 0)));
       values.add(new ArrayList<>());
     }
+
     recordIterator.forEachRemaining(r -> {
       for (int i = 0; i < headers.size(); i++) {
         values.get(i).add(recordToFieldValue.apply(i, r));
       }
     });
-    return Tuples.pair(headers, values);
+
+    if (totalCountIdx == -1) {
+      return new QueryResultData(headers, values, -1);
+    } else {
+      headers.remove(totalCountIdx);
+      final List<Object> totalCountColumn = values.remove(totalCountIdx);
+      return new QueryResultData(headers, values, (Long) totalCountColumn.get(0));
+    }
   }
 
-  public static <Column, Record> Pair<List<Header>, List<List<Object>>> transformToRowFormat(
+  public static <Column, Record> QueryResultData transformToRowFormat(
           List<Column> columns,
           Function<Column, String> columnNameProvider,
           Function<Column, Class<?>> columnTypeProvider,
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue) {
-    List<Header> headers = columns.stream().map(column -> new Header(columnNameProvider.apply(column), columnTypeProvider.apply(column), false)).toList();
+    final AtomicInteger totalCountColumn = new AtomicInteger(-1);
+    final List<Header> headers = new ArrayList<>();
+    for (int i = 0; i < columns.size(); i++) {
+      final Column current = columns.get(i);
+      final String name = columnNameProvider.apply(current);
+      if (TotalCountMeasure.ALIAS.equals(name)) {
+        totalCountColumn.set(i);
+      }
+      headers.add(new Header(name, columnTypeProvider.apply(current), false));
+
+    }
+    final int totalCountIdx = totalCountColumn.get();
+    final AtomicLong totalCountValue = new AtomicLong(TOTAL_COUNT_DEFAULT_VALUE);
     List<List<Object>> rows = new ArrayList<>();
-    recordIterator.forEachRemaining(r -> rows.add(
-            IntStream.range(0, headers.size()).mapToObj(i -> recordToFieldValue.apply(i, r)).toList()));
-    return Tuples.pair(headers, rows);
+    if (totalCountIdx == -1) {
+      recordIterator.forEachRemaining(r -> rows.add(
+                IntStream.range(0, headers.size()).mapToObj(i -> recordToFieldValue.apply(i, r)).toList()));
+    } else {
+      headers.remove(totalCountIdx);
+      recordIterator.forEachRemaining(r -> {
+        totalCountValue.set((Long) recordToFieldValue.apply(totalCountIdx, r));
+        rows.add(
+              IntStream.range(0, headers.size()).filter(i -> i != totalCountIdx).mapToObj(i -> recordToFieldValue.apply(i, r)).toList());
+
+      });
+    }
+    return new QueryResultData(headers, rows, totalCountValue.get());
+  }
+
+  @RequiredArgsConstructor
+  public static class QueryResultData {
+    @Getter
+    private final List<Header> headers;
+    @Getter
+    private final List<List<Object>> values;
+    @Getter
+    private final long totalCount;
   }
 }

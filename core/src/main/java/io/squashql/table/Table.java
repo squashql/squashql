@@ -95,8 +95,10 @@ public interface Table extends Iterable<List<Object>> {
 
   /**
    * Returns the total number of rows before applying the query limit as in {@link QueryDto#limit}.
+   *
+   * <p>Returns {@value -1} in case the total count has not been computed.
    */
-//  long totalCount();
+  long totalCount();
 
   void show(int numRows);
 

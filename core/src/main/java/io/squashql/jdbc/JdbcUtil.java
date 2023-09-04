@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 
+import static io.squashql.query.database.AQueryEngine.TOTAL_COUNT_DEFAULT_VALUE;
+
 public final class JdbcUtil {
 
   private JdbcUtil() {
@@ -148,7 +150,7 @@ public final class JdbcUtil {
           }
         }).toList());
       }
-      return new RowTable(headers, rows);
+      return new RowTable(headers, rows, TOTAL_COUNT_DEFAULT_VALUE); // todo-167
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }

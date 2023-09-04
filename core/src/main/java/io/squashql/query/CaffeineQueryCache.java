@@ -57,7 +57,8 @@ public class CaffeineQueryCache implements QueryCache {
     return new ColumnarTable(
             headers,
             Collections.singleton(CountMeasure.INSTANCE),
-            values);
+            values,
+            table.totalCount());
   }
 
   @Override

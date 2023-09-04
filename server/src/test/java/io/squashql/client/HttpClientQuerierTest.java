@@ -196,4 +196,22 @@ public class HttpClientQuerierTest {
                     List.of("Nutella 250g", "ITM Balma", 5),
                     List.of("Nutella 250g", "ITM Toulouse and Drive", 5));
   }
+
+  @Test
+  void testRunQueryWithTotalCount() {
+    // Note. The CJ will make null appear in rows. We want to make sure null values are correctly handled.
+    QueryDto query = Query
+            .from("our_prices")
+            .select(List.of(SCENARIO_FIELD_NAME, "pdv"), List.of(CountMeasure.INSTANCE, TotalCountMeasure.INSTANCE))
+            .limit(5)
+            .build();
+    // todo-167 should we account for empty result when computing the window ?
+    QueryResultDto response = this.querier.run(query);
+    SimpleTableDto table = response.table;
+    Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
+            List.of(MAIN_SCENARIO_NAME, "ITM Balma", 20d),
+            List.of(MAIN_SCENARIO_NAME, "ITM Toulouse and Drive", 20d)
+    );
+    Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "pdv", "ps");
+  }
 }

@@ -1,6 +1,7 @@
 package io.squashql.query.database;
 
 import com.google.cloud.bigquery.*;
+import com.google.cloud.bigquery.Field;
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryUtil;
 import io.squashql.jackson.JacksonUtil;
@@ -204,7 +205,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     try {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
       Schema schema = tableResult.getSchema();
-      Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
+      QueryResultData result = transformToColumnFormat(
               query,
               schema.getFields(),
               (column, name) -> name,
@@ -214,9 +215,10 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
               this.queryRewriter
       );
       return new ColumnarTable(
-              result.getOne(),
+              result.getHeaders(),
               new HashSet<>(query.measures),
-              result.getTwo());
+              result.getValues(),
+              result.getTotalCount());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
@@ -228,13 +230,13 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     try {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
       Schema schema = tableResult.getSchema();
-      Pair<List<Header>, List<List<Object>>> result = transformToRowFormat(
+      QueryResultData result = transformToRowFormat(
               schema.getFields(),
-              column -> column.getName(),
+              Field::getName,
               column -> BigQueryUtil.bigQueryTypeToClass(column.getType()),
               tableResult.iterateAll().iterator(),
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i));
-      return new RowTable(result.getOne(), result.getTwo());
+      return new RowTable(result.getHeaders(), result.getValues(), result.getTotalCount());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
