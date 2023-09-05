@@ -196,6 +196,7 @@ public class HttpClientQuerierTest {
                     List.of("Nutella 250g", "ITM Balma", 5),
                     List.of("Nutella 250g", "ITM Toulouse and Drive", 5));
   }
+<<<<<<< HEAD
 
   @Test
   void testRunQueryWithTotalCount() {
@@ -214,4 +215,6 @@ public class HttpClientQuerierTest {
     );
     Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "pdv", "ps");
   }
+=======
+>>>>>>> parent of 0dd5800 (Add the total count to Table)
 }

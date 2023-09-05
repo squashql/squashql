@@ -60,8 +60,7 @@ public class BucketerExecutor {
     return new ColumnarTable(
             finalHeaders,
             table.measures(),
-            newColumnValues,
-            -1); // todo-167
+            newColumnValues);
   }
 
   private static Function<Object[], List<Object[]>> createBucketer(BucketColumnSetDto bucketColumnSetDto) {

@@ -12,7 +12,6 @@ import org.eclipse.collections.impl.list.mutable.primitive.MutableIntListFactory
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.IntStream;
 
 public interface Table extends Iterable<List<Object>> {
 
@@ -37,9 +36,6 @@ public interface Table extends Iterable<List<Object>> {
   }
 
   default List<Object> getAggregateValues(Measure measure) {
-    if (TotalCountMeasure.ALIAS.equals(measure.alias())) {
-      return IntStream.range(0,
-    }
     int index = headers().indexOf(getHeader(measure));
     if (index < 0) {
       throw new IllegalArgumentException("no aggregate values for " + measure);
@@ -100,11 +96,10 @@ public interface Table extends Iterable<List<Object>> {
 
   /**
    * Returns the total number of rows before applying the query limit as in {@link QueryDto#limit}.
-   *
-   * <p>Returns {@value -1} in case the total count has not been computed.
    */
   default long totalCount() {
-    return (long) getAggregateValues(TotalCountMeasure.INSTANCE).get(0);
+    return measures().contains(TotalCountMeasure.INSTANCE)
+            ? (long) getAggregateValues(TotalCountMeasure.INSTANCE).get(0) : -1;
   }
 
   void show(int numRows);

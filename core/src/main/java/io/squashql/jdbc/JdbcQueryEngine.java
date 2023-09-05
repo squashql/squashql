@@ -1,23 +1,19 @@
 package io.squashql.jdbc;
 
+import io.squashql.table.ColumnarTable;
 import io.squashql.query.Header;
-import io.squashql.query.TotalCountMeasure;
+import io.squashql.table.RowTable;
+import io.squashql.table.Table;
 import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryRewriter;
-import io.squashql.table.ColumnarTable;
-import io.squashql.table.RowTable;
-import io.squashql.table.Table;
+import org.eclipse.collections.api.tuple.Pair;
 
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.*;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEngine<T> {
@@ -36,7 +32,7 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
         columnTypes.add(typeToClassConverter().apply(tableResult.getMetaData(), i + 1));
       }
 
-      QueryResultData result = transformToColumnFormat(
+      Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
               query,
               columnTypes,
               (columnType, name) -> name,
@@ -46,43 +42,34 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
               this.queryRewriter
       );
       return new ColumnarTable(
-              result.getHeaders(),
-              query.measures.stream().filter(m -> !TotalCountMeasure.ALIAS.equals(m.alias())).collect(Collectors.toSet()),
-              result.getValues(),
-              result.getTotalCount());
+              result.getOne(),
+              new HashSet<>(query.measures),
+              result.getTwo());
     });
   }
 
   @Override
   public Table executeRawSql(String sql) {
     return executeQuery(sql, this.datastore.getConnection(), tableResult -> {
-      List<Header> headers = new ArrayList<>();
-      ResultSetMetaData metadata = tableResult.getMetaData();
-      // get the column names; column indexes start from 1
-      final AtomicInteger totalCountColumn = new AtomicInteger(-1);
-      for (int i = 1; i < metadata.getColumnCount() + 1; i++) {
-        final String columnName = metadata.getColumnName(i);
-        if (TotalCountMeasure.ALIAS.equals(columnName)) {
-          totalCountColumn.set(i - 1);
-        }
-        headers.add(new Header(columnName, typeToClassConverter().apply(metadata, i), false));
-      }
-      final int totalCountIdx = totalCountColumn.get();
+      List<Header> headers = createHeaderList(tableResult, Collections.emptySet());
       List<List<Object>> rows = new ArrayList<>();
-      long totalCountValue = TOTAL_COUNT_DEFAULT_VALUE;
-      if (totalCountIdx == -1) {
-        while (tableResult.next()) {
-          rows.add(IntStream.range(0, headers.size()).mapToObj(i -> getTypeValue(tableResult, i)).toList());
-        }
-      } else {
-        headers.remove(totalCountIdx);
-        while (tableResult.next()) {
-          totalCountValue = (long) getTypeValue(tableResult, totalCountIdx);
-          rows.add(IntStream.range(0, headers.size()).filter(i -> i != totalCountIdx).mapToObj(i -> getTypeValue(tableResult, i)).toList());
-        }
+      while (tableResult.next()) {
+        rows.add(IntStream.range(0, headers.size()).mapToObj(i -> getTypeValue(tableResult, i)).toList());
       }
-      return new RowTable(headers, rows, totalCountValue);
+      return new RowTable(headers, rows);
     });
+  }
+
+  protected List<Header> createHeaderList(ResultSet tableResult, Set<String> measureNames) throws SQLException {
+    List<Header> headers = new ArrayList<>();
+    ResultSetMetaData metadata = tableResult.getMetaData();
+    // get the column names; column indexes start from 1
+    for (int i = 1; i < metadata.getColumnCount() + 1; i++) {
+      String fieldName = metadata.getColumnName(i);
+      headers.add(new Header(fieldName, typeToClassConverter().apply(metadata, i), measureNames.contains(fieldName)));
+    }
+
+    return headers;
   }
 
   private static class ResultSetIterator implements Iterator<Object[]> {

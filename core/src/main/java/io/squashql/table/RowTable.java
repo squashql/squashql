@@ -6,25 +6,14 @@ import io.squashql.query.dictionary.ObjectArrayDictionary;
 
 import java.util.*;
 
-import static io.squashql.query.database.AQueryEngine.TOTAL_COUNT_DEFAULT_VALUE;
-
 public class RowTable implements Table {
 
   protected final List<Header> headers;
   protected final List<List<Object>> rows;
-  private final long totalCount;
 
-  public RowTable(List<Header> headers, List<List<Object>> rows, long totalCount) {
+  public RowTable(List<Header> headers, List<List<Object>> rows) {
     this.headers = new ArrayList<>(headers);
     this.rows = new ArrayList<>(rows);
-    this.totalCount = totalCount;
-  }
-
-  /**
-   * For tests.
-   */
-  public RowTable(List<Header> headers, List<List<Object>> rows) {
-    this(headers, rows, TOTAL_COUNT_DEFAULT_VALUE);
   }
 
   private static void throwNotSupportedException() {
@@ -45,11 +34,6 @@ public class RowTable implements Table {
   @Override
   public long count() {
     return this.rows.size();
-  }
-
-  @Override
-  public long totalCount() {
-    return this.totalCount;
   }
 
   @Override

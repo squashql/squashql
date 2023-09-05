@@ -4,15 +4,14 @@ import com.clickhouse.client.ClickHouseClient;
 import com.clickhouse.client.ClickHouseNodes;
 import com.clickhouse.client.ClickHouseProtocol;
 import com.clickhouse.client.ClickHouseResponse;
-import com.clickhouse.data.ClickHouseColumn;
-import com.clickhouse.data.ClickHouseFormat;
-import com.clickhouse.data.ClickHouseRecord;
-import com.clickhouse.data.ClickHouseValue;
+import com.clickhouse.data.*;
 import io.squashql.ClickHouseDatastore;
 import io.squashql.ClickHouseUtil;
 import io.squashql.table.ColumnarTable;
+import io.squashql.query.Header;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
+import org.eclipse.collections.api.tuple.Pair;
 
 import java.util.HashSet;
 import java.util.List;
@@ -53,7 +52,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
                  .query(sql)
                  .execute()
                  .get()) {
-      QueryResultData result = transformToColumnFormat(
+      Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
               query,
               response.getColumns(),
               (column, name) -> name,
@@ -62,10 +61,9 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
               (index, r) -> getValue(r, index, response.getColumns()),
               this.queryRewriter);
       return new ColumnarTable(
-              result.getHeaders(),
+              result.getOne(),
               new HashSet<>(query.measures),
-              result.getValues(),
-              result.getTotalCount());
+              result.getTwo());
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);
     }
@@ -79,13 +77,13 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
                  .query(sql)
                  .execute()
                  .get()) {
-      QueryResultData result = transformToRowFormat(
+      Pair<List<Header>, List<List<Object>>> result = transformToRowFormat(
               response.getColumns(),
-              ClickHouseColumn::getColumnName,
+              column -> column.getColumnName(),
               column -> ClickHouseUtil.clickHouseTypeToClass(column.getDataType()),
               response.records().iterator(),
               (i, r) -> getValue(r, i, response.getColumns()));
-      return new RowTable(result.getHeaders(), result.getValues(), result.getTotalCount());
+      return new RowTable(result.getOne(), result.getTwo());
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);
     }

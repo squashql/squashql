@@ -1,10 +1,10 @@
 package io.squashql.jdbc;
 
 import io.squashql.query.Header;
+import io.squashql.store.Store;
+import io.squashql.store.TypedField;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
-import io.squashql.store.TypedField;
-import io.squashql.store.Store;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -13,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
-
-import static io.squashql.query.database.AQueryEngine.TOTAL_COUNT_DEFAULT_VALUE;
 
 public final class JdbcUtil {
 
@@ -150,7 +148,7 @@ public final class JdbcUtil {
           }
         }).toList());
       }
-      return new RowTable(headers, rows, TOTAL_COUNT_DEFAULT_VALUE); // should we use default value as its debug method?
+      return new RowTable(headers, rows);
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
