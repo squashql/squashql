@@ -22,7 +22,6 @@ import static io.squashql.query.dto.OrderKeywordDto.ASC;
 import static io.squashql.query.dto.OrderKeywordDto.DESC;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

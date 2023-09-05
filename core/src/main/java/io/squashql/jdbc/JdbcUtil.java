@@ -1,10 +1,10 @@
 package io.squashql.jdbc;
 
 import io.squashql.query.Header;
-import io.squashql.store.Store;
-import io.squashql.store.TypedField;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
+import io.squashql.store.TypedField;
+import io.squashql.store.Store;
 
 import java.sql.*;
 import java.util.ArrayList;

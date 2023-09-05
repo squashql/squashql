@@ -2,7 +2,6 @@ package io.squashql.query.database;
 
 import com.google.common.collect.Ordering;
 import io.squashql.query.TableField;
-import io.squashql.query.TotalCountMeasure;
 import io.squashql.query.dto.*;
 import io.squashql.store.TypedField;
 import io.squashql.util.Queries;
