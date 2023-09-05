@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.eq;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
@@ -137,7 +139,7 @@ public class HttpClientQuerierTest {
     // Note. The CJ will make null appear in rows. We want to make sure null values are correctly handled.
     QueryDto query = Query
             .from("our_prices")
-            .where(SCENARIO_FIELD_NAME, Functions.eq(MAIN_SCENARIO_NAME))
+            .where(criterion(SCENARIO_FIELD_NAME, eq("Fake scenario")))
             .select(List.of(SCENARIO_FIELD_NAME, "pdv"), List.of(Functions.sum("ps", "price")))
             .build();
 
@@ -196,25 +198,20 @@ public class HttpClientQuerierTest {
                     List.of("Nutella 250g", "ITM Balma", 5),
                     List.of("Nutella 250g", "ITM Toulouse and Drive", 5));
   }
-<<<<<<< HEAD
 
   @Test
   void testRunQueryWithTotalCount() {
     // Note. The CJ will make null appear in rows. We want to make sure null values are correctly handled.
     QueryDto query = Query
             .from("our_prices")
+            .where(criterion("pdv", eq("ITM Balma")))
             .select(List.of(SCENARIO_FIELD_NAME, "pdv"), List.of(CountMeasure.INSTANCE, TotalCountMeasure.INSTANCE))
-            .limit(5)
+            .limit(0)
             .build();
-    // todo-167 test with 0 result
+
     QueryResultDto response = this.querier.run(query);
     SimpleTableDto table = response.table;
-    Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
-            List.of(MAIN_SCENARIO_NAME, "ITM Balma", 20d),
-            List.of(MAIN_SCENARIO_NAME, "ITM Toulouse and Drive", 20d)
-    );
-    Assertions.assertThat(table.columns).containsExactly(SCENARIO_FIELD_NAME, "pdv", "ps");
+    final int totalCountIdx = table.columns.indexOf(TotalCountMeasure.ALIAS);
+    Assertions.assertThat(table.rows.stream().mapToInt(row -> (int) row.get(totalCountIdx))).containsOnly(5);
   }
-=======
->>>>>>> parent of 0dd5800 (Add the total count to Table)
 }
