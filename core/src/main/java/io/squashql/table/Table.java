@@ -2,6 +2,7 @@ package io.squashql.table;
 
 import io.squashql.query.Header;
 import io.squashql.query.Measure;
+import io.squashql.query.TotalCountMeasure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.QueryDto;
 import org.eclipse.collections.api.list.primitive.IntList;
@@ -11,6 +12,7 @@ import org.eclipse.collections.impl.list.mutable.primitive.MutableIntListFactory
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 public interface Table extends Iterable<List<Object>> {
 
@@ -35,6 +37,9 @@ public interface Table extends Iterable<List<Object>> {
   }
 
   default List<Object> getAggregateValues(Measure measure) {
+    if (TotalCountMeasure.ALIAS.equals(measure.alias())) {
+      return IntStream.range(0,
+    }
     int index = headers().indexOf(getHeader(measure));
     if (index < 0) {
       throw new IllegalArgumentException("no aggregate values for " + measure);
@@ -98,7 +103,9 @@ public interface Table extends Iterable<List<Object>> {
    *
    * <p>Returns {@value -1} in case the total count has not been computed.
    */
-  long totalCount();
+  default long totalCount() {
+    return (long) getAggregateValues(TotalCountMeasure.INSTANCE).get(0);
+  }
 
   void show(int numRows);
 

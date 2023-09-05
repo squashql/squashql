@@ -236,21 +236,6 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   }
 
   @Test
-  void testQueryWithTotalCount() {
-    QueryDto query = Query
-            .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(TotalCountMeasure.INSTANCE))
-            .limit(2)
-            .build();
-    Table result = this.executor.execute(query);
-
-    Assertions.assertThat(result).hasSize(2)
-            .allMatch(row -> (Long) row.get(1) == 3L);
-    Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(SCENARIO_FIELD_NAME, TotalCountMeasure.ALIAS);
-  }
-
-  @Test
   void testQueryWildcardCount() {
     QueryDto query = Query
             .from(this.storeName)

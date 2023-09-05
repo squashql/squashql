@@ -150,7 +150,7 @@ public final class JdbcUtil {
           }
         }).toList());
       }
-      return new RowTable(headers, rows, TOTAL_COUNT_DEFAULT_VALUE); // todo-167
+      return new RowTable(headers, rows, TOTAL_COUNT_DEFAULT_VALUE); // should we use default value as its debug method?
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }

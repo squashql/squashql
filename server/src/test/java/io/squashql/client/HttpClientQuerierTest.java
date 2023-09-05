@@ -205,7 +205,7 @@ public class HttpClientQuerierTest {
             .select(List.of(SCENARIO_FIELD_NAME, "pdv"), List.of(CountMeasure.INSTANCE, TotalCountMeasure.INSTANCE))
             .limit(5)
             .build();
-    // todo-167 should we account for empty result when computing the window ?
+    // todo-167 test with 0 result
     QueryResultDto response = this.querier.run(query);
     SimpleTableDto table = response.table;
     Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
