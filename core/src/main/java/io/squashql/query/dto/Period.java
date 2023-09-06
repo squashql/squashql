@@ -35,6 +35,32 @@ public interface Period {
     }
   }
 
+  record QuarterFromDate(String date) implements Period {
+
+    public String year() {
+      return "YEAR(" + date + ")";
+    }
+
+    public String quarter() {
+      return "QUARTER(" + date + ")";
+    }
+
+    @Override
+    public Set<String> getFields() {
+      return Set.of(this.date);
+    }
+  }
+
+  interface ReferenceDatePosition {
+  }
+
+  record ReferenceQuarterFromDatePosition(QuarterFromDate quarter, int quarterShift, int yearShift) implements ReferenceDatePosition {
+  }
+
+  static ReferenceDatePosition fromQuarterFromDate(QuarterFromDate quarter, int quarterShift, int yearShift) {
+    return new ReferenceQuarterFromDatePosition(quarter, quarterShift, yearShift);
+  }
+
   record Semester(String semester, String year) implements Period {
 
     @Override

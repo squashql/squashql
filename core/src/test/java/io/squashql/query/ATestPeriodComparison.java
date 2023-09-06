@@ -134,6 +134,26 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   }
 
   @Test
+  void testQuarterFromDate() {
+    Period.QuarterFromDate quarterFromDate = new Period.QuarterFromDate("date_sales");
+    Period.ReferenceDatePosition referenceDatePosition = Period.fromQuarterFromDate(quarterFromDate, 0, 1);;
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
+    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
+            "myMeasure",
+            ABSOLUTE_DIFFERENCE,
+            sales,
+            referenceDatePosition);
+
+    var query = Query.from(this.storeName)
+            .select(List.of(quarterFromDate.year(), quarterFromDate.quarter()), List.of(m, sales))
+            .build();
+
+    Query.from(this.storeName)
+            .select(List.of("date_sales"), List.of(m, sales))
+            .build();
+  }
+
+  @Test
   void testCompareQuarterCurrentWithPrevious() {
     Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");

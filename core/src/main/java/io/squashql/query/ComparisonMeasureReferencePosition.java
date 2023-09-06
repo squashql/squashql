@@ -24,6 +24,15 @@ public class ComparisonMeasureReferencePosition implements Measure {
   public Map<String, String> referencePosition;
   public Period period;
   public List<String> ancestors;
+  public Period.ReferenceDatePosition referenceDatePosition;
+
+  public ComparisonMeasureReferencePosition(@NonNull String alias,
+                                            @NonNull ComparisonMethod comparisonMethod,
+                                            @NonNull Measure measure,
+                                            @NonNull Period.ReferenceDatePosition referenceDatePosition) {
+    // TODO to implement
+    //    this(alias, comparisonMethod, measure, referencePosition, period, null, null);
+  }
 
   public ComparisonMeasureReferencePosition(@NonNull String alias,
                                             @NonNull ComparisonMethod comparisonMethod,

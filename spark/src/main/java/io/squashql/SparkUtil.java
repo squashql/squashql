@@ -74,7 +74,6 @@ public final class SparkUtil {
     }
   }
 
-
   public static StructType createSchema(List<TypedField> fields) {
     StructType schema = new StructType();
     for (TypedField field : fields) {
