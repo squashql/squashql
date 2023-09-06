@@ -1,10 +1,13 @@
 package io.squashql.query.database;
 
-import io.squashql.query.*;
+import io.squashql.query.CountMeasure;
+import io.squashql.query.Header;
+import io.squashql.query.QueryExecutor;
+import io.squashql.query.date.DateFunctions;
 import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.store.Datastore;
-import io.squashql.store.TypedField;
 import io.squashql.store.Store;
+import io.squashql.store.TypedField;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.util.Queries;
@@ -40,7 +43,8 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   public static Function<String, TypedField> createFieldSupplier(Map<String, Store> storesByName) {
     return fieldName -> {
-      String[] split = fieldName.split("\\.");
+      final String cleansedFieldName = DateFunctions.extractFieldFromDateFunctionOrReturn(fieldName);
+      String[] split = cleansedFieldName.split("\\.");
       if (split.length > 1) {
         String tableName = split[0];
         String fieldNameInTable = split[1];
@@ -48,17 +52,17 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
         if (store != null) {
           for (TypedField field : store.fields()) {
             if (field.name().equals(fieldNameInTable)) {
-              return field;
+              return cleansedFieldName.equals(fieldName) ? field : new TypedField(tableName, fieldName, field.type());
             }
           }
         }
       } else {
         for (Store store : storesByName.values()) {
           for (TypedField field : store.fields()) {
-            if (field.name().equals(fieldName)) {
+            if (field.name().equals(cleansedFieldName)) {
               // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
               // if any ambiguity, the DB will raise an exception.
-              return new TypedField(null, field.name(), field.type());
+              return new TypedField(null, fieldName, field.type());
             }
           }
         }
@@ -175,7 +179,10 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
           BiFunction<Integer, Record, Object> recordToFieldValue,
           QueryRewriter queryRewriter) {
     List<Header> headers = new ArrayList<>();
-    List<String> fieldNames = new ArrayList<>(query.select.stream().map(SqlUtils::getFieldFullName).toList());
+    List<String> fieldNames = new ArrayList<>(query.select.stream().map(f -> {
+      final String cleansedFieldName = DateFunctions.extractFieldFromDateFunctionOrReturn(f.name());
+      return cleansedFieldName.equals(f.name()) ? SqlUtils.getFieldFullName(f) : f.name();
+    }).toList());
     List<TypedField> groupingSelects = Queries.generateGroupingSelect(query);
     if (queryRewriter.useGroupingFunction()) {
       groupingSelects.forEach(r -> fieldNames.add(SqlUtils.groupingAlias(SqlUtils.getFieldFullName(r))));

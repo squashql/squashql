@@ -22,6 +22,8 @@ import static io.squashql.query.Functions.criterion;
 import static io.squashql.query.Functions.eq;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
+import static io.squashql.query.database.SqlUtils.getFieldFullName;
+import static io.squashql.query.date.DateFunctions.year;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
@@ -323,5 +325,15 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .build();
 
     Assertions.assertThatThrownBy(() -> this.executor.execute(query)).hasMessageContaining("Too many rows");
+  }
+
+  @Test
+  void testYearFunction() {
+    var query = Query.from(this.storeName)
+//            .select(List.of(getFieldFullName(this.storeName, "date_sales")), List.of(CountMeasure.INSTANCE))
+            .select(List.of(year(getFieldFullName(this.storeName, "date_sales"))), List.of(CountMeasure.INSTANCE))
+            .build();
+    Table finalTable = this.executor.execute(query);
+    finalTable.show();
   }
 }

@@ -2,6 +2,7 @@ package io.squashql.query.database;
 
 import com.google.common.collect.Ordering;
 import io.squashql.query.TableField;
+import io.squashql.query.date.DateFunctions;
 import io.squashql.query.dto.*;
 import io.squashql.store.TypedField;
 import io.squashql.util.Queries;
@@ -36,7 +37,7 @@ public class SQLTranslator {
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
 
-    query.select.forEach(f -> groupBy.add(queryRewriter.select(f)));
+    query.select.forEach(f -> groupBy.add(DateFunctions.translateToSqlDateFunctionOrReturn(queryRewriter.select(f))));
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true))); // Alias is needed when using sub-queries
 
     selects.addAll(groupBy); // coord first, then aggregates

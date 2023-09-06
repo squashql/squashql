@@ -4,11 +4,12 @@ import com.google.cloud.bigquery.*;
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryUtil;
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.table.RowTable;
-import io.squashql.table.Table;
-import io.squashql.query.*;
+import io.squashql.query.Header;
+import io.squashql.query.QueryExecutor;
 import io.squashql.store.TypedField;
 import io.squashql.table.ColumnarTable;
+import io.squashql.table.RowTable;
+import io.squashql.table.Table;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
@@ -272,11 +273,6 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     BigQueryQueryRewriter(String projectId, String datasetName) {
       this.projectId = projectId;
       this.datasetName = datasetName;
-    }
-
-    @Override
-    public String getFieldFullName(TypedField f) {
-      return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
     }
 
     @Override
