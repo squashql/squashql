@@ -57,6 +57,8 @@ export class ExpressionMeasure implements BasicMeasure {
   }
 }
 
+export const totalCount = new ExpressionMeasure("_total_count_", "COUNT(*) OVER ()")
+
 export class BinaryOperationMeasure implements Measure {
   readonly class: string = PACKAGE + "BinaryOperationMeasure"
   readonly alias: string

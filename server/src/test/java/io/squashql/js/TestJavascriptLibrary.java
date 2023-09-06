@@ -42,6 +42,7 @@ public class TestJavascriptLibrary {
     var expression = new ExpressionMeasure("myExpression", "sum(price*quantity)");
     q.withMeasure(expression);
     q.withMeasure(CountMeasure.INSTANCE);
+    q.withMeasure(TotalCountMeasure.INSTANCE);
     q.withMeasure(integer(123));
     q.withMeasure(decimal(1.23));
 
