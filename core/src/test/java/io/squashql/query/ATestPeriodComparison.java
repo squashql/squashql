@@ -7,10 +7,7 @@ import io.squashql.store.TypedField;
 import io.squashql.table.Table;
 import io.squashql.transaction.DataLoader;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -23,7 +20,7 @@ import static io.squashql.query.Functions.eq;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
 import static io.squashql.query.database.SqlUtils.getFieldFullName;
-import static io.squashql.query.date.DateFunctions.year;
+import static io.squashql.query.date.DateFunctions.*;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
@@ -333,7 +330,67 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .select(List.of(year(getFieldFullName(this.storeName, "date_sales"))), List.of(CountMeasure.INSTANCE))
             .having(criterion(year("date_sales"), eq(2022)))
             .build();
-    Table finalTable = this.executor.execute(query);
+    final Table finalTable = this.executor.execute(query);
+    final Class<?> yearType = finalTable.getHeader(year("date_sales")).type();
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            List.of(cast(yearType, 2022), 12L));
+  }
+
+  @Disabled("No support for semester")
+  void testSemesterFunction() {
+    var query = Query.from(this.storeName)
+            .select(List.of(year("date_sales"), semester("date_sales")), List.of(CountMeasure.INSTANCE))
+            .having(criterion(year("date_sales"), eq(2022)))
+            .build();
+    final Table finalTable = this.executor.execute(query);
     finalTable.show();
+  }
+
+  @Test
+  void testQuarterFunction() {
+    var query = Query.from(this.storeName)
+            .select(List.of(year("date_sales"), quarter("date_sales")), List.of(CountMeasure.INSTANCE))
+            .having(criterion(year("date_sales"), eq(2022)))
+            .build();
+    final Table finalTable = this.executor.execute(query);
+    final Class<?> yearType = finalTable.getHeader(year("date_sales")).type();
+    final Class<?> quarterType = finalTable.getHeader(quarter("date_sales")).type();
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            List.of(cast(yearType, 2022), cast(quarterType, 1), 3L),
+            List.of(cast(yearType, 2022), cast(quarterType, 2), 3L),
+            List.of(cast(yearType, 2022), cast(quarterType, 3), 3L),
+            List.of(cast(yearType, 2022), cast(quarterType, 4), 3L));
+  }
+
+  @Test
+  void testMonthFunction() {
+    var query = Query.from(this.storeName)
+            .select(List.of(year("date_sales"), month("date_sales")), List.of(CountMeasure.INSTANCE))
+            .having(criterion(year("date_sales"), eq(2022)))
+            .build();
+    final Table finalTable = this.executor.execute(query);
+    final Class<?> yearType = finalTable.getHeader(year("date_sales")).type();
+    final Class<?> monthType = finalTable.getHeader(month("date_sales")).type();
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            List.of(cast(yearType, 2022),  cast(monthType, 1), 1L),
+            List.of(cast(yearType, 2022), cast(monthType, 2), 1L),
+            List.of(cast(yearType, 2022), cast(monthType, 3), 1L),
+            List.of(cast(yearType, 2022), cast(monthType, 4), 1L),
+            List.of(cast(yearType, 2022), cast(monthType, 5), 1L),
+            List.of(cast(yearType, 2022), cast(monthType, 6), 1L),
+            List.of(cast(yearType, 2022), cast(monthType, 7), 1L),
+            List.of(cast(yearType, 2022), cast(monthType, 8), 1L),
+            List.of(cast(yearType, 2022), cast(monthType, 9), 1L),
+            List.of(cast(yearType, 2022), cast(monthType, 10), 1L),
+            List.of(cast(yearType, 2022), cast(monthType, 11), 1L),
+            List.of(cast(yearType, 2022), cast(monthType, 12), 1L));
+  }
+
+  private Object cast(Class<?> type, int value) {
+    if (type == int.class) {
+      return value;
+    } else {
+      return (long) value;
+    }
   }
 }
