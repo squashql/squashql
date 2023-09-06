@@ -331,7 +331,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .having(criterion(year("date_sales"), eq(2022)))
             .build();
     final Table finalTable = this.executor.execute(query);
-    final Class<?> yearType = finalTable.getHeader(year("date_sales")).type();
+    final Class<?> yearType = finalTable.getHeader(year(getFieldFullName(this.storeName, "date_sales"))).type();
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             List.of(cast(yearType, 2022), 12L));
   }
