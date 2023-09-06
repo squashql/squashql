@@ -339,8 +339,8 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   @Disabled("No support for semester")
   void testSemesterFunction() {
     var query = Query.from(this.storeName)
+            .where(criterion(year("date_sales"), eq(2022)))
             .select(List.of(year("date_sales"), semester("date_sales")), List.of(CountMeasure.INSTANCE))
-            .having(criterion(year("date_sales"), eq(2022)))
             .build();
     final Table finalTable = this.executor.execute(query);
     finalTable.show();
