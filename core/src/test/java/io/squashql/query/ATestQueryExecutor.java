@@ -700,6 +700,20 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   }
 
   @Test
+  void testTotalCountWithQueryLimit() {
+    int limit = 1;
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("category"), List.of(CountMeasure.INSTANCE, TotalCountMeasure.INSTANCE))
+            .limit(limit)
+            .build();
+
+    Table result = this.executor.execute(query);
+    Assertions.assertThat(result.count()).isEqualTo(limit); // we don't care about the result, and we can't know what lines will be returned
+    Assertions.assertThat(result.getAggregateValues(TotalCountMeasure.INSTANCE).get(0)).isEqualTo(3L);
+  }
+
+  @Test
   void testHavingConditions() {
     BasicMeasure price_sum = (BasicMeasure) sum("pricesum", "price");
     BasicMeasure price_sum_expr = new ExpressionMeasure("p_expr", "sum(" + this.queryEngine.queryRewriter().fieldName("price") + ")");

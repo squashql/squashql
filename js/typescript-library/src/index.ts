@@ -15,7 +15,7 @@ export {
   plus, minus, multiply, divide,
   integer, decimal,
   comparisonMeasureWithPeriod, comparisonMeasureWithBucket, comparisonMeasureWithParent,
-  count, total_count,
+  count, totalCount as total_count,
   ComparisonMethod,
 } from './measure'
 

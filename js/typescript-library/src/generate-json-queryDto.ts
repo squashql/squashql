@@ -13,7 +13,7 @@ import {
   ExpressionMeasure,
   integer,
   sum,
-  total_count,
+  totalCount,
 } from "./measure"
 import {
   _in,
@@ -57,7 +57,7 @@ export function generateFromQueryDto() {
   const expression = new ExpressionMeasure("myExpression", "sum(price*quantity)")
   q.withMeasure(expression)
   q.withMeasure(count)
-  q.withMeasure(total_count)
+  q.withMeasure(totalCount)
   q.withMeasure(integer(123))
   q.withMeasure(decimal(1.23))
 
