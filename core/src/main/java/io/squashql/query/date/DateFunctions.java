@@ -51,4 +51,14 @@ public class DateFunctions {
     }
     return str;
   }
+
+  public static boolean isDateFunction(String str) {
+    for (Pattern p : DATE_PATTERNS) {
+      Matcher matcher = p.matcher(str);
+      if (matcher.find()) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

@@ -330,8 +330,8 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   @Test
   void testYearFunction() {
     var query = Query.from(this.storeName)
-//            .select(List.of(getFieldFullName(this.storeName, "date_sales")), List.of(CountMeasure.INSTANCE))
             .select(List.of(year(getFieldFullName(this.storeName, "date_sales"))), List.of(CountMeasure.INSTANCE))
+            .having(criterion(year("date_sales"), eq(2022)))
             .build();
     Table finalTable = this.executor.execute(query);
     finalTable.show();

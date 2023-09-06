@@ -221,7 +221,7 @@ public class SQLTranslator {
   }
 
   public static String toSql(TypedField field, ConditionDto dto, QueryRewriter queryRewriter) {
-    String formattedFieldName = queryRewriter.getFieldFullName(field);
+    String formattedFieldName = DateFunctions.translateToSqlDateFunctionOrReturn(queryRewriter.getFieldFullName(field));
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
       Function<Object, String> sqlMapper = getQuoteFn(field);
       return switch (dto.type()) {
@@ -287,7 +287,8 @@ public class SQLTranslator {
             || field.type().equals(long.class)
             || field.type().equals(float.class)
             || field.type().equals(boolean.class)
-            || field.type().equals(Boolean.class)) {
+            || field.type().equals(Boolean.class)
+            || DateFunctions.isDateFunction(field.name())) {
       // no quote
       return String::valueOf;
     } else if (field.type().equals(String.class)) {
