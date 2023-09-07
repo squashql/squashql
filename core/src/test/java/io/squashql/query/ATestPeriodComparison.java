@@ -392,6 +392,6 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     } else if (type == long.class) {
       return (long) value;
     }
-      throw new UnsupportedOperationException("type :" + type + ", is unsupported!");
+    throw new UnsupportedOperationException("type :" + type + ", is unsupported!");
   }
 }
