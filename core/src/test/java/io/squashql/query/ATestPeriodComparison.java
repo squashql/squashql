@@ -7,7 +7,10 @@ import io.squashql.store.TypedField;
 import io.squashql.table.Table;
 import io.squashql.transaction.DataLoader;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -334,16 +337,6 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     final Class<?> yearType = finalTable.getHeader(year(getFieldFullName(this.storeName, "date_sales"))).type();
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             List.of(cast(yearType, 2022), 12L));
-  }
-
-  @Disabled("No support for semester")
-  void testSemesterFunction() {
-    var query = Query.from(this.storeName)
-            .where(criterion(year("date_sales"), eq(2022)))
-            .select(List.of(year("date_sales"), semester("date_sales")), List.of(CountMeasure.INSTANCE))
-            .build();
-    final Table finalTable = this.executor.execute(query);
-    finalTable.show();
   }
 
   @Test

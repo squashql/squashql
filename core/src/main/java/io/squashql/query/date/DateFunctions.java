@@ -8,20 +8,14 @@ public class DateFunctions {
 
   static final List<Pattern> DATE_PATTERNS = List.of(
           Pattern.compile("__(YEAR)__(.*)__"),
-          Pattern.compile("__(SEMESTER)__(.*)__"),
           Pattern.compile("__(QUARTER)__(.*)__"),
           Pattern.compile("__(MONTH)__(.*)__"));
   static final String YEAR_FORMAT = "__YEAR__%s__";
-  static final String SEMESTER_FORMAT = "__SEMESTER__%s__";
   static final String QUARTER_FORMAT = "__QUARTER__%s__";
   static final String MONTH_FORMAT = "__MONTH__%s__";
 
   public static String year(String column) {
     return String.format(YEAR_FORMAT, column);
-  }
-
-  public static String semester(String column) {
-    return String.format(SEMESTER_FORMAT, column);
   }
 
   public static String quarter(String column) {
