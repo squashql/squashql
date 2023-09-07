@@ -387,10 +387,11 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   }
 
   private Object cast(Class<?> type, int value) {
-    if (type == int.class) {
+    if (type == int.class || type == short.class || type == byte.class) { // weird typing for clickhouse
       return value;
-    } else {
+    } else if (type == long.class) {
       return (long) value;
     }
+      throw new UnsupportedOperationException("type :" + type + ", is unsupported!");
   }
 }
