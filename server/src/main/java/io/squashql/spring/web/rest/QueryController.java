@@ -118,7 +118,7 @@ public class QueryController {
   public ResponseEntity<MetadataResultDto> getMetadata() {
     List<MetadataResultDto.StoreMetadata> stores = new ArrayList<>();
     for (Store store : this.queryEngine.datastore().storesByName().values()) {
-      List<MetadataItem> items = store.fields().stream().map(f -> new MetadataItem(f.fieldName(), f.fieldName(), f.type())).toList();
+      List<MetadataItem> items = store.fields().stream().map(f -> new MetadataItem(f.name(), f.name(), f.type())).toList();
       stores.add(new MetadataResultDto.StoreMetadata(store.name(), items));
     }
     return ResponseEntity.ok(new MetadataResultDto(stores, this.queryEngine.supportedAggregationFunctions(), Collections.emptyList()));

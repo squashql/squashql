@@ -5,7 +5,7 @@ import io.squashql.type.TypedField;
 public interface QueryRewriter {
 
   default String getFieldFullName(TypedField f) {
-    return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.fieldName()));
+    return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
   }
 
   default String fieldName(String field) {

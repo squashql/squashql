@@ -26,7 +26,7 @@ public abstract class ATestDocPeriodComparison extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<TypedField>> getFieldsByStore() {
-    TypedField studentName = new TableField("student", "fieldName", String.class);
+    TypedField studentName = new TableField("student", "name", String.class);
     TypedField test = new TableField("student", "test", String.class);
     TypedField score = new TableField("student", "score", int.class);
     TypedField semester = new TableField("student", "semester", int.class);

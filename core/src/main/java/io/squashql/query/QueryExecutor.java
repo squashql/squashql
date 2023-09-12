@@ -79,7 +79,7 @@ public class QueryExecutor {
     Set<String> axes = new HashSet<>(context.rows);
     axes.addAll(context.columns);
     Set<String> select = new HashSet<>(query.columns);
-    select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream().map(TypedField::fieldName)).collect(Collectors.toSet()));
+    select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream().map(TypedField::name)).collect(Collectors.toSet()));
     axes.removeAll(select);
 
     if (!axes.isEmpty()) {

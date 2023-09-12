@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 public class DateFunctions {
 
-  static final List<Pattern> DATE_PATTERNS = List.of(
+  public static final List<Pattern> DATE_PATTERNS = List.of(
           Pattern.compile("__(YEAR)__(.*)__"),
           Pattern.compile("__(QUARTER)__(.*)__"),
           Pattern.compile("__(MONTH)__(.*)__"));
@@ -31,16 +31,6 @@ public class DateFunctions {
       Matcher matcher = p.matcher(str);
       if (matcher.find()) {
         return matcher.group(2);
-      }
-    }
-    return str;
-  }
-
-  public static String translateToSqlDateFunctionOrReturn(String str) {
-    for (Pattern p : DATE_PATTERNS) {
-      Matcher matcher = p.matcher(str);
-      if (matcher.find()) {
-        return matcher.group(1) + "(" + matcher.group(2) + ")";
       }
     }
     return str;

@@ -26,7 +26,7 @@ public class SqlUtils {
   }
 
   public static String getFieldFullName(TypedField field) {
-    return field.store() == null ? field.fieldName() : field.store() + '.' + field.fieldName();
+    return field.store() == null ? field.name() : field.store() + '.' + field.name();
   }
 
   /**

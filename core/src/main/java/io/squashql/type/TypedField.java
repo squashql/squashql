@@ -8,9 +8,9 @@ public interface TypedField {
 
   String store();
 
-  String fieldName();
+  String name();
 
   Class<?> type();
 
-  String sqlExpression(Function<String, TableField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias);
+  String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias);
 }

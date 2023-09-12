@@ -26,7 +26,7 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
   @Override
   protected Map<String, List<TypedField>> getFieldsByStore() {
     // See https://mariadb.com/kb/en/subqueries-in-a-from-clause/
-    TypedField studentName = new TableField("student", "fieldName", String.class);
+    TypedField studentName = new TableField("student", "name", String.class);
     TypedField test = new TableField("student", "test", String.class);
     TypedField score = new TableField("student", "score", int.class);
     return Map.of("student", List.of(studentName, test, score));

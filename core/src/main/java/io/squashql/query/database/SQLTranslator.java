@@ -37,7 +37,7 @@ public class SQLTranslator {
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
 
-    query.select.forEach(f -> groupBy.add(DateFunctions.translateToSqlDateFunctionOrReturn(queryRewriter.select(f))));
+    query.select.forEach(f -> groupBy.add(f.sqlExpression(fieldProvider, queryRewriter, false)));
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true))); // Alias is needed when using sub-queries
 
     selects.addAll(groupBy); // coord first, then aggregates
@@ -221,7 +221,7 @@ public class SQLTranslator {
   }
 
   public static String toSql(TypedField field, ConditionDto dto, QueryRewriter queryRewriter) {
-    String formattedFieldName = DateFunctions.translateToSqlDateFunctionOrReturn(queryRewriter.getFieldFullName(field));
+    String formattedFieldName = field.sqlExpression(null, queryRewriter, false); // todo-181 do we really need the fieldProvider ?
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
       Function<Object, String> sqlMapper = getQuoteFn(field);
       return switch (dto.type()) {
@@ -288,7 +288,7 @@ public class SQLTranslator {
             || field.type().equals(float.class)
             || field.type().equals(boolean.class)
             || field.type().equals(Boolean.class)
-            || DateFunctions.isDateFunction(field.fieldName())) {
+            || DateFunctions.isDateFunction(field.name())) {
       // no quote
       return String::valueOf;
     } else if (field.type().equals(String.class)) {

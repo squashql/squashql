@@ -49,7 +49,7 @@ public class SnowflakeDataLoader implements DataLoader {
       int size = list.size();
       for (int i = 0; i < size; i++) {
         TypedField field = list.get(i);
-        sb.append("\"").append(field.fieldName()).append("\" ").append(JdbcUtil.classToSqlType(field.type()));
+        sb.append("\"").append(field.name()).append("\" ").append(JdbcUtil.classToSqlType(field.type()));
         if (i < size - 1) {
           sb.append(", ");
         }
@@ -88,7 +88,7 @@ public class SnowflakeDataLoader implements DataLoader {
 
   private void ensureScenarioColumnIsPresent(String store) {
     List<TypedField> fields = this.snowflakeDatastore.storesByName().get(store).fields();
-    boolean found = fields.stream().anyMatch(f -> f.fieldName().equals(SCENARIO_FIELD_NAME));
+    boolean found = fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
     if (!found) {
       throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));
     }

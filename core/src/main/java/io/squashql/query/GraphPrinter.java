@@ -72,9 +72,9 @@ public class GraphPrinter {
     StringBuilder sb = new StringBuilder();
     appendIfNotNullOrNotEmpty(sb, null, scope.tableDto());
     appendIfNotNullOrNotEmpty(sb, null, scope.subQuery());
-    appendIfNotNullOrNotEmpty(sb, "columns=", scope.columns().stream().map(TypedField::fieldName).toList());
+    appendIfNotNullOrNotEmpty(sb, "columns=", scope.columns().stream().map(TypedField::name).toList());
     appendIfNotNullOrNotEmpty(sb, null, scope.whereCriteriaDto());
-    appendIfNotNullOrNotEmpty(sb, "rollup=", scope.rollupColumns().stream().map(TypedField::fieldName).toList());
+    appendIfNotNullOrNotEmpty(sb, "rollup=", scope.rollupColumns().stream().map(TypedField::name).toList());
     return sb.toString();
   }
 

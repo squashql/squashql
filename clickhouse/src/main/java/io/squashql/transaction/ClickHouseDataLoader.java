@@ -50,7 +50,7 @@ public class ClickHouseDataLoader implements DataLoader {
       int size = list.size();
       for (int i = 0; i < size; i++) {
         TypedField field = list.get(i);
-        sb.append(SqlUtils.backtickEscape(field.fieldName())).append(" Nullable(").append(classToClickHouseType(field.type())).append(')');
+        sb.append(SqlUtils.backtickEscape(field.name())).append(" Nullable(").append(classToClickHouseType(field.type())).append(')');
         if (i < size - 1) {
           sb.append(", ");
         }
@@ -86,7 +86,7 @@ public class ClickHouseDataLoader implements DataLoader {
 
   private void ensureScenarioColumnIsPresent(String store) {
     List<TypedField> fields = ClickHouseDatastore.getFields(this.clickHouseDataSource, store);
-    boolean found = fields.stream().anyMatch(f -> f.fieldName().equals(SCENARIO_FIELD_NAME));
+    boolean found = fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
     if (!found) {
       throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));
     }

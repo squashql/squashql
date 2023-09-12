@@ -41,11 +41,11 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
     TypedField orderDetailsId = new TableField(this.orderDetails, "orderDetailsId", int.class);
     Function<String, TypedField> productId = s -> new TableField(s, "productId", int.class);
     TypedField quantity = new TableField(this.orderDetails, "quantity", int.class);
-    TypedField shipperName = new TableField(this.shippers, "fieldName", String.class);
-    TypedField productName = new TableField(this.products, "fieldName", String.class);
+    TypedField shipperName = new TableField(this.shippers, "name", String.class);
+    TypedField productName = new TableField(this.products, "name", String.class);
     Function<String, TableField> categoryId = s -> new TableField(s, "categoryId", int.class);
     TypedField price = new TableField(this.products, "price", double.class);
-    TypedField categoryName = new TableField(this.categories, "fieldName", String.class);
+    TypedField categoryName = new TableField(this.categories, "name", String.class);
     return Map.of(
             this.orders, List.of(orderId.apply(this.orders), shipperId.apply(this.orders)),
             this.orderDetails, List.of(orderDetailsId, orderId.apply(this.orderDetails), productId.apply(this.orderDetails), quantity),
@@ -116,7 +116,7 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
             List.of("Confections", "Pavlova", 1l),
             List.of("Dairy Products", "Camembert Pierrot", 8l));
     Assertions.assertThat(table.headers().stream().map(Header::name))
-            .containsExactly(this.categories + ".fieldName", this.products + ".fieldName", "quantity_sum");
+            .containsExactly(this.categories + ".name", this.products + ".name", "quantity_sum");
   }
 
   @Test

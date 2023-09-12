@@ -22,8 +22,8 @@ public class QueryAwareQueryRewriter implements QueryRewriter {
     VirtualTableDto vt = this.query.virtualTableDto;
     if (vt != null
             && vt.name.equals(f.store())
-            && vt.fields.contains(f.fieldName())) {
-      return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.fieldName()));
+            && vt.fields.contains(f.name())) {
+      return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
       // todo-181 should we care about this case ?
     } else {
       return this.underlying.getFieldFullName(f);
