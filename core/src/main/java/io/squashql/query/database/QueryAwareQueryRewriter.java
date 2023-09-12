@@ -46,11 +46,6 @@ public class QueryAwareQueryRewriter implements QueryRewriter {
   }
 
   @Override
-  public String rollup(TypedField f) {
-    return getFieldFullName(f);
-  }
-
-  @Override
   public String measureAlias(String alias) {
     return this.underlying.measureAlias(alias);
   }

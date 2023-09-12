@@ -118,6 +118,12 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
         }
 
         @Override
+        public String selectDate(TypedField f) {
+          // todo-181
+          return null;
+        }
+
+        @Override
         public String rollup(TypedField field) {
           Function<Object, String> quoter = SQLTranslator.getQuoteFn(field);
           return String.format("coalesce(%s, %s)", qr.rollup(field),

@@ -9,6 +9,6 @@ public record TableField(String store, String name, Class<?> type) implements Ty
 
   @Override
   public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
-    return this.name;
+    return queryRewriter.select(this);
   }
 }
