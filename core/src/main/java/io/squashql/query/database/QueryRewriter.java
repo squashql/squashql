@@ -46,7 +46,7 @@ public interface QueryRewriter {
     for (Pattern p : DATE_PATTERNS) {
       Matcher matcher = p.matcher(f.name());
       if (matcher.find()) {
-        return matcher.group(1) + "(" + matcher.group(2) + ")";
+        return matcher.group(1) + "(" + matcher.group(2) + ")"; //todo-181 should we wrap the second group in SqlUtil#getFullName ?
       }
     }
     throw new UnsupportedOperationException("Unsupported function: " + f.name());
