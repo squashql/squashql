@@ -7,24 +7,24 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import java.util.Objects;
 import java.util.function.Function;
 
 @ToString
 @EqualsAndHashCode
-@NoArgsConstructor // For Jackson
+@NoArgsConstructor
 @AllArgsConstructor
-public class ConstantField implements Field {
+public class FunctionField implements Field {
 
-  public Object value;
+  private String store;
+  private String expression;
 
   @Override
   public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter) {
-    return Objects.toString(this.value);
+    return queryRewriter.selectDate(new io.squashql.type.FunctionField(this.store, this.expression));
   }
 
   @Override
   public String name() {
-    return toString(); // todo-181 should we rather trhow
+    return this.expression;
   }
 }

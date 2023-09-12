@@ -1,5 +1,9 @@
 package io.squashql.query.date;
 
+import io.squashql.type.FunctionField;
+import io.squashql.type.TableField;
+import io.squashql.type.TypedField;
+
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,5 +48,15 @@ public class DateFunctions {
       }
     }
     return false;
+  }
+
+  public static TypedField asTypedField(String str) {
+    for (Pattern p : DATE_PATTERNS) {
+      Matcher matcher = p.matcher(str);
+      if (matcher.find()) {
+        return new FunctionField(null, str);
+      }
+    }
+    return new TableField(null, str, double.class);
   }
 }

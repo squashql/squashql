@@ -55,4 +55,9 @@ public class TableField implements Field {
       return queryRewriter.getFieldFullName(new io.squashql.type.TableField(this.tableName, this.fieldName, Object.class));
     }
   }
+
+  @Override
+  public String name() {
+    return this.fullName;
+  }
 }

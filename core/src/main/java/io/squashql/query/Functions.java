@@ -21,6 +21,11 @@ public class Functions {
   }
 
   // whereCriterion
+
+  /**
+   * @deprecated use {@link #criterion(Field, ConditionDto)}.
+   */
+  @Deprecated
   public static CriteriaDto criterion(String field, ConditionDto conditionDto) {
     return new CriteriaDto(new TableField(field), conditionDto);
   }

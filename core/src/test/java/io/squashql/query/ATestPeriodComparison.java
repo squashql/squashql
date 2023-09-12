@@ -3,9 +3,9 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.Period;
-import io.squashql.type.TableField;
 import io.squashql.table.Table;
 import io.squashql.transaction.DataLoader;
+import io.squashql.type.TableField;
 import io.squashql.type.TypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
@@ -331,8 +331,8 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   @Test
   void testYearFunction() {
     var query = Query.from(this.storeName)
+            .where(criterion(new FunctionField(null, year("date_sales")), eq(2022)))
             .select(List.of(year(getFieldFullName(this.storeName, "date_sales"))), List.of(CountMeasure.INSTANCE))
-            .having(criterion(year("date_sales"), eq(2022)))
             .build();
     final Table finalTable = this.executor.execute(query);
     finalTable.show();
@@ -345,7 +345,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   void testQuarterFunction() {
     var query = Query.from(this.storeName)
             .select(List.of(year("date_sales"), quarter("date_sales")), List.of(CountMeasure.INSTANCE))
-            .having(criterion(year("date_sales"), eq(2022)))
+            .having(criterion(new FunctionField(this.storeName, year("date_sales")), eq(2022)))
             .build();
     final Table finalTable = this.executor.execute(query);
     final Class<?> yearType = finalTable.getHeader(year("date_sales")).type();
@@ -361,7 +361,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   void testMonthFunction() {
     var query = Query.from(this.storeName)
             .select(List.of(year("date_sales"), month("date_sales")), List.of(CountMeasure.INSTANCE))
-            .having(criterion(year("date_sales"), eq(2022)))
+            .having(criterion(new FunctionField(null, year("date_sales")), eq(2022)))
             .build();
     final Table finalTable = this.executor.execute(query);
     final Class<?> yearType = finalTable.getHeader(year("date_sales")).type();

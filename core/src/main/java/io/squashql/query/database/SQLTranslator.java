@@ -3,7 +3,6 @@ package io.squashql.query.database;
 import com.google.common.collect.Ordering;
 import io.squashql.query.date.DateFunctions;
 import io.squashql.query.dto.*;
-import io.squashql.type.TableField;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
 
@@ -254,7 +253,7 @@ public class SQLTranslator {
 
   public static String toSql(Function<String, TypedField> fieldProvider, CriteriaDto criteriaDto, QueryRewriter queryRewriter) {
     if (criteriaDto.isWhereCriterion()) {
-      return toSql(fieldProvider.apply(((io.squashql.query.TableField) criteriaDto.field).fullName), criteriaDto.condition, queryRewriter);
+      return toSql(fieldProvider.apply(criteriaDto.field.name()), criteriaDto.condition, queryRewriter);
     } else if (criteriaDto.isHavingCriterion()) {
       return toSql(fieldProvider.apply(criteriaDto.measure.alias()), criteriaDto.condition, queryRewriter);
     } else if (criteriaDto.isJoinCriterion()) {
@@ -301,7 +300,7 @@ public class SQLTranslator {
 
   protected static void addHavingConditions(StringBuilder statement, CriteriaDto havingCriteriaDto, QueryRewriter queryRewriter) {
     if (havingCriteriaDto != null) {
-      String havingClause = toSql(name -> new TableField(null, name, double.class), havingCriteriaDto, queryRewriter);
+      String havingClause = toSql(DateFunctions::asTypedField, havingCriteriaDto, queryRewriter);
       if (havingClause != null) {
         statement
                 .append(" having ")

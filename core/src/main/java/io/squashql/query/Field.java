@@ -10,4 +10,6 @@ import java.util.function.Function;
 public interface Field {
 
   String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter);
+
+  String name();
 }

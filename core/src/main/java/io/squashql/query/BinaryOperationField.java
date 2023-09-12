@@ -29,4 +29,10 @@ public class BinaryOperationField implements Field {
             .append(")")
             .toString();
   }
+
+  @Override
+  public String name() {
+    return toString(); // todo-181 should we rather trhow
+  }
+
 }
