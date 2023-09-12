@@ -1,9 +1,9 @@
 package io.squashql.query;
 
 import io.squashql.query.dto.*;
-import io.squashql.store.TypedField;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
+import io.squashql.type.TypedField;
 
 import java.util.List;
 import java.util.Set;

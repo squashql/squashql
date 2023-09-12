@@ -2,7 +2,8 @@ package io.squashql.transaction;
 
 import io.squashql.SparkDatastore;
 import io.squashql.SparkUtil;
-import io.squashql.store.TypedField;
+import io.squashql.type.TableField;
+import io.squashql.type.TypedField;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.types.StructType;
@@ -32,7 +33,7 @@ public class SparkDataLoader implements DataLoader {
   public static void createTemporaryTable(SparkSession spark, String table, List<TypedField> fields, boolean cjMode) {
     ImmutableList<TypedField> all = ImmutableListFactoryImpl.INSTANCE.ofAll(fields);
     if (cjMode) {
-      all = all.newWith(new TypedField(table, SCENARIO_FIELD_NAME, String.class));
+      all = all.newWith(new TableField(table, SCENARIO_FIELD_NAME, String.class));
     }
     StructType schema = SparkUtil.createSchema(all.castToList());
     spark.conf().set("spark.sql.caseSensitive", String.valueOf(true)); // without it, table names are lowercase.
@@ -81,7 +82,7 @@ public class SparkDataLoader implements DataLoader {
 
   private boolean scenarioColumnIsPresent(String store) {
     List<TypedField> fields = SparkDatastore.getFields(this.spark, store);
-    return fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
+    return fields.stream().anyMatch(f -> f.fieldName().equals(SCENARIO_FIELD_NAME));
   }
 
   @Override

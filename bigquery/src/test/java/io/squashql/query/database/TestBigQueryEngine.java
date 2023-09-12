@@ -4,13 +4,16 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryServiceAccountDatastore;
 import io.squashql.BigQueryUtil;
-import io.squashql.query.*;
+import io.squashql.query.AggregatedMeasure;
+import io.squashql.query.Header;
+import io.squashql.query.QueryExecutor;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.*;
-import io.squashql.store.TypedField;
 import io.squashql.store.Store;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
+import io.squashql.type.TableField;
+import io.squashql.type.TypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -24,9 +27,9 @@ import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 public class TestBigQueryEngine {
 
   final Function<String, TypedField> fp = name -> switch (name) {
-    case "category" -> new TypedField("baseStore", name, long.class);
-    case "price" -> new TypedField("baseStore", name, double.class);
-    default -> new TypedField("baseStore", name, String.class);
+    case "category" -> new TableField("baseStore", name, long.class);
+    case "price" -> new TableField("baseStore", name, double.class);
+    default -> new TableField("baseStore", name, String.class);
   };
 
   @Test

@@ -3,7 +3,7 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.Period;
-import io.squashql.store.TypedField;
+import io.squashql.type.TableField;
 import io.squashql.table.Table;
 import io.squashql.transaction.DataLoader;
 import org.assertj.core.api.Assertions;
@@ -35,16 +35,16 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
-  protected Map<String, List<TypedField>> getFieldsByStore() {
-    TypedField ean = new TypedField(this.storeName, "ean", String.class);
-    TypedField category = new TypedField(this.storeName, "category", String.class);
-    TypedField sales = new TypedField(this.storeName, "sales", double.class);
-    TypedField qty = new TypedField(this.storeName, "quantity", long.class);
-    TypedField year = new TypedField(this.storeName, "year_sales", long.class); // Use long to make sure we support also long as type
-    TypedField semester = new TypedField(this.storeName, "semester_sales", int.class);
-    TypedField quarter = new TypedField(this.storeName, "quarter_sales", int.class);
-    TypedField month = new TypedField(this.storeName, "month_sales", int.class);
-    TypedField date = new TypedField(this.storeName, "date_sales", LocalDate.class);
+  protected Map<String, List<TableField>> getFieldsByStore() {
+    TableField ean = new TableField(this.storeName, "ean", String.class);
+    TableField category = new TableField(this.storeName, "category", String.class);
+    TableField sales = new TableField(this.storeName, "sales", double.class);
+    TableField qty = new TableField(this.storeName, "quantity", long.class);
+    TableField year = new TableField(this.storeName, "year_sales", long.class); // Use long to make sure we support also long as type
+    TableField semester = new TableField(this.storeName, "semester_sales", int.class);
+    TableField quarter = new TableField(this.storeName, "quarter_sales", int.class);
+    TableField month = new TableField(this.storeName, "month_sales", int.class);
+    TableField date = new TableField(this.storeName, "date_sales", LocalDate.class);
     return Map.of(this.storeName, List.of(ean, category, sales, qty, year, semester, quarter, month, date));
   }
 
@@ -334,6 +334,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .having(criterion(year("date_sales"), eq(2022)))
             .build();
     final Table finalTable = this.executor.execute(query);
+    finalTable.show();
     final Class<?> yearType = finalTable.getHeader(year(getFieldFullName(this.storeName, "date_sales"))).type();
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             List.of(cast(yearType, 2022), 12L));

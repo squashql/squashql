@@ -5,8 +5,9 @@ import io.squashql.query.builder.Query;
 import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.TypedField;
 import io.squashql.table.Table;
+import io.squashql.type.TableField;
+import io.squashql.type.TypedField;
 import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -35,16 +36,16 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<TypedField>> getFieldsByStore() {
-    Function<String, TypedField> orderId = s -> new TypedField(s, "orderId", int.class);
-    Function<String, TypedField> shipperId = s -> new TypedField(s, "shipperId", int.class);
-    TypedField orderDetailsId = new TypedField(this.orderDetails, "orderDetailsId", int.class);
-    Function<String, TypedField> productId = s -> new TypedField(s, "productId", int.class);
-    TypedField quantity = new TypedField(this.orderDetails, "quantity", int.class);
-    TypedField shipperName = new TypedField(this.shippers, "name", String.class);
-    TypedField productName = new TypedField(this.products, "name", String.class);
-    Function<String, TypedField> categoryId = s -> new TypedField(s, "categoryId", int.class);
-    TypedField price = new TypedField(this.products, "price", double.class);
-    TypedField categoryName = new TypedField(this.categories, "name", String.class);
+    Function<String, TypedField> orderId = s -> new TableField(s, "orderId", int.class);
+    Function<String, TypedField> shipperId = s -> new TableField(s, "shipperId", int.class);
+    TypedField orderDetailsId = new TableField(this.orderDetails, "orderDetailsId", int.class);
+    Function<String, TypedField> productId = s -> new TableField(s, "productId", int.class);
+    TypedField quantity = new TableField(this.orderDetails, "quantity", int.class);
+    TypedField shipperName = new TableField(this.shippers, "fieldName", String.class);
+    TypedField productName = new TableField(this.products, "fieldName", String.class);
+    Function<String, TableField> categoryId = s -> new TableField(s, "categoryId", int.class);
+    TypedField price = new TableField(this.products, "price", double.class);
+    TypedField categoryName = new TableField(this.categories, "fieldName", String.class);
     return Map.of(
             this.orders, List.of(orderId.apply(this.orders), shipperId.apply(this.orders)),
             this.orderDetails, List.of(orderDetailsId, orderId.apply(this.orderDetails), productId.apply(this.orderDetails), quantity),
@@ -115,7 +116,7 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
             List.of("Confections", "Pavlova", 1l),
             List.of("Dairy Products", "Camembert Pierrot", 8l));
     Assertions.assertThat(table.headers().stream().map(Header::name))
-            .containsExactly(this.categories + ".name", this.products + ".name", "quantity_sum");
+            .containsExactly(this.categories + ".fieldName", this.products + ".fieldName", "quantity_sum");
   }
 
   @Test

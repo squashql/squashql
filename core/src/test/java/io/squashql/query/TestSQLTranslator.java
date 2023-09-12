@@ -5,8 +5,9 @@ import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.DefaultQueryRewriter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
-import io.squashql.store.TypedField;
+import io.squashql.type.TableField;
 import io.squashql.store.Store;
+import io.squashql.type.TypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -39,9 +40,9 @@ public class TestSQLTranslator {
     if (split.length > 1) {
       String tableName = split[0];
       String fieldNameInTable = split[1];
-      return new TypedField(tableName, fieldNameInTable, type.apply(fieldNameInTable));
+      return new TableField(tableName, fieldNameInTable, type.apply(fieldNameInTable));
     } else {
-      return new TypedField(null, s, type.apply(s));
+      return new TableField(null, s, type.apply(s));
     }
   };
 
@@ -211,9 +212,9 @@ public class TestSQLTranslator {
     a.join(c, LEFT, jCToAB);
 
     Function<String, TypedField> fieldSupplier = AQueryEngine.createFieldSupplier(Map.of(
-            "A", new Store("A", List.of(new TypedField("A", "a_id", int.class), new TypedField("A", "a_f", int.class), new TypedField("A", "y", int.class))),
-            "B", new Store("B", List.of(new TypedField("B", "b_id", int.class), new TypedField("B", "b_other_id", int.class))),
-            "C", new Store("C", List.of(new TypedField("c", "a_id", int.class), new TypedField("C", "c_f", int.class), new TypedField("C", "c_other_id", int.class)))
+            "A", new Store("A", List.of(new TableField("A", "a_id", int.class), new TableField("A", "a_f", int.class), new TableField("A", "y", int.class))),
+            "B", new Store("B", List.of(new TableField("B", "b_id", int.class), new TableField("B", "b_other_id", int.class))),
+            "C", new Store("C", List.of(new TableField("c", "a_id", int.class), new TableField("C", "c_f", int.class), new TableField("C", "c_other_id", int.class)))
     ));
 
     DatabaseQuery query = new DatabaseQuery().table(a).withSelect(fieldSupplier.apply("A.y"));
@@ -248,7 +249,7 @@ public class TestSQLTranslator {
 
   @Test
   void testConditionWithValueFullPath() {
-    TypedField field = new TypedField(BASE_STORE_NAME, SCENARIO_FIELD_NAME, String.class);
+    TableField field = new TableField(BASE_STORE_NAME, SCENARIO_FIELD_NAME, String.class);
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(field)
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
@@ -381,8 +382,8 @@ public class TestSQLTranslator {
 
   @Test
   void testComplexAggregatedMeasures() {
-    Field finalPrice = new TableField("recommendation.finalprice");
-    Field recoPrice = new TableField("recommendation.recoprice");
+    Field finalPrice = new io.squashql.query.TableField("recommendation.finalprice");
+    Field recoPrice = new io.squashql.query.TableField("recommendation.recoprice");
     Measure measure = sumIf("increase_sum", minus(finalPrice, recoPrice), all(
             criterion(finalPrice, recoPrice, ConditionType.GT),
             criterion(recoPrice, gt(0))
@@ -394,9 +395,9 @@ public class TestSQLTranslator {
                     " then (`recommendation`.`finalprice`-`recommendation`.`recoprice`) end)" +
                     " as `increase_sum`");
 
-    Field initial_price = new TableField("recommendation.initial_price");
+    Field initial_price = new io.squashql.query.TableField("recommendation.initial_price");
     Field one = new ConstantField(1);
-    Field tvaRate = new TableField("product.tva_rate");
+    Field tvaRate = new io.squashql.query.TableField("product.tva_rate");
     Measure whatever = sum("whatever", divide(initial_price, plus(one, tvaRate)));
     Assertions.assertThat(whatever.sqlExpression(fp, DefaultQueryRewriter.INSTANCE, true))
             .isEqualTo("sum((`recommendation`.`initial_price`/(1+`product`.`tva_rate`))) as `whatever`");
@@ -404,9 +405,9 @@ public class TestSQLTranslator {
 
   @Test
   void testComplexFieldCalculation() {
-    Field f1 = new TableField("f1");
-    Field f2 = new TableField("f2");
-    Field f3 = new TableField("f3");
+    Field f1 = new io.squashql.query.TableField("f1");
+    Field f2 = new io.squashql.query.TableField("f2");
+    Field f3 = new io.squashql.query.TableField("f3");
 
     BinaryOperationField f1_minus_f2 = new BinaryOperationField(BinaryOperator.MINUS, f1, f2);
     BinaryOperationField divide = new BinaryOperationField(BinaryOperator.DIVIDE, f1_minus_f2, f1);

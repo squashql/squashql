@@ -4,8 +4,9 @@ import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.Period;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.TypedField;
 import io.squashql.table.Table;
+import io.squashql.type.TableField;
+import io.squashql.type.TypedField;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -25,11 +26,11 @@ public abstract class ATestDocPeriodComparison extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<TypedField>> getFieldsByStore() {
-    TypedField studentName = new TypedField("student", "name", String.class);
-    TypedField test = new TypedField("student", "test", String.class);
-    TypedField score = new TypedField("student", "score", int.class);
-    TypedField semester = new TypedField("student", "semester", int.class);
-    TypedField year = new TypedField("student", "year", int.class);
+    TypedField studentName = new TableField("student", "fieldName", String.class);
+    TypedField test = new TableField("student", "test", String.class);
+    TypedField score = new TableField("student", "score", int.class);
+    TypedField semester = new TableField("student", "semester", int.class);
+    TypedField year = new TableField("student", "year", int.class);
     return Map.of("student", List.of(studentName, test, score, year, semester));
   }
 

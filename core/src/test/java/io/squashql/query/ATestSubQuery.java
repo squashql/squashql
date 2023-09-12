@@ -3,8 +3,9 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.TypedField;
 import io.squashql.table.Table;
+import io.squashql.type.TableField;
+import io.squashql.type.TypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -25,9 +26,9 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
   @Override
   protected Map<String, List<TypedField>> getFieldsByStore() {
     // See https://mariadb.com/kb/en/subqueries-in-a-from-clause/
-    TypedField studentName = new TypedField("student", "name", String.class);
-    TypedField test = new TypedField("student", "test", String.class);
-    TypedField score = new TypedField("student", "score", int.class);
+    TypedField studentName = new TableField("student", "fieldName", String.class);
+    TypedField test = new TableField("student", "test", String.class);
+    TypedField score = new TableField("student", "score", int.class);
     return Map.of("student", List.of(studentName, test, score));
   }
 

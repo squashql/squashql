@@ -1,10 +1,13 @@
 package io.squashql.util;
 
 import io.squashql.PrimitiveMeasureVisitor;
-import io.squashql.query.*;
+import io.squashql.query.ColumnSet;
+import io.squashql.query.ColumnSetKey;
+import io.squashql.query.Measure;
+import io.squashql.query.QueryExecutor;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.dto.*;
-import io.squashql.store.TypedField;
+import io.squashql.type.TypedField;
 
 import java.util.*;
 import java.util.function.Function;

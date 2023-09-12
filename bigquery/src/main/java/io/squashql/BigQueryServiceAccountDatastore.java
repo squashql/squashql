@@ -4,8 +4,9 @@ import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.*;
 import com.google.common.base.Suppliers;
-import io.squashql.store.TypedField;
 import io.squashql.store.Store;
+import io.squashql.type.TableField;
+import io.squashql.type.TypedField;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -86,7 +87,7 @@ public class BigQueryServiceAccountDatastore implements BigQueryDatastore {
     try {
       Schema schema = query.getTable(datasetName, tableName).getDefinition().getSchema();
       for (com.google.cloud.bigquery.Field field : schema.getFields()) {
-        fields.add(new TypedField(tableName, field.getName(), BigQueryUtil.bigQueryTypeToClass(field.getType())));
+        fields.add(new TableField(tableName, field.getName(), BigQueryUtil.bigQueryTypeToClass(field.getType())));
       }
       return fields;
     } catch (Exception e) {

@@ -3,7 +3,7 @@ package io.squashql;
 import io.squashql.query.*;
 import io.squashql.query.QueryExecutor.QueryScope;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.TypedField;
+import io.squashql.type.TypedField;
 import org.eclipse.collections.impl.set.mutable.MutableSetFactoryImpl;
 
 import java.util.Collections;

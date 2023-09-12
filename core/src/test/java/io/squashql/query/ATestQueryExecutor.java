@@ -5,8 +5,9 @@ import io.squashql.query.builder.Query;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
-import io.squashql.store.TypedField;
 import io.squashql.table.Table;
+import io.squashql.type.TableField;
+import io.squashql.type.TypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -31,13 +32,13 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<TypedField>> getFieldsByStore() {
-    TypedField ean = new TypedField(this.storeName, "ean", String.class);
-    TypedField eanId = new TypedField(this.storeName, "eanId", int.class);
-    TypedField category = new TypedField(this.storeName, "category", String.class);
-    TypedField subcategory = new TypedField(this.storeName, "subcategory", String.class);
-    TypedField price = new TypedField(this.storeName, "price", double.class);
-    TypedField qty = new TypedField(this.storeName, "quantity", int.class);
-    TypedField isFood = new TypedField(this.storeName, "isFood", boolean.class);
+    TypedField ean = new TableField(this.storeName, "ean", String.class);
+    TypedField eanId = new TableField(this.storeName, "eanId", int.class);
+    TypedField category = new TableField(this.storeName, "category", String.class);
+    TypedField subcategory = new TableField(this.storeName, "subcategory", String.class);
+    TypedField price = new TableField(this.storeName, "price", double.class);
+    TypedField qty = new TableField(this.storeName, "quantity", int.class);
+    TypedField isFood = new TableField(this.storeName, "isFood", boolean.class);
     return Map.of(this.storeName, List.of(eanId, ean, category, subcategory, price, qty, isFood));
   }
 

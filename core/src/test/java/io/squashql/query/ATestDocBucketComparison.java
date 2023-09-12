@@ -4,8 +4,9 @@ import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.TypedField;
 import io.squashql.table.Table;
+import io.squashql.type.TableField;
+import io.squashql.type.TypedField;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -27,9 +28,9 @@ public abstract class ATestDocBucketComparison extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<TypedField>> getFieldsByStore() {
-    TypedField salePrice = new TypedField("store", "saleprice", double.class);
-    TypedField loavesSold = new TypedField("store", "loavessold", int.class);
-    TypedField pos = new TypedField("store", "pointofsale", String.class);
+    TypedField salePrice = new TableField("store", "saleprice", double.class);
+    TypedField loavesSold = new TableField("store", "loavessold", int.class);
+    TypedField pos = new TableField("store", "pointofsale", String.class);
     return Map.of("store", List.of(salePrice, loavesSold, pos));
   }
 

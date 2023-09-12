@@ -2,8 +2,9 @@ package io.squashql.query;
 
 import io.squashql.query.database.QueryEngine;
 import io.squashql.store.Datastore;
-import io.squashql.store.TypedField;
 import io.squashql.transaction.DataLoader;
+import io.squashql.type.TableField;
+import io.squashql.type.TypedField;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 

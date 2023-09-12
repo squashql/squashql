@@ -7,8 +7,9 @@ import com.clickhouse.jdbc.ClickHouseDataSource;
 import com.clickhouse.jdbc.internal.ClickHouseJdbcUrlParser;
 import com.google.common.base.Suppliers;
 import io.squashql.store.Datastore;
-import io.squashql.store.TypedField;
 import io.squashql.store.Store;
+import io.squashql.type.TableField;
+import io.squashql.type.TypedField;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -83,7 +84,7 @@ public class ClickHouseDatastore implements Datastore {
         String columnName = (String) columns.getObject("COLUMN_NAME");
         String typeName = (String) columns.getObject("TYPE_NAME");
         ClickHouseColumn column = ClickHouseColumn.of("", typeName);
-        fields.add(new TypedField(table, columnName, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())));
+        fields.add(new TableField(table, columnName, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())));
       }
 
       return fields;

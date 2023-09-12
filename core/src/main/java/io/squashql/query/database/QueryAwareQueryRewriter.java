@@ -1,7 +1,7 @@
 package io.squashql.query.database;
 
 import io.squashql.query.dto.VirtualTableDto;
-import io.squashql.store.TypedField;
+import io.squashql.type.TypedField;
 
 /**
  * A {@link QueryRewriter} whose logic depends on the query being executed. See {@link #getFieldFullName(TypedField)}.
@@ -22,8 +22,8 @@ public class QueryAwareQueryRewriter implements QueryRewriter {
     VirtualTableDto vt = this.query.virtualTableDto;
     if (vt != null
             && vt.name.equals(f.store())
-            && vt.fields.contains(f.name())) {
-      return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
+            && vt.fields.contains(f.fieldName())) {
+      return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.fieldName()));
       // todo-181 should we care about this case ?
     } else {
       return this.underlying.getFieldFullName(f);

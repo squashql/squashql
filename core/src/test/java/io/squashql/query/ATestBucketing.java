@@ -8,8 +8,9 @@ import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.VirtualTableDto;
-import io.squashql.store.TypedField;
+import io.squashql.type.TableField;
 import io.squashql.table.Table;
+import io.squashql.type.TypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -32,11 +33,11 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<TypedField>> getFieldsByStore() {
-    TypedField ean = new TypedField(this.storeName, "ean", int.class);
-    TypedField shop = new TypedField(this.storeName, "shop", String.class);
-    TypedField unitPrice = new TypedField(this.storeName, "unitPrice", double.class);
-    TypedField qtySold = new TypedField(this.storeName, "qtySold", int.class);
-    TypedField kvi = new TypedField(this.storeName, "kvi", double.class);
+    TypedField ean = new TableField(this.storeName, "ean", int.class);
+    TypedField shop = new TableField(this.storeName, "shop", String.class);
+    TypedField unitPrice = new TableField(this.storeName, "unitPrice", double.class);
+    TypedField qtySold = new TableField(this.storeName, "qtySold", int.class);
+    TypedField kvi = new TableField(this.storeName, "kvi", double.class);
     return Map.of(this.storeName, List.of(ean, shop, unitPrice, qtySold, kvi));
   }
 

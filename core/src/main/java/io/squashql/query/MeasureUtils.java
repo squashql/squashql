@@ -7,7 +7,8 @@ import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.Period;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.exception.FieldNotFoundException;
-import io.squashql.store.TypedField;
+import io.squashql.type.TableField;
+import io.squashql.type.TypedField;
 import lombok.NoArgsConstructor;
 
 import java.util.*;
@@ -33,7 +34,7 @@ public final class MeasureUtils {
 
   public static String createExpression(Measure m) {
     if (m instanceof AggregatedMeasure a) {
-      Function<String, TypedField> fieldProvider = s -> new TypedField(null, s, String.class);
+      Function<String, TypedField> fieldProvider = s -> new TableField(null, s, String.class);
       if (a.criteria != null) {
         String conditionSt = SQLTranslator.toSql(fieldProvider, a.criteria, BASIC);
         return a.aggregationFunction + "If(" + a.field.sqlExpression(fieldProvider, BASIC) + ", " + conditionSt + ")";
@@ -105,7 +106,7 @@ public final class MeasureUtils {
     if (root == null) {
       return null;
     } else if (root.isWhereCriterion()) {
-      return (((TableField) root.field).fieldName).equals(field) ? null : root;
+      return (((io.squashql.query.TableField) root.field).fieldName).equals(field) ? null : root;
     } else {
       removeCriteriaOnField(field, root.children);
       return root;
@@ -117,7 +118,7 @@ public final class MeasureUtils {
     while (iterator.hasNext()) {
       CriteriaDto criteriaDto = iterator.next();
       if (criteriaDto.isWhereCriterion()) {
-        if (((TableField) criteriaDto.field).fieldName.equals(field)) {
+        if (((io.squashql.query.TableField) criteriaDto.field).fieldName.equals(field)) {
           iterator.remove();
         }
       } else {
@@ -151,7 +152,7 @@ public final class MeasureUtils {
       } catch (FieldNotFoundException e) {
         // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
         // contains only "raw" fields, it will throw an exception.
-        return new TypedField(null, fieldName, fallbackType);
+        return new TableField(null, fieldName, fallbackType);
       }
     };
   }

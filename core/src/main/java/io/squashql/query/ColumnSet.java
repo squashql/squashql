@@ -2,7 +2,7 @@ package io.squashql.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.squashql.store.TypedField;
+import io.squashql.type.TypedField;
 
 import java.util.List;
 

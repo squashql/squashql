@@ -1,11 +1,11 @@
 package io.squashql.query.database;
 
-import io.squashql.store.TypedField;
+import io.squashql.type.TypedField;
 
 public interface QueryRewriter {
 
   default String getFieldFullName(TypedField f) {
-    return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
+    return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.fieldName()));
   }
 
   default String fieldName(String field) {
@@ -19,7 +19,7 @@ public interface QueryRewriter {
   /**
    * Customizes how to refer to a Common Table Expression (CTE) in the SQL statement.
    *
-   * @param cteName the name of the CTE
+   * @param cteName the field name of the CTE
    * @return the customized argument
    */
   default String cteName(String cteName) {

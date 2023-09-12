@@ -8,12 +8,16 @@ import com.github.benmanes.caffeine.cache.stats.ConcurrentStatsCounter;
 import com.github.benmanes.caffeine.cache.stats.StatsCounter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.CacheStatsDto;
-import io.squashql.store.TypedField;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
+import io.squashql.type.TableField;
+import io.squashql.type.TypedField;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 public class CaffeineQueryCache implements QueryCache {
 

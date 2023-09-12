@@ -9,9 +9,9 @@ import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.parameter.QueryCacheParameter;
-import io.squashql.store.TypedField;
 import io.squashql.store.Store;
 import io.squashql.table.*;
+import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
@@ -79,7 +79,7 @@ public class QueryExecutor {
     Set<String> axes = new HashSet<>(context.rows);
     axes.addAll(context.columns);
     Set<String> select = new HashSet<>(query.columns);
-    select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream().map(TypedField::name)).collect(Collectors.toSet()));
+    select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream().map(TypedField::fieldName)).collect(Collectors.toSet()));
     axes.removeAll(select);
 
     if (!axes.isEmpty()) {
