@@ -6,6 +6,7 @@ import io.squashql.query.dto.Period;
 import io.squashql.type.TableField;
 import io.squashql.table.Table;
 import io.squashql.transaction.DataLoader;
+import io.squashql.type.TypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
-  protected Map<String, List<TableField>> getFieldsByStore() {
+  protected Map<String, List<TypedField>> getFieldsByStore() {
     TableField ean = new TableField(this.storeName, "ean", String.class);
     TableField category = new TableField(this.storeName, "category", String.class);
     TableField sales = new TableField(this.storeName, "sales", double.class);

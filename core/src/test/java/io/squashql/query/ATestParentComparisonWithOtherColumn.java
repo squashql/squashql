@@ -3,8 +3,9 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.type.TableField;
 import io.squashql.table.Table;
+import io.squashql.type.TableField;
+import io.squashql.type.TypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -22,7 +23,7 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
   protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
-  protected Map<String, List<TableField>> getFieldsByStore() {
+  protected Map<String, List<TypedField>> getFieldsByStore() {
     TableField city = new TableField(this.storeName, "city", String.class);
     TableField country = new TableField(this.storeName, "country", String.class);
     TableField continent = new TableField(this.storeName, "continent", String.class);
