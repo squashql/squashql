@@ -8,6 +8,7 @@ import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.store.Datastore;
 import io.squashql.store.Store;
 import io.squashql.store.TypedField;
+import io.squashql.store.UnknownType;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.util.Queries;
@@ -52,7 +53,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
         if (store != null) {
           for (TypedField field : store.fields()) {
             if (field.name().equals(fieldNameInTable)) {
-              return cleansedFieldName.equals(fieldName) ? field : new TypedField(tableName, fieldName, field.type());
+              return cleansedFieldName.equals(fieldName) ? field : new TypedField(tableName, fieldName, UnknownType.class);
             }
           }
         }
@@ -62,7 +63,8 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
             if (field.name().equals(cleansedFieldName)) {
               // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
               // if any ambiguity, the DB will raise an exception.
-              return new TypedField(null, fieldName, field.type());
+              final Class<?> type = cleansedFieldName.equals(fieldName) ? field.type() : UnknownType.class;
+              return new TypedField(null, fieldName, type);
             }
           }
         }
