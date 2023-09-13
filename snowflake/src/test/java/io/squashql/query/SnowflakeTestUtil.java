@@ -17,9 +17,6 @@ public class SnowflakeTestUtil {
     properties.put("role", "ACCOUNTADMIN");
   }
 
-  /**
-   * See {@link io.squashql.SnowflakeUtil}.
-   */
   public static Object translate(Object o) {
     if (o == null) {
       return null;

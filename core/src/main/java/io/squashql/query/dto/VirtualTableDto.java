@@ -1,8 +1,7 @@
 package io.squashql.query.dto;
 
 import io.squashql.store.Store;
-import io.squashql.type.TableField;
-import io.squashql.type.TypedField;
+import io.squashql.type.TableTypedField;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -26,10 +25,10 @@ public class VirtualTableDto {
   }
 
   public static Store toStore(VirtualTableDto virtualTableDto) {
-    List<TypedField> fields = new ArrayList<>();
+    List<TableTypedField> fields = new ArrayList<>();
     for (int i = 0; i < virtualTableDto.fields.size(); i++) {
       Class<?> klazz = virtualTableDto.records.get(0).get(i).getClass(); // take the first row to determine the type
-      fields.add(new TableField(virtualTableDto.name, virtualTableDto.fields.get(i), klazz));
+      fields.add(new TableTypedField(virtualTableDto.name, virtualTableDto.fields.get(i), klazz));
     }
     return new Store(virtualTableDto.name, fields);
   }

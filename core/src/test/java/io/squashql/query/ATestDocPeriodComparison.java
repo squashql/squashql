@@ -5,8 +5,7 @@ import io.squashql.query.builder.Query;
 import io.squashql.query.dto.Period;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.table.Table;
-import io.squashql.type.TableField;
-import io.squashql.type.TypedField;
+import io.squashql.type.TableTypedField;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -25,12 +24,12 @@ import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 public abstract class ATestDocPeriodComparison extends ABaseTestQuery {
 
   @Override
-  protected Map<String, List<TypedField>> getFieldsByStore() {
-    TypedField studentName = new TableField("student", "name", String.class);
-    TypedField test = new TableField("student", "test", String.class);
-    TypedField score = new TableField("student", "score", int.class);
-    TypedField semester = new TableField("student", "semester", int.class);
-    TypedField year = new TableField("student", "year", int.class);
+  protected Map<String, List<TableTypedField>> getFieldsByStore() {
+    TableTypedField studentName = new TableTypedField("student", "name", String.class);
+    TableTypedField test = new TableTypedField("student", "test", String.class);
+    TableTypedField score = new TableTypedField("student", "score", int.class);
+    TableTypedField semester = new TableTypedField("student", "semester", int.class);
+    TableTypedField year = new TableTypedField("student", "year", int.class);
     return Map.of("student", List.of(studentName, test, score, year, semester));
   }
 

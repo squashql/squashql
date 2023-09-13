@@ -6,9 +6,12 @@ import io.squashql.BigQueryUtil;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.Header;
 import io.squashql.query.QueryExecutor;
+import io.squashql.query.date.DateFunctions;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
+import io.squashql.type.FunctionTypedField;
+import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.api.tuple.Pair;
@@ -16,12 +19,9 @@ import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 
 import java.util.*;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static io.squashql.query.database.SQLTranslator.checkRollupIsValid;
-import static io.squashql.query.date.DateFunctions.DATE_PATTERNS;
 
 public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
@@ -97,11 +97,11 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
               rewriter);
     } else {
       checkRollupIsValid(
-              query.select.stream().map(f -> this.queryRewriter.select(f)).toList(),
-              query.rollup.stream().map(f -> this.queryRewriter.rollup(f)).toList());
+              query.select.stream().map(this.queryRewriter::select).toList(),
+              query.rollup.stream().map(this.queryRewriter::rollup).toList());
 
-      // Special case for BigQuery because it does not support either the grouping function used to identify extra-rows added
-      // by rollup or grouping sets for partial rollup.
+      // Special case for BigQuery because it does not support either the grouping function used to identify extra-rows
+      // added by rollup or grouping sets for partial rollup.
 
       /*
        * The trick here is to change what is put in select and rollup:
@@ -120,11 +120,11 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
                   quoter.apply(BigQueryUtil.getNullValue(field.type())));
         }
 
-        @Override
-        public String selectDate(TypedField f) {
-          // todo-181
-          return null;
-        }
+//        @Override
+//        public String selectDate(TypedField f) {
+//          // todo-181
+//          return null;
+//        }
 
         @Override
         public String rollup(TypedField field) {
@@ -134,7 +134,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
         }
 
         @Override
-        public String getFieldFullName(TypedField f) {
+        public String getFieldFullName(TableTypedField f) {
           return qr.getFieldFullName(f);
         }
       };
@@ -161,7 +161,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     boolean isPartialRollup = !Set.copyOf(query.select).equals(Set.copyOf(query.rollup));
     List<TypedField> missingColumnsInRollup = new ArrayList<>(query.select);
     missingColumnsInRollup.removeAll(query.rollup);
-    Set<String> missingColumnsInRollupSet = missingColumnsInRollup.stream().map(SqlUtils::getFieldFullName).collect(Collectors.toSet());
+    Set<String> missingColumnsInRollupSet = missingColumnsInRollup.stream().map(SqlUtils::expression).collect(Collectors.toSet());
 
     MutableIntSet rowIndicesToRemove = new IntHashSet();
     for (int i = 0; i < input.headers().size(); i++) {
@@ -284,18 +284,14 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       this.datasetName = datasetName;
     }
 
-    /**
-     * https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#extract
-     */
     @Override
-    public String selectDate(TypedField f) {
-      for (Pattern p : DATE_PATTERNS) {
-        Matcher matcher = p.matcher(f.name());
-        if (matcher.find()) {
-          return String.format("EXTRACT(%s FROM %s)", matcher.group(1), matcher.group(2));
-        }
+    public String functionExpression(FunctionTypedField ftf) {
+      if (DateFunctions.DATE_PATTERNS.keySet().contains(ftf.function())) {
+        // https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#extract
+        return String.format("EXTRACT(%s FROM %s)", ftf.function(), getFieldFullName(ftf.field()));
+      } else {
+        throw new IllegalArgumentException("Unsupported function " + ftf);
       }
-      throw new UnsupportedOperationException("Unsupported function: " + f.name());
     }
 
     @Override

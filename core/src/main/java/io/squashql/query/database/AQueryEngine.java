@@ -9,8 +9,8 @@ import io.squashql.store.Datastore;
 import io.squashql.store.Store;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
-import io.squashql.type.FunctionField;
-import io.squashql.type.TableField;
+import io.squashql.type.FunctionTypedField;
+import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
@@ -45,36 +45,46 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   public static Function<String, TypedField> createFieldSupplier(Map<String, Store> storesByName) {
     return expression -> {
-      final String cleansedFieldName = DateFunctions.extractFieldFromDateFunctionOrReturn(expression);
-      String[] split = cleansedFieldName.split("\\.");
-      if (split.length > 1) {
-        String tableName = split[0];
-        String fieldNameInTable = split[1];
-        Store store = storesByName.get(tableName);
-        if (store != null) {
-          for (TypedField field : store.fields()) {
-            if (field.name().equals(fieldNameInTable)) {
-              return cleansedFieldName.equals(expression) ? field : new FunctionField(tableName, expression);
-            }
-          }
-        }
+      final Pair<String, String> extracted = DateFunctions.extractFunctionAndFieldFromDateFunction(expression);
+      TableTypedField tableTypedField = getTableTypedField(extracted.getTwo(), storesByName);
+      String function = extracted.getOne();
+      if (function == null) {
+        return tableTypedField;
       } else {
-        for (Store store : storesByName.values()) {
-          for (TypedField field : store.fields()) {
-            if (field.name().equals(cleansedFieldName)) {
-              // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
-              // if any ambiguity, the DB will raise an exception.
-              return cleansedFieldName.equals(expression) ? new TableField(null, expression, field.type()) : new FunctionField(null, expression);
-            }
+        return new FunctionTypedField(tableTypedField, function);
+      }
+    };
+  }
+
+  private static TableTypedField getTableTypedField(String fieldName, Map<String, Store> storesByName) {
+    String[] split = fieldName.split("\\.");
+    if (split.length > 1) {
+      String tableName = split[0];
+      String fieldNameInTable = split[1];
+      Store store = storesByName.get(tableName);
+      if (store != null) {
+        for (TableTypedField field : store.fields()) {
+          if (field.name().equals(fieldNameInTable)) {
+            return field;
           }
         }
       }
-
-      if (expression.equals(CountMeasure.INSTANCE.alias())) {
-        return new TableField(null, CountMeasure.INSTANCE.alias(), long.class);
+    } else {
+      for (Store store : storesByName.values()) {
+        for (TableTypedField field : store.fields()) {
+          if (field.name().equals(fieldName)) {
+            // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
+            // if any ambiguity, the DB will raise an exception.
+            return new TableTypedField(null, fieldName, field.type());
+          }
+        }
       }
-      throw new FieldNotFoundException("Cannot find field with name " + expression);
-    };
+    }
+
+    if (fieldName.equals(CountMeasure.INSTANCE.alias())) {
+      return new TableTypedField(null, CountMeasure.INSTANCE.alias(), long.class);
+    }
+    throw new FieldNotFoundException("Cannot find field with name " + fieldName);
   }
 
   @Override
@@ -181,14 +191,19 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
           BiFunction<Integer, Record, Object> recordToFieldValue,
           QueryRewriter queryRewriter) {
     List<Header> headers = new ArrayList<>();
-    List<String> fieldNames = new ArrayList<>(query.select.stream().map(f -> {
-      final String cleansedFieldName = DateFunctions.extractFieldFromDateFunctionOrReturn(f.name());
-      return cleansedFieldName.equals(f.name()) ? SqlUtils.getFieldFullName(f) : f.name();
-      // todo-181 year(storetexxx.date_sales)
-    }).toList());
+    Function<TypedField, String> typedFieldStringFunction = f -> {
+      if (f instanceof TableTypedField ttf) {
+        return SqlUtils.getFieldFullName(ttf);
+      } else if (f instanceof FunctionTypedField ftf) {
+        return DateFunctions.name(ftf);
+      } else {
+        throw new IllegalArgumentException(f.getClass().getName());
+      }
+    };
+    List<String> fieldNames = new ArrayList<>(query.select.stream().map(typedFieldStringFunction).toList());
     List<TypedField> groupingSelects = Queries.generateGroupingSelect(query);
     if (queryRewriter.useGroupingFunction()) {
-      groupingSelects.forEach(r -> fieldNames.add(SqlUtils.groupingAlias(SqlUtils.getFieldFullName(r))));
+      groupingSelects.forEach(r -> fieldNames.add(SqlUtils.groupingAlias(typedFieldStringFunction.apply(r))));
     }
     query.measures.forEach(m -> fieldNames.add(m.alias()));
     List<List<Object>> values = new ArrayList<>(columns.size());

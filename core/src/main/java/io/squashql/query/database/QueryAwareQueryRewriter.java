@@ -1,10 +1,11 @@
 package io.squashql.query.database;
 
 import io.squashql.query.dto.VirtualTableDto;
-import io.squashql.type.TypedField;
+import io.squashql.type.FunctionTypedField;
+import io.squashql.type.TableTypedField;
 
 /**
- * A {@link QueryRewriter} whose logic depends on the query being executed. See {@link #getFieldFullName(TypedField)}.
+ * A {@link QueryRewriter} whose logic depends on the query being executed. See {@link #getFieldFullName(TableTypedField)}.
  */
 public class QueryAwareQueryRewriter implements QueryRewriter {
 
@@ -18,7 +19,7 @@ public class QueryAwareQueryRewriter implements QueryRewriter {
   }
 
   @Override
-  public String getFieldFullName(TypedField f) {
+  public String getFieldFullName(TableTypedField f) {
     VirtualTableDto vt = this.query.virtualTableDto;
     if (vt != null
             && vt.name.equals(f.store())
@@ -27,6 +28,11 @@ public class QueryAwareQueryRewriter implements QueryRewriter {
     } else {
       return this.underlying.getFieldFullName(f);
     }
+  }
+
+  @Override
+  public String functionExpression(FunctionTypedField ftf) {
+    return this.underlying.functionExpression(ftf);
   }
 
   @Override

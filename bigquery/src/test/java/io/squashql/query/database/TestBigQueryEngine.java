@@ -10,12 +10,14 @@ import io.squashql.query.dto.*;
 import io.squashql.store.Store;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
-import io.squashql.type.TableField;
+import io.squashql.type.FunctionTypedField;
+import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
 
@@ -24,10 +26,10 @@ import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
 public class TestBigQueryEngine {
 
-  final Function<String, TypedField> fp = name -> switch (name) {
-    case "category" -> new TableField("baseStore", name, long.class);
-    case "price" -> new TableField("baseStore", name, double.class);
-    default -> new TableField("baseStore", name, String.class);
+  final Function<String, TableTypedField> fp = name -> switch (name) {
+    case "category" -> new TableTypedField("baseStore", name, long.class);
+    case "price" -> new TableTypedField("baseStore", name, double.class);
+    default -> new TableTypedField("baseStore", name, String.class);
   };
 
   @Test
@@ -145,8 +147,8 @@ public class TestBigQueryEngine {
     TypedField scenarioField = this.fp.apply(scenario);
     TypedField categoryField = this.fp.apply(category);
     ColumnarTable input = new ColumnarTable(
-            List.of(new Header(SqlUtils.getFieldFullName(scenarioField), scenarioField.type(), false),
-                    new Header(SqlUtils.getFieldFullName(categoryField), categoryField.type(), false),
+            List.of(new Header(SqlUtils.expression(scenarioField), scenarioField.type(), false),
+                    new Header(SqlUtils.expression(categoryField), categoryField.type(), false),
                     new Header("price.sum", double.class, true)),
             Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
             values);
@@ -227,7 +229,7 @@ public class TestBigQueryEngine {
     for (List<String> groupingSet : groupingSets) {
       List<TypedField> l = new ArrayList<>();
       gp.add(l);
-      if (groupingSet.size() == 0) {
+      if (groupingSet.isEmpty()) {
         continue; // GT
       }
       for (String s : groupingSet) {
@@ -261,7 +263,7 @@ public class TestBigQueryEngine {
     List<String> rows = List.of("continent", "country", "city");
     List<String> columns = List.of("spending category", "spending subcategory");
     QueryExecutor.PivotTableContext context = new QueryExecutor.PivotTableContext(new PivotTableQueryDto(queryDto, rows, columns));
-    context.init(this.fp);
+    context.init(this.fp::apply);
     String sqlStatement = bqe.createSqlStatement(query, context);
 
     String continentCol = "coalesce(`pid.ds.baseStore`.`continent`, '___null___')";
@@ -290,13 +292,11 @@ public class TestBigQueryEngine {
 
   @Test
   void testSqlGenerationWithDateFunctions() {
-    String year = Functions.year("date");
-    String quarter = Functions.quarter("date");
-    String month = Functions.month("date");
+    TableTypedField dateField = new TableTypedField("baseStore", "date", LocalDate.class);
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect(new io.squashql.type.FunctionField("baseStore", year))
-            .withSelect(new io.squashql.type.FunctionField("baseStore", quarter))
-            .withSelect(new io.squashql.type.FunctionField("baseStore", month))
+            .withSelect(new FunctionTypedField(dateField, "YEAR"))
+            .withSelect(new FunctionTypedField(dateField, "QUARTER"))
+            .withSelect(new FunctionTypedField(dateField, "MONTH"))
             .aggregatedMeasure("price.sum", "price", "sum")
             .table("baseStore");
 
@@ -311,10 +311,14 @@ public class TestBigQueryEngine {
     BigQueryEngine bqe = new BigQueryEngine(datastore);
     String sqlStatement = bqe.createSqlStatement(query, null);
     System.out.println(sqlStatement);
-//    Assertions.assertThat(sqlStatement)
-//            .isEqualTo("select coalesce(`myProjectId.myDatasetName.baseStore`.`scenario`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`category`, " + BigQueryUtil.getNullValue(long.class) + ")," +
-//                    " sum(`price`) as `price.sum`, avg(`price`) as `price.avg`" +
-//                    " from `myProjectId.myDatasetName.baseStore`" +
-//                    " group by rollup(coalesce(`myProjectId.myDatasetName.baseStore`.`scenario`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`category`, " + BigQueryUtil.getNullValue(long.class) + "))");
+    String sql = "select " +
+            "EXTRACT(YEAR FROM `myProjectId.myDatasetName.baseStore`.`date`), " +
+            "EXTRACT(QUARTER FROM `myProjectId.myDatasetName.baseStore`.`date`), " +
+            "EXTRACT(MONTH FROM `myProjectId.myDatasetName.baseStore`.`date`), sum(`price`) as `price.sum` " +
+            "from `myProjectId.myDatasetName.baseStore` group by " +
+            "EXTRACT(YEAR FROM `myProjectId.myDatasetName.baseStore`.`date`), " +
+            "EXTRACT(QUARTER FROM `myProjectId.myDatasetName.baseStore`.`date`), " +
+            "EXTRACT(MONTH FROM `myProjectId.myDatasetName.baseStore`.`date`)";
+    Assertions.assertThat(sqlStatement).isEqualTo(sql);
   }
 }

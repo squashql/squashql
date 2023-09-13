@@ -7,7 +7,7 @@ import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.Period;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.exception.FieldNotFoundException;
-import io.squashql.type.TableField;
+import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.NoArgsConstructor;
 
@@ -34,7 +34,7 @@ public final class MeasureUtils {
 
   public static String createExpression(Measure m) {
     if (m instanceof AggregatedMeasure a) {
-      Function<String, TypedField> fieldProvider = s -> new TableField(null, s, String.class);
+      Function<String, TypedField> fieldProvider = s -> new TableTypedField(null, s, String.class);
       if (a.criteria != null) {
         String conditionSt = SQLTranslator.toSql(fieldProvider, a.criteria, BASIC);
         return a.aggregationFunction + "If(" + a.field.sqlExpression(fieldProvider, BASIC) + ", " + conditionSt + ")";
@@ -152,7 +152,7 @@ public final class MeasureUtils {
       } catch (FieldNotFoundException e) {
         // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
         // contains only "raw" fields, it will throw an exception.
-        return new TableField(null, fieldName, fallbackType);
+        return new TableTypedField(null, fieldName, fallbackType);
       }
     };
   }

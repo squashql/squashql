@@ -1,14 +1,9 @@
 package io.squashql.type;
 
-import io.squashql.query.database.QueryRewriter;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public interface TypedField {
 
-  String store();
-
-  String name();
-
   Class<?> type();
-
-  String sqlExpression(QueryRewriter queryRewriter, boolean withAlias);
 }

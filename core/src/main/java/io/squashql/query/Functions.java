@@ -182,15 +182,27 @@ public class Functions {
     return new DoubleConstantMeasure(value);
   }
 
-  public static String year(String field) {
+  public static Field year(String field) {
+    return new FunctionField(yearStr(field));
+  }
+
+  public static Field quarter(String field) {
+    return new FunctionField(quarterStr(field));
+  }
+
+  public static Field month(String field) {
+    return new FunctionField(monthStr(field));
+  }
+
+  public static String yearStr(String field) {
     return DateFunctions.year(field);
   }
 
-  public static String quarter(String field) {
+  public static String quarterStr(String field) {
     return DateFunctions.quarter(field);
   }
 
-  public static String month(String field) {
+  public static String monthStr(String field) {
     return DateFunctions.month(field);
   }
 }

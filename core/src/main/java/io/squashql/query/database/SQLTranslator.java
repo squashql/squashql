@@ -1,8 +1,9 @@
 package io.squashql.query.database;
 
 import com.google.common.collect.Ordering;
-import io.squashql.query.date.DateFunctions;
+import io.squashql.query.MeasureUtils;
 import io.squashql.query.dto.*;
+import io.squashql.store.UnknownType;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
 
@@ -36,7 +37,7 @@ public class SQLTranslator {
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
 
-    query.select.forEach(f -> groupBy.add(f.sqlExpression(queryRewriter, false)));
+    query.select.forEach(f -> groupBy.add(queryRewriter.select(f)));
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true))); // Alias is needed when using sub-queries
 
     selects.addAll(groupBy); // coord first, then aggregates
@@ -65,7 +66,7 @@ public class SQLTranslator {
     } else {
       addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
     }
-    addHavingConditions(statement, query.havingCriteriaDto, queryRewriter);
+    addHavingConditions(fieldProvider, statement, query.havingCriteriaDto, queryRewriter);
     addLimit(query.limit, statement);
     return statement.toString();
   }
@@ -220,7 +221,7 @@ public class SQLTranslator {
   }
 
   public static String toSql(TypedField field, ConditionDto dto, QueryRewriter queryRewriter) {
-    String formattedFieldName = field.sqlExpression(queryRewriter, false); // todo-181 do we really need the fieldProvider ?
+    String formattedFieldName = queryRewriter.select(field);
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
       Function<Object, String> sqlMapper = getQuoteFn(field);
       return switch (dto.type()) {
@@ -287,7 +288,7 @@ public class SQLTranslator {
             || field.type().equals(float.class)
             || field.type().equals(boolean.class)
             || field.type().equals(Boolean.class)
-            || DateFunctions.isDateFunction(field.name())) {
+            || field.type().equals(UnknownType.class)) {
       // no quote
       return String::valueOf;
     } else if (field.type().equals(String.class)) {
@@ -298,9 +299,9 @@ public class SQLTranslator {
     }
   }
 
-  protected static void addHavingConditions(StringBuilder statement, CriteriaDto havingCriteriaDto, QueryRewriter queryRewriter) {
+  protected static void addHavingConditions(Function<String, TypedField> fieldProvider, StringBuilder statement, CriteriaDto havingCriteriaDto, QueryRewriter queryRewriter) {
     if (havingCriteriaDto != null) {
-      String havingClause = toSql(DateFunctions::asTypedField, havingCriteriaDto, queryRewriter);
+      String havingClause = toSql(MeasureUtils.withFallback(fieldProvider, Number.class), havingCriteriaDto, queryRewriter);
       if (havingClause != null) {
         statement
                 .append(" having ")

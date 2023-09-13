@@ -1,19 +1,20 @@
 package io.squashql.query.date;
 
-import io.squashql.type.FunctionField;
-import io.squashql.type.TableField;
-import io.squashql.type.TypedField;
+import io.squashql.query.database.SqlUtils;
+import io.squashql.type.FunctionTypedField;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
 
-import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DateFunctions {
 
-  public static final List<Pattern> DATE_PATTERNS = List.of(
-          Pattern.compile("__(YEAR)__(.*)__"),
-          Pattern.compile("__(QUARTER)__(.*)__"),
-          Pattern.compile("__(MONTH)__(.*)__"));
+  public static final Map<String, Pattern> DATE_PATTERNS = Map.of(
+          "YEAR", Pattern.compile("__(YEAR)__(.*)__"),
+          "QUARTER", Pattern.compile("__(QUARTER)__(.*)__"),
+          "MONTH", Pattern.compile("__(MONTH)__(.*)__"));
   static final String YEAR_FORMAT = "__YEAR__%s__";
   static final String QUARTER_FORMAT = "__QUARTER__%s__";
   static final String MONTH_FORMAT = "__MONTH__%s__";
@@ -30,18 +31,22 @@ public class DateFunctions {
     return String.format(MONTH_FORMAT, column);
   }
 
-  public static String extractFieldFromDateFunctionOrReturn(String str) {
-    for (Pattern p : DATE_PATTERNS) {
-      Matcher matcher = p.matcher(str);
+  public static String name(FunctionTypedField field) {
+    return String.format("__%s__%s__", field.function(), SqlUtils.expression(field.field()));
+  }
+
+  public static Pair<String, String> extractFunctionAndFieldFromDateFunction(String str) {
+    for (Map.Entry<String, Pattern> p : DATE_PATTERNS.entrySet()) {
+      Matcher matcher = p.getValue().matcher(str);
       if (matcher.find()) {
-        return matcher.group(2);
+        return Tuples.pair(p.getKey(), matcher.group(2));
       }
     }
-    return str;
+    return Tuples.pair(null, str);
   }
 
   public static boolean isDateFunction(String str) {
-    for (Pattern p : DATE_PATTERNS) {
+    for (Pattern p : DATE_PATTERNS.values()) {
       Matcher matcher = p.matcher(str);
       if (matcher.find()) {
         return true;
@@ -50,13 +55,13 @@ public class DateFunctions {
     return false;
   }
 
-  public static TypedField asTypedField(String str) {
-    for (Pattern p : DATE_PATTERNS) {
-      Matcher matcher = p.matcher(str);
-      if (matcher.find()) {
-        return new FunctionField(null, str);
-      }
-    }
-    return new TableField(null, str, double.class);
-  }
+//  public static TypedField asTypedField(String str) {
+//    for (Pattern p : DATE_PATTERNS) {
+//      Matcher matcher = p.matcher(str);
+//      if (matcher.find()) {
+//        return new FunctionTypedField(null, str);
+//      }
+//    }
+//    return new TableTypedField(null, str, double.class);
+//  }
 }

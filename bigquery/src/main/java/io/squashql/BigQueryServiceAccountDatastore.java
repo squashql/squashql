@@ -5,8 +5,7 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.*;
 import com.google.common.base.Suppliers;
 import io.squashql.store.Store;
-import io.squashql.type.TableField;
-import io.squashql.type.TypedField;
+import io.squashql.type.TableTypedField;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -63,7 +62,7 @@ public class BigQueryServiceAccountDatastore implements BigQueryDatastore {
             .stream()
             .collect(HashMap::new,
                     (map, table) -> {
-                      List<TypedField> fields = getFieldsOrNull(bigquery, datasetName, table);
+                      List<TableTypedField> fields = getFieldsOrNull(bigquery, datasetName, table);
                       if (fields != null) {
                         map.put(table, new Store(table, fields));
                       }
@@ -75,19 +74,18 @@ public class BigQueryServiceAccountDatastore implements BigQueryDatastore {
   public static Collection<String> getTableNames(BigQuery query, String projectId, String datasetName) {
     Page<Table> tablePage = query.listTables(datasetName);
     Set<String> tableNames = new HashSet<>();
-    Iterator<Table> iterator = tablePage.getValues().iterator();
-    while (iterator.hasNext()) {
-      tableNames.add(iterator.next().getTableId().getTable());
+    for (Table table : tablePage.getValues()) {
+      tableNames.add(table.getTableId().getTable());
     }
     return tableNames;
   }
 
-  public static List<TypedField> getFieldsOrNull(BigQuery query, String datasetName, String tableName) {
-    List<TypedField> fields = new ArrayList<>();
+  public static List<TableTypedField> getFieldsOrNull(BigQuery query, String datasetName, String tableName) {
+    List<TableTypedField> fields = new ArrayList<>();
     try {
       Schema schema = query.getTable(datasetName, tableName).getDefinition().getSchema();
       for (com.google.cloud.bigquery.Field field : schema.getFields()) {
-        fields.add(new TableField(tableName, field.getName(), BigQueryUtil.bigQueryTypeToClass(field.getType())));
+        fields.add(new TableTypedField(tableName, field.getName(), BigQueryUtil.bigQueryTypeToClass(field.getType())));
       }
       return fields;
     } catch (Exception e) {

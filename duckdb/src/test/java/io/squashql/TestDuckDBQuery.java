@@ -7,8 +7,7 @@ import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.transaction.DuckDBDataLoader;
-import io.squashql.type.TableField;
-import io.squashql.type.TypedField;
+import io.squashql.type.TableTypedField;
 import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -26,7 +25,7 @@ public class TestDuckDBQuery {
   protected DuckDBDataLoader dl;
   protected QueryExecutor executor;
 
-  void setup(Map<String, List<TypedField>> fieldsByStore, Runnable dataLoading) {
+  void setup(Map<String, List<TableTypedField>> fieldsByStore, Runnable dataLoading) {
     this.datastore = new DuckDBDatastore();
     this.dl = new DuckDBDataLoader(this.datastore);
     fieldsByStore.forEach(this.dl::createOrReplaceTable);
@@ -35,14 +34,14 @@ public class TestDuckDBQuery {
     dataLoading.run();
   }
 
-  protected Map<String, List<TypedField>> getFieldsByStore() {
-    TypedField ean = new TableField(this.storeName, "ean", String.class);
-    TypedField eanId = new TableField(this.storeName, "eanId", int.class);
-    TypedField category = new TableField(this.storeName, "category", String.class);
-    TypedField subcategory = new TableField(this.storeName, "subcategory", String.class);
-    TypedField price = new TableField(this.storeName, "price", double.class);
-    TypedField qty = new TableField(this.storeName, "quantity", int.class);
-    TypedField isFood = new TableField(this.storeName, "isFood", boolean.class);
+  protected Map<String, List<TableTypedField>> getFieldsByStore() {
+    TableTypedField ean = new TableTypedField(this.storeName, "ean", String.class);
+    TableTypedField eanId = new TableTypedField(this.storeName, "eanId", int.class);
+    TableTypedField category = new TableTypedField(this.storeName, "category", String.class);
+    TableTypedField subcategory = new TableTypedField(this.storeName, "subcategory", String.class);
+    TableTypedField price = new TableTypedField(this.storeName, "price", double.class);
+    TableTypedField qty = new TableTypedField(this.storeName, "quantity", int.class);
+    TableTypedField isFood = new TableTypedField(this.storeName, "isFood", boolean.class);
     return Map.of(this.storeName, List.of(eanId, ean, category, subcategory, price, qty, isFood));
   }
 

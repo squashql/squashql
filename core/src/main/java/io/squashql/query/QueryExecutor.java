@@ -11,8 +11,10 @@ import io.squashql.query.dto.*;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.store.Store;
 import io.squashql.table.*;
+import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -79,7 +81,7 @@ public class QueryExecutor {
     Set<String> axes = new HashSet<>(context.rows);
     axes.addAll(context.columns);
     Set<String> select = new HashSet<>(query.columns);
-    select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream().map(TypedField::name)).collect(Collectors.toSet()));
+    select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream().map(TableTypedField::name)).collect(Collectors.toSet()));
     axes.removeAll(select);
 
     if (!axes.isEmpty()) {
@@ -332,7 +334,9 @@ public class QueryExecutor {
     private final List<String> cleansedRows;
     private final List<String> columns;
     private final List<String> cleansedColumns;
+    @Getter
     private List<TypedField> rowFields;
+    @Getter
     private List<TypedField> columnFields;
 
     public PivotTableContext(PivotTableQueryDto pivotTableQueryDto) {
@@ -359,14 +363,6 @@ public class QueryExecutor {
     public void init(Function<String, TypedField> fieldSupplier) {
       this.rowFields = this.cleansedRows.stream().map(fieldSupplier).toList();
       this.columnFields = this.cleansedColumns.stream().map(fieldSupplier).toList();
-    }
-
-    public List<TypedField> getRowFields() {
-      return this.rowFields;
-    }
-
-    public List<TypedField> getColumnFields() {
-      return this.columnFields;
     }
   }
 

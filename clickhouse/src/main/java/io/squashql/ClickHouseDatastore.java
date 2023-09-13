@@ -8,8 +8,7 @@ import com.clickhouse.jdbc.internal.ClickHouseJdbcUrlParser;
 import com.google.common.base.Suppliers;
 import io.squashql.store.Datastore;
 import io.squashql.store.Store;
-import io.squashql.type.TableField;
-import io.squashql.type.TypedField;
+import io.squashql.type.TableTypedField;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -74,17 +73,17 @@ public class ClickHouseDatastore implements Datastore {
     }
   }
 
-  public static List<TypedField> getFields(ClickHouseDataSource dataSource, String table) {
+  public static List<TableTypedField> getFields(ClickHouseDataSource dataSource, String table) {
     try {
       DatabaseMetaData metaData = dataSource.getConnection().getMetaData();
       ResultSet columns = metaData.getColumns(null, (String) ClickHouseDefaults.DATABASE.getDefaultValue(), table, null);
 
-      List<TypedField> fields = new ArrayList<>();
+      List<TableTypedField> fields = new ArrayList<>();
       while (columns.next()) {
         String columnName = (String) columns.getObject("COLUMN_NAME");
         String typeName = (String) columns.getObject("TYPE_NAME");
         ClickHouseColumn column = ClickHouseColumn.of("", typeName);
-        fields.add(new TableField(table, columnName, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())));
+        fields.add(new TableTypedField(table, columnName, ClickHouseUtil.clickHouseTypeToClass(column.getDataType())));
       }
 
       return fields;

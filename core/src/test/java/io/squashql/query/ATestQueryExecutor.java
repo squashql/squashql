@@ -6,8 +6,7 @@ import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.table.Table;
-import io.squashql.type.TableField;
-import io.squashql.type.TypedField;
+import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -31,14 +30,14 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
-  protected Map<String, List<TypedField>> getFieldsByStore() {
-    TypedField ean = new TableField(this.storeName, "ean", String.class);
-    TypedField eanId = new TableField(this.storeName, "eanId", int.class);
-    TypedField category = new TableField(this.storeName, "category", String.class);
-    TypedField subcategory = new TableField(this.storeName, "subcategory", String.class);
-    TypedField price = new TableField(this.storeName, "price", double.class);
-    TypedField qty = new TableField(this.storeName, "quantity", int.class);
-    TypedField isFood = new TableField(this.storeName, "isFood", boolean.class);
+  protected Map<String, List<TableTypedField>> getFieldsByStore() {
+    TableTypedField ean = new TableTypedField(this.storeName, "ean", String.class);
+    TableTypedField eanId = new TableTypedField(this.storeName, "eanId", int.class);
+    TableTypedField category = new TableTypedField(this.storeName, "category", String.class);
+    TableTypedField subcategory = new TableTypedField(this.storeName, "subcategory", String.class);
+    TableTypedField price = new TableTypedField(this.storeName, "price", double.class);
+    TableTypedField qty = new TableTypedField(this.storeName, "quantity", int.class);
+    TableTypedField isFood = new TableTypedField(this.storeName, "isFood", boolean.class);
     return Map.of(this.storeName, List.of(eanId, ean, category, subcategory, price, qty, isFood));
   }
 
@@ -555,7 +554,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
                     decimal))
             .build();
     Table result = this.executor.execute(query);
-    Assertions.assertThat(result).containsExactly(List.of(4650d, 4650d, 9900l, 9900d, 100, 100d));
+    Assertions.assertThat(result).containsExactly(List.of(4650d, 4650d, 9900l, 9900d, translate(100), 100d));
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly("a1", "a2", "b1", "b2", "constant(100)", "constant(100.0)");
   }

@@ -3,8 +3,7 @@ package io.squashql.transaction;
 import com.google.cloud.bigquery.*;
 import io.squashql.BigQueryServiceAccountDatastore;
 import io.squashql.BigQueryUtil;
-import io.squashql.type.TableField;
-import io.squashql.type.TypedField;
+import io.squashql.type.TableTypedField;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
@@ -33,10 +32,10 @@ public class BigQueryDataLoader implements DataLoader {
     return this.bigquery;
   }
 
-  public void dropAndCreateInMemoryTable(String tableName, List<TypedField> fields) {
-    List<TypedField> list = ImmutableListFactoryImpl.INSTANCE
+  public void dropAndCreateInMemoryTable(String tableName, List<TableTypedField> fields) {
+    List<TableTypedField> list = ImmutableListFactoryImpl.INSTANCE
             .ofAll(fields)
-            .newWith(new TableField(tableName, SCENARIO_FIELD_NAME, String.class))
+            .newWith(new TableTypedField(tableName, SCENARIO_FIELD_NAME, String.class))
             .castToList();
 
     TableId tableId = TableId.of(this.datasetName, tableName);
@@ -66,7 +65,7 @@ public class BigQueryDataLoader implements DataLoader {
     // Check the table contains a column scenario.
     ensureScenarioColumnIsPresent(store);
 
-    List<TypedField> fields = BigQueryServiceAccountDatastore.getFieldsOrNull(this.bigquery, this.datasetName, store);
+    List<TableTypedField> fields = BigQueryServiceAccountDatastore.getFieldsOrNull(this.bigquery, this.datasetName, store);
     List<InsertAllRequest.RowToInsert> list = new ArrayList<>();
     for (Object[] tuple : tuples) {
       Map<String, Object> m = new HashMap<>();
@@ -130,7 +129,7 @@ public class BigQueryDataLoader implements DataLoader {
   }
 
   private void ensureScenarioColumnIsPresent(String store) {
-    List<TypedField> fields = BigQueryServiceAccountDatastore.getFieldsOrNull(this.bigquery, this.datasetName, store);
+    List<TableTypedField> fields = BigQueryServiceAccountDatastore.getFieldsOrNull(this.bigquery, this.datasetName, store);
     boolean found = fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
     if (!found) {
       throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));

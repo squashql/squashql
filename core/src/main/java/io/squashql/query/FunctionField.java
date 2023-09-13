@@ -11,16 +11,15 @@ import java.util.function.Function;
 
 @ToString
 @EqualsAndHashCode
-@NoArgsConstructor
+@NoArgsConstructor // For Jackson
 @AllArgsConstructor
 public class FunctionField implements Field {
 
-  private String store;
   private String expression;
 
   @Override
   public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter) {
-    return queryRewriter.selectDate(new io.squashql.type.FunctionField(this.store, this.expression));
+    throw new IllegalStateException("Incorrect path of execution");
   }
 
   @Override
