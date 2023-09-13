@@ -20,7 +20,7 @@ public class TableField implements Field {
   public String fieldName;
 
   /**
-   * Should be "tableName.name"
+   * Should be "tableName.fieldName"
    */
   public String fullName;
 

@@ -36,7 +36,7 @@ public class SQLTranslator {
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
 
-    query.select.forEach(f -> groupBy.add(f.sqlExpression(fieldProvider, queryRewriter, false)));
+    query.select.forEach(f -> groupBy.add(f.sqlExpression(queryRewriter, false)));
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true))); // Alias is needed when using sub-queries
 
     selects.addAll(groupBy); // coord first, then aggregates
@@ -220,7 +220,7 @@ public class SQLTranslator {
   }
 
   public static String toSql(TypedField field, ConditionDto dto, QueryRewriter queryRewriter) {
-    String formattedFieldName = field.sqlExpression(null, queryRewriter, false); // todo-181 do we really need the fieldProvider ?
+    String formattedFieldName = field.sqlExpression(queryRewriter, false); // todo-181 do we really need the fieldProvider ?
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
       Function<Object, String> sqlMapper = getQuoteFn(field);
       return switch (dto.type()) {

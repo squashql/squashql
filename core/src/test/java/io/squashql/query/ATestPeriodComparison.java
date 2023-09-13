@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.Period;
 import io.squashql.table.Table;
 import io.squashql.transaction.DataLoader;
@@ -12,6 +13,8 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -23,8 +26,6 @@ import static io.squashql.query.Functions.criterion;
 import static io.squashql.query.Functions.eq;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
-import static io.squashql.query.database.SqlUtils.getFieldFullName;
-import static io.squashql.query.date.DateFunctions.*;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
@@ -328,28 +329,31 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     Assertions.assertThatThrownBy(() -> this.executor.execute(query)).hasMessageContaining("Too many rows");
   }
 
-  @Test
-  void testYearFunction() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testYearFunction(boolean fullName) {
+    String dateSales = fullName ? SqlUtils.getFieldFullName(this.storeName, "date_sales") : "date_sales";
     var query = Query.from(this.storeName)
-            .where(criterion(new FunctionField(null, year("date_sales")), eq(2022)))
-            .select(List.of(year(getFieldFullName(this.storeName, "date_sales"))), List.of(CountMeasure.INSTANCE))
+            .where(criterion(Functions.year(dateSales), eq(2022)))
+            .select(List.of(Functions.year(dateSales)), List.of(CountMeasure.INSTANCE))
             .build();
     final Table finalTable = this.executor.execute(query);
-    finalTable.show();
-    final Class<?> yearType = finalTable.getHeader(year(getFieldFullName(this.storeName, "date_sales"))).type();
+    final Class<?> yearType = finalTable.getHeader(Functions.year(dateSales)).type();
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             List.of(cast(yearType, 2022), 12L));
   }
 
-  @Test
-  void testQuarterFunction() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testQuarterFunction(boolean fullName) {
+    String dateSales = fullName ? SqlUtils.getFieldFullName(this.storeName, "date_sales") : "date_sales";
     var query = Query.from(this.storeName)
-            .select(List.of(year("date_sales"), quarter("date_sales")), List.of(CountMeasure.INSTANCE))
-            .having(criterion(new FunctionField(this.storeName, year("date_sales")), eq(2022)))
+            .select(List.of(Functions.year(dateSales), Functions.quarter(dateSales)), List.of(CountMeasure.INSTANCE))
+            .having(criterion(Functions.year(dateSales), eq(2022)))
             .build();
     final Table finalTable = this.executor.execute(query);
-    final Class<?> yearType = finalTable.getHeader(year("date_sales")).type();
-    final Class<?> quarterType = finalTable.getHeader(quarter("date_sales")).type();
+    final Class<?> yearType = finalTable.getHeader(Functions.year(dateSales)).type();
+    final Class<?> quarterType = finalTable.getHeader(Functions.quarter(dateSales)).type();
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             List.of(cast(yearType, 2022), cast(quarterType, 1), 3L),
             List.of(cast(yearType, 2022), cast(quarterType, 2), 3L),
@@ -357,15 +361,17 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             List.of(cast(yearType, 2022), cast(quarterType, 4), 3L));
   }
 
-  @Test
-  void testMonthFunction() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testMonthFunction(boolean fullName) {
+    String dateSales = fullName ? SqlUtils.getFieldFullName(this.storeName, "date_sales") : "date_sales";
     var query = Query.from(this.storeName)
-            .select(List.of(year("date_sales"), month("date_sales")), List.of(CountMeasure.INSTANCE))
-            .having(criterion(new FunctionField(null, year("date_sales")), eq(2022)))
+            .select(List.of(Functions.year(dateSales), Functions.month(dateSales)), List.of(CountMeasure.INSTANCE))
+            .having(criterion(Functions.year(dateSales), eq(2022)))
             .build();
     final Table finalTable = this.executor.execute(query);
-    final Class<?> yearType = finalTable.getHeader(year("date_sales")).type();
-    final Class<?> monthType = finalTable.getHeader(month("date_sales")).type();
+    final Class<?> yearType = finalTable.getHeader(Functions.year(dateSales)).type();
+    final Class<?> monthType = finalTable.getHeader(Functions.month(dateSales)).type();
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             List.of(cast(yearType, 2022),  cast(monthType, 1), 1L),
             List.of(cast(yearType, 2022), cast(monthType, 2), 1L),
@@ -380,6 +386,8 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             List.of(cast(yearType, 2022), cast(monthType, 11), 1L),
             List.of(cast(yearType, 2022), cast(monthType, 12), 1L));
   }
+
+  // TODO test with rollup
 
   private Object cast(Class<?> type, int value) {
     if (type == int.class || type == short.class || type == byte.class) { // weird typing for clickhouse

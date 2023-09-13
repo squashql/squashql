@@ -2,8 +2,6 @@ package io.squashql.type;
 
 import io.squashql.query.database.QueryRewriter;
 
-import java.util.function.Function;
-
 public interface TypedField {
 
   String store();
@@ -12,5 +10,5 @@ public interface TypedField {
 
   Class<?> type();
 
-  String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias);
+  String sqlExpression(QueryRewriter queryRewriter, boolean withAlias);
 }

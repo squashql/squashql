@@ -4,9 +4,7 @@ import com.google.auth.oauth2.ServiceAccountCredentials;
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryServiceAccountDatastore;
 import io.squashql.BigQueryUtil;
-import io.squashql.query.AggregatedMeasure;
-import io.squashql.query.Header;
-import io.squashql.query.QueryExecutor;
+import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.*;
 import io.squashql.store.Store;
@@ -288,5 +286,35 @@ public class TestBigQueryEngine {
                     "%1$s rollup(%2$s, %3$s, %5$s, %6$s, %4$s)",
             base, continentCol, countryCol, cityCol, scCol, sscCol);
     Assertions.assertThat(sqlStatement).isEqualTo(sql);
+  }
+
+  @Test
+  void testSqlGenerationWithDateFunctions() {
+    String year = Functions.year("date");
+    String quarter = Functions.quarter("date");
+    String month = Functions.month("date");
+    DatabaseQuery query = new DatabaseQuery()
+            .withSelect(new io.squashql.type.FunctionField("baseStore", year))
+            .withSelect(new io.squashql.type.FunctionField("baseStore", quarter))
+            .withSelect(new io.squashql.type.FunctionField("baseStore", month))
+            .aggregatedMeasure("price.sum", "price", "sum")
+            .table("baseStore");
+
+    BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName") {
+      @Override
+      public Map<String, Store> storesByName() {
+        return Map.of("baseStore", new Store("baseStore", List.of(
+                TestBigQueryEngine.this.fp.apply(SCENARIO_FIELD_NAME)
+        )));
+      }
+    };
+    BigQueryEngine bqe = new BigQueryEngine(datastore);
+    String sqlStatement = bqe.createSqlStatement(query, null);
+    System.out.println(sqlStatement);
+//    Assertions.assertThat(sqlStatement)
+//            .isEqualTo("select coalesce(`myProjectId.myDatasetName.baseStore`.`scenario`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`category`, " + BigQueryUtil.getNullValue(long.class) + ")," +
+//                    " sum(`price`) as `price.sum`, avg(`price`) as `price.avg`" +
+//                    " from `myProjectId.myDatasetName.baseStore`" +
+//                    " group by rollup(coalesce(`myProjectId.myDatasetName.baseStore`.`scenario`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`category`, " + BigQueryUtil.getNullValue(long.class) + "))");
   }
 }

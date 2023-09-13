@@ -1,6 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.agg.AggregationFunction;
+import io.squashql.query.date.DateFunctions;
 import io.squashql.query.dto.*;
 
 import java.util.List;
@@ -179,5 +180,17 @@ public class Functions {
 
   public static Measure decimal(double value) {
     return new DoubleConstantMeasure(value);
+  }
+
+  public static String year(String field) {
+    return DateFunctions.year(field);
+  }
+
+  public static String quarter(String field) {
+    return DateFunctions.quarter(field);
+  }
+
+  public static String month(String field) {
+    return DateFunctions.month(field);
   }
 }

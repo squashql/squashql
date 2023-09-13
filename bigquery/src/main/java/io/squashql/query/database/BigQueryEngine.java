@@ -16,9 +16,12 @@ import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static io.squashql.query.database.SQLTranslator.checkRollupIsValid;
+import static io.squashql.query.date.DateFunctions.DATE_PATTERNS;
 
 public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
@@ -279,6 +282,20 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     BigQueryQueryRewriter(String projectId, String datasetName) {
       this.projectId = projectId;
       this.datasetName = datasetName;
+    }
+
+    /**
+     * https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#extract
+     */
+    @Override
+    public String selectDate(TypedField f) {
+      for (Pattern p : DATE_PATTERNS) {
+        Matcher matcher = p.matcher(f.name());
+        if (matcher.find()) {
+          return String.format("EXTRACT(%s FROM %s)", matcher.group(1), matcher.group(2));
+        }
+      }
+      throw new UnsupportedOperationException("Unsupported function: " + f.name());
     }
 
     @Override

@@ -24,7 +24,6 @@ public class QueryAwareQueryRewriter implements QueryRewriter {
             && vt.name.equals(f.store())
             && vt.fields.contains(f.name())) {
       return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
-      // todo-181 should we care about this case ?
     } else {
       return this.underlying.getFieldFullName(f);
     }
