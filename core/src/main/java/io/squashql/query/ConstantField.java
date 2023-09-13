@@ -25,6 +25,6 @@ public class ConstantField implements Field {
 
   @Override
   public String name() {
-    return toString(); // todo-181 should we rather trhow
+    throw new IllegalStateException("Incorrect path of execution");
   }
 }

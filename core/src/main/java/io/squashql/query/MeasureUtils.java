@@ -106,7 +106,7 @@ public final class MeasureUtils {
     if (root == null) {
       return null;
     } else if (root.isWhereCriterion()) {
-      return (((io.squashql.query.TableField) root.field).fieldName).equals(field) ? null : root;
+      return (((TableField) root.field).fieldName).equals(field) ? null : root;
     } else {
       removeCriteriaOnField(field, root.children);
       return root;
@@ -118,7 +118,7 @@ public final class MeasureUtils {
     while (iterator.hasNext()) {
       CriteriaDto criteriaDto = iterator.next();
       if (criteriaDto.isWhereCriterion()) {
-        if (((io.squashql.query.TableField) criteriaDto.field).fieldName.equals(field)) {
+        if (((TableField) criteriaDto.field).fieldName.equals(field)) {
           iterator.remove();
         }
       } else {

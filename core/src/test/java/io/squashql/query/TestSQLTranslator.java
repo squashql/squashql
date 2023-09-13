@@ -382,8 +382,8 @@ public class TestSQLTranslator {
 
   @Test
   void testComplexAggregatedMeasures() {
-    Field finalPrice = new io.squashql.query.TableField("recommendation.finalprice");
-    Field recoPrice = new io.squashql.query.TableField("recommendation.recoprice");
+    Field finalPrice = new TableField("recommendation.finalprice");
+    Field recoPrice = new TableField("recommendation.recoprice");
     Measure measure = sumIf("increase_sum", minus(finalPrice, recoPrice), all(
             criterion(finalPrice, recoPrice, ConditionType.GT),
             criterion(recoPrice, gt(0))
@@ -395,9 +395,9 @@ public class TestSQLTranslator {
                     " then (`recommendation`.`finalprice`-`recommendation`.`recoprice`) end)" +
                     " as `increase_sum`");
 
-    Field initial_price = new io.squashql.query.TableField("recommendation.initial_price");
+    Field initial_price = new TableField("recommendation.initial_price");
     Field one = new ConstantField(1);
-    Field tvaRate = new io.squashql.query.TableField("product.tva_rate");
+    Field tvaRate = new TableField("product.tva_rate");
     Measure whatever = sum("whatever", divide(initial_price, plus(one, tvaRate)));
     Assertions.assertThat(whatever.sqlExpression(fp, DefaultQueryRewriter.INSTANCE, true))
             .isEqualTo("sum((`recommendation`.`initial_price`/(1+`product`.`tva_rate`))) as `whatever`");
@@ -405,9 +405,9 @@ public class TestSQLTranslator {
 
   @Test
   void testComplexFieldCalculation() {
-    Field f1 = new io.squashql.query.TableField("f1");
-    Field f2 = new io.squashql.query.TableField("f2");
-    Field f3 = new io.squashql.query.TableField("f3");
+    Field f1 = new TableField("f1");
+    Field f2 = new TableField("f2");
+    Field f3 = new TableField("f3");
 
     BinaryOperationField f1_minus_f2 = new BinaryOperationField(BinaryOperator.MINUS, f1, f2);
     BinaryOperationField divide = new BinaryOperationField(BinaryOperator.DIVIDE, f1_minus_f2, f1);

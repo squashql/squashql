@@ -44,24 +44,4 @@ public class DateFunctions {
     }
     return Tuples.pair(null, str);
   }
-
-  public static boolean isDateFunction(String str) {
-    for (Pattern p : DATE_PATTERNS.values()) {
-      Matcher matcher = p.matcher(str);
-      if (matcher.find()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-//  public static TypedField asTypedField(String str) {
-//    for (Pattern p : DATE_PATTERNS) {
-//      Matcher matcher = p.matcher(str);
-//      if (matcher.find()) {
-//        return new FunctionTypedField(null, str);
-//      }
-//    }
-//    return new TableTypedField(null, str, double.class);
-//  }
 }
