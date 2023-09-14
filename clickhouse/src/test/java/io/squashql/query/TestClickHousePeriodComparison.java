@@ -50,4 +50,19 @@ public class TestClickHousePeriodComparison extends ATestPeriodComparison {
   protected DataLoader createDataLoader() {
     return new ClickHouseDataLoader(((ClickHouseDatastore) this.datastore).dataSource);
   }
+
+  @Override
+  protected Object yearType(int i) {
+    return i;
+  }
+
+  @Override
+  protected Object quarterType(int i) {
+    return i;
+  }
+
+  @Override
+  protected Object monthType(int i) {
+    return i;
+  }
 }

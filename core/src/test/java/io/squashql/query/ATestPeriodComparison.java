@@ -336,9 +336,8 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .having(criterion(Functions.year(dateSales), eq(2022)))
             .build();
     final Table finalTable = this.executor.execute(query);
-    final Class<?> yearType = finalTable.getHeader(Functions.yearStr(dateSales)).type();
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            List.of(cast(yearType, 2022), 12L));
+            List.of(yearType(2022), 12L));
   }
 
   @ParameterizedTest
@@ -350,9 +349,8 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .select(List.of(Functions.yearStr(dateSales)), List.of(CountMeasure.INSTANCE))
             .build();
     final Table finalTable = this.executor.execute(query);
-    final Class<?> yearType = finalTable.getHeader(Functions.yearStr(dateSales)).type();
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            List.of(cast(yearType, 2022), 12L));
+            List.of(yearType(2022), 12L));
   }
 
   @ParameterizedTest
@@ -364,14 +362,11 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .select(List.of(Functions.yearStr(dateSales), Functions.quarterStr(dateSales)), List.of(CountMeasure.INSTANCE))
             .build();
     final Table finalTable = this.executor.execute(query);
-
-    final Class<?> yearType = finalTable.getHeader(Functions.yearStr(dateSales)).type();
-    final Class<?> quarterType = finalTable.getHeader(Functions.quarterStr(dateSales)).type();
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            List.of(cast(yearType, 2022), cast(quarterType, 1), 3L),
-            List.of(cast(yearType, 2022), cast(quarterType, 2), 3L),
-            List.of(cast(yearType, 2022), cast(quarterType, 3), 3L),
-            List.of(cast(yearType, 2022), cast(quarterType, 4), 3L));
+            List.of(yearType(2022), quarterType(1), 3L),
+            List.of(yearType(2022), quarterType(2), 3L),
+            List.of(yearType(2022), quarterType(3), 3L),
+            List.of(yearType(2022), quarterType(4), 3L));
   }
 
   @ParameterizedTest
@@ -383,32 +378,48 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .select(List.of(Functions.yearStr(dateSales), Functions.monthStr(dateSales)), List.of(CountMeasure.INSTANCE))
             .build();
     final Table finalTable = this.executor.execute(query);
-    final Class<?> yearType = finalTable.getHeader(Functions.yearStr(dateSales)).type();
-    final Class<?> monthType = finalTable.getHeader(Functions.monthStr(dateSales)).type();
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
-            List.of(cast(yearType, 2022), cast(monthType, 1), 1L),
-            List.of(cast(yearType, 2022), cast(monthType, 2), 1L),
-            List.of(cast(yearType, 2022), cast(monthType, 3), 1L),
-            List.of(cast(yearType, 2022), cast(monthType, 4), 1L),
-            List.of(cast(yearType, 2022), cast(monthType, 5), 1L),
-            List.of(cast(yearType, 2022), cast(monthType, 6), 1L),
-            List.of(cast(yearType, 2022), cast(monthType, 7), 1L),
-            List.of(cast(yearType, 2022), cast(monthType, 8), 1L),
-            List.of(cast(yearType, 2022), cast(monthType, 9), 1L),
-            List.of(cast(yearType, 2022), cast(monthType, 10), 1L),
-            List.of(cast(yearType, 2022), cast(monthType, 11), 1L),
-            List.of(cast(yearType, 2022), cast(monthType, 12), 1L));
+            List.of(yearType(2022), monthType(1), 1L),
+            List.of(yearType(2022), monthType(2), 1L),
+            List.of(yearType(2022), monthType(3), 1L),
+            List.of(yearType(2022), monthType(4), 1L),
+            List.of(yearType(2022), monthType(5), 1L),
+            List.of(yearType(2022), monthType(6), 1L),
+            List.of(yearType(2022), monthType(7), 1L),
+            List.of(yearType(2022), monthType(8), 1L),
+            List.of(yearType(2022), monthType(9), 1L),
+            List.of(yearType(2022), monthType(10), 1L),
+            List.of(yearType(2022), monthType(11), 1L),
+            List.of(yearType(2022), monthType(12), 1L));
   }
 
-  // TODO test with rollup
-
-  // TODO use translate
-  private Object cast(Class<?> type, int value) {
-    if (type == int.class || type == short.class || type == byte.class) { // weird typing for clickhouse
-      return value;
-    } else if (type == long.class) {
-      return (long) value;
-    }
-    throw new UnsupportedOperationException("type :" + type + ", is unsupported!");
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testDateFunctionWithRollup(boolean fullName) {
+    String dateSales = fullName ? SqlUtils.getFieldFullName(this.storeName, "date_sales") : "date_sales";
+    var query = Query.from(this.storeName)
+            .select(List.of(Functions.yearStr(dateSales)), List.of(CountMeasure.INSTANCE))
+            .rollup(Functions.yearStr(dateSales))
+            .build();
+    final Table finalTable = this.executor.execute(query);
+    finalTable.show();
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            List.of(yearType(2022), 12L),
+            List.of(yearType(2023), 12L),
+            List.of("Grand Total", 24L)
+            );
   }
+
+  protected Object yearType(int i) {
+    return (long) i;
+  }
+
+  protected Object quarterType(int i) {
+    return (long) i;
+  }
+
+  protected Object monthType(int i) {
+    return (long) i;
+  }
+
 }
