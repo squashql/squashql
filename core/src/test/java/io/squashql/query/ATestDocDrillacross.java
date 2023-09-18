@@ -4,7 +4,7 @@ import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.TypedField;
+import io.squashql.type.TableTypedField;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -20,12 +20,12 @@ import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 public abstract class ATestDocDrillacross extends ABaseTestQuery {
 
   @Override
-  protected Map<String, List<TypedField>> getFieldsByStore() {
-    TypedField eanShipment = new TypedField("shipment", "product", String.class);
-    TypedField eanReturn = new TypedField("return", "product", String.class);
-    TypedField qtyShipment = new TypedField("shipment", "quantity", int.class);
-    TypedField qtyReturn = new TypedField("return", "quantity", int.class);
-    TypedField reason = new TypedField("return", "reason", String.class);
+  protected Map<String, List<TableTypedField>> getFieldsByStore() {
+    TableTypedField eanShipment = new TableTypedField("shipment", "product", String.class);
+    TableTypedField eanReturn = new TableTypedField("return", "product", String.class);
+    TableTypedField qtyShipment = new TableTypedField("shipment", "quantity", int.class);
+    TableTypedField qtyReturn = new TableTypedField("return", "quantity", int.class);
+    TableTypedField reason = new TableTypedField("return", "reason", String.class);
     return Map.of(
             "shipment", List.of(eanShipment, qtyShipment),
             "return", List.of(eanReturn, qtyReturn, reason));

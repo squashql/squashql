@@ -1,7 +1,8 @@
 package io.squashql.query;
 
 import io.squashql.query.database.QueryRewriter;
-import io.squashql.store.TypedField;
+import io.squashql.type.TableTypedField;
+import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -52,7 +53,12 @@ public class TableField implements Field {
     if (CountMeasure.FIELD_NAME.equals(this.fieldName)) {
       return CountMeasure.FIELD_NAME;
     } else {
-      return queryRewriter.getFieldFullName(new TypedField(this.tableName, this.fieldName, Object.class));
+      return queryRewriter.getFieldFullName(new TableTypedField(this.tableName, this.fieldName, Object.class));
     }
+  }
+
+  @Override
+  public String name() {
+    return this.fullName;
   }
 }

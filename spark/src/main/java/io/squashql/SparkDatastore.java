@@ -4,8 +4,8 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.google.common.base.Suppliers;
 import io.squashql.store.Datastore;
-import io.squashql.store.TypedField;
 import io.squashql.store.Store;
+import io.squashql.type.TableTypedField;
 import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -71,18 +71,18 @@ public class SparkDatastore implements Datastore {
     }
   }
 
-  public static List<TypedField> getFields(SparkSession spark, String tableName) {
+  public static List<TableTypedField> getFields(SparkSession spark, String tableName) {
     try {
       Catalog catalog = spark.catalog();
       Table table = catalog.getTable(tableName);
       Dataset<Column> columns = table.isTemporary()
               ? catalog.listColumns(tableName)
               : catalog.listColumns("default", tableName);
-      List<TypedField> fields = new ArrayList<>();
+      List<TableTypedField> fields = new ArrayList<>();
       Iterator<Column> columnIterator = columns.toLocalIterator();
       while (columnIterator.hasNext()) {
         Column column = columnIterator.next();
-        fields.add(new TypedField(tableName, column.name(), SparkUtil.datatypeToClass(DataType.fromDDL(column.dataType()))));
+        fields.add(new TableTypedField(tableName, column.name(), SparkUtil.datatypeToClass(DataType.fromDDL(column.dataType()))));
       }
       return fields;
     } catch (AnalysisException e) {

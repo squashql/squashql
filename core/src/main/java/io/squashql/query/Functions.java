@@ -1,6 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.agg.AggregationFunction;
+import io.squashql.query.date.DateFunctions;
 import io.squashql.query.dto.*;
 
 import java.util.List;
@@ -21,6 +22,11 @@ public class Functions {
   }
 
   // whereCriterion
+
+  /**
+   * @deprecated use {@link #criterion(Field, ConditionDto)}.
+   */
+  @Deprecated
   public static CriteriaDto criterion(String field, ConditionDto conditionDto) {
     return new CriteriaDto(new TableField(field), conditionDto);
   }
@@ -174,5 +180,29 @@ public class Functions {
 
   public static Measure decimal(double value) {
     return new DoubleConstantMeasure(value);
+  }
+
+  public static Field year(String field) {
+    return new FunctionField(yearStr(field));
+  }
+
+  public static Field quarter(String field) {
+    return new FunctionField(quarterStr(field));
+  }
+
+  public static Field month(String field) {
+    return new FunctionField(monthStr(field));
+  }
+
+  public static String yearStr(String field) {
+    return DateFunctions.year(field);
+  }
+
+  public static String quarterStr(String field) {
+    return DateFunctions.quarter(field);
+  }
+
+  public static String monthStr(String field) {
+    return DateFunctions.month(field);
   }
 }

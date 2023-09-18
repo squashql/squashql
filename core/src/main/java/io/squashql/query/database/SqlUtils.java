@@ -1,6 +1,8 @@
 package io.squashql.query.database;
 
-import io.squashql.store.TypedField;
+import io.squashql.type.FunctionTypedField;
+import io.squashql.type.TableTypedField;
+import io.squashql.type.TypedField;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,8 +27,18 @@ public class SqlUtils {
     return store == null ? name : store + '.' + name;
   }
 
-  public static String getFieldFullName(TypedField field) {
+  public static String getFieldFullName(TableTypedField field) {
     return field.store() == null ? field.name() : field.store() + '.' + field.name();
+  }
+
+  public static String expression(TypedField f) {
+    if (f instanceof TableTypedField ttf) {
+      return getFieldFullName(ttf);
+    } else if (f instanceof FunctionTypedField ftf) {
+      return ftf.function() + "(" + getFieldFullName(ftf.field()) + ")";
+    } else {
+      throw new IllegalArgumentException(f.getClass().getName());
+    }
   }
 
   /**

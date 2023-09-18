@@ -1,6 +1,6 @@
 package io.squashql;
 
-import io.squashql.store.TypedField;
+import io.squashql.type.TableTypedField;
 import io.squashql.util.Types;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
@@ -75,9 +75,9 @@ public final class SparkUtil {
   }
 
 
-  public static StructType createSchema(List<TypedField> fields) {
+  public static StructType createSchema(List<TableTypedField> fields) {
     StructType schema = new StructType();
-    for (TypedField field : fields) {
+    for (TableTypedField field : fields) {
       schema = schema.add(field.name(), classToDatatype(field.type()));
     }
     return schema;

@@ -1,8 +1,11 @@
 package io.squashql.query;
 
 import io.squashql.query.database.QueryRewriter;
-import io.squashql.store.TypedField;
-import lombok.*;
+import io.squashql.type.TypedField;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.ToString;
 
 import java.util.function.Function;
 

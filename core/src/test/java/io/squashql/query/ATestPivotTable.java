@@ -7,8 +7,8 @@ import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.PivotTableQueryDto;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.TypedField;
 import io.squashql.table.*;
+import io.squashql.type.TableTypedField;
 import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
@@ -17,7 +17,10 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.Functions.*;
@@ -30,13 +33,13 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
   protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
-  protected Map<String, List<TypedField>> getFieldsByStore() {
-    TypedField city = new TypedField(this.storeName, "city", String.class);
-    TypedField country = new TypedField(this.storeName, "country", String.class);
-    TypedField continent = new TypedField(this.storeName, "continent", String.class);
-    TypedField spendingCategory = new TypedField(this.storeName, "spending category", String.class);
-    TypedField spendingSubcategory = new TypedField(this.storeName, "spending subcategory", String.class);
-    TypedField amount = new TypedField(this.storeName, "amount", double.class);
+  protected Map<String, List<TableTypedField>> getFieldsByStore() {
+    TableTypedField city = new TableTypedField(this.storeName, "city", String.class);
+    TableTypedField country = new TableTypedField(this.storeName, "country", String.class);
+    TableTypedField continent = new TableTypedField(this.storeName, "continent", String.class);
+    TableTypedField spendingCategory = new TableTypedField(this.storeName, "spending category", String.class);
+    TableTypedField spendingSubcategory = new TableTypedField(this.storeName, "spending subcategory", String.class);
+    TableTypedField amount = new TableTypedField(this.storeName, "amount", double.class);
     return Map.of(this.storeName, List.of(city, country, continent, spendingCategory, spendingSubcategory, amount));
   }
 

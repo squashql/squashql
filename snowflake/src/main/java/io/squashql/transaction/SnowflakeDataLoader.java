@@ -2,7 +2,7 @@ package io.squashql.transaction;
 
 import io.squashql.SnowflakeDatastore;
 import io.squashql.jdbc.JdbcUtil;
-import io.squashql.store.TypedField;
+import io.squashql.type.TableTypedField;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
 import java.sql.Connection;
@@ -30,15 +30,15 @@ public class SnowflakeDataLoader implements DataLoader {
     }
   }
 
-  public void createOrReplaceTable(String table, List<TypedField> fields) {
+  public void createOrReplaceTable(String table, List<TableTypedField> fields) {
     createOrReplaceTable(this.snowflakeDatastore, table, fields, true);
   }
 
-  public static void createOrReplaceTable(SnowflakeDatastore snowflakeDatastore, String table, List<TypedField> fields,
+  public static void createOrReplaceTable(SnowflakeDatastore snowflakeDatastore, String table, List<TableTypedField> fields,
                                           boolean cjMode) {
-    List<TypedField> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
+    List<TableTypedField> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
             .ofAll(fields)
-            .newWith(new TypedField(table, SCENARIO_FIELD_NAME, String.class))
+            .newWith(new TableTypedField(table, SCENARIO_FIELD_NAME, String.class))
             .castToList() : fields;
 
     try (Connection conn = snowflakeDatastore.getConnection();
@@ -47,7 +47,7 @@ public class SnowflakeDataLoader implements DataLoader {
       sb.append("(");
       int size = list.size();
       for (int i = 0; i < size; i++) {
-        TypedField field = list.get(i);
+        TableTypedField field = list.get(i);
         sb.append("\"").append(field.name()).append("\" ").append(JdbcUtil.classToSqlType(field.type()));
         if (i < size - 1) {
           sb.append(", ");
@@ -86,7 +86,7 @@ public class SnowflakeDataLoader implements DataLoader {
   }
 
   private void ensureScenarioColumnIsPresent(String store) {
-    List<TypedField> fields = this.snowflakeDatastore.storesByName().get(store).fields();
+    List<TableTypedField> fields = this.snowflakeDatastore.storesByName().get(store).fields();
     boolean found = fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
     if (!found) {
       throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));

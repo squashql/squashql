@@ -4,12 +4,12 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.github.dockerjava.api.command.LogContainerCmd;
 import io.squashql.SparkDatastore;
-import io.squashql.table.Table;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.SparkQueryEngine;
 import io.squashql.store.Datastore;
-import io.squashql.store.TypedField;
+import io.squashql.table.Table;
 import io.squashql.transaction.SparkDataLoader;
+import io.squashql.type.TableTypedField;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.SparkSession;
 import org.assertj.core.api.Assertions;
@@ -89,10 +89,10 @@ public class TestQueryRemote {
     SparkQueryEngine queryEngine = new SparkQueryEngine(datastore);
     SparkDataLoader tm = new SparkDataLoader(datastore.spark);
 
-    TypedField ean = new TypedField(storeName, "ean", String.class);
-    TypedField category = new TypedField(storeName, "category", String.class);
-    TypedField price = new TypedField(storeName, "price", double.class);
-    TypedField qty = new TypedField(storeName, "quantity", int.class);
+    TableTypedField ean = new TableTypedField(storeName, "ean", String.class);
+    TableTypedField category = new TableTypedField(storeName, "category", String.class);
+    TableTypedField price = new TableTypedField(storeName, "price", double.class);
+    TableTypedField qty = new TableTypedField(storeName, "quantity", int.class);
     tm.createTemporaryTable(storeName, List.of(ean, category, price, qty));
 
     tm.load(MAIN_SCENARIO_NAME, storeName, List.of(
@@ -109,7 +109,7 @@ public class TestQueryRemote {
 
     DatabaseQuery query = new DatabaseQuery()
             .table(storeName)
-            .withSelect(new TypedField(storeName, SCENARIO_FIELD_NAME, String.class))
+            .withSelect(new TableTypedField(storeName, SCENARIO_FIELD_NAME, String.class))
             .aggregatedMeasure("p", "price", "sum")
             .aggregatedMeasure("q", "quantity", "sum");
     Table result = queryEngine.execute(query, null);

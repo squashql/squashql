@@ -5,8 +5,8 @@ import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.*;
 import io.squashql.query.parameter.QueryCacheParameter;
-import io.squashql.store.TypedField;
 import io.squashql.table.Table;
+import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,15 +39,15 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   }
 
   @Override
-  protected Map<String, List<TypedField>> getFieldsByStore() {
-    TypedField ean = new TypedField(this.storeName, "ean", String.class);
-    TypedField category = new TypedField(this.storeName, "category", String.class);
-    TypedField price = new TypedField(this.storeName, "price", double.class);
-    TypedField qty = new TypedField(this.storeName, "quantity", int.class);
+  protected Map<String, List<TableTypedField>> getFieldsByStore() {
+    TableTypedField ean = new TableTypedField(this.storeName, "ean", String.class);
+    TableTypedField category = new TableTypedField(this.storeName, "category", String.class);
+    TableTypedField price = new TableTypedField(this.storeName, "price", double.class);
+    TableTypedField qty = new TableTypedField(this.storeName, "quantity", int.class);
 
-    TypedField comp_ean = new TypedField(this.competitorStoreName, "comp_ean", String.class);
-    TypedField comp_name = new TypedField(this.competitorStoreName, "comp_name", String.class);
-    TypedField comp_price = new TypedField(this.competitorStoreName, "comp_price", double.class);
+    TableTypedField comp_ean = new TableTypedField(this.competitorStoreName, "comp_ean", String.class);
+    TableTypedField comp_name = new TableTypedField(this.competitorStoreName, "comp_name", String.class);
+    TableTypedField comp_price = new TableTypedField(this.competitorStoreName, "comp_price", double.class);
 
     return Map.of(
             this.storeName, List.of(ean, category, price, qty),

@@ -1,7 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.database.QueryRewriter;
-import io.squashql.store.TypedField;
+import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -29,4 +29,10 @@ public class BinaryOperationField implements Field {
             .append(")")
             .toString();
   }
+
+  @Override
+  public String name() {
+    throw new IllegalStateException("Incorrect path of execution");
+  }
+
 }

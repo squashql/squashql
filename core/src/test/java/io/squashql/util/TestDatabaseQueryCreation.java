@@ -1,10 +1,10 @@
 package io.squashql.util;
 
 import io.squashql.query.*;
-import io.squashql.query.parameter.Parameter;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.TypedField;
+import io.squashql.query.parameter.Parameter;
+import io.squashql.type.TypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

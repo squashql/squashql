@@ -33,10 +33,24 @@ public class TestSparkPeriodComparison extends ATestPeriodComparison {
     SparkDatastore ds = (SparkDatastore) this.datastore;
     return new SparkDataLoader(ds.spark);
   }
-
   @Override
   protected void createTables() {
     SparkDataLoader tm = (SparkDataLoader) this.tm;
     this.fieldsByStore.forEach((store, fields) -> tm.createTemporaryTable(store, fields));
+  }
+
+  @Override
+  protected Object yearType(int i) {
+    return i;
+  }
+
+  @Override
+  protected Object quarterType(int i) {
+    return i;
+  }
+
+  @Override
+  protected Object monthType(int i) {
+    return i;
   }
 }

@@ -4,8 +4,8 @@ import io.squashql.query.QueryExecutor.ExecutionContext;
 import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import io.squashql.query.comp.BinaryOperations;
 import io.squashql.query.dto.BucketColumnSetDto;
-import io.squashql.store.TypedField;
 import io.squashql.table.Table;
+import io.squashql.type.TypedField;
 
 import java.util.ArrayList;
 import java.util.Collections;

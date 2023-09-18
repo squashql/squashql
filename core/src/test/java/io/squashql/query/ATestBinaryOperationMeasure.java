@@ -3,8 +3,8 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.TypedField;
 import io.squashql.table.Table;
+import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -21,11 +21,11 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
   protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
-  protected Map<String, List<TypedField>> getFieldsByStore() {
-    TypedField ean = new TypedField(this.storeName, "ean", String.class);
-    TypedField category = new TypedField(this.storeName, "category", String.class);
-    TypedField sales = new TypedField(this.storeName, "sales", double.class);
-    TypedField qty = new TypedField(this.storeName, "quantity", long.class);
+  protected Map<String, List<TableTypedField>> getFieldsByStore() {
+    TableTypedField ean = new TableTypedField(this.storeName, "ean", String.class);
+    TableTypedField category = new TableTypedField(this.storeName, "category", String.class);
+    TableTypedField sales = new TableTypedField(this.storeName, "sales", double.class);
+    TableTypedField qty = new TableTypedField(this.storeName, "quantity", long.class);
     return Map.of(this.storeName, List.of(ean, category, sales, qty));
   }
 

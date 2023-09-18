@@ -4,7 +4,7 @@ import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.CriteriaDto;
-import io.squashql.store.TypedField;
+import io.squashql.type.TypedField;
 import lombok.*;
 
 import java.util.function.Function;

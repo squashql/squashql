@@ -5,8 +5,8 @@ import io.squashql.query.builder.Query;
 import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.TypedField;
 import io.squashql.table.Table;
+import io.squashql.type.TableTypedField;
 import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -34,17 +34,17 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
   protected final String categories = storeName("categories");
 
   @Override
-  protected Map<String, List<TypedField>> getFieldsByStore() {
-    Function<String, TypedField> orderId = s -> new TypedField(s, "orderId", int.class);
-    Function<String, TypedField> shipperId = s -> new TypedField(s, "shipperId", int.class);
-    TypedField orderDetailsId = new TypedField(this.orderDetails, "orderDetailsId", int.class);
-    Function<String, TypedField> productId = s -> new TypedField(s, "productId", int.class);
-    TypedField quantity = new TypedField(this.orderDetails, "quantity", int.class);
-    TypedField shipperName = new TypedField(this.shippers, "name", String.class);
-    TypedField productName = new TypedField(this.products, "name", String.class);
-    Function<String, TypedField> categoryId = s -> new TypedField(s, "categoryId", int.class);
-    TypedField price = new TypedField(this.products, "price", double.class);
-    TypedField categoryName = new TypedField(this.categories, "name", String.class);
+  protected Map<String, List<TableTypedField>> getFieldsByStore() {
+    Function<String, TableTypedField> orderId = s -> new TableTypedField(s, "orderId", int.class);
+    Function<String, TableTypedField> shipperId = s -> new TableTypedField(s, "shipperId", int.class);
+    TableTypedField orderDetailsId = new TableTypedField(this.orderDetails, "orderDetailsId", int.class);
+    Function<String, TableTypedField> productId = s -> new TableTypedField(s, "productId", int.class);
+    TableTypedField quantity = new TableTypedField(this.orderDetails, "quantity", int.class);
+    TableTypedField shipperName = new TableTypedField(this.shippers, "name", String.class);
+    TableTypedField productName = new TableTypedField(this.products, "name", String.class);
+    Function<String, TableTypedField> categoryId = s -> new TableTypedField(s, "categoryId", int.class);
+    TableTypedField price = new TableTypedField(this.products, "price", double.class);
+    TableTypedField categoryName = new TableTypedField(this.categories, "name", String.class);
     return Map.of(
             this.orders, List.of(orderId.apply(this.orders), shipperId.apply(this.orders)),
             this.orderDetails, List.of(orderDetailsId, orderId.apply(this.orderDetails), productId.apply(this.orderDetails), quantity),

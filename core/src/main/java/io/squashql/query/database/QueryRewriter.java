@@ -1,10 +1,12 @@
 package io.squashql.query.database;
 
-import io.squashql.store.TypedField;
+import io.squashql.type.FunctionTypedField;
+import io.squashql.type.TableTypedField;
+import io.squashql.type.TypedField;
 
 public interface QueryRewriter {
 
-  default String getFieldFullName(TypedField f) {
+  default String getFieldFullName(TableTypedField f) {
     return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
   }
 
@@ -26,6 +28,10 @@ public interface QueryRewriter {
     return cteName;
   }
 
+  default String functionExpression(FunctionTypedField ftf) {
+    return ftf.function() + "(" + getFieldFullName(ftf.field()) + ")";
+  }
+
   /**
    * Customizes what's written in the SELECT statement AND GROUP BY for the given selected column.
    * See {@link SQLTranslator}.
@@ -34,7 +40,13 @@ public interface QueryRewriter {
    * @return the customized argument
    */
   default String select(TypedField f) {
-    return getFieldFullName(f);
+    if (f instanceof TableTypedField ttf) {
+      return getFieldFullName(ttf);
+    } else if (f instanceof FunctionTypedField ftf) {
+      return functionExpression(ftf);
+    } else {
+      throw new IllegalArgumentException(f.getClass().getName());
+    }
   }
 
   /**
@@ -44,7 +56,7 @@ public interface QueryRewriter {
    * @return the customized argument
    */
   default String rollup(TypedField f) {
-    return getFieldFullName(f);
+    return select(f);
   }
 
   default String measureAlias(String alias) {

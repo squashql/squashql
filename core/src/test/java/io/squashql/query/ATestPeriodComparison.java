@@ -2,15 +2,15 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.Period;
-import io.squashql.store.TypedField;
 import io.squashql.table.Table;
 import io.squashql.transaction.DataLoader;
+import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -33,16 +33,16 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
-  protected Map<String, List<TypedField>> getFieldsByStore() {
-    TypedField ean = new TypedField(this.storeName, "ean", String.class);
-    TypedField category = new TypedField(this.storeName, "category", String.class);
-    TypedField sales = new TypedField(this.storeName, "sales", double.class);
-    TypedField qty = new TypedField(this.storeName, "quantity", long.class);
-    TypedField year = new TypedField(this.storeName, "year_sales", long.class); // Use long to make sure we support also long as type
-    TypedField semester = new TypedField(this.storeName, "semester_sales", int.class);
-    TypedField quarter = new TypedField(this.storeName, "quarter_sales", int.class);
-    TypedField month = new TypedField(this.storeName, "month_sales", int.class);
-    TypedField date = new TypedField(this.storeName, "date_sales", LocalDate.class);
+  protected Map<String, List<TableTypedField>> getFieldsByStore() {
+    TableTypedField ean = new TableTypedField(this.storeName, "ean", String.class);
+    TableTypedField category = new TableTypedField(this.storeName, "category", String.class);
+    TableTypedField sales = new TableTypedField(this.storeName, "sales", double.class);
+    TableTypedField qty = new TableTypedField(this.storeName, "quantity", long.class);
+    TableTypedField year = new TableTypedField(this.storeName, "year_sales", long.class); // Use long to make sure we support also long as type
+    TableTypedField semester = new TableTypedField(this.storeName, "semester_sales", int.class);
+    TableTypedField quarter = new TableTypedField(this.storeName, "quarter_sales", int.class);
+    TableTypedField month = new TableTypedField(this.storeName, "month_sales", int.class);
+    TableTypedField date = new TableTypedField(this.storeName, "date_sales", LocalDate.class);
     return Map.of(this.storeName, List.of(ean, category, sales, qty, year, semester, quarter, month, date));
   }
 
@@ -289,7 +289,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   void testCompareYearCurrentWithPreviousWithFilterAndCalculatedMeasure() {
     Period.Year period = new Period.Year("year_sales");
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
-    Measure multiply = Functions.multiply("sales*2", sales, Functions.integer(2));
+    Measure multiply = Functions.multiply("sales times 2", sales, Functions.integer(2));
     ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
@@ -324,4 +324,102 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
 
     Assertions.assertThatThrownBy(() -> this.executor.execute(query)).hasMessageContaining("Too many rows");
   }
+
+  @Test
+  void testYearFunctionAndHaving() {
+    // BigQuery. See https://github.com/squashql/squashql/issues/183
+    Assumptions.assumeFalse(this.queryEngine.getClass().getSimpleName().contains(TestClass.Type.BIGQUERY.className));
+
+    String dateSales = "date_sales";
+    var query = Query.from(this.storeName)
+            .select(List.of(Functions.yearStr(dateSales)), List.of(CountMeasure.INSTANCE))
+            .having(criterion(Functions.year(dateSales), eq(2022)))
+            .build();
+    final Table finalTable = this.executor.execute(query);
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            List.of(yearType(2022), 12L));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testYearFunctionAndWhere(boolean fullName) {
+    String dateSales = fullName ? SqlUtils.getFieldFullName(this.storeName, "date_sales") : "date_sales";
+    var query = Query.from(this.storeName)
+            .where(criterion(Functions.year(dateSales), eq(2022)))
+            .select(List.of(Functions.yearStr(dateSales)), List.of(CountMeasure.INSTANCE))
+            .build();
+    final Table finalTable = this.executor.execute(query);
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            List.of(yearType(2022), 12L));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testQuarterFunctionAndWhere(boolean fullName) {
+    String dateSales = fullName ? SqlUtils.getFieldFullName(this.storeName, "date_sales") : "date_sales";
+    var query = Query.from(this.storeName)
+            .where(criterion(Functions.year(dateSales), eq(2022)))
+            .select(List.of(Functions.yearStr(dateSales), Functions.quarterStr(dateSales)), List.of(CountMeasure.INSTANCE))
+            .build();
+    final Table finalTable = this.executor.execute(query);
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            List.of(yearType(2022), quarterType(1), 3L),
+            List.of(yearType(2022), quarterType(2), 3L),
+            List.of(yearType(2022), quarterType(3), 3L),
+            List.of(yearType(2022), quarterType(4), 3L));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testMonthFunctionAndWhere(boolean fullName) {
+    String dateSales = fullName ? SqlUtils.getFieldFullName(this.storeName, "date_sales") : "date_sales";
+    var query = Query.from(this.storeName)
+            .where(criterion(Functions.year(dateSales), eq(2022)))
+            .select(List.of(Functions.yearStr(dateSales), Functions.monthStr(dateSales)), List.of(CountMeasure.INSTANCE))
+            .build();
+    final Table finalTable = this.executor.execute(query);
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            List.of(yearType(2022), monthType(1), 1L),
+            List.of(yearType(2022), monthType(2), 1L),
+            List.of(yearType(2022), monthType(3), 1L),
+            List.of(yearType(2022), monthType(4), 1L),
+            List.of(yearType(2022), monthType(5), 1L),
+            List.of(yearType(2022), monthType(6), 1L),
+            List.of(yearType(2022), monthType(7), 1L),
+            List.of(yearType(2022), monthType(8), 1L),
+            List.of(yearType(2022), monthType(9), 1L),
+            List.of(yearType(2022), monthType(10), 1L),
+            List.of(yearType(2022), monthType(11), 1L),
+            List.of(yearType(2022), monthType(12), 1L));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testDateFunctionWithRollup(boolean fullName) {
+    String dateSales = fullName ? SqlUtils.getFieldFullName(this.storeName, "date_sales") : "date_sales";
+    var query = Query.from(this.storeName)
+            .select(List.of(Functions.yearStr(dateSales)), List.of(CountMeasure.INSTANCE))
+            .rollup(Functions.yearStr(dateSales))
+            .build();
+    final Table finalTable = this.executor.execute(query);
+    finalTable.show();
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            List.of(yearType(2022), 12L),
+            List.of(yearType(2023), 12L),
+            List.of("Grand Total", 24L)
+            );
+  }
+
+  protected Object yearType(int i) {
+    return (long) i;
+  }
+
+  protected Object quarterType(int i) {
+    return (long) i;
+  }
+
+  protected Object monthType(int i) {
+    return (long) i;
+  }
+
 }

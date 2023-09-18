@@ -8,12 +8,15 @@ import com.github.benmanes.caffeine.cache.stats.ConcurrentStatsCounter;
 import com.github.benmanes.caffeine.cache.stats.StatsCounter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.CacheStatsDto;
-import io.squashql.store.TypedField;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
+import io.squashql.type.TypedField;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 public class CaffeineQueryCache implements QueryCache {
 
@@ -45,13 +48,13 @@ public class CaffeineQueryCache implements QueryCache {
   @Override
   public ColumnarTable createRawResult(PrefetchQueryScope scope) {
     Set<TypedField> columns = scope.columns();
-    List<Header> headers = new ArrayList<>(columns.stream().map(column -> new Header(SqlUtils.getFieldFullName(column), column.type(), false)).toList());
+    List<Header> headers = new ArrayList<>(columns.stream().map(column -> new Header(SqlUtils.expression(column), column.type(), false)).toList());
     headers.add(new Header(CountMeasure.ALIAS, long.class, true));
 
     List<List<Object>> values = new ArrayList<>();
     Table table = this.results.getIfPresent(scope);
     for (TypedField f : columns) {
-      values.add(table.getColumnValues(SqlUtils.getFieldFullName(f)));
+      values.add(table.getColumnValues(SqlUtils.expression(f)));
     }
     values.add(table.getAggregateValues(CountMeasure.INSTANCE));
     return new ColumnarTable(

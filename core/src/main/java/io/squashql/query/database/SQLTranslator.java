@@ -1,9 +1,10 @@
 package io.squashql.query.database;
 
 import com.google.common.collect.Ordering;
-import io.squashql.query.TableField;
+import io.squashql.query.MeasureUtils;
 import io.squashql.query.dto.*;
-import io.squashql.store.TypedField;
+import io.squashql.store.UnknownType;
+import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
 
 import java.util.*;
@@ -65,7 +66,7 @@ public class SQLTranslator {
     } else {
       addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
     }
-    addHavingConditions(statement, query.havingCriteriaDto, queryRewriter);
+    addHavingConditions(fieldProvider, statement, query.havingCriteriaDto, queryRewriter);
     addLimit(query.limit, statement);
     return statement.toString();
   }
@@ -220,7 +221,7 @@ public class SQLTranslator {
   }
 
   public static String toSql(TypedField field, ConditionDto dto, QueryRewriter queryRewriter) {
-    String formattedFieldName = queryRewriter.getFieldFullName(field);
+    String formattedFieldName = queryRewriter.select(field);
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
       Function<Object, String> sqlMapper = getQuoteFn(field);
       return switch (dto.type()) {
@@ -253,7 +254,7 @@ public class SQLTranslator {
 
   public static String toSql(Function<String, TypedField> fieldProvider, CriteriaDto criteriaDto, QueryRewriter queryRewriter) {
     if (criteriaDto.isWhereCriterion()) {
-      return toSql(fieldProvider.apply(((TableField) criteriaDto.field).fullName), criteriaDto.condition, queryRewriter);
+      return toSql(fieldProvider.apply(criteriaDto.field.name()), criteriaDto.condition, queryRewriter);
     } else if (criteriaDto.isHavingCriterion()) {
       return toSql(fieldProvider.apply(criteriaDto.measure.alias()), criteriaDto.condition, queryRewriter);
     } else if (criteriaDto.isJoinCriterion()) {
@@ -286,7 +287,8 @@ public class SQLTranslator {
             || field.type().equals(long.class)
             || field.type().equals(float.class)
             || field.type().equals(boolean.class)
-            || field.type().equals(Boolean.class)) {
+            || field.type().equals(Boolean.class)
+            || field.type().equals(UnknownType.class)) {
       // no quote
       return String::valueOf;
     } else if (field.type().equals(String.class)) {
@@ -297,9 +299,9 @@ public class SQLTranslator {
     }
   }
 
-  protected static void addHavingConditions(StringBuilder statement, CriteriaDto havingCriteriaDto, QueryRewriter queryRewriter) {
+  protected static void addHavingConditions(Function<String, TypedField> fieldProvider, StringBuilder statement, CriteriaDto havingCriteriaDto, QueryRewriter queryRewriter) {
     if (havingCriteriaDto != null) {
-      String havingClause = toSql(name -> new TypedField(null, name, double.class), havingCriteriaDto, queryRewriter);
+      String havingClause = toSql(MeasureUtils.withFallback(fieldProvider, Number.class), havingCriteriaDto, queryRewriter);
       if (havingClause != null) {
         statement
                 .append(" having ")

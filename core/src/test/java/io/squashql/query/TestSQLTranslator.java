@@ -5,8 +5,9 @@ import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.DefaultQueryRewriter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
-import io.squashql.store.TypedField;
+import io.squashql.type.TableTypedField;
 import io.squashql.store.Store;
+import io.squashql.type.TypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -39,9 +40,9 @@ public class TestSQLTranslator {
     if (split.length > 1) {
       String tableName = split[0];
       String fieldNameInTable = split[1];
-      return new TypedField(tableName, fieldNameInTable, type.apply(fieldNameInTable));
+      return new TableTypedField(tableName, fieldNameInTable, type.apply(fieldNameInTable));
     } else {
-      return new TypedField(null, s, type.apply(s));
+      return new TableTypedField(null, s, type.apply(s));
     }
   };
 
@@ -211,9 +212,9 @@ public class TestSQLTranslator {
     a.join(c, LEFT, jCToAB);
 
     Function<String, TypedField> fieldSupplier = AQueryEngine.createFieldSupplier(Map.of(
-            "A", new Store("A", List.of(new TypedField("A", "a_id", int.class), new TypedField("A", "a_f", int.class), new TypedField("A", "y", int.class))),
-            "B", new Store("B", List.of(new TypedField("B", "b_id", int.class), new TypedField("B", "b_other_id", int.class))),
-            "C", new Store("C", List.of(new TypedField("c", "a_id", int.class), new TypedField("C", "c_f", int.class), new TypedField("C", "c_other_id", int.class)))
+            "A", new Store("A", List.of(new TableTypedField("A", "a_id", int.class), new TableTypedField("A", "a_f", int.class), new TableTypedField("A", "y", int.class))),
+            "B", new Store("B", List.of(new TableTypedField("B", "b_id", int.class), new TableTypedField("B", "b_other_id", int.class))),
+            "C", new Store("C", List.of(new TableTypedField("c", "a_id", int.class), new TableTypedField("C", "c_f", int.class), new TableTypedField("C", "c_other_id", int.class)))
     ));
 
     DatabaseQuery query = new DatabaseQuery().table(a).withSelect(fieldSupplier.apply("A.y"));
@@ -248,7 +249,7 @@ public class TestSQLTranslator {
 
   @Test
   void testConditionWithValueFullPath() {
-    TypedField field = new TypedField(BASE_STORE_NAME, SCENARIO_FIELD_NAME, String.class);
+    TableTypedField field = new TableTypedField(BASE_STORE_NAME, SCENARIO_FIELD_NAME, String.class);
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(field)
             .aggregatedMeasure("pnl.sum", "pnl", "sum")

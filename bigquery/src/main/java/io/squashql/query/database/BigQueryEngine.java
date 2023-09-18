@@ -4,11 +4,15 @@ import com.google.cloud.bigquery.*;
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryUtil;
 import io.squashql.jackson.JacksonUtil;
+import io.squashql.query.Header;
+import io.squashql.query.QueryExecutor;
+import io.squashql.query.date.DateFunctions;
+import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
-import io.squashql.query.*;
-import io.squashql.store.TypedField;
-import io.squashql.table.ColumnarTable;
+import io.squashql.type.FunctionTypedField;
+import io.squashql.type.TableTypedField;
+import io.squashql.type.TypedField;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
@@ -93,11 +97,11 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
               rewriter);
     } else {
       checkRollupIsValid(
-              query.select.stream().map(f -> this.queryRewriter.select(f)).toList(),
-              query.rollup.stream().map(f -> this.queryRewriter.rollup(f)).toList());
+              query.select.stream().map(this.queryRewriter::select).toList(),
+              query.rollup.stream().map(this.queryRewriter::rollup).toList());
 
-      // Special case for BigQuery because it does not support either the grouping function used to identify extra-rows added
-      // by rollup or grouping sets for partial rollup.
+      // Special case for BigQuery because it does not support either the grouping function used to identify extra-rows
+      // added by rollup or grouping sets for partial rollup.
 
       /*
        * The trick here is to change what is put in select and rollup:
@@ -124,7 +128,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
         }
 
         @Override
-        public String getFieldFullName(TypedField f) {
+        public String getFieldFullName(TableTypedField f) {
           return qr.getFieldFullName(f);
         }
       };
@@ -151,7 +155,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     boolean isPartialRollup = !Set.copyOf(query.select).equals(Set.copyOf(query.rollup));
     List<TypedField> missingColumnsInRollup = new ArrayList<>(query.select);
     missingColumnsInRollup.removeAll(query.rollup);
-    Set<String> missingColumnsInRollupSet = missingColumnsInRollup.stream().map(SqlUtils::getFieldFullName).collect(Collectors.toSet());
+    Set<String> missingColumnsInRollupSet = missingColumnsInRollup.stream().map(SqlUtils::expression).collect(Collectors.toSet());
 
     MutableIntSet rowIndicesToRemove = new IntHashSet();
     for (int i = 0; i < input.headers().size(); i++) {
@@ -275,8 +279,13 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     }
 
     @Override
-    public String getFieldFullName(TypedField f) {
-      return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
+    public String functionExpression(FunctionTypedField ftf) {
+      if (DateFunctions.DATE_PATTERNS.keySet().contains(ftf.function())) {
+        // https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#extract
+        return String.format("EXTRACT(%s FROM %s)", ftf.function(), getFieldFullName(ftf.field()));
+      } else {
+        throw new IllegalArgumentException("Unsupported function " + ftf);
+      }
     }
 
     @Override

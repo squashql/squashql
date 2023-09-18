@@ -4,8 +4,8 @@ import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.store.TypedField;
 import io.squashql.table.Table;
+import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -32,11 +32,11 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
           .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
 
   @Override
-  protected Map<String, List<TypedField>> getFieldsByStore() {
-    TypedField ean = new TypedField(this.storeName, "ean", String.class);
-    TypedField category = new TypedField(this.storeName, "category", String.class);
-    TypedField price = new TypedField(this.storeName, "price", double.class);
-    TypedField qty = new TypedField(this.storeName, "quantity", int.class);
+  protected Map<String, List<TableTypedField>> getFieldsByStore() {
+    TableTypedField ean = new TableTypedField(this.storeName, "ean", String.class);
+    TableTypedField category = new TableTypedField(this.storeName, "category", String.class);
+    TableTypedField price = new TableTypedField(this.storeName, "price", double.class);
+    TableTypedField qty = new TableTypedField(this.storeName, "quantity", int.class);
     return Map.of(this.storeName, List.of(ean, category, price, qty));
   }
 
