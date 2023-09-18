@@ -10,7 +10,7 @@ export {
 
 export {
   Measure, AggregatedMeasure, ExpressionMeasure, BasicMeasure,
-  sum, min, max, avg,
+  sum, min, max, avg, countByField,
   sumIf, minIf, maxIf, avgIf, countIf,
   plus, minus, multiply, divide,
   integer, decimal,

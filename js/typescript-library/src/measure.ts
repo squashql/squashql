@@ -187,6 +187,10 @@ export function avg(alias: string, field: Field | string): Measure {
   return new AggregatedMeasure(alias, toField(field), "avg")
 }
 
+export function countByField(alias: string, field: Field | string): Measure {
+  return new AggregatedMeasure(alias, toField(field), "count")
+}
+
 // aggIf
 
 export function sumIf(alias: string, field: Field | string, criterion: Criteria): Measure {
