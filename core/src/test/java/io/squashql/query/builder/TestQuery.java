@@ -285,7 +285,7 @@ public class TestQuery {
     QueryDto build = Query
             .from("saas")
             .select(tableFields(List.of("col1", "col2")), List.of(sum))
-            .rollup("col1")
+            .rollup(tableField("col1"))
             .orderBy("col1", OrderKeywordDto.ASC)
             .build();
 
@@ -293,7 +293,7 @@ public class TestQuery {
             .table("saas")
             .withColumn(tableField("col1"))
             .withColumn(tableField("col2"))
-            .withRollup("col1")
+            .withRollup(tableField("col1"))
             .orderBy("col1", OrderKeywordDto.ASC)
             .withMeasure(sum);
 
@@ -320,7 +320,7 @@ public class TestQuery {
     QueryDto qWithRollup = new QueryDto()
             .table("saas")
             .withColumn(tableField("col1"))
-            .withRollup("col1")
+            .withRollup(tableField("col1"))
             .withHavingCriteria(criterion)
             .withMeasure(sum);
 

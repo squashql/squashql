@@ -14,6 +14,7 @@ import static io.squashql.query.Functions.multiply;
 import static io.squashql.query.Functions.or;
 import static io.squashql.query.Functions.sum;
 import static io.squashql.query.Functions.sumIf;
+import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
@@ -136,7 +137,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .from(this.storeName)
             .where(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
             .select(tableFields(List.of("eanId")), List.of(sum("p", "price"), sum("q", "quantity")))
-            .rollup("eanId")
+            .rollup(tableField("eanId"))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -155,7 +156,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .select(tableFields(List.of("subcategory")), List.of(sum("q", "quantity")))
-            .rollup("subcategory")
+            .rollup(tableField("subcategory"))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -169,7 +170,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("q", "quantity")))
-            .rollup("category") // We don't care here about total on scenario
+            .rollup(tableField("category")) // We don't care here about total on scenario
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -229,7 +230,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .from(this.storeName)
             .where(SCENARIO_FIELD_NAME, eq("s1")) // filter to reduce output table size
             .select(List.of(SCENARIO_FIELD_NAME, "category", "subcategory"), List.of(sum("q", "quantity")))
-            .rollup("category") // Only total for category
+            .rollup(tableField("category")) // Only total for category
             .build();
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -245,7 +246,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .select(tableFields(List.of("category")), List.of(sum("p", "price")))
-            .rollup("subcategory") // not correct because it should be a subset of the column in the select
+            .rollup(tableField("subcategory")) // not correct because it should be a subset of the column in the select
             .build();
     Assertions.assertThatThrownBy(() -> this.executor.execute(query))
             // The columns contain in rollup [`subcategory`] must be a subset of the columns contain in the select [`category`]

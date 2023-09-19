@@ -4,6 +4,7 @@ import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.Functions.all;
 import static io.squashql.query.Functions.criterion;
 import static io.squashql.query.Functions.in;
+import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 
@@ -269,7 +270,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .select(tableFields(List.of("spending category", "spending subcategory", "continent", "country", "city")), measures)
-            .rollup("spending category") // rollup is not supported with the pivot table API
+            .rollup(tableField("spending category")) // rollup is not supported with the pivot table API
             .build();
     List<String> rows = List.of("continent", "country", "city");
     List<String> columns = List.of("spending category", "spending subcategory");
