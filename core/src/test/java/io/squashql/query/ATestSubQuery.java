@@ -1,22 +1,26 @@
 package io.squashql.query;
 
+import static io.squashql.query.Functions.avg;
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.ge;
+import static io.squashql.query.Functions.min;
+import static io.squashql.query.Functions.sum;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.agg.AggregationFunction.AVG;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import static io.squashql.query.Functions.*;
-import static io.squashql.query.agg.AggregationFunction.AVG;
-import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -46,7 +50,7 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
   @Test
   void testSubQuery() {
     QueryDto subQuery = Query.from("student")
-            .select(List.of("name"), List.of(sum("score_sum", "score")))
+            .select(tableFields(List.of("name")), List.of(sum("score_sum", "score")))
             .build();
     // See https://mariadb.com/kb/en/subqueries-in-a-from-clause/
     QueryDto queryDto = Query.from(subQuery)
@@ -59,7 +63,7 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
   @Test
   void testSubQueryAggIfWithConditionOnSubQueryField() {
     QueryDto subQuery = Query.from("student")
-            .select(List.of("name"), List.of(sum("score_sum", "score")))
+            .select(tableFields(List.of("name")), List.of(sum("score_sum", "score")))
             .build();
 
     // Take into account only score.sum >= 100
@@ -77,11 +81,11 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
     // This sub-query does not really make sense in that case, but the idea is to have 1 remaining column in the
     // top-select to do a rollup afterwards.
     QueryDto subQuery = Query.from("student")
-            .select(List.of("name", "score"), List.of(min("score_min", "score")))
+            .select(tableFields(List.of("name", "score")), List.of(min("score_min", "score")))
             .build();
 
     QueryDto queryDto = Query.from(subQuery)
-            .select(List.of("name"), List.of(avg("avg", "score_min")))
+            .select(tableFields(List.of("name")), List.of(avg("avg", "score_min")))
             .rollup(List.of("name"))
             .build();
     Table result = this.executor.execute(queryDto);

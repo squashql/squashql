@@ -8,6 +8,7 @@ import static io.squashql.query.Functions.ge;
 import static io.squashql.query.Functions.isNull;
 import static io.squashql.query.Functions.sum;
 import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 
 import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.ColumnSetKey;
@@ -34,7 +35,7 @@ public class TestQuery {
 
     QueryDto build = Query
             .from("saas")
-            .select(List.of("col1", "col2"), List.of(columnSet), List.of(sum))
+            .select(tableFields(List.of("col1", "col2")), List.of(columnSet), List.of(sum))
             .build();
 
     QueryDto q = new QueryDto()
@@ -50,7 +51,7 @@ public class TestQuery {
     build = Query
             .from("saas")
             .where("f1", eq("A"))
-            .select(List.of("col1", "col2"), List.of(columnSet), List.of(sum))
+            .select(tableFields(List.of("col1", "col2")), List.of(columnSet), List.of(sum))
             .build();
 
     Assertions.assertThat(build).isEqualTo(q.withCondition("f1", eq("A")));
@@ -62,7 +63,7 @@ public class TestQuery {
             .where("f1", eq("A"))
             .where("f2", eq("B"))
             .where(any)
-            .select(List.of("col1", "col2"), List.of(columnSet), List.of(sum))
+            .select(tableFields(List.of("col1", "col2")), List.of(columnSet), List.of(sum))
             .build();
 
     Assertions.assertThat(build).isEqualTo(q.withCondition("f2", eq("B")).withWhereCriteria(any));
@@ -70,7 +71,7 @@ public class TestQuery {
     // with limit
     build = Query
             .from("saas")
-            .select(List.of("col1", "col2"), List.of(columnSet), List.of(sum))
+            .select(tableFields(List.of("col1", "col2")), List.of(columnSet), List.of(sum))
             .limit(100)
             .build();
 
@@ -96,7 +97,7 @@ public class TestQuery {
               .from("saas")
               .join("other", JoinType.LEFT)
               .on(criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ))
-              .select(List.of("col1", "col2"), List.of(sum))
+              .select(tableFields(List.of("col1", "col2")), List.of(sum))
               .build();
 
       saas.join(other, JoinType.LEFT, new JoinMappingDto(other.name + ".id", saas.name + ".id"));
@@ -132,7 +133,7 @@ public class TestQuery {
                       criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ),
                       criterion(other.name + ".a", saas.name + ".b", ConditionType.EQ)
               ))
-              .select(List.of("col1", "col2"), List.of(sum))
+              .select(tableFields(List.of("col1", "col2")), List.of(sum))
               .build();
 
       Assertions.assertThat(build).isEqualTo(q);
@@ -157,7 +158,7 @@ public class TestQuery {
               .join("other", JoinType.INNER)
               .on(criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ))
               .where("f1", eq("A"))
-              .select(List.of("col1", "col2"), List.of(sum))
+              .select(tableFields(List.of("col1", "col2")), List.of(sum))
               .build();
 
       Assertions.assertThat(build).isEqualTo(q);
@@ -186,7 +187,7 @@ public class TestQuery {
             .on(criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ))
             .join("another", JoinType.INNER)
             .on(criterion(another.name + ".id", saas.name + ".id", ConditionType.EQ))
-            .select(List.of("col1", "col2"), List.of(sum))
+            .select(tableFields(List.of("col1", "col2")), List.of(sum))
             .build();
 
     Assertions.assertThat(build).isEqualTo(q);
@@ -201,7 +202,7 @@ public class TestQuery {
             .from("saas")
             .join(vt, JoinType.INNER)
             .on(criterion("saas.id", "vtable.id", ConditionType.EQ))
-            .select(List.of("col1", "col2"), List.of(sum))
+            .select(tableFields(List.of("col1", "col2")), List.of(sum))
             .build();
 
     saas.join(new TableDto("vtable"), JoinType.INNER, new JoinMappingDto(saas.name + ".id", vt.name + ".id"));
@@ -223,7 +224,7 @@ public class TestQuery {
     // Single order by
     QueryDto build = Query
             .from("saas")
-            .select(List.of("col1", "col2"), List.of(sum))
+            .select(tableFields(List.of("col1", "col2")), List.of(sum))
             .orderBy("col1", OrderKeywordDto.ASC)
             .build();
 
@@ -239,7 +240,7 @@ public class TestQuery {
     // Multiple orders by
     build = Query
             .from("saas")
-            .select(List.of("col1", "col2"), List.of(sum))
+            .select(tableFields(List.of("col1", "col2")), List.of(sum))
             .orderBy("col1", OrderKeywordDto.ASC)
             .orderBy("col2", List.of("1", "10"))
             .build();
@@ -262,7 +263,7 @@ public class TestQuery {
     // Single order by
     QueryDto build = Query
             .from("saas")
-            .select(List.of("col1", "col2"), List.of(sum))
+            .select(tableFields(List.of("col1", "col2")), List.of(sum))
             .orderBy("col1", OrderKeywordDto.ASC)
             .limit(10)
             .build();
@@ -283,7 +284,7 @@ public class TestQuery {
     Measure sum = sum("sum", "f2");
     QueryDto build = Query
             .from("saas")
-            .select(List.of("col1", "col2"), List.of(sum))
+            .select(tableFields(List.of("col1", "col2")), List.of(sum))
             .rollup("col1")
             .orderBy("col1", OrderKeywordDto.ASC)
             .build();
@@ -305,13 +306,13 @@ public class TestQuery {
     CriteriaDto criterion = criterion((AggregatedMeasure) sum, ge(0));
     QueryDto buildWoRollup = Query
             .from("saas")
-            .select(List.of("col1"), List.of(sum))
+            .select(tableFields(List.of("col1")), List.of(sum))
             .having(criterion)
             .build();
 
     QueryDto buildWithRollup = Query
             .from("saas")
-            .select(List.of("col1"), List.of(sum))
+            .select(tableFields(List.of("col1")), List.of(sum))
             .rollup(List.of("col1"))
             .having(criterion)
             .build();

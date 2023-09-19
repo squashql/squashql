@@ -1,11 +1,34 @@
 package io.squashql.spring.web.rest;
 
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.*;
+import io.squashql.query.BasicUser;
+import io.squashql.query.ColumnSetKey;
+import io.squashql.query.ComparisonMeasureReferencePosition;
+import io.squashql.query.ComparisonMethod;
+import io.squashql.query.CountMeasure;
+import io.squashql.query.ExpressionMeasure;
+import io.squashql.query.Functions;
+import io.squashql.query.Measure;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
-import io.squashql.query.dto.*;
+import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.dto.ConditionType;
+import io.squashql.query.dto.JoinType;
+import io.squashql.query.dto.MetadataItem;
+import io.squashql.query.dto.MetadataResultDto;
+import io.squashql.query.dto.QueryMergeDto;
+import io.squashql.query.dto.QueryResultDto;
 import io.squashql.spring.dataset.DatasetTestConfig;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,16 +38,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
-import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = "spring.main.allow-bean-definition-overriding=true")
 @Import(DatasetTestConfig.class)
@@ -45,7 +58,7 @@ public class QueryControllerTest {
             .on(criterion("our_prices" + ".pdv", "our_stores_their_stores" + ".our_store", ConditionType.EQ))
             .join("their_prices", JoinType.INNER)
             .on(criterion("their_prices" + ".competitor_concurrent_pdv", "our_stores_their_stores" + ".their_store", ConditionType.EQ))
-            .select(List.of(SCENARIO_FIELD_NAME, "ean"), List.of(
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "ean")), List.of(
                     Functions.sum("capdv", "capdv"),
                     new ExpressionMeasure("capdv_concurrents", "sum(competitor_price * quantity)"),
                     new ExpressionMeasure("indice_prix", "sum(capdv) / sum(competitor_price * quantity)")))
@@ -228,11 +241,11 @@ public class QueryControllerTest {
   void testQueryMerge() throws Exception {
     var query1 = Query
             .from("our_prices")
-            .select(List.of("ean"), List.of(Functions.sum("capdv-sum", "capdv")))
+            .select(tableFields(List.of("ean")), List.of(Functions.sum("capdv-sum", "capdv")))
             .build();
     var query2 = Query
             .from("our_prices")
-            .select(List.of("ean"), List.of(Functions.avg("capdv-avg", "capdv")))
+            .select(tableFields(List.of("ean")), List.of(Functions.avg("capdv-avg", "capdv")))
             .build();
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_MERGE)

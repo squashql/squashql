@@ -8,6 +8,7 @@ import static io.squashql.query.Functions.in;
 import static io.squashql.query.Functions.min;
 import static io.squashql.query.Functions.sum;
 import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
@@ -142,7 +143,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   void testQueryDifferentConditions() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(sum("ps", "price")))
+            .select(tableFields(List.of("category")), List.of(sum("ps", "price")))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
@@ -154,7 +155,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     query = Query
             .from(this.storeName)
             .where("category", eq("drink"))
-            .select(List.of("category"), List.of(sum("ps", "price")))
+            .select(tableFields(List.of("category")), List.of(sum("ps", "price")))
             .build();
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("drink", 2d));
@@ -167,7 +168,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     query = Query
             .from(this.storeName)
             .where("category", in("food", "cloth"))
-            .select(List.of("category"), List.of(sum("ps", "price")))
+            .select(tableFields(List.of("category")), List.of(sum("ps", "price")))
             .build();
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
@@ -182,7 +183,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .from(this.storeName)
             .join(competitorStoreName, JoinType.INNER)
             .on(criterion(this.storeName + ".ean", this.competitorStoreName + ".comp_ean", ConditionType.EQ))
-            .select(List.of("category"), List.of(sum("ps", "price")))
+            .select(tableFields(List.of("category")), List.of(sum("ps", "price")))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
@@ -194,7 +195,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     // Same query but wo. join. Should not hit the cache
     query = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(sum("ps", "price")))
+            .select(tableFields(List.of("category")), List.of(sum("ps", "price")))
             .build();
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
@@ -213,7 +214,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
 
     QueryDto firstSubQuery = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(ca)) // ca per category
+            .select(tableFields(List.of("category")), List.of(ca)) // ca per category
             .build();
 
     QueryDto queryDto = Query
@@ -227,7 +228,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     // Change the sub query
     QueryDto secondSubQuery = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(min)) // change agg function
+            .select(tableFields(List.of("category")), List.of(min)) // change agg function
             .build();
     queryDto = Query
             .from(secondSubQuery)
@@ -240,7 +241,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     // Change again the sub query
     secondSubQuery = Query
             .from(this.storeName)
-            .select(List.of("ean"), List.of(min)) // change here
+            .select(tableFields(List.of("ean")), List.of(min)) // change here
             .build();
     queryDto = Query
             .from(secondSubQuery)
@@ -264,12 +265,12 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   void testQueryWithSubQueryAndColumnsAndConditions() {
     QueryDto firstSubQuery = Query
             .from(this.storeName)
-            .select(List.of("category", "ean"), List.of(sum("ca", "price"))) // ca per scenario
+            .select(tableFields(List.of("category", "ean")), List.of(sum("ca", "price"))) // ca per scenario
             .build();
 
     QueryDto queryDto = Query
             .from(firstSubQuery)
-            .select(List.of("ean"), List.of(avg("mean", "ca"))) // ean needs to be in the subquery to make it work!
+            .select(tableFields(List.of("ean")), List.of(avg("mean", "ca"))) // ean needs to be in the subquery to make it work!
             .build();
     Table result = this.executor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(
@@ -381,7 +382,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
 
     QueryDto subQuery = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(ca)) // ca per category
+            .select(tableFields(List.of("category")), List.of(ca)) // ca per category
             .build();
 
     QueryDto queryDto = Query
@@ -406,7 +407,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     // No limit, it will use the default value (10k)
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("ean"), List.of(sum("ps", "price")))
+            .select(tableFields(List.of("ean")), List.of(sum("ps", "price")))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
@@ -447,7 +448,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .join(cte, JoinType.INNER)
             .on(all(criterion("price", "min", ConditionType.GE),
                     criterion("price", "max", ConditionType.LT)))
-            .select(List.of("ean", "bucket"), List.of())
+            .select(tableFields(List.of("ean", "bucket")), List.of())
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -468,7 +469,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .join(cte, JoinType.INNER)
             .on(all(criterion("price", "min", ConditionType.GE),
                     criterion("price", "max", ConditionType.LT)))
-            .select(List.of("ean", "bucket"), List.of())
+            .select(tableFields(List.of("ean", "bucket")), List.of())
             .build();
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -499,7 +500,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   void testQueryPivotTable() {
     QueryDto q = Query
             .from(this.storeName)
-            .select(List.of("category", "ean"), List.of(sum("ca", "price")))
+            .select(tableFields(List.of("category", "ean")), List.of(sum("ca", "price")))
             .build();
     int base = 0;
     this.executor.execute(new PivotTableQueryDto(q, List.of("category"), List.of("ean")));

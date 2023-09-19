@@ -1,23 +1,25 @@
 package io.squashql.query;
 
+import static io.squashql.query.ComparisonMethod.DIVIDE;
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.eq;
+import static io.squashql.query.Functions.in;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import static io.squashql.query.database.QueryEngine.TOTAL;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import static io.squashql.query.ComparisonMethod.DIVIDE;
-import static io.squashql.query.Functions.*;
-import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
-import static io.squashql.query.database.QueryEngine.TOTAL;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -54,7 +56,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, List.of("city", "country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("continent", "country", "city"), List.of(pop, pOp))
+            .select(tableFields(List.of("continent", "country", "city")), List.of(pop, pOp))
             .build();
 
     Table result = this.executor.execute(query);
@@ -70,7 +72,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
 
     query = Query
             .from(this.storeName)
-            .select(List.of("continent", "country", "city"), List.of(pOp))
+            .select(tableFields(List.of("continent", "country", "city")), List.of(pOp))
             .build(); // query only parent
 
     result = this.executor.execute(query);
@@ -92,7 +94,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .where(criterion("city", in("montreal", "toronto")))
-            .select(List.of("continent", "country", "city"), List.of(pOp))
+            .select(tableFields(List.of("continent", "country", "city")), List.of(pOp))
             .build(); // query only parent
 
     Table result = this.executor.execute(query);
@@ -103,7 +105,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
     query = Query
             .from(this.storeName)
             .where(criterion("country", eq("canada")))
-            .select(List.of("continent", "country", "city"), List.of(pOp))
+            .select(tableFields(List.of("continent", "country", "city")), List.of(pOp))
             .build(); // query only parent
 
     result = this.executor.execute(query);
@@ -115,7 +117,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
     query = Query
             .from(this.storeName)
             .where(criterion("continent", eq("eu")))
-            .select(List.of("continent", "country", "city"), List.of(pOp))
+            .select(tableFields(List.of("continent", "country", "city")), List.of(pOp))
             .build(); // query only parent
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -130,7 +132,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, List.of("country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("continent", "country", "city"), List.of(pop, pOp))
+            .select(tableFields(List.of("continent", "country", "city")), List.of(pop, pOp))
             .build(); // query only parent
 
     Table result = this.executor.execute(query);
@@ -158,7 +160,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .where(criterion("country", eq("canada"))) // use a filter to limit the number of rows
-            .select(List.of("continent", "country", "city"), List.of(pop, pOp, pop2, pOp2))
+            .select(tableFields(List.of("continent", "country", "city")), List.of(pop, pOp, pop2, pOp2))
             .build(); // query only parent
 
     Table table = this.executor.execute(query);

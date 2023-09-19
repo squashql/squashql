@@ -1,5 +1,10 @@
 package io.squashql.query;
 
+import static io.squashql.query.Functions.divide;
+import static io.squashql.query.Functions.multiply;
+import static io.squashql.query.Functions.sum;
+import static io.squashql.query.TableField.tableFields;
+
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.DatabaseQuery;
@@ -10,15 +15,12 @@ import io.squashql.store.Datastore;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-
-import static io.squashql.query.Functions.*;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 @TestClass(ignore = {TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE, TestClass.Type.CLICKHOUSE, TestClass.Type.SPARK})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -52,7 +54,7 @@ public abstract class ATestQueryExecutionLocality extends ABaseTestQuery {
     Measure divide = divide("d", multiply("m", sum("ps", "price"), sum("qs", "quantity")), Functions.integer(2));
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("ean"), List.of(divide))
+            .select(tableFields(List.of("ean")), List.of(divide))
             .build();
     Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(

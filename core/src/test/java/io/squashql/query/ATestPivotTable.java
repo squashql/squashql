@@ -1,5 +1,12 @@
 package io.squashql.query;
 
+import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
+import static io.squashql.query.Functions.all;
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.in;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+
 import com.google.common.collect.ImmutableList;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
@@ -7,24 +14,23 @@ import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.PivotTableQueryDto;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.table.*;
+import io.squashql.table.ColumnarTable;
+import io.squashql.table.PivotTable;
+import io.squashql.table.RowTable;
+import io.squashql.table.Table;
+import io.squashql.table.TableUtils;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.TestUtil;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Assumptions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.api.TestInstance;
-
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
-import static io.squashql.query.Functions.*;
-import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.TestInstance;
 
 @TestClass(ignore = {TestClass.Type.SNOWFLAKE})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -80,11 +86,11 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
     QueryDto queryWithoutRollup = Query
             .from(this.storeName)
-            .select(List.of("continent", "country", "city"), List.of(amount))
+            .select(tableFields(List.of("continent", "country", "city")), List.of(amount))
             .build();
     QueryDto queryRollup = Query
             .from(this.storeName)
-            .select(List.of("continent", "country", "city"), List.of(amount))
+            .select(tableFields(List.of("continent", "country", "city")), List.of(amount))
             .rollup(List.of("continent", "country", "city"))
             .build();
     Table resultRollup = this.executor.execute(queryRollup);
@@ -111,7 +117,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .where(criterion("city", in("la", "london"))) // to reduce size of the output
-            .select(List.of("spending category", "city"), List.of(amount))
+            .select(tableFields(List.of("spending category", "city")), List.of(amount))
             .build();
     List<String> rows = List.of("city");
     List<String> columns = List.of("spending category");
@@ -151,7 +157,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
                     criterion("city", in("paris", "lyon", "london")),
                     criterion("country", in("france", "uk"))
             )) // to reduce size of the output
-            .select(List.of("spending category", "spending subcategory", "country", "city"), measures)
+            .select(tableFields(List.of("spending category", "spending subcategory", "country", "city")), measures)
             .build();
     List<String> rows = List.of("country", "city");
     List<String> columns = List.of("spending category", "spending subcategory");
@@ -166,7 +172,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     List<Measure> measures = List.of(amount, min);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("spending category", "spending subcategory", "continent", "country", "city"), measures)
+            .select(tableFields(List.of("spending category", "spending subcategory", "continent", "country", "city")), measures)
             .build();
     List<String> rows = List.of("continent", "country", "city");
     List<String> columns = List.of("spending category", "spending subcategory");
@@ -229,7 +235,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     List<Measure> measures = List.of(amountComp);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("spending category"), List.of(bucketCS), measures)
+            .select(tableFields(List.of("spending category")), List.of(bucketCS), measures)
             .build();
     verifyResults(testInfo, query, List.of("group", "country"), List.of("spending category"));
   }
@@ -249,7 +255,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
                     criterion("city", in("paris", "lyon", "london")),
                     criterion("country", in("france", "uk"))
             )) // to reduce size of the output
-            .select(List.of("spending category", "spending subcategory", "continent", "country", "city"), measures)
+            .select(tableFields(List.of("spending category", "spending subcategory", "continent", "country", "city")), measures)
             .build();
     List<String> rows = List.of("continent", "country", "city");
     List<String> columns = List.of("spending category", "spending subcategory");
@@ -262,7 +268,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     List<Measure> measures = List.of(amount);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("spending category", "spending subcategory", "continent", "country", "city"), measures)
+            .select(tableFields(List.of("spending category", "spending subcategory", "continent", "country", "city")), measures)
             .rollup("spending category") // rollup is not supported with the pivot table API
             .build();
     List<String> rows = List.of("continent", "country", "city");
@@ -277,7 +283,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     List<Measure> measures = List.of(amount);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("spending category", "spending subcategory", "continent", "country", "city"), measures)
+            .select(tableFields(List.of("spending category", "spending subcategory", "continent", "country", "city")), measures)
             .build();
     List<String> rowsWithoutContinent = List.of("country", "city");
     List<String> columns = List.of("spending category", "spending subcategory");
@@ -298,7 +304,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     List<Measure> measures = List.of(amount);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("spending category", "spending subcategory", "continent", "country", "city"), measures)
+            .select(tableFields(List.of("spending category", "spending subcategory", "continent", "country", "city")), measures)
             .build();
     List<String> rows = List.of("unknown", "continent", "country", "city");
     List<String> columns = List.of("spending category", "spending subcategory");
@@ -314,7 +320,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("spending category", "spending subcategory", "continent", "country", "city"), List.of(CountMeasure.INSTANCE))
+            .select(tableFields(List.of("spending category", "spending subcategory", "continent", "country", "city")), List.of(CountMeasure.INSTANCE))
             .build();
     List<String> rows = List.of("continent", "country", "city");
     List<String> columns = List.of("spending category", "spending subcategory");

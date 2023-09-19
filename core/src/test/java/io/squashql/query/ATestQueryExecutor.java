@@ -1,27 +1,45 @@
 package io.squashql.query;
 
-import io.squashql.TestClass;
-import io.squashql.query.builder.Query;
-import io.squashql.query.database.QueryRewriter;
-import io.squashql.query.database.SqlUtils;
-import io.squashql.query.dto.*;
-import io.squashql.table.Table;
-import io.squashql.type.TableTypedField;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import static io.squashql.query.Functions.*;
+import static io.squashql.query.Functions.all;
+import static io.squashql.query.Functions.avg;
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.eq;
+import static io.squashql.query.Functions.ge;
+import static io.squashql.query.Functions.in;
+import static io.squashql.query.Functions.isNotNull;
+import static io.squashql.query.Functions.isNull;
+import static io.squashql.query.Functions.le;
+import static io.squashql.query.Functions.min;
+import static io.squashql.query.Functions.multiply;
+import static io.squashql.query.Functions.or;
+import static io.squashql.query.Functions.sum;
+import static io.squashql.query.Functions.sumIf;
+import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
 import static io.squashql.query.dto.OrderKeywordDto.ASC;
 import static io.squashql.query.dto.OrderKeywordDto.DESC;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
+
+import io.squashql.TestClass;
+import io.squashql.query.builder.Query;
+import io.squashql.query.database.QueryRewriter;
+import io.squashql.query.database.SqlUtils;
+import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.dto.ConditionDto;
+import io.squashql.query.dto.CriteriaDto;
+import io.squashql.query.dto.JoinType;
+import io.squashql.query.dto.OrderKeywordDto;
+import io.squashql.query.dto.QueryDto;
+import io.squashql.table.Table;
+import io.squashql.type.TableTypedField;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -117,7 +135,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .where(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
-            .select(List.of("eanId"), List.of(sum("p", "price"), sum("q", "quantity")))
+            .select(tableFields(List.of("eanId")), List.of(sum("p", "price"), sum("q", "quantity")))
             .rollup("eanId")
             .build();
     Table result = this.executor.execute(query);
@@ -136,7 +154,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryWildcardWithFullRollupWithNullValues() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("subcategory"), List.of(sum("q", "quantity")))
+            .select(tableFields(List.of("subcategory")), List.of(sum("q", "quantity")))
             .rollup("subcategory")
             .build();
     Table result = this.executor.execute(query);
@@ -226,7 +244,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryRollupIncorrect() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(sum("p", "price")))
+            .select(tableFields(List.of("category")), List.of(sum("p", "price")))
             .rollup("subcategory") // not correct because it should be a subset of the column in the select
             .build();
     Assertions.assertThatThrownBy(() -> this.executor.execute(query))
@@ -281,7 +299,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
                     criterion("ean", eq("bottle")),
                     criterion(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)),
                     criterion("category", in("cloth", "drink"))))
-            .select(List.of("category", "ean"), List.of(sum("q", "quantity")))
+            .select(tableFields(List.of("category", "ean")), List.of(sum("q", "quantity")))
             .build();
 
     Table table = this.executor.execute(query);
@@ -294,7 +312,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
                     criterion(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)),
                     criterion("category", in("cloth", "drink")),
                     criterion("quantity", Functions.gt(10))))
-            .select(List.of("category", "ean"), List.of(sum("q", "quantity")))
+            .select(tableFields(List.of("category", "ean")), List.of(sum("q", "quantity")))
             .build();
     table = this.executor.execute(query);
     Assertions.assertThat(table).isEmpty();
@@ -304,14 +322,14 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testConditionsNullNotNull() {
     QueryDto query = Query.from(this.storeName)
             .where(criterion("subcategory", isNotNull()))
-            .select(List.of("ean"), List.of(CountMeasure.INSTANCE))
+            .select(tableFields(List.of("ean")), List.of(CountMeasure.INSTANCE))
             .build();
     Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(List.of("cookie", 3l));
 
     query = Query.from(this.storeName)
             .where(criterion("subcategory", isNull()))
-            .select(List.of("ean"), List.of(CountMeasure.INSTANCE))
+            .select(tableFields(List.of("ean")), List.of(CountMeasure.INSTANCE))
             .build();
     table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(
@@ -335,7 +353,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .where(criterion("isFood", eq(true)))
-            .select(List.of("ean"), List.of())
+            .select(tableFields(List.of("ean")), List.of())
             .build();
     Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(List.of("bottle"), List.of("cookie"));
@@ -460,7 +478,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testOrderByWithRollup() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(sum("p_sum", "price")))
+            .select(tableFields(List.of("category")), List.of(sum("p_sum", "price")))
             .rollup(List.of("category"))
             .orderBy("category", ASC)
             .build();
@@ -496,7 +514,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     // Without explicit ordering
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("subcategory"), List.of(CountMeasure.INSTANCE))
+            .select(tableFields(List.of("subcategory")), List.of(CountMeasure.INSTANCE))
             .build();
     Table result = this.executor.execute(query);
     // Without explicit ordering, null comes last because of: Comparator.nullsLast(Comparator.naturalOrder())
@@ -507,7 +525,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     // With explicit ordering
     query = Query
             .from(this.storeName)
-            .select(List.of("subcategory"), List.of(CountMeasure.INSTANCE))
+            .select(tableFields(List.of("subcategory")), List.of(CountMeasure.INSTANCE))
             .orderBy("subcategory", ASC)
             .build();
     result = this.executor.execute(query);
@@ -520,7 +538,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testOrderByMeasure() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(sum("p", "price")))
+            .select(tableFields(List.of("category")), List.of(sum("p", "price")))
             .build();
     Table result = this.executor.execute(query);
     // Default order
@@ -579,7 +597,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testMergeTables() {
     QueryDto query1 = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(sum("p_sum", "price")))
+            .select(tableFields(List.of("category")), List.of(sum("p_sum", "price")))
             .rollup(List.of("category"))
             .build();
 
@@ -613,7 +631,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testMergeWithComparators() {
     QueryDto query1 = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(sum("p_sum", "price")))
+            .select(tableFields(List.of("category")), List.of(sum("p_sum", "price")))
             .rollup(List.of("category"))
             .orderBy("category", OrderKeywordDto.DESC)
             .build();
@@ -704,7 +722,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     int limit = 1;
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(CountMeasure.INSTANCE, TotalCountMeasure.INSTANCE))
+            .select(tableFields(List.of("category")), List.of(CountMeasure.INSTANCE, TotalCountMeasure.INSTANCE))
             .limit(limit)
             .build();
 
@@ -720,7 +738,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     // Single condition
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("ean"), List.of(price_sum))
+            .select(tableFields(List.of("ean")), List.of(price_sum))
             .having(criterion(price_sum, ge(9.0)))
             .build();
     Table table = this.executor.execute(query);
@@ -731,7 +749,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     // Multiple conditions
     query = Query
             .from(this.storeName)
-            .select(List.of("ean"), List.of(price_sum, price_sum_expr))
+            .select(tableFields(List.of("ean")), List.of(price_sum, price_sum_expr))
             .having(all(
                     criterion(price_sum, ge(7d)),
                     criterion(price_sum_expr, le(10d))))

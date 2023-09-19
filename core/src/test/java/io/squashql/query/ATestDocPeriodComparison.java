@@ -1,19 +1,19 @@
 package io.squashql.query;
 
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.Period;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-
-import java.util.List;
-import java.util.Map;
-
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 /**
  * This test class is used to verify and print tables for the documentation. Nothing is asserted in those tests this is
@@ -73,7 +73,7 @@ public abstract class ATestDocPeriodComparison extends ABaseTestQuery {
             new Period.Semester("semester", "year"));
 
     QueryDto queryDto = Query.from("student")
-            .select(List.of("year", "semester", "name"), List.of(sum, comp))
+            .select(tableFields(List.of("year", "semester", "name")), List.of(sum, comp))
             .build();
     Table result = this.executor.execute(queryDto);
     result.show();
@@ -90,7 +90,7 @@ public abstract class ATestDocPeriodComparison extends ABaseTestQuery {
             new Period.Year("year"));
 
     QueryDto queryDto = Query.from("student")
-            .select(List.of("year", "name"), List.of(sum, Functions.multiply("progression in %", comp, Functions.decimal(100))))
+            .select(tableFields(List.of("year", "name")), List.of(sum, Functions.multiply("progression in %", comp, Functions.decimal(100))))
             .build();
     Table result = this.executor.execute(queryDto);
     result.show();

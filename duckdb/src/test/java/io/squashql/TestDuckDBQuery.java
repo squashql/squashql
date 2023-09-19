@@ -1,5 +1,8 @@
 package io.squashql;
 
+import static io.squashql.query.Functions.sum;
+import static io.squashql.query.TableField.tableFields;
+
 import io.squashql.query.QueryExecutor;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
@@ -9,14 +12,11 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.transaction.DuckDBDataLoader;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.TestUtil;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static io.squashql.query.Functions.sum;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestDuckDBQuery {
   protected String storeName = "myStore";
@@ -59,7 +59,7 @@ public class TestDuckDBQuery {
 
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("eanId"), List.of(sum("p", "price"), sum("q", "quantity")))
+            .select(tableFields(List.of("eanId")), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
 
     AtomicInteger limitCapture = new AtomicInteger(-1);
@@ -78,12 +78,12 @@ public class TestDuckDBQuery {
 
     QueryDto query1 = Query
             .from(this.storeName)
-            .select(List.of("eanId"), List.of(sum("p", "price")))
+            .select(tableFields(List.of("eanId")), List.of(sum("p", "price")))
             .build();
 
     QueryDto query2 = Query
             .from(this.storeName)
-            .select(List.of("eanId"), List.of(sum("q", "quantity")))
+            .select(tableFields(List.of("eanId")), List.of(sum("q", "quantity")))
             .build();
 
     query1.limit = 2;

@@ -1,12 +1,37 @@
 package io.squashql.client;
 
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.eq;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
+
 import io.squashql.client.http.HttpClientQuerier;
-import io.squashql.query.*;
+import io.squashql.query.AggregatedMeasure;
+import io.squashql.query.ColumnSetKey;
+import io.squashql.query.ComparisonMeasureReferencePosition;
+import io.squashql.query.ComparisonMethod;
+import io.squashql.query.CountMeasure;
+import io.squashql.query.Functions;
+import io.squashql.query.Measure;
+import io.squashql.query.TotalCountMeasure;
 import io.squashql.query.builder.Query;
-import io.squashql.query.dto.*;
+import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.dto.JoinType;
+import io.squashql.query.dto.MetadataItem;
+import io.squashql.query.dto.PivotTableQueryDto;
+import io.squashql.query.dto.PivotTableQueryResultDto;
+import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.QueryMergeDto;
+import io.squashql.query.dto.QueryResultDto;
+import io.squashql.query.dto.SimpleTableDto;
 import io.squashql.spring.SquashQLApplication;
 import io.squashql.spring.dataset.DatasetTestConfig;
 import io.squashql.spring.web.rest.QueryControllerTest;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,16 +39,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
-
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.Functions.eq;
-import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
-import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
 @SpringBootTest(
         classes = SquashQLApplication.class,
@@ -177,7 +192,7 @@ public class HttpClientQuerierTest {
   @Test
   void testPivotTable() {
     QueryDto query = Query.from("our_prices")
-            .select(List.of("ean", "pdv"), List.of(CountMeasure.INSTANCE))
+            .select(tableFields(List.of("ean", "pdv")), List.of(CountMeasure.INSTANCE))
             .build();
     PivotTableQueryDto pivotTableQuery = new PivotTableQueryDto(query, List.of("pdv"), List.of("ean"));
     PivotTableQueryResultDto response = this.querier.run(pivotTableQuery);

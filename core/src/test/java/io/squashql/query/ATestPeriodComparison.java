@@ -1,5 +1,14 @@
 package io.squashql.query;
 
+import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.eq;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import static io.squashql.query.database.QueryEngine.TOTAL;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
+
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.SqlUtils;
@@ -7,23 +16,18 @@ import io.squashql.query.dto.Period;
 import io.squashql.table.Table;
 import io.squashql.transaction.DataLoader;
 import io.squashql.type.TableTypedField;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.Functions.eq;
-import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
-import static io.squashql.query.database.QueryEngine.TOTAL;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
-import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -95,7 +99,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             period);
 
     var query = Query.from(this.storeName)
-            .select(List.of("year_sales", "quarter_sales"), List.of(m, sales))
+            .select(tableFields(List.of("year_sales", "quarter_sales")), List.of(m, sales))
             .build();
 
     Table finalTable = this.executor.execute(query);
@@ -114,7 +118,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     // Add a condition and make sure condition is cleared during prefetching.s
     query = Query.from(this.storeName)
             .where("year_sales", eq(2023l))
-            .select(List.of("year_sales", "quarter_sales"), List.of(m))
+            .select(tableFields(List.of("year_sales", "quarter_sales")), List.of(m))
             .build();
     finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
@@ -125,7 +129,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
 
     query = Query.from(this.storeName)
             .where("quarter_sales", eq(1))
-            .select(List.of("year_sales", "quarter_sales"), List.of(m))
+            .select(tableFields(List.of("year_sales", "quarter_sales")), List.of(m))
             .build();
     finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
@@ -318,7 +322,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             period);
 
     var query = Query.from(this.storeName)
-            .select(List.of("year_sales", "quarter_sales"), List.of(m, sales))
+            .select(tableFields(List.of("year_sales", "quarter_sales")), List.of(m, sales))
             .limit(2)
             .build();
 

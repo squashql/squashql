@@ -1,21 +1,59 @@
 package io.squashql.js;
 
+import static io.squashql.query.Functions.all;
+import static io.squashql.query.Functions.and;
+import static io.squashql.query.Functions.avg;
+import static io.squashql.query.Functions.avgIf;
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.decimal;
+import static io.squashql.query.Functions.divide;
+import static io.squashql.query.Functions.eq;
+import static io.squashql.query.Functions.ge;
+import static io.squashql.query.Functions.gt;
+import static io.squashql.query.Functions.in;
+import static io.squashql.query.Functions.integer;
+import static io.squashql.query.Functions.isNotNull;
+import static io.squashql.query.Functions.isNull;
+import static io.squashql.query.Functions.like;
+import static io.squashql.query.Functions.lt;
+import static io.squashql.query.Functions.or;
+import static io.squashql.query.Functions.plus;
+import static io.squashql.query.Functions.sum;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
+
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.*;
+import io.squashql.query.AggregatedMeasure;
+import io.squashql.query.BasicMeasure;
+import io.squashql.query.BinaryOperationMeasure;
+import io.squashql.query.BinaryOperator;
+import io.squashql.query.ColumnSetKey;
+import io.squashql.query.ComparisonMeasureReferencePosition;
+import io.squashql.query.ComparisonMethod;
 import io.squashql.query.ConstantField;
+import io.squashql.query.CountMeasure;
+import io.squashql.query.ExpressionMeasure;
+import io.squashql.query.Measure;
 import io.squashql.query.TableField;
+import io.squashql.query.TotalCountMeasure;
 import io.squashql.query.builder.Query;
-import io.squashql.query.dto.*;
+import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.dto.ConditionType;
+import io.squashql.query.dto.JoinMappingDto;
+import io.squashql.query.dto.JoinType;
+import io.squashql.query.dto.OrderKeywordDto;
+import io.squashql.query.dto.Period;
+import io.squashql.query.dto.PivotTableQueryDto;
+import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.QueryMergeDto;
+import io.squashql.query.dto.TableDto;
+import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.util.TestUtil;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
 import java.util.Map;
-
-import static io.squashql.query.Functions.*;
-import static io.squashql.query.TableField.tableField;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestJavascriptLibrary {
 
@@ -132,7 +170,7 @@ public class TestJavascriptLibrary {
             .on(all(criterion("myTable.value", "myCte.min", ConditionType.GE), criterion("myTable.value", "myCte.max", ConditionType.LT)))
             .where("f2", gt(659))
             .where("f3", eq(123))
-            .select(List.of("a", "b"),
+            .select(tableFields(List.of("a", "b")),
                     List.of(bucketColumnSet),
                     List.of(measure, avg("sum", "f1"), measureExpr))
             .rollup("a", "b")
@@ -163,11 +201,11 @@ public class TestJavascriptLibrary {
   void testReadJsonBuildFromQueryMerge() {
     var table = new TableDto("myTable");
     QueryDto q1 = Query.from(table.name)
-            .select(List.of("a", "b"),
+            .select(tableFields(List.of("a", "b")),
                     List.of(sum("sum", "f1")))
             .build();
     QueryDto q2 = Query.from(table.name)
-            .select(List.of("a", "b"),
+            .select(tableFields(List.of("a", "b")),
                     List.of(avg("sum", "f1")))
             .build();
 
@@ -182,7 +220,7 @@ public class TestJavascriptLibrary {
   void testReadJsonBuildFromQueryPivot() {
     var table = new TableDto("myTable");
     QueryDto q = Query.from(table.name)
-            .select(List.of("a", "b"),
+            .select(tableFields(List.of("a", "b")),
                     List.of(avg("sum", "f1")))
             .build();
 

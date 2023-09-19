@@ -1,19 +1,19 @@
 package io.squashql.query;
 
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -52,7 +52,7 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("continent", "country", "city"), List.of(amount, pOp))
+            .select(tableFields(List.of("continent", "country", "city")), List.of(amount, pOp))
             .build();
 
     Table result = this.executor.execute(query);
@@ -68,7 +68,7 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "continent"));
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("continent", "country", "city"), List.of(amount, pOp))
+            .select(tableFields(List.of("continent", "country", "city")), List.of(amount, pOp))
             .build();
 
     Table result = this.executor.execute(query);
@@ -86,7 +86,7 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("spending_category", "continent", "country", "city"), List.of(amount, pOp))
+            .select(tableFields(List.of("spending_category", "continent", "country", "city")), List.of(amount, pOp))
             .build();
 
     Table result = this.executor.execute(query);
@@ -108,7 +108,7 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("spending_category", "city"), List.of(amount, pOp))
+            .select(tableFields(List.of("spending_category", "city")), List.of(amount, pOp))
             .build();
 
     Table result = this.executor.execute(query);
