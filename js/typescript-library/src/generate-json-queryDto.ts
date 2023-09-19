@@ -45,8 +45,8 @@ export function generateFromQueryDto() {
 
   const q = new Query()
   q.onTable(table)
-          .withColumn("a")
-          .withColumn("b")
+          .withColumn(tableField("a"))
+          .withColumn(tableField("b"))
 
   const price = new AggregatedMeasure("price.sum", new TableField("price"), "sum")
   q.withMeasure(price)
@@ -105,7 +105,7 @@ export function generateFromQueryDto() {
 
   const subQ = new Query()
   subQ.onTable(table)
-          .withColumn("aa")
+          .withColumn(tableField("aa"))
           .withMeasure(sum("sum_aa", "f"))
   q.onSubQuery(subQ)
 

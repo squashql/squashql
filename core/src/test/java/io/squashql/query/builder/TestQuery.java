@@ -1,15 +1,29 @@
 package io.squashql.query.builder;
 
+import static io.squashql.query.Functions.all;
+import static io.squashql.query.Functions.any;
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.eq;
+import static io.squashql.query.Functions.ge;
+import static io.squashql.query.Functions.isNull;
+import static io.squashql.query.Functions.sum;
+import static io.squashql.query.TableField.tableField;
+
 import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.ColumnSetKey;
 import io.squashql.query.Measure;
-import io.squashql.query.dto.*;
+import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.dto.ConditionType;
+import io.squashql.query.dto.CriteriaDto;
+import io.squashql.query.dto.JoinMappingDto;
+import io.squashql.query.dto.JoinType;
+import io.squashql.query.dto.OrderKeywordDto;
+import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.TableDto;
+import io.squashql.query.dto.VirtualTableDto;
+import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static io.squashql.query.Functions.*;
 
 public class TestQuery {
 
@@ -25,8 +39,8 @@ public class TestQuery {
 
     QueryDto q = new QueryDto()
             .table("saas")
-            .withColumn("col1")
-            .withColumn("col2")
+            .withColumn(tableField("col1"))
+            .withColumn(tableField("col2"))
             .withColumnSet(ColumnSetKey.BUCKET, columnSet)
             .withMeasure(sum);
 
@@ -62,8 +76,8 @@ public class TestQuery {
 
     q = new QueryDto()
             .table("saas")
-            .withColumn("col1")
-            .withColumn("col2")
+            .withColumn(tableField("col1"))
+            .withColumn(tableField("col2"))
             .withColumnSet(ColumnSetKey.BUCKET, columnSet)
             .withMeasure(sum)
             .withLimit(100);
@@ -89,8 +103,8 @@ public class TestQuery {
 
       QueryDto q = new QueryDto()
               .table(saas)
-              .withColumn("col1")
-              .withColumn("col2")
+              .withColumn(tableField("col1"))
+              .withColumn(tableField("col2"))
               .withMeasure(sum);
 
       Assertions.assertThat(build).isEqualTo(q);
@@ -106,8 +120,8 @@ public class TestQuery {
 
       QueryDto q = new QueryDto()
               .table(saas)
-              .withColumn("col1")
-              .withColumn("col2")
+              .withColumn(tableField("col1"))
+              .withColumn(tableField("col2"))
               .withMeasure(sum);
 
       // With two join conditions
@@ -130,8 +144,8 @@ public class TestQuery {
 
       QueryDto q = new QueryDto()
               .table(saas)
-              .withColumn("col1")
-              .withColumn("col2")
+              .withColumn(tableField("col1"))
+              .withColumn(tableField("col2"))
               .withMeasure(sum)
               .withCondition("f1", eq("A"));
 
@@ -159,8 +173,8 @@ public class TestQuery {
 
     QueryDto q = new QueryDto()
             .table(saas)
-            .withColumn("col1")
-            .withColumn("col2")
+            .withColumn(tableField("col1"))
+            .withColumn(tableField("col2"))
             .withMeasure(sum);
 
     saas.join(other, JoinType.LEFT, new JoinMappingDto(other.name + ".id", saas.name + ".id"));
@@ -194,8 +208,8 @@ public class TestQuery {
 
     QueryDto q = new QueryDto()
             .table(saas)
-            .withColumn("col1")
-            .withColumn("col2")
+            .withColumn(tableField("col1"))
+            .withColumn(tableField("col2"))
             .withMeasure(sum);
     q.virtualTableDto = vt;
 
@@ -215,8 +229,8 @@ public class TestQuery {
 
     QueryDto q = new QueryDto()
             .table("saas")
-            .withColumn("col1")
-            .withColumn("col2")
+            .withColumn(tableField("col1"))
+            .withColumn(tableField("col2"))
             .orderBy("col1", OrderKeywordDto.ASC)
             .withMeasure(sum);
 
@@ -232,8 +246,8 @@ public class TestQuery {
 
     q = new QueryDto()
             .table("saas")
-            .withColumn("col1")
-            .withColumn("col2")
+            .withColumn(tableField("col1"))
+            .withColumn(tableField("col2"))
             .orderBy("col1", OrderKeywordDto.ASC)
             .orderBy("col2", List.of("1", "10"))
             .withMeasure(sum);
@@ -255,8 +269,8 @@ public class TestQuery {
 
     QueryDto q = new QueryDto()
             .table("saas")
-            .withColumn("col1")
-            .withColumn("col2")
+            .withColumn(tableField("col1"))
+            .withColumn(tableField("col2"))
             .orderBy("col1", OrderKeywordDto.ASC)
             .withLimit(10)
             .withMeasure(sum);
@@ -276,8 +290,8 @@ public class TestQuery {
 
     QueryDto q = new QueryDto()
             .table("saas")
-            .withColumn("col1")
-            .withColumn("col2")
+            .withColumn(tableField("col1"))
+            .withColumn(tableField("col2"))
             .withRollup("col1")
             .orderBy("col1", OrderKeywordDto.ASC)
             .withMeasure(sum);
@@ -304,14 +318,14 @@ public class TestQuery {
 
     QueryDto qWithRollup = new QueryDto()
             .table("saas")
-            .withColumn("col1")
+            .withColumn(tableField("col1"))
             .withRollup("col1")
             .withHavingCriteria(criterion)
             .withMeasure(sum);
 
     QueryDto qWoRollup = new QueryDto()
             .table("saas")
-            .withColumn("col1")
+            .withColumn(tableField("col1"))
             .withHavingCriteria(criterion)
             .withMeasure(sum);
 

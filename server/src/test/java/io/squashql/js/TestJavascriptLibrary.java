@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.squashql.query.Functions.*;
+import static io.squashql.query.TableField.tableField;
 
 public class TestJavascriptLibrary {
 
@@ -30,8 +31,8 @@ public class TestJavascriptLibrary {
 
     QueryDto q = new QueryDto()
             .table(table)
-            .withColumn("a")
-            .withColumn("b");
+            .withColumn(tableField("a"))
+            .withColumn(tableField("b"));
 
     var price = new AggregatedMeasure("price.sum", "price", "sum");
     q.withMeasure(price);
@@ -89,7 +90,7 @@ public class TestJavascriptLibrary {
 
     QueryDto subQuery = new QueryDto()
             .table(table)
-            .withColumn("aa")
+            .withColumn(tableField("aa"))
             .withMeasure(sum("sum_aa", "f"));
     q.table(subQuery);
 

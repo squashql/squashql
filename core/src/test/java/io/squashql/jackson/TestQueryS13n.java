@@ -12,6 +12,7 @@ import java.util.Map;
 
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.Functions.*;
+import static io.squashql.query.TableField.tableField;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
@@ -22,7 +23,7 @@ public class TestQueryS13n {
     QueryDto query = new QueryDto()
             .table("myTable")
             .withColumn(SCENARIO_FIELD_NAME)
-            .withColumn("ean")
+            .withColumn(tableField("ean"))
             .withMeasure(new AggregatedMeasure("p", "price", "sum"))
             .withMeasure(new AggregatedMeasure("q", "quantity", "sum"))
             .withMeasure(new AggregatedMeasure("priceAlias", "price", "sum", Functions.criterion("category", Functions.eq("food"))))
@@ -53,8 +54,8 @@ public class TestQueryS13n {
     query.table(orders);
 
     // Coordinates
-    query.withColumn("productName");
-    query.withColumn("categoryName");
+    query.withColumn(tableField("productName"));
+    query.withColumn(tableField("categoryName"));
 
     // Measures
     query.withMeasure(new AggregatedMeasure("p", "price", "sum"));
