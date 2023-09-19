@@ -3,12 +3,13 @@ package io.squashql.query;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-
-import java.util.function.Function;
 
 @ToString
 @EqualsAndHashCode
@@ -61,4 +62,26 @@ public class TableField implements Field {
   public String name() {
     return this.fullName;
   }
+
+  /*
+   * Syntactic sugar helpers.
+   */
+
+  public static Field tableField(final String tableName, final String name) {
+    return new TableField(tableName);
+  }
+
+  public static Field tableField(final String name) {
+    return new TableField(name);
+  }
+
+  public static List<Field> tableFields(String tableName, List<String> fields) {
+    return fields.stream().map(f -> new TableField(tableName, f)).collect(Collectors.toList());
+  }
+
+  public static List<Field> tableFields(List<String> fields) {
+    return fields.stream().map(TableField::new).collect(Collectors.toList());
+  }
+
+
 }

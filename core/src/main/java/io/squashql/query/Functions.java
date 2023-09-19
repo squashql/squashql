@@ -13,6 +13,7 @@ import static io.squashql.query.dto.ConditionType.OR;
 public class Functions {
 
   // joinCriterion
+  @Deprecated
   public static CriteriaDto criterion(String field, String fieldOther, ConditionType conditionType) {
     return new CriteriaDto(new TableField(field), new TableField(fieldOther), conditionType);
   }
