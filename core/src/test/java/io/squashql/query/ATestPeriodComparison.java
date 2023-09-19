@@ -337,7 +337,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
 
     String dateSales = "date_sales";
     var query = Query.from(this.storeName)
-            .select(List.of(Functions.yearStr(dateSales)), List.of(CountMeasure.INSTANCE))
+            .select(List.of(Functions.year(dateSales)), List.of(CountMeasure.INSTANCE))
             .having(criterion(Functions.year(dateSales), eq(2022)))
             .build();
     final Table finalTable = this.executor.execute(query);
@@ -351,7 +351,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     String dateSales = fullName ? SqlUtils.getFieldFullName(this.storeName, "date_sales") : "date_sales";
     var query = Query.from(this.storeName)
             .where(criterion(Functions.year(dateSales), eq(2022)))
-            .select(List.of(Functions.yearStr(dateSales)), List.of(CountMeasure.INSTANCE))
+            .select(List.of(Functions.year(dateSales)), List.of(CountMeasure.INSTANCE))
             .build();
     final Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
@@ -364,7 +364,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     String dateSales = fullName ? SqlUtils.getFieldFullName(this.storeName, "date_sales") : "date_sales";
     var query = Query.from(this.storeName)
             .where(criterion(Functions.year(dateSales), eq(2022)))
-            .select(List.of(Functions.yearStr(dateSales), Functions.quarterStr(dateSales)), List.of(CountMeasure.INSTANCE))
+            .select(List.of(Functions.year(dateSales), Functions.quarter(dateSales)), List.of(CountMeasure.INSTANCE))
             .build();
     final Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
@@ -380,7 +380,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     String dateSales = fullName ? SqlUtils.getFieldFullName(this.storeName, "date_sales") : "date_sales";
     var query = Query.from(this.storeName)
             .where(criterion(Functions.year(dateSales), eq(2022)))
-            .select(List.of(Functions.yearStr(dateSales), Functions.monthStr(dateSales)), List.of(CountMeasure.INSTANCE))
+            .select(List.of(Functions.year(dateSales), Functions.month(dateSales)), List.of(CountMeasure.INSTANCE))
             .build();
     final Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
@@ -403,8 +403,8 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   void testDateFunctionWithRollup(boolean fullName) {
     String dateSales = fullName ? SqlUtils.getFieldFullName(this.storeName, "date_sales") : "date_sales";
     var query = Query.from(this.storeName)
-            .select(List.of(Functions.yearStr(dateSales)), List.of(CountMeasure.INSTANCE))
-            .rollup(Functions.yearStr(dateSales))
+            .select(List.of(Functions.year(dateSales)), List.of(CountMeasure.INSTANCE))
+            .rollup(Functions.year(dateSales))
             .build();
     final Table finalTable = this.executor.execute(query);
     finalTable.show();
