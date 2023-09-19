@@ -110,11 +110,11 @@ public class TestJavascriptLibrary {
             List.of("Mois", "Annee")));
 
     var queryCondition = or(and(eq("a"), eq("b")), lt(5), like("a%"));
-    q.withCondition("f1", queryCondition);
-    q.withCondition("f2", gt(659));
-    q.withCondition("f3", in(0, 1, 2));
-    q.withCondition("f4", isNull());
-    q.withCondition("f5", isNotNull());
+    q.withCondition(tableField("f1"), queryCondition);
+    q.withCondition(tableField("f2"), gt(659));
+    q.withCondition(tableField("f3"), in(0, 1, 2));
+    q.withCondition(tableField("f4"), isNull());
+    q.withCondition(tableField("f5"), isNotNull());
 
     q.withHavingCriteria(all(criterion(price, ge(10)), criterion(expression, lt(100))));
 
@@ -168,12 +168,12 @@ public class TestJavascriptLibrary {
                     criterion("myTable" + ".a", "refTable" + ".a", ConditionType.EQ)))
             .join(cte, JoinType.INNER)
             .on(all(criterion("myTable.value", "myCte.min", ConditionType.GE), criterion("myTable.value", "myCte.max", ConditionType.LT)))
-            .where("f2", gt(659))
-            .where("f3", eq(123))
+            .where(tableField("f2"), gt(659))
+            .where(tableField("f3"), eq(123))
             .select(tableFields(List.of("a", "b")),
                     List.of(bucketColumnSet),
                     List.of(measure, avg("sum", "f1"), measureExpr))
-            .rollup("a", "b")
+            .rollup(tableField("a"), tableField("b"))
             .having(all(criterion((BasicMeasure) measure, gt(0)), criterion((BasicMeasure) measureExpr, lt(10))))
             .orderBy(tableField("f4"), OrderKeywordDto.ASC)
             .limit(10)

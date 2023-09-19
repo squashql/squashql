@@ -50,23 +50,23 @@ public class TestQuery {
     // Only one condition
     build = Query
             .from("saas")
-            .where("f1", eq("A"))
+            .where(tableField("f1"), eq("A"))
             .select(tableFields(List.of("col1", "col2")), List.of(columnSet), List.of(sum))
             .build();
 
-    Assertions.assertThat(build).isEqualTo(q.withCondition("f1", eq("A")));
+    Assertions.assertThat(build).isEqualTo(q.withCondition(tableField("f1"), eq("A")));
 
     // Multiple conditions
     CriteriaDto any = any(criterion("f3", eq("C")), criterion("f3", isNull()));
     build = Query
             .from("saas")
-            .where("f1", eq("A"))
-            .where("f2", eq("B"))
+            .where(tableField("f1"), eq("A"))
+            .where(tableField("f2"), eq("B"))
             .where(any)
             .select(tableFields(List.of("col1", "col2")), List.of(columnSet), List.of(sum))
             .build();
 
-    Assertions.assertThat(build).isEqualTo(q.withCondition("f2", eq("B")).withWhereCriteria(any));
+    Assertions.assertThat(build).isEqualTo(q.withCondition(tableField("f2"), eq("B")).withWhereCriteria(any));
 
     // with limit
     build = Query
@@ -148,7 +148,7 @@ public class TestQuery {
               .withColumn(tableField("col1"))
               .withColumn(tableField("col2"))
               .withMeasure(sum)
-              .withCondition("f1", eq("A"));
+              .withCondition(tableField("f1"), eq("A"));
 
       saas.join(other, JoinType.INNER, new JoinMappingDto(other.name + ".id", saas.name + ".id"));
 
@@ -157,7 +157,7 @@ public class TestQuery {
               .from("saas")
               .join("other", JoinType.INNER)
               .on(criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ))
-              .where("f1", eq("A"))
+              .where(tableField("f1"), eq("A"))
               .select(tableFields(List.of("col1", "col2")), List.of(sum))
               .build();
 
@@ -313,7 +313,7 @@ public class TestQuery {
     QueryDto buildWithRollup = Query
             .from("saas")
             .select(tableFields(List.of("col1")), List.of(sum))
-            .rollup(List.of("col1"))
+            .rollup(tableField("col1"))
             .having(criterion)
             .build();
 

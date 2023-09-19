@@ -439,7 +439,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testOrderByColumn() {
     QueryDto query = Query
             .from(this.storeName)
-            .where("category", in("cloth", "drink"))
+            .where(tableField("category"), in("cloth", "drink"))
             .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(CountMeasure.INSTANCE))
             .build();
     Table result = this.executor.execute(query);

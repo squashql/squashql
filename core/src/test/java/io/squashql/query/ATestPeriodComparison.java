@@ -117,7 +117,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
 
     // Add a condition and make sure condition is cleared during prefetching.s
     query = Query.from(this.storeName)
-            .where("year_sales", eq(2023l))
+            .where(tableField("year_sales"), eq(2023l))
             .select(tableFields(List.of("year_sales", "quarter_sales")), List.of(m))
             .build();
     finalTable = this.executor.execute(query);
@@ -128,7 +128,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(4), 0d));
 
     query = Query.from(this.storeName)
-            .where("quarter_sales", eq(1))
+            .where(tableField("quarter_sales"), eq(1))
             .select(tableFields(List.of("year_sales", "quarter_sales")), List.of(m))
             .build();
     finalTable = this.executor.execute(query);

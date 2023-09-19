@@ -64,10 +64,10 @@ public class TestQueryS13n {
     // Conditions
     ConditionDto december = and(gt("1/12/1996"), lt("31/12/1996"));
     ConditionDto october = and(ge("1/10/1996"), le("31/10/1996"));
-    query.withCondition("orderDate", or(december, october));
-    query.withCondition("city", in("paris", "london"));
-    query.withCondition("country", eq("france"));
-    query.withCondition("shipper", neq("aramex"));
+    query.withCondition(tableField("orderDate"), or(december, october));
+    query.withCondition(tableField("city"), in("paris", "london"));
+    query.withCondition(tableField("country"), eq("france"));
+    query.withCondition(tableField("shipper"), neq("aramex"));
 
     String serialize = query.json();
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
