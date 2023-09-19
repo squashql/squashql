@@ -91,7 +91,7 @@ export function generateFromQueryDto() {
     havingCriterion(expression, lt(100)),
   ]))
 
-  q.orderBy("a", OrderKeyword.ASC)
+  q.orderBy(tableField("a"), OrderKeyword.ASC)
   q.orderByFirstElements("b", ["1", "l", "p"])
 
   const values = new Map(Object.entries({

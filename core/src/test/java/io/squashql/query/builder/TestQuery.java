@@ -225,14 +225,14 @@ public class TestQuery {
     QueryDto build = Query
             .from("saas")
             .select(tableFields(List.of("col1", "col2")), List.of(sum))
-            .orderBy("col1", OrderKeywordDto.ASC)
+            .orderBy(tableField("col1"), OrderKeywordDto.ASC)
             .build();
 
     QueryDto q = new QueryDto()
             .table("saas")
             .withColumn(tableField("col1"))
             .withColumn(tableField("col2"))
-            .orderBy("col1", OrderKeywordDto.ASC)
+            .orderBy(tableField("col1"), OrderKeywordDto.ASC)
             .withMeasure(sum);
 
     Assertions.assertThat(build).isEqualTo(q);
@@ -241,16 +241,16 @@ public class TestQuery {
     build = Query
             .from("saas")
             .select(tableFields(List.of("col1", "col2")), List.of(sum))
-            .orderBy("col1", OrderKeywordDto.ASC)
-            .orderBy("col2", List.of("1", "10"))
+            .orderBy(tableField("col1"), OrderKeywordDto.ASC)
+            .orderBy(tableField("col2"), List.of("1", "10"))
             .build();
 
     q = new QueryDto()
             .table("saas")
             .withColumn(tableField("col1"))
             .withColumn(tableField("col2"))
-            .orderBy("col1", OrderKeywordDto.ASC)
-            .orderBy("col2", List.of("1", "10"))
+            .orderBy(tableField("col1"), OrderKeywordDto.ASC)
+            .orderBy(tableField("col2"), List.of("1", "10"))
             .withMeasure(sum);
 
     Assertions.assertThat(build).isEqualTo(q);
@@ -264,7 +264,7 @@ public class TestQuery {
     QueryDto build = Query
             .from("saas")
             .select(tableFields(List.of("col1", "col2")), List.of(sum))
-            .orderBy("col1", OrderKeywordDto.ASC)
+            .orderBy(tableField("col1"), OrderKeywordDto.ASC)
             .limit(10)
             .build();
 
@@ -272,7 +272,7 @@ public class TestQuery {
             .table("saas")
             .withColumn(tableField("col1"))
             .withColumn(tableField("col2"))
-            .orderBy("col1", OrderKeywordDto.ASC)
+            .orderBy(tableField("col1"), OrderKeywordDto.ASC)
             .withLimit(10)
             .withMeasure(sum);
 
@@ -286,7 +286,7 @@ public class TestQuery {
             .from("saas")
             .select(tableFields(List.of("col1", "col2")), List.of(sum))
             .rollup(tableField("col1"))
-            .orderBy("col1", OrderKeywordDto.ASC)
+            .orderBy(tableField("col1"), OrderKeywordDto.ASC)
             .build();
 
     QueryDto q = new QueryDto()
@@ -294,7 +294,7 @@ public class TestQuery {
             .withColumn(tableField("col1"))
             .withColumn(tableField("col2"))
             .withRollup(tableField("col1"))
-            .orderBy("col1", OrderKeywordDto.ASC)
+            .orderBy(tableField("col1"), OrderKeywordDto.ASC)
             .withMeasure(sum);
 
     Assertions.assertThat(build).isEqualTo(q);

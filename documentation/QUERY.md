@@ -1,3 +1,4 @@
+
 ## Summary
 
 The library is available here [https://www.npmjs.com/package/@squashql/squashql-js](https://www.npmjs.com/package/@squashql/squashql-js).
@@ -171,7 +172,7 @@ const q = from("myTable")
                 ["col1", "col2"],
                 [],
                 [sum("alias1", "col3")])
-        .orderBy("col2", OrderKeyword.ASC)
+        .orderBy(tableField("col2"), OrderKeyword.ASC)
         .build()
 ```
 

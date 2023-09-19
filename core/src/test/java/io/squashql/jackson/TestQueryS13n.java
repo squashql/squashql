@@ -132,8 +132,8 @@ public class TestQueryS13n {
             .table("products")
             .withMeasure(new AggregatedMeasure("s", "sales", "sum"));
 
-    query.orderBy("X", List.of("a", "b", "c"));
-    query.orderBy("Y", OrderKeywordDto.ASC);
+    query.orderBy(tableField("X"), List.of("a", "b", "c"));
+    query.orderBy(tableField("Y"), OrderKeywordDto.ASC);
 
     String serialize = query.json();
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);

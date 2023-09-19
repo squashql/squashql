@@ -118,8 +118,8 @@ public class TestJavascriptLibrary {
 
     q.withHavingCriteria(all(criterion(price, ge(10)), criterion(expression, lt(100))));
 
-    q.orderBy("a", OrderKeywordDto.ASC);
-    q.orderBy("b", List.of("1", "l", "p"));
+    q.orderBy(tableField("a"), OrderKeywordDto.ASC);
+    q.orderBy(tableField("b"), List.of("1", "l", "p"));
 
     BucketColumnSetDto columnSet = new BucketColumnSetDto("group", "scenario")
             .withNewBucket("a", List.of("a1", "a2"))
@@ -175,7 +175,7 @@ public class TestJavascriptLibrary {
                     List.of(measure, avg("sum", "f1"), measureExpr))
             .rollup("a", "b")
             .having(all(criterion((BasicMeasure) measure, gt(0)), criterion((BasicMeasure) measureExpr, lt(10))))
-            .orderBy("f4", OrderKeywordDto.ASC)
+            .orderBy(tableField("f4"), OrderKeywordDto.ASC)
             .limit(10)
             .build();
 

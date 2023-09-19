@@ -28,7 +28,7 @@ export function generateFromQuery() {
                   [measure, avg("sum", "f1"), measureExpr])
           .rollup(["a", "b"])
           .having(all([havingCriterion(measure, gt(0)), havingCriterion(measureExpr, lt(10))]))
-          .orderBy("f4", OrderKeyword.ASC)
+          .orderBy(tableField("f4"), OrderKeyword.ASC)
           .limit(10)
           .build()
 
