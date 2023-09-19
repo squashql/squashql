@@ -175,7 +175,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   void testSimpleWithTotals() {
     Measure pop = Functions.sum("population", "population");
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, List.of("city", "country", "continent"));
-    List<String> cols = List.of("continent", "country", "city");
+    List<Field> cols = tableFields(List.of("continent", "country", "city"));
     QueryDto query = Query
             .from(this.storeName)
             .select(cols, List.of(pop, pOp))

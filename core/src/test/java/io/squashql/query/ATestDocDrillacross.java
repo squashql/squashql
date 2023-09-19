@@ -51,13 +51,13 @@ public abstract class ATestDocDrillacross extends ABaseTestQuery {
     QueryDto query1 = Query
             .from("shipment")
             .select(tableFields(List.of("product")), List.of(sum("quantity sold", "quantity")))
-            .rollup(List.of("product"))
+            .rollup(tableFields(List.of("product")))
             .build();
 
     QueryDto query2 = Query
             .from("return")
             .select(tableFields(List.of("product", "reason")), List.of(sum("quantity returned", "quantity")))
-            .rollup(List.of("product", "reason"))
+            .rollup(tableFields(List.of("product", "reason")))
             .build();
 
     BiConsumer<QueryDto, QueryDto> runnable = (q1, q2) -> this.executor.execute(q1, q2, JoinType.FULL, null).show();

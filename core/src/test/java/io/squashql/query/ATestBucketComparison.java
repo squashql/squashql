@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import static io.squashql.query.ComparisonMethod.RELATIVE_DIFFERENCE;
 import static io.squashql.query.Functions.eq;
+import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
@@ -107,7 +108,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
     query = new QueryDto()
             .table(this.storeName)
             .withColumnSet(ColumnSetKey.BUCKET, this.bucketCS)
-            .withCondition(SCENARIO_FIELD_NAME, eq("s1"))
+            .withCondition(tableField(SCENARIO_FIELD_NAME), eq("s1"))
             .withMeasure(priceComp);
 
     dataset = this.executor.execute(query);
@@ -274,7 +275,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
     var query = Query
             .from(this.storeName)
             .select_(List.of(bucketCS), List.of(CountMeasure.INSTANCE))
-            .rollup(List.of(SCENARIO_FIELD_NAME)) // should not affect the comparison engine
+            .rollup(tableFields(List.of(SCENARIO_FIELD_NAME))) // should not affect the comparison engine
             .build();
 
     Table dataset = this.executor.execute(query);

@@ -5,6 +5,7 @@ import static io.squashql.query.Functions.criterion;
 import static io.squashql.query.Functions.ge;
 import static io.squashql.query.Functions.min;
 import static io.squashql.query.Functions.sum;
+import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.agg.AggregationFunction.AVG;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
@@ -86,7 +87,7 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
 
     QueryDto queryDto = Query.from(subQuery)
             .select(tableFields(List.of("name")), List.of(avg("avg", "score_min")))
-            .rollup(List.of("name"))
+            .rollup(tableFields(List.of("name")))
             .build();
     Table result = this.executor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(

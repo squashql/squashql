@@ -3,6 +3,7 @@ package io.squashql.query;
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.Functions.criterion;
 import static io.squashql.query.Functions.eq;
+import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
@@ -149,7 +150,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             period);
 
     var query = Query.from(this.storeName)
-            .select(List.of("year_sales", "quarter_sales", SCENARIO_FIELD_NAME), List.of(m, sales))
+            .select(tableFields(List.of("year_sales", "quarter_sales", SCENARIO_FIELD_NAME)), List.of(m, sales))
             .build();
 
     Table finalTable = this.executor.execute(query);
@@ -179,7 +180,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             period);
 
     var query = Query.from(this.storeName)
-            .select(List.of("year_sales", SCENARIO_FIELD_NAME), List.of(m, sales))
+            .select(tableFields(List.of("year_sales", SCENARIO_FIELD_NAME)), List.of(m, sales))
             .build();
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
@@ -192,8 +193,8 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     // Rollup will make Grand Total and Total appear. For this line, we can't make the comparison. Null should be
     // written and the query should not fail.
     query = Query.from(this.storeName)
-            .select(List.of("year_sales", SCENARIO_FIELD_NAME), List.of(m, sales))
-            .rollup(List.of("year_sales", SCENARIO_FIELD_NAME))
+            .select(tableFields(List.of("year_sales", SCENARIO_FIELD_NAME)), List.of(m, sales))
+            .rollup(tableFields(List.of("year_sales", SCENARIO_FIELD_NAME)))
             .build();
     finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
@@ -216,7 +217,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             period);
 
     var query = Query.from(this.storeName)
-            .select(List.of("year_sales", "semester_sales", SCENARIO_FIELD_NAME), List.of(m, sales))
+            .select(tableFields(List.of("year_sales", "semester_sales", SCENARIO_FIELD_NAME)), List.of(m, sales))
             .build();
 
     Table finalTable = this.executor.execute(query);
@@ -246,7 +247,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
                     criterion("year_sales", Functions.in(2022, 2023)),
                     criterion("month_sales", Functions.in(1, 2, 12))
             ))
-            .select(List.of("year_sales", "month_sales", SCENARIO_FIELD_NAME), List.of(m, sales))
+            .select(tableFields(List.of("year_sales", "month_sales", SCENARIO_FIELD_NAME)), List.of(m, sales))
             .build();
 
     Table finalTable = this.executor.execute(query);
@@ -274,7 +275,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             period);
 
     var query = Query.from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(m))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(m))
             .build();
     Assertions.assertThatThrownBy(() -> this.executor.execute(query))
             .isInstanceOf(IllegalArgumentException.class)
@@ -303,7 +304,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
 
     var query = Query.from(this.storeName)
             .where(criterion("year_sales", eq(2023l)))
-            .select(List.of("year_sales", SCENARIO_FIELD_NAME), List.of(m, multiply))
+            .select(tableFields(List.of("year_sales", SCENARIO_FIELD_NAME)), List.of(m, multiply))
             .build();
     Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(

@@ -92,7 +92,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     QueryDto queryRollup = Query
             .from(this.storeName)
             .select(tableFields(List.of("continent", "country", "city")), List.of(amount))
-            .rollup(List.of("continent", "country", "city"))
+            .rollup(tableFields(List.of("continent", "country", "city")))
             .build();
     Table resultRollup = this.executor.execute(queryRollup);
 
