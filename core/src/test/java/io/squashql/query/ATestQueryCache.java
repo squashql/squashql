@@ -94,7 +94,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   void testQuerySameColumns() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("ps", "price"), sum("qs", "quantity")))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("ps", "price"), sum("qs", "quantity")))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
@@ -108,7 +108,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     // New query but same columns, same measure
     query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("qs", "quantity")))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("qs", "quantity")))
             .build();
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 33l));
@@ -119,7 +119,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   void testQueryDifferentColumns() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("ps", "price")))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("ps", "price")))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d));
@@ -320,7 +320,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
 
     Supplier<QueryDto> querySupplier = () -> new QueryDto()
             .table(this.storeName)
-            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumn(tableField(SCENARIO_FIELD_NAME))
             .withMeasure(new AggregatedMeasure("ps", "price", AggregationFunction.SUM));
     // Scope 1 added to the cache
     executor.execute(querySupplier.get());
@@ -346,7 +346,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
 
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("ps", "price"), sum("qs", "quantity")))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("ps", "price"), sum("qs", "quantity")))
             .build();
     Table result = execute(this.executor, query, paul);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
@@ -483,14 +483,14 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   void testCacheWithFullPath() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(this.storeName + "." + SCENARIO_FIELD_NAME), List.of())
+            .select(tableFields(List.of(this.storeName + "." + SCENARIO_FIELD_NAME)), List.of())
             .build();
     this.executor.execute(query);
     assertCacheStats(0, 1);
 
     query = Query
             .from(this.storeName)
-            .select(List.of(this.storeName + "." + SCENARIO_FIELD_NAME), List.of())
+            .select(tableFields(List.of(this.storeName + "." + SCENARIO_FIELD_NAME)), List.of())
             .build();
     this.executor.execute(query);
     assertCacheStats(1, 1);

@@ -22,7 +22,7 @@ public class TestQueryS13n {
   void testRoundTrip() {
     QueryDto query = new QueryDto()
             .table("myTable")
-            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumn(tableField(SCENARIO_FIELD_NAME))
             .withColumn(tableField("ean"))
             .withMeasure(new AggregatedMeasure("p", "price", "sum"))
             .withMeasure(new AggregatedMeasure("q", "quantity", "sum"))
@@ -117,7 +117,7 @@ public class TestQueryS13n {
 
     var query = new QueryDto()
             .table("products")
-            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumn(tableField(SCENARIO_FIELD_NAME))
             .withMeasure(m)
             .withMeasure(sales);
 

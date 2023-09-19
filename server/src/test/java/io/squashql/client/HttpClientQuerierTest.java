@@ -2,6 +2,7 @@ package io.squashql.client;
 
 import static io.squashql.query.Functions.criterion;
 import static io.squashql.query.Functions.eq;
+import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
@@ -72,7 +73,7 @@ public class HttpClientQuerierTest {
   void testRunQuery() {
     QueryDto query = new QueryDto()
             .table("our_prices")
-            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumn(tableField(SCENARIO_FIELD_NAME))
             .withMeasure(new AggregatedMeasure("qs", "quantity", "sum"));
 
     QueryResultDto response = this.querier.run(query);
@@ -88,11 +89,11 @@ public class HttpClientQuerierTest {
   void testMergeQuery() {
     QueryDto query1 = new QueryDto()
             .table("our_prices")
-            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumn(tableField(SCENARIO_FIELD_NAME))
             .withMeasure(new AggregatedMeasure("qs", "quantity", "sum"));
     QueryDto query2 = new QueryDto()
             .table("our_prices")
-            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumn(tableField(SCENARIO_FIELD_NAME))
             .withMeasure(new AggregatedMeasure(("qa"), "quantity", "avg"));
 
     QueryResultDto response = this.querier.queryMerge(new QueryMergeDto(query1, query2, JoinType.FULL));
@@ -154,8 +155,8 @@ public class HttpClientQuerierTest {
     // Note. The CJ will make null appear in rows. We want to make sure null values are correctly handled.
     QueryDto query = Query
             .from("our_prices")
-            .where(SCENARIO_FIELD_NAME, Functions.eq(MAIN_SCENARIO_NAME))
-            .select(List.of(SCENARIO_FIELD_NAME, "pdv"), List.of(Functions.sum("ps", "price")))
+            .where(tableField(SCENARIO_FIELD_NAME), Functions.eq(MAIN_SCENARIO_NAME))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "pdv")), List.of(Functions.sum("ps", "price")))
             .build();
 
     QueryResultDto response = this.querier.run(query);
@@ -220,7 +221,7 @@ public class HttpClientQuerierTest {
     QueryDto query = Query
             .from("our_prices")
             .where(criterion("pdv", eq("ITM Balma")))
-            .select(List.of(SCENARIO_FIELD_NAME, "pdv"), List.of(CountMeasure.INSTANCE, TotalCountMeasure.INSTANCE))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "pdv")), List.of(CountMeasure.INSTANCE, TotalCountMeasure.INSTANCE))
             .limit(2)
             .build();
 

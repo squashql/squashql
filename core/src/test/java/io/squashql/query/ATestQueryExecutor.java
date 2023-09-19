@@ -85,7 +85,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryWildcard() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price"), sum("q", "quantity")))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -98,9 +98,9 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryWildcardWithFullRollup() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
-            .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("p", "price"), sum("q", "quantity")))
-            .rollup(SCENARIO_FIELD_NAME, "category")
+            .where(tableField(SCENARIO_FIELD_NAME), eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "category")), List.of(sum("p", "price"), sum("q", "quantity")))
+            .rollup(tableFields(List.of(SCENARIO_FIELD_NAME, "category")))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -118,9 +118,9 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryWildcardWithFullRollupFullName() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME), eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
-            .select(List.of(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME), SqlUtils.getFieldFullName(this.storeName, "category")), List.of(sum("p", "price"), sum("q", "quantity")))
-            .rollup(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME), SqlUtils.getFieldFullName(this.storeName, "category"))
+            .where(tableField(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME)), eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
+            .select(tableFields(List.of(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME), SqlUtils.getFieldFullName(this.storeName, "category"))), List.of(sum("p", "price"), sum("q", "quantity")))
+            .rollup(tableField(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME)), tableField(SqlUtils.getFieldFullName(this.storeName, "category")))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -135,7 +135,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryWildcardWithFullRollupOnColumnTypeInt() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
+            .where(tableField(SCENARIO_FIELD_NAME), eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
             .select(tableFields(List.of("eanId")), List.of(sum("p", "price"), sum("q", "quantity")))
             .rollup(tableField("eanId"))
             .build();
@@ -169,7 +169,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryWildcardPartialRollupWithTwoColumns() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("q", "quantity")))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "category")), List.of(sum("q", "quantity")))
             .rollup(tableField("category")) // We don't care here about total on scenario
             .build();
     Table result = this.executor.execute(query);
@@ -189,8 +189,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
     query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("q", "quantity")))
-            .rollup(SCENARIO_FIELD_NAME) // try with another column
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "category")), List.of(sum("q", "quantity")))
+            .rollup(tableField(SCENARIO_FIELD_NAME)) // try with another column
             .build();
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -212,9 +212,9 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryWildcardPartialRollupWithThreeColumns() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, eq("s1")) // filter to reduce output table size
-            .select(List.of(SCENARIO_FIELD_NAME, "category", "subcategory"), List.of(sum("q", "quantity")))
-            .rollup("category", "subcategory")
+            .where(tableField(SCENARIO_FIELD_NAME), eq("s1")) // filter to reduce output table size
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "category", "subcategory")), List.of(sum("q", "quantity")))
+            .rollup(tableField("category"), tableField("subcategory"))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -228,8 +228,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
     query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, eq("s1")) // filter to reduce output table size
-            .select(List.of(SCENARIO_FIELD_NAME, "category", "subcategory"), List.of(sum("q", "quantity")))
+            .where(tableField(SCENARIO_FIELD_NAME), eq("s1")) // filter to reduce output table size
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "category", "subcategory")), List.of(sum("q", "quantity")))
             .rollup(tableField("category")) // Only total for category
             .build();
     result = this.executor.execute(query);
@@ -257,7 +257,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryWildcardCount() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(CountMeasure.INSTANCE))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(CountMeasure.INSTANCE))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -272,8 +272,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQuerySeveralCoordinates() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, in("s1", "s2"))
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price"), sum("q", "quantity")))
+            .where(tableField(SCENARIO_FIELD_NAME), in("s1", "s2"))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
     Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
@@ -285,8 +285,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQuerySingleCoordinate() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, eq("s1"))
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price"), sum("q", "quantity")))
+            .where(tableField(SCENARIO_FIELD_NAME), eq("s1"))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
     Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("s1", 17.0d, 33l));
@@ -342,8 +342,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testLikeCondition() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, Functions.like("s%")) // start with s
-            .select(List.of(SCENARIO_FIELD_NAME), List.of())
+            .where(tableField(SCENARIO_FIELD_NAME), Functions.like("s%")) // start with s
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of())
             .build();
     Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(List.of("s1"), List.of("s2"));
@@ -367,7 +367,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testDiscovery() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME), List.of())
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of())
             .build();
     Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(
@@ -392,7 +392,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     ConditionDto or = or(eq("food"), eq("drink"));
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME),
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)),
                     List.of(new ExpressionMeasure("quantity if food or drink", expression),
                             sumIf("quantity filtered", this.storeName + ".quantity", criterion(this.storeName + ".category", or))))
             .build();
@@ -408,7 +408,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     CriteriaDto category = criterion("category", or);
     query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME),
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)),
                     List.of(sumIf("quantity filtered", "quantity", Functions.all(category, criterion("subcategory", eq("biscuit"))))))
             .build();
     result = this.executor.execute(query);
@@ -423,7 +423,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     ConditionDto or = or(eq("food"), eq("drink"));
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME),
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)),
                     List.of(sumIf("quantity filtered", this.storeName + ".quantity", criterion(this.storeName + ".category", or))))
             .build();
     Table result = this.executor.execute(query);
@@ -440,7 +440,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .where(tableField("category"), in("cloth", "drink"))
-            .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(CountMeasure.INSTANCE))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "category")), List.of(CountMeasure.INSTANCE))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -464,7 +464,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             "cloth");
 
     List<String> elements = List.of("s2", MAIN_SCENARIO_NAME, "s1");
-    query.orderBy(SCENARIO_FIELD_NAME, elements);
+    query.orderBy(tableField(SCENARIO_FIELD_NAME), elements);
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             List.of("s2", "drink", 1l),
@@ -480,7 +480,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .select(tableFields(List.of("category")), List.of(sum("p_sum", "price")))
-            .rollup(List.of("category"))
+            .rollup(tableFields(List.of("category")))
             .orderBy(tableField("category"), ASC)
             .build();
     Table result = this.executor.execute(query);
@@ -599,13 +599,13 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     QueryDto query1 = Query
             .from(this.storeName)
             .select(tableFields(List.of("category")), List.of(sum("p_sum", "price")))
-            .rollup(List.of("category"))
+            .rollup(tableFields(List.of("category")))
             .build();
 
     QueryDto query2 = Query
             .from(this.storeName)
-            .select(List.of("category", SCENARIO_FIELD_NAME), List.of(min("p_min", "price")))
-            .rollup(List.of("category", SCENARIO_FIELD_NAME))
+            .select(tableFields(List.of("category", SCENARIO_FIELD_NAME)), List.of(min("p_min", "price")))
+            .rollup(tableFields(List.of("category", SCENARIO_FIELD_NAME)))
             .build();
 
     Table result = this.executor.execute(query1, query2, JoinType.FULL, null);
@@ -633,16 +633,16 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     QueryDto query1 = Query
             .from(this.storeName)
             .select(tableFields(List.of("category")), List.of(sum("p_sum", "price")))
-            .rollup(List.of("category"))
+            .rollup(tableFields(List.of("category")))
             .orderBy(tableField("category"), OrderKeywordDto.DESC)
             .build();
 
     QueryDto query2 = Query
             .from(this.storeName)
-            .select(List.of("category", SCENARIO_FIELD_NAME), List.of(min("p_min", "price")))
-            .rollup(List.of("category", SCENARIO_FIELD_NAME))
+            .select(tableFields(List.of("category", SCENARIO_FIELD_NAME)), List.of(min("p_min", "price")))
+            .rollup(tableFields(List.of("category", SCENARIO_FIELD_NAME)))
             .orderBy(tableField("category"), ASC)
-            .orderBy(SCENARIO_FIELD_NAME, List.of("s1", MAIN_SCENARIO_NAME, "s2"))
+            .orderBy(tableField(SCENARIO_FIELD_NAME), List.of("s1", MAIN_SCENARIO_NAME, "s2"))
             .build();
 
     Table result = this.executor.execute(query1, query2, JoinType.FULL, null);
@@ -711,7 +711,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     int limit = 2;
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price")))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("p", "price")))
             .limit(limit)
             .build();
     Table result = this.executor.execute(query);
