@@ -20,11 +20,11 @@ public class TableDto {
     this.name = name;
   }
 
-  public void join(TableDto other, JoinType joinType, JoinMappingDto mapping) {
-    this.joins.add(new JoinDto(other, joinType, mapping));
+  public void join(TableDto other, JoinType joinType, CriteriaDto joinCriteria) {
+    this.joins.add(new JoinDto(other, joinType, joinCriteria));
   }
 
-  public void join(TableDto other, JoinType joinType, List<JoinMappingDto> JoinMappingDtos) {
-    this.joins.add(new JoinDto(other, joinType, JoinMappingDtos));
-  }
+//  public void join(TableDto other, JoinType joinType, List<JoinMappingDto> JoinMappingDtos) {
+//    this.joins.add(new JoinDto(other, joinType, JoinMappingDtos));
+//  }
 }

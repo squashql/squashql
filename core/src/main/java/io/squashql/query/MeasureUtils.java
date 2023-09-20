@@ -105,7 +105,7 @@ public final class MeasureUtils {
   private static CriteriaDto removeCriteriaOnField(String field, CriteriaDto root) {
     if (root == null) {
       return null;
-    } else if (root.isWhereCriterion()) {
+    } else if (root.field != null && root.condition != null) { // where clause condition
       return (((TableField) root.field).fieldName).equals(field) ? null : root;
     } else {
       removeCriteriaOnField(field, root.children);
@@ -117,7 +117,7 @@ public final class MeasureUtils {
     Iterator<CriteriaDto> iterator = children.iterator();
     while (iterator.hasNext()) {
       CriteriaDto criteriaDto = iterator.next();
-      if (criteriaDto.isWhereCriterion()) {
+      if (criteriaDto.field != null && criteriaDto.condition != null) { // where clause condition
         if (((TableField) criteriaDto.field).fieldName.equals(field)) {
           iterator.remove();
         }

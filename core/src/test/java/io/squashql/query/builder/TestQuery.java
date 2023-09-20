@@ -2,6 +2,7 @@ package io.squashql.query.builder;
 
 import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.ColumnSetKey;
+import io.squashql.query.Functions;
 import io.squashql.query.Measure;
 import io.squashql.query.dto.*;
 import org.assertj.core.api.Assertions;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static io.squashql.query.Functions.*;
+import static io.squashql.query.dto.ConditionType.EQ;
 
 public class TestQuery {
 
@@ -81,11 +83,11 @@ public class TestQuery {
       QueryDto build = Query
               .from("saas")
               .join("other", JoinType.LEFT)
-              .on(criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ))
+              .on(criterion(other.name + ".id", saas.name + ".id", EQ))
               .select(List.of("col1", "col2"), List.of(sum))
               .build();
 
-      saas.join(other, JoinType.LEFT, new JoinMappingDto(other.name + ".id", saas.name + ".id"));
+      saas.join(other, JoinType.LEFT, criterion(other.name + ".id", saas.name + ".id", EQ));
 
       QueryDto q = new QueryDto()
               .table(saas)
@@ -100,9 +102,9 @@ public class TestQuery {
       TableDto saas = new TableDto("saas");
       TableDto other = new TableDto("other");
 
-      saas.join(other, JoinType.INNER, List.of(
-              new JoinMappingDto(other.name + ".id", saas.name + ".id"),
-              new JoinMappingDto(other.name + ".a", saas.name + ".b")));
+      saas.join(other, JoinType.INNER, Functions.all(
+              criterion(other.name + ".id", saas.name + ".id", EQ),
+              criterion(other.name + ".a", saas.name + ".b", EQ)));
 
       QueryDto q = new QueryDto()
               .table(saas)
@@ -115,8 +117,8 @@ public class TestQuery {
               .from("saas")
               .join("other", JoinType.INNER)
               .on(all(
-                      criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ),
-                      criterion(other.name + ".a", saas.name + ".b", ConditionType.EQ)
+                      criterion(other.name + ".id", saas.name + ".id", EQ),
+                      criterion(other.name + ".a", saas.name + ".b", EQ)
               ))
               .select(List.of("col1", "col2"), List.of(sum))
               .build();
@@ -135,13 +137,13 @@ public class TestQuery {
               .withMeasure(sum)
               .withCondition("f1", eq("A"));
 
-      saas.join(other, JoinType.INNER, new JoinMappingDto(other.name + ".id", saas.name + ".id"));
+      saas.join(other, JoinType.INNER, criterion(other.name + ".id", saas.name + ".id", EQ));
 
       // With condition on the "joined" table
       QueryDto build = Query
               .from("saas")
               .join("other", JoinType.INNER)
-              .on(criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ))
+              .on(criterion(other.name + ".id", saas.name + ".id", EQ))
               .where("f1", eq("A"))
               .select(List.of("col1", "col2"), List.of(sum))
               .build();
@@ -163,15 +165,15 @@ public class TestQuery {
             .withColumn("col2")
             .withMeasure(sum);
 
-    saas.join(other, JoinType.LEFT, new JoinMappingDto(other.name + ".id", saas.name + ".id"));
-    saas.join(another, JoinType.INNER, new JoinMappingDto(another.name + ".id", saas.name + ".id"));
+    saas.join(other, JoinType.LEFT, criterion(other.name + ".id", saas.name + ".id", EQ));
+    saas.join(another, JoinType.INNER, criterion(another.name + ".id", saas.name + ".id", EQ));
 
     QueryDto build = Query
             .from("saas")
             .join("other", JoinType.LEFT)
-            .on(criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ))
+            .on(criterion(other.name + ".id", saas.name + ".id", EQ))
             .join("another", JoinType.INNER)
-            .on(criterion(another.name + ".id", saas.name + ".id", ConditionType.EQ))
+            .on(criterion(another.name + ".id", saas.name + ".id", EQ))
             .select(List.of("col1", "col2"), List.of(sum))
             .build();
 
@@ -186,11 +188,11 @@ public class TestQuery {
     QueryDto build = Query
             .from("saas")
             .join(vt, JoinType.INNER)
-            .on(criterion("saas.id", "vtable.id", ConditionType.EQ))
+            .on(criterion("saas.id", "vtable.id", EQ))
             .select(List.of("col1", "col2"), List.of(sum))
             .build();
 
-    saas.join(new TableDto("vtable"), JoinType.INNER, new JoinMappingDto(saas.name + ".id", vt.name + ".id"));
+    saas.join(new TableDto("vtable"), JoinType.INNER, criterion(saas.name + ".id", vt.name + ".id", EQ));
 
     QueryDto q = new QueryDto()
             .table(saas)

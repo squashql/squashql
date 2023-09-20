@@ -197,27 +197,12 @@ public class SQLTranslator {
               .append(" join ")
               .append(tableNameFunc.apply(join.table.name))
               .append(" on ");
-      for (int i = 0; i < join.mappings.size(); i++) {
-        statement.append(joinMappingToSql(join.mappings.get(i), fieldProvider, qr));
-        if (i < join.mappings.size() - 1) {
-          statement.append(" and ");
-        }
-      }
+      statement.append(toSql(fieldProvider, join.joinCriteria, qr));
 
       if (!join.table.joins.isEmpty()) {
         addJoins(statement, join.table, virtualTableDto, fieldProvider, qr);
       }
     }
-  }
-
-  public static String joinMappingToSql(JoinMappingDto mapping, Function<String, TypedField> fieldProvider, QueryRewriter qr) {
-    var op = switch (mapping.conditionType) {
-      case EQ, NEQ, LT, LE, GT, GE -> " " + mapping.conditionType.sqlInfix + " ";
-      default -> throw new IllegalStateException("Unexpected value: " + mapping.conditionType);
-    };
-    String from = mapping.from.sqlExpression(fieldProvider, qr);
-    String to = mapping.to.sqlExpression(fieldProvider, qr);
-    return from + op + to;
   }
 
   public static String toSql(TypedField field, ConditionDto dto, QueryRewriter queryRewriter) {
@@ -253,13 +238,14 @@ public class SQLTranslator {
   }
 
   public static String toSql(Function<String, TypedField> fieldProvider, CriteriaDto criteriaDto, QueryRewriter queryRewriter) {
-    if (criteriaDto.isWhereCriterion()) {
+    if (criteriaDto.field != null && criteriaDto.condition != null) {
       return toSql(fieldProvider.apply(criteriaDto.field.name()), criteriaDto.condition, queryRewriter);
-    } else if (criteriaDto.isHavingCriterion()) {
+    } else if (criteriaDto.measure != null && criteriaDto.condition != null) {
       return toSql(fieldProvider.apply(criteriaDto.measure.alias()), criteriaDto.condition, queryRewriter);
-    } else if (criteriaDto.isJoinCriterion()) {
-      JoinMappingDto mapping = new JoinMappingDto(criteriaDto.field, criteriaDto.fieldOther, criteriaDto.conditionType);
-      return joinMappingToSql(mapping, fieldProvider, queryRewriter);
+    } else if (criteriaDto.field != null && criteriaDto.fieldOther != null && criteriaDto.conditionType != null) {
+      String left = criteriaDto.field.sqlExpression(fieldProvider, queryRewriter);
+      String right = criteriaDto.fieldOther.sqlExpression(fieldProvider, queryRewriter);
+      return String.join(" ", left, criteriaDto.conditionType.sqlInfix, right);
     } else if (!criteriaDto.children.isEmpty()) {
       String sep = switch (criteriaDto.conditionType) {
         case AND -> " and ";

@@ -43,7 +43,7 @@ public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
   private void addJoinToQueryDto() {
     JoinTableBuilder jtb = this.currentJoinTableBuilder;
     if (jtb != null) {
-      this.queryDto.table.join(new TableDto(jtb.tableName), jtb.joinType, jtb.mappingDtos);
+      this.queryDto.table.join(new TableDto(jtb.tableName), jtb.joinType, jtb.joinCriteriaDto);
       this.currentJoinTableBuilder = null;
     }
   }
