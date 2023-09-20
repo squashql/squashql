@@ -1,20 +1,46 @@
 package io.squashql.jackson;
 
-import io.squashql.query.*;
-import io.squashql.query.parameter.Parameter;
-import io.squashql.query.parameter.QueryCacheParameter;
-import io.squashql.query.dto.*;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.Map;
-
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
-import static io.squashql.query.Functions.*;
+import static io.squashql.query.Functions.and;
+import static io.squashql.query.Functions.eq;
+import static io.squashql.query.Functions.ge;
+import static io.squashql.query.Functions.gt;
+import static io.squashql.query.Functions.in;
+import static io.squashql.query.Functions.le;
+import static io.squashql.query.Functions.lt;
+import static io.squashql.query.Functions.neq;
+import static io.squashql.query.Functions.or;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
+
+import io.squashql.query.AggregatedMeasure;
+import io.squashql.query.BinaryOperationMeasure;
+import io.squashql.query.BinaryOperator;
+import io.squashql.query.ColumnSetKey;
+import io.squashql.query.ComparisonMeasureReferencePosition;
+import io.squashql.query.ExpressionMeasure;
+import io.squashql.query.Functions;
+import io.squashql.query.TableField;
+import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.dto.ConditionDto;
+import io.squashql.query.dto.ConditionType;
+import io.squashql.query.dto.ExplicitOrderDto;
+import io.squashql.query.dto.JoinMappingDto;
+import io.squashql.query.dto.JoinType;
+import io.squashql.query.dto.OrderDto;
+import io.squashql.query.dto.OrderKeywordDto;
+import io.squashql.query.dto.Period;
+import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.SimpleOrderDto;
+import io.squashql.query.dto.SingleValueConditionDto;
+import io.squashql.query.dto.TableDto;
+import io.squashql.query.parameter.Parameter;
+import io.squashql.query.parameter.QueryCacheParameter;
+import java.util.List;
+import java.util.Map;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestQueryS13n {
 
@@ -77,7 +103,7 @@ public class TestQueryS13n {
   @Test
   void testRoundTripBucketComparisonQuery() {
     String groupOfScenario = "Group of scenario";
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, tableField(SCENARIO_FIELD_NAME))
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));

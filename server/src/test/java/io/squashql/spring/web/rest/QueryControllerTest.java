@@ -1,6 +1,7 @@
 package io.squashql.spring.web.rest;
 
 import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
@@ -142,7 +143,7 @@ public class QueryControllerTest {
 
   @Test
   void testScenarioGroupingQuery() throws Exception {
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", SCENARIO_FIELD_NAME)
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", tableField(SCENARIO_FIELD_NAME))
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));

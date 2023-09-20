@@ -121,7 +121,7 @@ public class TestJavascriptLibrary {
     q.orderBy(tableField("a"), OrderKeywordDto.ASC);
     q.orderBy(tableField("b"), List.of("1", "l", "p"));
 
-    BucketColumnSetDto columnSet = new BucketColumnSetDto("group", "scenario")
+    BucketColumnSetDto columnSet = new BucketColumnSetDto("group", tableField("scenario"))
             .withNewBucket("a", List.of("a1", "a2"))
             .withNewBucket("b", List.of("b1", "b2"));
     q.withColumnSet(ColumnSetKey.BUCKET, columnSet);
@@ -156,7 +156,7 @@ public class TestJavascriptLibrary {
     var refTable = new TableDto("refTable");
     var cte = new VirtualTableDto("myCte", List.of("id", "min", "max", "other"), List.of(List.of(0, 0, 1, "x"), List.of(1, 2, 3, "y")));
 
-    BucketColumnSetDto bucketColumnSet = new BucketColumnSetDto("group", "scenario")
+    BucketColumnSetDto bucketColumnSet = new BucketColumnSetDto("group", tableField("scenario"))
             .withNewBucket("a", List.of("a1", "a2"))
             .withNewBucket("b", List.of("b1", "b2"));
 

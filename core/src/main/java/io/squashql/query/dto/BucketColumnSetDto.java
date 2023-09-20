@@ -2,15 +2,15 @@ package io.squashql.query.dto;
 
 import io.squashql.query.ColumnSet;
 import io.squashql.query.ColumnSetKey;
+import io.squashql.query.Field;
 import io.squashql.type.TableTypedField;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @ToString
 @EqualsAndHashCode
@@ -19,11 +19,11 @@ public class BucketColumnSetDto implements ColumnSet {
 
   public String name;
 
-  public String field;
+  public Field field;
 
   public Map<String, List<String>> values = new LinkedHashMap<>();
 
-  public BucketColumnSetDto(String name, String field) {
+  public BucketColumnSetDto(String name, Field field) {
     this.name = name;
     this.field = field;
   }
@@ -34,13 +34,13 @@ public class BucketColumnSetDto implements ColumnSet {
   }
 
   @Override
-  public List<String> getColumnsForPrefetching() {
+  public List<Field> getColumnsForPrefetching() {
     return List.of(this.field);
   }
 
   @Override
   public List<TableTypedField> getNewColumns() {
-    return List.of(new TableTypedField(null, this.name, String.class), new TableTypedField(null, this.field, String.class));
+    return List.of(new TableTypedField(null, this.name, String.class), new TableTypedField(null, this.field.name(), String.class));
   }
 
   @Override

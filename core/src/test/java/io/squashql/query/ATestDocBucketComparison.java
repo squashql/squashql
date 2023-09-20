@@ -13,6 +13,7 @@ import org.junit.jupiter.api.TestInstance;
 import java.util.List;
 import java.util.Map;
 
+import static io.squashql.query.TableField.tableField;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
@@ -44,7 +45,7 @@ public abstract class ATestDocBucketComparison extends ABaseTestQuery {
   @Test
   void test() {
     Measure revenue = new ExpressionMeasure("revenue", "sum(saleprice * loavessold)");
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", SCENARIO_FIELD_NAME)
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", tableField(SCENARIO_FIELD_NAME))
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s3"))

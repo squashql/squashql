@@ -182,7 +182,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
   @Test
   void testGroupingOneColumnEachAxis() {
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", "country")
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", tableField("country"))
             .withNewBucket("european", List.of("uk", "france"))
             .withNewBucket("anglophone", List.of("usa", "uk"))
             .withNewBucket("all", List.of("usa", "uk", "france"));
@@ -221,7 +221,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
   @Test
   void testGroupingMultipleColumns(TestInfo testInfo) {
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", "country")
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", tableField("country"))
             .withNewBucket("european", List.of("uk", "france"))
             .withNewBucket("anglophone", List.of("usa", "uk"))
             .withNewBucket("all", List.of("usa", "uk", "france"));

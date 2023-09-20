@@ -1,16 +1,21 @@
 package io.squashql.util;
 
-import io.squashql.query.*;
+import static io.squashql.query.TableField.tableField;
+
+import io.squashql.query.ColumnSetKey;
+import io.squashql.query.ComparisonMeasureReferencePosition;
+import io.squashql.query.ComparisonMethod;
+import io.squashql.query.Measure;
+import io.squashql.query.QueryExecutor;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.parameter.Parameter;
 import io.squashql.type.TypedField;
+import java.util.Collections;
+import java.util.function.Function;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
-import java.util.Collections;
-import java.util.function.Function;
 
 public class TestDatabaseQueryCreation {
 
@@ -37,7 +42,7 @@ public class TestDatabaseQueryCreation {
   @Test
   void testColumnSetInSubQuery() {
     QueryDto subQuery = new QueryDto().table("table")
-            .withColumnSet(ColumnSetKey.BUCKET, new BucketColumnSetDto("a", "b"));
+            .withColumnSet(ColumnSetKey.BUCKET, new BucketColumnSetDto("a", tableField("b")));
     QueryDto queryDto = new QueryDto().table(subQuery);
 
     Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier), this.fieldSupplier, -1))

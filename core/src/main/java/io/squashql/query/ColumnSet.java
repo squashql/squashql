@@ -3,7 +3,6 @@ package io.squashql.query;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.squashql.type.TableTypedField;
-
 import java.util.List;
 
 /**
@@ -13,7 +12,7 @@ import java.util.List;
 public interface ColumnSet {
 
   @JsonIgnore
-  List<String> getColumnsForPrefetching();
+  List<Field> getColumnsForPrefetching();
 
   @JsonIgnore
   List<TableTypedField> getNewColumns();

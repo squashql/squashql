@@ -27,7 +27,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
 
   protected String groupOfScenario = "Group of scenario";
 
-  protected BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, SCENARIO_FIELD_NAME)
+  protected BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, tableField(SCENARIO_FIELD_NAME))
           .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
           .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
           .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
@@ -209,7 +209,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
   @Test
   void testOrderIsPreserved() {
     // The following order should be respected even if columns are ordered by default.
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, SCENARIO_FIELD_NAME)
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, tableField(SCENARIO_FIELD_NAME))
             .withNewBucket("B", List.of("s1", MAIN_SCENARIO_NAME))
             .withNewBucket("A", List.of("s2", MAIN_SCENARIO_NAME, "s1"))
             .withNewBucket("C", List.of(MAIN_SCENARIO_NAME, "s2", "s1"));
@@ -236,7 +236,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
   @Test
   void testOrderIsPreservedAndNaturallyOrderOnOtherColumns() {
     // The following order should be respected even if columns are ordered by default.
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, SCENARIO_FIELD_NAME)
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, tableField(SCENARIO_FIELD_NAME))
             .withNewBucket("B", List.of("s1", MAIN_SCENARIO_NAME))
             .withNewBucket("A", List.of("s2", MAIN_SCENARIO_NAME));
 
@@ -267,7 +267,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
   @Test
   void testTotal() {
     // The following order should be respected even if columns are ordered by default.
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, SCENARIO_FIELD_NAME)
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, tableField(SCENARIO_FIELD_NAME))
             .withNewBucket("B", List.of("s1", MAIN_SCENARIO_NAME))
             .withNewBucket("A", List.of("s2", MAIN_SCENARIO_NAME, "s1"))
             .withNewBucket("C", List.of(MAIN_SCENARIO_NAME, "s2", "s1"));
