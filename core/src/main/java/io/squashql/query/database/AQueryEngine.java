@@ -1,6 +1,7 @@
 package io.squashql.query.database;
 
 import io.squashql.query.CountMeasure;
+import io.squashql.query.Field;
 import io.squashql.query.Header;
 import io.squashql.query.QueryExecutor;
 import io.squashql.query.date.DateFunctions;
@@ -13,28 +14,27 @@ import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
-
-import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.IntStream;
 
 @Slf4j
 public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T> {
 
   public final T datastore;
 
-  protected final Supplier<Function<String, TypedField>> fieldSupplier;
-
   protected final QueryRewriter queryRewriter;
 
   protected AQueryEngine(T datastore, QueryRewriter queryRewriter) {
     this.datastore = datastore;
-    this.fieldSupplier = () -> createFieldSupplier(this.datastore.storesByName());
     this.queryRewriter = queryRewriter;
   }
 
@@ -43,9 +43,9 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     return this.queryRewriter;
   }
 
-  public static Function<String, TypedField> createFieldSupplier(Map<String, Store> storesByName) {
-    return expression -> {
-      final Pair<String, String> extracted = DateFunctions.extractFunctionAndFieldFromDateFunction(expression);
+  public static Function<Field, TypedField> createFieldSupplier(Map<String, Store> storesByName) {
+    return field -> {
+      final Pair<String, String> extracted = DateFunctions.extractFunctionAndFieldFromDateFunction(field.name());
       TableTypedField tableTypedField = getTableTypedField(extracted.getTwo(), storesByName);
       String function = extracted.getOne();
       if (function == null) {
@@ -85,11 +85,6 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
       return new TableTypedField(null, CountMeasure.INSTANCE.alias(), long.class);
     }
     throw new FieldNotFoundException("Cannot find field with name " + fieldName);
-  }
-
-  @Override
-  public Function<String, TypedField> getFieldSupplier() {
-    return this.fieldSupplier.get();
   }
 
   @Override

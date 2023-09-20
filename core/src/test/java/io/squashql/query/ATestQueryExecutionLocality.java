@@ -14,10 +14,8 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Datastore;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
-import io.squashql.type.TypedField;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -88,11 +86,6 @@ public abstract class ATestQueryExecutionLocality extends ABaseTestQuery {
     @Override
     public T datastore() {
       return this.underlying.datastore();
-    }
-
-    @Override
-    public Function<String, TypedField> getFieldSupplier() {
-      return this.underlying.getFieldSupplier();
     }
 
     @Override

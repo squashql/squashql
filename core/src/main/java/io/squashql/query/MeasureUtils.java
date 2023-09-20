@@ -9,13 +9,18 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
-import lombok.NoArgsConstructor;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 public final class MeasureUtils {
@@ -34,7 +39,7 @@ public final class MeasureUtils {
 
   public static String createExpression(Measure m) {
     if (m instanceof AggregatedMeasure a) {
-      Function<String, TypedField> fieldProvider = s -> new TableTypedField(null, s, String.class);
+      Function<Field, TypedField> fieldProvider = s -> new TableTypedField(null, s.name(), String.class);
       if (a.criteria != null) {
         String conditionSt = SQLTranslator.toSql(fieldProvider, a.criteria, BASIC);
         return a.aggregationFunction + "If(" + a.field.sqlExpression(fieldProvider, BASIC) + ", " + conditionSt + ")";
@@ -54,7 +59,7 @@ public final class MeasureUtils {
       }
     } else if (m instanceof ExpressionMeasure em) {
       return em.expression;
-    } else if (m instanceof ConstantMeasure cm) {
+    } else if (m instanceof ConstantMeasure<?> cm) {
       return String.valueOf(cm.value);
     } else {
       throw new IllegalArgumentException("Unexpected type " + m.getClass());
@@ -77,9 +82,9 @@ public final class MeasureUtils {
           QueryDto query,
           ComparisonMeasureReferencePosition cm,
           QueryExecutor.QueryScope queryScope,
-          Function<String, TypedField> fieldSupplier) {
+          Function<Field, TypedField> fieldSupplier) {
     AtomicReference<CriteriaDto> copy = new AtomicReference<>(queryScope.whereCriteriaDto() == null ? null : CriteriaDto.deepCopy(queryScope.whereCriteriaDto()));
-    Consumer<String> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
+    Consumer<Field> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(criteriaRemover));
     Optional.ofNullable(cm.period)
@@ -102,23 +107,23 @@ public final class MeasureUtils {
             queryScope.virtualTableDto());
   }
 
-  private static CriteriaDto removeCriteriaOnField(String field, CriteriaDto root) {
+  private static CriteriaDto removeCriteriaOnField(Field field, CriteriaDto root) {
     if (root == null) {
       return null;
     } else if (root.isWhereCriterion()) {
-      return (((TableField) root.field).fieldName).equals(field) ? null : root;
+      return root.field.equals(field) ? null : root;
     } else {
       removeCriteriaOnField(field, root.children);
       return root;
     }
   }
 
-  private static void removeCriteriaOnField(String field, List<CriteriaDto> children) {
+  private static void removeCriteriaOnField(Field field, List<CriteriaDto> children) {
     Iterator<CriteriaDto> iterator = children.iterator();
     while (iterator.hasNext()) {
       CriteriaDto criteriaDto = iterator.next();
       if (criteriaDto.isWhereCriterion()) {
-        if (((TableField) criteriaDto.field).fieldName.equals(field)) {
+        if (criteriaDto.field.equals(field)) {
           iterator.remove();
         }
       } else {
@@ -145,14 +150,14 @@ public final class MeasureUtils {
     }
   }
 
-  public static Function<String, TypedField> withFallback(Function<String, TypedField> fieldProvider, Class<?> fallbackType) {
-    return fieldName -> {
+  public static Function<Field, TypedField> withFallback(Function<Field, TypedField> fieldProvider, Class<?> fallbackType) {
+    return field -> {
       try {
-        return fieldProvider.apply(fieldName);
+        return fieldProvider.apply(field);
       } catch (FieldNotFoundException e) {
         // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
         // contains only "raw" fields, it will throw an exception.
-        return new TableTypedField(null, fieldName, fallbackType);
+        return new TableTypedField(null, field.name(), fallbackType);
       }
     };
   }

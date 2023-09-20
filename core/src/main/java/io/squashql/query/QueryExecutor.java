@@ -1,5 +1,7 @@
 package io.squashql.query;
 
+import static io.squashql.query.ColumnSetKey.BUCKET;
+
 import io.squashql.PrefetchVisitor;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.QueryCache.SubQueryScope;
@@ -7,26 +9,39 @@ import io.squashql.query.QueryCache.TableScope;
 import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
-import io.squashql.query.dto.*;
+import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.dto.CacheStatsDto;
+import io.squashql.query.dto.CriteriaDto;
+import io.squashql.query.dto.JoinType;
+import io.squashql.query.dto.PivotTableQueryDto;
+import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.TableDto;
+import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.store.Store;
-import io.squashql.table.*;
-import io.squashql.type.TableTypedField;
+import io.squashql.table.ColumnarTable;
+import io.squashql.table.MergeTables;
+import io.squashql.table.PivotTable;
+import io.squashql.table.Table;
+import io.squashql.table.TableUtils;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.impl.tuple.Tuples;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static io.squashql.query.ColumnSetKey.BUCKET;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
 
 @Slf4j
 public class QueryExecutor {
@@ -80,8 +95,8 @@ public class QueryExecutor {
   public static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
     Set<String> axes = new HashSet<>(context.rows);
     axes.addAll(context.columns);
-    Set<String> select = new HashSet<>(query.columns);
-    select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream().map(TableTypedField::name)).collect(Collectors.toSet()));
+    Set<Field> select = new HashSet<>(query.columns);
+    select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream()).collect(Collectors.toSet()));
     axes.removeAll(select);
 
     if (!axes.isEmpty()) {
@@ -145,7 +160,7 @@ public class QueryExecutor {
                        IntConsumer limitNotifier) {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
 
-    Function<String, TypedField> fieldSupplier = createQueryFieldSupplier(this.queryEngine, query.virtualTableDto);
+    Function<Field, TypedField> fieldSupplier = createQueryFieldSupplier(this.queryEngine, query.virtualTableDto);
     if (pivotTableContext != null) {
       pivotTableContext.init(fieldSupplier);
     }
@@ -330,10 +345,10 @@ public class QueryExecutor {
    * This object is temporary until BigQuery supports the grouping sets. See <a href="https://issuetracker.google.com/issues/35905909">issue</a>
    */
   public static class PivotTableContext {
-    private final List<String> rows;
-    private final List<String> cleansedRows;
-    private final List<String> columns;
-    private final List<String> cleansedColumns;
+    private final List<Field> rows;
+    private final List<Field> cleansedRows;
+    private final List<Field> columns;
+    private final List<Field> cleansedColumns;
     @Getter
     private List<TypedField> rowFields;
     @Getter
@@ -346,7 +361,7 @@ public class QueryExecutor {
       this.cleansedColumns = cleanse(pivotTableQueryDto.query, pivotTableQueryDto.columns);
     }
 
-    public static List<String> cleanse(QueryDto query, List<String> fields) {
+    public static List<Field> cleanse(QueryDto query, List<Field> fields) {
       // ColumnSet is a special type of column that does not exist in the database but only in SquashQL. Totals can't be
       // computed. This is why it is removed from the axes.
       ColumnSet columnSet = query.columnSets.get(BUCKET);
@@ -360,7 +375,7 @@ public class QueryExecutor {
       return fields;
     }
 
-    public void init(Function<String, TypedField> fieldSupplier) {
+    public void init(Function<Field, TypedField> fieldSupplier) {
       this.rowFields = this.cleansedRows.stream().map(fieldSupplier).toList();
       this.columnFields = this.cleansedColumns.stream().map(fieldSupplier).toList();
     }
@@ -394,7 +409,7 @@ public class QueryExecutor {
     return TableUtils.replaceTotalCellValues(table, true);
   }
 
-  public static Function<String, TypedField> createQueryFieldSupplier(QueryEngine<?> queryEngine, VirtualTableDto vt) {
+  public static Function<Field, TypedField> createQueryFieldSupplier(QueryEngine<?> queryEngine, VirtualTableDto vt) {
     Map<String, Store> storesByName = new HashMap<>(queryEngine.datastore().storesByName());
     if (vt != null) {
       storesByName.put(vt.name, VirtualTableDto.toStore(vt));

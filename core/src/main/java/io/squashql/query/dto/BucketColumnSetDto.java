@@ -3,7 +3,7 @@ package io.squashql.query.dto;
 import io.squashql.query.ColumnSet;
 import io.squashql.query.ColumnSetKey;
 import io.squashql.query.Field;
-import io.squashql.type.TableTypedField;
+import io.squashql.query.TableField;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -39,8 +39,8 @@ public class BucketColumnSetDto implements ColumnSet {
   }
 
   @Override
-  public List<TableTypedField> getNewColumns() {
-    return List.of(new TableTypedField(null, this.name, String.class), new TableTypedField(null, this.field.name(), String.class));
+  public List<Field> getNewColumns() {
+    return List.of(new TableField(null, this.name), this.field);
   }
 
   @Override

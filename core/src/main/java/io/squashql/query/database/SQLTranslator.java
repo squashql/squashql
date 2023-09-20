@@ -1,13 +1,27 @@
 package io.squashql.query.database;
 
 import com.google.common.collect.Ordering;
+import io.squashql.query.Field;
 import io.squashql.query.MeasureUtils;
-import io.squashql.query.dto.*;
+import io.squashql.query.TableField;
+import io.squashql.query.dto.ConditionDto;
+import io.squashql.query.dto.ConstantConditionDto;
+import io.squashql.query.dto.CriteriaDto;
+import io.squashql.query.dto.InConditionDto;
+import io.squashql.query.dto.JoinDto;
+import io.squashql.query.dto.JoinMappingDto;
+import io.squashql.query.dto.LogicalConditionDto;
+import io.squashql.query.dto.SingleValueConditionDto;
+import io.squashql.query.dto.TableDto;
+import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.UnknownType;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -15,12 +29,12 @@ public class SQLTranslator {
 
   public static final String TOTAL_CELL = "___total___";
 
-  public static String translate(DatabaseQuery query, Function<String, TypedField> fieldProvider) {
+  public static String translate(DatabaseQuery query, Function<Field, TypedField> fieldProvider) {
     return translate(query, fieldProvider, DefaultQueryRewriter.INSTANCE);
   }
 
   public static String translate(DatabaseQuery query,
-                                 Function<String, TypedField> fieldProvider,
+                                 Function<Field, TypedField> fieldProvider,
                                  QueryRewriter queryRewriter) {
     QueryAwareQueryRewriter qr = new QueryAwareQueryRewriter(queryRewriter, query);
     return translate(query, fieldProvider, __ -> qr);
@@ -30,7 +44,7 @@ public class SQLTranslator {
    * Be careful when using this method directly. You may have to leverage {@link QueryAwareQueryRewriter} somehow.
    */
   public static String translate(DatabaseQuery query,
-                                 Function<String, TypedField> fieldProvider,
+                                 Function<Field, TypedField> fieldProvider,
                                  Function<DatabaseQuery, QueryRewriter> queryRewriterSupplier) {
     QueryRewriter queryRewriter = queryRewriterSupplier.apply(query);
     List<String> selects = new ArrayList<>();
@@ -177,7 +191,7 @@ public class SQLTranslator {
     statement.append(")");
   }
 
-  protected static void addWhereConditions(StringBuilder statement, DatabaseQuery query, Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter) {
+  protected static void addWhereConditions(StringBuilder statement, DatabaseQuery query, Function<Field, TypedField> fieldProvider, QueryRewriter queryRewriter) {
     if (query.whereCriteriaDto != null) {
       String whereClause = toSql(fieldProvider, query.whereCriteriaDto, queryRewriter);
       if (whereClause != null) {
@@ -188,7 +202,7 @@ public class SQLTranslator {
     }
   }
 
-  private static void addJoins(StringBuilder statement, TableDto tableQuery, VirtualTableDto virtualTableDto, Function<String, TypedField> fieldProvider, QueryRewriter qr) {
+  private static void addJoins(StringBuilder statement, TableDto tableQuery, VirtualTableDto virtualTableDto, Function<Field, TypedField> fieldProvider, QueryRewriter qr) {
     Function<String, String> tableNameFunc = tableName -> virtualTableDto != null && virtualTableDto.name.equals(tableName) ? qr.cteName(tableName) : qr.tableName(tableName);
     for (JoinDto join : tableQuery.joins) {
       statement
@@ -210,7 +224,7 @@ public class SQLTranslator {
     }
   }
 
-  public static String joinMappingToSql(JoinMappingDto mapping, Function<String, TypedField> fieldProvider, QueryRewriter qr) {
+  public static String joinMappingToSql(JoinMappingDto mapping, Function<Field, TypedField> fieldProvider, QueryRewriter qr) {
     var op = switch (mapping.conditionType) {
       case EQ, NEQ, LT, LE, GT, GE -> " " + mapping.conditionType.sqlInfix + " ";
       default -> throw new IllegalStateException("Unexpected value: " + mapping.conditionType);
@@ -252,11 +266,12 @@ public class SQLTranslator {
     }
   }
 
-  public static String toSql(Function<String, TypedField> fieldProvider, CriteriaDto criteriaDto, QueryRewriter queryRewriter) {
+  public static String toSql(Function<Field, TypedField> fieldProvider, CriteriaDto criteriaDto, QueryRewriter queryRewriter) {
     if (criteriaDto.isWhereCriterion()) {
-      return toSql(fieldProvider.apply(criteriaDto.field.name()), criteriaDto.condition, queryRewriter);
+      return toSql(fieldProvider.apply(criteriaDto.field), criteriaDto.condition, queryRewriter);
     } else if (criteriaDto.isHavingCriterion()) {
-      return toSql(fieldProvider.apply(criteriaDto.measure.alias()), criteriaDto.condition, queryRewriter);
+      // todo-mde hack for expression measure since they don't include a `Field`. Will be cleaned when we resolve queries
+      return toSql(fieldProvider.apply(new TableField(criteriaDto.measure.alias())), criteriaDto.condition, queryRewriter);
     } else if (criteriaDto.isJoinCriterion()) {
       JoinMappingDto mapping = new JoinMappingDto(criteriaDto.field, criteriaDto.fieldOther, criteriaDto.conditionType);
       return joinMappingToSql(mapping, fieldProvider, queryRewriter);
@@ -299,7 +314,7 @@ public class SQLTranslator {
     }
   }
 
-  protected static void addHavingConditions(Function<String, TypedField> fieldProvider, StringBuilder statement, CriteriaDto havingCriteriaDto, QueryRewriter queryRewriter) {
+  protected static void addHavingConditions(Function<Field, TypedField> fieldProvider, StringBuilder statement, CriteriaDto havingCriteriaDto, QueryRewriter queryRewriter) {
     if (havingCriteriaDto != null) {
       String havingClause = toSql(MeasureUtils.withFallback(fieldProvider, Number.class), havingCriteriaDto, queryRewriter);
       if (havingClause != null) {
