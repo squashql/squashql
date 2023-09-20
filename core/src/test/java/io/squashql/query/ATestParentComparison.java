@@ -53,10 +53,11 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   @Test
   void testSimple() {
     Measure pop = Functions.sum("population", "population");
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, List.of("city", "country", "continent"));
+    final List<Field> fields = tableFields(List.of("continent", "country", "city"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, fields);
     QueryDto query = Query
             .from(this.storeName)
-            .select(tableFields(List.of("continent", "country", "city")), List.of(pop, pOp))
+            .select(fields, List.of(pop, pOp))
             .build();
 
     Table result = this.executor.execute(query);
@@ -90,11 +91,12 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   @Test
   void testClearFilter() {
     Measure pop = Functions.sum("population", "population");
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, List.of("city", "country", "continent"));
+    List<Field> fields = tableFields(List.of("continent", "country", "city"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, fields);
     QueryDto query = Query
             .from(this.storeName)
             .where(criterion("city", in("montreal", "toronto")))
-            .select(tableFields(List.of("continent", "country", "city")), List.of(pOp))
+            .select(fields, List.of(pOp))
             .build(); // query only parent
 
     Table result = this.executor.execute(query);
@@ -129,7 +131,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   @Test
   void testWithMissingAncestor() {
     Measure pop = Functions.sum("population", "population");
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, List.of("country", "continent"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, tableFields(List.of("country", "continent")));
     QueryDto query = Query
             .from(this.storeName)
             .select(tableFields(List.of("continent", "country", "city")), List.of(pop, pOp))
@@ -154,7 +156,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
     // parent with a measure computed by SquashQL.
     Measure pop = Functions.sum("populationsum", "population");
     Measure pop2 = Functions.plus("pop2", pop, Functions.integer(2));
-    List<String> ancestors = List.of("city", "country", "continent");
+    List<Field> ancestors = tableFields(List.of("city", "country", "continent"));
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, ancestors);
     ComparisonMeasureReferencePosition pOp2 = new ComparisonMeasureReferencePosition("percentOfParent2", DIVIDE, pop2, ancestors);
     QueryDto query = Query
@@ -174,12 +176,12 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   @Test
   void testSimpleWithTotals() {
     Measure pop = Functions.sum("population", "population");
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, List.of("city", "country", "continent"));
-    List<Field> cols = tableFields(List.of("continent", "country", "city"));
+    List<Field> fields = tableFields(List.of("continent", "country", "city"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, fields);
     QueryDto query = Query
             .from(this.storeName)
-            .select(cols, List.of(pop, pOp))
-            .rollup(cols)
+            .select(fields, List.of(pop, pOp))
+            .rollup(fields)
             .build();
 
     Table result = this.executor.execute(query);

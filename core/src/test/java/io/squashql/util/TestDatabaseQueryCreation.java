@@ -5,6 +5,7 @@ import static io.squashql.query.TableField.tableField;
 import io.squashql.query.ColumnSetKey;
 import io.squashql.query.ComparisonMeasureReferencePosition;
 import io.squashql.query.ComparisonMethod;
+import io.squashql.query.Field;
 import io.squashql.query.Measure;
 import io.squashql.query.QueryExecutor;
 import io.squashql.query.dto.BucketColumnSetDto;
@@ -19,7 +20,7 @@ import org.mockito.Mockito;
 
 public class TestDatabaseQueryCreation {
 
-  private final Function<String, TypedField> fieldSupplier = Mockito.mock(Function.class);
+  private final Function<Field, TypedField> fieldSupplier = Mockito.mock(Function.class);
 
   @Test
   void testNoTable() {
