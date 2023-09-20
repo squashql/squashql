@@ -71,7 +71,7 @@ public interface Table extends Iterable<List<Object>> {
     int i = 0;
     MutableIntList list = MutableIntListFactoryImpl.INSTANCE.empty();
     for (Header header : headers()) {
-      if (header.name().equals(column)) {
+      if (header.name().equals(column.name())) {
         list.add(i);
       }
       i++;
