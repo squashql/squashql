@@ -34,14 +34,14 @@ public final class Queries {
   private Queries() {
   }
 
-  public static Map<Field, Comparator<?>> getComparators(QueryDto queryDto) {
+  public static Map<String, Comparator<?>> getComparators(QueryDto queryDto) {
     Map<Field, OrderDto> orders = queryDto.orders;
-    Map<Field, Comparator<?>> res = new HashMap<>();
+    Map<String, Comparator<?>> res = new HashMap<>();
     orders.forEach((c, order) -> {
       if (order instanceof SimpleOrderDto so) {
-        res.put(c, NullAndTotalComparator.nullsLastAndTotalsFirst(so.order == DESC ? Comparator.naturalOrder().reversed() : Comparator.naturalOrder()));
+        res.put(c.name(), NullAndTotalComparator.nullsLastAndTotalsFirst(so.order == DESC ? Comparator.naturalOrder().reversed() : Comparator.naturalOrder()));
       } else if (order instanceof ExplicitOrderDto eo) {
-        res.put(c, NullAndTotalComparator.nullsLastAndTotalsFirst(new CustomExplicitOrdering(eo.explicit)));
+        res.put(c.name(), NullAndTotalComparator.nullsLastAndTotalsFirst(new CustomExplicitOrdering(eo.explicit)));
       } else {
         throw new IllegalStateException("Unexpected value: " + orders);
       }
@@ -56,8 +56,8 @@ public final class Queries {
         List<Object> l = new ArrayList<>(v);
         m.put(k, l);
       });
-      res.put(cs.name, new CustomExplicitOrdering(new ArrayList<>(m.keySet())));
-      res.put(cs.field, DependentExplicitOrdering.create(m));
+      res.put(cs.name.name(), new CustomExplicitOrdering(new ArrayList<>(m.keySet())));
+      res.put(cs.field.name(), DependentExplicitOrdering.create(m));
     }
 
     return res;

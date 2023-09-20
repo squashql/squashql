@@ -32,7 +32,7 @@ public abstract class AComparisonExecutor {
     int index = 0;
     for (Header header : readFromTable.headers()) {
       if (!header.isMeasure()) {
-        indexByColumn.put(header.field(), index++);
+        indexByColumn.put(header.name(), index++);
       }
     }
     BiPredicate<Object[], Header[]> procedure = createShiftProcedure(cm, indexByColumn);

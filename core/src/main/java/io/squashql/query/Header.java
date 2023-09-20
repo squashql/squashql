@@ -1,4 +1,4 @@
 package io.squashql.query;
 
-public record Header(Field field, Class<?> type, boolean isMeasure) {
+public record Header(String name, Class<?> type, boolean isMeasure) {
 }

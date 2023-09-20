@@ -19,7 +19,7 @@ public class BucketerExecutor {
 
     int[] indexColumnsToRead = new int[bucketColumnSetDto.getColumnsForPrefetching().size()];
     for (int i = 0; i < bucketColumnSetDto.getColumnsForPrefetching().size(); i++) {
-      indexColumnsToRead[i] = table.columnIndex(bucketColumnSetDto.getColumnsForPrefetching().get(i));
+      indexColumnsToRead[i] = table.columnIndex(bucketColumnSetDto.getColumnsForPrefetching().get(i).name());
     }
 
     MutableIntSet indexColsInPrefetch = new IntHashSet();
@@ -30,7 +30,7 @@ public class BucketerExecutor {
       if (!bucketColumnSetDto.getColumnsForPrefetching().contains(field)) {
         indexColsInPrefetch.add(i);
       }
-      Header header = new Header(field, String.class, false);
+      Header header = new Header(field.name(), String.class, false);
       if (!table.headers().contains(header)) {
         finalHeaders.add(header); // append to the end
       }

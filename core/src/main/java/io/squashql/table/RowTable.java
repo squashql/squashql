@@ -62,7 +62,7 @@ public class RowTable implements Table {
 
   @Override
   public String toString() {
-    return TableUtils.toString(this.headers, this, h -> ((Header) h).field().name(), String::valueOf);
+    return TableUtils.toString(this.headers, this, h -> ((Header) h).name(), String::valueOf);
   }
 
   @Override

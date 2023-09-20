@@ -131,7 +131,7 @@ public class TableUtils {
     List<MetadataItem> metadata = new ArrayList<>();
     for (Header header : t.headers()) {
       Optional<Measure> optionalMeasure = t.measures().stream()
-              .filter(m -> m.alias().equals(header.field().name()))
+              .filter(m -> m.alias().equals(header.name()))
               .findAny();
       if (header.isMeasure() && optionalMeasure.isPresent()) {
         Measure measure = optionalMeasure.get();
@@ -139,9 +139,9 @@ public class TableUtils {
         if (expression == null) {
           measure = measure.withExpression(MeasureUtils.createExpression(measure));
         }
-        metadata.add(new MetadataItem(header.field(), measure.expression(), header.type()));
+        metadata.add(new MetadataItem(header.name(), measure.expression(), header.type()));
       } else {
-        metadata.add(new MetadataItem(header.field(), header.field().name(), header.type()));
+        metadata.add(new MetadataItem(header.name(), header.name(), header.type()));
       }
     }
     return metadata;
@@ -167,7 +167,7 @@ public class TableUtils {
     List<List<Object>> values = new ArrayList<>();
     for (Field finalColumn : columns) {
       headers.add(table.getHeader(finalColumn));
-      values.add(Objects.requireNonNull(table.getColumnValues(finalColumn)));
+      values.add(Objects.requireNonNull(table.getColumnValues(finalColumn.name())));
     }
     for (Measure measure : measures) {
       headers.add(table.getHeader(measure));
@@ -184,11 +184,11 @@ public class TableUtils {
   }
 
   public static Table orderRows(ColumnarTable table,
-                                Map<Field, Comparator<?>> comparatorByColumnName,
+                                Map<String, Comparator<?>> comparatorByColumnName,
                                 Collection<ColumnSet> columnSets) {
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
-    Map<Field, Comparator<?>> copy = new HashMap<>(comparatorByColumnName);
+    Map<String, Comparator<?>> copy = new HashMap<>(comparatorByColumnName);
 
     columnSets.forEach(columnSet -> {
       if (columnSet.getColumnSetKey() != ColumnSetKey.BUCKET) {
@@ -196,13 +196,13 @@ public class TableUtils {
       }
       BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
       // Remove from the map of comparators to use default one when only none is defined for regular column
-      copy.remove(cs.name);
-      copy.remove(cs.field);
+      copy.remove(cs.name.name());
+      copy.remove(cs.field.name());
     });
 
     List<Header> headers = table.headers;
     for (Header header : headers) {
-      Field headerName = header.field();
+      String headerName = header.name();
       Comparator<?> queryComp = comparatorByColumnName.get(headerName);
       // Order by default if not explicitly asked in the query. Otherwise, respect the order.
       if (queryComp != null || copy.isEmpty()) {
@@ -223,7 +223,7 @@ public class TableUtils {
     for (ColumnSet columnSet : new HashSet<>(columnSets)) {
       BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
       // cs.field can appear multiple times in the table.
-      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(cs.name));
+      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(cs.name.name()));
     }
 
     int[] finalIndices = MultipleColumnsSorter.sort(args, comparators, contextIndices);
@@ -249,13 +249,13 @@ public class TableUtils {
    * {@link QueryEngine#TOTAL}.
    */
   public static Table replaceTotalCellValues(ColumnarTable table, boolean hasTotal) {
-    return !hasTotal ? table : replaceTotalCellValues(table, table.headers().stream().map(Header::field).toList(), List.of());
+    return !hasTotal ? table : replaceTotalCellValues(table, table.headers().stream().map(Header::name).toList(), List.of());
   }
 
   /**
    * Same as {@link #replaceTotalCellValues(ColumnarTable, boolean)} but for adapted to pivot table.
    */
-  public static Table replaceTotalCellValues(ColumnarTable table, List<Field> rows, List<Field> columns) {
+  public static Table replaceTotalCellValues(ColumnarTable table, List<String> rows, List<String> columns) {
     // To lazily copy the table when needed.
     boolean[] lazilyCreated = new boolean[1];
     Supplier<Table> finalTable = Suppliers.memoize(() -> {
@@ -279,22 +279,22 @@ public class TableUtils {
             finalTable.get().getColumn(i).set(rowIndex, total);
           }
 
-          if (rows.contains(header.field())) {
+          if (rows.contains(header.name())) {
             grandTotalRow &= isTotalCell;
           }
 
-          if (columns.contains(header.field())) {
+          if (columns.contains(header.name())) {
             grandTotalCol &= isTotalCell;
           }
         }
       }
 
       int finalRowIndex = rowIndex;
-      BiConsumer<Boolean, List<Field>> consumer = (grandTotal, axis) -> {
+      BiConsumer<Boolean, List<String>> consumer = (grandTotal, axis) -> {
         if (grandTotal) {
           for (int i = 0; i < table.headers().size(); i++) {
             Header header = table.headers().get(i);
-            if (!header.isMeasure() && axis.contains(header.field())) {
+            if (!header.isMeasure() && axis.contains(header.name())) {
               finalTable.get().getColumn(i).set(finalRowIndex, QueryEngine.GRAND_TOTAL);
             }
           }

@@ -31,7 +31,7 @@ public interface Table extends Iterable<List<Object>> {
     return elements;
   }
 
-  default List<Object> getColumnValues(Field column) {
+  default List<Object> getColumnValues(String column) {
     return getColumn(columnIndex(column));
   }
 
@@ -44,25 +44,25 @@ public interface Table extends Iterable<List<Object>> {
   }
 
   default Header getHeader(Measure measure) {
-    return headers().stream().filter(header -> header.field().name().equals(measure.alias()))
+    return headers().stream().filter(header -> header.name().equals(measure.alias()))
             .findAny().orElseThrow(() -> new IllegalArgumentException("no header for " + measure));
   }
 
   default Header getHeader(Field column) {
-    return headers().get(columnIndex(column));
+    return headers().get(columnIndex(column.name()));
   }
 
-  default int columnIndex(Field column) {
+  default int columnIndex(String column) {
     int index = -1, i = 0;
     for (Header header : headers()) {
-      if (header.field().equals(column)) {
+      if (header.name().equals(column)) {
         index = i;
         break;
       }
       i++;
     }
     if (index < 0) {
-      throw new IllegalArgumentException("no column named " + column + ". Available columns are " + headers().stream().map(Header::field).toList());
+      throw new IllegalArgumentException("no column named " + column + ". Available columns are " + headers().stream().map(Header::name).toList());
     }
     return index;
   }
@@ -71,7 +71,7 @@ public interface Table extends Iterable<List<Object>> {
     int i = 0;
     MutableIntList list = MutableIntListFactoryImpl.INSTANCE.empty();
     for (Header header : headers()) {
-      if (header.field().equals(column)) {
+      if (header.name().equals(column)) {
         list.add(i);
       }
       i++;

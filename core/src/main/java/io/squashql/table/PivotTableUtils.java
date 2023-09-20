@@ -123,7 +123,7 @@ public final class PivotTableUtils {
     Arrays.fill(mapping, -1);
     for (int i = 0; i < headers.size(); i++) {
       for (int j = 0; j < table.headers().size(); j++) {
-        if (table.headers().get(j).field().equals(headers.get(i))) {
+        if (table.headers().get(j).name().equals(headers.get(i))) {
           mapping[i] = j;
           break;
         }

@@ -156,7 +156,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
           newHeaders.add(header);
           newValues.add(columnValues);
         } else {
-          String baseName = Objects.requireNonNull(SqlUtils.extractFieldFromGroupingAlias(header.field()));
+          String baseName = Objects.requireNonNull(SqlUtils.extractFieldFromGroupingAlias(header.name()));
           List<Object> baseColumnValues = input.getColumnValues(baseName);
           for (int rowIndex = 0; rowIndex < columnValues.size(); rowIndex++) {
             if (((Number) columnValues.get(rowIndex)).longValue() == 1) {

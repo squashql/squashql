@@ -85,7 +85,8 @@ public class QueryExecutor {
     PivotTableContext pivotTableContext = new PivotTableContext(pivotTableQueryDto);
     QueryDto preparedQuery = prepareQuery(pivotTableQueryDto.query, pivotTableContext);
     Table result = execute(preparedQuery, pivotTableContext, cacheStatsDtoBuilder, user, false, limitNotifier);
-    result = TableUtils.replaceTotalCellValues((ColumnarTable) result, pivotTableQueryDto.rows, pivotTableQueryDto.columns);
+    result = TableUtils.replaceTotalCellValues((ColumnarTable) result, pivotTableQueryDto.rows.stream().map(Field::name).collect(
+            Collectors.toList()), pivotTableQueryDto.columns.stream().map(Field::name).collect(Collectors.toList()));
     result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
 
     List<String> values = pivotTableQueryDto.query.measures.stream().map(Measure::alias).toList();
@@ -382,8 +383,8 @@ public class QueryExecutor {
   }
 
   public Table execute(QueryDto first, QueryDto second, JoinType joinType, SquashQLUser user) {
-    Map<Field, Comparator<?>> firstComparators = Queries.getComparators(first);
-    Map<Field, Comparator<?>> secondComparators = Queries.getComparators(second);
+    Map<String, Comparator<?>> firstComparators = Queries.getComparators(first);
+    Map<String, Comparator<?>> secondComparators = Queries.getComparators(second);
     secondComparators.putAll(firstComparators); // the comparators of the first query take precedence over the second's
 
     Set<ColumnSet> columnSets = Stream.concat(first.columnSets.values().stream(), second.columnSets.values().stream())
@@ -403,7 +404,7 @@ public class QueryExecutor {
     return CompletableFuture.allOf(f1, f2).thenApply(__ -> merge(f1.join(), f2.join(), joinType, secondComparators, columnSets)).join();
   }
 
-  public static Table merge(Table table1, Table table2, JoinType joinType, Map<Field, Comparator<?>> comparators, Set<ColumnSet> columnSets) {
+  public static Table merge(Table table1, Table table2, JoinType joinType, Map<String, Comparator<?>> comparators, Set<ColumnSet> columnSets) {
     ColumnarTable table = (ColumnarTable) MergeTables.mergeTables(table1, table2, joinType);
     table = (ColumnarTable) TableUtils.orderRows(table, comparators, columnSets);
     return TableUtils.replaceTotalCellValues(table, true);

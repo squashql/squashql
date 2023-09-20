@@ -85,7 +85,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
             .build();
 
     Table result = this.executor.execute(query);
-    Assertions.assertThat(result.headers().stream().map(Header::field))
+    Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(shop, bucket, "sales");
     Assertions.assertThat(result).containsExactly(
             List.of("0", "hypersensistive", 240d),
@@ -103,7 +103,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
             .rollup(shop, bucket)
             .build();
     result = this.executor.execute(query);
-    Assertions.assertThat(result.headers().stream().map(Header::field))
+    Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(shop, bucket, "sales");
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, GRAND_TOTAL, 900d),

@@ -264,7 +264,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of(MAIN_SCENARIO_NAME, 3l),
             List.of("s1", 3l),
             List.of("s2", 3l));
-    Assertions.assertThat(result.headers().stream().map(Header::field))
+    Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
   }
 
@@ -401,7 +401,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of(MAIN_SCENARIO_NAME, 30l, 30l),
             List.of("s1", 30l, 30l),
             List.of("s2", 30l, 30l));
-    Assertions.assertThat(result.headers().stream().map(Header::field))
+    Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(SCENARIO_FIELD_NAME, "quantity if food or drink", "quantity filtered");
 
     // Multiple fields
@@ -431,7 +431,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of(MAIN_SCENARIO_NAME, 30l),
             List.of("s1", 30l),
             List.of("s2", 30l));
-    Assertions.assertThat(result.headers().stream().map(Header::field))
+    Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(SCENARIO_FIELD_NAME, "quantity filtered");
   }
 
@@ -574,7 +574,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(List.of(4650d, 4650d, 9900l, 9900d, translate(100), 100d));
-    Assertions.assertThat(result.headers().stream().map(Header::field).toList())
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly("a1", "a2", "b1", "b2", "constant(100)", "constant(100.0)");
   }
 
@@ -586,7 +586,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     String price = qr.fieldName("price");
     // Use SUMPRICE in upper case to simplify the test. Indeed, Snowflake converts lower case aliases to upper case...
     Table result = this.executor.execute(String.format("select %s, sum(%s) as SUMPRICE from %s group by %s order by %s", ean, price, tableName, ean, ean));
-    Assertions.assertThat(result.headers().stream().map(header -> header.field()).toList())
+    Assertions.assertThat(result.headers().stream().map(header -> header.name()).toList())
             .containsExactly("ean", "SUMPRICE");
     Assertions.assertThat(result).containsExactly(
             List.of("bottle", 7.5d),
@@ -610,7 +610,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
     Table result = this.executor.execute(query1, query2, JoinType.FULL, null);
 
-    Assertions.assertThat(result.headers().stream().map(Header::field).toList())
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly("category", SCENARIO_FIELD_NAME, "p_sum", "p_min");
     Assertions.assertThat(result).containsExactly(
             Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, 46.5d, 1.5d),

@@ -24,7 +24,7 @@ public class DuckDBDataLoader implements DataLoader {
   }
 
   public void createOrReplaceTable(String tableName, Table table) {
-    List<TableTypedField> fields = table.headers().stream().map(h -> new TableTypedField(tableName, h.field(), h.type())).toList();
+    List<TableTypedField> fields = table.headers().stream().map(h -> new TableTypedField(tableName, h.name(), h.type())).toList();
     createOrReplaceTable(this.datastore, tableName, fields, false);
     loadWithOrWithoutScenario(null, tableName, table.iterator());
   }

@@ -4,8 +4,13 @@ import com.google.common.base.Suppliers;
 import io.squashql.query.Header;
 import io.squashql.query.Measure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public class ColumnarTable implements Table {
@@ -19,7 +24,7 @@ public class ColumnarTable implements Table {
   public ColumnarTable(List<Header> headers, Set<Measure> measures, List<List<Object>> values) {
     if (headers.stream().filter(Header::isMeasure)
             .anyMatch(measureHeader -> !measures.stream().map(Measure::alias).toList()
-                    .contains(measureHeader.field()))) {
+                    .contains(measureHeader.name()))) {
       throw new IllegalArgumentException("Every header measure should have its description in measures.");
     }
     this.headers = new ArrayList<>(headers);
@@ -46,7 +51,7 @@ public class ColumnarTable implements Table {
 
   @Override
   public void addAggregates(Header header, Measure measure, List<Object> values) {
-    this.headers.add(new Header(header.field(), header.type(), true));
+    this.headers.add(new Header(header.name(), header.type(), true));
     this.measures.add(measure);
     this.values.add(values);
   }
@@ -87,7 +92,7 @@ public class ColumnarTable implements Table {
 
   @Override
   public String toString() {
-    return TableUtils.toString(this.headers, this, h -> ((Header) h).field().name(), String::valueOf);
+    return TableUtils.toString(this.headers, this, h -> ((Header) h).name(), String::valueOf);
   }
 
   @Override
