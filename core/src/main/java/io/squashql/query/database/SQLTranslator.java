@@ -1,7 +1,9 @@
 package io.squashql.query.database;
 
 import com.google.common.collect.Ordering;
+import io.squashql.query.Field;
 import io.squashql.query.MeasureUtils;
+import io.squashql.query.TableField;
 import io.squashql.query.dto.*;
 import io.squashql.store.UnknownType;
 import io.squashql.type.TypedField;
@@ -205,23 +207,23 @@ public class SQLTranslator {
     }
   }
 
-  public static String toSql(TypedField field, ConditionDto dto, QueryRewriter queryRewriter) {
-    String formattedFieldName = queryRewriter.select(field);
+  public static String toSql(Field field, ConditionDto dto, Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter) {
+    String expression = field.sqlExpression(fieldProvider, queryRewriter);
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
-      Function<Object, String> sqlMapper = getQuoteFn(field);
+      Function<Object, String> sqlMapper = getQuoteFn(fieldProvider.apply(field.name()));
       return switch (dto.type()) {
-        case IN -> formattedFieldName + " " + dto.type().sqlInfix + " (" +
+        case IN -> expression + " " + dto.type().sqlInfix + " (" +
                 ((InConditionDto) dto).values
                         .stream()
                         .map(sqlMapper)
                         .collect(Collectors.joining(", ")) + ")";
         case EQ, NEQ, LT, LE, GT, GE, LIKE ->
-                formattedFieldName + " " + dto.type().sqlInfix + " " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
+                expression + " " + dto.type().sqlInfix + " " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
         default -> throw new IllegalStateException("Unexpected value: " + dto.type());
       };
     } else if (dto instanceof LogicalConditionDto logical) {
-      String first = toSql(field, logical.one, queryRewriter);
-      String second = toSql(field, logical.two, queryRewriter);
+      String first = toSql(field, logical.one, fieldProvider, queryRewriter);
+      String second = toSql(field, logical.two, fieldProvider, queryRewriter);
       String typeString = switch (dto.type()) {
         case AND, OR -> " " + ((LogicalConditionDto) dto).type.sqlInfix + " ";
         default -> throw new IllegalStateException("Incorrect type " + logical.type);
@@ -229,7 +231,7 @@ public class SQLTranslator {
       return "(" + first + typeString + second + ")";
     } else if (dto instanceof ConstantConditionDto cc) {
       return switch (cc.type()) {
-        case NULL, NOT_NULL -> formattedFieldName + " " + cc.type.sqlInfix;
+        case NULL, NOT_NULL -> expression + " " + cc.type.sqlInfix;
         default -> throw new IllegalStateException("Unexpected value: " + dto.type());
       };
     } else {
@@ -239,9 +241,9 @@ public class SQLTranslator {
 
   public static String toSql(Function<String, TypedField> fieldProvider, CriteriaDto criteriaDto, QueryRewriter queryRewriter) {
     if (criteriaDto.field != null && criteriaDto.condition != null) {
-      return toSql(fieldProvider.apply(criteriaDto.field.name()), criteriaDto.condition, queryRewriter);
+      return toSql(criteriaDto.field, criteriaDto.condition, fieldProvider, queryRewriter);
     } else if (criteriaDto.measure != null && criteriaDto.condition != null) {
-      return toSql(fieldProvider.apply(criteriaDto.measure.alias()), criteriaDto.condition, queryRewriter);
+      return toSql(new TableField(criteriaDto.measure.alias()), criteriaDto.condition, fieldProvider, queryRewriter);
     } else if (criteriaDto.field != null && criteriaDto.fieldOther != null && criteriaDto.conditionType != null) {
       String left = criteriaDto.field.sqlExpression(fieldProvider, queryRewriter);
       String right = criteriaDto.fieldOther.sqlExpression(fieldProvider, queryRewriter);

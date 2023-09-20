@@ -34,5 +34,4 @@ public class BinaryOperationField implements Field {
   public String name() {
     throw new IllegalStateException("Incorrect path of execution");
   }
-
 }
