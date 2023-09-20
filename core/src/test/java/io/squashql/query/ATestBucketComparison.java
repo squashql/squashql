@@ -70,8 +70,8 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
             Map.of(
-                    SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
-                    this.groupOfScenario, "g"
+                    tableField(SCENARIO_FIELD_NAME), AComparisonExecutor.REF_POS_FIRST,
+                    tableField(this.groupOfScenario), "g"
             ),
             ColumnSetKey.BUCKET);
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
@@ -80,8 +80,8 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
             Map.of(
-                    SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
-                    this.groupOfScenario, "g"
+                    tableField(SCENARIO_FIELD_NAME), AComparisonExecutor.REF_POS_FIRST,
+                    tableField(this.groupOfScenario), "g"
             ),
             ColumnSetKey.BUCKET);
 
@@ -125,8 +125,8 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
             Map.of(
-                    SCENARIO_FIELD_NAME, "s-1",
-                    this.groupOfScenario, "g"
+                    tableField(SCENARIO_FIELD_NAME), "s-1",
+                    tableField(this.groupOfScenario), "g"
             ),
             ColumnSetKey.BUCKET);
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
@@ -134,7 +134,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             "quantityDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
-            Map.of(SCENARIO_FIELD_NAME, "s-1", this.groupOfScenario, "g"),
+            Map.of(tableField(SCENARIO_FIELD_NAME), "s-1", tableField(this.groupOfScenario), "g"),
             ColumnSetKey.BUCKET);
 
     var query = new QueryDto()
@@ -168,8 +168,8 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             RELATIVE_DIFFERENCE,
             price,
             Map.of(
-                    SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
-                    this.groupOfScenario, "g"
+                    tableField(SCENARIO_FIELD_NAME), AComparisonExecutor.REF_POS_FIRST,
+                    tableField(this.groupOfScenario), "g"
             ),
             ColumnSetKey.BUCKET);
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
@@ -178,8 +178,8 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             RELATIVE_DIFFERENCE,
             quantity,
             Map.of(
-                    SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
-                    this.groupOfScenario, "g"
+                    tableField(SCENARIO_FIELD_NAME), AComparisonExecutor.REF_POS_FIRST,
+                    tableField(this.groupOfScenario), "g"
             ),
             ColumnSetKey.BUCKET);
 

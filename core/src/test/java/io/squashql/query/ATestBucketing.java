@@ -1,5 +1,11 @@
 package io.squashql.query;
 
+import static io.squashql.query.Functions.all;
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import static io.squashql.query.database.QueryEngine.TOTAL;
+
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.QueryRewriter;
@@ -8,21 +14,15 @@ import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.VirtualTableDto;
-import io.squashql.type.TableTypedField;
 import io.squashql.table.Table;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-
+import io.squashql.type.TableTypedField;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
-
-import static io.squashql.query.Functions.all;
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
-import static io.squashql.query.database.QueryEngine.TOTAL;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 @TestClass(ignore = TestClass.Type.CLICKHOUSE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -75,8 +75,8 @@ public abstract class ATestBucketing extends ABaseTestQuery {
     CriteriaDto criteria = all(
             criterion(fieldNameGenerator.apply(this.storeName, "kvi"), fieldNameGenerator.apply(sensitivities.name, "min"), ConditionType.GE),
             criterion(fieldNameGenerator.apply(this.storeName, "kvi"), fieldNameGenerator.apply(sensitivities.name, "max"), ConditionType.LT));
-    String bucket = fieldNameGenerator.apply(sensitivities.name, "bucket");
-    String shop = fieldNameGenerator.apply(this.storeName, "shop");
+    Field bucket = tableField(fieldNameGenerator.apply(sensitivities.name, "bucket"));
+    Field shop = tableField(fieldNameGenerator.apply(this.storeName, "shop"));
     var query = Query
             .from(this.storeName)
             .join(sensitivities, JoinType.INNER)
@@ -86,7 +86,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 
     Table result = this.executor.execute(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(shop, bucket, "sales");
+            .containsExactly(shop.name(), bucket.name(), "sales");
     Assertions.assertThat(result).containsExactly(
             List.of("0", "hypersensistive", 240d),
             List.of("0", "sensistive", 150d),
@@ -104,7 +104,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
             .build();
     result = this.executor.execute(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(shop, bucket, "sales");
+            .containsExactly(shop.name(), bucket.name(), "sales");
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, GRAND_TOTAL, 900d),
             List.of("0", TOTAL, 450d),

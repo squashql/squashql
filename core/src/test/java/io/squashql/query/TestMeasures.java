@@ -1,15 +1,18 @@
 package io.squashql.query;
 
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.eq;
+import static io.squashql.query.Functions.plus;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
+
 import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.dto.Period;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import static io.squashql.query.Functions.*;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestMeasures {
 
@@ -45,18 +48,18 @@ public class TestMeasures {
     AggregatedMeasure amount = new AggregatedMeasure("sum(Amount)", "Amount", AggregationFunction.SUM);
     AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, criterion("Income/Expense", eq("Revenue")));
     Measure ebidtaRatio = Functions.divide("EBITDA %", amount, sales);
-
+    final Period.Year period = new Period.Year(tableField("Year"));
     ComparisonMeasureReferencePosition growth = new ComparisonMeasureReferencePosition(
             "Growth",
             ComparisonMethod.DIVIDE,
             sales,
-            Map.of("Year", "y-1"),
-            new Period.Year("Year"));
+            Map.of(period.year(), "y-1"),
+            period);
     Measure kpi = plus("KPI", ebidtaRatio, growth);
 
-    Map<String, String> referencePosition = new LinkedHashMap<>();
-    referencePosition.put("scenario encrypted", "s-1");
-    referencePosition.put("group", "g");
+    Map<Field, String> referencePosition = new LinkedHashMap<>();
+    referencePosition.put(tableField("scenario encrypted"), "s-1");
+    referencePosition.put(tableField("group"), "g");
     ComparisonMeasureReferencePosition kpiComp = new ComparisonMeasureReferencePosition(
             "KPI comp. with prev. scenario",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
@@ -64,7 +67,7 @@ public class TestMeasures {
             referencePosition,
             ColumnSetKey.BUCKET);
 
-    ComparisonMeasureReferencePosition parentComparisonMeasure = new ComparisonMeasureReferencePosition("parent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
+    ComparisonMeasureReferencePosition parentComparisonMeasure = new ComparisonMeasureReferencePosition("parent", ComparisonMethod.DIVIDE, amount, tableFields(List.of("city", "country", "continent")));
 
     Assertions.assertThat(MeasureUtils.createExpression(amount)).isEqualTo("sum(Amount)");
     Assertions.assertThat(MeasureUtils.createExpression(sales)).isEqualTo("sumIf(Amount, Income/Expense = 'Revenue')");
