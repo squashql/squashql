@@ -47,12 +47,12 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     for (Map.Entry<Field, String> entry : cm.referencePosition.entrySet()) {
       PeriodUnit pu = mapping.get(entry.getKey());
       referencePosition.put(pu, entry.getValue());
-      indexByPeriodUnit.put(pu, indexByColumn.getIfAbsent(entry.getKey(), -1));
+      indexByPeriodUnit.put(pu, indexByColumn.getIfAbsent(entry.getKey().name(), -1));
     }
     for (Map.Entry<Field, PeriodUnit> entry : mapping.entrySet()) {
       PeriodUnit pu = mapping.get(entry.getKey());
       referencePosition.putIfAbsent(pu, "c"); // constant for missing ref.
-      indexByPeriodUnit.getIfAbsentPut(pu, indexByColumn.getIfAbsent(entry.getKey(), -1));
+      indexByPeriodUnit.getIfAbsentPut(pu, indexByColumn.getIfAbsent(entry.getKey().name(), -1));
     }
     return new ShiftProcedure(period, referencePosition, indexByPeriodUnit);
   }
