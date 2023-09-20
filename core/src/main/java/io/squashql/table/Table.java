@@ -1,17 +1,17 @@
 package io.squashql.table;
 
+import io.squashql.query.Field;
 import io.squashql.query.Header;
 import io.squashql.query.Measure;
 import io.squashql.query.TotalCountMeasure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.QueryDto;
-import org.eclipse.collections.api.list.primitive.IntList;
-import org.eclipse.collections.api.list.primitive.MutableIntList;
-import org.eclipse.collections.impl.list.mutable.primitive.MutableIntListFactoryImpl;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import org.eclipse.collections.api.list.primitive.IntList;
+import org.eclipse.collections.api.list.primitive.MutableIntList;
+import org.eclipse.collections.impl.list.mutable.primitive.MutableIntListFactoryImpl;
 
 public interface Table extends Iterable<List<Object>> {
 
@@ -31,7 +31,7 @@ public interface Table extends Iterable<List<Object>> {
     return elements;
   }
 
-  default List<Object> getColumnValues(String column) {
+  default List<Object> getColumnValues(Field column) {
     return getColumn(columnIndex(column));
   }
 
@@ -44,34 +44,34 @@ public interface Table extends Iterable<List<Object>> {
   }
 
   default Header getHeader(Measure measure) {
-    return headers().stream().filter(header -> header.name().equals(measure.alias()))
+    return headers().stream().filter(header -> header.field().name().equals(measure.alias()))
             .findAny().orElseThrow(() -> new IllegalArgumentException("no header for " + measure));
   }
 
-  default Header getHeader(String column) {
+  default Header getHeader(Field column) {
     return headers().get(columnIndex(column));
   }
 
-  default int columnIndex(String column) {
+  default int columnIndex(Field column) {
     int index = -1, i = 0;
     for (Header header : headers()) {
-      if (header.name().equals(column)) {
+      if (header.field().equals(column)) {
         index = i;
         break;
       }
       i++;
     }
     if (index < 0) {
-      throw new IllegalArgumentException("no column named " + column + ". Available columns are " + headers().stream().map(Header::name).toList());
+      throw new IllegalArgumentException("no column named " + column + ". Available columns are " + headers().stream().map(Header::field).toList());
     }
     return index;
   }
 
-  default IntList columnIndices(String column) {
+  default IntList columnIndices(Field column) {
     int i = 0;
     MutableIntList list = MutableIntListFactoryImpl.INSTANCE.empty();
     for (Header header : headers()) {
-      if (header.name().equals(column)) {
+      if (header.field().equals(column)) {
         list.add(i);
       }
       i++;

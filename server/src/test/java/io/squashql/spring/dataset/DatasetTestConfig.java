@@ -67,7 +67,7 @@ public class DatasetTestConfig {
    * +------------------------+--------------+----------------------+----------------------+----------------------+----------------------+----------------------+----------------------+
    */
   public static void toJson(PivotTable pivotTable) {
-    List<String> list = pivotTable.table.headers().stream().map(Header::name).toList();
+    List<String> list = pivotTable.table.headers().stream().map(Header::field).toList();
 
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(pivotTable.table.iterator()))

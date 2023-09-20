@@ -50,7 +50,7 @@ public class QueryController {
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(),
             true,
             null);
-    List<String> fields = table.headers().stream().map(Header::name).collect(Collectors.toList());
+    List<String> fields = table.headers().stream().map(Header::field).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))
             .columns(fields)
@@ -70,7 +70,7 @@ public class QueryController {
             csBuilder,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(),
             null);
-    List<String> fields = pt.table.headers().stream().map(Header::name).collect(Collectors.toList());
+    List<String> fields = pt.table.headers().stream().map(Header::field).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(pt.table.iterator()))
             .columns(fields)
@@ -90,7 +90,7 @@ public class QueryController {
             queryMergeDto.second,
             queryMergeDto.joinType,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get());
-    List<String> fields = table.headers().stream().map(Header::name).collect(Collectors.toList());
+    List<String> fields = table.headers().stream().map(Header::field).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
             .rows(ImmutableList.copyOf(table.iterator()))
             .columns(fields)

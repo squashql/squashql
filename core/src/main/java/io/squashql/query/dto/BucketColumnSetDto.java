@@ -17,14 +17,14 @@ import lombok.ToString;
 @NoArgsConstructor // For Jackson
 public class BucketColumnSetDto implements ColumnSet {
 
-  public String name;
+  public Field name;
 
   public Field field;
 
   public Map<String, List<String>> values = new LinkedHashMap<>();
 
   public BucketColumnSetDto(String name, Field field) {
-    this.name = name;
+    this.name = new TableField(name);
     this.field = field;
   }
 
@@ -40,7 +40,7 @@ public class BucketColumnSetDto implements ColumnSet {
 
   @Override
   public List<Field> getNewColumns() {
-    return List.of(new TableField(null, this.name), this.field);
+    return List.of(this.name, this.field);
   }
 
   @Override

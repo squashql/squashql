@@ -162,12 +162,12 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       Header h = input.headers().get(i);
       List<Object> columnValues = input.getColumn(i);
       if (i < query.select.size()) {
-        List<Object> baseColumnValues = input.getColumnValues(h.name());
+        List<Object> baseColumnValues = input.getColumnValues(h.field());
         for (int rowIndex = 0; rowIndex < input.count(); rowIndex++) {
           Object value = columnValues.get(rowIndex);
           if (value == null) {
             baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
-            if (query.groupingSets.isEmpty() && isPartialRollup && missingColumnsInRollupSet.contains(h.name())) {
+            if (query.groupingSets.isEmpty() && isPartialRollup && missingColumnsInRollupSet.contains(h.field())) {
               // Partial rollup not supported https://issuetracker.google.com/issues/35905909, we let bigquery compute
               // all totals, and we remove here the extra rows.
               rowIndicesToRemove.add(rowIndex);

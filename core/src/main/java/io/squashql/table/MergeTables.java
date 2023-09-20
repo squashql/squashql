@@ -78,7 +78,7 @@ public class MergeTables {
         if (mergedMeasures.contains(rightHeader)) {
           throw new UnsupportedOperationException(String.format(
                   "The two tables both contain the measure %s while they must not share any measure to be merged.",
-                  rightHeader.name()));
+                  rightHeader.field()));
         } else {
           mergedMeasures.add(rightHeader);
         }
@@ -197,7 +197,7 @@ public class MergeTables {
   private static List<Measure> getMeasures(ColumnarTable table) {
     return table.headers().stream()
             .filter(Header::isMeasure)
-            .map(h -> table.measures().stream().filter(m -> m.alias().equals(h.name())).findFirst().orElseThrow(() -> new IllegalStateException("Cannot find measure with name " + h.name())))
+            .map(h -> table.measures().stream().filter(m -> m.alias().equals(h.field())).findFirst().orElseThrow(() -> new IllegalStateException("Cannot find measure with name " + h.field())))
             .toList();
   }
 

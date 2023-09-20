@@ -1,16 +1,17 @@
 package io.squashql.table;
 
+import io.squashql.query.Field;
 import java.util.List;
 
 public class PivotTable {
 
   public final Table table;
   public final List<List<Object>> pivotTableCells;
-  public final List<String> rows;
-  public final List<String> columns;
+  public final List<Field> rows;
+  public final List<Field> columns;
   public final List<String> values;
 
-  public PivotTable(Table table, List<String> rows, List<String> columns, List<String> values) {
+  public PivotTable(Table table, List<Field> rows, List<Field> columns, List<String> values) {
     this.table = table;
     this.rows = rows;
     this.columns = columns;

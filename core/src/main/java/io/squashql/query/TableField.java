@@ -49,7 +49,7 @@ public class TableField implements Field {
   }
 
   @Override
-  public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter) {
+  public String sqlExpression(Function<Field, TypedField> fieldProvider, QueryRewriter queryRewriter) {
     setAttributes();
     if (CountMeasure.FIELD_NAME.equals(this.fieldName)) {
       return CountMeasure.FIELD_NAME;

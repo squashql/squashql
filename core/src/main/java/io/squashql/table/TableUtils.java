@@ -1,17 +1,31 @@
 package io.squashql.table;
 
 import com.google.common.base.Suppliers;
-import io.squashql.query.*;
+import io.squashql.query.ColumnSet;
+import io.squashql.query.ColumnSetKey;
+import io.squashql.query.Field;
+import io.squashql.query.Header;
+import io.squashql.query.Measure;
+import io.squashql.query.MeasureUtils;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
-import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.NullAndTotalComparator;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -76,7 +90,7 @@ public class TableUtils {
      */
     final StringBuilder formatString = new StringBuilder();
     String flag = leftJustifiedRows ? "-" : "";
-    columnLengths.entrySet().forEach(e -> formatString.append("| %" + flag + e.getValue() + "s "));
+    columnLengths.forEach((key, value) -> formatString.append("| %" + flag + value + "s "));
     formatString.append("|\n");
 
     /*
@@ -117,7 +131,7 @@ public class TableUtils {
     List<MetadataItem> metadata = new ArrayList<>();
     for (Header header : t.headers()) {
       Optional<Measure> optionalMeasure = t.measures().stream()
-              .filter(m -> m.alias().equals(header.name()))
+              .filter(m -> m.alias().equals(header.field().name()))
               .findAny();
       if (header.isMeasure() && optionalMeasure.isPresent()) {
         Measure measure = optionalMeasure.get();
@@ -125,9 +139,9 @@ public class TableUtils {
         if (expression == null) {
           measure = measure.withExpression(MeasureUtils.createExpression(measure));
         }
-        metadata.add(new MetadataItem(header.name(), measure.expression(), header.type()));
+        metadata.add(new MetadataItem(header.field(), measure.expression(), header.type()));
       } else {
-        metadata.add(new MetadataItem(header.name(), header.name(), header.type()));
+        metadata.add(new MetadataItem(header.field(), header.field().name(), header.type()));
       }
     }
     return metadata;
@@ -139,20 +153,19 @@ public class TableUtils {
    */
   public static ColumnarTable selectAndOrderColumns(ColumnarTable table,
                                                     QueryDto queryDto) {
-    List<String> finalColumns = new ArrayList<>();
+    List<Field> finalColumns = new ArrayList<>();
     queryDto.columnSets.values()
             .forEach(cs -> finalColumns.addAll(cs.getNewColumns()
                     .stream()
-                    .map(SqlUtils::getFieldFullName)
                     .toList()));
     finalColumns.addAll(queryDto.columns);
     return selectAndOrderColumns(table, finalColumns, queryDto.measures);
   }
 
-  public static ColumnarTable selectAndOrderColumns(ColumnarTable table, List<String> columns, List<Measure> measures) {
+  public static ColumnarTable selectAndOrderColumns(ColumnarTable table, List<Field> columns, List<Measure> measures) {
     List<Header> headers = new ArrayList<>();
     List<List<Object>> values = new ArrayList<>();
-    for (String finalColumn : columns) {
+    for (Field finalColumn : columns) {
       headers.add(table.getHeader(finalColumn));
       values.add(Objects.requireNonNull(table.getColumnValues(finalColumn)));
     }
@@ -171,11 +184,11 @@ public class TableUtils {
   }
 
   public static Table orderRows(ColumnarTable table,
-                                Map<String, Comparator<?>> comparatorByColumnName,
+                                Map<Field, Comparator<?>> comparatorByColumnName,
                                 Collection<ColumnSet> columnSets) {
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
-    Map<String, Comparator<?>> copy = new HashMap<>(comparatorByColumnName);
+    Map<Field, Comparator<?>> copy = new HashMap<>(comparatorByColumnName);
 
     columnSets.forEach(columnSet -> {
       if (columnSet.getColumnSetKey() != ColumnSetKey.BUCKET) {
@@ -188,8 +201,8 @@ public class TableUtils {
     });
 
     List<Header> headers = table.headers;
-    for (int i = 0; i < headers.size(); i++) {
-      String headerName = headers.get(i).name();
+    for (Header header : headers) {
+      Field headerName = header.field();
       Comparator<?> queryComp = comparatorByColumnName.get(headerName);
       // Order by default if not explicitly asked in the query. Otherwise, respect the order.
       if (queryComp != null || copy.isEmpty()) {
@@ -236,13 +249,13 @@ public class TableUtils {
    * {@link QueryEngine#TOTAL}.
    */
   public static Table replaceTotalCellValues(ColumnarTable table, boolean hasTotal) {
-    return !hasTotal ? table : replaceTotalCellValues(table, table.headers().stream().map(Header::name).toList(), List.of());
+    return !hasTotal ? table : replaceTotalCellValues(table, table.headers().stream().map(Header::field).toList(), List.of());
   }
 
   /**
    * Same as {@link #replaceTotalCellValues(ColumnarTable, boolean)} but for adapted to pivot table.
    */
-  public static Table replaceTotalCellValues(ColumnarTable table, List<String> rows, List<String> columns) {
+  public static Table replaceTotalCellValues(ColumnarTable table, List<Field> rows, List<Field> columns) {
     // To lazily copy the table when needed.
     boolean[] lazilyCreated = new boolean[1];
     Supplier<Table> finalTable = Suppliers.memoize(() -> {
@@ -266,22 +279,22 @@ public class TableUtils {
             finalTable.get().getColumn(i).set(rowIndex, total);
           }
 
-          if (rows.contains(header.name())) {
+          if (rows.contains(header.field())) {
             grandTotalRow &= isTotalCell;
           }
 
-          if (columns.contains(header.name())) {
+          if (columns.contains(header.field())) {
             grandTotalCol &= isTotalCell;
           }
         }
       }
 
       int finalRowIndex = rowIndex;
-      BiConsumer<Boolean, List<String>> consumer = (grandTotal, axis) -> {
+      BiConsumer<Boolean, List<Field>> consumer = (grandTotal, axis) -> {
         if (grandTotal) {
           for (int i = 0; i < table.headers().size(); i++) {
             Header header = table.headers().get(i);
-            if (!header.isMeasure() && axis.contains(header.name())) {
+            if (!header.isMeasure() && axis.contains(header.field())) {
               finalTable.get().getColumn(i).set(finalRowIndex, QueryEngine.GRAND_TOTAL);
             }
           }

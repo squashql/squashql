@@ -90,8 +90,8 @@ public class TestUtil {
     List<Header> headers = new ArrayList<>();
     Set<String> measureNames = measures.stream().map(Measure::alias).collect(Collectors.toSet());
     for (Header header : rowTable.headers()) {
-      if (measureNames.contains(header.name())) {
-        headers.add(new Header(header.name(), header.type(), true));
+      if (measureNames.contains(header.field())) {
+        headers.add(new Header(header.field(), header.type(), true));
       } else {
         headers.add(header);
       }

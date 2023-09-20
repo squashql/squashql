@@ -1,9 +1,9 @@
 package io.squashql.query.database;
 
+import io.squashql.query.TableField;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

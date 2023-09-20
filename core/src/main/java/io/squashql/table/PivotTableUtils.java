@@ -1,6 +1,11 @@
 package io.squashql.table;
 
-import java.util.*;
+import io.squashql.query.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public final class PivotTableUtils {
@@ -10,8 +15,8 @@ public final class PivotTableUtils {
 
   static List<List<Object>> pivot(PivotTable pivotTable) {
     Table table = pivotTable.table;
-    List<String> rows = pivotTable.rows;
-    List<String> columns = pivotTable.columns;
+    List<Field> rows = pivotTable.rows;
+    List<Field> columns = pivotTable.columns;
     List<String> values = pivotTable.values;
 
     Set<ObjectArrayKey> columnHeaderValues = getHeaderValues(table, columns);
@@ -96,7 +101,7 @@ public final class PivotTableUtils {
    * Gets all the possible values in the table for the given headers. The values stored in {@link ObjectArrayKey} are
    * aligned with the headers and the order in the resulting set is preserved.
    */
-  private static Set<ObjectArrayKey> getHeaderValues(Table table, List<String> headers) {
+  private static Set<ObjectArrayKey> getHeaderValues(Table table, List<Field> headers) {
     int[] mapping = getHeaderIndices(table, headers);
 
     LinkedHashSet<ObjectArrayKey> result = new LinkedHashSet<>();
@@ -113,12 +118,12 @@ public final class PivotTableUtils {
   /**
    * Gets the indices of the given headers in the table.
    */
-  private static int[] getHeaderIndices(Table table, List<String> headers) {
+  private static int[] getHeaderIndices(Table table, List<Field> headers) {
     int[] mapping = new int[headers.size()];
     Arrays.fill(mapping, -1);
     for (int i = 0; i < headers.size(); i++) {
       for (int j = 0; j < table.headers().size(); j++) {
-        if (table.headers().get(j).name().equals(headers.get(i))) {
+        if (table.headers().get(j).field().equals(headers.get(i))) {
           mapping[i] = j;
           break;
         }

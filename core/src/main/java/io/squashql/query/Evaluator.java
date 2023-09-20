@@ -1,12 +1,13 @@
 package io.squashql.query;
 
+import static io.squashql.query.ColumnSetKey.BUCKET;
+
 import io.squashql.query.QueryExecutor.ExecutionContext;
 import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import io.squashql.query.comp.BinaryOperations;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -14,14 +15,12 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static io.squashql.query.ColumnSetKey.BUCKET;
-
 public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>, MeasureVisitor<Void> {
 
-  private final Function<String, TypedField> fieldSupplier;
+  private final Function<Field, TypedField> fieldSupplier;
   private ExecutionContext executionContext;
 
-  public Evaluator(Function<String, TypedField> fieldSupplier) {
+  public Evaluator(Function<Field, TypedField> fieldSupplier) {
     this.fieldSupplier = fieldSupplier;
   }
 
@@ -56,7 +55,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     for (int i = 0; i < lo.size(); i++) {
       r.add(operation.apply((Number) lo.get(i), (Number) ro.get(i)));
     }
-    Header header = new Header(bom.alias(), BinaryOperations.getOutputType(bom.operator, lType, rType), true);
+    Header header = new Header(bom.alias, BinaryOperations.getOutputType(bom.operator, lType, rType), true);
     intermediateResult.addAggregates(header, bom, r);
     return null;
   }

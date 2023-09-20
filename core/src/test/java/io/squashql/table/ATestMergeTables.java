@@ -435,7 +435,7 @@ abstract class ATestMergeTables {
       newHeaders.add(null);
     }
     for (int i = 0; i < order.size(); i++) {
-      int newIndex = table.headers().stream().map(h -> h.name()).toList().indexOf(order.get(i));
+      int newIndex = table.headers().stream().map(h -> h.field()).toList().indexOf(order.get(i));
       newValues.set(i, table.getColumns().get(newIndex));
       newHeaders.set(i, table.headers().get(newIndex));
     }

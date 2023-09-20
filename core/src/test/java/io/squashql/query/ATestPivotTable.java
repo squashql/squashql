@@ -343,7 +343,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     ColumnarTable actualColumnarTable = TestUtil.convert(actualTable, Set.of(CountMeasure.INSTANCE));
 
     actualColumnarTable = TableUtils.selectAndOrderColumns(actualColumnarTable,
-            expectedPivotTable.table.headers().stream().filter(h -> !h.isMeasure()).map(Header::name).toList(),
+            expectedPivotTable.table.headers().stream().filter(h -> !h.isMeasure()).map(Header::field).toList(),
             List.of(CountMeasure.INSTANCE));
     actualColumnarTable = (ColumnarTable) TableUtils.orderRows(actualColumnarTable);
 

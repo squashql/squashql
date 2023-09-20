@@ -2,12 +2,11 @@ package io.squashql.query;
 
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.type.TypedField;
+import java.util.function.Function;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-
-import java.util.function.Function;
 
 @ToString
 @EqualsAndHashCode
@@ -20,7 +19,7 @@ public class BinaryOperationField implements Field {
   public Field rightOperand;
 
   @Override
-  public String sqlExpression(Function<String, TypedField> fp, QueryRewriter qr) {
+  public String sqlExpression(Function<Field, TypedField> fp, QueryRewriter qr) {
     return new StringBuilder()
             .append("(")
             .append(this.leftOperand.sqlExpression(fp, qr))

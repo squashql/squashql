@@ -1,4 +1,6 @@
 package io.squashql.query.dto;
 
-public record MetadataItem(String name, String expression, Class<?> type) {
+import io.squashql.query.Field;
+
+public record MetadataItem(Field field, String expression, Class<?> type) {
 }

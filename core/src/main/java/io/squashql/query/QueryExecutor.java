@@ -93,7 +93,7 @@ public class QueryExecutor {
   }
 
   public static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
-    Set<String> axes = new HashSet<>(context.rows);
+    Set<Field> axes = new HashSet<>(context.rows);
     axes.addAll(context.columns);
     Set<Field> select = new HashSet<>(query.columns);
     select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream()).collect(Collectors.toSet()));
@@ -109,9 +109,9 @@ public class QueryExecutor {
       throw new IllegalArgumentException(select + " in select but not on rows or columns. Please add those fields on one axis");
     }
 
-    List<String> rows = context.cleansedRows;
-    List<String> columns = context.cleansedColumns;
-    List<List<String>> groupingSets = new ArrayList<>();
+    List<Field> rows = context.cleansedRows;
+    List<Field> columns = context.cleansedColumns;
+    List<List<Field>> groupingSets = new ArrayList<>();
     // GT use an empty list instead of list of size 1 with an empty string because could cause issue later on with FieldSupplier
     groupingSets.add(List.of());
     // Rows
@@ -127,7 +127,7 @@ public class QueryExecutor {
     // all combinations
     for (int i = rows.size(); i >= 1; i--) {
       for (int j = columns.size(); j >= 1; j--) {
-        List<String> all = new ArrayList<>(rows.subList(0, i));
+        List<Field> all = new ArrayList<>(rows.subList(0, i));
         all.addAll(columns.subList(0, j));
         groupingSets.add(all);
       }
@@ -250,7 +250,7 @@ public class QueryExecutor {
   private static Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> computeDependencyGraph(
           QueryDto query,
           QueryScope queryScope,
-          Function<String, TypedField> fieldSupplier) {
+          Function<Field, TypedField> fieldSupplier) {
     // This graph is used to keep track of dependency between execution plans. An Execution Plan is bound to a given scope.
     DependencyGraph<QueryScope> executionGraph = new DependencyGraph<>();
 
@@ -278,7 +278,7 @@ public class QueryExecutor {
             executionGraph);
   }
 
-  public static QueryScope createQueryScope(QueryDto query, Function<String, TypedField> fieldSupplier) {
+  public static QueryScope createQueryScope(QueryDto query, Function<Field, TypedField> fieldSupplier) {
     // If column set, it changes the scope
     List<TypedField> columns = Stream.concat(
             query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
@@ -366,7 +366,7 @@ public class QueryExecutor {
       // computed. This is why it is removed from the axes.
       ColumnSet columnSet = query.columnSets.get(BUCKET);
       if (columnSet != null) {
-        String name = ((BucketColumnSetDto) columnSet).name;
+        Field name = ((BucketColumnSetDto) columnSet).name;
         if (fields.contains(name)) {
           fields = new ArrayList<>(fields);
           fields.remove(name);
@@ -382,8 +382,8 @@ public class QueryExecutor {
   }
 
   public Table execute(QueryDto first, QueryDto second, JoinType joinType, SquashQLUser user) {
-    Map<String, Comparator<?>> firstComparators = Queries.getComparators(first);
-    Map<String, Comparator<?>> secondComparators = Queries.getComparators(second);
+    Map<Field, Comparator<?>> firstComparators = Queries.getComparators(first);
+    Map<Field, Comparator<?>> secondComparators = Queries.getComparators(second);
     secondComparators.putAll(firstComparators); // the comparators of the first query take precedence over the second's
 
     Set<ColumnSet> columnSets = Stream.concat(first.columnSets.values().stream(), second.columnSets.values().stream())
@@ -403,7 +403,7 @@ public class QueryExecutor {
     return CompletableFuture.allOf(f1, f2).thenApply(__ -> merge(f1.join(), f2.join(), joinType, secondComparators, columnSets)).join();
   }
 
-  public static Table merge(Table table1, Table table2, JoinType joinType, Map<String, Comparator<?>> comparators, Set<ColumnSet> columnSets) {
+  public static Table merge(Table table1, Table table2, JoinType joinType, Map<Field, Comparator<?>> comparators, Set<ColumnSet> columnSets) {
     ColumnarTable table = (ColumnarTable) MergeTables.mergeTables(table1, table2, joinType);
     table = (ColumnarTable) TableUtils.orderRows(table, comparators, columnSets);
     return TableUtils.replaceTotalCellValues(table, true);

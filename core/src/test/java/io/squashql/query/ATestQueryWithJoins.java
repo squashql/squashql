@@ -114,7 +114,7 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
             List.of("Confections", "Chocolade", 10l),
             List.of("Confections", "Pavlova", 1l),
             List.of("Dairy Products", "Camembert Pierrot", 8l));
-    Assertions.assertThat(table.headers().stream().map(Header::name))
+    Assertions.assertThat(table.headers().stream().map(Header::field))
             .containsExactly(this.categories + ".name", this.products + ".name", "quantity_sum");
   }
 
