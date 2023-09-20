@@ -35,18 +35,19 @@ import {
 import * as fs from "fs"
 import {OrderKeyword} from "./order";
 import {BucketColumnSet, Month} from "./columnsets";
-import {ConstantField, TableField} from "./field";
+import {ConstantField, TableField, tableField} from "./field";
 
 export function generateFromQueryDto() {
   const table = new Table("myTable")
   const refTable = new Table("refTable")
   table.join(refTable, JoinType.INNER, [new JoinMapping(new TableField("fromField"), new TableField("toField"), ConditionType.EQ)])
   table.join(new Table("a"), JoinType.LEFT, [new JoinMapping(new TableField("a.a_id"), new TableField("myTable.id"), ConditionType.EQ)])
-
+  const a = tableField("a");
+  const b = tableField("b");
   const q = new Query()
   q.onTable(table)
-          .withColumn(tableField("a"))
-          .withColumn(tableField("b"))
+          .withColumn(a)
+          .withColumn(b)
 
   const price = new AggregatedMeasure("price.sum", new TableField("price"), "sum")
   q.withMeasure(price)
@@ -91,8 +92,8 @@ export function generateFromQueryDto() {
     havingCriterion(expression, lt(100)),
   ]))
 
-  q.orderBy(tableField("a"), OrderKeyword.ASC)
-  q.orderByFirstElements("b", ["1", "l", "p"])
+  q.orderBy(a, OrderKeyword.ASC)
+  q.orderByFirstElements(b, ["1", "l", "p"])
 
   const values = new Map(Object.entries({
     "a": ["a1", "a2"],

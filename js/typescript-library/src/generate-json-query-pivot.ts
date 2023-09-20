@@ -1,11 +1,14 @@
-import {from} from "./queryBuilder";
-import {avg, sum} from "./measure";
-import * as fs from "fs"
-import {createPivotTableQuery} from "./querier";
+import * as fs from "fs";
+import { tableFields } from "./field";
+import { avg } from "./measure";
+import { createPivotTableQuery } from "./querier";
+import { from } from "./queryBuilder";
 
 export function generateFromQueryPivot() {
+  const fields = tableFields(["a", "b"]);
+
   const q = from("myTable")
-          .select(["a", "b"],
+          .select(fields,
                   [],
                   [avg("sum", "f1")])
           .build()

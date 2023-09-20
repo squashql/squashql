@@ -1,5 +1,5 @@
-import {PACKAGE} from "./index"
-import {BinaryOperator} from "./measure";
+import { PACKAGE } from "./index";
+import { BinaryOperator } from "./measure";
 
 export interface Field {
   readonly class: string
@@ -70,6 +70,7 @@ export class TableField extends AField {
     }
   }
 
+
   toJSON() {
     return {
       "@class": this.class,
@@ -79,6 +80,16 @@ export class TableField extends AField {
     }
   }
 }
+
+
+export function tableField(fullName:string) {
+  return new TableField(fullName);
+}
+
+export function tableFields(fullNames:string[]) {
+  return fullNames.map(f => new TableField(f));
+}
+
 
 export class BinaryOperationField extends AField {
   readonly class: string = PACKAGE + "BinaryOperationField"
