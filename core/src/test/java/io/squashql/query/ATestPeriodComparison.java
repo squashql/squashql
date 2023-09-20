@@ -90,13 +90,13 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
 
   @Test
   void testCompareQuarterCurrentWithSamePreviousYear() {
-    Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
+    Period.Quarter period = new Period.Quarter(tableField("quarter_sales"), tableField("year_sales"));
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            Map.of("quarter_sales", "q", "year_sales", "y-1"),
+            Map.of(period.quarter(), "q", period.year(), "y-1"),
             period);
 
     var query = Query.from(this.storeName)
@@ -114,7 +114,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(3), 0d, 85d),
             Arrays.asList(2023l, translate(4), 0d, 35d));
     Assertions.assertThat(finalTable.headers().stream().map(Header::name))
-            .containsExactlyInAnyOrder(period.year(), period.quarter(), "myMeasure", "sum(sales)");
+            .containsExactlyInAnyOrder(period.year().name(), period.quarter().name(), "myMeasure", "sum(sales)");
 
     // Add a condition and make sure condition is cleared during prefetching.s
     query = Query.from(this.storeName)
@@ -140,13 +140,13 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
 
   @Test
   void testCompareQuarterCurrentWithPrevious() {
-    Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
+    Period.Quarter period = new Period.Quarter(tableField("quarter_sales"), tableField("year_sales"));
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            Map.of("quarter_sales", "q-1"), // Test here we can omit "year" in the ref. map.
+            Map.of(period.quarter(), "q-1"), // Test here we can omit "year" in the ref. map.
             period);
 
     var query = Query.from(this.storeName)
@@ -165,18 +165,18 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(4), "base", -50d, 35d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Header::name))
-            .containsExactlyInAnyOrder(DataLoader.SCENARIO_FIELD_NAME, period.year(), period.quarter(), "myMeasure", "sum(sales)");
+            .containsExactlyInAnyOrder(DataLoader.SCENARIO_FIELD_NAME, period.year().name(), period.quarter().name(), "myMeasure", "sum(sales)");
   }
 
   @Test
   void testCompareYearCurrentWithPrevious() {
-    Period.Year period = new Period.Year("year_sales");
+    Period.Year period = new Period.Year(tableField("year_sales"));
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            Map.of("year_sales", "y-1"),
+            Map.of(period.year(), "y-1"),
             period);
 
     var query = Query.from(this.storeName)
@@ -188,7 +188,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, "base", 0d, 300d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Header::name))
-            .containsExactlyInAnyOrder(DataLoader.SCENARIO_FIELD_NAME, period.year(), "myMeasure", "sum(sales)");
+            .containsExactlyInAnyOrder(DataLoader.SCENARIO_FIELD_NAME, period.year().name(), "myMeasure", "sum(sales)");
 
     // Rollup will make Grand Total and Total appear. For this line, we can't make the comparison. Null should be
     // written and the query should not fail.
@@ -207,7 +207,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
 
   @Test
   void testCompareSemesterCurrentWithPrevious() {
-    Period.Semester period = new Period.Semester("semester_sales", "year_sales");
+    Period.Semester period = new Period.Semester(tableField("semester_sales"), tableField("year_sales"));
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
@@ -228,12 +228,12 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(2), "base", -60d, 120d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Header::name))
-            .containsExactlyInAnyOrder(DataLoader.SCENARIO_FIELD_NAME, period.year(), period.semester(), "myMeasure", "sum(sales)");
+            .containsExactlyInAnyOrder(DataLoader.SCENARIO_FIELD_NAME, period.year().name(), period.semester().name(), "myMeasure", "sum(sales)");
   }
 
   @Test
   void testCompareMonthCurrentWithPrevious() {
-    Period.Month period = new Period.Month("month_sales", "year_sales");
+    Period.Month period = new Period.Month(tableField("month_sales"), tableField("year_sales"));
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
@@ -260,18 +260,18 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(12), "base", -5d, 10d));
     Assertions
             .assertThat(finalTable.headers().stream().map(Header::name))
-            .containsExactlyInAnyOrder(DataLoader.SCENARIO_FIELD_NAME, period.year(), period.month(), "myMeasure", "sum(sales)");
+            .containsExactlyInAnyOrder(DataLoader.SCENARIO_FIELD_NAME, period.year().name(), period.month().name(), "myMeasure", "sum(sales)");
   }
 
   @Test
   void testPeriodIsMissingFromQuery() {
-    Period.Year period = new Period.Year("year_sales");
+    Period.Year period = new Period.Year(tableField("year_sales"));
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            Map.of("year_sales", "y-1"),
+            Map.of(period.year(), "y-1"),
             period);
 
     var query = Query.from(this.storeName)
@@ -292,14 +292,14 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
    */
   @Test
   void testCompareYearCurrentWithPreviousWithFilterAndCalculatedMeasure() {
-    Period.Year period = new Period.Year("year_sales");
+    Period.Year period = new Period.Year(tableField("year_sales"));
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     Measure multiply = Functions.multiply("sales times 2", sales, Functions.integer(2));
     ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             multiply,
-            Map.of("year_sales", "y-1"),
+            Map.of(period.year(), "y-1"),
             period);
 
     var query = Query.from(this.storeName)
@@ -313,13 +313,13 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
 
   @Test
   void testCompareWithLimit() {
-    Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
+    Period.Quarter period = new Period.Quarter(tableField("quarter_sales"), tableField("year_sales"));
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
     ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            Map.of("quarter_sales", "q", "year_sales", "y-1"),
+            Map.of(period.quarter(), "q", period.year(), "y-1"),
             period);
 
     var query = Query.from(this.storeName)

@@ -25,14 +25,14 @@ public class ComparisonMeasureReferencePosition implements Measure {
   public ComparisonMethod comparisonMethod;
   public Measure measure;
   public ColumnSetKey columnSetKey;
-  public Map<String, String> referencePosition;
+  public Map<Field, String> referencePosition;
   public Period period;
-  public List<String> ancestors;
+  public List<Field> ancestors;
 
   public ComparisonMeasureReferencePosition(@NonNull String alias,
                                             @NonNull ComparisonMethod comparisonMethod,
                                             @NonNull Measure measure,
-                                            @NonNull Map<String, String> referencePosition,
+                                            @NonNull Map<Field, String> referencePosition,
                                             @NonNull Period period) {
     this(alias, comparisonMethod, measure, referencePosition, period, null, null);
   }
@@ -40,7 +40,7 @@ public class ComparisonMeasureReferencePosition implements Measure {
   public ComparisonMeasureReferencePosition(@NonNull String alias,
                                             @NonNull ComparisonMethod comparisonMethod,
                                             @NonNull Measure measure,
-                                            @NonNull Map<String, String> referencePosition,
+                                            @NonNull Map<Field, String> referencePosition,
                                             @NonNull ColumnSetKey columnSetKey) {
     this(alias, comparisonMethod, measure, referencePosition, null, columnSetKey, null);
   }
@@ -48,17 +48,17 @@ public class ComparisonMeasureReferencePosition implements Measure {
   public ComparisonMeasureReferencePosition(@NonNull String alias,
                                             @NonNull ComparisonMethod comparisonMethod,
                                             @NonNull Measure measure,
-                                            @NonNull List<String> ancestors) {
+                                            @NonNull List<Field> ancestors) {
     this(alias, comparisonMethod, measure, null, null, null, ancestors);
   }
 
   private ComparisonMeasureReferencePosition(@NonNull String alias,
                                              @NonNull ComparisonMethod comparisonMethod,
                                              @NonNull Measure measure,
-                                             Map<String, String> referencePosition,
+                                             Map<Field, String> referencePosition,
                                              Period period,
                                              ColumnSetKey columnSetKey,
-                                             List<String> ancestors) {
+                                             List<Field> ancestors) {
     this.alias = alias;
     this.comparisonMethod = comparisonMethod;
     this.measure = measure;

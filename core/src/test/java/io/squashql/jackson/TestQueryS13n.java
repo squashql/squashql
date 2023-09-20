@@ -114,8 +114,8 @@ public class TestQueryS13n {
             ABSOLUTE_DIFFERENCE,
             price,
             Map.of(
-                    SCENARIO_FIELD_NAME, "first",
-                    groupOfScenario, "g"
+                    tableField(SCENARIO_FIELD_NAME), "first",
+                    tableField(groupOfScenario), "g"
             ),
             ColumnSetKey.BUCKET);
 
@@ -133,12 +133,12 @@ public class TestQueryS13n {
   @Test
   void testRoundTripPeriodComparisonQuery() {
     AggregatedMeasure sales = new AggregatedMeasure("s", "sales", "sum");
-    Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
+    Period.Quarter period = new Period.Quarter(tableField("quarter_sales"), tableField("year_sales"));
     ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            Map.of("year_sales", "y-1"),
+            Map.of(period.year(), "y-1"),
             period);
 
     var query = new QueryDto()

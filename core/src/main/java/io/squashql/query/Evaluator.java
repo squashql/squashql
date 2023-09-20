@@ -70,7 +70,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
       }
       executor = new BucketComparisonExecutor((BucketColumnSetDto) cs);
     } else if (cm.period != null) {
-      for (String field : cm.period.getFields()) {
+      for (Field field : cm.period.getFields()) {
         if (!this.executionContext.query().columns.contains(field)) {
           throw new IllegalArgumentException(String.format("%s is not specified in the query but is used in a comparison measure: %s", field, cm));
         }

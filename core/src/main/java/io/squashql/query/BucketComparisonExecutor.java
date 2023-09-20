@@ -29,13 +29,13 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
     final ObjectIntMap<String> indexByColumn;
     final Map<String, List<String>> valuesByBucket = new LinkedHashMap<>();
 
-    ShiftProcedure(BucketColumnSetDto cSet, Map<String, String> referencePosition, ObjectIntMap<String> indexByColumn) {
+    ShiftProcedure(BucketColumnSetDto cSet, Map<Field, String> referencePosition, ObjectIntMap<String> indexByColumn) {
       this.valuesByBucket.putAll(cSet.values);
       this.indexByColumn = indexByColumn;
       this.transformationByColumn = new ArrayList<>();
       // Order does matter here
-      this.transformationByColumn.add(Tuples.pair(cSet.name.name(), parse(referencePosition.get(cSet.name.name()))));
-      this.transformationByColumn.add(Tuples.pair(cSet.field.name(), parse(referencePosition.get(cSet.field.name()))));
+      this.transformationByColumn.add(Tuples.pair(cSet.name.name(), parse(referencePosition.get(cSet.name))));
+      this.transformationByColumn.add(Tuples.pair(cSet.field.name(), parse(referencePosition.get(cSet.field))));
     }
 
     @Override

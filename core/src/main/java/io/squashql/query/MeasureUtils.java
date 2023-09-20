@@ -136,7 +136,7 @@ public final class MeasureUtils {
     return m.accept(new PrimitiveMeasureVisitor());
   }
 
-  public static List<String> getColumnsForPrefetching(Period period) {
+  public static List<Field> getColumnsForPrefetching(Period period) {
     if (period instanceof Period.Quarter q) {
       return List.of(q.year(), q.quarter());
     } else if (period instanceof Period.Year y) {

@@ -21,17 +21,17 @@ public class ParentComparisonExecutor extends AComparisonExecutor {
 
   static class ShiftProcedure implements BiPredicate<Object[], Header[]> {
 
-    final List<String> ancestors;
+    final List<Field> ancestors;
     final ObjectIntMap<String> indexByColumn;
 
-    ShiftProcedure(List<String> ancestors, ObjectIntMap<String> indexByColumn) {
+    ShiftProcedure(List<Field> ancestors, ObjectIntMap<String> indexByColumn) {
       this.ancestors = ancestors;
       this.indexByColumn = indexByColumn;
     }
 
     @Override
     public boolean test(Object[] row, Header[] headers) {
-      for (String ancestor : this.ancestors) {
+      for (Field ancestor : this.ancestors) {
         // Is it expressed ?
         if (this.indexByColumn.containsKey(ancestor)) {
           int index = this.indexByColumn.get(ancestor);
