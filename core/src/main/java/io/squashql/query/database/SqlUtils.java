@@ -31,6 +31,10 @@ public class SqlUtils {
     return field.store() == null ? field.name() : field.store() + '.' + field.name();
   }
 
+  public static String getFieldFullName(TableField field) {
+    return field.tableName == null ? field.name() : field.tableName + '.' + field.name();
+  }
+
   public static String expression(TypedField f) {
     if (f instanceof TableTypedField ttf) {
       return getFieldFullName(ttf);

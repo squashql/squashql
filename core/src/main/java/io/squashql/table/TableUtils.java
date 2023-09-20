@@ -7,8 +7,10 @@ import io.squashql.query.Field;
 import io.squashql.query.Header;
 import io.squashql.query.Measure;
 import io.squashql.query.MeasureUtils;
+import io.squashql.query.TableField;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
@@ -153,21 +155,22 @@ public class TableUtils {
    */
   public static ColumnarTable selectAndOrderColumns(ColumnarTable table,
                                                     QueryDto queryDto) {
-    List<Field> finalColumns = new ArrayList<>();
+    List<String> finalColumns = new ArrayList<>();
     queryDto.columnSets.values()
             .forEach(cs -> finalColumns.addAll(cs.getNewColumns()
                     .stream()
+                    .map(f -> SqlUtils.getFieldFullName((TableField) f))
                     .toList()));
-    finalColumns.addAll(queryDto.columns);
+    finalColumns.addAll(queryDto.columns.stream().map(Field::name).toList());
     return selectAndOrderColumns(table, finalColumns, queryDto.measures);
   }
 
-  public static ColumnarTable selectAndOrderColumns(ColumnarTable table, List<Field> columns, List<Measure> measures) {
+  public static ColumnarTable selectAndOrderColumns(ColumnarTable table, List<String> columns, List<Measure> measures) {
     List<Header> headers = new ArrayList<>();
     List<List<Object>> values = new ArrayList<>();
-    for (Field finalColumn : columns) {
+    for (String finalColumn : columns) {
       headers.add(table.getHeader(finalColumn));
-      values.add(Objects.requireNonNull(table.getColumnValues(finalColumn.name())));
+      values.add(Objects.requireNonNull(table.getColumnValues(finalColumn)));
     }
     for (Measure measure : measures) {
       headers.add(table.getHeader(measure));

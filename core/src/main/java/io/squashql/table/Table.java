@@ -48,8 +48,8 @@ public interface Table extends Iterable<List<Object>> {
             .findAny().orElseThrow(() -> new IllegalArgumentException("no header for " + measure));
   }
 
-  default Header getHeader(Field column) {
-    return headers().get(columnIndex(column.name()));
+  default Header getHeader(String column) {
+    return headers().get(columnIndex(column));
   }
 
   default int columnIndex(String column) {

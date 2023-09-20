@@ -24,7 +24,7 @@ public class BucketColumnSetDto implements ColumnSet {
   public Map<String, List<String>> values = new LinkedHashMap<>();
 
   public BucketColumnSetDto(String name, Field field) {
-    this.name = new TableField(name);
+    this.name = new TableField(name); // todo-mde should it really be a table field ? maybe bucketfield ?
     this.field = field;
   }
 

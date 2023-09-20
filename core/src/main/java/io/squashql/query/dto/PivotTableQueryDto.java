@@ -14,6 +14,6 @@ import lombok.ToString;
 public class PivotTableQueryDto {
 
   public QueryDto query;
-  public List<Field> rows;
+  public List<Field> rows; //todo-mde should we use alias since we know rows and columns are already in the query ?
   public List<Field> columns;
 }
