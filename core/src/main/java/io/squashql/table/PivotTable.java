@@ -5,6 +5,7 @@ import java.util.List;
 
 public class PivotTable {
 
+  //todo-mde how should we serialize this
   public final Table table;
   public final List<List<Object>> pivotTableCells;
   public final List<Field> rows;

@@ -1,6 +1,6 @@
 [
-  ["spending category", "spending category", "Grand Total", "extra", "minimum expenditure"],
-  ["group", "country", "amountComp", "amountComp", "amountComp"],
+  [{"@class":"io.squashql.query.TableField","tableName":null,"fieldName":"spending category","fullName":"spending category"},{"@class":"io.squashql.query.TableField","tableName":null,"fieldName":"spending category","fullName":"spending category"},"Grand Total","extra","minimum expenditure"],
+  [{"@class":"io.squashql.query.TableField","tableName":null,"fieldName":"group","fullName":"group"},{"@class":"io.squashql.query.TableField","tableName":null,"fieldName":"country","fullName":"country"},"amountComp","amountComp","amountComp"],
   ["european", "uk", 0.0, 0.0, 0.0],
   ["european", "france", -1.0, -3.0, 2.0],
   ["anglophone", "usa", 0.0, 0.0, 0.0],
