@@ -16,8 +16,8 @@ public class HttpClientQuerier {
 
   private static final Feign.Builder builder = Feign.builder()
           .client(new feign.okhttp.OkHttpClient(client))
-          .encoder(new JacksonEncoder(JacksonUtil.mapper))
-          .decoder(new JacksonDecoder(JacksonUtil.mapper));
+          .encoder(new JacksonEncoder(JacksonUtil.OBJECT_MAPPER))
+          .decoder(new JacksonDecoder(JacksonUtil.OBJECT_MAPPER));
 
   public String url;
 

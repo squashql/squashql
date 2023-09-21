@@ -1,7 +1,11 @@
 package io.squashql.query;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.dto.Period;
+import io.squashql.query.dto.QueryDto.KeyFieldDeserializer;
+import io.squashql.query.dto.QueryDto.KeyFieldSerializer;
 import io.squashql.type.TypedField;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +29,8 @@ public class ComparisonMeasureReferencePosition implements Measure {
   public ComparisonMethod comparisonMethod;
   public Measure measure;
   public ColumnSetKey columnSetKey;
+  @JsonSerialize(keyUsing = KeyFieldSerializer.class)
+  @JsonDeserialize(keyUsing = KeyFieldDeserializer.class)
   public Map<Field, String> referencePosition;
   public Period period;
   public List<Field> ancestors;

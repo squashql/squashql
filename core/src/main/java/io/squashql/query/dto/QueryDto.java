@@ -2,12 +2,20 @@ package io.squashql.query.dto;
 
 import static io.squashql.query.dto.ConditionType.AND;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.KeyDeserializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.ColumnSet;
 import io.squashql.query.ColumnSetKey;
 import io.squashql.query.Field;
 import io.squashql.query.Measure;
 import io.squashql.query.parameter.Parameter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -28,13 +36,16 @@ public class QueryDto {
 
   public VirtualTableDto virtualTableDto; // Only support 1 single virtual for now
 
+  @JsonSerialize(using = ListFieldSerializer.class)
   public List<Field> columns = new ArrayList<>();
 
+  @JsonSerialize(using = ListFieldSerializer.class)
   public List<Field> rollupColumns = new ArrayList<>();
 
   /**
    * Internal ONLY! This field is not supposed to be set by the external API and is incompatible with {@link #rollupColumns}
    */
+  @JsonSerialize(using = GroupingSetSerializer.class)
   public List<List<Field>> groupingSets = new ArrayList<>();
 
   public Map<ColumnSetKey, ColumnSet> columnSets = new LinkedHashMap<>();
@@ -45,6 +56,8 @@ public class QueryDto {
 
   public CriteriaDto havingCriteriaDto = null;
 
+  @JsonSerialize(keyUsing = KeyFieldSerializer.class)
+  @JsonDeserialize(keyUsing = KeyFieldDeserializer.class)
   public Map<Field, OrderDto> orders = new HashMap<>();
 
   public Map<String, Parameter> parameters = new HashMap<>();
@@ -126,5 +139,53 @@ public class QueryDto {
 
   public String json() {
     return JacksonUtil.serialize(this);
+  }
+
+  private static class ListFieldSerializer extends JsonSerializer<List<Field>> {
+
+    @Override
+    public void serialize(List<Field> fields, JsonGenerator gen, SerializerProvider provider) throws IOException {
+      serializeFieldList(fields, gen, provider);
+    }
+  }
+
+  private static class GroupingSetSerializer extends JsonSerializer<List<List<Field>>> {
+
+    @Override
+    public void serialize(List<List<Field>> groupingSets, JsonGenerator gen, SerializerProvider provider)
+            throws IOException {
+      gen.writeStartArray();
+      for (final List<Field> group : groupingSets) {
+        serializeFieldList(group, gen, provider);
+      }
+      gen.writeEndArray();
+    }
+  }
+
+  private static void serializeFieldList(List<Field> fields, JsonGenerator gen, SerializerProvider provider) throws IOException {
+    gen.writeStartArray();
+    for (final Field field : fields) {
+      provider.defaultSerializeValue(field, gen);
+    }
+    gen.writeEndArray();
+  }
+
+  public static class KeyFieldSerializer extends JsonSerializer<Field> {
+    @Override
+    public void serialize(Field field, JsonGenerator gen, SerializerProvider provider) throws IOException {
+      gen.writeFieldName(JacksonUtil.serialize(field));
+    }
+  }
+
+  @NoArgsConstructor
+  public static class KeyFieldDeserializer extends KeyDeserializer {
+
+    @Override
+    public Field deserializeKey(
+            String key,
+            DeserializationContext context) {
+
+      return JacksonUtil.deserialize(key, Field.class);
+    }
   }
 }

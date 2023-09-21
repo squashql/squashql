@@ -108,7 +108,7 @@ public class QueryControllerTest {
     this.mvc.perform(MockMvcRequestBuilders.get(QueryController.MAPPING_METADATA))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
-              assertMetadataResult(JacksonUtil.mapper.readValue(contentAsString, MetadataResultDto.class));
+              assertMetadataResult(JacksonUtil.OBJECT_MAPPER.readValue(contentAsString, MetadataResultDto.class));
             });
   }
 
