@@ -41,10 +41,6 @@ public class AggregatedMeasure implements BasicMeasure {
     this(alias, field, aggregationFunction, false, criteria);
   }
 
-  public AggregatedMeasure(@NonNull String alias, @NonNull Field field, @NonNull String aggregationFunction) {
-    this(alias, field, aggregationFunction, null);
-  }
-
   public AggregatedMeasure(@NonNull String alias, @NonNull String field, @NonNull String aggregationFunction, boolean distinct, CriteriaDto criteria) {
     this(alias, new TableField(field), aggregationFunction, distinct, criteria);
   }

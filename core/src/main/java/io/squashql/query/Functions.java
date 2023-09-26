@@ -131,7 +131,7 @@ public class Functions {
   }
 
   public static Measure count(String alias, Field field) {
-    return new AggregatedMeasure(alias, field, AggregationFunction.COUNT);
+    return new AggregatedMeasure(alias, field, AggregationFunction.COUNT, null);
   }
 
   public static Measure countIf(String alias, String field, CriteriaDto criteriaDto) {
@@ -163,7 +163,7 @@ public class Functions {
   }
 
   public static Measure max(String alias, Field field) {
-    return new AggregatedMeasure(alias, field, AggregationFunction.MAX);
+    return new AggregatedMeasure(alias, field, AggregationFunction.MAX, null);
   }
 
   public static Measure min(String alias, String field) {
@@ -171,7 +171,7 @@ public class Functions {
   }
 
   public static Measure min(String alias, Field field) {
-    return new AggregatedMeasure(alias, field, AggregationFunction.MIN);
+    return new AggregatedMeasure(alias, field, AggregationFunction.MIN, null);
   }
 
   public static Measure sum(String alias, String field) {
@@ -179,7 +179,7 @@ public class Functions {
   }
 
   public static Measure sum(String alias, Field field) {
-    return new AggregatedMeasure(alias, field, AggregationFunction.SUM);
+    return new AggregatedMeasure(alias, field, AggregationFunction.SUM, null);
   }
 
   public static Measure sumIf(String alias, String field, CriteriaDto criteriaDto) {
@@ -195,7 +195,7 @@ public class Functions {
   }
 
   public static Measure avg(String alias, Field field) {
-    return new AggregatedMeasure(alias, field, AggregationFunction.AVG);
+    return new AggregatedMeasure(alias, field, AggregationFunction.AVG, null);
   }
 
   public static Measure avgIf(String alias, String field, CriteriaDto criteriaDto) {
