@@ -418,6 +418,25 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .containsExactly(SCENARIO_FIELD_NAME, "quantity filtered");
   }
 
+  /**
+   * {@code countDistinct(category)}
+   */
+  @Test
+  void testCountDistinct() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of("category"),
+                    List.of(countDistinct("count distinct categories", this.storeName + ".category")))
+            .build();
+    Table result = this.executor.execute(query);
+    Assertions.assertThat(result).containsExactlyInAnyOrder(
+            List.of("drink", 3),
+            List.of("food", 3),
+            List.of("cloth", 3));
+    Assertions.assertThat(result.headers().stream().map(Header::name))
+            .containsExactly("category", "count distinct categories");
+  }
+
   @Test
   void testOrderByColumn() {
     QueryDto query = Query
