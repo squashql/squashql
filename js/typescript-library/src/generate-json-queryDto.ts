@@ -8,7 +8,7 @@ import {
   comparisonMeasureWithParent,
   comparisonMeasureWithPeriod,
   ComparisonMethod,
-  count,
+  countRows,
   decimal,
   ExpressionMeasure,
   integer,
@@ -56,7 +56,7 @@ export function generateFromQueryDto() {
   q.withMeasure(plus)
   const expression = new ExpressionMeasure("myExpression", "sum(price*quantity)")
   q.withMeasure(expression)
-  q.withMeasure(count)
+  q.withMeasure(countRows)
   q.withMeasure(totalCount)
   q.withMeasure(integer(123))
   q.withMeasure(decimal(1.23))

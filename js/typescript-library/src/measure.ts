@@ -92,15 +92,7 @@ export enum BinaryOperator {
   DIVIDE = "DIVIDE",
 }
 
-class CountMeasure extends AggregatedMeasure {
-  private static _instance: CountMeasure
-
-  public static get instance() {
-    return this._instance || (this._instance = new this("_contributors_count_", new TableField("*"), "count"));
-  }
-}
-
-export const count = CountMeasure.instance;
+export const countRows = new AggregatedMeasure("_contributors_count_", new TableField("*"), "count")
 
 class ComparisonMeasureReferencePosition implements Measure {
   readonly class: string = PACKAGE + "ComparisonMeasureReferencePosition"
@@ -187,7 +179,7 @@ export function avg(alias: string, field: Field | string): Measure {
   return new AggregatedMeasure(alias, toField(field), "avg")
 }
 
-export function countByField(alias: string, field: Field | string): Measure {
+export function count(alias: string, field: Field | string): Measure {
   return new AggregatedMeasure(alias, toField(field), "count")
 }
 
