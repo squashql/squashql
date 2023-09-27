@@ -92,7 +92,7 @@ export enum BinaryOperator {
   DIVIDE = "DIVIDE",
 }
 
-export const count = new AggregatedMeasure("_contributors_count_", new TableField("*"), "count");
+export const countRows = new AggregatedMeasure("_contributors_count_", new TableField("*"), "count")
 
 class ComparisonMeasureReferencePosition implements Measure {
   readonly class: string = PACKAGE + "ComparisonMeasureReferencePosition"
@@ -177,6 +177,10 @@ export function max(alias: string, field: Field | string): Measure {
 
 export function avg(alias: string, field: Field | string): Measure {
   return new AggregatedMeasure(alias, toField(field), "avg")
+}
+
+export function count(alias: string, field: Field | string): Measure {
+  return new AggregatedMeasure(alias, toField(field), "count")
 }
 
 // aggIf
