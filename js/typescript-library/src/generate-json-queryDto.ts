@@ -1,4 +1,4 @@
-import {JoinMapping, JoinType, Query, Table} from "./query"
+import {JoinType, Query, Table} from "./query"
 import {
   AggregatedMeasure,
   avgIf,
@@ -21,13 +21,13 @@ import {
   and,
   ConditionType,
   criterion,
+  criterion_,
   eq,
   ge,
   gt,
   havingCriterion,
   isNotNull,
   isNull,
-  criterion_,
   like,
   lt,
   or
@@ -40,8 +40,8 @@ import {ConstantField, TableField} from "./field";
 export function generateFromQueryDto() {
   const table = new Table("myTable")
   const refTable = new Table("refTable")
-  table.join(refTable, JoinType.INNER, [new JoinMapping(new TableField("fromField"), new TableField("toField"), ConditionType.EQ)])
-  table.join(new Table("a"), JoinType.LEFT, [new JoinMapping(new TableField("a.a_id"), new TableField("myTable.id"), ConditionType.EQ)])
+  table.join(refTable, JoinType.INNER, criterion_(new TableField("fromField"), new TableField("toField"), ConditionType.EQ))
+  table.join(new Table("a"), JoinType.LEFT, criterion_(new TableField("a.a_id"), new TableField("myTable.id"), ConditionType.EQ))
 
   const q = new Query()
   q.onTable(table)

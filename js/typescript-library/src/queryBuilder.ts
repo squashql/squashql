@@ -1,10 +1,9 @@
 import {Measure} from "./measure";
 import {ColumnSet} from "./columnsets";
-import {JoinMapping, JoinType, Query, Table} from "./query";
+import {JoinType, Query, Table} from "./query";
 import {Criteria} from "./conditions";
 import {OrderKeyword} from "./order";
 import {VirtualTable} from "./virtualtable";
-import {TableField} from "./field";
 
 export interface CanAddOrderBy {
   orderBy(column: string, order: OrderKeyword): HasHaving
@@ -89,7 +88,7 @@ class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
   private addJoinToQueryDto() {
     const jtb = this.currentJoinTableBuilder
     if (jtb != null) {
-      this.queryDto.table.join(new Table(jtb.tableName), jtb.joinType, jtb.mappings)
+      this.queryDto.table.join(new Table(jtb.tableName), jtb.joinType, jtb.joinCriteria)
       this.currentJoinTableBuilder = null
     }
   }
@@ -140,17 +139,13 @@ class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
 
 class JoinTableBuilder implements HasStartedBuildingJoin {
 
-  readonly mappings: Array<JoinMapping> = []
+  joinCriteria: Criteria
 
   constructor(public parent: QueryBuilder, public tableName: string, public joinType: JoinType) {
   }
 
   on(joinCriterion: Criteria): HasJoin {
-    if (joinCriterion.children?.length > 0) {
-      joinCriterion.children.forEach(c => this.on(c))
-    } else {
-      this.mappings.push(new JoinMapping(joinCriterion.field, joinCriterion.fieldOther, joinCriterion.conditionType))
-    }
+    this.joinCriteria = joinCriterion
     return this.parent
   }
 }

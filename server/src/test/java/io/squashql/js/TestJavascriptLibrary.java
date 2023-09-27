@@ -25,8 +25,8 @@ public class TestJavascriptLibrary {
   void testReadJsonBuildFromQueryDto() {
     var table = new TableDto("myTable");
     var refTable = new TableDto("refTable");
-    table.join(refTable, JoinType.INNER, new JoinMappingDto("fromField", "toField"));
-    table.join(new TableDto("a"), JoinType.LEFT, new JoinMappingDto("a" + ".a_id", "myTable" + ".id"));
+    table.join(refTable, JoinType.INNER, criterion("fromField", "toField", ConditionType.EQ));
+    table.join(new TableDto("a"), JoinType.LEFT, criterion("a" + ".a_id", "myTable" + ".id", ConditionType.EQ));
 
     QueryDto q = new QueryDto()
             .table(table)

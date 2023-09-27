@@ -1,7 +1,7 @@
 export const PACKAGE = "io.squashql.query."
 
 export {
-  Query, Table, JoinType, JoinMapping, QueryMerge,
+  Query, Table, JoinType, QueryMerge,
 } from './query'
 
 export {
@@ -15,7 +15,7 @@ export {
   plus, minus, multiply, divide,
   integer, decimal,
   comparisonMeasureWithPeriod, comparisonMeasureWithBucket, comparisonMeasureWithParent,
-  count, totalCount as total_count,
+  count, totalCount,
   ComparisonMethod,
 } from './measure'
 

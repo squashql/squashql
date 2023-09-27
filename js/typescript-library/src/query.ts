@@ -115,8 +115,8 @@ export class Table {
   constructor(public name: string) {
   }
 
-  join(other: Table, type: JoinType, mappings: Array<JoinMapping>) {
-    this.joins.push(new Join(other, type, mappings))
+  join(other: Table, type: JoinType, criteria: Criteria) {
+    this.joins.push(new Join(other, type, criteria))
   }
 }
 
@@ -127,11 +127,6 @@ export enum JoinType {
 }
 
 class Join {
-  constructor(private table: Table, private type: JoinType, private mappings: Array<JoinMapping>) {
-  }
-}
-
-export class JoinMapping {
-  constructor(private from: Field, private to: Field, private conditionType: ConditionType) {
+  constructor(private table: Table, private type: JoinType, private joinCriteria: Criteria) {
   }
 }
