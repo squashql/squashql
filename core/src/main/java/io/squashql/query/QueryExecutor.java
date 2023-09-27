@@ -1,7 +1,5 @@
 package io.squashql.query;
 
-import static io.squashql.query.ColumnSetKey.BUCKET;
-
 import io.squashql.PrefetchVisitor;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.QueryCache.SubQueryScope;
@@ -9,39 +7,25 @@ import io.squashql.query.QueryCache.TableScope;
 import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
-import io.squashql.query.dto.BucketColumnSetDto;
-import io.squashql.query.dto.CacheStatsDto;
-import io.squashql.query.dto.CriteriaDto;
-import io.squashql.query.dto.JoinType;
-import io.squashql.query.dto.PivotTableQueryDto;
-import io.squashql.query.dto.QueryDto;
-import io.squashql.query.dto.TableDto;
-import io.squashql.query.dto.VirtualTableDto;
+import io.squashql.query.dto.*;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.store.Store;
-import io.squashql.table.ColumnarTable;
-import io.squashql.table.MergeTables;
-import io.squashql.table.PivotTable;
-import io.squashql.table.Table;
-import io.squashql.table.TableUtils;
+import io.squashql.table.*;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
+
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.impl.tuple.Tuples;
+
+import static io.squashql.query.ColumnSetKey.BUCKET;
 
 @Slf4j
 public class QueryExecutor {
@@ -90,7 +74,7 @@ public class QueryExecutor {
     result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
 
     List<String> values = pivotTableQueryDto.query.measures.stream().map(Measure::alias).toList();
-    return new PivotTable(result, pivotTableQueryDto.rows, pivotTableQueryDto.columns, values);
+    return new PivotTable(result, pivotTableQueryDto.rows.stream().map(Field::name).toList(), pivotTableQueryDto.columns.stream().map(Field::name).toList(), values);
   }
 
   public static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
@@ -101,13 +85,13 @@ public class QueryExecutor {
     axes.removeAll(select);
 
     if (!axes.isEmpty()) {
-      throw new IllegalArgumentException(axes + " on rows or columns by not in select. Please add those fields in select");
+      throw new IllegalArgumentException(axes.stream().map(Field::name).toList() + " on rows or columns by not in select. Please add those fields in select");
     }
     axes = new HashSet<>(context.rows);
     axes.addAll(context.columns);
     select.removeAll(axes);
     if (!select.isEmpty()) {
-      throw new IllegalArgumentException(select + " in select but not on rows or columns. Please add those fields on one axis");
+      throw new IllegalArgumentException(select.stream().map(Field::name).toList() + " in select but not on rows or columns. Please add those fields on one axis");
     }
 
     List<Field> rows = context.cleansedRows;

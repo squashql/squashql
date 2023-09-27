@@ -1,12 +1,8 @@
 package io.squashql.jackson;
 
-import static io.squashql.query.TableField.tableField;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import io.squashql.query.Field;
-import java.util.List;
 
 public class JacksonUtil {
 
@@ -32,12 +28,5 @@ public class JacksonUtil {
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
-  }
-
-
-  public static void main(String[] args) {
-    List<Field> fields = List.of(tableField("toto"));
-    final String ser = serialize(fields);
-    final var des = deserialize(ser, List.class);
   }
 }

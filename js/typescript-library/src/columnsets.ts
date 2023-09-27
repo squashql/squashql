@@ -1,4 +1,4 @@
-import {PACKAGE} from "./index";
+import {Field, PACKAGE} from "./index";
 
 export interface ColumnSet {
   readonly class: string
@@ -13,7 +13,7 @@ export class BucketColumnSet implements ColumnSet {
   readonly class: string = PACKAGE + "dto.BucketColumnSetDto"
   readonly key: ColumnSetKey = ColumnSetKey.BUCKET
 
-  constructor(private columnName: string, private field: string, private values: Map<string, Array<string>>) {
+  constructor(private columnName: Field, private field: Field, private values: Map<string, Array<string>>) {
   }
 
   toJSON() {

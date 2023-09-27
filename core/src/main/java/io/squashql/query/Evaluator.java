@@ -1,19 +1,20 @@
 package io.squashql.query;
 
-import static io.squashql.query.ColumnSetKey.BUCKET;
-
 import io.squashql.query.QueryExecutor.ExecutionContext;
 import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import io.squashql.query.comp.BinaryOperations;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+
+import static io.squashql.query.ColumnSetKey.BUCKET;
 
 public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>, MeasureVisitor<Void> {
 
@@ -72,7 +73,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     } else if (cm.period != null) {
       for (Field field : cm.period.getFields()) {
         if (!this.executionContext.query().columns.contains(field)) {
-          throw new IllegalArgumentException(String.format("%s is not specified in the query but is used in a comparison measure: %s", field, cm));
+          throw new IllegalArgumentException(String.format("%s is not specified in the query but is used in a comparison measure: %s", field.name(), cm));
         }
       }
       executor = new PeriodComparisonExecutor(cm);

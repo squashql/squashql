@@ -1,35 +1,11 @@
 package io.squashql.spring.web.rest;
 
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.TableField.tableField;
-import static io.squashql.query.TableField.tableFields;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
-import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.BasicUser;
-import io.squashql.query.ColumnSetKey;
-import io.squashql.query.ComparisonMeasureReferencePosition;
-import io.squashql.query.ComparisonMethod;
-import io.squashql.query.CountMeasure;
-import io.squashql.query.ExpressionMeasure;
-import io.squashql.query.Functions;
-import io.squashql.query.Measure;
+import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
-import io.squashql.query.dto.BucketColumnSetDto;
-import io.squashql.query.dto.ConditionType;
-import io.squashql.query.dto.JoinType;
-import io.squashql.query.dto.MetadataItem;
-import io.squashql.query.dto.MetadataResultDto;
-import io.squashql.query.dto.QueryMergeDto;
-import io.squashql.query.dto.QueryResultDto;
+import io.squashql.query.dto.*;
 import io.squashql.spring.dataset.DatasetTestConfig;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +15,18 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(properties = "spring.main.allow-bean-definition-overriding=true")
 @Import(DatasetTestConfig.class)
@@ -156,13 +144,13 @@ public class QueryControllerTest {
             "aggregatedMeasureDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             aggregatedMeasure,
-            Map.of(SCENARIO_FIELD_NAME, "s-1", "group", "g"),
+            Map.of(tableField(SCENARIO_FIELD_NAME), "s-1", tableField("group"), "g"),
             ColumnSetKey.BUCKET);
     ComparisonMeasureReferencePosition indicePrixDiff = new ComparisonMeasureReferencePosition(
             "indicePrixDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             indicePrix,
-            Map.of(SCENARIO_FIELD_NAME, "s-1", "group", "g"),
+            Map.of(tableField(SCENARIO_FIELD_NAME), "s-1", tableField("group"), "g"),
             ColumnSetKey.BUCKET);
 
     var query = Query

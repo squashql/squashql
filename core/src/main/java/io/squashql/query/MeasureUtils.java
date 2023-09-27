@@ -9,18 +9,13 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import lombok.NoArgsConstructor;
+
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 public final class MeasureUtils {
@@ -52,10 +47,10 @@ public final class MeasureUtils {
       String alias = cm.getMeasure().alias();
       if (cm.ancestors != null) {
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
-        return formula + ", ancestors = " + cm.ancestors;
+        return formula + ", ancestors = " + cm.ancestors.stream().map(Field::name).toList();
       } else {
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current)", alias + "(reference)");
-        return formula + ", reference = " + cm.referencePosition;
+        return formula + ", reference = " + cm.referencePosition.entrySet().stream().map(e -> String.join("=", e.getKey().name(), e.getValue())).toList();
       }
     } else if (m instanceof ExpressionMeasure em) {
       return em.expression;
@@ -94,8 +89,7 @@ public final class MeasureUtils {
             .ifPresent(ancestors -> {
               ancestors.forEach(criteriaRemover);
               List<TypedField> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).map(fieldSupplier).collect(Collectors.toList());
-              Collections.reverse(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage order".
-              rollupColumns.addAll(ancestorFields);
+              rollupColumns.addAll(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage reverse order".
             });
     return new QueryExecutor.QueryScope(queryScope.tableDto(),
             queryScope.subQuery(),

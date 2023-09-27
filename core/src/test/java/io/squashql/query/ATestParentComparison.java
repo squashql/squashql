@@ -1,25 +1,24 @@
 package io.squashql.query;
 
-import static io.squashql.query.ComparisonMethod.DIVIDE;
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.Functions.eq;
-import static io.squashql.query.Functions.in;
-import static io.squashql.query.TableField.tableFields;
-import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
-import static io.squashql.query.database.QueryEngine.TOTAL;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
-
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import static io.squashql.query.ComparisonMethod.DIVIDE;
+import static io.squashql.query.Functions.*;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import static io.squashql.query.database.QueryEngine.TOTAL;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -156,13 +155,13 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
     // parent with a measure computed by SquashQL.
     Measure pop = Functions.sum("populationsum", "population");
     Measure pop2 = Functions.plus("pop2", pop, Functions.integer(2));
-    List<Field> ancestors = tableFields(List.of("city", "country", "continent"));
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, ancestors);
-    ComparisonMeasureReferencePosition pOp2 = new ComparisonMeasureReferencePosition("percentOfParent2", DIVIDE, pop2, ancestors);
+    List<Field> select = tableFields(List.of("continent", "country", "city"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, select);
+    ComparisonMeasureReferencePosition pOp2 = new ComparisonMeasureReferencePosition("percentOfParent2", DIVIDE, pop2, select);
     QueryDto query = Query
             .from(this.storeName)
             .where(criterion("country", eq("canada"))) // use a filter to limit the number of rows
-            .select(tableFields(List.of("continent", "country", "city")), List.of(pop, pOp, pop2, pOp2))
+            .select(select, List.of(pop, pOp, pop2, pOp2))
             .build(); // query only parent
 
     Table table = this.executor.execute(query);

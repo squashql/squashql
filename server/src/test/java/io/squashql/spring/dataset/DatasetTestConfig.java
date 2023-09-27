@@ -1,8 +1,5 @@
 package io.squashql.spring.dataset;
 
-import static io.squashql.query.TableField.tableFields;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
-
 import com.google.common.collect.ImmutableList;
 import io.squashql.DuckDBDatastore;
 import io.squashql.jackson.JacksonUtil;
@@ -19,14 +16,18 @@ import io.squashql.store.Store;
 import io.squashql.table.PivotTable;
 import io.squashql.transaction.DuckDBDataLoader;
 import io.squashql.type.TableTypedField;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
+
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestConfiguration
 public class DatasetTestConfig {
@@ -45,7 +46,7 @@ public class DatasetTestConfig {
     QueryDto query = Query.from("our_prices")
             .select(tableFields(List.of("ean", "pdv", "scenario")), List.of(new AggregatedMeasure("count", "*", "count")))
             .build();
-    PivotTable pt = queryExecutor.execute(new PivotTableQueryDto(query, List.of("pdv", "ean"), List.of("scenario")));
+    PivotTable pt = queryExecutor.execute(new PivotTableQueryDto(query, tableFields(List.of("pdv", "ean")), tableFields(List.of("scenario"))));
     pt.show();
     toJson(pt);
   }

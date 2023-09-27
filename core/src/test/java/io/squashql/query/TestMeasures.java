@@ -1,18 +1,17 @@
 package io.squashql.query;
 
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.Functions.eq;
-import static io.squashql.query.Functions.plus;
-import static io.squashql.query.TableField.tableField;
-import static io.squashql.query.TableField.tableFields;
-
 import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.dto.Period;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
+
+import static io.squashql.query.Functions.*;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 
 public class TestMeasures {
 
@@ -72,9 +71,9 @@ public class TestMeasures {
     Assertions.assertThat(MeasureUtils.createExpression(amount)).isEqualTo("sum(Amount)");
     Assertions.assertThat(MeasureUtils.createExpression(sales)).isEqualTo("sumIf(Amount, Income/Expense = 'Revenue')");
     Assertions.assertThat(MeasureUtils.createExpression(ebidtaRatio)).isEqualTo("sum(Amount) / sales");
-    Assertions.assertThat(MeasureUtils.createExpression(growth)).isEqualTo("sales(current) / sales(reference), reference = {Year=y-1}");
+    Assertions.assertThat(MeasureUtils.createExpression(growth)).isEqualTo("sales(current) / sales(reference), reference = [Year=y-1]");
     Assertions.assertThat(MeasureUtils.createExpression(kpi)).isEqualTo("EBITDA % + Growth");
-    Assertions.assertThat(MeasureUtils.createExpression(kpiComp)).isEqualTo("KPI(current) - KPI(reference), reference = {scenario encrypted=s-1, group=g}");
+    Assertions.assertThat(MeasureUtils.createExpression(kpiComp)).isEqualTo("KPI(current) - KPI(reference), reference = [scenario encrypted=s-1, group=g]");
     Assertions.assertThat(MeasureUtils.createExpression(parentComparisonMeasure)).isEqualTo("sum(Amount) / sum(Amount)(parent), ancestors = [city, country, continent]");
   }
 }

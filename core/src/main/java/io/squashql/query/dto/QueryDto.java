@@ -1,10 +1,7 @@
 package io.squashql.query.dto;
 
-import static io.squashql.query.dto.ConditionType.AND;
-
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -16,17 +13,14 @@ import io.squashql.query.ColumnSetKey;
 import io.squashql.query.Field;
 import io.squashql.query.Measure;
 import io.squashql.query.parameter.Parameter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+
+import java.io.IOException;
+import java.util.*;
+
+import static io.squashql.query.dto.ConditionType.AND;
 
 @ToString
 @EqualsAndHashCode
@@ -180,7 +174,6 @@ public class QueryDto {
     }
   }
 
-  @NoArgsConstructor
   public static class KeyFieldDeserializer extends KeyDeserializer {
 
     @Override

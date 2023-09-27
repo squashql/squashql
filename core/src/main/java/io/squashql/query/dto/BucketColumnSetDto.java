@@ -4,13 +4,14 @@ import io.squashql.query.ColumnSet;
 import io.squashql.query.ColumnSetKey;
 import io.squashql.query.Field;
 import io.squashql.query.TableField;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 @ToString
 @EqualsAndHashCode
@@ -24,7 +25,7 @@ public class BucketColumnSetDto implements ColumnSet {
   public Map<String, List<String>> values = new LinkedHashMap<>();
 
   public BucketColumnSetDto(String name, Field field) {
-    this.name = new TableField(name); // todo-mde should it really be a table field ? maybe bucketfield ?
+    this.name = new TableField(name);
     this.field = field;
   }
 

@@ -73,10 +73,10 @@ export function generateFromQueryDto() {
     "scenario": "s-1"
   }))))
   q.withMeasure(comparisonMeasureWithPeriod("growth", ComparisonMethod.DIVIDE, price, new Map(Object.entries({
-    "Annee": "y-1",
-    "Mois": "m"
-  })), new Month("mois", "annee")))
-  q.withMeasure(comparisonMeasureWithParent("parent", ComparisonMethod.DIVIDE, price, ["Mois", "Annee"]))
+    "Year": "y-1",
+    "Month": "m"
+  })), new Month("Year", "Month")))
+  q.withMeasure(comparisonMeasureWithParent("parent", ComparisonMethod.DIVIDE, price, ["Year", "Month"]))
 
   const queryCondition = or(or(and(eq("a"), eq("b")), lt(5)), like("a%"))
   q.withWhereCriteria(all([
@@ -99,7 +99,7 @@ export function generateFromQueryDto() {
     "a": ["a1", "a2"],
     "b": ["b1", "b2"]
   }))
-  q.withBucketColumnSet(new BucketColumnSet("group", "scenario", values))
+  q.withBucketColumnSet(new BucketColumnSet(tableField("group"), tableField("scenario"), values))
 
   // SubQuery - Note this is not valid because a table has been set above, but we are just testing
   // the json here.

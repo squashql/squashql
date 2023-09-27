@@ -163,7 +163,7 @@ However, ordering can be customized by using `orderBy` method.
 
 ```typescript
 import {
-  from, sum, OrderKeyword
+  from, sum, OrderKeyword, tableField
 } from "@squashql/squashql-js"
 
 
@@ -756,7 +756,7 @@ import {
 } from "@squashql/squashql-js"
 
 const pop = sum("pop", "population")
-const ancestors = ["city", "country", "continent"]
+const ancestors = ["continent", "country", "city"]
 const ratio = comparisonMeasureWithParent("ratio", ComparisonMethod.DIVIDE, pop, ancestors)
 const query = from("populationTable")
         .select(["continent", "country", "city"], [], [pop, ratio])
@@ -766,7 +766,7 @@ const query = from("populationTable")
 
 `comparisonMeasureWithParent` method is used to create a special measure built to compare values of an underlying
 measure (third argument) with the parent values of the same measure. Parenthood is indicated with the array of `ancestors`
-(fourth argument) which contains column names in "lineage order". 
+(fourth argument) which contains column names in "lineage reverse order". 
 
 Note the columns used to define the ancestors need to be passed to the select method but not necessary to the rollup method. 
 

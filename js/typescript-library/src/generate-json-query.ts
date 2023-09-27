@@ -15,7 +15,7 @@ export function generateFromQuery() {
     "b": ["b1", "b2"]
   }))
   const cte = new VirtualTable("myCte", ["id", "min", "max", "other"], [[0, 0, 1, "x"], [1, 2, 3, "y"]])
-  const bucketColumnSet = new BucketColumnSet("group", "scenario", values)
+  const bucketColumnSet = new BucketColumnSet(tableField("group"), tableField("scenario"), values)
   const measure = sum("sum", "f1");
   const measureExpr = new ExpressionMeasure("sum_expr", "sum(f1)");
   const fields = tableFields(["a", "b"]);
