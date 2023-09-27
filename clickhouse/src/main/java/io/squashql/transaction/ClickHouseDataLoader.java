@@ -49,7 +49,10 @@ public class ClickHouseDataLoader implements DataLoader {
       int size = list.size();
       for (int i = 0; i < size; i++) {
         TableTypedField field = list.get(i);
-        sb.append(SqlUtils.backtickEscape(field.name())).append(" Nullable(").append(classToClickHouseType(field.type())).append(')');
+        sb.append(SqlUtils.backtickEscape(field.name()))
+                .append(" Nullable(")
+                .append(classToClickHouseType(field.type()))
+                .append(')');
         if (i < size - 1) {
           sb.append(", ");
         }
