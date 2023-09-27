@@ -5,6 +5,7 @@ import { Measure } from "./measure";
 import { ExplicitOrderDto, Order, OrderKeyword, SimpleOrder } from "./order";
 import { Parameter } from "./parameters";
 import { VirtualTable } from "./virtualtable";
+import {serializeMap} from "./util";
 
 export class QueryMerge {
   constructor(readonly first: Query, readonly second: Query, readonly joinType: JoinType) {
@@ -103,7 +104,7 @@ export class Query {
       "measures": this.measures,
       "whereCriteriaDto": this.whereCriteria,
       "havingCriteriaDto": this.havingCriteriaDto,
-      "orders": Object.fromEntries(this.orders),
+      "orders": Object.fromEntries(serializeMap(this.orders)),
       "limit": this.limit
     }
   }

@@ -1,21 +1,13 @@
 package io.squashql.query;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.dto.Period;
-import io.squashql.query.dto.QueryDto.KeyFieldDeserializer;
-import io.squashql.query.dto.QueryDto.KeyFieldSerializer;
 import io.squashql.type.TypedField;
+import lombok.*;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.ToString;
-import lombok.With;
 
 @ToString
 @EqualsAndHashCode
@@ -26,11 +18,11 @@ public class ComparisonMeasureReferencePosition implements Measure {
   public String alias;
   @With
   public String expression;
+  @Getter
   public ComparisonMethod comparisonMethod;
+  @Getter
   public Measure measure;
   public ColumnSetKey columnSetKey;
-  @JsonSerialize(keyUsing = KeyFieldSerializer.class)
-  @JsonDeserialize(keyUsing = KeyFieldDeserializer.class)
   public Map<Field, String> referencePosition;
   public Period period;
   public List<Field> ancestors;
@@ -72,14 +64,6 @@ public class ComparisonMeasureReferencePosition implements Measure {
     this.period = period;
     this.columnSetKey = columnSetKey;
     this.ancestors = ancestors;
-  }
-
-  public Measure getMeasure() {
-    return this.measure;
-  }
-
-  public ComparisonMethod getComparisonMethod() {
-    return this.comparisonMethod;
   }
 
   @Override
