@@ -17,8 +17,6 @@ import java.util.List;
 @AllArgsConstructor
 public class CriteriaDto {
 
-//  public static final CriteriaDto NO_CRITERIA = new CriteriaDto(AND, Collections.emptyList());
-
   public Field field;
   public Field fieldOther;
   public BasicMeasure measure;

@@ -141,8 +141,4 @@ public abstract class ATestBucketing extends ABaseTestQuery {
             List.of("1", "sensistive", 150d),
             List.of("1", "unsensistive", 60d));
   }
-
-  // FIXME tutorial
-  //  criterion(new TableField("Happiness score").minus(new TableField("satisfactionLevels.lower_bound")),  ge(0)),
-  //  criterion(new TableField("Happiness score").minus(new TableField("satisfactionLevels.upper_bound")),  lt(0)),
 }
