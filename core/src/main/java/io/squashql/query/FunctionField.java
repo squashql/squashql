@@ -1,6 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.database.QueryRewriter;
+import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -19,7 +20,8 @@ public class FunctionField implements Field {
 
   @Override
   public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter) {
-    throw new IllegalStateException("Incorrect path of execution");
+    FunctionTypedField typedField = (FunctionTypedField) fieldProvider.apply(this.expression);
+    return queryRewriter.functionExpression(typedField);
   }
 
   @Override

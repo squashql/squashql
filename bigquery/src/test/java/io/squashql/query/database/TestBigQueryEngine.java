@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
 
+import static io.squashql.query.Functions.criterion;
 import static io.squashql.query.dto.JoinType.INNER;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
@@ -175,7 +176,7 @@ public class TestBigQueryEngine {
             List.of("a", "b"),
             List.of(List.of(0, "0"), List.of(1, "1")));
     query.virtualTableDto = virtual;
-    query.table.joins.add(new JoinDto(new TableDto(virtual.name), INNER, new JoinMappingDto("baseStore.category", virtual.name + ".a", ConditionType.EQ)));
+    query.table.joins.add(new JoinDto(new TableDto(virtual.name), INNER, criterion("baseStore.category", virtual.name + ".a", ConditionType.EQ)));
 
     BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName") {
       @Override

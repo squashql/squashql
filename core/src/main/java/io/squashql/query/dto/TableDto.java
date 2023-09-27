@@ -23,8 +23,4 @@ public class TableDto {
   public void join(TableDto other, JoinType joinType, CriteriaDto joinCriteria) {
     this.joins.add(new JoinDto(other, joinType, joinCriteria));
   }
-
-//  public void join(TableDto other, JoinType joinType, List<JoinMappingDto> JoinMappingDtos) {
-//    this.joins.add(new JoinDto(other, joinType, JoinMappingDtos));
-//  }
 }

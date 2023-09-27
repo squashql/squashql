@@ -210,7 +210,7 @@ public class SQLTranslator {
   public static String toSql(Field field, ConditionDto dto, Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter) {
     String expression = field.sqlExpression(fieldProvider, queryRewriter);
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
-      Function<Object, String> sqlMapper = getQuoteFn(fieldProvider.apply(field.name()));
+      Function<Object, String> sqlMapper = field instanceof TableField ? getQuoteFn(fieldProvider.apply(field.name())) : String::valueOf; // FIXME dirty workaround
       return switch (dto.type()) {
         case IN -> expression + " " + dto.type().sqlInfix + " (" +
                 ((InConditionDto) dto).values

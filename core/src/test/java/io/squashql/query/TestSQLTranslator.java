@@ -232,13 +232,14 @@ public class TestSQLTranslator {
                     criterion(SCENARIO_FIELD_NAME, or(eq("base"), eq("s1"), eq("s2"))),
                     criterion("delta", ge(123d)),
                     criterion("type", or(eq("A"), eq("B"))),
-                    criterion("pnl", lt(10d)))
+                    criterion("pnl", lt(10d)),
+                    criterion(minus(new TableField("pnl"), new ConstantField(1)), lt(11d)))
             )
             .table(BASE_STORE_NAME);
     Assertions.assertThat(translate(query, fp))
             .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum` from " + BASE_STORE_NAME_ESCAPED
                     + " where (((`scenario` = 'base' or `scenario` = 's1') or `scenario` = 's2')"
-                    + " and `delta` >= 123.0 and (`type` = 'A' or `type` = 'B') and `pnl` < 10.0)"
+                    + " and `delta` >= 123.0 and (`type` = 'A' or `type` = 'B') and `pnl` < 10.0 and (`pnl`-1) < 11.0)"
                     + " group by `scenario`, `type`"
             );
   }
