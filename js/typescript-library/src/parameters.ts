@@ -1,4 +1,4 @@
-import {PACKAGE} from "./index";
+import {PACKAGE} from "./index"
 
 export interface Parameter {
   readonly class: string
@@ -11,7 +11,7 @@ export enum Action {
 
 export class QueryCacheParameter implements Parameter {
   readonly class: string = PACKAGE + "parameter.QueryCacheParameter"
-  readonly key: string = "cache";
+  readonly key: string = "cache"
 
   constructor(private action: Action) {
   }

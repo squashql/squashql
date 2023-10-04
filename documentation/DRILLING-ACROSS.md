@@ -36,9 +36,16 @@ Information about shipments and returns is captured in two tables: shipment and 
 Now let's ask to group by on product with a rollup to have a summary of each table:
 
 ```typescript
-const query = from("shipment")
-        .select(["product"], [], [sum("quantity sold", "quantity")])
-        .rollup(["product"])
+class Shipment {
+  readonly _name: string = "shipment"
+  readonly product: TableField = new TableField("shipment.product")
+  readonly quantity: TableField = new TableField("shipment.quantity")
+}
+const shipment = new Shipment()
+
+const query = from(shipment._name)
+        .select([shipment.product], [], [sum("quantity sold", shipment.quantity)])
+        .rollup([shipment.product])
         .build()
 ```
 
@@ -56,9 +63,17 @@ Result:
 
 A similar query can be executed on `return` table.
 ```typescript
-const query = from("return")
-        .select(["product"], [], [sum("quantity returned", "quantity")])
-        .rollup(["product"])
+class Return {
+  readonly _name: string = "return"
+  readonly product: TableField = new TableField("return.product")
+  readonly quantity: TableField = new TableField("return.quantity")
+  readonly reason: TableField = new TableField("return.reason")
+}
+const returnTable = new Return()
+
+const query = from(returnTable._name)
+        .select([returnTable.product], [], [sum("quantity returned", returnTable.quantity)])
+        .rollup([returnTable.product])
         .build()
 ```
 
@@ -79,13 +94,13 @@ of SquashQL. Two queries need to be defined and how results of those queries sho
 possible: FULL, INNER, LEFT.
 
 ```typescript
-const queryShipment = from("shipment")
-        .select(["product"], [], [sum("quantity sold", "quantity")])
-        .rollup(["product"])
+const queryShipment = from(shipment._name)
+        .select([shipment.product], [], [sum("quantity sold", shipment.quantity)])
+        .rollup([shipment.product])
         .build()
-const queryReturn = from("return")
-        .select(["product"], [], [sum("quantity returned", "quantity")])
-        .rollup(["product"])
+const queryReturn = from(returnTable._name)
+        .select([returnTable.product], [], [sum("quantity returned", returnTable.quantity)])
+        .rollup([returnTable.product])
         .build()
 ```
 
@@ -161,9 +176,9 @@ join type is `INNER` so both entries are discarded.
 Let's change the second query and add `reason` to the select.
 
 ```typescript
-const queryReturnWithReason = from("return")
-        .select(["product", "reason"], [], [sum("quantity returned", "quantity")])
-        .rollup(["product", "reason"])
+const queryReturnWithReason = from(returnTable._name)
+        .select([returnTable.product, returnTable.reason], [], [sum("quantity returned", returnTable.quantity)])
+        .rollup([returnTable.product, returnTable.reason])
         .build()
 ```
 
@@ -183,13 +198,13 @@ When executed this query individually, the result looks like:
 ```
 
 ```typescript
-const queryShipment = from("shipment")
-        .select(["product"], [], [sum("quantity sold", "quantity")])
-        .rollup(["product"])
+const queryShipment = from(shipment._name)
+        .select([shipment.product], [], [sum("quantity sold", shipment.quantity)])
+        .rollup([shipment.product])
         .build()
-const queryReturnWithReason = from("return")
-        .select(["product", "reason"], [], [sum("quantity returned", "quantity")])
-        .rollup(["product", "reason"])
+const queryReturnWithReason = from(returnTable._name)
+        .select([returnTable.product, returnTable.reason], [], [sum("quantity returned", returnTable.quantity)])
+        .rollup([returnTable.product, returnTable.reason])
         .build()
 
 querier.executeQueryMerge(new QueryMerge(queryShipment, queryReturnWithReason, JoinType.FULL))

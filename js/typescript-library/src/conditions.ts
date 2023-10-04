@@ -1,5 +1,4 @@
-import {AggregatedMeasure, BasicMeasure, Field, PACKAGE, TableField} from "./index";
-import {toField} from "./util";
+import {BasicMeasure, Field, PACKAGE} from "./index"
 
 export interface Condition {
   readonly class: string
@@ -29,7 +28,7 @@ function toJSON(c: Condition) {
 }
 
 class SingleValueCondition implements Condition {
-  class: string = PACKAGE + "dto.SingleValueConditionDto";
+  class: string = PACKAGE + "dto.SingleValueConditionDto"
 
   constructor(readonly type: ConditionType, private value: any) {
   }
@@ -43,7 +42,7 @@ class SingleValueCondition implements Condition {
 }
 
 class ConstantCondition implements Condition {
-  class: string = PACKAGE + "dto.ConstantConditionDto";
+  class: string = PACKAGE + "dto.ConstantConditionDto"
 
   constructor(readonly type: ConditionType) {
   }
@@ -56,8 +55,8 @@ class ConstantCondition implements Condition {
 }
 
 class InCondition implements Condition {
-  type: ConditionType = ConditionType.IN;
-  class: string = PACKAGE + "dto.InConditionDto";
+  type: ConditionType = ConditionType.IN
+  class: string = PACKAGE + "dto.InConditionDto"
 
   constructor(private values: Array<any>) {
   }
@@ -71,7 +70,7 @@ class InCondition implements Condition {
 }
 
 class LogicalCondition implements Condition {
-  class: string = PACKAGE + "dto.LogicalConditionDto";
+  class: string = PACKAGE + "dto.LogicalConditionDto"
 
   constructor(readonly type: ConditionType, private one: Condition, private two: Condition) {
   }
@@ -96,12 +95,12 @@ export class Criteria {
   }
 }
 
-export function criterion(field: Field | string, condition: Condition): Criteria {
-  return new Criteria(toField(field), undefined, undefined, condition, undefined, undefined)
+export function criterion(field: Field, condition: Condition): Criteria {
+  return new Criteria(field, undefined, undefined, condition, undefined, undefined)
 }
 
-export function criterion_(field: Field | string, fieldOther: Field | string, conditionType: ConditionType): Criteria {
-  return new Criteria(toField(field), toField(fieldOther), undefined, undefined, conditionType, undefined)
+export function criterion_(field: Field, fieldOther: Field, conditionType: ConditionType): Criteria {
+  return new Criteria(field, fieldOther, undefined, undefined, conditionType, undefined)
 }
 
 export function havingCriterion(measure: BasicMeasure, condition: Condition): Criteria {

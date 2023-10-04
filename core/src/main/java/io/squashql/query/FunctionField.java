@@ -3,12 +3,13 @@ package io.squashql.query;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TypedField;
+
+import java.util.function.Function;
+
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-
-import java.util.function.Function;
 
 @ToString
 @EqualsAndHashCode
@@ -16,16 +17,16 @@ import java.util.function.Function;
 @AllArgsConstructor
 public class FunctionField implements Field {
 
-  private String expression;
+  private Field expression;
 
   @Override
-  public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter) {
+  public String sqlExpression(Function<Field, TypedField> fieldProvider, QueryRewriter queryRewriter) {
     FunctionTypedField typedField = (FunctionTypedField) fieldProvider.apply(this.expression);
     return queryRewriter.functionExpression(typedField);
   }
 
   @Override
   public String name() {
-    return this.expression;
+    return this.expression.name();
   }
 }

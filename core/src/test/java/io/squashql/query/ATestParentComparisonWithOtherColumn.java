@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestClass
@@ -49,10 +50,11 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
   @Test
   void testSimple() {
     Measure amount = Functions.sum("amount", "amount");
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
+    final List<Field> fields = tableFields(List.of("continent", "country", "city"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, fields);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("continent", "country", "city"), List.of(amount, pOp))
+            .select(fields, List.of(amount, pOp))
             .build();
 
     Table result = this.executor.execute(query);
@@ -65,10 +67,10 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
   @Test
   void testSkipMiddleAncestors() {
     Measure amount = Functions.sum("amount", "amount");
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "continent"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, tableFields(List.of("continent", "country", "city")));
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("continent", "country", "city"), List.of(amount, pOp))
+            .select(tableFields(List.of("continent", "country", "city")), List.of(amount, pOp))
             .build();
 
     Table result = this.executor.execute(query);
@@ -83,10 +85,10 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
   @Test
   void testCrossjoinWithOtherColumn() {
     Measure amount = Functions.sum("amount", "amount");
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, tableFields(List.of("continent", "country", "city")));
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("spending_category", "continent", "country", "city"), List.of(amount, pOp))
+            .select(tableFields(List.of("spending_category", "continent", "country", "city")), List.of(amount, pOp))
             .build();
 
     Table result = this.executor.execute(query);
@@ -105,10 +107,10 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
   @Test
   void testCrossjoinWithOtherColumnAndMissingAncestorsInQuery() {
     Measure amount = Functions.sum("amount", "amount");
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, List.of("city", "country", "continent"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, tableFields(List.of("city", "country", "continent")));
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("spending_category", "city"), List.of(amount, pOp))
+            .select(tableFields(List.of("spending_category", "city")), List.of(amount, pOp))
             .build();
 
     Table result = this.executor.execute(query);

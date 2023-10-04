@@ -1,10 +1,11 @@
-import {Measure} from "./measure";
-import {ConditionType, Criteria} from "./conditions";
-import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order";
-import {BucketColumnSet, ColumnSet, ColumnSetKey} from "./columnsets";
-import { VirtualTable } from "./virtualtable";
-import {Parameter} from "./parameters";
-import {Field} from "./field";
+import { BucketColumnSet, ColumnSet, ColumnSetKey } from "./columnsets"
+import { ConditionType, Criteria } from "./conditions"
+import { Field } from "./field"
+import { Measure } from "./measure"
+import { ExplicitOrderDto, Order, OrderKeyword, SimpleOrder } from "./order"
+import { Parameter } from "./parameters"
+import { VirtualTable } from "./virtualtable"
+import {serializeMap} from "./util"
 
 export class QueryMerge {
   constructor(readonly first: Query, readonly second: Query, readonly joinType: JoinType) {
@@ -12,8 +13,8 @@ export class QueryMerge {
 }
 
 export class Query {
-  columns: Array<string>
-  rollupColumns: Array<string>
+  columns: Array<Field>
+  rollupColumns: Array<Field>
   columnSets: Map<string, ColumnSet>
   parameters: Map<string, Parameter>
   measures: Array<Measure>
@@ -21,7 +22,7 @@ export class Query {
   virtualTable: VirtualTable
   whereCriteria: Criteria
   havingCriteriaDto: Criteria
-  orders: Map<string, Order>
+  orders: Map<Field, Order>
   subQuery: Query
   limit: number = -1
 
@@ -31,7 +32,7 @@ export class Query {
     this.measures = []
     this.whereCriteria = undefined
     this.havingCriteriaDto = undefined
-    this.orders = new Map<string, Order>()
+    this.orders = new Map<Field, Order>()
     this.columnSets = new Map<string, ColumnSet>()
     this.parameters = new Map<string, Parameter>()
   }
@@ -48,20 +49,20 @@ export class Query {
 
   withWhereCriteria(criterion: Criteria): Query {
     this.whereCriteria = criterion
-    return this;
+    return this
   }
 
   withHavingCriteria(criterion: Criteria): Query {
     this.havingCriteriaDto = criterion
-    return this;
+    return this
   }
 
-  withColumn(colum: string): Query {
+  withColumn(colum: Field): Query {
     this.columns.push(colum)
     return this
   }
 
-  withRollupColumn(colum: string): Query {
+  withRollupColumn(colum: Field): Query {
     this.rollupColumns.push(colum)
     return this
   }
@@ -81,12 +82,12 @@ export class Query {
     return this
   }
 
-  orderBy(column: string, order: OrderKeyword): Query {
+  orderBy(column: Field, order: OrderKeyword): Query {
     this.orders.set(column, new SimpleOrder(order))
     return this
   }
 
-  orderByFirstElements(column: string, firstElements: Array<any>): Query {
+  orderByFirstElements(column: Field, firstElements: Array<any>): Query {
     this.orders.set(column, new ExplicitOrderDto(firstElements))
     return this
   }
@@ -103,7 +104,7 @@ export class Query {
       "measures": this.measures,
       "whereCriteriaDto": this.whereCriteria,
       "havingCriteriaDto": this.havingCriteriaDto,
-      "orders": Object.fromEntries(this.orders),
+      "orders": Object.fromEntries(serializeMap(this.orders)),
       "limit": this.limit
     }
   }

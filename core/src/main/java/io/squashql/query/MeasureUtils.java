@@ -34,7 +34,7 @@ public final class MeasureUtils {
 
   public static String createExpression(Measure m) {
     if (m instanceof AggregatedMeasure a) {
-      Function<String, TypedField> fieldProvider = s -> new TableTypedField(null, s, String.class);
+      Function<Field, TypedField> fieldProvider = s -> new TableTypedField(null, s.name(), String.class);
       if (a.criteria != null) {
         String conditionSt = SQLTranslator.toSql(fieldProvider, a.criteria, BASIC);
         return a.aggregationFunction + "If(" + a.field.sqlExpression(fieldProvider, BASIC) + ", " + conditionSt + ")";
@@ -47,14 +47,14 @@ public final class MeasureUtils {
       String alias = cm.getMeasure().alias();
       if (cm.ancestors != null) {
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
-        return formula + ", ancestors = " + cm.ancestors;
+        return formula + ", ancestors = " + cm.ancestors.stream().map(Field::name).toList();
       } else {
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current)", alias + "(reference)");
-        return formula + ", reference = " + cm.referencePosition;
+        return formula + ", reference = " + cm.referencePosition.entrySet().stream().map(e -> String.join("=", e.getKey().name(), e.getValue())).toList();
       }
     } else if (m instanceof ExpressionMeasure em) {
       return em.expression;
-    } else if (m instanceof ConstantMeasure cm) {
+    } else if (m instanceof ConstantMeasure<?> cm) {
       return String.valueOf(cm.value);
     } else {
       throw new IllegalArgumentException("Unexpected type " + m.getClass());
@@ -77,9 +77,9 @@ public final class MeasureUtils {
           QueryDto query,
           ComparisonMeasureReferencePosition cm,
           QueryExecutor.QueryScope queryScope,
-          Function<String, TypedField> fieldSupplier) {
+          Function<Field, TypedField> fieldSupplier) {
     AtomicReference<CriteriaDto> copy = new AtomicReference<>(queryScope.whereCriteriaDto() == null ? null : CriteriaDto.deepCopy(queryScope.whereCriteriaDto()));
-    Consumer<String> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
+    Consumer<Field> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(criteriaRemover));
     Optional.ofNullable(cm.period)
@@ -89,8 +89,7 @@ public final class MeasureUtils {
             .ifPresent(ancestors -> {
               ancestors.forEach(criteriaRemover);
               List<TypedField> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).map(fieldSupplier).collect(Collectors.toList());
-              Collections.reverse(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage order".
-              rollupColumns.addAll(ancestorFields);
+              rollupColumns.addAll(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage reverse order".
             });
     return new QueryExecutor.QueryScope(queryScope.tableDto(),
             queryScope.subQuery(),
@@ -102,7 +101,7 @@ public final class MeasureUtils {
             queryScope.virtualTableDto());
   }
 
-  private static CriteriaDto removeCriteriaOnField(String field, CriteriaDto root) {
+  private static CriteriaDto removeCriteriaOnField(Field field, CriteriaDto root) {
     if (root == null) {
       return null;
     } else if (root.field != null && root.condition != null) { // where clause condition
@@ -113,7 +112,7 @@ public final class MeasureUtils {
     }
   }
 
-  private static void removeCriteriaOnField(String field, List<CriteriaDto> children) {
+  private static void removeCriteriaOnField(Field field, List<CriteriaDto> children) {
     Iterator<CriteriaDto> iterator = children.iterator();
     while (iterator.hasNext()) {
       CriteriaDto criteriaDto = iterator.next();
@@ -131,7 +130,7 @@ public final class MeasureUtils {
     return m.accept(new PrimitiveMeasureVisitor());
   }
 
-  public static List<String> getColumnsForPrefetching(Period period) {
+  public static List<Field> getColumnsForPrefetching(Period period) {
     if (period instanceof Period.Quarter q) {
       return List.of(q.year(), q.quarter());
     } else if (period instanceof Period.Year y) {
@@ -145,14 +144,14 @@ public final class MeasureUtils {
     }
   }
 
-  public static Function<String, TypedField> withFallback(Function<String, TypedField> fieldProvider, Class<?> fallbackType) {
-    return fieldName -> {
+  public static Function<Field, TypedField> withFallback(Function<Field, TypedField> fieldProvider, Class<?> fallbackType) {
+    return field -> {
       try {
-        return fieldProvider.apply(fieldName);
+        return fieldProvider.apply(field);
       } catch (FieldNotFoundException e) {
         // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
         // contains only "raw" fields, it will throw an exception.
-        return new TableTypedField(null, fieldName, fallbackType);
+        return new TableTypedField(null, field.name(), fallbackType);
       }
     };
   }

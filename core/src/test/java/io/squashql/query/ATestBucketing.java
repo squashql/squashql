@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 import static io.squashql.query.Functions.*;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
 
@@ -68,8 +70,8 @@ public abstract class ATestBucketing extends ABaseTestQuery {
     CriteriaDto criteria = all(
             criterion(fieldNameGenerator.apply(this.storeName, "kvi"), fieldNameGenerator.apply(sensitivities.name, "min"), ConditionType.GE),
             criterion(fieldNameGenerator.apply(this.storeName, "kvi"), fieldNameGenerator.apply(sensitivities.name, "max"), ConditionType.LT));
-    String bucket = fieldNameGenerator.apply(sensitivities.name, "bucket");
-    String shop = fieldNameGenerator.apply(this.storeName, "shop");
+    Field bucket = tableField(fieldNameGenerator.apply(sensitivities.name, "bucket"));
+    Field shop = tableField(fieldNameGenerator.apply(this.storeName, "shop"));
     var query = Query
             .from(this.storeName)
             .join(sensitivities, JoinType.INNER)
@@ -79,7 +81,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 
     Table result = this.executor.execute(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(shop, bucket, "sales");
+            .containsExactly(shop.name(), bucket.name(), "sales");
     Assertions.assertThat(result).containsExactly(
             List.of("0", "hypersensistive", 240d),
             List.of("0", "sensistive", 150d),
@@ -97,7 +99,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
             .build();
     result = this.executor.execute(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(shop, bucket, "sales");
+            .containsExactly(shop.name(), bucket.name(), "sales");
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, GRAND_TOTAL, 900d),
             List.of("0", TOTAL, 450d),
@@ -127,7 +129,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
             .from(this.storeName)
             .join(sensitivities, JoinType.INNER)
             .on(criteria)
-            .select(List.of(shop, bucket), List.of(sales))
+            .select(tableFields(List.of(shop, bucket)), List.of(sales))
             .build();
 
     Table result = this.executor.execute(query);

@@ -1,27 +1,46 @@
 package io.squashql.query;
 
-import io.squashql.TestClass;
-import io.squashql.query.builder.Query;
-import io.squashql.query.database.QueryRewriter;
-import io.squashql.query.database.SqlUtils;
-import io.squashql.query.dto.*;
-import io.squashql.table.Table;
-import io.squashql.type.TableTypedField;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import static io.squashql.query.Functions.*;
+import static io.squashql.query.Functions.all;
+import static io.squashql.query.Functions.avg;
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.eq;
+import static io.squashql.query.Functions.ge;
+import static io.squashql.query.Functions.in;
+import static io.squashql.query.Functions.isNotNull;
+import static io.squashql.query.Functions.isNull;
+import static io.squashql.query.Functions.le;
+import static io.squashql.query.Functions.min;
+import static io.squashql.query.Functions.multiply;
+import static io.squashql.query.Functions.or;
+import static io.squashql.query.Functions.sum;
+import static io.squashql.query.Functions.sumIf;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
 import static io.squashql.query.dto.OrderKeywordDto.ASC;
 import static io.squashql.query.dto.OrderKeywordDto.DESC;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
+
+import io.squashql.TestClass;
+import io.squashql.query.builder.Query;
+import io.squashql.query.database.QueryRewriter;
+import io.squashql.query.database.SqlUtils;
+import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.dto.ConditionDto;
+import io.squashql.query.dto.CriteriaDto;
+import io.squashql.query.dto.JoinType;
+import io.squashql.query.dto.OrderKeywordDto;
+import io.squashql.query.dto.QueryDto;
+import io.squashql.table.Table;
+import io.squashql.type.TableTypedField;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -66,7 +85,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryWildcard() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price"), sum("q", "quantity")))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -79,9 +98,9 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryWildcardWithFullRollup() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
-            .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("p", "price"), sum("q", "quantity")))
-            .rollup(SCENARIO_FIELD_NAME, "category")
+            .where(tableField(SCENARIO_FIELD_NAME), eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "category")), List.of(sum("p", "price"), sum("q", "quantity")))
+            .rollup(tableFields(List.of(SCENARIO_FIELD_NAME, "category")))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -99,9 +118,9 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryWildcardWithFullRollupFullName() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME), eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
-            .select(List.of(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME), SqlUtils.getFieldFullName(this.storeName, "category")), List.of(sum("p", "price"), sum("q", "quantity")))
-            .rollup(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME), SqlUtils.getFieldFullName(this.storeName, "category"))
+            .where(tableField(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME)), eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
+            .select(tableFields(List.of(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME), SqlUtils.getFieldFullName(this.storeName, "category"))), List.of(sum("p", "price"), sum("q", "quantity")))
+            .rollup(tableField(SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME)), tableField(SqlUtils.getFieldFullName(this.storeName, "category")))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -116,9 +135,9 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryWildcardWithFullRollupOnColumnTypeInt() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
-            .select(List.of("eanId"), List.of(sum("p", "price"), sum("q", "quantity")))
-            .rollup("eanId")
+            .where(tableField(SCENARIO_FIELD_NAME), eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
+            .select(tableFields(List.of("eanId")), List.of(sum("p", "price"), sum("q", "quantity")))
+            .rollup(tableField("eanId"))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -136,8 +155,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryWildcardWithFullRollupWithNullValues() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("subcategory"), List.of(sum("q", "quantity")))
-            .rollup("subcategory")
+            .select(tableFields(List.of("subcategory")), List.of(sum("q", "quantity")))
+            .rollup(tableField("subcategory"))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -150,8 +169,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryWildcardPartialRollupWithTwoColumns() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("q", "quantity")))
-            .rollup("category") // We don't care here about total on scenario
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "category")), List.of(sum("q", "quantity")))
+            .rollup(tableField("category")) // We don't care here about total on scenario
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -170,8 +189,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
     query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(sum("q", "quantity")))
-            .rollup(SCENARIO_FIELD_NAME) // try with another column
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "category")), List.of(sum("q", "quantity")))
+            .rollup(tableField(SCENARIO_FIELD_NAME)) // try with another column
             .build();
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -193,9 +212,9 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryWildcardPartialRollupWithThreeColumns() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, eq("s1")) // filter to reduce output table size
-            .select(List.of(SCENARIO_FIELD_NAME, "category", "subcategory"), List.of(sum("q", "quantity")))
-            .rollup("category", "subcategory")
+            .where(tableField(SCENARIO_FIELD_NAME), eq("s1")) // filter to reduce output table size
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "category", "subcategory")), List.of(sum("q", "quantity")))
+            .rollup(tableField("category"), tableField("subcategory"))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -209,9 +228,9 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
     query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, eq("s1")) // filter to reduce output table size
-            .select(List.of(SCENARIO_FIELD_NAME, "category", "subcategory"), List.of(sum("q", "quantity")))
-            .rollup("category") // Only total for category
+            .where(tableField(SCENARIO_FIELD_NAME), eq("s1")) // filter to reduce output table size
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "category", "subcategory")), List.of(sum("q", "quantity")))
+            .rollup(tableField("category")) // Only total for category
             .build();
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -226,8 +245,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryRollupIncorrect() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(sum("p", "price")))
-            .rollup("subcategory") // not correct because it should be a subset of the column in the select
+            .select(tableFields(List.of("category")), List.of(sum("p", "price")))
+            .rollup(tableField("subcategory")) // not correct because it should be a subset of the column in the select
             .build();
     Assertions.assertThatThrownBy(() -> this.executor.execute(query))
             // The columns contain in rollup [`subcategory`] must be a subset of the columns contain in the select [`category`]
@@ -238,7 +257,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQueryWildcardCount() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(CountMeasure.INSTANCE))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(CountMeasure.INSTANCE))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -253,8 +272,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQuerySeveralCoordinates() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, in("s1", "s2"))
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price"), sum("q", "quantity")))
+            .where(tableField(SCENARIO_FIELD_NAME), in("s1", "s2"))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
     Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
@@ -266,8 +285,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testQuerySingleCoordinate() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, eq("s1"))
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price"), sum("q", "quantity")))
+            .where(tableField(SCENARIO_FIELD_NAME), eq("s1"))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
     Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("s1", 17.0d, 33l));
@@ -281,7 +300,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
                     criterion("ean", eq("bottle")),
                     criterion(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)),
                     criterion("category", in("cloth", "drink"))))
-            .select(List.of("category", "ean"), List.of(sum("q", "quantity")))
+            .select(tableFields(List.of("category", "ean")), List.of(sum("q", "quantity")))
             .build();
 
     Table table = this.executor.execute(query);
@@ -294,7 +313,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
                     criterion(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)),
                     criterion("category", in("cloth", "drink")),
                     criterion("quantity", Functions.gt(10))))
-            .select(List.of("category", "ean"), List.of(sum("q", "quantity")))
+            .select(tableFields(List.of("category", "ean")), List.of(sum("q", "quantity")))
             .build();
     table = this.executor.execute(query);
     Assertions.assertThat(table).isEmpty();
@@ -304,14 +323,14 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testConditionsNullNotNull() {
     QueryDto query = Query.from(this.storeName)
             .where(criterion("subcategory", isNotNull()))
-            .select(List.of("ean"), List.of(CountMeasure.INSTANCE))
+            .select(tableFields(List.of("ean")), List.of(CountMeasure.INSTANCE))
             .build();
     Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(List.of("cookie", 3l));
 
     query = Query.from(this.storeName)
             .where(criterion("subcategory", isNull()))
-            .select(List.of("ean"), List.of(CountMeasure.INSTANCE))
+            .select(tableFields(List.of("ean")), List.of(CountMeasure.INSTANCE))
             .build();
     table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(
@@ -323,8 +342,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testLikeCondition() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(SCENARIO_FIELD_NAME, Functions.like("s%")) // start with s
-            .select(List.of(SCENARIO_FIELD_NAME), List.of())
+            .where(tableField(SCENARIO_FIELD_NAME), Functions.like("s%")) // start with s
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of())
             .build();
     Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(List.of("s1"), List.of("s2"));
@@ -335,7 +354,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .where(criterion("isFood", eq(true)))
-            .select(List.of("ean"), List.of())
+            .select(tableFields(List.of("ean")), List.of())
             .build();
     Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(List.of("bottle"), List.of("cookie"));
@@ -348,7 +367,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testDiscovery() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME), List.of())
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of())
             .build();
     Table table = this.executor.execute(query);
     Assertions.assertThat(table).containsExactly(
@@ -373,7 +392,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     ConditionDto or = or(eq("food"), eq("drink"));
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME),
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)),
                     List.of(new ExpressionMeasure("quantity if food or drink", expression),
                             sumIf("quantity filtered", this.storeName + ".quantity", criterion(this.storeName + ".category", or))))
             .build();
@@ -389,7 +408,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     CriteriaDto category = criterion("category", or);
     query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME),
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)),
                     List.of(sumIf("quantity filtered", "quantity", Functions.all(category, criterion("subcategory", eq("biscuit"))))))
             .build();
     result = this.executor.execute(query);
@@ -404,7 +423,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     ConditionDto or = or(eq("food"), eq("drink"));
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME),
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)),
                     List.of(sumIf("quantity filtered", this.storeName + ".quantity", criterion(this.storeName + ".category", or))))
             .build();
     Table result = this.executor.execute(query);
@@ -420,8 +439,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testOrderByColumn() {
     QueryDto query = Query
             .from(this.storeName)
-            .where("category", in("cloth", "drink"))
-            .select(List.of(SCENARIO_FIELD_NAME, "category"), List.of(CountMeasure.INSTANCE))
+            .where(tableField("category"), in("cloth", "drink"))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "category")), List.of(CountMeasure.INSTANCE))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -432,7 +451,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of("s2", "cloth", 1l),
             List.of("s2", "drink", 1l));
 
-    query.orderBy("category", OrderKeywordDto.DESC);
+    query.orderBy(tableField("category"), OrderKeywordDto.DESC);
     result = this.executor.execute(query);
     // The order is enforced by the user on category, but we can't know the order of the scenario column, this is why
     // only the category column is checked
@@ -445,7 +464,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             "cloth");
 
     List<String> elements = List.of("s2", MAIN_SCENARIO_NAME, "s1");
-    query.orderBy(SCENARIO_FIELD_NAME, elements);
+    query.orderBy(tableField(SCENARIO_FIELD_NAME), elements);
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             List.of("s2", "drink", 1l),
@@ -460,9 +479,9 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testOrderByWithRollup() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(sum("p_sum", "price")))
-            .rollup(List.of("category"))
-            .orderBy("category", ASC)
+            .select(tableFields(List.of("category")), List.of(sum("p_sum", "price")))
+            .rollup(tableFields(List.of("category")))
+            .orderBy(tableField("category"), ASC)
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -471,7 +490,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of("drink", 7.5d),
             List.of("food", 9d));
 
-    query.orderBy("category", DESC);
+    query.orderBy(tableField("category"), DESC);
     result = this.executor.execute(query);
     // Total AND Grand Total always on top
     Assertions.assertThat(result).containsExactly(
@@ -481,7 +500,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of("cloth", 30d));
 
     // With explicit ordering
-    query.orderBy("category", List.of("drink", "food", "cloth"));
+    query.orderBy(tableField("category"), List.of("drink", "food", "cloth"));
     result = this.executor.execute(query);
     // Total AND Grand Total always on top
     Assertions.assertThat(result).containsExactly(
@@ -496,7 +515,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     // Without explicit ordering
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("subcategory"), List.of(CountMeasure.INSTANCE))
+            .select(tableFields(List.of("subcategory")), List.of(CountMeasure.INSTANCE))
             .build();
     Table result = this.executor.execute(query);
     // Without explicit ordering, null comes last because of: Comparator.nullsLast(Comparator.naturalOrder())
@@ -507,8 +526,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     // With explicit ordering
     query = Query
             .from(this.storeName)
-            .select(List.of("subcategory"), List.of(CountMeasure.INSTANCE))
-            .orderBy("subcategory", ASC)
+            .select(tableFields(List.of("subcategory")), List.of(CountMeasure.INSTANCE))
+            .orderBy(tableField("subcategory"), ASC)
             .build();
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
@@ -520,7 +539,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testOrderByMeasure() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(sum("p", "price")))
+            .select(tableFields(List.of("category")), List.of(sum("p", "price")))
             .build();
     Table result = this.executor.execute(query);
     // Default order
@@ -529,7 +548,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of("drink", 7.5d),
             List.of("food", 9d));
 
-    query.orderBy("p", OrderKeywordDto.DESC);
+    query.orderBy(tableField("p"), OrderKeywordDto.DESC);
     result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactly(
             List.of("cloth", 30d),
@@ -579,14 +598,14 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testMergeTables() {
     QueryDto query1 = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(sum("p_sum", "price")))
-            .rollup(List.of("category"))
+            .select(tableFields(List.of("category")), List.of(sum("p_sum", "price")))
+            .rollup(tableFields(List.of("category")))
             .build();
 
     QueryDto query2 = Query
             .from(this.storeName)
-            .select(List.of("category", SCENARIO_FIELD_NAME), List.of(min("p_min", "price")))
-            .rollup(List.of("category", SCENARIO_FIELD_NAME))
+            .select(tableFields(List.of("category", SCENARIO_FIELD_NAME)), List.of(min("p_min", "price")))
+            .rollup(tableFields(List.of("category", SCENARIO_FIELD_NAME)))
             .build();
 
     Table result = this.executor.execute(query1, query2, JoinType.FULL, null);
@@ -613,17 +632,17 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testMergeWithComparators() {
     QueryDto query1 = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(sum("p_sum", "price")))
-            .rollup(List.of("category"))
-            .orderBy("category", OrderKeywordDto.DESC)
+            .select(tableFields(List.of("category")), List.of(sum("p_sum", "price")))
+            .rollup(tableFields(List.of("category")))
+            .orderBy(tableField("category"), OrderKeywordDto.DESC)
             .build();
 
     QueryDto query2 = Query
             .from(this.storeName)
-            .select(List.of("category", SCENARIO_FIELD_NAME), List.of(min("p_min", "price")))
-            .rollup(List.of("category", SCENARIO_FIELD_NAME))
-            .orderBy("category", ASC)
-            .orderBy(SCENARIO_FIELD_NAME, List.of("s1", MAIN_SCENARIO_NAME, "s2"))
+            .select(tableFields(List.of("category", SCENARIO_FIELD_NAME)), List.of(min("p_min", "price")))
+            .rollup(tableFields(List.of("category", SCENARIO_FIELD_NAME)))
+            .orderBy(tableField("category"), ASC)
+            .orderBy(tableField(SCENARIO_FIELD_NAME), List.of("s1", MAIN_SCENARIO_NAME, "s2"))
             .build();
 
     Table result = this.executor.execute(query1, query2, JoinType.FULL, null);
@@ -645,7 +664,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Test
   void testMergeWithColumnSetsPreserveOrder() {
-    BucketColumnSetDto group1 = new BucketColumnSetDto("group1", "category")
+    BucketColumnSetDto group1 = new BucketColumnSetDto("group1", tableField("category"))
             .withNewBucket("Food & Drink", List.of("food", "drink"))
             .withNewBucket("Other", List.of("cloth"));
     /*
@@ -662,7 +681,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .select_(List.of(group1), List.of(sum("p_sum", "price")))
             .build();
 
-    BucketColumnSetDto group2 = new BucketColumnSetDto("group2", "subcategory")
+    BucketColumnSetDto group2 = new BucketColumnSetDto("group2", tableField("subcategory"))
             .withNewBucket("Categorized", List.of("biscuit"))
             .withNewBucket("Not categorized", Arrays.asList(null, "other"));
     /*
@@ -692,7 +711,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     int limit = 2;
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(SCENARIO_FIELD_NAME), List.of(sum("p", "price")))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("p", "price")))
             .limit(limit)
             .build();
     Table result = this.executor.execute(query);
@@ -704,7 +723,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     int limit = 1;
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(CountMeasure.INSTANCE, TotalCountMeasure.INSTANCE))
+            .select(tableFields(List.of("category")), List.of(CountMeasure.INSTANCE, TotalCountMeasure.INSTANCE))
             .limit(limit)
             .build();
 
@@ -720,7 +739,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     // Single condition
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("ean"), List.of(price_sum))
+            .select(tableFields(List.of("ean")), List.of(price_sum))
             .having(criterion(price_sum, ge(9.0)))
             .build();
     Table table = this.executor.execute(query);
@@ -731,7 +750,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     // Multiple conditions
     query = Query
             .from(this.storeName)
-            .select(List.of("ean"), List.of(price_sum, price_sum_expr))
+            .select(tableFields(List.of("ean")), List.of(price_sum, price_sum_expr))
             .having(all(
                     criterion(price_sum, ge(7d)),
                     criterion(price_sum_expr, le(10d))))

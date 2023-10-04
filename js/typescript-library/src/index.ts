@@ -10,12 +10,12 @@ export {
 
 export {
   Measure, AggregatedMeasure, ExpressionMeasure, BasicMeasure,
-  sum, min, max, avg,
+  sum, min, max, avg, count,
   sumIf, minIf, maxIf, avgIf, countIf,
   plus, minus, multiply, divide,
   integer, decimal,
   comparisonMeasureWithPeriod, comparisonMeasureWithBucket, comparisonMeasureWithParent,
-  count, totalCount,
+  countRows, totalCount,
   ComparisonMethod,
 } from './measure'
 

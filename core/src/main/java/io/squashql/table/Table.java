@@ -1,17 +1,17 @@
 package io.squashql.table;
 
+import io.squashql.query.Field;
 import io.squashql.query.Header;
 import io.squashql.query.Measure;
 import io.squashql.query.TotalCountMeasure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.QueryDto;
-import org.eclipse.collections.api.list.primitive.IntList;
-import org.eclipse.collections.api.list.primitive.MutableIntList;
-import org.eclipse.collections.impl.list.mutable.primitive.MutableIntListFactoryImpl;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import org.eclipse.collections.api.list.primitive.IntList;
+import org.eclipse.collections.api.list.primitive.MutableIntList;
+import org.eclipse.collections.impl.list.mutable.primitive.MutableIntListFactoryImpl;
 
 public interface Table extends Iterable<List<Object>> {
 
@@ -67,11 +67,11 @@ public interface Table extends Iterable<List<Object>> {
     return index;
   }
 
-  default IntList columnIndices(String column) {
+  default IntList columnIndices(Field column) {
     int i = 0;
     MutableIntList list = MutableIntListFactoryImpl.INSTANCE.empty();
     for (Header header : headers()) {
-      if (header.name().equals(column)) {
+      if (header.name().equals(column.name())) {
         list.add(i);
       }
       i++;

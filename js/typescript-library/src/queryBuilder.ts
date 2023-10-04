@@ -1,14 +1,15 @@
-import {Measure} from "./measure";
-import {ColumnSet} from "./columnsets";
-import {JoinType, Query, Table} from "./query";
-import {Criteria} from "./conditions";
-import {OrderKeyword} from "./order";
-import {VirtualTable} from "./virtualtable";
+import {Measure} from "./measure"
+import {ColumnSet} from "./columnsets"
+import {JoinType, Query, Table} from "./query"
+import {Criteria} from "./conditions"
+import {OrderKeyword} from "./order"
+import {VirtualTable} from "./virtualtable"
+import {Field} from "./field"
 
 export interface CanAddOrderBy {
-  orderBy(column: string, order: OrderKeyword): HasHaving
+  orderBy(column: Field, order: OrderKeyword): HasHaving
 
-  orderByFirstElements(column: string, firstElements: Array<any>): HasHaving
+  orderByFirstElements(column: Field, firstElements: Array<any>): HasHaving
 }
 
 export interface CanBeBuildQuery {
@@ -27,13 +28,13 @@ export interface HasCondition {
    * added to select are automatically added to the groupBy clause of the query: aggregated results are then grouped by
    * the columns and columnSets indicated.
    */
-  select(columns: string[], columnSets: ColumnSet[], measures: Measure[]): CanAddRollup
+  select(columns: Field[], columnSets: ColumnSet[], measures: Measure[]): CanAddRollup
 }
 
 export type HasJoin = HasTable & CanStartBuildingJoin
 
 export interface HasOrderBy extends CanBeBuildQuery {
-  limit(limit: number): CanBeBuildQuery;
+  limit(limit: number): CanBeBuildQuery
 }
 
 export type HasHaving = HasOrderBy & CanAddOrderBy
@@ -49,7 +50,7 @@ export interface HasTable extends HasCondition {
 }
 
 export interface CanAddRollup extends HasOrderBy, CanAddOrderBy, CanAddHaving {
-  rollup(columns: string[]): CanAddHaving
+  rollup(columns: Field[]): CanAddHaving
 }
 
 export interface CanAddHaving extends HasOrderBy, CanAddOrderBy {
@@ -57,20 +58,20 @@ export interface CanAddHaving extends HasOrderBy, CanAddOrderBy {
 }
 
 export function from(tableName: string): HasStartedBuildingTable {
-  const queryBuilder = new QueryBuilder();
+  const queryBuilder = new QueryBuilder()
   queryBuilder.queryDto.table = new Table(tableName)
   return queryBuilder
 }
 
 export function fromSubQuery(subQuery: Query): HasStartedBuildingTable {
-  const queryBuilder = new QueryBuilder();
+  const queryBuilder = new QueryBuilder()
   queryBuilder.queryDto.subQuery = subQuery
   return queryBuilder
 }
 
 class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildingTable, HasOrderBy, CanAddRollup {
   readonly queryDto: Query = new Query()
-  private currentJoinTableBuilder: JoinTableBuilder = null;
+  private currentJoinTableBuilder: JoinTableBuilder = null
 
   joinVirtual(virtualTable: VirtualTable, joinType: JoinType): HasStartedBuildingJoin {
     this.addJoinToQueryDto()
@@ -93,7 +94,7 @@ class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
     }
   }
 
-  select(columns: string[], columnSets: ColumnSet[], measures: Measure[]): CanAddRollup {
+  select(columns: Field[], columnSets: ColumnSet[], measures: Measure[]): CanAddRollup {
     this.addJoinToQueryDto()
     columns.forEach(c => this.queryDto.withColumn(c))
     columnSets.forEach(cs => this.queryDto.columnSets.set(cs.key, cs))
@@ -101,7 +102,7 @@ class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
     return this
   }
 
-  rollup(columns: string[]): CanAddHaving {
+  rollup(columns: Field[]): CanAddHaving {
     columns.forEach(c => this.queryDto.withRollupColumn(c))
     return this
   }
@@ -126,12 +127,12 @@ class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
     return this
   }
 
-  orderBy(column: string, order: OrderKeyword): HasHaving {
+  orderBy(column: Field, order: OrderKeyword): HasHaving {
     this.queryDto.orderBy(column, order)
     return this
   }
 
-  orderByFirstElements(column: string, firstElements: Array<any>): HasHaving {
+  orderByFirstElements(column: Field, firstElements: Array<any>): HasHaving {
     this.queryDto.orderByFirstElements(column, firstElements)
     return this
   }

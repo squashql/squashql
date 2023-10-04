@@ -22,6 +22,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -45,7 +47,7 @@ public class QueryControllerTest {
             .on(criterion("our_prices" + ".pdv", "our_stores_their_stores" + ".our_store", ConditionType.EQ))
             .join("their_prices", JoinType.INNER)
             .on(criterion("their_prices" + ".competitor_concurrent_pdv", "our_stores_their_stores" + ".their_store", ConditionType.EQ))
-            .select(List.of(SCENARIO_FIELD_NAME, "ean"), List.of(
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "ean")), List.of(
                     Functions.sum("capdv", "capdv"),
                     new ExpressionMeasure("capdv_concurrents", "sum(competitor_price * quantity)"),
                     new ExpressionMeasure("indice_prix", "sum(capdv) / sum(competitor_price * quantity)")))
@@ -94,7 +96,7 @@ public class QueryControllerTest {
     this.mvc.perform(MockMvcRequestBuilders.get(QueryController.MAPPING_METADATA))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
-              assertMetadataResult(JacksonUtil.mapper.readValue(contentAsString, MetadataResultDto.class));
+              assertMetadataResult(JacksonUtil.OBJECT_MAPPER.readValue(contentAsString, MetadataResultDto.class));
             });
   }
 
@@ -129,7 +131,7 @@ public class QueryControllerTest {
 
   @Test
   void testScenarioGroupingQuery() throws Exception {
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", SCENARIO_FIELD_NAME)
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", tableField(SCENARIO_FIELD_NAME))
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
@@ -142,13 +144,13 @@ public class QueryControllerTest {
             "aggregatedMeasureDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             aggregatedMeasure,
-            Map.of(SCENARIO_FIELD_NAME, "s-1", "group", "g"),
+            Map.of(tableField(SCENARIO_FIELD_NAME), "s-1", tableField("group"), "g"),
             ColumnSetKey.BUCKET);
     ComparisonMeasureReferencePosition indicePrixDiff = new ComparisonMeasureReferencePosition(
             "indicePrixDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             indicePrix,
-            Map.of(SCENARIO_FIELD_NAME, "s-1", "group", "g"),
+            Map.of(tableField(SCENARIO_FIELD_NAME), "s-1", tableField("group"), "g"),
             ColumnSetKey.BUCKET);
 
     var query = Query
@@ -228,11 +230,11 @@ public class QueryControllerTest {
   void testQueryMerge() throws Exception {
     var query1 = Query
             .from("our_prices")
-            .select(List.of("ean"), List.of(Functions.sum("capdv-sum", "capdv")))
+            .select(tableFields(List.of("ean")), List.of(Functions.sum("capdv-sum", "capdv")))
             .build();
     var query2 = Query
             .from("our_prices")
-            .select(List.of("ean"), List.of(Functions.avg("capdv-avg", "capdv")))
+            .select(tableFields(List.of("ean")), List.of(Functions.avg("capdv-avg", "capdv")))
             .build();
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_MERGE)

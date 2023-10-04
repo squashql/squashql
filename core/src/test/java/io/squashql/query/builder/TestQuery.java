@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static io.squashql.query.Functions.*;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.dto.ConditionType.EQ;
 
 public class TestQuery {
@@ -22,13 +24,13 @@ public class TestQuery {
 
     QueryDto build = Query
             .from("saas")
-            .select(List.of("col1", "col2"), List.of(columnSet), List.of(sum))
+            .select(tableFields(List.of("col1", "col2")), List.of(columnSet), List.of(sum))
             .build();
 
     QueryDto q = new QueryDto()
             .table("saas")
-            .withColumn("col1")
-            .withColumn("col2")
+            .withColumn(tableField("col1"))
+            .withColumn(tableField("col2"))
             .withColumnSet(ColumnSetKey.BUCKET, columnSet)
             .withMeasure(sum);
 
@@ -37,35 +39,35 @@ public class TestQuery {
     // Only one condition
     build = Query
             .from("saas")
-            .where("f1", eq("A"))
-            .select(List.of("col1", "col2"), List.of(columnSet), List.of(sum))
+            .where(tableField("f1"), eq("A"))
+            .select(tableFields(List.of("col1", "col2")), List.of(columnSet), List.of(sum))
             .build();
 
-    Assertions.assertThat(build).isEqualTo(q.withCondition("f1", eq("A")));
+    Assertions.assertThat(build).isEqualTo(q.withCondition(tableField("f1"), eq("A")));
 
     // Multiple conditions
     CriteriaDto any = any(criterion("f3", eq("C")), criterion("f3", isNull()));
     build = Query
             .from("saas")
-            .where("f1", eq("A"))
-            .where("f2", eq("B"))
+            .where(tableField("f1"), eq("A"))
+            .where(tableField("f2"), eq("B"))
             .where(any)
-            .select(List.of("col1", "col2"), List.of(columnSet), List.of(sum))
+            .select(tableFields(List.of("col1", "col2")), List.of(columnSet), List.of(sum))
             .build();
 
-    Assertions.assertThat(build).isEqualTo(q.withCondition("f2", eq("B")).withWhereCriteria(any));
+    Assertions.assertThat(build).isEqualTo(q.withCondition(tableField("f2"), eq("B")).withWhereCriteria(any));
 
     // with limit
     build = Query
             .from("saas")
-            .select(List.of("col1", "col2"), List.of(columnSet), List.of(sum))
+            .select(tableFields(List.of("col1", "col2")), List.of(columnSet), List.of(sum))
             .limit(100)
             .build();
 
     q = new QueryDto()
             .table("saas")
-            .withColumn("col1")
-            .withColumn("col2")
+            .withColumn(tableField("col1"))
+            .withColumn(tableField("col2"))
             .withColumnSet(ColumnSetKey.BUCKET, columnSet)
             .withMeasure(sum)
             .withLimit(100);
@@ -83,16 +85,16 @@ public class TestQuery {
       QueryDto build = Query
               .from("saas")
               .join("other", JoinType.LEFT)
-              .on(criterion(other.name + ".id", saas.name + ".id", EQ))
-              .select(List.of("col1", "col2"), List.of(sum))
+              .on(criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ))
+              .select(tableFields(List.of("col1", "col2")), List.of(sum))
               .build();
 
       saas.join(other, JoinType.LEFT, criterion(other.name + ".id", saas.name + ".id", EQ));
 
       QueryDto q = new QueryDto()
               .table(saas)
-              .withColumn("col1")
-              .withColumn("col2")
+              .withColumn(tableField("col1"))
+              .withColumn(tableField("col2"))
               .withMeasure(sum);
 
       Assertions.assertThat(build).isEqualTo(q);
@@ -108,8 +110,8 @@ public class TestQuery {
 
       QueryDto q = new QueryDto()
               .table(saas)
-              .withColumn("col1")
-              .withColumn("col2")
+              .withColumn(tableField("col1"))
+              .withColumn(tableField("col2"))
               .withMeasure(sum);
 
       // With two join conditions
@@ -120,7 +122,7 @@ public class TestQuery {
                       criterion(other.name + ".id", saas.name + ".id", EQ),
                       criterion(other.name + ".a", saas.name + ".b", EQ)
               ))
-              .select(List.of("col1", "col2"), List.of(sum))
+              .select(tableFields(List.of("col1", "col2")), List.of(sum))
               .build();
 
       Assertions.assertThat(build).isEqualTo(q);
@@ -132,10 +134,10 @@ public class TestQuery {
 
       QueryDto q = new QueryDto()
               .table(saas)
-              .withColumn("col1")
-              .withColumn("col2")
+              .withColumn(tableField("col1"))
+              .withColumn(tableField("col2"))
               .withMeasure(sum)
-              .withCondition("f1", eq("A"));
+              .withCondition(tableField("f1"), eq("A"));
 
       saas.join(other, JoinType.INNER, criterion(other.name + ".id", saas.name + ".id", EQ));
 
@@ -143,9 +145,9 @@ public class TestQuery {
       QueryDto build = Query
               .from("saas")
               .join("other", JoinType.INNER)
-              .on(criterion(other.name + ".id", saas.name + ".id", EQ))
-              .where("f1", eq("A"))
-              .select(List.of("col1", "col2"), List.of(sum))
+              .on(criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ))
+              .where(tableField("f1"), eq("A"))
+              .select(tableFields(List.of("col1", "col2")), List.of(sum))
               .build();
 
       Assertions.assertThat(build).isEqualTo(q);
@@ -161,8 +163,8 @@ public class TestQuery {
 
     QueryDto q = new QueryDto()
             .table(saas)
-            .withColumn("col1")
-            .withColumn("col2")
+            .withColumn(tableField("col1"))
+            .withColumn(tableField("col2"))
             .withMeasure(sum);
 
     saas.join(other, JoinType.LEFT, criterion(other.name + ".id", saas.name + ".id", EQ));
@@ -173,8 +175,8 @@ public class TestQuery {
             .join("other", JoinType.LEFT)
             .on(criterion(other.name + ".id", saas.name + ".id", EQ))
             .join("another", JoinType.INNER)
-            .on(criterion(another.name + ".id", saas.name + ".id", EQ))
-            .select(List.of("col1", "col2"), List.of(sum))
+            .on(criterion(another.name + ".id", saas.name + ".id", ConditionType.EQ))
+            .select(tableFields(List.of("col1", "col2")), List.of(sum))
             .build();
 
     Assertions.assertThat(build).isEqualTo(q);
@@ -188,16 +190,16 @@ public class TestQuery {
     QueryDto build = Query
             .from("saas")
             .join(vt, JoinType.INNER)
-            .on(criterion("saas.id", "vtable.id", EQ))
-            .select(List.of("col1", "col2"), List.of(sum))
+            .on(criterion("saas.id", "vtable.id", ConditionType.EQ))
+            .select(tableFields(List.of("col1", "col2")), List.of(sum))
             .build();
 
     saas.join(new TableDto("vtable"), JoinType.INNER, criterion(saas.name + ".id", vt.name + ".id", EQ));
 
     QueryDto q = new QueryDto()
             .table(saas)
-            .withColumn("col1")
-            .withColumn("col2")
+            .withColumn(tableField("col1"))
+            .withColumn(tableField("col2"))
             .withMeasure(sum);
     q.virtualTableDto = vt;
 
@@ -211,15 +213,15 @@ public class TestQuery {
     // Single order by
     QueryDto build = Query
             .from("saas")
-            .select(List.of("col1", "col2"), List.of(sum))
-            .orderBy("col1", OrderKeywordDto.ASC)
+            .select(tableFields(List.of("col1", "col2")), List.of(sum))
+            .orderBy(tableField("col1"), OrderKeywordDto.ASC)
             .build();
 
     QueryDto q = new QueryDto()
             .table("saas")
-            .withColumn("col1")
-            .withColumn("col2")
-            .orderBy("col1", OrderKeywordDto.ASC)
+            .withColumn(tableField("col1"))
+            .withColumn(tableField("col2"))
+            .orderBy(tableField("col1"), OrderKeywordDto.ASC)
             .withMeasure(sum);
 
     Assertions.assertThat(build).isEqualTo(q);
@@ -227,17 +229,17 @@ public class TestQuery {
     // Multiple orders by
     build = Query
             .from("saas")
-            .select(List.of("col1", "col2"), List.of(sum))
-            .orderBy("col1", OrderKeywordDto.ASC)
-            .orderBy("col2", List.of("1", "10"))
+            .select(tableFields(List.of("col1", "col2")), List.of(sum))
+            .orderBy(tableField("col1"), OrderKeywordDto.ASC)
+            .orderBy(tableField("col2"), List.of("1", "10"))
             .build();
 
     q = new QueryDto()
             .table("saas")
-            .withColumn("col1")
-            .withColumn("col2")
-            .orderBy("col1", OrderKeywordDto.ASC)
-            .orderBy("col2", List.of("1", "10"))
+            .withColumn(tableField("col1"))
+            .withColumn(tableField("col2"))
+            .orderBy(tableField("col1"), OrderKeywordDto.ASC)
+            .orderBy(tableField("col2"), List.of("1", "10"))
             .withMeasure(sum);
 
     Assertions.assertThat(build).isEqualTo(q);
@@ -250,16 +252,16 @@ public class TestQuery {
     // Single order by
     QueryDto build = Query
             .from("saas")
-            .select(List.of("col1", "col2"), List.of(sum))
-            .orderBy("col1", OrderKeywordDto.ASC)
+            .select(tableFields(List.of("col1", "col2")), List.of(sum))
+            .orderBy(tableField("col1"), OrderKeywordDto.ASC)
             .limit(10)
             .build();
 
     QueryDto q = new QueryDto()
             .table("saas")
-            .withColumn("col1")
-            .withColumn("col2")
-            .orderBy("col1", OrderKeywordDto.ASC)
+            .withColumn(tableField("col1"))
+            .withColumn(tableField("col2"))
+            .orderBy(tableField("col1"), OrderKeywordDto.ASC)
             .withLimit(10)
             .withMeasure(sum);
 
@@ -271,17 +273,17 @@ public class TestQuery {
     Measure sum = sum("sum", "f2");
     QueryDto build = Query
             .from("saas")
-            .select(List.of("col1", "col2"), List.of(sum))
-            .rollup("col1")
-            .orderBy("col1", OrderKeywordDto.ASC)
+            .select(tableFields(List.of("col1", "col2")), List.of(sum))
+            .rollup(tableField("col1"))
+            .orderBy(tableField("col1"), OrderKeywordDto.ASC)
             .build();
 
     QueryDto q = new QueryDto()
             .table("saas")
-            .withColumn("col1")
-            .withColumn("col2")
-            .withRollup("col1")
-            .orderBy("col1", OrderKeywordDto.ASC)
+            .withColumn(tableField("col1"))
+            .withColumn(tableField("col2"))
+            .withRollup(tableField("col1"))
+            .orderBy(tableField("col1"), OrderKeywordDto.ASC)
             .withMeasure(sum);
 
     Assertions.assertThat(build).isEqualTo(q);
@@ -293,27 +295,27 @@ public class TestQuery {
     CriteriaDto criterion = criterion((AggregatedMeasure) sum, ge(0));
     QueryDto buildWoRollup = Query
             .from("saas")
-            .select(List.of("col1"), List.of(sum))
+            .select(tableFields(List.of("col1")), List.of(sum))
             .having(criterion)
             .build();
 
     QueryDto buildWithRollup = Query
             .from("saas")
-            .select(List.of("col1"), List.of(sum))
-            .rollup(List.of("col1"))
+            .select(tableFields(List.of("col1")), List.of(sum))
+            .rollup(tableField("col1"))
             .having(criterion)
             .build();
 
     QueryDto qWithRollup = new QueryDto()
             .table("saas")
-            .withColumn("col1")
-            .withRollup("col1")
+            .withColumn(tableField("col1"))
+            .withRollup(tableField("col1"))
             .withHavingCriteria(criterion)
             .withMeasure(sum);
 
     QueryDto qWoRollup = new QueryDto()
             .table("saas")
-            .withColumn("col1")
+            .withColumn(tableField("col1"))
             .withHavingCriteria(criterion)
             .withMeasure(sum);
 

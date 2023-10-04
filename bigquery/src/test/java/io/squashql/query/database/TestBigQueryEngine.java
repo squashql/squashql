@@ -1,42 +1,55 @@
 package io.squashql.query.database;
 
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.dto.JoinType.INNER;
+import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
+
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryServiceAccountDatastore;
 import io.squashql.BigQueryUtil;
-import io.squashql.query.*;
+import io.squashql.query.AggregatedMeasure;
+import io.squashql.query.Field;
+import io.squashql.query.Header;
+import io.squashql.query.QueryExecutor;
 import io.squashql.query.builder.Query;
-import io.squashql.query.dto.*;
+import io.squashql.query.dto.ConditionType;
+import io.squashql.query.dto.JoinDto;
+import io.squashql.query.dto.PivotTableQueryDto;
+import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.TableDto;
+import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.Store;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.time.LocalDate;
-import java.util.*;
-import java.util.function.Function;
-
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.dto.JoinType.INNER;
-import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
-
 public class TestBigQueryEngine {
 
-  final Function<String, TableTypedField> fp = name -> switch (name) {
-    case "category" -> new TableTypedField("baseStore", name, long.class);
-    case "price" -> new TableTypedField("baseStore", name, double.class);
-    default -> new TableTypedField("baseStore", name, String.class);
+  final Function<Field, TableTypedField> fp = field -> switch (field.name()) {
+    case "category" -> new TableTypedField("baseStore", field.name(), long.class);
+    case "price" -> new TableTypedField("baseStore", field.name(), double.class);
+    default -> new TableTypedField("baseStore", field.name(), String.class);
   };
 
   @Test
   void testSqlGenerationWithRollup() {
-    String category = "category";
-    String scenario = SCENARIO_FIELD_NAME;
+    Field category = tableField("category");
+    Field scenario = tableField(SCENARIO_FIELD_NAME);
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(this.fp.apply(scenario))
             .withSelect(this.fp.apply(category))
@@ -49,9 +62,9 @@ public class TestBigQueryEngine {
       @Override
       public Map<String, Store> storesByName() {
         return Map.of("baseStore", new Store("baseStore", List.of(
-                TestBigQueryEngine.this.fp.apply(SCENARIO_FIELD_NAME),
+                TestBigQueryEngine.this.fp.apply(scenario),
                 TestBigQueryEngine.this.fp.apply(category),
-                TestBigQueryEngine.this.fp.apply("price")
+                TestBigQueryEngine.this.fp.apply(tableField("price"))
         )));
       }
     };
@@ -66,11 +79,15 @@ public class TestBigQueryEngine {
 
   @Test
   void testSqlGenerationWithPartialRollup() {
+    final Field col1 = tableField("col1");
+    final Field col2 = tableField("col2");
+    final Field col3 = tableField("col3");
+    final Field col4 = tableField("col4");
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect(this.fp.apply("col1"))
-            .withSelect(this.fp.apply("col2"))
-            .withSelect(this.fp.apply("col3"))
-            .rollup(List.of(this.fp.apply("col2")))
+            .withSelect(this.fp.apply(col1))
+            .withSelect(this.fp.apply(col2))
+            .withSelect(this.fp.apply(col3))
+            .rollup(List.of(this.fp.apply(col2)))
             .aggregatedMeasure("price.sum", "price", "sum")
             .table("baseStore");
 
@@ -78,10 +95,10 @@ public class TestBigQueryEngine {
       @Override
       public Map<String, Store> storesByName() {
         return Map.of("baseStore", new Store("baseStore", List.of(
-                TestBigQueryEngine.this.fp.apply("col1"),
-                TestBigQueryEngine.this.fp.apply("col2"),
-                TestBigQueryEngine.this.fp.apply("col3"),
-                TestBigQueryEngine.this.fp.apply("col4")
+                TestBigQueryEngine.this.fp.apply(col1),
+                TestBigQueryEngine.this.fp.apply(col2),
+                TestBigQueryEngine.this.fp.apply(col3),
+                TestBigQueryEngine.this.fp.apply(col4)
         )));
       }
     };
@@ -95,10 +112,10 @@ public class TestBigQueryEngine {
                     " group by rollup(coalesce(`myProjectId.myDatasetName.baseStore`.`col1`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`col3`, '___null___'), coalesce(`myProjectId.myDatasetName.baseStore`.`col2`, '___null___'))");
 
     query = new DatabaseQuery()
-            .withSelect(this.fp.apply("col1"))
-            .withSelect(this.fp.apply("col2"))
-            .withSelect(this.fp.apply("col3"))
-            .rollup(List.of(this.fp.apply("col3"), this.fp.apply("col2")))
+            .withSelect(this.fp.apply(col1))
+            .withSelect(this.fp.apply(col2))
+            .withSelect(this.fp.apply(col3))
+            .rollup(List.of(this.fp.apply(col3), this.fp.apply(col2)))
             .aggregatedMeasure("price.sum", "price", "sum")
             .table("baseStore");
     sqlStatement = bqe.createSqlStatement(query, null);
@@ -112,8 +129,8 @@ public class TestBigQueryEngine {
 
   @Test
   void testPartialRollup() {
-    String category = "category";
-    String scenario = SCENARIO_FIELD_NAME;
+    Field category = tableField("category");
+    Field scenario = tableField(SCENARIO_FIELD_NAME);
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(this.fp.apply(scenario))
             .withSelect(this.fp.apply(category))
@@ -125,9 +142,9 @@ public class TestBigQueryEngine {
       @Override
       public Map<String, Store> storesByName() {
         return Map.of("baseStore", new Store("baseStore", List.of(
-                TestBigQueryEngine.this.fp.apply(SCENARIO_FIELD_NAME),
+                TestBigQueryEngine.this.fp.apply(scenario),
                 TestBigQueryEngine.this.fp.apply(category),
-                TestBigQueryEngine.this.fp.apply("price")
+                TestBigQueryEngine.this.fp.apply(tableField("price"))
         )));
       }
     };
@@ -165,7 +182,7 @@ public class TestBigQueryEngine {
 
   @Test
   void testSqlGenerationWithRollupAndCte() {
-    String category = "category";
+    Field category = tableField("category");
     DatabaseQuery query = new DatabaseQuery()
             .withSelect(this.fp.apply(category))
             .rollup(List.of(this.fp.apply(category)))
@@ -183,7 +200,7 @@ public class TestBigQueryEngine {
       public Map<String, Store> storesByName() {
         return Map.of("baseStore", new Store("baseStore", List.of(
                 TestBigQueryEngine.this.fp.apply(category),
-                TestBigQueryEngine.this.fp.apply("price")
+                TestBigQueryEngine.this.fp.apply(tableField("price"))
         )));
       }
     };
@@ -199,11 +216,11 @@ public class TestBigQueryEngine {
 
   @Test
   void testSqlGenerationWithGroupingSets() {
-    String sc = "spending category";
-    String ssc = "spending subcategory";
-    String continent = "continent";
-    String country = "country";
-    String city = "city";
+    Field sc = tableField("spending category");
+    Field ssc = tableField("spending subcategory");
+    Field continent = tableField("continent");
+    Field country = tableField("country");
+    Field city = tableField("city");
     QueryDto queryDto = Query
             .from("baseStore")
             .select(List.of(continent, country, city, sc, ssc), List.of())
@@ -211,7 +228,7 @@ public class TestBigQueryEngine {
     queryDto = QueryExecutor.prepareQuery(
             queryDto,
             new QueryExecutor.PivotTableContext(new PivotTableQueryDto(queryDto, List.of(continent, country, city), List.of(sc, ssc))));
-    List<List<String>> groupingSets = List.of(List.of(),
+    List<List<Field>> groupingSets = List.of(List.of(),
             List.of(sc),
             List.of(sc, ssc),
             List.of(continent, sc),
@@ -227,13 +244,13 @@ public class TestBigQueryEngine {
     Assertions.assertThat(queryDto.groupingSets).containsExactlyInAnyOrderElementsOf(groupingSets);
 
     List<List<TypedField>> gp = new ArrayList<>();
-    for (List<String> groupingSet : groupingSets) {
+    for (List<Field> groupingSet : groupingSets) {
       List<TypedField> l = new ArrayList<>();
       gp.add(l);
       if (groupingSet.isEmpty()) {
         continue; // GT
       }
-      for (String s : groupingSet) {
+      for (Field s : groupingSet) {
         l.add(this.fp.apply(s));
       }
     }
@@ -261,8 +278,8 @@ public class TestBigQueryEngine {
       }
     };
     BigQueryEngine bqe = new BigQueryEngine(datastore);
-    List<String> rows = List.of("continent", "country", "city");
-    List<String> columns = List.of("spending category", "spending subcategory");
+    List<Field> rows = tableFields(List.of("continent", "country", "city"));
+    List<Field> columns = tableFields(List.of("spending category", "spending subcategory"));
     QueryExecutor.PivotTableContext context = new QueryExecutor.PivotTableContext(new PivotTableQueryDto(queryDto, rows, columns));
     context.init(this.fp::apply);
     String sqlStatement = bqe.createSqlStatement(query, context);
@@ -305,7 +322,7 @@ public class TestBigQueryEngine {
       @Override
       public Map<String, Store> storesByName() {
         return Map.of("baseStore", new Store("baseStore", List.of(
-                TestBigQueryEngine.this.fp.apply(SCENARIO_FIELD_NAME)
+                TestBigQueryEngine.this.fp.apply(tableField(SCENARIO_FIELD_NAME))
         )));
       }
     };

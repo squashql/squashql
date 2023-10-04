@@ -1,9 +1,16 @@
 package io.squashql.query.database;
 
-import com.google.cloud.bigquery.*;
+import static io.squashql.query.database.SQLTranslator.checkRollupIsValid;
+
+import com.google.cloud.bigquery.FieldValue;
+import com.google.cloud.bigquery.FieldValueList;
+import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.Schema;
+import com.google.cloud.bigquery.TableResult;
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryUtil;
 import io.squashql.jackson.JacksonUtil;
+import io.squashql.query.Field;
 import io.squashql.query.Header;
 import io.squashql.query.QueryExecutor;
 import io.squashql.query.date.DateFunctions;
@@ -13,15 +20,16 @@ import io.squashql.table.Table;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
-
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static io.squashql.query.database.SQLTranslator.checkRollupIsValid;
 
 public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
@@ -54,7 +62,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   protected String createSqlStatement(DatabaseQuery query, QueryExecutor.PivotTableContext context) {
     boolean hasRollup = !query.rollup.isEmpty();
     BigQueryQueryRewriter rewriter = (BigQueryQueryRewriter) this.queryRewriter;
-    Function<String, TypedField> queryFieldSupplier = QueryExecutor.createQueryFieldSupplier(this, query.virtualTableDto);
+    Function<Field, TypedField> queryFieldSupplier = QueryExecutor.createQueryFieldSupplier(this, query.virtualTableDto);
     if (!query.groupingSets.isEmpty()) {
       // rows = a,b,c; columns = x,y
       // (a,b,c,x,y)

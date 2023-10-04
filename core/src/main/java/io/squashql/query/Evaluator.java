@@ -18,10 +18,10 @@ import static io.squashql.query.ColumnSetKey.BUCKET;
 
 public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>, MeasureVisitor<Void> {
 
-  private final Function<String, TypedField> fieldSupplier;
+  private final Function<Field, TypedField> fieldSupplier;
   private ExecutionContext executionContext;
 
-  public Evaluator(Function<String, TypedField> fieldSupplier) {
+  public Evaluator(Function<Field, TypedField> fieldSupplier) {
     this.fieldSupplier = fieldSupplier;
   }
 
@@ -56,7 +56,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     for (int i = 0; i < lo.size(); i++) {
       r.add(operation.apply((Number) lo.get(i), (Number) ro.get(i)));
     }
-    Header header = new Header(bom.alias(), BinaryOperations.getOutputType(bom.operator, lType, rType), true);
+    Header header = new Header(bom.alias, BinaryOperations.getOutputType(bom.operator, lType, rType), true);
     intermediateResult.addAggregates(header, bom, r);
     return null;
   }
@@ -71,9 +71,9 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
       }
       executor = new BucketComparisonExecutor((BucketColumnSetDto) cs);
     } else if (cm.period != null) {
-      for (String field : cm.period.getFields()) {
+      for (Field field : cm.period.getFields()) {
         if (!this.executionContext.query().columns.contains(field)) {
-          throw new IllegalArgumentException(String.format("%s is not specified in the query but is used in a comparison measure: %s", field, cm));
+          throw new IllegalArgumentException(String.format("%s is not specified in the query but is used in a comparison measure: %s", field.name(), cm));
         }
       }
       executor = new PeriodComparisonExecutor(cm);

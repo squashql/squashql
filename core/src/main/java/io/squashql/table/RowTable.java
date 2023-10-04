@@ -3,8 +3,11 @@ package io.squashql.table;
 import io.squashql.query.Header;
 import io.squashql.query.Measure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 public class RowTable implements Table {
 

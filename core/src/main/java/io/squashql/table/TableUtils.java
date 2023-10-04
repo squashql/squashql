@@ -1,7 +1,13 @@
 package io.squashql.table;
 
 import com.google.common.base.Suppliers;
-import io.squashql.query.*;
+import io.squashql.query.ColumnSet;
+import io.squashql.query.ColumnSetKey;
+import io.squashql.query.Field;
+import io.squashql.query.Header;
+import io.squashql.query.Measure;
+import io.squashql.query.MeasureUtils;
+import io.squashql.query.TableField;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
@@ -10,8 +16,18 @@ import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.NullAndTotalComparator;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -76,7 +92,7 @@ public class TableUtils {
      */
     final StringBuilder formatString = new StringBuilder();
     String flag = leftJustifiedRows ? "-" : "";
-    columnLengths.entrySet().forEach(e -> formatString.append("| %" + flag + e.getValue() + "s "));
+    columnLengths.forEach((key, value) -> formatString.append("| %" + flag + value + "s "));
     formatString.append("|\n");
 
     /*
@@ -143,9 +159,9 @@ public class TableUtils {
     queryDto.columnSets.values()
             .forEach(cs -> finalColumns.addAll(cs.getNewColumns()
                     .stream()
-                    .map(SqlUtils::getFieldFullName)
+                    .map(f -> SqlUtils.getFieldFullName((TableField) f))
                     .toList()));
-    finalColumns.addAll(queryDto.columns);
+    finalColumns.addAll(queryDto.columns.stream().map(Field::name).toList());
     return selectAndOrderColumns(table, finalColumns, queryDto.measures);
   }
 
@@ -183,13 +199,13 @@ public class TableUtils {
       }
       BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
       // Remove from the map of comparators to use default one when only none is defined for regular column
-      copy.remove(cs.name);
-      copy.remove(cs.field);
+      copy.remove(cs.name.name());
+      copy.remove(cs.field.name());
     });
 
     List<Header> headers = table.headers;
-    for (int i = 0; i < headers.size(); i++) {
-      String headerName = headers.get(i).name();
+    for (Header header : headers) {
+      String headerName = header.name();
       Comparator<?> queryComp = comparatorByColumnName.get(headerName);
       // Order by default if not explicitly asked in the query. Otherwise, respect the order.
       if (queryComp != null || copy.isEmpty()) {
@@ -210,7 +226,7 @@ public class TableUtils {
     for (ColumnSet columnSet : new HashSet<>(columnSets)) {
       BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
       // cs.field can appear multiple times in the table.
-      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(cs.name));
+      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(cs.name.name()));
     }
 
     int[] finalIndices = MultipleColumnsSorter.sort(args, comparators, contextIndices);

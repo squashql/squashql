@@ -1,15 +1,14 @@
 package io.squashql.query;
 
 import io.squashql.query.dto.BucketColumnSetDto;
-import org.eclipse.collections.api.map.primitive.ObjectIntMap;
-import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.impl.tuple.Tuples;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
+import org.eclipse.collections.api.map.primitive.ObjectIntMap;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
 
 public class BucketComparisonExecutor extends AComparisonExecutor {
 
@@ -30,15 +29,13 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
     final ObjectIntMap<String> indexByColumn;
     final Map<String, List<String>> valuesByBucket = new LinkedHashMap<>();
 
-    ShiftProcedure(BucketColumnSetDto cSet, Map<String, String> referencePosition, ObjectIntMap<String> indexByColumn) {
-      for (Map.Entry<String, List<String>> value : cSet.values.entrySet()) {
-        this.valuesByBucket.put(value.getKey(), value.getValue());
-      }
+    ShiftProcedure(BucketColumnSetDto cSet, Map<Field, String> referencePosition, ObjectIntMap<String> indexByColumn) {
+      this.valuesByBucket.putAll(cSet.values);
       this.indexByColumn = indexByColumn;
       this.transformationByColumn = new ArrayList<>();
       // Order does matter here
-      this.transformationByColumn.add(Tuples.pair(cSet.name, parse(referencePosition.get(cSet.name))));
-      this.transformationByColumn.add(Tuples.pair(cSet.field, parse(referencePosition.get(cSet.field))));
+      this.transformationByColumn.add(Tuples.pair(cSet.name.name(), parse(referencePosition.get(cSet.name))));
+      this.transformationByColumn.add(Tuples.pair(cSet.field.name(), parse(referencePosition.get(cSet.field))));
     }
 
     @Override

@@ -1,22 +1,23 @@
 package io.squashql.query;
 
+import static io.squashql.query.ComparisonMethod.RELATIVE_DIFFERENCE;
+import static io.squashql.query.Functions.eq;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
+
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
+import java.util.List;
+import java.util.Map;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-
-import java.util.List;
-import java.util.Map;
-
-import static io.squashql.query.ComparisonMethod.RELATIVE_DIFFERENCE;
-import static io.squashql.query.Functions.eq;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
-import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -26,7 +27,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
 
   protected String groupOfScenario = "Group of scenario";
 
-  protected BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, SCENARIO_FIELD_NAME)
+  protected BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, tableField(SCENARIO_FIELD_NAME))
           .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
           .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
           .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
@@ -69,8 +70,8 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
             Map.of(
-                    SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
-                    this.groupOfScenario, "g"
+                    tableField(SCENARIO_FIELD_NAME), AComparisonExecutor.REF_POS_FIRST,
+                    tableField(this.groupOfScenario), "g"
             ),
             ColumnSetKey.BUCKET);
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
@@ -79,8 +80,8 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
             Map.of(
-                    SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
-                    this.groupOfScenario, "g"
+                    tableField(SCENARIO_FIELD_NAME), AComparisonExecutor.REF_POS_FIRST,
+                    tableField(this.groupOfScenario), "g"
             ),
             ColumnSetKey.BUCKET);
 
@@ -107,7 +108,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
     query = new QueryDto()
             .table(this.storeName)
             .withColumnSet(ColumnSetKey.BUCKET, this.bucketCS)
-            .withCondition(SCENARIO_FIELD_NAME, eq("s1"))
+            .withCondition(tableField(SCENARIO_FIELD_NAME), eq("s1"))
             .withMeasure(priceComp);
 
     dataset = this.executor.execute(query);
@@ -124,8 +125,8 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
             Map.of(
-                    SCENARIO_FIELD_NAME, "s-1",
-                    this.groupOfScenario, "g"
+                    tableField(SCENARIO_FIELD_NAME), "s-1",
+                    tableField(this.groupOfScenario), "g"
             ),
             ColumnSetKey.BUCKET);
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
@@ -133,7 +134,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             "quantityDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
-            Map.of(SCENARIO_FIELD_NAME, "s-1", this.groupOfScenario, "g"),
+            Map.of(tableField(SCENARIO_FIELD_NAME), "s-1", tableField(this.groupOfScenario), "g"),
             ColumnSetKey.BUCKET);
 
     var query = new QueryDto()
@@ -167,8 +168,8 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             RELATIVE_DIFFERENCE,
             price,
             Map.of(
-                    SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
-                    this.groupOfScenario, "g"
+                    tableField(SCENARIO_FIELD_NAME), AComparisonExecutor.REF_POS_FIRST,
+                    tableField(this.groupOfScenario), "g"
             ),
             ColumnSetKey.BUCKET);
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
@@ -177,8 +178,8 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             RELATIVE_DIFFERENCE,
             quantity,
             Map.of(
-                    SCENARIO_FIELD_NAME, AComparisonExecutor.REF_POS_FIRST,
-                    this.groupOfScenario, "g"
+                    tableField(SCENARIO_FIELD_NAME), AComparisonExecutor.REF_POS_FIRST,
+                    tableField(this.groupOfScenario), "g"
             ),
             ColumnSetKey.BUCKET);
 
@@ -208,7 +209,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
   @Test
   void testOrderIsPreserved() {
     // The following order should be respected even if columns are ordered by default.
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, SCENARIO_FIELD_NAME)
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, tableField(SCENARIO_FIELD_NAME))
             .withNewBucket("B", List.of("s1", MAIN_SCENARIO_NAME))
             .withNewBucket("A", List.of("s2", MAIN_SCENARIO_NAME, "s1"))
             .withNewBucket("C", List.of(MAIN_SCENARIO_NAME, "s2", "s1"));
@@ -235,7 +236,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
   @Test
   void testOrderIsPreservedAndNaturallyOrderOnOtherColumns() {
     // The following order should be respected even if columns are ordered by default.
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, SCENARIO_FIELD_NAME)
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, tableField(SCENARIO_FIELD_NAME))
             .withNewBucket("B", List.of("s1", MAIN_SCENARIO_NAME))
             .withNewBucket("A", List.of("s2", MAIN_SCENARIO_NAME));
 
@@ -243,7 +244,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
     // by category.
     var query = Query
             .from(this.storeName)
-            .select(List.of("category"), List.of(bucketCS), List.of(CountMeasure.INSTANCE))
+            .select(tableFields(List.of("category")), List.of(bucketCS), List.of(CountMeasure.INSTANCE))
             .build();
 
     Table dataset = this.executor.execute(query);
@@ -266,7 +267,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
   @Test
   void testTotal() {
     // The following order should be respected even if columns are ordered by default.
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, SCENARIO_FIELD_NAME)
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(this.groupOfScenario, tableField(SCENARIO_FIELD_NAME))
             .withNewBucket("B", List.of("s1", MAIN_SCENARIO_NAME))
             .withNewBucket("A", List.of("s2", MAIN_SCENARIO_NAME, "s1"))
             .withNewBucket("C", List.of(MAIN_SCENARIO_NAME, "s2", "s1"));
@@ -274,7 +275,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
     var query = Query
             .from(this.storeName)
             .select_(List.of(bucketCS), List.of(CountMeasure.INSTANCE))
-            .rollup(List.of(SCENARIO_FIELD_NAME)) // should not affect the comparison engine
+            .rollup(tableFields(List.of(SCENARIO_FIELD_NAME))) // should not affect the comparison engine
             .build();
 
     Table dataset = this.executor.execute(query);

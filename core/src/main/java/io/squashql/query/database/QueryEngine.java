@@ -3,10 +3,7 @@ package io.squashql.query.database;
 import io.squashql.query.QueryExecutor;
 import io.squashql.store.Datastore;
 import io.squashql.table.Table;
-import io.squashql.type.TypedField;
-
 import java.util.List;
-import java.util.function.Function;
 
 public interface QueryEngine<T extends Datastore> {
 
@@ -18,8 +15,6 @@ public interface QueryEngine<T extends Datastore> {
   Table executeRawSql(String sql);
 
   T datastore();
-
-  Function<String, TypedField> getFieldSupplier();
 
   /**
    * Returns the list of supported aggregation functions by the underlying database.

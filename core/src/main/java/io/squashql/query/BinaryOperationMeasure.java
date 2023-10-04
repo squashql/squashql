@@ -3,9 +3,13 @@ package io.squashql.query;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.type.TypedField;
-import lombok.*;
-
 import java.util.function.Function;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.ToString;
+import lombok.With;
 
 @ToString
 @EqualsAndHashCode
@@ -31,7 +35,7 @@ public class BinaryOperationMeasure implements Measure {
   }
 
   @Override
-  public String sqlExpression(Function<String, TypedField> fp, QueryRewriter qr, boolean withAlias) {
+  public String sqlExpression(Function<Field, TypedField> fp, QueryRewriter qr, boolean withAlias) {
     String sql = new StringBuilder()
             .append("(")
             .append(this.leftOperand.sqlExpression(fp, qr, false))

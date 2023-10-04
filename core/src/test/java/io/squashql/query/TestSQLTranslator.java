@@ -1,25 +1,42 @@
 package io.squashql.query;
 
-import io.squashql.query.database.AQueryEngine;
-import io.squashql.query.database.DatabaseQuery;
-import io.squashql.query.database.DefaultQueryRewriter;
-import io.squashql.query.database.SqlUtils;
-import io.squashql.query.dto.*;
-import io.squashql.type.TableTypedField;
-import io.squashql.store.Store;
-import io.squashql.type.TypedField;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-
-import static io.squashql.query.Functions.*;
+import static io.squashql.query.Functions.all;
+import static io.squashql.query.Functions.avg;
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.divide;
+import static io.squashql.query.Functions.eq;
+import static io.squashql.query.Functions.ge;
+import static io.squashql.query.Functions.gt;
+import static io.squashql.query.Functions.isNull;
+import static io.squashql.query.Functions.lt;
+import static io.squashql.query.Functions.minus;
+import static io.squashql.query.Functions.or;
+import static io.squashql.query.Functions.plus;
+import static io.squashql.query.Functions.sum;
+import static io.squashql.query.Functions.sumIf;
+import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.database.SQLTranslator.translate;
 import static io.squashql.query.dto.JoinType.INNER;
 import static io.squashql.query.dto.JoinType.LEFT;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
+
+import io.squashql.query.database.AQueryEngine;
+import io.squashql.query.database.DatabaseQuery;
+import io.squashql.query.database.DefaultQueryRewriter;
+import io.squashql.query.database.SqlUtils;
+import io.squashql.query.dto.ConditionType;
+import io.squashql.query.dto.JoinDto;
+import io.squashql.query.dto.JoinMappingDto;
+import io.squashql.query.dto.TableDto;
+import io.squashql.query.dto.VirtualTableDto;
+import io.squashql.store.Store;
+import io.squashql.type.TableTypedField;
+import io.squashql.type.TypedField;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 public class TestSQLTranslator {
 
@@ -30,19 +47,19 @@ public class TestSQLTranslator {
    * A simple implementation that has the same logic as {@link AQueryEngine#createFieldSupplier(Map)} but does not verify
    * a store/field does exist.
    */
-  private static final Function<String, TypedField> fp = s -> {
+  private static final Function<Field, TypedField> fp = s -> {
     Function<String, Class<?>> type = f -> switch (f) {
       case "pnl", BASE_STORE_NAME + "." + "pnl" -> double.class;
       case "delta", BASE_STORE_NAME + "." + "delta" -> Double.class;
       default -> String.class;
     };
-    String[] split = s.split("\\.");
+    String[] split = s.name().split("\\.");
     if (split.length > 1) {
       String tableName = split[0];
       String fieldNameInTable = split[1];
       return new TableTypedField(tableName, fieldNameInTable, type.apply(fieldNameInTable));
     } else {
-      return new TableTypedField(null, s, type.apply(s));
+      return new TableTypedField(null, split[0], type.apply(split[0]));
     }
   };
 
@@ -73,8 +90,8 @@ public class TestSQLTranslator {
   @Test
   void testGroupBy() {
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect(fp.apply(SCENARIO_FIELD_NAME))
-            .withSelect(fp.apply("type"))
+            .withSelect(fp.apply(tableField(SCENARIO_FIELD_NAME)))
+            .withSelect(fp.apply(tableField("type")))
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
             .aggregatedMeasure("delta.sum", "delta", "sum")
             .aggregatedMeasure("pnl.avg", "pnl", "avg")
@@ -88,8 +105,8 @@ public class TestSQLTranslator {
   @Test
   void testGroupByWithFullName() {
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect(fp.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, SCENARIO_FIELD_NAME)))
-            .withSelect(fp.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, "type")))
+            .withSelect(fp.apply(tableField(SqlUtils.getFieldFullName(BASE_STORE_NAME, SCENARIO_FIELD_NAME))))
+            .withSelect(fp.apply(tableField(SqlUtils.getFieldFullName(BASE_STORE_NAME, "type"))))
             .aggregatedMeasure("pnl.sum", SqlUtils.getFieldFullName(BASE_STORE_NAME, "pnl"), "sum")
             .aggregatedMeasure("delta.sum", SqlUtils.getFieldFullName(BASE_STORE_NAME, "delta"), "sum")
             .table(BASE_STORE_NAME);
@@ -112,10 +129,12 @@ public class TestSQLTranslator {
 
   @Test
   void testWithFullRollup() {
+    final TypedField scenario = fp.apply(tableField(SCENARIO_FIELD_NAME));
+    final TypedField type = fp.apply(tableField("type"));
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect(fp.apply(SCENARIO_FIELD_NAME))
-            .withSelect(fp.apply("type"))
-            .rollup(List.of(fp.apply(SCENARIO_FIELD_NAME), fp.apply("type")))
+            .withSelect(scenario)
+            .withSelect(type)
+            .rollup(List.of(scenario, type))
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
@@ -130,12 +149,12 @@ public class TestSQLTranslator {
 
   @Test
   void testWithFullRollupWithFullName() {
+    final TypedField scenario = fp.apply(tableField(SqlUtils.getFieldFullName(BASE_STORE_NAME, SCENARIO_FIELD_NAME)));
+    final TypedField type = fp.apply(tableField(SqlUtils.getFieldFullName(BASE_STORE_NAME, "type")));
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect(fp.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, SCENARIO_FIELD_NAME)))
-            .withSelect(fp.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, "type")))
-            .rollup(List.of(
-                    fp.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, SCENARIO_FIELD_NAME)),
-                    fp.apply(SqlUtils.getFieldFullName(BASE_STORE_NAME, "type"))))
+            .withSelect(scenario)
+            .withSelect(type)
+            .rollup(List.of(scenario, type))
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
@@ -151,9 +170,9 @@ public class TestSQLTranslator {
   @Test
   void testWithPartialRollup() {
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect(fp.apply(SCENARIO_FIELD_NAME))
-            .withSelect(fp.apply("type"))
-            .rollup(List.of(fp.apply(SCENARIO_FIELD_NAME)))
+            .withSelect(fp.apply(tableField(SCENARIO_FIELD_NAME)))
+            .withSelect(fp.apply(tableField("type")))
+            .rollup(List.of(fp.apply(tableField(SCENARIO_FIELD_NAME))))
             .aggregatedMeasure("pnl.sum", "price", "sum")
             .table(BASE_STORE_NAME);
 
@@ -207,13 +226,13 @@ public class TestSQLTranslator {
             criterion(c.name + ".c_f", a.name + ".a_f", ConditionType.EQ)
     ));
 
-    Function<String, TypedField> fieldSupplier = AQueryEngine.createFieldSupplier(Map.of(
+    Function<Field, TypedField> fieldSupplier = AQueryEngine.createFieldSupplier(Map.of(
             "A", new Store("A", List.of(new TableTypedField("A", "a_id", int.class), new TableTypedField("A", "a_f", int.class), new TableTypedField("A", "y", int.class))),
             "B", new Store("B", List.of(new TableTypedField("B", "b_id", int.class), new TableTypedField("B", "b_other_id", int.class))),
             "C", new Store("C", List.of(new TableTypedField("c", "a_id", int.class), new TableTypedField("C", "c_f", int.class), new TableTypedField("C", "c_other_id", int.class)))
     ));
 
-    DatabaseQuery query = new DatabaseQuery().table(a).withSelect(fieldSupplier.apply("A.y"));
+    DatabaseQuery query = new DatabaseQuery().table(a).withSelect(fieldSupplier.apply(tableField("A.y")));
 
     Assertions.assertThat(translate(query, fieldSupplier))
             .isEqualTo("select `A`.`y` from `A` " +
@@ -225,8 +244,8 @@ public class TestSQLTranslator {
   @Test
   void testConditionsWithValue() {
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect(fp.apply(SCENARIO_FIELD_NAME))
-            .withSelect(fp.apply("type"))
+            .withSelect(fp.apply(tableField(SCENARIO_FIELD_NAME)))
+            .withSelect(fp.apply(tableField("type")))
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
             .whereCriteria(all(
                     criterion(SCENARIO_FIELD_NAME, or(eq("base"), eq("s1"), eq("s2"))),
@@ -268,13 +287,13 @@ public class TestSQLTranslator {
     TableDto a = new TableDto("a");
     DatabaseQuery subQuery = new DatabaseQuery()
             .table(a)
-            .withSelect(fp.apply("c1"))
-            .withSelect(fp.apply("c3"))
+            .withSelect(fp.apply(tableField("c1")))
+            .withSelect(fp.apply(tableField("c3")))
             .withMeasure(avg("mean", "c2"));
 
     DatabaseQuery query = new DatabaseQuery()
             .subQuery(subQuery)
-            .withSelect(fp.apply("c3")) // c3 needs to be in the subquery
+            .withSelect(fp.apply(tableField("c3"))) // c3 needs to be in the subquery
             .withMeasure(sum("sum GT", "mean"))
             .whereCriteria(criterion("type", eq("myType")));
     Assertions.assertThat(translate(query, fp))
@@ -327,8 +346,8 @@ public class TestSQLTranslator {
             .table(main)
             .virtualTable(virtualTable)
             .withMeasure(sum("pnl.sum", "pnl"))
-            .withSelect(fp.apply("id"))
-            .withSelect(fp.apply("b"));
+            .withSelect(fp.apply(tableField("id")))
+            .withSelect(fp.apply(tableField("b")));
     String expected = String.format("with %2$s as (select 0 as `a`, '0' as `b` union all select 1 as `a`, '1' as `b`) " +
                     "select `id`, `b`, sum(`pnl`) as `pnl.sum` from `%1$s` " +
                     "inner join %2$s on `id` = `a` group by `id`, `b`",
@@ -349,8 +368,8 @@ public class TestSQLTranslator {
             .table(main)
             .virtualTable(virtualTable)
             .withMeasure(sum("pnl.sum", "pnl"))
-            .withSelect(fp.apply("id"))
-            .withSelect(fp.apply("b"));
+            .withSelect(fp.apply(tableField("id")))
+            .withSelect(fp.apply(tableField("b")));
     String expected = String.format("with %2$s as (select 0 as `a`, '0' as `b` union all select 1 as `a`, '1' as `b`) " +
                     "select `id`, `b`, sum(`pnl`) as `pnl.sum` from `%1$s` " +
                     "inner join %2$s on `%1$s`.`id` = %2$s.`a` group by `id`, `b`",
@@ -362,14 +381,16 @@ public class TestSQLTranslator {
 
   @Test
   void testGroupingSets() {
+    final TypedField a = fp.apply(tableField("a"));
+    final TypedField b = fp.apply(tableField("b"));
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect(fp.apply("a"))
-            .withSelect(fp.apply("b"))
+            .withSelect(a)
+            .withSelect(b)
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
             .groupingSets(List.of(
                     List.of(), // GT
-                    List.of(fp.apply("a")), // total a
-                    List.of(fp.apply("a"), fp.apply("b"))
+                    List.of(a), // total a
+                    List.of(a, b)
             ))
             .table(BASE_STORE_NAME);
 

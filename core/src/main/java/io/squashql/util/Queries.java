@@ -1,19 +1,32 @@
 package io.squashql.util;
 
+import static io.squashql.query.dto.OrderKeywordDto.DESC;
+
 import io.squashql.PrimitiveMeasureVisitor;
 import io.squashql.query.ColumnSet;
 import io.squashql.query.ColumnSetKey;
+import io.squashql.query.Field;
 import io.squashql.query.Measure;
 import io.squashql.query.QueryExecutor;
 import io.squashql.query.database.DatabaseQuery;
-import io.squashql.query.dto.*;
+import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.dto.ExplicitOrderDto;
+import io.squashql.query.dto.OrderDto;
+import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.SimpleOrderDto;
 import io.squashql.type.TypedField;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static io.squashql.query.dto.OrderKeywordDto.DESC;
 
 public final class Queries {
 
@@ -22,13 +35,13 @@ public final class Queries {
   }
 
   public static Map<String, Comparator<?>> getComparators(QueryDto queryDto) {
-    Map<String, OrderDto> orders = queryDto.orders;
+    Map<Field, OrderDto> orders = queryDto.orders;
     Map<String, Comparator<?>> res = new HashMap<>();
     orders.forEach((c, order) -> {
       if (order instanceof SimpleOrderDto so) {
-        res.put(c, NullAndTotalComparator.nullsLastAndTotalsFirst(so.order == DESC ? Comparator.naturalOrder().reversed() : Comparator.naturalOrder()));
+        res.put(c.name(), NullAndTotalComparator.nullsLastAndTotalsFirst(so.order == DESC ? Comparator.naturalOrder().reversed() : Comparator.naturalOrder()));
       } else if (order instanceof ExplicitOrderDto eo) {
-        res.put(c, NullAndTotalComparator.nullsLastAndTotalsFirst(new CustomExplicitOrdering(eo.explicit)));
+        res.put(c.name(), NullAndTotalComparator.nullsLastAndTotalsFirst(new CustomExplicitOrdering(eo.explicit)));
       } else {
         throw new IllegalStateException("Unexpected value: " + orders);
       }
@@ -43,14 +56,14 @@ public final class Queries {
         List<Object> l = new ArrayList<>(v);
         m.put(k, l);
       });
-      res.put(cs.name, new CustomExplicitOrdering(new ArrayList<>(m.keySet())));
-      res.put(cs.field, DependentExplicitOrdering.create(m));
+      res.put(cs.name.name(), new CustomExplicitOrdering(new ArrayList<>(m.keySet())));
+      res.put(cs.field.name(), DependentExplicitOrdering.create(m));
     }
 
     return res;
   }
 
-  public static DatabaseQuery queryScopeToDatabaseQuery(QueryExecutor.QueryScope queryScope, Function<String, TypedField> fieldSupplier, int limit) {
+  public static DatabaseQuery queryScopeToDatabaseQuery(QueryExecutor.QueryScope queryScope, Function<Field, TypedField> fieldSupplier, int limit) {
     Set<TypedField> selects = new HashSet<>(queryScope.columns());
     DatabaseQuery prefetchQuery = new DatabaseQuery();
     if (queryScope.tableDto() != null) {
@@ -70,7 +83,7 @@ public final class Queries {
     return prefetchQuery;
   }
 
-  public static DatabaseQuery toSubDatabaseQuery(QueryDto query, Function<String, TypedField> fieldSupplier) {
+  public static DatabaseQuery toSubDatabaseQuery(QueryDto query, Function<Field, TypedField> fieldSupplier) {
     if (query.subQuery != null) {
       throw new IllegalArgumentException("sub-query in a sub-query is not supported");
     }
@@ -79,7 +92,7 @@ public final class Queries {
       throw new IllegalArgumentException("virtualTableDto in a sub-query is not supported");
     }
 
-    Set<String> cols = new HashSet<>(query.columns);
+    Set<Field> cols = new HashSet<>(query.columns);
     if (query.columnSets != null && !query.columnSets.isEmpty()) {
       throw new IllegalArgumentException("column sets are not expected in sub query: " + query);
     }

@@ -1,4 +1,4 @@
-import {PACKAGE} from "./index";
+import {Field, PACKAGE} from "./index"
 
 export interface ColumnSet {
   readonly class: string
@@ -13,7 +13,7 @@ export class BucketColumnSet implements ColumnSet {
   readonly class: string = PACKAGE + "dto.BucketColumnSetDto"
   readonly key: ColumnSetKey = ColumnSetKey.BUCKET
 
-  constructor(private columnName: string, private field: string, private values: Map<string, Array<string>>) {
+  constructor(private columnName: Field, private field: Field, private values: Map<string, Array<string>>) {
   }
 
   toJSON() {
@@ -33,7 +33,7 @@ export interface Period {
 export class Month implements Period {
   readonly class: string = PACKAGE + "dto.Period$Month"
 
-  constructor(private month: string, private year: string) {
+  constructor(private month: Field, private year: Field) {
   }
 
   toJSON() {
@@ -48,7 +48,7 @@ export class Month implements Period {
 export class Quarter implements Period {
   readonly class: string = PACKAGE + "dto.Period$Quarter"
 
-  constructor(private quarter: string, private year: string) {
+  constructor(private quarter: Field, private year: Field) {
   }
 
   toJSON() {
@@ -63,7 +63,7 @@ export class Quarter implements Period {
 export class Semester implements Period {
   readonly class: string = PACKAGE + "dto.Period$Semester"
 
-  constructor(private semester: string, private year: string) {
+  constructor(private semester: Field, private year: Field) {
   }
 
   toJSON() {
@@ -78,7 +78,7 @@ export class Semester implements Period {
 export class Year implements Period {
   readonly class: string = PACKAGE + "dto.Period$Year"
 
-  constructor(private year: string) {
+  constructor(private year: Field) {
   }
 
   toJSON() {

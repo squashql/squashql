@@ -1,9 +1,10 @@
 package io.squashql.jackson;
 
 import io.squashql.query.*;
+import io.squashql.query.builder.Query;
+import io.squashql.query.dto.*;
 import io.squashql.query.parameter.Parameter;
 import io.squashql.query.parameter.QueryCacheParameter;
-import io.squashql.query.dto.*;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -12,6 +13,7 @@ import java.util.Map;
 
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.Functions.*;
+import static io.squashql.query.TableField.tableField;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
@@ -21,8 +23,8 @@ public class TestQueryS13n {
   void testRoundTrip() {
     QueryDto query = new QueryDto()
             .table("myTable")
-            .withColumn(SCENARIO_FIELD_NAME)
-            .withColumn("ean")
+            .withColumn(tableField(SCENARIO_FIELD_NAME))
+            .withColumn(tableField("ean"))
             .withMeasure(new AggregatedMeasure("p", "price", "sum"))
             .withMeasure(new AggregatedMeasure("q", "quantity", "sum"))
             .withMeasure(new AggregatedMeasure("priceAlias", "price", "sum", Functions.criterion("category", Functions.eq("food"))))
@@ -53,8 +55,8 @@ public class TestQueryS13n {
     query.table(orders);
 
     // Coordinates
-    query.withColumn("productName");
-    query.withColumn("categoryName");
+    query.withColumn(tableField("productName"));
+    query.withColumn(tableField("categoryName"));
 
     // Measures
     query.withMeasure(new AggregatedMeasure("p", "price", "sum"));
@@ -63,10 +65,10 @@ public class TestQueryS13n {
     // Conditions
     ConditionDto december = and(gt("1/12/1996"), lt("31/12/1996"));
     ConditionDto october = and(ge("1/10/1996"), le("31/10/1996"));
-    query.withCondition("orderDate", or(december, october));
-    query.withCondition("city", in("paris", "london"));
-    query.withCondition("country", eq("france"));
-    query.withCondition("shipper", neq("aramex"));
+    query.withCondition(tableField("orderDate"), or(december, october));
+    query.withCondition(tableField("city"), in("paris", "london"));
+    query.withCondition(tableField("country"), eq("france"));
+    query.withCondition(tableField("shipper"), neq("aramex"));
 
     String serialize = query.json();
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
@@ -76,7 +78,7 @@ public class TestQueryS13n {
   @Test
   void testRoundTripBucketComparisonQuery() {
     String groupOfScenario = "Group of scenario";
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, SCENARIO_FIELD_NAME)
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, tableField(SCENARIO_FIELD_NAME))
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
@@ -87,8 +89,8 @@ public class TestQueryS13n {
             ABSOLUTE_DIFFERENCE,
             price,
             Map.of(
-                    SCENARIO_FIELD_NAME, "first",
-                    groupOfScenario, "g"
+                    tableField(SCENARIO_FIELD_NAME), "first",
+                    tableField(groupOfScenario), "g"
             ),
             ColumnSetKey.BUCKET);
 
@@ -106,17 +108,17 @@ public class TestQueryS13n {
   @Test
   void testRoundTripPeriodComparisonQuery() {
     AggregatedMeasure sales = new AggregatedMeasure("s", "sales", "sum");
-    Period.Quarter period = new Period.Quarter("quarter_sales", "year_sales");
+    Period.Quarter period = new Period.Quarter(tableField("quarter_sales"), tableField("year_sales"));
     ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
             "myMeasure",
             ABSOLUTE_DIFFERENCE,
             sales,
-            Map.of("year_sales", "y-1"),
+            Map.of(period.year(), "y-1"),
             period);
 
     var query = new QueryDto()
             .table("products")
-            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumn(tableField(SCENARIO_FIELD_NAME))
             .withMeasure(m)
             .withMeasure(sales);
 
@@ -131,8 +133,8 @@ public class TestQueryS13n {
             .table("products")
             .withMeasure(new AggregatedMeasure("s", "sales", "sum"));
 
-    query.orderBy("X", List.of("a", "b", "c"));
-    query.orderBy("Y", OrderKeywordDto.ASC);
+    query.orderBy(tableField("X"), List.of("a", "b", "c"));
+    query.orderBy(tableField("Y"), OrderKeywordDto.ASC);
 
     String serialize = query.json();
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
@@ -187,5 +189,18 @@ public class TestQueryS13n {
     Assertions.assertThat(fieldDeserialize).isEqualTo(field);
     TableField simpleFieldDeserialize = JacksonUtil.deserialize(JacksonUtil.serialize(simpleNameField), TableField.class);
     Assertions.assertThat(simpleFieldDeserialize).isEqualTo(simpleNameField);
+  }
+
+  @Test
+  void testPivotTableDto() {
+    Field f1 = tableField("f1");
+    Field f2 = tableField("f2");
+    QueryDto query = Query.from("table")
+            .select(List.of(f1, f2), List.of(), List.of())
+            .build();
+    PivotTableQueryDto pivotTableQueryDto = new PivotTableQueryDto(query, List.of(f1), List.of(f2));
+    String serialize = JacksonUtil.serialize(pivotTableQueryDto);
+    PivotTableQueryDto deserialize = JacksonUtil.deserialize(serialize, PivotTableQueryDto.class);
+    Assertions.assertThat(deserialize).isEqualTo(pivotTableQueryDto);
   }
 }

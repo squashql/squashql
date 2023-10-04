@@ -1,24 +1,32 @@
 package io.squashql;
 
-import io.squashql.query.*;
+import io.squashql.query.AggregatedMeasure;
+import io.squashql.query.BinaryOperationMeasure;
+import io.squashql.query.ComparisonMeasureReferencePosition;
+import io.squashql.query.DoubleConstantMeasure;
+import io.squashql.query.ExpressionMeasure;
+import io.squashql.query.Field;
+import io.squashql.query.LongConstantMeasure;
+import io.squashql.query.Measure;
+import io.squashql.query.MeasureUtils;
+import io.squashql.query.MeasureVisitor;
 import io.squashql.query.QueryExecutor.QueryScope;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.type.TypedField;
-import org.eclipse.collections.impl.set.mutable.MutableSetFactoryImpl;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import org.eclipse.collections.impl.set.mutable.MutableSetFactoryImpl;
 
 public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Measure>>> {
 
   private final QueryDto query;
   private final QueryScope originalQueryScope;
-  private final Function<String, TypedField> fieldSupplier;
+  private final Function<Field, TypedField> fieldSupplier;
 
-  public PrefetchVisitor(QueryDto query, QueryScope originalQueryScope, Function<String, TypedField> fieldSupplier) {
+  public PrefetchVisitor(QueryDto query, QueryScope originalQueryScope, Function<Field, TypedField> fieldSupplier) {
     this.query = query;
     this.originalQueryScope = originalQueryScope;
     this.fieldSupplier = fieldSupplier;

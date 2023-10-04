@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
+import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestConfiguration
@@ -43,9 +44,9 @@ public class DatasetTestConfig {
   public void displayPivotTable() {
     QueryExecutor queryExecutor = new QueryExecutor(queryEngine());
     QueryDto query = Query.from("our_prices")
-            .select(List.of("ean", "pdv", "scenario"), List.of(new AggregatedMeasure("count", "*", "count")))
+            .select(tableFields(List.of("ean", "pdv", "scenario")), List.of(new AggregatedMeasure("count", "*", "count")))
             .build();
-    PivotTable pt = queryExecutor.execute(new PivotTableQueryDto(query, List.of("pdv", "ean"), List.of("scenario")));
+    PivotTable pt = queryExecutor.execute(new PivotTableQueryDto(query, tableFields(List.of("pdv", "ean")), tableFields(List.of("scenario"))));
     pt.show();
     toJson(pt);
   }
