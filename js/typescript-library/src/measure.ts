@@ -2,7 +2,7 @@ import {PACKAGE, Period} from "./index"
 import {Criteria} from "./conditions"
 import {ColumnSetKey} from "./columnsets"
 import {Field, TableField} from "./field";
-import {toField} from "./util";
+import {serializeMap} from "./util";
 
 // Marker type
 export type BasicMeasure = Measure
@@ -102,10 +102,10 @@ class ComparisonMeasureReferencePosition implements Measure {
   constructor(alias: string,
               private comparisonMethod: ComparisonMethod,
               private measure: Measure,
-              private referencePosition: Map<string, string>,
+              private referencePosition: Map<Field, string>,
               private columnSetKey?: ColumnSetKey,
               private period?: Period,
-              private ancestors?: Array<string>) {
+              private ancestors?: Array<Field>) {
     this.alias = alias
   }
 
@@ -117,7 +117,7 @@ class ComparisonMeasureReferencePosition implements Measure {
       "measure": this.measure,
       "columnSetKey": this.columnSetKey,
       "period": this.period,
-      "referencePosition": this.referencePosition ? Object.fromEntries(this.referencePosition) : undefined,
+      "referencePosition": this.referencePosition ? Object.fromEntries(serializeMap(this.referencePosition)) : undefined,
       "ancestors": this.ancestors,
     }
   }
@@ -163,46 +163,46 @@ class DoubleConstantMeasure implements Measure {
 
 // BASIC agg
 
-export function sum(alias: string, field: Field | string): Measure {
-  return new AggregatedMeasure(alias, toField(field), "sum")
+export function sum(alias: string, field: Field): Measure {
+  return new AggregatedMeasure(alias, field, "sum")
 }
 
-export function min(alias: string, field: Field | string): Measure {
-  return new AggregatedMeasure(alias, toField(field), "min")
+export function min(alias: string, field: Field): Measure {
+  return new AggregatedMeasure(alias, field, "min")
 }
 
-export function max(alias: string, field: Field | string): Measure {
-  return new AggregatedMeasure(alias, toField(field), "max")
+export function max(alias: string, field: Field): Measure {
+  return new AggregatedMeasure(alias, field, "max")
 }
 
-export function avg(alias: string, field: Field | string): Measure {
-  return new AggregatedMeasure(alias, toField(field), "avg")
+export function avg(alias: string, field: Field): Measure {
+  return new AggregatedMeasure(alias, field, "avg")
 }
 
-export function count(alias: string, field: Field | string): Measure {
-  return new AggregatedMeasure(alias, toField(field), "count")
+export function count(alias: string, field: Field): Measure {
+  return new AggregatedMeasure(alias, field, "count")
 }
 
 // aggIf
 
-export function sumIf(alias: string, field: Field | string, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, toField(field), "sum", criterion)
+export function sumIf(alias: string, field: Field, criterion: Criteria): Measure {
+  return new AggregatedMeasure(alias, field, "sum", criterion)
 }
 
-export function avgIf(alias: string, field: Field | string, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, toField(field), "avg", criterion)
+export function avgIf(alias: string, field: Field, criterion: Criteria): Measure {
+  return new AggregatedMeasure(alias, field, "avg", criterion)
 }
 
-export function minIf(alias: string, field: Field | string, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, toField(field), "min", criterion)
+export function minIf(alias: string, field: Field, criterion: Criteria): Measure {
+  return new AggregatedMeasure(alias, field, "min", criterion)
 }
 
-export function maxIf(alias: string, field: Field | string, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, toField(field), "max", criterion)
+export function maxIf(alias: string, field: Field, criterion: Criteria): Measure {
+  return new AggregatedMeasure(alias, field, "max", criterion)
 }
 
-export function countIf(alias: string, field: Field | string, criterion?: Criteria): Measure {
-  return new AggregatedMeasure(alias, toField(field), "count", criterion)
+export function countIf(alias: string, field: Field, criterion?: Criteria): Measure {
+  return new AggregatedMeasure(alias, field, "count", criterion)
 }
 
 // BINARY
@@ -238,7 +238,7 @@ export function decimal(value: Number): Measure {
 export function comparisonMeasureWithPeriod(alias: string,
                                             comparisonMethod: ComparisonMethod,
                                             measure: Measure,
-                                            referencePosition: Map<string, string>,
+                                            referencePosition: Map<Field, string>,
                                             period: Period): Measure {
   return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, undefined, period)
 }
@@ -246,13 +246,13 @@ export function comparisonMeasureWithPeriod(alias: string,
 export function comparisonMeasureWithBucket(alias: string,
                                             comparisonMethod: ComparisonMethod,
                                             measure: Measure,
-                                            referencePosition: Map<string, string>): Measure {
+                                            referencePosition: Map<Field, string>): Measure {
   return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, ColumnSetKey.BUCKET)
 }
 
 export function comparisonMeasureWithParent(alias: string,
                                             comparisonMethod: ComparisonMethod,
                                             measure: Measure,
-                                            ancestors: Array<string>): Measure {
+                                            ancestors: Array<Field>): Measure {
   return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, undefined, undefined, undefined, ancestors)
 }

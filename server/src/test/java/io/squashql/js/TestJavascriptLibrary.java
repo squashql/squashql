@@ -2,8 +2,6 @@ package io.squashql.js;
 
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
-import io.squashql.query.ConstantField;
-import io.squashql.query.TableField;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.*;
 import io.squashql.query.parameter.QueryCacheParameter;
@@ -15,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 
 import static io.squashql.query.Functions.*;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 
 public class TestJavascriptLibrary {
 
@@ -30,8 +30,8 @@ public class TestJavascriptLibrary {
 
     QueryDto q = new QueryDto()
             .table(table)
-            .withColumn("a")
-            .withColumn("b");
+            .withColumn(tableField("a"))
+            .withColumn(tableField("b"));
 
     var price = new AggregatedMeasure("price.sum", "price", "sum");
     q.withMeasure(price);
@@ -55,41 +55,41 @@ public class TestJavascriptLibrary {
     q.withMeasure(new ComparisonMeasureReferencePosition("comp bucket",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
-            Map.of("scenario", "s-1", "group", "g"),
+            Map.of(tableField("scenario"), "s-1", tableField("group"), "g"),
             ColumnSetKey.BUCKET));
 
-    Period.Month month = new Period.Month("mois", "annee");
+    Period.Month month = new Period.Month(tableField("Month"), tableField("Year"));
     q.withMeasure(new ComparisonMeasureReferencePosition("growth",
             ComparisonMethod.DIVIDE,
             price,
-            Map.of("Annee", "y-1", "Mois", "m"),
+            Map.of(tableField("Year"), "y-1", tableField("Month"), "m"),
             month));
 
     q.withMeasure(new ComparisonMeasureReferencePosition("parent",
             ComparisonMethod.DIVIDE,
             price,
-            List.of("Mois", "Annee")));
+            List.of(tableField("Year"), tableField("Month"))));
 
     var queryCondition = or(and(eq("a"), eq("b")), lt(5), like("a%"));
-    q.withCondition("f1", queryCondition);
-    q.withCondition("f2", gt(659));
-    q.withCondition("f3", in(0, 1, 2));
-    q.withCondition("f4", isNull());
-    q.withCondition("f5", isNotNull());
+    q.withCondition(tableField("f1"), queryCondition);
+    q.withCondition(tableField("f2"), gt(659));
+    q.withCondition(tableField("f3"), in(0, 1, 2));
+    q.withCondition(tableField("f4"), isNull());
+    q.withCondition(tableField("f5"), isNotNull());
 
     q.withHavingCriteria(all(criterion(price, ge(10)), criterion(expression, lt(100))));
 
-    q.orderBy("a", OrderKeywordDto.ASC);
-    q.orderBy("b", List.of("1", "l", "p"));
+    q.orderBy(tableField("a"), OrderKeywordDto.ASC);
+    q.orderBy(tableField("b"), List.of("1", "l", "p"));
 
-    BucketColumnSetDto columnSet = new BucketColumnSetDto("group", "scenario")
+    BucketColumnSetDto columnSet = new BucketColumnSetDto("group", tableField("scenario"))
             .withNewBucket("a", List.of("a1", "a2"))
             .withNewBucket("b", List.of("b1", "b2"));
     q.withColumnSet(ColumnSetKey.BUCKET, columnSet);
 
     QueryDto subQuery = new QueryDto()
             .table(table)
-            .withColumn("aa")
+            .withColumn(tableField("aa"))
             .withMeasure(sum("sum_aa", "f"));
     q.table(subQuery);
 
@@ -117,7 +117,7 @@ public class TestJavascriptLibrary {
     var refTable = new TableDto("refTable");
     var cte = new VirtualTableDto("myCte", List.of("id", "min", "max", "other"), List.of(List.of(0, 0, 1, "x"), List.of(1, 2, 3, "y")));
 
-    BucketColumnSetDto bucketColumnSet = new BucketColumnSetDto("group", "scenario")
+    BucketColumnSetDto bucketColumnSet = new BucketColumnSetDto("group", tableField("scenario"))
             .withNewBucket("a", List.of("a1", "a2"))
             .withNewBucket("b", List.of("b1", "b2"));
 
@@ -129,14 +129,14 @@ public class TestJavascriptLibrary {
                     criterion("myTable" + ".a", "refTable" + ".a", ConditionType.EQ)))
             .join(cte, JoinType.INNER)
             .on(all(criterion("myTable.value", "myCte.min", ConditionType.GE), criterion("myTable.value", "myCte.max", ConditionType.LT)))
-            .where("f2", gt(659))
-            .where("f3", eq(123))
-            .select(List.of("a", "b"),
+            .where(tableField("f2"), gt(659))
+            .where(tableField("f3"), eq(123))
+            .select(tableFields(List.of("a", "b")),
                     List.of(bucketColumnSet),
                     List.of(measure, avg("sum", "f1"), measureExpr))
-            .rollup("a", "b")
+            .rollup(tableField("a"), tableField("b"))
             .having(all(criterion((BasicMeasure) measure, gt(0)), criterion((BasicMeasure) measureExpr, lt(10))))
-            .orderBy("f4", OrderKeywordDto.ASC)
+            .orderBy(tableField("f4"), OrderKeywordDto.ASC)
             .limit(10)
             .build();
 
@@ -162,11 +162,11 @@ public class TestJavascriptLibrary {
   void testReadJsonBuildFromQueryMerge() {
     var table = new TableDto("myTable");
     QueryDto q1 = Query.from(table.name)
-            .select(List.of("a", "b"),
+            .select(tableFields(List.of("a", "b")),
                     List.of(sum("sum", "f1")))
             .build();
     QueryDto q2 = Query.from(table.name)
-            .select(List.of("a", "b"),
+            .select(tableFields(List.of("a", "b")),
                     List.of(avg("sum", "f1")))
             .build();
 
@@ -181,12 +181,12 @@ public class TestJavascriptLibrary {
   void testReadJsonBuildFromQueryPivot() {
     var table = new TableDto("myTable");
     QueryDto q = Query.from(table.name)
-            .select(List.of("a", "b"),
+            .select(tableFields(List.of("a", "b")),
                     List.of(avg("sum", "f1")))
             .build();
 
     String name = "build-from-query-pivot.json"; // The content of this file is generated by the js code.
     PivotTableQueryDto qjs = JacksonUtil.deserialize(TestUtil.readAllLines(name), PivotTableQueryDto.class);
-    Assertions.assertThat(qjs).isEqualTo(new PivotTableQueryDto(q, List.of("a"), List.of("b")));
+    Assertions.assertThat(qjs).isEqualTo(new PivotTableQueryDto(q, tableFields(List.of("a")), tableFields(List.of("b"))));
   }
 }

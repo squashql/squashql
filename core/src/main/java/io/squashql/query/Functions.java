@@ -1,18 +1,26 @@
 package io.squashql.query;
 
-import io.squashql.query.agg.AggregationFunction;
-import io.squashql.query.date.DateFunctions;
-import io.squashql.query.dto.*;
-
-import java.util.List;
-
-import static io.squashql.query.BinaryOperator.*;
+import static io.squashql.query.BinaryOperator.DIVIDE;
+import static io.squashql.query.BinaryOperator.MINUS;
+import static io.squashql.query.BinaryOperator.MULTIPLY;
+import static io.squashql.query.BinaryOperator.PLUS;
 import static io.squashql.query.dto.ConditionType.AND;
 import static io.squashql.query.dto.ConditionType.OR;
+
+import io.squashql.query.agg.AggregationFunction;
+import io.squashql.query.date.DateFunctions;
+import io.squashql.query.dto.ConditionDto;
+import io.squashql.query.dto.ConditionType;
+import io.squashql.query.dto.CriteriaDto;
+import io.squashql.query.dto.InConditionDto;
+import io.squashql.query.dto.LogicalConditionDto;
+import io.squashql.query.dto.SingleValueConditionDto;
+import java.util.List;
 
 public class Functions {
 
   // joinCriterion
+  @Deprecated
   public static CriteriaDto criterion(String field, String fieldOther, ConditionType conditionType) {
     return new CriteriaDto(new TableField(field), new TableField(fieldOther), conditionType);
   }
@@ -183,26 +191,15 @@ public class Functions {
   }
 
   public static Field year(String field) {
-    return new FunctionField(yearStr(field));
+    return new FunctionField(DateFunctions.year(field));
   }
 
   public static Field quarter(String field) {
-    return new FunctionField(quarterStr(field));
+    return new FunctionField(DateFunctions.quarter(field));
   }
 
   public static Field month(String field) {
-    return new FunctionField(monthStr(field));
+    return new FunctionField(DateFunctions.month(field));
   }
 
-  public static String yearStr(String field) {
-    return DateFunctions.year(field);
-  }
-
-  public static String quarterStr(String field) {
-    return DateFunctions.quarter(field);
-  }
-
-  public static String monthStr(String field) {
-    return DateFunctions.month(field);
-  }
 }

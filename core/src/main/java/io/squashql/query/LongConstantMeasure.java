@@ -2,14 +2,11 @@ package io.squashql.query;
 
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.type.TypedField;
+import java.util.function.Function;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.ToString;
 
-import java.util.function.Function;
-
-@ToString
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor // For Jackson
 public class LongConstantMeasure extends ConstantMeasure<Long> {
@@ -19,7 +16,7 @@ public class LongConstantMeasure extends ConstantMeasure<Long> {
   }
 
   @Override
-  public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
+  public String sqlExpression(Function<Field, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     return Long.toString(this.value);
   }
 

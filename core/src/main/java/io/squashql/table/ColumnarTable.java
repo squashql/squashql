@@ -4,8 +4,13 @@ import com.google.common.base.Suppliers;
 import io.squashql.query.Header;
 import io.squashql.query.Measure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public class ColumnarTable implements Table {

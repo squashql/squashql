@@ -1,5 +1,6 @@
 package io.squashql.query.dto;
 
+import io.squashql.query.Field;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -14,6 +15,6 @@ import java.util.List;
 public class PivotTableQueryDto {
 
   public QueryDto query;
-  public List<String> rows;
-  public List<String> columns;
+  public List<Field> rows;
+  public List<Field> columns;
 }

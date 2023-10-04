@@ -1,5 +1,9 @@
 package io.squashql.query;
 
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.ConditionType;
@@ -8,16 +12,12 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.TestUtil;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -103,7 +103,7 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
             .on(criterion(this.products + ".categoryId", this.categories + ".categoryId", ConditionType.EQ))
             // Select a field that exists in two tables: Products and Categories. If any ambiguity, it has to be solved
             // by the user by indicating the table from which the field should come from.
-            .select(List.of(this.categories + ".name", this.products + ".name"), List.of(Functions.sum("quantity_sum", "quantity")))
+            .select(tableFields(List.of(this.categories + ".name", this.products + ".name")), List.of(Functions.sum("quantity_sum", "quantity")))
             .build();
 
     Table table = this.executor.execute(query);
@@ -132,7 +132,7 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
             .on(criterion(this.products + ".categoryId", this.categories + ".categoryId", ConditionType.EQ))
             // Select a field that exists in two tables: Products and Categories. If any ambiguity, it has to be solved
             // by the user by indicating the table from which the field should come from.
-            .select(List.of("name"), List.of(Functions.sum("quantity_sum", "quantity")))
+            .select(tableFields(List.of("name")), List.of(Functions.sum("quantity_sum", "quantity")))
             .build();
     TestUtil.assertThatThrownBy(() -> this.executor.execute(query)).hasMessageContaining(ambiguousNameMessage());
   }

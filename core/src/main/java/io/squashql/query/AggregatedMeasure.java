@@ -5,9 +5,13 @@ import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.CriteriaDto;
 import io.squashql.type.TypedField;
-import lombok.*;
-
 import java.util.function.Function;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.ToString;
+import lombok.With;
 
 @ToString
 @EqualsAndHashCode
@@ -38,11 +42,11 @@ public class AggregatedMeasure implements BasicMeasure {
   }
 
   @Override
-  public String sqlExpression(Function<String, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
+  public String sqlExpression(Function<Field, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
     String sql;
     String fieldExpression = this.field.sqlExpression(fieldProvider, queryRewriter);
     if (this.criteria != null) {
-      Function<String, TypedField> fp = MeasureUtils.withFallback(fieldProvider, Number.class);
+      Function<Field, TypedField> fp = MeasureUtils.withFallback(fieldProvider, Number.class);
       String conditionSt = SQLTranslator.toSql(fp, this.criteria, queryRewriter);
       sql = this.aggregationFunction + "(case when " + conditionSt + " then " + fieldExpression + " end)";
     } else {

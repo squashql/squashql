@@ -1,17 +1,19 @@
-import {from} from "./queryBuilder";
-import {avg, sum} from "./measure";
-import * as fs from "fs"
+import * as fs from "fs";
+import {TableField, tableField, tableFields} from "./field";
+import {avg} from "./measure";
 import {createPivotTableQuery} from "./querier";
+import {from} from "./queryBuilder";
 
 export function generateFromQueryPivot() {
+  const fields = tableFields(["a", "b"]);
+
   const q = from("myTable")
-          .select(["a", "b"],
+          .select(fields,
                   [],
-                  [avg("sum", "f1")])
+                  [avg("sum", new TableField("f1"))])
           .build()
 
-  const pivotQuery = createPivotTableQuery(q, {rows: ["a"], columns: ["b"]})
-  console.log(JSON.stringify(pivotQuery))
+  const pivotQuery = createPivotTableQuery(q, {rows: [tableField("a")], columns: [tableField("b")]})
   const data = JSON.stringify(pivotQuery)
   fs.writeFileSync('build-from-query-pivot.json', data)
 }

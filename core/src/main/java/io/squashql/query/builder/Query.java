@@ -1,15 +1,22 @@
 package io.squashql.query.builder;
 
 import io.squashql.query.ColumnSet;
+import io.squashql.query.Field;
 import io.squashql.query.Measure;
-import io.squashql.query.dto.*;
-
+import io.squashql.query.dto.ConditionDto;
+import io.squashql.query.dto.CriteriaDto;
+import io.squashql.query.dto.JoinType;
+import io.squashql.query.dto.OrderKeywordDto;
+import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.TableDto;
+import io.squashql.query.dto.VirtualTableDto;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildingTable, HasOrderBy, CanAddRollup {
 
-  private final QueryDto queryDto = new QueryDto();
+  final QueryDto queryDto = new QueryDto();
 
   private JoinTableBuilder currentJoinTableBuilder;
 
@@ -40,7 +47,7 @@ public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
     return this.currentJoinTableBuilder;
   }
 
-  private void addJoinToQueryDto() {
+  void addJoinToQueryDto() {
     JoinTableBuilder jtb = this.currentJoinTableBuilder;
     if (jtb != null) {
       this.queryDto.table.join(new TableDto(jtb.tableName), jtb.joinType, jtb.mappingDtos);
@@ -49,7 +56,7 @@ public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
   }
 
   @Override
-  public HasTable where(String field, ConditionDto conditionDto) {
+  public HasTable where(Field field, ConditionDto conditionDto) {
     addJoinToQueryDto();
     this.queryDto.withCondition(field, conditionDto);
     return this;
@@ -63,7 +70,7 @@ public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
   }
 
   @Override
-  public CanAddRollup select(List<String> columns, List<ColumnSet> columnSets, List<Measure> measures) {
+  public CanAddRollup select(List<Field> columns, List<ColumnSet> columnSets, List<Measure> measures) {
     addJoinToQueryDto();
     columns.forEach(this.queryDto::withColumn);
     columnSets.forEach(cs -> this.queryDto.withColumnSet(cs.getColumnSetKey(), cs));
@@ -78,19 +85,19 @@ public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
   }
 
   @Override
-  public HasHaving orderBy(String column, OrderKeywordDto orderKeywordDto) {
+  public HasHaving orderBy(Field column, OrderKeywordDto orderKeywordDto) {
     this.queryDto.orderBy(column, orderKeywordDto);
     return this;
   }
 
   @Override
-  public HasHaving orderBy(String column, List<?> firstElements) {
+  public HasHaving orderBy(Field column, List<?> firstElements) {
     this.queryDto.orderBy(column, firstElements);
     return this;
   }
 
   @Override
-  public CanAddHaving rollup(String... columns) {
+  public CanAddHaving rollup(Field... columns) {
     Arrays.stream(columns).forEach(this.queryDto::withRollup);
     return this;
   }

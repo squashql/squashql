@@ -1,19 +1,19 @@
 package io.squashql.query;
 
+import static io.squashql.query.Functions.sum;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.type.TableTypedField;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
-
-import static io.squashql.query.Functions.sum;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestClass(ignore = {TestClass.Type.SPARK, TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE, TestClass.Type.CLICKHOUSE})
@@ -50,14 +50,14 @@ public abstract class ATestDocDrillacross extends ABaseTestQuery {
   void test() {
     QueryDto query1 = Query
             .from("shipment")
-            .select(List.of("product"), List.of(sum("quantity sold", "quantity")))
-            .rollup(List.of("product"))
+            .select(tableFields(List.of("product")), List.of(sum("quantity sold", "quantity")))
+            .rollup(tableFields(List.of("product")))
             .build();
 
     QueryDto query2 = Query
             .from("return")
-            .select(List.of("product", "reason"), List.of(sum("quantity returned", "quantity")))
-            .rollup(List.of("product", "reason"))
+            .select(tableFields(List.of("product", "reason")), List.of(sum("quantity returned", "quantity")))
+            .rollup(tableFields(List.of("product", "reason")))
             .build();
 
     BiConsumer<QueryDto, QueryDto> runnable = (q1, q2) -> this.executor.execute(q1, q2, JoinType.FULL, null).show();

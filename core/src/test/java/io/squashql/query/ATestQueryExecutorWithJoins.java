@@ -1,5 +1,9 @@
 package io.squashql.query;
 
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.ConditionType;
@@ -8,20 +12,16 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Datastore;
 import io.squashql.table.Table;
 import io.squashql.transaction.DataLoader;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Function;
-
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestQueryExecutorWithJoins {
@@ -85,7 +85,7 @@ public abstract class ATestQueryExecutorWithJoins {
             .on(criterion(this.products + ".ProductID", this.orderDetails + ".ProductID", ConditionType.EQ))
             .join(this.categories, JoinType.INNER)
             .on(criterion(this.products + ".CategoryID", this.categories + ".CategoryID", ConditionType.EQ))
-            .select(List.of("CategoryName"), List.of(Functions.sum("Q", "Quantity"), CountMeasure.INSTANCE))
+            .select(tableFields(List.of("CategoryName")), List.of(Functions.sum("Q", "Quantity"), CountMeasure.INSTANCE))
             .build();
 
     Table table = this.queryExecutor.execute(query);

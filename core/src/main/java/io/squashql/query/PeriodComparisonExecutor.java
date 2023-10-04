@@ -1,18 +1,20 @@
 package io.squashql.query;
 
+import static io.squashql.query.PeriodUnit.MONTH;
+import static io.squashql.query.PeriodUnit.QUARTER;
+import static io.squashql.query.PeriodUnit.SEMESTER;
+import static io.squashql.query.PeriodUnit.YEAR;
+
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.Period;
-import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
-import org.eclipse.collections.api.map.primitive.ObjectIntMap;
-import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
-
 import java.time.LocalDate;
 import java.time.temporal.IsoFields;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiPredicate;
-
-import static io.squashql.query.PeriodUnit.*;
+import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
+import org.eclipse.collections.api.map.primitive.ObjectIntMap;
+import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 
 public class PeriodComparisonExecutor extends AComparisonExecutor {
 
@@ -22,7 +24,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     this.cmrp = cmrp;
   }
 
-  public Map<String, PeriodUnit> mapping(Period period) {
+  public Map<Field, PeriodUnit> mapping(Period period) {
     if (period instanceof Period.Quarter q) {
       return Map.of(q.quarter(), QUARTER, q.year(), YEAR);
     } else if (period instanceof Period.Year y) {
@@ -40,17 +42,17 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
   protected BiPredicate<Object[], Header[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
     Map<PeriodUnit, String> referencePosition = new HashMap<>();
     Period period = this.cmrp.period;
-    Map<String, PeriodUnit> mapping = mapping(period);
+    Map<Field, PeriodUnit> mapping = mapping(period);
     MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
-    for (Map.Entry<String, String> entry : cm.referencePosition.entrySet()) {
+    for (Map.Entry<Field, String> entry : cm.referencePosition.entrySet()) {
       PeriodUnit pu = mapping.get(entry.getKey());
       referencePosition.put(pu, entry.getValue());
-      indexByPeriodUnit.put(pu, indexByColumn.getIfAbsent(entry.getKey(), -1));
+      indexByPeriodUnit.put(pu, indexByColumn.getIfAbsent(entry.getKey().name(), -1));
     }
-    for (Map.Entry<String, PeriodUnit> entry : mapping.entrySet()) {
+    for (Map.Entry<Field, PeriodUnit> entry : mapping.entrySet()) {
       PeriodUnit pu = mapping.get(entry.getKey());
       referencePosition.putIfAbsent(pu, "c"); // constant for missing ref.
-      indexByPeriodUnit.getIfAbsentPut(pu, indexByColumn.getIfAbsent(entry.getKey(), -1));
+      indexByPeriodUnit.getIfAbsentPut(pu, indexByColumn.getIfAbsent(entry.getKey().name(), -1));
     }
     return new ShiftProcedure(period, referencePosition, indexByPeriodUnit);
   }

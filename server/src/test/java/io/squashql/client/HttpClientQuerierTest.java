@@ -21,6 +21,8 @@ import java.util.stream.Stream;
 
 import static io.squashql.query.Functions.criterion;
 import static io.squashql.query.Functions.eq;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
@@ -57,7 +59,7 @@ public class HttpClientQuerierTest {
   void testRunQuery() {
     QueryDto query = new QueryDto()
             .table("our_prices")
-            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumn(tableField(SCENARIO_FIELD_NAME))
             .withMeasure(new AggregatedMeasure("qs", "quantity", "sum"));
 
     QueryResultDto response = this.querier.run(query);
@@ -73,11 +75,11 @@ public class HttpClientQuerierTest {
   void testMergeQuery() {
     QueryDto query1 = new QueryDto()
             .table("our_prices")
-            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumn(tableField(SCENARIO_FIELD_NAME))
             .withMeasure(new AggregatedMeasure("qs", "quantity", "sum"));
     QueryDto query2 = new QueryDto()
             .table("our_prices")
-            .withColumn(SCENARIO_FIELD_NAME)
+            .withColumn(tableField(SCENARIO_FIELD_NAME))
             .withMeasure(new AggregatedMeasure(("qa"), "quantity", "avg"));
 
     QueryResultDto response = this.querier.queryMerge(new QueryMergeDto(query1, query2, JoinType.FULL));
@@ -97,7 +99,7 @@ public class HttpClientQuerierTest {
 
   @Test
   void testRunGroupingScenarioQuery() {
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", SCENARIO_FIELD_NAME)
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", tableField(SCENARIO_FIELD_NAME))
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
             .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
@@ -108,8 +110,8 @@ public class HttpClientQuerierTest {
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             aggregatedMeasure,
             Map.of(
-                    SCENARIO_FIELD_NAME, "first",
-                    "group", "g"
+                    tableField(SCENARIO_FIELD_NAME), "first",
+                    tableField("group"), "g"
             ),
             ColumnSetKey.BUCKET);
     var query = Query
@@ -139,8 +141,8 @@ public class HttpClientQuerierTest {
     // Note. The CJ will make null appear in rows. We want to make sure null values are correctly handled.
     QueryDto query = Query
             .from("our_prices")
-            .where(SCENARIO_FIELD_NAME, Functions.eq(MAIN_SCENARIO_NAME))
-            .select(List.of(SCENARIO_FIELD_NAME, "pdv"), List.of(Functions.sum("ps", "price")))
+            .where(tableField(SCENARIO_FIELD_NAME), Functions.eq(MAIN_SCENARIO_NAME))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "pdv")), List.of(Functions.sum("ps", "price")))
             .build();
 
     QueryResultDto response = this.querier.run(query);
@@ -177,13 +179,13 @@ public class HttpClientQuerierTest {
   @Test
   void testPivotTable() {
     QueryDto query = Query.from("our_prices")
-            .select(List.of("ean", "pdv"), List.of(CountMeasure.INSTANCE))
+            .select(tableFields(List.of("ean", "pdv")), List.of(CountMeasure.INSTANCE))
             .build();
-    PivotTableQueryDto pivotTableQuery = new PivotTableQueryDto(query, List.of("pdv"), List.of("ean"));
+    PivotTableQueryDto pivotTableQuery = new PivotTableQueryDto(query, tableFields(List.of("pdv")), tableFields(List.of("ean")));
     PivotTableQueryResultDto response = this.querier.run(pivotTableQuery);
 
-    Assertions.assertThat(response.rows).containsExactlyElementsOf(pivotTableQuery.rows);
-    Assertions.assertThat(response.columns).containsExactlyElementsOf(pivotTableQuery.columns);
+    Assertions.assertThat(response.rows).containsExactlyElementsOf(pivotTableQuery.rows.stream().map(Field::name).toList());
+    Assertions.assertThat(response.columns).containsExactlyElementsOf(pivotTableQuery.columns.stream().map(Field::name).toList());
     Assertions.assertThat(response.values).containsExactlyElementsOf(List.of(CountMeasure.INSTANCE.alias));
     Assertions.assertThat(response.queryResult.table.rows)
             .containsExactly(
@@ -205,7 +207,7 @@ public class HttpClientQuerierTest {
     QueryDto query = Query
             .from("our_prices")
             .where(criterion("pdv", eq("ITM Balma")))
-            .select(List.of(SCENARIO_FIELD_NAME, "pdv"), List.of(CountMeasure.INSTANCE, TotalCountMeasure.INSTANCE))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME, "pdv")), List.of(CountMeasure.INSTANCE, TotalCountMeasure.INSTANCE))
             .limit(2)
             .build();
 

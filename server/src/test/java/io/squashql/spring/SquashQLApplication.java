@@ -17,7 +17,7 @@ public class SquashQLApplication {
 
   @Bean
   public MappingJackson2HttpMessageConverter jackson2HttpMessageConverter() {
-    return new MappingJackson2HttpMessageConverter(JacksonUtil.mapper);
+    return new MappingJackson2HttpMessageConverter(JacksonUtil.OBJECT_MAPPER);
   }
 
   @Bean

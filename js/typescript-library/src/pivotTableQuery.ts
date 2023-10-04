@@ -1,12 +1,13 @@
 import {Query} from "./query";
+import {Field} from "./field";
 
 export interface PivotTableQuery {
   query: Query
-  rows: Array<string>
-  columns: Array<string>
+  rows: Array<Field>
+  columns: Array<Field>
 }
 
 export interface PivotConfig {
-  rows: Array<string>
-  columns: Array<string>
+  rows: Array<Field>
+  columns: Array<Field>
 }
