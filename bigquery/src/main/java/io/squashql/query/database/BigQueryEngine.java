@@ -1,12 +1,6 @@
 package io.squashql.query.database;
 
-import static io.squashql.query.database.SQLTranslator.checkRollupIsValid;
-
-import com.google.cloud.bigquery.FieldValue;
-import com.google.cloud.bigquery.FieldValueList;
-import com.google.cloud.bigquery.QueryJobConfiguration;
-import com.google.cloud.bigquery.Schema;
-import com.google.cloud.bigquery.TableResult;
+import com.google.cloud.bigquery.*;
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryUtil;
 import io.squashql.jackson.JacksonUtil;
@@ -20,16 +14,15 @@ import io.squashql.table.Table;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
+
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static io.squashql.query.database.SQLTranslator.checkRollupIsValid;
 
 public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
@@ -288,7 +281,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
     @Override
     public String functionExpression(FunctionTypedField ftf) {
-      if (DateFunctions.DATE_PATTERNS.keySet().contains(ftf.function())) {
+      if (DateFunctions.SUPPORTED_DATE_FUNCTIONS.contains(ftf.function())) {
         // https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#extract
         return String.format("EXTRACT(%s FROM %s)", ftf.function(), getFieldFullName(ftf.field()));
       } else {
