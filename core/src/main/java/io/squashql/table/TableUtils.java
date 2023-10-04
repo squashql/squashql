@@ -1,13 +1,7 @@
 package io.squashql.table;
 
 import com.google.common.base.Suppliers;
-import io.squashql.query.ColumnSet;
-import io.squashql.query.ColumnSetKey;
-import io.squashql.query.Field;
-import io.squashql.query.Header;
-import io.squashql.query.Measure;
-import io.squashql.query.MeasureUtils;
-import io.squashql.query.TableField;
+import io.squashql.query.*;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
@@ -16,18 +10,8 @@ import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.NullAndTotalComparator;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -161,7 +145,7 @@ public class TableUtils {
                     .stream()
                     .map(f -> SqlUtils.getFieldFullName((TableField) f))
                     .toList()));
-    finalColumns.addAll(queryDto.columns.stream().map(Field::name).toList());
+    finalColumns.addAll(queryDto.columns.stream().map(c -> c.alias() != null ? c.alias() : c.name()).toList());
     return selectAndOrderColumns(table, finalColumns, queryDto.measures);
   }
 

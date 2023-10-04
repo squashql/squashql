@@ -1,13 +1,13 @@
 package io.squashql.query.database;
 
-import io.squashql.type.FunctionTypedField;
-import io.squashql.type.TableTypedField;
-import io.squashql.type.TypedField;
+import io.squashql.type.*;
+
+import java.util.Objects;
 
 public interface QueryRewriter {
 
   default String getFieldFullName(TableTypedField f) {
-    return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
+    return SqlUtils.getFieldFullName(f.getStore() == null ? null : tableName(f.getStore()), fieldName(f.getName()));
   }
 
   default String fieldName(String field) {
@@ -44,6 +44,16 @@ public interface QueryRewriter {
       return getFieldFullName(ttf);
     } else if (f instanceof FunctionTypedField ftf) {
       return functionExpression(ftf);
+    } else if (f instanceof ConstantTypedField ctf) {
+      return Objects.toString(ctf.value);
+    } else if (f instanceof BinaryOperationTypedField botf) {
+      return new StringBuilder()
+              .append("(")
+              .append(select(botf.leftOperand))
+              .append(botf.operator.infix)
+              .append(select(botf.rightOperand))
+              .append(")")
+              .toString();
     } else {
       throw new IllegalArgumentException(f.getClass().getName());
     }

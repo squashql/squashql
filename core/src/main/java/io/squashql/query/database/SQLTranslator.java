@@ -39,14 +39,18 @@ public class SQLTranslator {
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
 
-    query.select.forEach(f -> groupBy.add(queryRewriter.select(f)));
+    query.select.forEach(f -> {
+      String select = queryRewriter.select(f);
+      selects.add(f.alias() != null ? SqlUtils.appendAlias(select, queryRewriter, f.alias()) : select);
+      groupBy.add(select);
+    });
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true))); // Alias is needed when using sub-queries
 
-    selects.addAll(groupBy); // coord first, then aggregates
     if (queryRewriter.useGroupingFunction()) {
       // use grouping to identify totals
       Queries.generateGroupingSelect(query).forEach(f -> selects.add(String.format("grouping(%s)", queryRewriter.select(f))));
     }
+    // coord first, then aggregates
     selects.addAll(aggregates);
 
     StringBuilder statement = new StringBuilder();

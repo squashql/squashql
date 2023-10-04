@@ -1,19 +1,21 @@
 package io.squashql.query;
 
-import static io.squashql.query.Functions.all;
-import static io.squashql.query.Functions.avg;
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.Functions.eq;
-import static io.squashql.query.Functions.ge;
-import static io.squashql.query.Functions.in;
-import static io.squashql.query.Functions.isNotNull;
-import static io.squashql.query.Functions.isNull;
-import static io.squashql.query.Functions.le;
-import static io.squashql.query.Functions.min;
-import static io.squashql.query.Functions.multiply;
-import static io.squashql.query.Functions.or;
-import static io.squashql.query.Functions.sum;
-import static io.squashql.query.Functions.sumIf;
+import io.squashql.TestClass;
+import io.squashql.query.builder.Query;
+import io.squashql.query.database.QueryRewriter;
+import io.squashql.query.database.SqlUtils;
+import io.squashql.query.dto.*;
+import io.squashql.table.Table;
+import io.squashql.type.TableTypedField;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import static io.squashql.query.Functions.*;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
@@ -22,25 +24,6 @@ import static io.squashql.query.dto.OrderKeywordDto.ASC;
 import static io.squashql.query.dto.OrderKeywordDto.DESC;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
-
-import io.squashql.TestClass;
-import io.squashql.query.builder.Query;
-import io.squashql.query.database.QueryRewriter;
-import io.squashql.query.database.SqlUtils;
-import io.squashql.query.dto.BucketColumnSetDto;
-import io.squashql.query.dto.ConditionDto;
-import io.squashql.query.dto.CriteriaDto;
-import io.squashql.query.dto.JoinType;
-import io.squashql.query.dto.OrderKeywordDto;
-import io.squashql.query.dto.QueryDto;
-import io.squashql.table.Table;
-import io.squashql.type.TableTypedField;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -759,5 +742,43 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     Assertions.assertThat(table).containsExactly(
             List.of("bottle", 7.5d, 7.5d),
             List.of("cookie", 9.0d, 9.0d));
+  }
+
+  @Test
+  void testQueryAliasColumn() {
+    Field scenario = new TableField(SCENARIO_FIELD_NAME);
+    Field two = new ConstantField(2);
+    TableField price = new TableField("price");
+    Field calc = Functions.multiply(price, two);
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(criterion(scenario, eq(MAIN_SCENARIO_NAME)))
+            .select(List.of(scenario, two, calc), List.of())
+            .build();
+    Table result = this.executor.execute(query);
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
+            .containsExactly(SCENARIO_FIELD_NAME, "2", "(price*2)");
+    Assertions.assertThat(result).containsExactly(
+            List.of(MAIN_SCENARIO_NAME, 2, 4d),
+            List.of(MAIN_SCENARIO_NAME, 2, 6d),
+            List.of(MAIN_SCENARIO_NAME, 2, 20d));
+
+    // With alias
+    query = Query
+            .from(this.storeName)
+            .where(criterion(scenario, eq(MAIN_SCENARIO_NAME)))
+            .select(List.of(scenario.as("alias1"), two.as("alias2"), calc.as("alias3")), List.of())
+            .rollup(scenario.as("alias1"))
+            .build();
+    result = this.executor.execute(query);
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
+            .containsExactly("alias1", "alias2", "alias3");
+    Assertions.assertThat(result).containsExactly(
+            List.of(TOTAL, 2, 4d),
+            List.of(TOTAL, 2, 6d),
+            List.of(TOTAL, 2, 20d),
+            List.of(MAIN_SCENARIO_NAME, 2, 4d),
+            List.of(MAIN_SCENARIO_NAME, 2, 6d),
+            List.of(MAIN_SCENARIO_NAME, 2, 20d));
   }
 }

@@ -6,4 +6,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public interface TypedField {
 
   Class<?> type();
+
+  String alias();
 }

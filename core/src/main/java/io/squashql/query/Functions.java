@@ -126,6 +126,7 @@ public class Functions {
     return new BinaryOperationMeasure(alias, PLUS, a, b);
   }
 
+  @Deprecated
   public static Measure min(String alias, String field) {
     return new AggregatedMeasure(alias, field, AggregationFunction.MIN);
   }
@@ -134,6 +135,7 @@ public class Functions {
     return new AggregatedMeasure(alias, field, AggregationFunction.MIN, null);
   }
 
+  @Deprecated
   public static Measure sum(String alias, String field) {
     return new AggregatedMeasure(alias, field, AggregationFunction.SUM);
   }
@@ -142,6 +144,7 @@ public class Functions {
     return new AggregatedMeasure(alias, field, AggregationFunction.SUM, null);
   }
 
+  @Deprecated
   public static Measure sumIf(String alias, String field, CriteriaDto criteriaDto) {
     return new AggregatedMeasure(alias, new TableField(field), AggregationFunction.SUM, criteriaDto);
   }
@@ -150,6 +153,7 @@ public class Functions {
     return new AggregatedMeasure(alias, field, AggregationFunction.SUM, criteriaDto);
   }
 
+  @Deprecated
   public static Measure avg(String alias, String field) {
     return new AggregatedMeasure(alias, field, AggregationFunction.AVG);
   }
@@ -183,14 +187,14 @@ public class Functions {
   }
 
   public static Field year(String field) {
-    return new FunctionField("YEAR", new TableField(field));
+    return new FunctionField("YEAR", new TableField(field), null);
   }
 
   public static Field quarter(String field) {
-    return new FunctionField("QUARTER", new TableField(field));
+    return new FunctionField("QUARTER", new TableField(field), null);
   }
 
   public static Field month(String field) {
-    return new FunctionField("MONTH", new TableField(field));
+    return new FunctionField("MONTH", new TableField(field), null);
   }
 }

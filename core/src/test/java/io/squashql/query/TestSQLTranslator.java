@@ -44,9 +44,9 @@ public class TestSQLTranslator {
     if (split.length > 1) {
       String tableName = split[0];
       String fieldNameInTable = split[1];
-      return new TableTypedField(tableName, fieldNameInTable, type.apply(fieldNameInTable));
+      return new TableTypedField(tableName, fieldNameInTable, type.apply(fieldNameInTable), s.alias());
     } else {
-      return new TableTypedField(null, split[0], type.apply(split[0]));
+      return new TableTypedField(null, split[0], type.apply(split[0]), s.alias());
     }
   };
 

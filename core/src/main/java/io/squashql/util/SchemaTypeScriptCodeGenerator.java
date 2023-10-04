@@ -47,7 +47,7 @@ public class SchemaTypeScriptCodeGenerator {
       sb.append("export class ").append(transformName(storeName, true)).append("Table {").append(System.lineSeparator());
       addAttribute(sb, "tableName", storeName);
       for (TableTypedField field : store.fields()) {
-        addAttribute(sb, transformName(field.name(), false), field.name());
+        addAttribute(sb, transformName(field.getName(), false), field.getName());
       }
       sb.append('}').append(System.lineSeparator());
     });

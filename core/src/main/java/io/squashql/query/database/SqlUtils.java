@@ -28,7 +28,7 @@ public class SqlUtils {
   }
 
   public static String getFieldFullName(TableTypedField field) {
-    return field.store() == null ? field.name() : field.store() + '.' + field.name();
+    return field.getStore() == null ? field.getName() : field.getStore() + '.' + field.getName();
   }
 
   public static String getFieldFullName(TableField field) {
@@ -52,6 +52,7 @@ public class SqlUtils {
   /**
    * See {@link #groupingAlias(String)}.
    */
+  //FIXME should we need this?
   public static String extractFieldFromGroupingAlias(String str) {
     Matcher matcher = GROUPING_PATTERN.matcher(str);
     if (matcher.find()) {

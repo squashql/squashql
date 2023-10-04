@@ -404,7 +404,23 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .rollup(Functions.year(dateSales))
             .build();
     final Table finalTable = this.executor.execute(query);
-    finalTable.show();
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            List.of(yearType(2022), 12L),
+            List.of(yearType(2023), 12L),
+            List.of("Grand Total", 24L));
+  }
+
+  @Test
+  void testDateFunctionWithRollupWithAlias() {
+    String dateSales = SqlUtils.getFieldFullName(this.storeName, "date_sales");
+    Field year = Functions.year(dateSales).as("alias_year");
+    var query = Query.from(this.storeName)
+            .select(List.of(year), List.of(CountMeasure.INSTANCE))
+            .rollup(year)
+            .build();
+    final Table finalTable = this.executor.execute(query);
+    Assertions.assertThat(finalTable.headers().stream().map(Header::name))
+            .containsExactlyInAnyOrder("alias_year", CountMeasure.ALIAS);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             List.of(yearType(2022), 12L),
             List.of(yearType(2023), 12L),

@@ -1,11 +1,5 @@
 package io.squashql.query.database;
 
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.TableField.tableField;
-import static io.squashql.query.TableField.tableFields;
-import static io.squashql.query.dto.JoinType.INNER;
-import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
-
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryServiceAccountDatastore;
@@ -15,28 +9,26 @@ import io.squashql.query.Field;
 import io.squashql.query.Header;
 import io.squashql.query.QueryExecutor;
 import io.squashql.query.builder.Query;
-import io.squashql.query.dto.ConditionType;
-import io.squashql.query.dto.JoinDto;
-import io.squashql.query.dto.PivotTableQueryDto;
-import io.squashql.query.dto.QueryDto;
-import io.squashql.query.dto.TableDto;
-import io.squashql.query.dto.VirtualTableDto;
+import io.squashql.query.dto.*;
 import io.squashql.store.Store;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import java.time.LocalDate;
+import java.util.*;
+import java.util.function.Function;
+
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.dto.JoinType.INNER;
+import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
 public class TestBigQueryEngine {
 
@@ -312,9 +304,9 @@ public class TestBigQueryEngine {
   void testSqlGenerationWithDateFunctions() {
     TableTypedField dateField = new TableTypedField("baseStore", "date", LocalDate.class);
     DatabaseQuery query = new DatabaseQuery()
-            .withSelect(new FunctionTypedField(dateField, "YEAR"))
-            .withSelect(new FunctionTypedField(dateField, "QUARTER"))
-            .withSelect(new FunctionTypedField(dateField, "MONTH"))
+            .withSelect(new FunctionTypedField(dateField, "YEAR", null))
+            .withSelect(new FunctionTypedField(dateField, "QUARTER", null))
+            .withSelect(new FunctionTypedField(dateField, "MONTH", null))
             .aggregatedMeasure("price.sum", "price", "sum")
             .table("baseStore");
 
@@ -328,7 +320,6 @@ public class TestBigQueryEngine {
     };
     BigQueryEngine bqe = new BigQueryEngine(datastore);
     String sqlStatement = bqe.createSqlStatement(query, null);
-    System.out.println(sqlStatement);
     String sql = "select " +
             "EXTRACT(YEAR FROM `myProjectId.myDatasetName.baseStore`.`date`), " +
             "EXTRACT(QUARTER FROM `myProjectId.myDatasetName.baseStore`.`date`), " +

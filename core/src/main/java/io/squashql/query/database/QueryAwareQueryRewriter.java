@@ -22,9 +22,9 @@ public class QueryAwareQueryRewriter implements QueryRewriter {
   public String getFieldFullName(TableTypedField f) {
     VirtualTableDto vt = this.query.virtualTableDto;
     if (vt != null
-            && vt.name.equals(f.store())
-            && vt.fields.contains(f.name())) {
-      return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
+            && vt.name.equals(f.getStore())
+            && vt.fields.contains(f.getName())) {
+      return SqlUtils.getFieldFullName(cteName(f.getStore()), fieldName(f.getName()));
     } else {
       return this.underlying.getFieldFullName(f);
     }

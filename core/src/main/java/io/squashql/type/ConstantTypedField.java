@@ -8,20 +8,18 @@ import lombok.Getter;
 @EqualsAndHashCode
 @AllArgsConstructor
 @Getter
-public class TableTypedField implements TypedField {
+public class ConstantTypedField implements TypedField {
 
-  public final String store;
-  public final String name;
-  public final Class<?> type;
+  public final Object value;
   public final String alias;
 
-  public TableTypedField(String store, String name, Class<?> type) {
-    this(store, name, type, null);
+  public ConstantTypedField(Object value) {
+    this(value, null);
   }
 
   @Override
   public Class<?> type() {
-    return this.type;
+    return this.value.getClass();
   }
 
   @Override

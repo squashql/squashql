@@ -11,4 +11,8 @@ public interface Field {
   String sqlExpression(Function<Field, TypedField> fieldProvider, QueryRewriter queryRewriter);
 
   String name();
+
+  String alias();
+
+  Field as(String alias);
 }
