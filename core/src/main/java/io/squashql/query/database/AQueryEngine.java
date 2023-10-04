@@ -154,12 +154,10 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
           newHeaders.add(header);
           newValues.add(columnValues);
         } else {
-          // FIXME this is dirty, we should be able to do better since are choosing the header names. Maybe we need to
-          // use the TypedField in Header ?
-          //          String baseName = Objects.requireNonNull(SqlUtils.extractFieldFromGroupingAlias(header.name()));
+          // FIXME this is dirty, we should be able to do better since are controlling the header names beforehand.
           Map<String, TypedField> m = new HashMap<>();
           for (TypedField typedField : groupingSelects) {
-            m.put(String.format("grouping(%s)", this.queryRewriter.select(typedField)), typedField);
+            m.put(SqlUtils.groupingExpression(this.queryRewriter, typedField), typedField);
           }
           List<Object> baseColumnValues = input.getColumn(query.select.indexOf(m.get(header.name())));
           for (int rowIndex = 0; rowIndex < columnValues.size(); rowIndex++) {
@@ -193,8 +191,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     List<String> fieldNames = new ArrayList<>(query.select.stream().map(s -> s.alias() != null ? s.alias() : getTypedFieldString(s)).toList());
     List<TypedField> groupingSelects = Queries.generateGroupingSelect(query);
     if (queryRewriter.useGroupingFunction()) {
-      groupingSelects.forEach(r -> fieldNames.add(String.format("grouping(%s)", queryRewriter.select(r))));
-//      groupingSelects.forEach(r -> fieldNames.add(SqlUtils.groupingAlias(getTypedFieldString(r))));
+      groupingSelects.forEach(r -> fieldNames.add(SqlUtils.groupingExpression(queryRewriter, r)));
     }
     query.measures.forEach(m -> fieldNames.add(m.alias()));
     List<List<Object>> values = new ArrayList<>(columns.size());

@@ -48,7 +48,7 @@ public class SQLTranslator {
 
     if (queryRewriter.useGroupingFunction()) {
       // use grouping to identify totals
-      Queries.generateGroupingSelect(query).forEach(f -> selects.add(String.format("grouping(%s)", queryRewriter.select(f))));
+      Queries.generateGroupingSelect(query).forEach(f -> selects.add(SqlUtils.groupingExpression(queryRewriter, f)));
     }
     // coord first, then aggregates
     selects.addAll(aggregates);
