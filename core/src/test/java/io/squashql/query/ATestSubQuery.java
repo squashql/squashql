@@ -1,27 +1,23 @@
 package io.squashql.query;
 
-import static io.squashql.query.Functions.avg;
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.Functions.ge;
-import static io.squashql.query.Functions.min;
-import static io.squashql.query.Functions.sum;
-import static io.squashql.query.TableField.tableField;
-import static io.squashql.query.TableField.tableFields;
-import static io.squashql.query.agg.AggregationFunction.AVG;
-import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
-
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import static io.squashql.query.Functions.*;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.agg.AggregationFunction.AVG;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -56,6 +52,20 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
     // See https://mariadb.com/kb/en/subqueries-in-a-from-clause/
     QueryDto queryDto = Query.from(subQuery)
             .select(Collections.emptyList(), List.of(avg("avg", "score_sum")))
+            .build();
+    Table result = this.executor.execute(queryDto);
+    Assertions.assertThat(result).containsExactly(List.of(132d));
+  }
+
+  @Test
+  void testSubQueryWithAlias() {
+    TableField tableField = new TableField("name");
+    QueryDto subQuery = Query.from("student")
+            .select(List.of(tableField.as("student_name")), List.of(sum("score_sum", "score")))
+            .build();
+    // See https://mariadb.com/kb/en/subqueries-in-a-from-clause/
+    QueryDto queryDto = Query.from(subQuery)
+            .select(List.of(new TableField("student_name")), List.of(avg("avg", "score_sum")))
             .build();
     Table result = this.executor.execute(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(132d));
