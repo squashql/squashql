@@ -2,7 +2,7 @@ import {PACKAGE, Period} from "./index"
 import {Criteria} from "./conditions"
 import {ColumnSetKey} from "./columnsets"
 import {Field, TableField} from "./field";
-import {serializeMap, toField} from "./util";
+import {serializeMap} from "./util";
 
 // Marker type
 export type BasicMeasure = Measure
@@ -163,46 +163,46 @@ class DoubleConstantMeasure implements Measure {
 
 // BASIC agg
 
-export function sum(alias: string, field: Field | string): Measure {
-  return new AggregatedMeasure(alias, toField(field), "sum")
+export function sum(alias: string, field: Field): Measure {
+  return new AggregatedMeasure(alias, field, "sum")
 }
 
-export function min(alias: string, field: Field | string): Measure {
-  return new AggregatedMeasure(alias, toField(field), "min")
+export function min(alias: string, field: Field): Measure {
+  return new AggregatedMeasure(alias, field, "min")
 }
 
-export function max(alias: string, field: Field | string): Measure {
-  return new AggregatedMeasure(alias, toField(field), "max")
+export function max(alias: string, field: Field): Measure {
+  return new AggregatedMeasure(alias, field, "max")
 }
 
-export function avg(alias: string, field: Field | string): Measure {
-  return new AggregatedMeasure(alias, toField(field), "avg")
+export function avg(alias: string, field: Field): Measure {
+  return new AggregatedMeasure(alias, field, "avg")
 }
 
-export function count(alias: string, field: Field | string): Measure {
-  return new AggregatedMeasure(alias, toField(field), "count")
+export function count(alias: string, field: Field): Measure {
+  return new AggregatedMeasure(alias, field, "count")
 }
 
 // aggIf
 
-export function sumIf(alias: string, field: Field | string, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, toField(field), "sum", criterion)
+export function sumIf(alias: string, field: Field, criterion: Criteria): Measure {
+  return new AggregatedMeasure(alias, field, "sum", criterion)
 }
 
-export function avgIf(alias: string, field: Field | string, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, toField(field), "avg", criterion)
+export function avgIf(alias: string, field: Field, criterion: Criteria): Measure {
+  return new AggregatedMeasure(alias, field, "avg", criterion)
 }
 
-export function minIf(alias: string, field: Field | string, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, toField(field), "min", criterion)
+export function minIf(alias: string, field: Field, criterion: Criteria): Measure {
+  return new AggregatedMeasure(alias, field, "min", criterion)
 }
 
-export function maxIf(alias: string, field: Field | string, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, toField(field), "max", criterion)
+export function maxIf(alias: string, field: Field, criterion: Criteria): Measure {
+  return new AggregatedMeasure(alias, field, "max", criterion)
 }
 
-export function countIf(alias: string, field: Field | string, criterion?: Criteria): Measure {
-  return new AggregatedMeasure(alias, toField(field), "count", criterion)
+export function countIf(alias: string, field: Field, criterion?: Criteria): Measure {
+  return new AggregatedMeasure(alias, field, "count", criterion)
 }
 
 // BINARY

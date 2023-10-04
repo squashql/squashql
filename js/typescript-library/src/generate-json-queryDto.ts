@@ -1,36 +1,36 @@
 import {JoinMapping, JoinType, Query, Table} from "./query"
 import {
-    AggregatedMeasure,
-    avgIf,
-    BinaryOperationMeasure,
-    BinaryOperator,
-    comparisonMeasureWithBucket,
-    comparisonMeasureWithParent,
-    comparisonMeasureWithPeriod,
-    ComparisonMethod,
-    countRows,
-    decimal,
-    ExpressionMeasure,
-    integer,
-    sum,
-    totalCount,
+  AggregatedMeasure,
+  avgIf,
+  BinaryOperationMeasure,
+  BinaryOperator,
+  comparisonMeasureWithBucket,
+  comparisonMeasureWithParent,
+  comparisonMeasureWithPeriod,
+  ComparisonMethod,
+  countRows,
+  decimal,
+  ExpressionMeasure,
+  integer,
+  sum,
+  totalCount,
 } from "./measure"
 import {
-    _in,
-    all,
-    and,
-    ConditionType,
-    criterion,
-    eq,
-    ge,
-    gt,
-    havingCriterion,
-    isNotNull,
-    isNull,
-    criterion_,
-    like,
-    lt,
-    or
+  _in,
+  all,
+  and,
+  ConditionType,
+  criterion,
+  criterion_,
+  eq,
+  ge,
+  gt,
+  havingCriterion,
+  isNotNull,
+  isNull,
+  like,
+  lt,
+  or
 } from "./conditions"
 import * as fs from "fs"
 import {OrderKeyword} from "./order";
@@ -51,7 +51,7 @@ export function generateFromQueryDto() {
 
     const price = new AggregatedMeasure("price.sum", new TableField("price"), "sum")
     q.withMeasure(price)
-    const priceFood = new AggregatedMeasure("alias", new TableField("price"), "sum", criterion("category", eq("food")))
+    const priceFood = new AggregatedMeasure("alias", new TableField("price"), "sum", criterion(new TableField("category"), eq("food")))
     q.withMeasure(priceFood)
     const plus = new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood)
     q.withMeasure(plus)
@@ -80,11 +80,11 @@ export function generateFromQueryDto() {
 
     const queryCondition = or(or(and(eq("a"), eq("b")), lt(5)), like("a%"))
     q.withWhereCriteria(all([
-        criterion("f1", queryCondition),
-        criterion("f2", gt(659)),
-        criterion("f3", _in([0, 1, 2])),
-        criterion("f4", isNull()),
-        criterion("f5", isNotNull())
+        criterion(new TableField("f1"), queryCondition),
+        criterion(new TableField("f2"), gt(659)),
+        criterion(new TableField("f3"), _in([0, 1, 2])),
+        criterion(new TableField("f4"), isNull()),
+        criterion(new TableField("f5"), isNotNull())
     ]))
 
     q.withHavingCriteria(all([
@@ -107,10 +107,9 @@ export function generateFromQueryDto() {
     const subQ = new Query()
     subQ.onTable(table)
         .withColumn(tableField("aa"))
-        .withMeasure(sum("sum_aa", "f"))
+        .withMeasure(sum("sum_aa", new TableField("f")))
     q.onSubQuery(subQ)
 
-    console.log(JSON.stringify(q))
     const data = JSON.stringify(q)
     fs.writeFileSync('build-from-querydto.json', data)
 }

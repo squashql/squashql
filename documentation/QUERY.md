@@ -36,16 +36,47 @@ Selects columns from the table to be displayed and the measures to compute. Note
 added to `select` are automatically injected to the groupBy clause of the query** to avoid repetitive and verbose code. 
 Aggregated results are then grouped by the columns and columnSets indicated.
 
+The first arguments of the `select` is an array of `Field`s. Most of the time, you will use `TableField`s to represent
+fields belonging to a given table. It takes a single argument: a string that is the concatenation of the table it belongs 
+and its name. Since it could be cumbersome to declared by hand all fields, we provide a tool to generate them for you:
+https://github.com/squashql/squashql-codegen.
+
 ```typescript
 import {
-  from, sum, avg
+  from, sum, avg, Field, TableField
 } from "@squashql/squashql-js"
+
+const col1: Field = new TableField("myTable.col1")
+const col2: Field = new TableField("myTable.col2")
+const col3: Field = new TableField("myTable.col3")
+const col4: Field = new TableField("myTable.col4")
 
 const q = from("myTable")
         .select(
-                ["col1", "col2"], // list of columns
+                [col1, col2], // list of columns
                 [], // list of columnSets
-                [sum("alias1", "col3"), avg("alias2", "col4")] // list of measures
+                [sum("alias1", myTable.col3), avg("alias2", myTable.col4)] // list of measures
+        )
+        .build()
+```
+
+Or with [squashql-codegen](https://github.com/squashql/squashql-codegen):
+
+```typescript
+class MyTable {
+  readonly _name: string = "myTable"
+  readonly col1: TableField = new TableField("myTable.col1")
+  readonly col2: TableField = new TableField("myTable.col2")
+  readonly col3: TableField = new TableField("myTable.col3")
+  readonly col4: TableField = new TableField("myTable.col4")
+}
+const myTable = new MyTable()
+
+const q = from(myTable._name)
+        .select(
+                [myTable.col1, myTable.col2], // list of columns
+                [], // list of columnSets
+                [sum("alias1", myTable.col3), avg("alias2", myTable.col4)] // list of measures
         )
         .build()
 ```
@@ -58,6 +89,39 @@ FROM myTable
 GROUP BY col1, col2
 ```
 
+For the rest of the documentation, I will assume all tables with their fields are declared in a file named `table.ts` that
+looks like this:
+
+```typescript
+import {
+  TableField
+} from "@squashql/squashql-js"
+
+class MyTable {
+  readonly _name: string = "myTable"
+  readonly id: TableField = new TableField("myTable.id")
+  readonly col1: TableField = new TableField("myTable.col1")
+  readonly col2: TableField = new TableField("myTable.col2")
+  readonly col3: TableField = new TableField("myTable.col3")
+  readonly col4: TableField = new TableField("myTable.col4")
+}
+
+class RefTable {
+  readonly _name: string = "refTable"
+  readonly id: TableField = new TableField("refTable.id")
+  readonly col1: TableField = new TableField("refTable.col1")
+}
+
+const myTable = new MyTable()
+const refTable = new RefTable()
+
+export {
+  myTable, refTable
+}
+```
+
+To use it in another file, simply import it where you need it: `import {myTable} from "./table"`.
+
 ## Filtering
 
 Queries can be filtered by using Criteria class. 
@@ -66,8 +130,10 @@ Queries can be filtered by using Criteria class.
 
 A Criteria instance can contain a condition on a single field and can be build as so:
 ```typescript
-import { criterion } from "@squashql/squashql-js"
-const criteria = criterion("col2", eq("c"))
+import { criterion, eq } from "@squashql/squashql-js"
+import {myTable} from "./table"
+
+const criteria = criterion(myTable.col2, eq("c"))
 ```
 
 Several criteria can be chained with AND or OR by using the methods `any` and `all`
@@ -76,21 +142,21 @@ Several criteria can be chained with AND or OR by using the methods `any` and `a
 import {
   from, sum, avg, _in, eq, criterion, all
 } from "@squashql/squashql-js"
+import {myTable} from "./table"
 
-const q = from("myTable")
-        .where(all([criterion("col1", _in(["a", "b"])), criterion("col2", eq("c"))]))
+const q = from(myTable._name)
+        .where(all([criterion(myTable.col1, _in(["a", "b"])), criterion(myTable.col2, eq("c"))]))
         .select(
-                ["col1", "col2"],
+                [myTable.col1, myTable.col2],
                 [],
-                [sum("alias1", "col3"), avg("alias2", "col4")])
+                [sum("alias1", myTable.col3), avg("alias2", myTable.col4)])
         .build()
 ```
 
 ```sql
 SELECT col1, col2, sum(col3) as alias1, sum(col4) as alias2
 FROM myTable
-WHERE (col1 IN ('a', 'b')
-  AND col2 = 'c')
+WHERE (col1 IN ('a', 'b') AND col2 = 'c')
 GROUP BY col1, col2
 ```
 
@@ -101,10 +167,12 @@ Condition operators available: `eq, neq, lt, le, gt, ge, _in, isNull, isNotNull,
 > **Warning**
 > Filtering can only be applied on [basic measure](#basic-measure)
 
-A Criteria instance can contain a condition on a single [basic measure](#basic-measure) and can be build as so:
+A Criteria instance can contain a condition on a single [basic measure](#basic-measure) and can be built as so:
 ```typescript
 import { criterion, sum, ge } from "@squashql/squashql-js"
-const measure = sum("sum", "f1")
+import {myTable} from "./table"
+
+const measure = sum("sum", myTable.col1)
 const criteria = criterion(measure, ge(0))
 ```
 
@@ -114,12 +182,13 @@ Several criteria can be chained with AND or OR by using the methods `any` and `a
 import {
   from, sum, avg, gt, eq, havingCriterion, all
 } from "@squashql/squashql-js"
+import {myTable} from "./table"
 
-const measure1 = sum("alias1", "col3")
-const measure2 = avg("alias2", "col4")
-const q = from("myTable")
+const measure1 = sum("alias1", myTable.col3)
+const measure2 = avg("alias2", myTable.col4)
+const q = from(myTable._name)
         .select(
-                ["col1", "col2"],
+                [myTable.col1, myTable.col2],
                 [],
                 [measure1, measure2])
         .having(all([havingCriterion(measure1, gt(10)), havingCriterion(measure2, eq(5))]))
@@ -143,12 +212,13 @@ order by all columns in the query from left to right following natural order.
 import {
   from, sum, OrderKeyword
 } from "@squashql/squashql-js"
+import {myTable} from "./table"
 
-const q = from("myTable")
+const q = from(myTable._name)
         .select(
-                ["col1", "col2", "col3", "col4"],
+                [myTable.col1, myTable.col2, myTable.col3, myTable.col4],
                 [],
-                [sum("alias1", "col5")])
+                [sum("alias1", myTable.col5)])
         .build()
 ```
 
@@ -165,14 +235,14 @@ However, ordering can be customized by using `orderBy` method.
 import {
   from, sum, OrderKeyword, tableField
 } from "@squashql/squashql-js"
+import {myTable} from "./table"
 
-
-const q = from("myTable")
+const q = from(myTable._name)
         .select(
-                ["col1", "col2"],
+                [myTable.col1, myTable.col2],
                 [],
-                [sum("alias1", "col3")])
-        .orderBy(tableField("col2"), OrderKeyword.ASC)
+                [sum("alias1", myTable.col3)])
+        .orderBy(tableField(myTable.col2), OrderKeyword.ASC)
         .build()
 ```
 
@@ -194,18 +264,19 @@ Two types of join are supported: `INNER` and `LEFT`.
 
 ```typescript
 import {
-  from, JoinType, ConditionType, joinCriterion
+  from, JoinType, ConditionType, criterion_
 } from "@squashql/squashql-js"
+import {myTable, refTable} from "./table"
 
-const q = from("myTable")
-        .join("refTable", JoinType.INNER)
-        .on(criterion_("myTable.id", "refTable.id", ConditionType.EQ))
-        .select(["myTable.col", "refTable.col"], [], [])
+const q = from(myTable._name)
+        .join(refTable._name, JoinType.INNER)
+        .on(criterion_(myTable.id, refTable.id, ConditionType.EQ))
+        .select([myTable.col1, refTable.col1], [], [])
         .build()
 ```
 
 ```sql
-SELECT myTable.col, refTable.col
+SELECT myTable.col1, refTable.col1
 FROM myTable INNER JOIN refTable ON myTable.id = refTable.id
 ```
 
@@ -217,37 +288,38 @@ For multiple condition, chain the criteria with `all`.
 import {
   from, JoinType, ConditionType, criterion_, all
 } from "@squashql/squashql-js"
+import {myTable, refTable} from "./table"
 
-const q = from("myTable")
-        .join("refTable", JoinType.INNER)
+const q = from(myTable._name)
+        .join(refTable._name, JoinType.INNER)
         .on(all([
-          criterion_("myTable.id1", "refTable.id1", ConditionType.EQ),
-          criterion_("myTable.id2", "refTable.id2", ConditionType.EQ)
+          criterion_(myTable.id1, refTable.id1, ConditionType.EQ),
+          criterion_(myTable.id2, refTable.id2, ConditionType.EQ)
         ]))
-        .select(["myTable.col", "refTable.col"], [], [])
+        .select([myTable.col1, refTable.col1], [], [])
         .build()
 ```
 
 ```sql
-SELECT myTable.col, refTable.col
+SELECT myTable.col1, refTable.col1
 FROM myTable INNER JOIN refTable ON myTable.id1 = refTable.id1 AND myTable.id2 = refTable.id2 
 ```
 
 If your database supports non-equi joins, the `ConditionType` can be changed in the query. For instance:
 
 ```typescript
-const q = from("myTable")
-        .join("refTable", JoinType.LEFT)
+const q = from(myTable._name)
+        .join(refTable._name, JoinType.INNER)
         .on(all([
-          criterion_("myTable.kpi", "refTable.min", ConditionType.GE),
-          criterion_("myTable.kpi", "refTable.max", ConditionType.LT)
+          criterion_(myTable.kpi, refTable.min, ConditionType.GE),
+          criterion_(myTable.kpi, refTable.max, ConditionType.LT)
         ]))
-        .select(["myTable.col", "refTable.col"], [], [])
+        .select([myTable.col1, refTable.col1], [], [])
         .build()
 ```
 
 ```sql
-SELECT myTable.col, refTable.col
+SELECT myTable.col1, refTable.col1
 FROM myTable LEFT JOIN refTable ON myTable.kpi >= refTable.min AND myTable.kpi < refTable.max 
 ```
 
@@ -257,19 +329,22 @@ FROM myTable LEFT JOIN refTable ON myTable.kpi >= refTable.min AND myTable.kpi <
 import {
   from
 } from "@squashql/squashql-js"
+import {myTable, refTable, otherTable} from "./table"
 
-const q = from("myTable")
-        .innerJoin("refTable")
-        .on("myTable", "id", "refTable", "id")
-        .leftOuterJoin("otherTable")
-        .on("myTable", "id", "otherTable", "key1")
-        .on("refTable", "id", "otherTable", "key2")
-        .select(["myTable.col", "refTable.col"], [], [])
+const q = from(myTable._name)
+        .join(refTable._name, JoinType.INNER)
+        .on(criterion_(myTable.id, refTable.id, ConditionType.EQ))
+        .join(otherTable._name, JoinType.LEFT)
+        .on(all([
+          criterion_(myTable.id, otherTable.key1, ConditionType.EQ),
+          criterion_(refTable.id, otherTable.key2, ConditionType.EQ)
+        ]))
+        .select([myTable.col1, refTable.col1], [], [])
         .build()
 ```
 
 ```sql
-SELECT myTable.col, refTable.col
+SELECT myTable.col1, refTable.col1
 FROM myTable
        INNER JOIN refTable ON myTable.id = refTable.id
        LEFT OUTER JOIN otherTable ON myTable.id = otherTable.key1 AND refTable.id = otherTable.key2
@@ -300,10 +375,10 @@ operator that takes a `VirtualTable` object as argument.
 const q = from("tasks")
         .joinVirtual(prioryLevels, JoinType.INNER)
         .on(all([
-          criterion_("tasks.priority", "prioryLevels.min", ConditionType.GE),
-          criterion_("tasks.priority", "prioryLevels.max", ConditionType.LT)
+          criterion_(new TableField("tasks.priority"), new TableField("prioryLevels.min"), ConditionType.GE),
+          criterion_(new TableField("tasks.priority"), new TableField("prioryLevels.max"), ConditionType.LT)
         ]))
-        .select(["prioryLevels.priority"], [], [count])
+        .select([new TableField("prioryLevels.priority")], [], [count])
         .build()
 ```
 
@@ -327,12 +402,21 @@ FROM tasks INNER JOIN prioryLevels ON tasks.priority >= prioryLevels.min AND tas
 
 ```typescript
 import {
-  from, sum
+  from, sum, TableField
 } from "@squashql/squashql-js"
 
-const query = from("populationTable")
-        .select(["continent", "country", "city"], [], [sum("pop", "population")])
-        .rollup(["continent", "country", "city"])
+class PopulationTable {
+  readonly _name: string = "populationTable"
+  readonly continent: TableField = new TableField("populationTable.continent")
+  readonly country: TableField = new TableField("populationTable.country")
+  readonly city: TableField = new TableField("populationTable.city")
+  readonly population: TableField = new TableField("populationTable.population")
+}
+const populationTable = new PopulationTable()
+
+const query = from(populationTable._name)
+        .select([populationTable.continent, populationTable.country, populationTable.city], [], [sum("pop", populationTable.population)])
+        .rollup([populationTable.continent, populationTable.country, populationTable.city])
         .build()
 ```
 
@@ -373,13 +457,9 @@ Example
 Partial rollup reduces the number of subtotals by indicating which ones should be calculated.  
 
 ```typescript
-import {
-  from, sum
-} from "@squashql/squashql-js"
-
-const query = from("populationTable")
-        .select(["continent", "country", "city"], [], [sum("pop", "population")])
-        .rollup(["country", "city"])
+const query = from(populationTable._name)
+        .select([populationTable.continent, populationTable.country, populationTable.city], [], [sum("pop", populationTable.population)])
+        .rollup([populationTable.country, populationTable.city])
         .build()
 ```
 
@@ -425,14 +505,15 @@ import {
   from, fromSubQuery, sum, avg,
 } from "@squashql/squashql-js"
 
-const subQuery = from("student")
-        .select(["name"], [], [sum("score_sum", "score")])
+const subQuery = from(student._name)
+        .select([student.name], [], [sum("score_sum", student.score)])
         .build()
 
 const query = fromSubQuery(subQuery)
-        .select([], [], [avg("result", "score_sum")])
+        .select([], [], [avg("result", new TableField("score_sum"))])
         .build()
 ```
+Note `score_sum` does not belong to any table but can be referenced with its name in a `TableField` object.
 
 Example: Return the average total for all students
 
@@ -449,7 +530,7 @@ The interface `Field` can be used to represent either:
 - A column/field of a table: `TableField` e.g. `const a = new TableField("myTable.a")`
 - A constant value: `ConstantField` e.g. `const one = new ConstantField(1)`
 
-Fields can be combined to produce other fields to be used in calculations. 
+Fields can be combined to produce other fields to be used in calculations and perform more complex computations.
 
 ```typescript
 import {
@@ -506,11 +587,11 @@ import {
   criterion,      
 } from "@squashql/squashql-js"
 
-const amountSum = sum("sum_amount", "amount")
-const amountAvg = avg("avg_amount", "amount")
-const sales = sumIf("sales", "amount", criterion("IncomeExpense", eq("Revenue")))
+const amountSum = sum("sum_amount", myTable.amount)
+const amountAvg = avg("avg_amount", myTable.amount)
+const sales = sumIf("sales", "amount", criterion(myTable.incomeExpense, eq("Revenue")))
 
-const query = from("myTable")
+const query = from(myTable._name)
         .select([], [], [amountSum, amountAvg, sales])
         .build()
 ```
@@ -552,10 +633,11 @@ It is defined as the combination of other measures that can be either basic or n
 ```typescript
 import {
   sum,
-  multiply, divide, plus, minus
+  multiply, divide, plus, minus, TableField
 } from "@squashql/squashql-js"
 
-const aSum = sum("aSum", "a")
+const a = new TableField("myTable.a")
+const aSum = sum("aSum", a)
 const square = multiply("square", aSum, aSum)
 const twoTimes = plus("twoTimes", aSum, aSum)
 const zero = minus("zero", aSum, aSum)
@@ -567,11 +649,14 @@ Constant measures can be defined with `decimal` or `integer` operators:
 ```typescript
 import {
   sum,
-  decimal
+  decimal,
+  TableField
 } from "@squashql/squashql-js"
 
-const a = sum("aSum", "a")
-const b = sum("bSum", "b")
+const a = new TableField("myTable.a")
+const b = new TableField("myTable.b")
+const aSum = sum("aSum", a)
+const bSum = sum("bSum", b)
 const ratio = divide("ratio", a, b)
 const percent = multiply("percent", ratio, decimal(100)) 
 ```
@@ -629,18 +714,29 @@ import {
   sum,
   Semester,
   comparisonMeasureWithPeriod,
+  TableField
 } from "@squashql/squashql-js"
 
-const scoreSum = sum("score_sum", "score")
+class Student {
+  readonly _name: string = "student"
+  readonly year: TableField = new TableField("student.year")
+  readonly semester: TableField = new TableField("student.semester")
+  readonly name: TableField = new TableField("student.name")
+  readonly test: TableField = new TableField("student.test")
+  readonly score: TableField = new TableField("student.score")
+}
+const student = new Student()
+
+const scoreSum = sum("score_sum", student.score)
 const comparisonScore = comparisonMeasureWithPeriod(
         "compare with previous year",
         ComparisonMethod.ABSOLUTE_DIFFERENCE,
         scoreSum,
-        new Map(Object.entries({"semester": "s-1"})),
-        new Semester("semester", "year"))
+        new Map([[student.semester, "s-1"]]),
+        new Semester(student.semester, student.year))
 
-const query = from("student")
-        .select(["year", "semester", "name"], [], [scoreSum, comparisonScore])
+const query = from(student._name)
+        .select([student.year, student.semester, student.name], [], [scoreSum, comparisonScore])
         .build()
 ```
 
@@ -692,18 +788,29 @@ import {
   decimal,
   Year,
   comparisonMeasureWithPeriod,
+  TableField
 } from "@squashql/squashql-js"
 
-const scoreSum = sum("score_sum", "score")
+class Student {
+  readonly _name: string = "student"
+  readonly year: TableField = new TableField("student.year")
+  readonly semester: TableField = new TableField("student.semester")
+  readonly name: TableField = new TableField("student.name")
+  readonly test: TableField = new TableField("student.test")
+  readonly score: TableField = new TableField("student.score")
+}
+const student = new Student()
+
+const scoreSum = sum("score_sum", student.score)
 const comparisonScore = comparisonMeasureWithPeriod(
         "compare with previous year",
         ComparisonMethod.RELATIVE_DIFFERENCE,
         scoreSum,
-        new Map(Object.entries({"year": "y-1"})),
-        new Year("year"))
+        new Map([[student.year, "y-1"]]),
+        new Year(student.year))
 
-const query = from("student")
-        .select(["year", "name"], [], [scoreSum, multiply("progression in %", comparisonScore, decimal(100))])
+const query = from(student._name)
+        .select([student.year, student.name], [], [scoreSum, multiply("progression in %", comparisonScore, decimal(100))])
         .build()
 ```
 
@@ -740,7 +847,7 @@ Example: compute the ratio of population of a city to its country and of a count
 |          am |         usa |         nyc |        8.0 |
 |          eu |       Total |       Total |       11.5 |
 |          eu |      france |       Total |        2.5 |
-|          eu |      france |        lyon |        0.5 |
+|          eu |      france |        lyon |        0.5 | 
 |          eu |      france |       paris |        2.0 |
 |          eu |          uk |       Total |        9.0 |
 |          eu |          uk |      london |        9.0 |
@@ -753,14 +860,24 @@ import {
   from,
   sum,
   comparisonMeasureWithParent,
+  TableField
 } from "@squashql/squashql-js"
 
-const pop = sum("pop", "population")
-const ancestors = ["continent", "country", "city"]
+class PopulationTable {
+  readonly _name: string = "populationTable"
+  readonly continent: TableField = new TableField("populationTable.continent")
+  readonly country: TableField = new TableField("populationTable.country")
+  readonly city: TableField = new TableField("populationTable.city")
+  readonly population: TableField = new TableField("populationTable.population")
+}
+const populationTable = new PopulationTable()
+
+const pop = sum("pop", populationTable.population)
+const ancestors = [populationTable.continent, populationTable.country, populationTable.city]
 const ratio = comparisonMeasureWithParent("ratio", ComparisonMethod.DIVIDE, pop, ancestors)
-const query = from("populationTable")
-        .select(["continent", "country", "city"], [], [pop, ratio])
-        .rollup(["continent", "country", "city"])
+const query = from(populationTable._name)
+        .select([populationTable.continent, populationTable.country, populationTable.city], [], [pop, ratio])
+        .rollup([populationTable.continent, populationTable.country, populationTable.city])
         .build()
 ```
 
@@ -819,9 +936,11 @@ To compute the revenue
 ```typescript
 import {ExpressionMeasure, from} from "@squashql/squashql-js"
 
-const revenue = new ExpressionMeasure("revenue", "sum(saleprice * loavessold)")
+const saleprice = new TableField("myTable.saleprice")
+const loavessold = new TableField("myTable.loavessold")
+const revenue = sum("revenue", saleprice.multiply(loavessold))
 const query = from("myTable")
-        .select(["scenario"], [], [revenue])
+        .select([myTable.scenario], [], [revenue])
         .build()
 ```
 
@@ -851,7 +970,7 @@ const groups = new Map(Object.entries({
   "group3": ["base", "s3"],
   "group4": ["s1", "s2", "s3"],
 }))
-const columnSet = new BucketColumnSet("group", "scenario", groups)
+const columnSet = new BucketColumnSet(new TableField("group"), new TableField("myTable.scenario"), groups)
 ```
 
 The first argument of `BucketColumnSet` is the name of the new (virtual) column that will be created.
@@ -869,8 +988,10 @@ const values = new Map(Object.entries({
   "group3": ["base", "s3"],
   "group4": ["s1", "s2", "s3"],
 }))
-const columnSet = new BucketColumnSet("group", "scenario", values)
-const revenue = new ExpressionMeasure("revenue", "sum(saleprice * loavessold)")
+const saleprice = new TableField("myTable.saleprice")
+const loavessold = new TableField("myTable.loavessold")
+const revenue = sum("revenue", saleprice.multiply(loavessold))
+const columnSet = new BucketColumnSet(new TableField("group"), new TableField("myTable.scenario"), groups)
 const query = from("myTable")
         .select([], [columnSet], [revenue])
         .build()
@@ -905,12 +1026,14 @@ const values = new Map(Object.entries({
   "group3": ["base", "s3"],
   "group4": ["s1", "s2", "s3"],
 }))
-const columnSet = new BucketColumnSet("group", "scenario", values)
-const revenue = new ExpressionMeasure("revenue", "sum(saleprice * loavessold)")
+const saleprice = new TableField("myTable.saleprice")
+const loavessold = new TableField("myTable.loavessold")
+const revenue = sum("revenue", saleprice.multiply(loavessold))
+const columnSet = new BucketColumnSet(new TableField("group"), new TableField("myTable.scenario"), groups)
 const revenueComparison = comparisonMeasureWithBucket("revenueComparison",
         ComparisonMethod.ABSOLUTE_DIFFERENCE,
         revenue,
-        new Map(Object.entries({"scenario": "s-1"})),)
+        new Map([[new TableField("myTable.scenario"), "s-1"]]))
 const query = from("myTable")
         .select([], [columnSet], [revenue, revenueComparison])
         .build()

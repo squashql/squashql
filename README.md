@@ -51,11 +51,18 @@ The library can be downloaded [here](https://www.npmjs.com/package/@squashql/squ
 
 ```typescript
 import {
-    from, avg
+    from, avg, TableField
 } from "@squashql/squashql-js"
 
-const q = from("Orders")
-    .select(["customer_id"], [], [avg("average_spends", "amount")])
+class Orders {
+  readonly _name: string = "Orders"
+  readonly customer_id: TableField = new TableField("Orders.customer_id")
+  readonly amount: TableField = new TableField("Orders.amount")
+}
+const orders = new Orders()
+
+const q = from(orders._name)
+    .select([orders.customer_id], [], [avg("average_spends", orders.amount)])
     .build();
 ```
 
@@ -109,11 +116,20 @@ To execute a query. It accepts a json object built with the Typescript library a
 object representing the result table of the computation. The object returns is of type [QueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts#L53)
 
 ```typescript
-const income = sumIf("Income", "Amount", criterion("Income / Expenditure", eq("Income")))
-const expenditure = sumIf("Expenditure", "Amount", criterion("Income / Expenditure", neq("Income")))
-const query = from("budget")
-        .where(criterion("Scenario", eq("b")))
-        .select(["Year", "Month", "Category"], [], [income, expenditure])
+class Budget {
+  readonly _name: string = "budget"
+  readonly incomeExpenditure: TableField = new TableField("budget.IncomeExpenditure")
+  readonly amount: TableField = new TableField("budget.Amount")
+  readonly year: TableField = new TableField("budget.Year")
+  readonly month: TableField = new TableField("budget.Month")
+  readonly category: TableField = new TableField("budget.Category")
+}
+const budget = new Budget()
+
+const income = sumIf("Income", budget.amount, criterion(budget.incomeExpenditure, eq("Income")))
+const expenditure = sumIf("Expenditure", budget.amount, criterion(budget.incomeExpenditure, neq("Income")))
+const query = from(budget._name)
+        .select([budget.year, budget.month, budget.category], [], [income, expenditure])
         .build()
 querier.execute(query).then(r => console.log(JSON.stringify(r)));
 ```
@@ -149,19 +165,18 @@ The object returns is of type [PivotTableQueryResult](https://github.com/squashq
 To enable the pivot table feature, a `PivotConfig` parameter needs to be pass to the `execute` method: 
 ```typescript
 const pivotConfig: PivotConfig = {
-  rows: ["Category"],
-  columns: ["Year", "Month"]
+  rows: [budget.category],
+  columns: [budget.year, budget.month]
 }
 ```
 It is used by SquashQL to know which totals and subtotals needs to be computed. The union of the two lists rows and columns
 must be exactly equal to the list of columns provided in the select.  
 
 ```typescript
-const income = sumIf("Income", "Amount", criterion("Income / Expenditure", eq("Income")))
-const expenditure = sumIf("Expenditure", "Amount", criterion("Income / Expenditure", neq("Income")))
-const query = from("budget")
-        .where(criterion("Scenario", eq("b")))
-        .select(["Year", "Month", "Category"], [], [income, expenditure])
+const income = sumIf("Income", budget.amount, criterion(budget.incomeExpenditure, eq("Income")))
+const expenditure = sumIf("Expenditure", budget.amount, criterion(budget.incomeExpenditure, neq("Income")))
+const query = from(budget._name)
+        .select([budget.year, budget.month, budget.category], [], [income, expenditure])
         .build()
 querier.execute(query, pivotConfig).then(r => console.log(JSON.stringify(r)));
 ```
@@ -194,11 +209,28 @@ performing a sort-merge operation on the common attribute column headers.
 The object returns is of type [QueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts#L53).
 
 ```typescript
-const myFirstQuery = from("myTable")
-        .select(["col1"], [], [count])
+class MyTable {
+  readonly _name: string = "myTable"
+  readonly id: TableField = new TableField("myTable.id")
+  readonly col1: TableField = new TableField("myTable.col1")
+}
+
+class OtherTable {
+  readonly _name: string = "otherTable"
+  readonly id: TableField = new TableField("otherTable.id")
+  readonly col1: TableField = new TableField("otherTable.col1")
+  readonly col2: TableField = new TableField("otherTable.col2")
+  readonly field: TableField = new TableField("otherTable.field")
+}
+
+const myTable = new MyTable()
+const otherTable = new OtherTable()
+
+const myFirstQuery = from(myTable._name)
+        .select([myTable.col1], [], [count])
         .build()
-const mySecondQuery = from("otherTable")
-        .select(["col1", "col2"], [], [sum("alias", "field")])
+const mySecondQuery = from(otherTable._name)
+        .select([otherTable.col1, otherTable.col2], [], [sum("alias", otherTable.field)])
         .build()
 querier.executeQueryMerge(new QueryMerge(myFirstQuery, mySecondQuery)).then(response => console.log(response))
 ```

@@ -1,5 +1,4 @@
-import {AggregatedMeasure, BasicMeasure, Field, PACKAGE, TableField} from "./index";
-import {toField} from "./util";
+import {BasicMeasure, Field, PACKAGE} from "./index";
 
 export interface Condition {
   readonly class: string
@@ -96,12 +95,12 @@ export class Criteria {
   }
 }
 
-export function criterion(field: Field | string, condition: Condition): Criteria {
-  return new Criteria(toField(field), undefined, undefined, condition, undefined, undefined)
+export function criterion(field: Field, condition: Condition): Criteria {
+  return new Criteria(field, undefined, undefined, condition, undefined, undefined)
 }
 
-export function criterion_(field: Field | string, fieldOther: Field | string, conditionType: ConditionType): Criteria {
-  return new Criteria(toField(field), toField(fieldOther), undefined, undefined, conditionType, undefined)
+export function criterion_(field: Field, fieldOther: Field, conditionType: ConditionType): Criteria {
+  return new Criteria(field, fieldOther, undefined, undefined, conditionType, undefined)
 }
 
 export function havingCriterion(measure: BasicMeasure, condition: Condition): Criteria {
