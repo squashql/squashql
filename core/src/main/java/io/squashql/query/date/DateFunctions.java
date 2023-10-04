@@ -1,7 +1,5 @@
 package io.squashql.query.date;
 
-import io.squashql.query.database.SqlUtils;
-import io.squashql.type.FunctionTypedField;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 
@@ -31,9 +29,9 @@ public class DateFunctions {
     return String.format(MONTH_FORMAT, column);
   }
 
-  public static String name(FunctionTypedField field) {
-    return String.format("__%s__%s__", field.function(), SqlUtils.expression(field.field()));
-  }
+//  public static String name(FunctionTypedField field) {
+//    return String.format("__%s__%s__", field.function(), SqlUtils.expression(field.field()));
+//  }
 
   public static Pair<String, String> extractFunctionAndFieldFromDateFunction(String str) {
     for (Map.Entry<String, Pattern> p : DATE_PATTERNS.entrySet()) {

@@ -1,42 +1,29 @@
 package io.squashql.query;
 
-import static io.squashql.query.Functions.all;
-import static io.squashql.query.Functions.avg;
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.Functions.divide;
-import static io.squashql.query.Functions.eq;
-import static io.squashql.query.Functions.ge;
-import static io.squashql.query.Functions.gt;
-import static io.squashql.query.Functions.isNull;
-import static io.squashql.query.Functions.lt;
-import static io.squashql.query.Functions.minus;
-import static io.squashql.query.Functions.or;
-import static io.squashql.query.Functions.plus;
-import static io.squashql.query.Functions.sum;
-import static io.squashql.query.Functions.sumIf;
-import static io.squashql.query.TableField.tableField;
-import static io.squashql.query.database.SQLTranslator.translate;
-import static io.squashql.query.dto.JoinType.INNER;
-import static io.squashql.query.dto.JoinType.LEFT;
-import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
-
 import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.DefaultQueryRewriter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.JoinDto;
-import io.squashql.query.dto.JoinMappingDto;
 import io.squashql.query.dto.TableDto;
 import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.Store;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
+
+import static io.squashql.query.Functions.*;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.database.SQLTranslator.translate;
+import static io.squashql.query.dto.JoinType.INNER;
+import static io.squashql.query.dto.JoinType.LEFT;
+import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
 public class TestSQLTranslator {
 

@@ -1,21 +1,13 @@
 package io.squashql.query;
 
-import static io.squashql.query.BinaryOperator.DIVIDE;
-import static io.squashql.query.BinaryOperator.MINUS;
-import static io.squashql.query.BinaryOperator.MULTIPLY;
-import static io.squashql.query.BinaryOperator.PLUS;
+import io.squashql.query.agg.AggregationFunction;
+import io.squashql.query.dto.*;
+
+import java.util.List;
+
+import static io.squashql.query.BinaryOperator.*;
 import static io.squashql.query.dto.ConditionType.AND;
 import static io.squashql.query.dto.ConditionType.OR;
-
-import io.squashql.query.agg.AggregationFunction;
-import io.squashql.query.date.DateFunctions;
-import io.squashql.query.dto.ConditionDto;
-import io.squashql.query.dto.ConditionType;
-import io.squashql.query.dto.CriteriaDto;
-import io.squashql.query.dto.InConditionDto;
-import io.squashql.query.dto.LogicalConditionDto;
-import io.squashql.query.dto.SingleValueConditionDto;
-import java.util.List;
 
 public class Functions {
 
@@ -191,15 +183,14 @@ public class Functions {
   }
 
   public static Field year(String field) {
-    return new FunctionField(DateFunctions.year(field));
+    return new FunctionField("YEAR", new TableField(field));
   }
 
   public static Field quarter(String field) {
-    return new FunctionField(DateFunctions.quarter(field));
+    return new FunctionField("QUARTER", new TableField(field));
   }
 
   public static Field month(String field) {
-    return new FunctionField(DateFunctions.month(field));
+    return new FunctionField("MONTH", new TableField(field));
   }
-
 }
