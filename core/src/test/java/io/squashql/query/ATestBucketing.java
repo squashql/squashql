@@ -1,11 +1,5 @@
 package io.squashql.query;
 
-import static io.squashql.query.Functions.all;
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.TableField.tableField;
-import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
-import static io.squashql.query.database.QueryEngine.TOTAL;
-
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.QueryRewriter;
@@ -16,13 +10,22 @@ import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+
+import static io.squashql.query.Functions.*;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import static io.squashql.query.database.QueryEngine.TOTAL;
 
 @TestClass(ignore = TestClass.Type.CLICKHOUSE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -57,16 +60,8 @@ public abstract class ATestBucketing extends ABaseTestQuery {
           List.of("hypersensistive", 80d, 101d)
   ));
 
-  @Test
-  void testSimpleFieldName() {
-    test(false);
-  }
-
-  @Test
-  void testFullFieldName() {
-    test(true);
-  }
-
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
   void test(boolean useFullName) {
     QueryRewriter qr = this.executor.queryEngine.queryRewriter();
     String expression = String.format("sum(%s * %s)", qr.fieldName("unitPrice"), qr.fieldName("qtySold"));
@@ -112,6 +107,38 @@ public abstract class ATestBucketing extends ABaseTestQuery {
             List.of("0", "sensistive", 150d),
             List.of("0", "unsensistive", 60d),
             List.of("1", TOTAL, 450d),
+            List.of("1", "hypersensistive", 240d),
+            List.of("1", "sensistive", 150d),
+            List.of("1", "unsensistive", 60d));
+  }
+
+  @Test
+  void testConditionFieldCombined() {
+    QueryRewriter qr = this.executor.queryEngine.queryRewriter();
+    String expression = String.format("sum(%s * %s)", qr.fieldName("unitPrice"), qr.fieldName("qtySold"));
+    ExpressionMeasure sales = new ExpressionMeasure("sales", expression);
+    TableField kvi = new TableField(this.storeName, "kvi");
+    TableField min = new TableField(sensitivities.name, "min");
+    TableField max = new TableField(sensitivities.name, "max");
+    CriteriaDto criteria = all(
+            criterion(minus(kvi, min), ge(0)),
+            criterion(minus(kvi, max), lt(0)));
+    String bucket = SqlUtils.getFieldFullName(sensitivities.name, "bucket");
+    String shop = SqlUtils.getFieldFullName(this.storeName, "shop");
+    var query = Query
+            .from(this.storeName)
+            .join(sensitivities, JoinType.INNER)
+            .on(criteria)
+            .select(tableFields(List.of(shop, bucket)), List.of(sales))
+            .build();
+
+    Table result = this.executor.execute(query);
+    Assertions.assertThat(result.headers().stream().map(Header::name))
+            .containsExactly(shop, bucket, "sales");
+    Assertions.assertThat(result).containsExactly(
+            List.of("0", "hypersensistive", 240d),
+            List.of("0", "sensistive", 150d),
+            List.of("0", "unsensistive", 60d),
             List.of("1", "hypersensistive", 240d),
             List.of("1", "sensistive", 150d),
             List.of("1", "unsensistive", 60d));

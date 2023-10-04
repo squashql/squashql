@@ -1,4 +1,4 @@
-import {BasicMeasure, Field, PACKAGE} from "./index";
+import {BasicMeasure, Field, PACKAGE} from "./index"
 
 export interface Condition {
   readonly class: string
@@ -28,7 +28,7 @@ function toJSON(c: Condition) {
 }
 
 class SingleValueCondition implements Condition {
-  class: string = PACKAGE + "dto.SingleValueConditionDto";
+  class: string = PACKAGE + "dto.SingleValueConditionDto"
 
   constructor(readonly type: ConditionType, private value: any) {
   }
@@ -42,7 +42,7 @@ class SingleValueCondition implements Condition {
 }
 
 class ConstantCondition implements Condition {
-  class: string = PACKAGE + "dto.ConstantConditionDto";
+  class: string = PACKAGE + "dto.ConstantConditionDto"
 
   constructor(readonly type: ConditionType) {
   }
@@ -55,8 +55,8 @@ class ConstantCondition implements Condition {
 }
 
 class InCondition implements Condition {
-  type: ConditionType = ConditionType.IN;
-  class: string = PACKAGE + "dto.InConditionDto";
+  type: ConditionType = ConditionType.IN
+  class: string = PACKAGE + "dto.InConditionDto"
 
   constructor(private values: Array<any>) {
   }
@@ -70,7 +70,7 @@ class InCondition implements Condition {
 }
 
 class LogicalCondition implements Condition {
-  class: string = PACKAGE + "dto.LogicalConditionDto";
+  class: string = PACKAGE + "dto.LogicalConditionDto"
 
   constructor(readonly type: ConditionType, private one: Condition, private two: Condition) {
   }

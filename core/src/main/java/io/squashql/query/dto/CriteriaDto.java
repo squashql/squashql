@@ -1,8 +1,8 @@
 package io.squashql.query.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.squashql.query.BasicMeasure;
 import io.squashql.query.Field;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -11,21 +11,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static io.squashql.query.dto.ConditionType.AND;
-
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
+@AllArgsConstructor
 public class CriteriaDto {
-
-  public static final CriteriaDto NO_CRITERIA = new CriteriaDto(AND, Collections.emptyList());
 
   public Field field;
   public Field fieldOther;
   public BasicMeasure measure;
   public ConditionDto condition;
   public ConditionType conditionType;
-  public List<CriteriaDto> children;
+  public List<CriteriaDto> children = new ArrayList<>();
 
   public CriteriaDto(Field field, ConditionDto condition) {
     this.field = field;
@@ -37,24 +34,26 @@ public class CriteriaDto {
     this.condition = condition;
   }
 
-  public CriteriaDto(ConditionType conditionType, List<CriteriaDto> criteriaDtos) {
-    this.conditionType = conditionType;
-    this.children = criteriaDtos;
-  }
-
   public CriteriaDto(Field field, Field fieldOther, ConditionType conditionType) {
     this.field = field;
     this.fieldOther = fieldOther;
     this.conditionType = conditionType;
   }
 
+  public CriteriaDto(ConditionType conditionType, List<CriteriaDto> criteriaDtos) {
+    this.conditionType = conditionType;
+    this.children = criteriaDtos;
+  }
+
   public static CriteriaDto deepCopy(CriteriaDto criteriaDto) {
-    if (criteriaDto.isWhereCriterion()) {
-      return new CriteriaDto(criteriaDto.field, criteriaDto.condition);
-    } else if (criteriaDto.isHavingCriterion()) {
-      return new CriteriaDto(criteriaDto.measure, criteriaDto.condition);
-    } else if (criteriaDto.isJoinCriterion()) {
-      return new CriteriaDto(criteriaDto.field, criteriaDto.fieldOther, criteriaDto.conditionType);
+    if (criteriaDto.children == null || criteriaDto.children.isEmpty()) {
+      return new CriteriaDto(
+              criteriaDto.field,
+              criteriaDto.fieldOther,
+              criteriaDto.measure,
+              criteriaDto.condition,
+              criteriaDto.conditionType,
+              Collections.emptyList());
     } else {
       List<CriteriaDto> list = new ArrayList<>(criteriaDto.children.size());
       for (CriteriaDto dto : criteriaDto.children) {
@@ -63,25 +62,5 @@ public class CriteriaDto {
       }
       return new CriteriaDto(criteriaDto.conditionType, list);
     }
-  }
-
-  @JsonIgnore
-  public boolean isWhereCriterion() {
-    return this.field != null && this.condition != null;
-  }
-
-  @JsonIgnore
-  public boolean isHavingCriterion() {
-    return this.measure != null && this.condition != null;
-  }
-
-  @JsonIgnore
-  public boolean isJoinCriterion() {
-    return this.field != null && this.fieldOther != null && this.conditionType != null;
-  }
-
-  @JsonIgnore
-  public boolean isCriteria() {
-    return this.conditionType != null && this.children != null && !this.children.isEmpty();
   }
 }

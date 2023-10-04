@@ -1,8 +1,8 @@
-import axios, {AxiosInstance} from "axios";
-import {Query, QueryMerge} from "./query";
-import {Measure} from "./measure";
-import {CreateAxiosDefaults} from "axios/index";
-import {PivotConfig, PivotTableQuery} from "./pivotTableQuery";
+import axios, {AxiosInstance} from "axios"
+import {Query, QueryMerge} from "./query"
+import {Measure} from "./measure"
+import {CreateAxiosDefaults} from "axios/index"
+import {PivotConfig, PivotTableQuery} from "./pivotTableQuery"
 
 export class Querier {
 
@@ -13,7 +13,7 @@ export class Querier {
       baseURL: url,
       timeout: 30_000,
       ...config
-    });
+    })
   }
 
   async getMetadata(): Promise<MetadataResult> {
@@ -28,9 +28,9 @@ export class Querier {
     if (typeof pivotConfig === 'undefined') {
       promise = this.axiosInstance.post(`/query${urlSuffix}`, query)
     } else {
-      promise = this.axiosInstance.post(`/query-pivot${urlSuffix}`, createPivotTableQuery(query, pivotConfig));
+      promise = this.axiosInstance.post(`/query-pivot${urlSuffix}`, createPivotTableQuery(query, pivotConfig))
     }
-    return promise.then(r => r.data);
+    return promise.then(r => r.data)
   }
 
   async executeQueryMerge(query: QueryMerge): Promise<QueryResult> {
@@ -47,7 +47,7 @@ export class Querier {
 }
 
 export function createPivotTableQuery(query: Query, pivotConfig?: PivotConfig): PivotTableQuery {
-  return {query, rows: pivotConfig.rows, columns: pivotConfig.columns};
+  return {query, rows: pivotConfig.rows, columns: pivotConfig.columns}
 }
 
 export interface QueryResult {

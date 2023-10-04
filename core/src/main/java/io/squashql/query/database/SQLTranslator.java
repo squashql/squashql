@@ -4,24 +4,12 @@ import com.google.common.collect.Ordering;
 import io.squashql.query.Field;
 import io.squashql.query.MeasureUtils;
 import io.squashql.query.TableField;
-import io.squashql.query.dto.ConditionDto;
-import io.squashql.query.dto.ConstantConditionDto;
-import io.squashql.query.dto.CriteriaDto;
-import io.squashql.query.dto.InConditionDto;
-import io.squashql.query.dto.JoinDto;
-import io.squashql.query.dto.JoinMappingDto;
-import io.squashql.query.dto.LogicalConditionDto;
-import io.squashql.query.dto.SingleValueConditionDto;
-import io.squashql.query.dto.TableDto;
-import io.squashql.query.dto.VirtualTableDto;
+import io.squashql.query.dto.*;
 import io.squashql.store.UnknownType;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -211,12 +199,7 @@ public class SQLTranslator {
               .append(" join ")
               .append(tableNameFunc.apply(join.table.name))
               .append(" on ");
-      for (int i = 0; i < join.mappings.size(); i++) {
-        statement.append(joinMappingToSql(join.mappings.get(i), fieldProvider, qr));
-        if (i < join.mappings.size() - 1) {
-          statement.append(" and ");
-        }
-      }
+      statement.append(toSql(fieldProvider, join.joinCriteria, qr));
 
       if (!join.table.joins.isEmpty()) {
         addJoins(statement, join.table, virtualTableDto, fieldProvider, qr);
@@ -224,33 +207,23 @@ public class SQLTranslator {
     }
   }
 
-  public static String joinMappingToSql(JoinMappingDto mapping, Function<Field, TypedField> fieldProvider, QueryRewriter qr) {
-    var op = switch (mapping.conditionType) {
-      case EQ, NEQ, LT, LE, GT, GE -> " " + mapping.conditionType.sqlInfix + " ";
-      default -> throw new IllegalStateException("Unexpected value: " + mapping.conditionType);
-    };
-    String from = mapping.from.sqlExpression(fieldProvider, qr);
-    String to = mapping.to.sqlExpression(fieldProvider, qr);
-    return from + op + to;
-  }
-
-  public static String toSql(TypedField field, ConditionDto dto, QueryRewriter queryRewriter) {
-    String formattedFieldName = queryRewriter.select(field);
+  public static String toSql(Field field, ConditionDto dto, Function<Field, TypedField> fieldProvider, QueryRewriter queryRewriter) {
+    String expression = field.sqlExpression(fieldProvider, queryRewriter);
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
-      Function<Object, String> sqlMapper = getQuoteFn(field);
+      Function<Object, String> sqlMapper = field instanceof TableField ? getQuoteFn(fieldProvider.apply(field)) : String::valueOf; // FIXME dirty workaround
       return switch (dto.type()) {
-        case IN -> formattedFieldName + " " + dto.type().sqlInfix + " (" +
+        case IN -> expression + " " + dto.type().sqlInfix + " (" +
                 ((InConditionDto) dto).values
                         .stream()
                         .map(sqlMapper)
                         .collect(Collectors.joining(", ")) + ")";
         case EQ, NEQ, LT, LE, GT, GE, LIKE ->
-                formattedFieldName + " " + dto.type().sqlInfix + " " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
+                expression + " " + dto.type().sqlInfix + " " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
         default -> throw new IllegalStateException("Unexpected value: " + dto.type());
       };
     } else if (dto instanceof LogicalConditionDto logical) {
-      String first = toSql(field, logical.one, queryRewriter);
-      String second = toSql(field, logical.two, queryRewriter);
+      String first = toSql(field, logical.one, fieldProvider, queryRewriter);
+      String second = toSql(field, logical.two, fieldProvider, queryRewriter);
       String typeString = switch (dto.type()) {
         case AND, OR -> " " + ((LogicalConditionDto) dto).type.sqlInfix + " ";
         default -> throw new IllegalStateException("Incorrect type " + logical.type);
@@ -258,7 +231,7 @@ public class SQLTranslator {
       return "(" + first + typeString + second + ")";
     } else if (dto instanceof ConstantConditionDto cc) {
       return switch (cc.type()) {
-        case NULL, NOT_NULL -> formattedFieldName + " " + cc.type.sqlInfix;
+        case NULL, NOT_NULL -> expression + " " + cc.type.sqlInfix;
         default -> throw new IllegalStateException("Unexpected value: " + dto.type());
       };
     } else {
@@ -267,14 +240,14 @@ public class SQLTranslator {
   }
 
   public static String toSql(Function<Field, TypedField> fieldProvider, CriteriaDto criteriaDto, QueryRewriter queryRewriter) {
-    if (criteriaDto.isWhereCriterion()) {
-      return toSql(fieldProvider.apply(criteriaDto.field), criteriaDto.condition, queryRewriter);
-    } else if (criteriaDto.isHavingCriterion()) {
-      // todo-mde hack for expression measure since they don't include a `Field`. Will be cleaned when we resolve queries
-      return toSql(fieldProvider.apply(new TableField(criteriaDto.measure.alias())), criteriaDto.condition, queryRewriter);
-    } else if (criteriaDto.isJoinCriterion()) {
-      JoinMappingDto mapping = new JoinMappingDto(criteriaDto.field, criteriaDto.fieldOther, criteriaDto.conditionType);
-      return joinMappingToSql(mapping, fieldProvider, queryRewriter);
+    if (criteriaDto.field != null && criteriaDto.condition != null) {
+      return toSql(criteriaDto.field, criteriaDto.condition, fieldProvider, queryRewriter);
+    } else if (criteriaDto.measure != null && criteriaDto.condition != null) {
+      return toSql(new TableField(criteriaDto.measure.alias()), criteriaDto.condition, fieldProvider, queryRewriter);
+    } else if (criteriaDto.field != null && criteriaDto.fieldOther != null && criteriaDto.conditionType != null) {
+      String left = criteriaDto.field.sqlExpression(fieldProvider, queryRewriter);
+      String right = criteriaDto.fieldOther.sqlExpression(fieldProvider, queryRewriter);
+      return String.join(" ", left, criteriaDto.conditionType.sqlInfix, right);
     } else if (!criteriaDto.children.isEmpty()) {
       String sep = switch (criteriaDto.conditionType) {
         case AND -> " and ";

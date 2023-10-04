@@ -1,10 +1,10 @@
-import { ColumnSet } from "./columnsets";
-import { Criteria } from "./conditions";
-import { Field } from "./field";
-import { Measure } from "./measure";
-import { OrderKeyword } from "./order";
-import { JoinMapping, JoinType, Query, Table } from "./query";
-import { VirtualTable } from "./virtualtable";
+import {Measure} from "./measure"
+import {ColumnSet} from "./columnsets"
+import {JoinType, Query, Table} from "./query"
+import {Criteria} from "./conditions"
+import {OrderKeyword} from "./order"
+import {VirtualTable} from "./virtualtable"
+import {Field} from "./field"
 
 export interface CanAddOrderBy {
   orderBy(column: Field, order: OrderKeyword): HasHaving
@@ -34,7 +34,7 @@ export interface HasCondition {
 export type HasJoin = HasTable & CanStartBuildingJoin
 
 export interface HasOrderBy extends CanBeBuildQuery {
-  limit(limit: number): CanBeBuildQuery;
+  limit(limit: number): CanBeBuildQuery
 }
 
 export type HasHaving = HasOrderBy & CanAddOrderBy
@@ -58,20 +58,20 @@ export interface CanAddHaving extends HasOrderBy, CanAddOrderBy {
 }
 
 export function from(tableName: string): HasStartedBuildingTable {
-  const queryBuilder = new QueryBuilder();
+  const queryBuilder = new QueryBuilder()
   queryBuilder.queryDto.table = new Table(tableName)
   return queryBuilder
 }
 
 export function fromSubQuery(subQuery: Query): HasStartedBuildingTable {
-  const queryBuilder = new QueryBuilder();
+  const queryBuilder = new QueryBuilder()
   queryBuilder.queryDto.subQuery = subQuery
   return queryBuilder
 }
 
 class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildingTable, HasOrderBy, CanAddRollup {
   readonly queryDto: Query = new Query()
-  private currentJoinTableBuilder: JoinTableBuilder = null;
+  private currentJoinTableBuilder: JoinTableBuilder = null
 
   joinVirtual(virtualTable: VirtualTable, joinType: JoinType): HasStartedBuildingJoin {
     this.addJoinToQueryDto()
@@ -89,7 +89,7 @@ class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
   private addJoinToQueryDto() {
     const jtb = this.currentJoinTableBuilder
     if (jtb != null) {
-      this.queryDto.table.join(new Table(jtb.tableName), jtb.joinType, jtb.mappings)
+      this.queryDto.table.join(new Table(jtb.tableName), jtb.joinType, jtb.joinCriteria)
       this.currentJoinTableBuilder = null
     }
   }
@@ -140,17 +140,13 @@ class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
 
 class JoinTableBuilder implements HasStartedBuildingJoin {
 
-  readonly mappings: Array<JoinMapping> = []
+  joinCriteria: Criteria
 
   constructor(public parent: QueryBuilder, public tableName: string, public joinType: JoinType) {
   }
 
   on(joinCriterion: Criteria): HasJoin {
-    if (joinCriterion.children?.length > 0) {
-      joinCriterion.children.forEach(c => this.on(c))
-    } else {
-      this.mappings.push(new JoinMapping(joinCriterion.field, joinCriterion.fieldOther, joinCriterion.conditionType))
-    }
+    this.joinCriteria = joinCriterion
     return this.parent
   }
 }

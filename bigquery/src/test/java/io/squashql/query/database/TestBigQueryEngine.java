@@ -1,5 +1,6 @@
 package io.squashql.query.database;
 
+import static io.squashql.query.Functions.criterion;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.dto.JoinType.INNER;
@@ -16,7 +17,6 @@ import io.squashql.query.QueryExecutor;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.JoinDto;
-import io.squashql.query.dto.JoinMappingDto;
 import io.squashql.query.dto.PivotTableQueryDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.dto.TableDto;
@@ -193,7 +193,7 @@ public class TestBigQueryEngine {
             List.of("a", "b"),
             List.of(List.of(0, "0"), List.of(1, "1")));
     query.virtualTableDto = virtual;
-    query.table.joins.add(new JoinDto(new TableDto(virtual.name), INNER, new JoinMappingDto("baseStore.category", virtual.name + ".a", ConditionType.EQ)));
+    query.table.joins.add(new JoinDto(new TableDto(virtual.name), INNER, criterion("baseStore.category", virtual.name + ".a", ConditionType.EQ)));
 
     BigQueryDatastore datastore = new BigQueryServiceAccountDatastore(Mockito.mock(ServiceAccountCredentials.class), "myProjectId", "myDatasetName") {
       @Override

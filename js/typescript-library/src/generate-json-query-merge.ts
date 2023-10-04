@@ -1,11 +1,11 @@
-import * as fs from "fs";
-import {TableField, tableFields} from "./field";
-import {avg, sum} from "./measure";
-import {JoinType, QueryMerge} from "./query";
-import {from} from "./queryBuilder";
+import * as fs from "fs"
+import {TableField, tableFields} from "./field"
+import {avg, sum} from "./measure"
+import {JoinType, QueryMerge} from "./query"
+import {from} from "./queryBuilder"
 
 export function generateFromQueryMerge() {
-  const fields = tableFields(["a", "b"]);
+  const fields = tableFields(["a", "b"])
   const query1 = from("myTable")
           .select(fields, [], [sum("sum", new TableField("f1"))])
           .build()

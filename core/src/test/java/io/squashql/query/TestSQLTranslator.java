@@ -1,42 +1,29 @@
 package io.squashql.query;
 
-import static io.squashql.query.Functions.all;
-import static io.squashql.query.Functions.avg;
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.Functions.divide;
-import static io.squashql.query.Functions.eq;
-import static io.squashql.query.Functions.ge;
-import static io.squashql.query.Functions.gt;
-import static io.squashql.query.Functions.isNull;
-import static io.squashql.query.Functions.lt;
-import static io.squashql.query.Functions.minus;
-import static io.squashql.query.Functions.or;
-import static io.squashql.query.Functions.plus;
-import static io.squashql.query.Functions.sum;
-import static io.squashql.query.Functions.sumIf;
-import static io.squashql.query.TableField.tableField;
-import static io.squashql.query.database.SQLTranslator.translate;
-import static io.squashql.query.dto.JoinType.INNER;
-import static io.squashql.query.dto.JoinType.LEFT;
-import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
-
 import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.DefaultQueryRewriter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.JoinDto;
-import io.squashql.query.dto.JoinMappingDto;
 import io.squashql.query.dto.TableDto;
 import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.Store;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
+
+import static io.squashql.query.Functions.*;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.database.SQLTranslator.translate;
+import static io.squashql.query.dto.JoinType.INNER;
+import static io.squashql.query.dto.JoinType.LEFT;
+import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
 public class TestSQLTranslator {
 
@@ -187,21 +174,18 @@ public class TestSQLTranslator {
   void testJoins() {
     TableDto baseStore = new TableDto(BASE_STORE_NAME);
     TableDto table1 = new TableDto("table1");
-    JoinMappingDto mappingBaseToTable1 = new JoinMappingDto(baseStore.name + ".id", table1.name + ".table1_id");
     TableDto table2 = new TableDto("table2");
-    JoinMappingDto mappingBaseToTable2 = new JoinMappingDto(baseStore.name + ".id", table2.name + ".table2_id");
     TableDto table3 = new TableDto("table3");
-    JoinMappingDto mappingTable2ToTable3 = new JoinMappingDto(table2.name + ".table2_field_1", table3.name + ".table3_id");
     TableDto table4 = new TableDto("table4");
-    List<JoinMappingDto> mappingTable1ToTable4 = List.of(
-            new JoinMappingDto(table1.name + ".table1_field_2", table4.name + ".table4_id_1"),
-            new JoinMappingDto(table1.name + ".table1_field_3", table4.name + ".table4_id_2"));
 
-    baseStore.joins.add(new JoinDto(table1, INNER, mappingBaseToTable1));
-    baseStore.joins.add(new JoinDto(table2, LEFT, mappingBaseToTable2));
+    baseStore.joins.add(new JoinDto(table1, INNER, criterion(baseStore.name + ".id", table1.name + ".table1_id", ConditionType.EQ)));
+    baseStore.joins.add(new JoinDto(table2, LEFT, criterion(baseStore.name + ".id", table2.name + ".table2_id", ConditionType.EQ)));
 
-    table1.joins.add(new JoinDto(table4, INNER, mappingTable1ToTable4));
-    table2.joins.add(new JoinDto(table3, INNER, mappingTable2ToTable3));
+    table1.joins.add(new JoinDto(table4, INNER, all(
+            criterion(table1.name + ".table1_field_2", table4.name + ".table4_id_1", ConditionType.EQ),
+            criterion(table1.name + ".table1_field_3", table4.name + ".table4_id_2", ConditionType.EQ)
+    )));
+    table2.joins.add(new JoinDto(table3, INNER, criterion(table2.name + ".table2_field_1", table3.name + ".table3_id", ConditionType.EQ)));
 
     DatabaseQuery query = new DatabaseQuery()
             .table(baseStore)
@@ -210,7 +194,7 @@ public class TestSQLTranslator {
     Assertions.assertThat(translate(query, fp))
             .isEqualTo("select avg(`pnl`) as `pnl.avg` from " + BASE_STORE_NAME_ESCAPED
                     + " inner join `table1` on " + BASE_STORE_NAME_ESCAPED + ".`id` = `table1`.`table1_id`"
-                    + " inner join `table4` on `table1`.`table1_field_2` = `table4`.`table4_id_1` and `table1`.`table1_field_3` = `table4`.`table4_id_2`"
+                    + " inner join `table4` on (`table1`.`table1_field_2` = `table4`.`table4_id_1` and `table1`.`table1_field_3` = `table4`.`table4_id_2`)"
                     + " left join `table2` on " + BASE_STORE_NAME_ESCAPED + ".`id` = `table2`.`table2_id`"
                     + " inner join `table3` on `table2`.`table2_field_1` = `table3`.`table3_id`"
             );
@@ -220,15 +204,14 @@ public class TestSQLTranslator {
   void testJoinsEquijoinsMultipleCondCrossTables() {
     TableDto a = new TableDto("A");
     TableDto b = new TableDto("B");
-    JoinMappingDto jAToB = new JoinMappingDto(a.name + ".a_id", b.name + ".b_id");
     TableDto c = new TableDto("C");
     // should be able to ref. both column of A and B in the join.
-    List<JoinMappingDto> jCToAB = List.of(
-            new JoinMappingDto(c.name + ".c_other_id", b.name + ".b_other_id"),
-            new JoinMappingDto(c.name + ".c_f", a.name + ".a_f"));
 
-    a.join(b, INNER, jAToB);
-    a.join(c, LEFT, jCToAB);
+    a.join(b, INNER, criterion(a.name + ".a_id", b.name + ".b_id", ConditionType.EQ));
+    a.join(c, LEFT, all(
+            criterion(c.name + ".c_other_id", b.name + ".b_other_id", ConditionType.EQ),
+            criterion(c.name + ".c_f", a.name + ".a_f", ConditionType.EQ)
+    ));
 
     Function<Field, TypedField> fieldSupplier = AQueryEngine.createFieldSupplier(Map.of(
             "A", new Store("A", List.of(new TableTypedField("A", "a_id", int.class), new TableTypedField("A", "a_f", int.class), new TableTypedField("A", "y", int.class))),
@@ -241,7 +224,7 @@ public class TestSQLTranslator {
     Assertions.assertThat(translate(query, fieldSupplier))
             .isEqualTo("select `A`.`y` from `A` " +
                     "inner join `B` on `A`.`a_id` = `B`.`b_id` " +
-                    "left join `C` on `C`.`c_other_id` = `B`.`b_other_id` and `C`.`c_f` = `A`.`a_f` " +
+                    "left join `C` on (`C`.`c_other_id` = `B`.`b_other_id` and `C`.`c_f` = `A`.`a_f`) " +
                     "group by `A`.`y`");
   }
 
@@ -255,13 +238,14 @@ public class TestSQLTranslator {
                     criterion(SCENARIO_FIELD_NAME, or(eq("base"), eq("s1"), eq("s2"))),
                     criterion("delta", ge(123d)),
                     criterion("type", or(eq("A"), eq("B"))),
-                    criterion("pnl", lt(10d)))
+                    criterion("pnl", lt(10d)),
+                    criterion(minus(new TableField("pnl"), new ConstantField(1)), lt(11d)))
             )
             .table(BASE_STORE_NAME);
     Assertions.assertThat(translate(query, fp))
             .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum` from " + BASE_STORE_NAME_ESCAPED
                     + " where (((`scenario` = 'base' or `scenario` = 's1') or `scenario` = 's2')"
-                    + " and `delta` >= 123.0 and (`type` = 'A' or `type` = 'B') and `pnl` < 10.0)"
+                    + " and `delta` >= 123.0 and (`type` = 'A' or `type` = 'B') and `pnl` < 10.0 and (`pnl`-1) < 11.0)"
                     + " group by `scenario`, `type`"
             );
   }
@@ -344,7 +328,7 @@ public class TestSQLTranslator {
             "virtual",
             List.of("a", "b"),
             List.of(List.of(0, "0"), List.of(1, "1")));
-    main.join(new TableDto(virtualTable.name), INNER, new JoinMappingDto("id", "a", ConditionType.EQ));
+    main.join(new TableDto(virtualTable.name), INNER, criterion("id", "a", ConditionType.EQ));
     DatabaseQuery query = new DatabaseQuery()
             .table(main)
             .virtualTable(virtualTable)
@@ -366,7 +350,7 @@ public class TestSQLTranslator {
             "virtual",
             List.of("a", "b"),
             List.of(List.of(0, "0"), List.of(1, "1")));
-    main.join(new TableDto(virtualTable.name), INNER, new JoinMappingDto(BASE_STORE_NAME + ".id", virtualTable.name + ".a", ConditionType.EQ));
+    main.join(new TableDto(virtualTable.name), INNER, criterion(BASE_STORE_NAME + ".id", virtualTable.name + ".a", ConditionType.EQ));
     DatabaseQuery query = new DatabaseQuery()
             .table(main)
             .virtualTable(virtualTable)

@@ -15,7 +15,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @NoArgsConstructor
 public final class MeasureUtils {
@@ -88,7 +87,7 @@ public final class MeasureUtils {
     Optional.ofNullable(cm.ancestors)
             .ifPresent(ancestors -> {
               ancestors.forEach(criteriaRemover);
-              List<TypedField> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).map(fieldSupplier).collect(Collectors.toList());
+              List<TypedField> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).map(fieldSupplier).toList();
               rollupColumns.addAll(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage reverse order".
             });
     return new QueryExecutor.QueryScope(queryScope.tableDto(),
@@ -104,7 +103,7 @@ public final class MeasureUtils {
   private static CriteriaDto removeCriteriaOnField(Field field, CriteriaDto root) {
     if (root == null) {
       return null;
-    } else if (root.isWhereCriterion()) {
+    } else if (root.field != null && root.condition != null) { // where clause condition
       return root.field.equals(field) ? null : root;
     } else {
       removeCriteriaOnField(field, root.children);
@@ -116,7 +115,7 @@ public final class MeasureUtils {
     Iterator<CriteriaDto> iterator = children.iterator();
     while (iterator.hasNext()) {
       CriteriaDto criteriaDto = iterator.next();
-      if (criteriaDto.isWhereCriterion()) {
+      if (criteriaDto.field != null && criteriaDto.condition != null) { // where clause condition
         if (criteriaDto.field.equals(field)) {
           iterator.remove();
         }

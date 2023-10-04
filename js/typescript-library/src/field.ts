@@ -1,5 +1,5 @@
-import { PACKAGE } from "./index";
-import { BinaryOperator } from "./measure";
+import { PACKAGE } from "./index"
+import { BinaryOperator } from "./measure"
 
 export interface Field {
   readonly class: string
@@ -14,7 +14,7 @@ export interface Field {
 }
 
 abstract class AField implements Field {
-  readonly class: string;
+  readonly class: string
 
   divide(other: Field): Field {
     return new BinaryOperationField(BinaryOperator.DIVIDE, this, other)
@@ -62,10 +62,10 @@ export class TableField extends AField {
     if (this.fullName != null) {
       const split = this.fullName.split(".")
       if (split.length > 1) {
-        this.tableName = split[0];
-        this.fieldName = split[1];
+        this.tableName = split[0]
+        this.fieldName = split[1]
       } else {
-        this.fieldName = split[0];
+        this.fieldName = split[0]
       }
     }
   }
@@ -83,11 +83,11 @@ export class TableField extends AField {
 
 
 export function tableField(fullName:string) {
-  return new TableField(fullName);
+  return new TableField(fullName)
 }
 
 export function tableFields(fullNames:string[]) {
-  return fullNames.map(f => new TableField(f));
+  return fullNames.map(f => new TableField(f))
 }
 
 

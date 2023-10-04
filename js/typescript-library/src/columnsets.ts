@@ -1,4 +1,4 @@
-import {Field, PACKAGE} from "./index";
+import {Field, PACKAGE} from "./index"
 
 export interface ColumnSet {
   readonly class: string

@@ -39,10 +39,14 @@ public class SqlUtils {
     if (f instanceof TableTypedField ttf) {
       return getFieldFullName(ttf);
     } else if (f instanceof FunctionTypedField ftf) {
-      return ftf.function() + "(" + getFieldFullName(ftf.field()) + ")";
+      return singleOperandFunctionName(ftf.function(), getFieldFullName(ftf.field()));
     } else {
       throw new IllegalArgumentException(f.getClass().getName());
     }
+  }
+
+  public static String singleOperandFunctionName(String function, String operand) {
+    return function + "(" + operand + ")";
   }
 
   /**

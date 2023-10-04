@@ -1,4 +1,4 @@
-import {PACKAGE} from "./index";
+import {PACKAGE} from "./index"
 
 export interface Order {
   readonly class: string
@@ -24,7 +24,7 @@ export class SimpleOrder implements Order {
 }
 
 export class ExplicitOrderDto implements Order {
-  class: string = PACKAGE + "dto.ExplicitOrderDto";
+  class: string = PACKAGE + "dto.ExplicitOrderDto"
 
   constructor(private explicit: Array<any>) {
   }

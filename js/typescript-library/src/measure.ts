@@ -1,8 +1,8 @@
 import {PACKAGE, Period} from "./index"
 import {Criteria} from "./conditions"
 import {ColumnSetKey} from "./columnsets"
-import {Field, TableField} from "./field";
-import {serializeMap} from "./util";
+import {Field, TableField} from "./field"
+import {serializeMap} from "./util"
 
 // Marker type
 export type BasicMeasure = Measure
@@ -226,11 +226,11 @@ export function divide(alias: string, measure1: Measure, measure2: Measure): Mea
 // CONSTANT
 
 export function integer(value: Number): Measure {
-  return new LongConstantMeasure(value);
+  return new LongConstantMeasure(value)
 }
 
 export function decimal(value: Number): Measure {
-  return new DoubleConstantMeasure(value);
+  return new DoubleConstantMeasure(value)
 }
 
 // COMPARISON
