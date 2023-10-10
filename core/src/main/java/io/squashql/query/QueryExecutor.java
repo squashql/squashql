@@ -304,11 +304,15 @@ public class QueryExecutor {
 
     // Here we take the global plan and execute the plans for a given scope one by one, in dependency order. The order
     // is given by the graph itself.
-    ExecutionPlan<QueryScope, Void> globalPlan = new ExecutionPlan<>(dependencyGraph.getTwo(), (scope, context) -> {
-      ExecutionPlan<QueryPlanNodeKey, ExecutionContext> scopedPlan = new ExecutionPlan<>(dependencyGraph.getOne(), new Evaluator(fieldSupplier));
-      scopedPlan.execute(new ExecutionContext(tableByScope.get(scope), scope, tableByScope, query, queryLimit));
+    final Set<QueryScope> visited = new HashSet<>();
+    ExecutionPlan<QueryPlanNodeKey, Evaluator> globalPlan = new ExecutionPlan<>(dependencyGraph.getOne(), (queryNode, context) -> {
+      final QueryScope scope = queryNode.queryScope;
+      if (visited.add(scope)) {
+        final ExecutionContext executionContext = new ExecutionContext(scope, tableByScope, query, queryLimit);
+        context.accept(queryNode, executionContext);
+      }
     });
-    globalPlan.execute(null);
+    globalPlan.execute(new Evaluator(fieldSupplier));
 
     Table result = tableByScope.get(queryScope);
 
@@ -416,8 +420,7 @@ public class QueryExecutor {
   public record QueryPlanNodeKey(QueryScope queryScope, Measure measure) {
   }
 
-  public record ExecutionContext(Table writeToTable,
-                                 QueryScope queryScope,
+  public record ExecutionContext(QueryScope queryScope,
                                  Map<QueryScope, Table> tableByScope,
                                  QueryDto query,
                                  int queryLimit) {
