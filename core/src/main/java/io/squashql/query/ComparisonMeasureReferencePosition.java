@@ -1,10 +1,13 @@
 package io.squashql.query;
 
+import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.dto.Period;
+import io.squashql.type.TypedField;
 import lombok.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 @ToString
 @EqualsAndHashCode
@@ -61,6 +64,11 @@ public class ComparisonMeasureReferencePosition implements Measure {
     this.period = period;
     this.columnSetKey = columnSetKey;
     this.ancestors = ancestors;
+  }
+
+  @Override
+  public String sqlExpression(Function<Field, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
+    throw new IllegalStateException();
   }
 
   @Override
