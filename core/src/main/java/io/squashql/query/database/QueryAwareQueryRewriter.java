@@ -1,5 +1,6 @@
 package io.squashql.query.database;
 
+import io.squashql.query.compiled.DatabaseQuery2;
 import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
@@ -11,9 +12,9 @@ public class QueryAwareQueryRewriter implements QueryRewriter {
 
   private final QueryRewriter underlying;
 
-  private final DatabaseQuery query;
+  private final DatabaseQuery2 query;
 
-  public QueryAwareQueryRewriter(QueryRewriter underlying, DatabaseQuery query) {
+  public QueryAwareQueryRewriter(QueryRewriter underlying, DatabaseQuery2 query) {
     this.underlying = underlying;
     this.query = query;
   }

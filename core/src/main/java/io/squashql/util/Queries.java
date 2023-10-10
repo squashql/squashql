@@ -8,6 +8,7 @@ import io.squashql.query.ColumnSetKey;
 import io.squashql.query.Field;
 import io.squashql.query.Measure;
 import io.squashql.query.QueryExecutor;
+import io.squashql.query.compiled.DatabaseQuery2;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.ExplicitOrderDto;
@@ -116,7 +117,7 @@ public final class Queries {
     return prefetchQuery;
   }
 
-  public static List<TypedField> generateGroupingSelect(DatabaseQuery query) {
+  public static List<TypedField> generateGroupingSelect(DatabaseQuery2 query) {
     List<TypedField> selects = new ArrayList<>();
     selects.addAll(query.rollup);
     // order matters, this is why a LinkedHashSet is used.

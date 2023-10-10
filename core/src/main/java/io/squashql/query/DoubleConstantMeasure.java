@@ -1,8 +1,5 @@
 package io.squashql.query;
 
-import io.squashql.query.database.QueryRewriter;
-import io.squashql.type.TypedField;
-import java.util.function.Function;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -18,11 +15,6 @@ public class DoubleConstantMeasure extends ConstantMeasure<Double> {
   @Override
   public <R> R accept(MeasureVisitor<R> visitor) {
     return visitor.visit(this);
-  }
-
-  @Override
-  public String sqlExpression(Function<Field, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
-    return Double.toString(this.value);
   }
 
   @Override
