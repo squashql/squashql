@@ -1,9 +1,14 @@
 package io.squashql.query;
 
 import io.squashql.PrefetchVisitor;
+import io.squashql.PrimitiveMeasureVisitor;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.QueryCache.SubQueryScope;
 import io.squashql.query.QueryCache.TableScope;
+import io.squashql.query.compiled.CompiledCriteria;
+import io.squashql.query.compiled.CompiledMeasure;
+import io.squashql.query.compiled.CompiledTable;
+import io.squashql.query.compiled.DatabaseQuery2;
 import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
@@ -135,6 +140,99 @@ public class QueryExecutor {
             null,
             true,
             null);
+  }
+
+  private DatabaseQuery2 compileQuery(final QueryScope query, final List<Measure> queriedMeasures, final int limit) {
+    checkQuery(query);
+    final CompiledTable table;
+    final DatabaseQuery2 subQuery;
+    final Function<Field, TypedField> fieldSupplier = createQueryFieldSupplier(this.queryEngine, query.virtualTableDto);
+    if (query.subQuery == null) {
+      subQuery = null;
+      table = compileTable(query.tableDto);
+    } else {
+      subQuery = compileSubQuery(query.subQuery, fieldSupplier);
+      table = null;
+    }
+    final List<TypedField> select = Collections.unmodifiableList(query.columns);
+    final CompiledCriteria whereCriteria = compileCriteria(query.whereCriteriaDto);
+    final CompiledCriteria havingCriteria = compileCriteria(query.havingCriteriaDto);
+    final List<CompiledMeasure> measures = compileMeasure(queriedMeasures);
+    final List<TypedField> rollup = Collections.unmodifiableList(query.rollupColumns);
+    final List<List<TypedField>> groupingSets = Collections.unmodifiableList(query.groupingSets);
+    return new DatabaseQuery2(query.virtualTableDto,
+            table,
+            subQuery,
+            select,
+            whereCriteria,
+            havingCriteria,
+            measures,
+            rollup,
+            groupingSets,
+            limit);
+  }
+
+  private void checkQuery(final QueryScope query) {
+    if (query.tableDto == null && query.subQuery == null) {
+      throw new IllegalArgumentException("A table or sub-query was expected in " + query);
+    } else if (query.tableDto != null && query.subQuery != null) {
+      throw new IllegalArgumentException("Cannot define a table and a sub-query at the same time in " + query);
+    }
+  }
+
+  private DatabaseQuery2 compileSubQuery(final QueryDto subQuery, final Function<Field, TypedField> fieldSupplier) {
+    checkSubQuery(subQuery);
+    final CompiledTable table = compileTable(subQuery.table);
+    final List<TypedField> select = subQuery.columns.stream().map(fieldSupplier).toList();
+    final CompiledCriteria whereCriteria = compileCriteria(subQuery.whereCriteriaDto);
+    final CompiledCriteria havingCriteria = compileCriteria(subQuery.havingCriteriaDto);
+    final List<CompiledMeasure> measures = compileMeasure(subQuery.measures);
+    // should we check groupingSet and rollup as well are empty ?
+    return new DatabaseQuery2(null,
+            table,
+            null,
+            select,
+            whereCriteria,
+            havingCriteria,
+            measures,
+            Collections.emptyList(),
+            Collections.emptyList(),
+            -1);
+  }
+
+  // todo-mde maybe move this part when building the subQuery ?
+  private void checkSubQuery(final QueryDto subQuery) {
+    if (subQuery.subQuery != null) {
+      throw new IllegalArgumentException("sub-query in a sub-query is not supported");
+    }
+    if (subQuery.virtualTableDto != null) {
+      throw new IllegalArgumentException("virtualTableDto in a sub-query is not supported");
+    }
+    if (subQuery.columnSets != null && !subQuery.columnSets.isEmpty()) {
+      throw new IllegalArgumentException("column sets are not expected in sub query: " + subQuery);
+    }
+    if (subQuery.parameters != null && !subQuery.parameters.isEmpty()) {
+      throw new IllegalArgumentException("parameters are not expected in sub query: " + subQuery);
+    }
+    for (Measure measure : subQuery.measures) {
+      if (measure.accept(new PrimitiveMeasureVisitor())) {
+        continue;
+      }
+      throw new IllegalArgumentException("Only measures that can be computed by the underlying database can be used" +
+              " in a sub-query but " + measure + " was provided");
+    }
+  }
+
+  private CompiledTable compileTable(final TableDto table) {
+    return null;
+  }
+
+  private CompiledCriteria compileCriteria(final CriteriaDto whereCriteriaDto) {
+    return null;
+  }
+
+  private List<CompiledMeasure> compileMeasure(final List<Measure> measures) {
+    return null;
   }
 
   public Table execute(QueryDto query,

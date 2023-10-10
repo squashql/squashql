@@ -1,10 +1,16 @@
 package io.squashql.type;
 
+import io.squashql.query.database.QueryRewriter;
 import io.squashql.store.UnknownType;
 
 import static io.squashql.query.date.DateFunctions.SUPPORTED_DATE_FUNCTIONS;
 
 public record FunctionTypedField(TableTypedField field, String function) implements TypedField {
+
+  @Override
+  public String sqlExpression(QueryRewriter queryRewriter) {
+    return queryRewriter.functionExpression(this);
+  }
 
   @Override
   public Class<?> type() {

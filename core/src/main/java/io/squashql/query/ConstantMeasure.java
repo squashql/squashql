@@ -2,7 +2,6 @@ package io.squashql.query;
 
 import lombok.*;
 
-@ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
 public abstract class ConstantMeasure<T> implements Measure {
