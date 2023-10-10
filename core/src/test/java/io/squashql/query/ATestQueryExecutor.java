@@ -1,19 +1,21 @@
 package io.squashql.query;
 
-import static io.squashql.query.Functions.all;
-import static io.squashql.query.Functions.avg;
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.Functions.eq;
-import static io.squashql.query.Functions.ge;
-import static io.squashql.query.Functions.in;
-import static io.squashql.query.Functions.isNotNull;
-import static io.squashql.query.Functions.isNull;
-import static io.squashql.query.Functions.le;
-import static io.squashql.query.Functions.min;
-import static io.squashql.query.Functions.multiply;
-import static io.squashql.query.Functions.or;
-import static io.squashql.query.Functions.sum;
-import static io.squashql.query.Functions.sumIf;
+import io.squashql.TestClass;
+import io.squashql.query.builder.Query;
+import io.squashql.query.database.QueryRewriter;
+import io.squashql.query.database.SqlUtils;
+import io.squashql.query.dto.*;
+import io.squashql.table.Table;
+import io.squashql.type.TableTypedField;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import static io.squashql.query.Functions.*;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
@@ -22,25 +24,6 @@ import static io.squashql.query.dto.OrderKeywordDto.ASC;
 import static io.squashql.query.dto.OrderKeywordDto.DESC;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
-
-import io.squashql.TestClass;
-import io.squashql.query.builder.Query;
-import io.squashql.query.database.QueryRewriter;
-import io.squashql.query.database.SqlUtils;
-import io.squashql.query.dto.BucketColumnSetDto;
-import io.squashql.query.dto.ConditionDto;
-import io.squashql.query.dto.CriteriaDto;
-import io.squashql.query.dto.JoinType;
-import io.squashql.query.dto.OrderKeywordDto;
-import io.squashql.query.dto.QueryDto;
-import io.squashql.table.Table;
-import io.squashql.type.TableTypedField;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

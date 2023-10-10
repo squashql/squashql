@@ -3,26 +3,16 @@ package io.squashql.query.database;
 import com.google.cloud.bigquery.*;
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryUtil;
-import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.Field;
 import io.squashql.query.Header;
-import io.squashql.query.QueryExecutor;
 import io.squashql.query.date.DateFunctions;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
 import io.squashql.type.FunctionTypedField;
-import io.squashql.type.TableTypedField;
-import io.squashql.type.TypedField;
-import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static io.squashql.query.database.SQLTranslator.checkRollupIsValid;
+import java.util.HashSet;
+import java.util.List;
 
 public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
@@ -49,158 +39,6 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
   public BigQueryEngine(BigQueryDatastore datastore) {
     super(datastore, new BigQueryQueryRewriter(datastore.getProjectId(), datastore.getDatasetName()));
-  }
-
-  @Override
-  protected String createSqlStatement(DatabaseQuery query, QueryExecutor.PivotTableContext context) {
-    boolean hasRollup = !query.rollup.isEmpty();
-    BigQueryQueryRewriter rewriter = (BigQueryQueryRewriter) this.queryRewriter;
-    Function<Field, TypedField> queryFieldSupplier = QueryExecutor.createQueryFieldSupplier(this, query.virtualTableDto);
-    if (!query.groupingSets.isEmpty()) {
-      // rows = a,b,c; columns = x,y
-      // (a,b,c,x,y)
-      // (a,b,x,y,c)
-      // (a,x,y,b,c)
-      // (x,y,a,b,c)
-      List<TypedField> l = new ArrayList<>(context.getRowFields());
-      l.addAll(context.getColumnFields());
-      List<List<TypedField>> rollups = new ArrayList<>();
-      rollups.add(l);
-      for (int i = 0; i < context.getRowFields().size(); i++) {
-        List<TypedField> copy = new ArrayList<>(context.getRowFields());
-        copy.addAll(i, context.getColumnFields());
-        rollups.add(copy);
-      }
-
-      StringBuilder sb = new StringBuilder();
-      String unionDistinct = " union distinct ";
-
-      for (int i = 0; i < rollups.size(); i++) {
-        DatabaseQuery deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), DatabaseQuery.class);
-        deepCopy.groupingSets = Collections.emptyList();
-        deepCopy.rollup = rollups.get(i);
-
-        boolean isNotLast = i < rollups.size() - 1;
-        if (isNotLast) {
-          deepCopy.limit = -1; // only for the last one.
-        }
-        sb.append(createSqlStatement(deepCopy, null));
-        if (isNotLast) {
-          sb.append(unionDistinct);
-        }
-      }
-      return sb.toString();
-    }
-
-    if (!hasRollup) {
-      return SQLTranslator.translate(query,
-              queryFieldSupplier,
-              rewriter);
-    } else {
-      checkRollupIsValid(
-              query.select.stream().map(this.queryRewriter::select).toList(),
-              query.rollup.stream().map(this.queryRewriter::rollup).toList());
-
-      // Special case for BigQuery because it does not support either the grouping function used to identify extra-rows
-      // added by rollup or grouping sets for partial rollup.
-
-      /*
-       * The trick here is to change what is put in select and rollup:
-       * SELECT SUM(amount) as amount_sum, COALESCE(a, "r1"), COALESCE(b, "r2") FROM table
-       * GROUP BY ROLLUP(COALESCE(a, "___null___"), COALESCE(b, "___null___"))
-       * By doing so, null values (not the ones due to rollup) will be changed to "___null___" and null values in the
-       * result dataset correspond to the subtotals.
-       */
-      QueryAwareQueryRewriter qr = new QueryAwareQueryRewriter(rewriter, query);
-      BigQueryQueryRewriter newRewriter = new BigQueryQueryRewriter(rewriter.projectId, rewriter.datasetName) {
-
-        @Override
-        public String select(TypedField field) {
-          Function<Object, String> quoter = SQLTranslator.getQuoteFn(field);
-          return String.format("coalesce(%s, %s)", qr.select(field),
-                  quoter.apply(BigQueryUtil.getNullValue(field.type())));
-        }
-
-        @Override
-        public String rollup(TypedField field) {
-          Function<Object, String> quoter = SQLTranslator.getQuoteFn(field);
-          return String.format("coalesce(%s, %s)", qr.rollup(field),
-                  quoter.apply(BigQueryUtil.getNullValue(field.type())));
-        }
-
-        @Override
-        public String getFieldFullName(TableTypedField f) {
-          return qr.getFieldFullName(f);
-        }
-      };
-
-      List<TypedField> missingColumnsInRollup = new ArrayList<>(query.select);
-      missingColumnsInRollup.removeAll(query.rollup);
-      DatabaseQuery deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), DatabaseQuery.class);
-      // Missing columns needs to be added at the beginning to have the correct sub-totals
-      missingColumnsInRollup.addAll(query.rollup);
-      deepCopy.rollup = missingColumnsInRollup;
-      return SQLTranslator.translate(deepCopy,
-              queryFieldSupplier,
-              // The condition on rollup is to handle subquery
-              q -> q.rollup.isEmpty() ? this.queryRewriter : newRewriter);
-    }
-  }
-
-  @Override
-  protected Table postProcessDataset(Table input, DatabaseQuery query) {
-    if (query.rollup.isEmpty() && query.groupingSets.isEmpty()) {
-      return input;
-    }
-
-    boolean isPartialRollup = !Set.copyOf(query.select).equals(Set.copyOf(query.rollup));
-    List<TypedField> missingColumnsInRollup = new ArrayList<>(query.select);
-    missingColumnsInRollup.removeAll(query.rollup);
-    Set<String> missingColumnsInRollupSet = missingColumnsInRollup.stream().map(SqlUtils::expression).collect(Collectors.toSet());
-
-    MutableIntSet rowIndicesToRemove = new IntHashSet();
-    for (int i = 0; i < input.headers().size(); i++) {
-      Header h = input.headers().get(i);
-      List<Object> columnValues = input.getColumn(i);
-      if (i < query.select.size()) {
-        List<Object> baseColumnValues = input.getColumnValues(h.name());
-        for (int rowIndex = 0; rowIndex < input.count(); rowIndex++) {
-          Object value = columnValues.get(rowIndex);
-          if (value == null) {
-            baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
-            if (query.groupingSets.isEmpty() && isPartialRollup && missingColumnsInRollupSet.contains(h.name())) {
-              // Partial rollup not supported https://issuetracker.google.com/issues/35905909, we let bigquery compute
-              // all totals, and we remove here the extra rows.
-              rowIndicesToRemove.add(rowIndex);
-            }
-          } else if (value.equals(BigQueryUtil.getNullValue(h.type()))) {
-            baseColumnValues.set(rowIndex, null);
-          }
-        }
-      }
-    }
-
-    List<List<Object>> newValues;
-    if (!rowIndicesToRemove.isEmpty()) {
-      newValues = new ArrayList<>(input.headers().size());
-      for (int col = 0; col < input.headers().size(); col++) {
-        List<Object> columnValues = input.getColumn(col);
-        List<Object> newColumnValues = new ArrayList<>(columnValues.size() - rowIndicesToRemove.size());
-        for (int rowIndex = 0; rowIndex < input.count(); rowIndex++) {
-          if (!rowIndicesToRemove.contains(rowIndex)) {
-            newColumnValues.add(columnValues.get(rowIndex));
-          }
-        }
-        newValues.add(newColumnValues);
-      }
-    } else {
-      newValues = ((ColumnarTable) input).getColumns();
-    }
-
-    return new ColumnarTable(
-            input.headers(),
-            input.measures(),
-            newValues);
   }
 
   @Override
@@ -321,8 +159,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
     @Override
     public boolean useGroupingFunction() {
-      // Not supported https://issuetracker.google.com/issues/205238172
-      return false;
+      return true;
     }
   }
 }
