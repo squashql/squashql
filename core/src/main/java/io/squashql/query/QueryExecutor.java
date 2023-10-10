@@ -20,8 +20,6 @@ import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -248,11 +246,11 @@ public class QueryExecutor {
       pivotTableContext.init(fieldSupplier);
     }
     QueryScope queryScope = createQueryScope(query, fieldSupplier);
-    Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> dependencyGraph = computeDependencyGraph(query, queryScope, fieldSupplier);
+    DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(query, queryScope, fieldSupplier);
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
     Map<QueryScope, Set<Measure>> measuresByQueryScope = new HashMap<>();
-    ExecutionPlan<QueryPlanNodeKey, Void> prefetchingPlan = new ExecutionPlan<>(dependencyGraph.getOne(), (node, v) -> {
+    ExecutionPlan<QueryPlanNodeKey, Void> prefetchingPlan = new ExecutionPlan<>(dependencyGraph, (node, v) -> {
       QueryScope scope = node.queryScope;
       int limit = scope.equals(queryScope) ? queryLimit : queryLimit + 1; // limit + 1 to detect when results can be wrong
       prefetchQueryByQueryScope.computeIfAbsent(scope, k -> Queries.queryScopeToDatabaseQuery(scope, fieldSupplier, limit));
@@ -305,7 +303,7 @@ public class QueryExecutor {
     // Here we take the global plan and execute the plans for a given scope one by one, in dependency order. The order
     // is given by the graph itself.
     final Set<QueryScope> visited = new HashSet<>();
-    ExecutionPlan<QueryPlanNodeKey, Evaluator> globalPlan = new ExecutionPlan<>(dependencyGraph.getOne(), (queryNode, context) -> {
+    ExecutionPlan<QueryPlanNodeKey, Evaluator> globalPlan = new ExecutionPlan<>(dependencyGraph, (queryNode, context) -> {
       final QueryScope scope = queryNode.queryScope;
       if (visited.add(scope)) {
         final ExecutionContext executionContext = new ExecutionContext(scope, tableByScope, query, queryLimit);
@@ -334,24 +332,15 @@ public class QueryExecutor {
     return result;
   }
 
-  private static Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> computeDependencyGraph(
+  private static DependencyGraph<QueryPlanNodeKey> computeDependencyGraph(
           QueryDto query,
           QueryScope queryScope,
           Function<Field, TypedField> fieldSupplier) {
-    // This graph is used to keep track of dependency between execution plans. An Execution Plan is bound to a given scope.
-    DependencyGraph<QueryScope> executionGraph = new DependencyGraph<>();
 
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
       Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(query, nodeKey.queryScope, fieldSupplier));
       Set<QueryPlanNodeKey> set = new HashSet<>();
-      executionGraph.addNode(nodeKey.queryScope);
       for (Map.Entry<QueryScope, Set<Measure>> entry : dependencies.entrySet()) {
-
-        executionGraph.addNode(entry.getKey());
-        if (!nodeKey.queryScope.equals(entry.getKey())) {
-          executionGraph.putEdge(nodeKey.queryScope, entry.getKey());
-        }
-
         for (Measure measure : entry.getValue()) {
           set.add(new QueryPlanNodeKey(entry.getKey(), measure));
         }
@@ -360,9 +349,7 @@ public class QueryExecutor {
     });
     Set<Measure> queriedMeasures = new HashSet<>(query.measures);
     queriedMeasures.add(CountMeasure.INSTANCE); // Always add count
-    return Tuples.pair(
-            builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList()),
-            executionGraph);
+    return builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList());
   }
 
   public static QueryScope createQueryScope(QueryDto query, Function<Field, TypedField> fieldSupplier) {
@@ -424,6 +411,9 @@ public class QueryExecutor {
                                  Map<QueryScope, Table> tableByScope,
                                  QueryDto query,
                                  int queryLimit) {
+    Table getWriteToTable() {
+      return tableByScope.get(queryScope);
+    }
   }
 
 

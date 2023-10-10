@@ -35,17 +35,16 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     }
 
     Measure measure = queryPlanNodeKey.measure();
-    if (executionContext.writeToTable().measures().contains(measure)) {
+    if (executionContext.getWriteToTable().measures().contains(measure)) {
       return; // Nothing to do
     }
-
     this.executionContext = executionContext;
     measure.accept(this);
   }
 
   @Override
   public Void visit(BinaryOperationMeasure bom) {
-    Table intermediateResult = this.executionContext.writeToTable();
+    Table intermediateResult = this.executionContext.getWriteToTable();
     List<Object> lo = intermediateResult.getAggregateValues(bom.leftOperand);
     List<Object> ro = intermediateResult.getAggregateValues(bom.rightOperand);
     List<Object> r = new ArrayList<>(lo.size());
@@ -89,7 +88,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     if (readFromTable.count() == this.executionContext.queryLimit()) {
       throw new RuntimeException("Too many rows, some intermediate results exceed the limit " + this.executionContext.queryLimit());
     }
-    executeComparator(cm, this.executionContext.writeToTable(), readFromTable, executor);
+    executeComparator(cm, this.executionContext.getWriteToTable(), readFromTable, executor);
     return null;
   }
 
@@ -101,13 +100,13 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
 
   @Override
   public Void visit(LongConstantMeasure measure) {
-    executeConstantOperation(measure, this.executionContext.writeToTable());
+    executeConstantOperation(measure, this.executionContext.getWriteToTable());
     return null;
   }
 
   @Override
   public Void visit(DoubleConstantMeasure measure) {
-    executeConstantOperation(measure, this.executionContext.writeToTable());
+    executeConstantOperation(measure, this.executionContext.getWriteToTable());
     return null;
   }
 
