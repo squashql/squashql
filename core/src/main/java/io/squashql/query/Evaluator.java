@@ -27,13 +27,6 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
 
   @Override
   public void accept(QueryPlanNodeKey queryPlanNodeKey, ExecutionContext executionContext) {
-    if (!queryPlanNodeKey.queryScope().equals(executionContext.queryScope())) {
-      // Not in the correct plan, abort execution. This condition is very important to not write aggregates where they
-      // should not suppose to be written. The whole dependency graph (See QueryExecutor) can be traversed multiple times
-      // when there are more than 1 execution plan.
-      return;
-    }
-
     Measure measure = queryPlanNodeKey.measure();
     if (executionContext.getWriteToTable().measures().contains(measure)) {
       return; // Nothing to do

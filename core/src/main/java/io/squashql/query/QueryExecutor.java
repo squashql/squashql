@@ -302,11 +302,10 @@ public class QueryExecutor {
 
     // Here we take the global plan and execute the plans for a given scope one by one, in dependency order. The order
     // is given by the graph itself.
-    final Set<QueryScope> visited = new HashSet<>();
+    final Set<QueryPlanNodeKey> visited = new HashSet<>();
     ExecutionPlan<QueryPlanNodeKey, Evaluator> globalPlan = new ExecutionPlan<>(dependencyGraph, (queryNode, context) -> {
-      final QueryScope scope = queryNode.queryScope;
-      if (visited.add(scope)) {
-        final ExecutionContext executionContext = new ExecutionContext(scope, tableByScope, query, queryLimit);
+      if (visited.add(queryNode)) {
+        final ExecutionContext executionContext = new ExecutionContext(queryNode.queryScope, tableByScope, query, queryLimit);
         context.accept(queryNode, executionContext);
       }
     });
