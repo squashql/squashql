@@ -426,15 +426,17 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .select(tableFields(List.of("category")),
-                    List.of(countDistinct("count distinct categories", this.storeName + ".category")))
+                    List.of(
+                            count("count categories", this.storeName + ".category"),
+                            countDistinct("count distinct categories", this.storeName + ".category")))
             .build();
     Table result = this.executor.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
-            List.of("drink", 3),
-            List.of("food", 3),
-            List.of("cloth", 3));
+            List.of("drink", 3l, 1l),
+            List.of("food", 3l, 1l),
+            List.of("cloth", 3l, 1l));
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly("category", "count distinct categories");
+            .containsExactly("category", "count categories", "count distinct categories");
   }
 
   @Test
