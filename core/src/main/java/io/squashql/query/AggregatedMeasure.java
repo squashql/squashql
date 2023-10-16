@@ -19,13 +19,13 @@ import lombok.With;
 @AllArgsConstructor
 public class AggregatedMeasure implements BasicMeasure {
 
+  public String alias;
   @With
   public String expression;
-  String alias;
-  Field field;
-  String aggregationFunction;
-  boolean distinct;
-  CriteriaDto criteria;
+  public Field field;
+  public String aggregationFunction;
+  public boolean distinct;
+  public CriteriaDto criteria;
 
   public AggregatedMeasure(@NonNull String alias, @NonNull Field field, @NonNull String aggregationFunction, boolean distinct, CriteriaDto criteria) {
     this.alias = alias;

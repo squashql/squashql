@@ -425,7 +425,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testCountDistinct() {
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of("category"),
+            .select(tableFields(List.of("category")),
                     List.of(countDistinct("count distinct categories", this.storeName + ".category")))
             .build();
     Table result = this.executor.execute(query);
