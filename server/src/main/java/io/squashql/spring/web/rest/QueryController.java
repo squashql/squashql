@@ -8,6 +8,7 @@ import io.squashql.store.Store;
 import io.squashql.table.PivotTable;
 import io.squashql.table.Table;
 import io.squashql.table.TableUtils;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +22,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+@Import(JacksonConfiguration.class)
 @RestController
 public class QueryController {
 

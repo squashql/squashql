@@ -12,5 +12,4 @@ public class JacksonConfiguration {
   public MappingJackson2HttpMessageConverter jackson2HttpMessageConverter() {
     return new MappingJackson2HttpMessageConverter(JacksonUtil.OBJECT_MAPPER);
   }
-
 }
