@@ -366,6 +366,10 @@ public class QueryExecutor {
     }
   }
 
+  public Table executePivot(QueryDto first, QueryDto second, PivotTableContext context, JoinType joinType, SquashQLUser user) {
+
+  }
+
   public Table execute(QueryDto first, QueryDto second, JoinType joinType, SquashQLUser user) {
     Map<String, Comparator<?>> firstComparators = Queries.getComparators(first);
     Map<String, Comparator<?>> secondComparators = Queries.getComparators(second);
