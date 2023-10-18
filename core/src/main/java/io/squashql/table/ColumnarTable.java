@@ -4,6 +4,7 @@ import com.google.common.base.Suppliers;
 import io.squashql.query.Header;
 import io.squashql.query.Measure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -86,13 +87,8 @@ public class ColumnarTable implements Table {
   }
 
   @Override
-  public void show(int numRows) {
-    System.out.println(this);
-  }
-
-  @Override
   public String toString() {
-    return TableUtils.toString(this.headers, this, h -> ((Header) h).name(), String::valueOf);
+    return toString(Integer.MAX_VALUE);
   }
 
   @Override
