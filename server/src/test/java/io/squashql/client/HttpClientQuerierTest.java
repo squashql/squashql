@@ -141,7 +141,7 @@ public class HttpClientQuerierTest {
     // Note. The CJ will make null appear in rows. We want to make sure null values are correctly handled.
     QueryDto query = Query
             .from("our_prices")
-            .where(tableField(SCENARIO_FIELD_NAME), Functions.eq(MAIN_SCENARIO_NAME))
+            .where(tableField(SCENARIO_FIELD_NAME), Functions.eq(new ConstantField(MAIN_SCENARIO_NAME)))
             .select(tableFields(List.of(SCENARIO_FIELD_NAME, "pdv")), List.of(Functions.sum("ps", "price")))
             .build();
 
@@ -206,7 +206,7 @@ public class HttpClientQuerierTest {
     // Note. The CJ will make null appear in rows. We want to make sure null values are correctly handled.
     QueryDto query = Query
             .from("our_prices")
-            .where(criterion("pdv", eq("ITM Balma")))
+            .where(criterion("pdv", eq(new ConstantField("ITM Balma"))))
             .select(tableFields(List.of(SCENARIO_FIELD_NAME, "pdv")), List.of(CountMeasure.INSTANCE, TotalCountMeasure.INSTANCE))
             .limit(2)
             .build();
