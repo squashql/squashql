@@ -51,7 +51,7 @@ export function generateFromQueryDto() {
 
   const price = new AggregatedMeasure("price.sum", new TableField("price"), "sum")
   q.withMeasure(price)
-  const priceFood = new AggregatedMeasure("alias", new TableField("price"), "sum", false, criterion(new TableField("category"), eq("food")))
+  const priceFood = new AggregatedMeasure("alias", new TableField("price"), "sum", false, criterion(new TableField("category"), eq(new ConstantField("food"))))
   q.withMeasure(priceFood)
   const plus = new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood)
   q.withMeasure(plus)
@@ -78,18 +78,18 @@ export function generateFromQueryDto() {
   ]), new Month(tableField("Month"), tableField("Year"))))
   q.withMeasure(comparisonMeasureWithParent("parent", ComparisonMethod.DIVIDE, price, [tableField("Year"), tableField("Month")]))
 
-  const queryCondition = or(or(and(eq("a"), eq("b")), lt(5)), like("a%"))
+  const queryCondition = or(or(and(eq(new ConstantField("a")), eq(new ConstantField("b"))), lt(new ConstantField(5))), like(new ConstantField("a%")))
   q.withWhereCriteria(all([
     criterion(new TableField("f1"), queryCondition),
-    criterion(new TableField("f2"), gt(659)),
-    criterion(new TableField("f3"), _in([0, 1, 2])),
+    criterion(new TableField("f2"), gt(new ConstantField(659))),
+    criterion(new TableField("f3"), _in([new ConstantField(0), new ConstantField(1), new ConstantField(2)])),
     criterion(new TableField("f4"), isNull()),
     criterion(new TableField("f5"), isNotNull())
   ]))
 
   q.withHavingCriteria(all([
-    havingCriterion(price, ge(10)),
-    havingCriterion(expression, lt(100)),
+    havingCriterion(price, ge(new ConstantField(10))),
+    havingCriterion(expression, lt(new ConstantField(100))),
   ]))
 
   q.orderBy(a, OrderKeyword.ASC)

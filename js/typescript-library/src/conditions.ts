@@ -30,7 +30,7 @@ function toJSON(c: Condition) {
 class SingleValueCondition implements Condition {
   class: string = PACKAGE + "dto.SingleValueConditionDto"
 
-  constructor(readonly type: ConditionType, private value: any) {
+  constructor(readonly type: ConditionType, private value: Field) {
   }
 
   toJSON() {
@@ -58,7 +58,7 @@ class InCondition implements Condition {
   type: ConditionType = ConditionType.IN
   class: string = PACKAGE + "dto.InConditionDto"
 
-  constructor(private values: Array<any>) {
+  constructor(private values: Array<Field>) {
   }
 
   toJSON() {
@@ -131,34 +131,34 @@ export function isNotNull(): Condition {
   return new ConstantCondition(ConditionType.NOT_NULL)
 }
 
-export function _in(value: Array<any>): Condition {
+export function _in(value: Array<Field>): Condition {
   return new InCondition(value)
 }
 
-export function eq(value: any): Condition {
+export function eq(value: Field): Condition {
   return new SingleValueCondition(ConditionType.EQ, value)
 }
 
-export function neq(value: any): Condition {
+export function neq(value: Field): Condition {
   return new SingleValueCondition(ConditionType.NEQ, value)
 }
 
-export function lt(value: any): Condition {
+export function lt(value: Field): Condition {
   return new SingleValueCondition(ConditionType.LT, value)
 }
 
-export function le(value: any): Condition {
+export function le(value: Field): Condition {
   return new SingleValueCondition(ConditionType.LE, value)
 }
 
-export function gt(value: any): Condition {
+export function gt(value: Field): Condition {
   return new SingleValueCondition(ConditionType.GT, value)
 }
 
-export function ge(value: any): Condition {
+export function ge(value: Field): Condition {
   return new SingleValueCondition(ConditionType.GE, value)
 }
 
-export function like(value: string): Condition {
+export function like(value: Field): Condition {
   return new SingleValueCondition(ConditionType.LIKE, value)
 }
