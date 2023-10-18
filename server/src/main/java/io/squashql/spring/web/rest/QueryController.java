@@ -47,7 +47,6 @@ public class QueryController {
   public ResponseEntity<QueryResultDto> execute(@RequestBody QueryDto query) {
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
     Table table = this.queryExecutor.execute(query,
-            null,
             csBuilder,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(),
             true,

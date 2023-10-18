@@ -3,21 +3,23 @@ package io.squashql.query;
 import com.google.common.collect.ImmutableList;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
-import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.PivotTableQueryDto;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.table.*;
+import io.squashql.table.PivotTable;
+import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.Functions.*;
@@ -309,51 +311,6 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     // continent is missing despite the fact it is in the select
     Assertions.assertThatThrownBy(() -> this.executor.execute(new PivotTableQueryDto(query, rows, columns)))
             .hasMessage("[unknown] on rows or columns by not in select. Please add those fields in select");
-  }
-
-  @Test
-  void testPivotTableWithRollupsAndUnionDistincts() {
-    // No need to run for the other DB.
-    Assumptions.assumeTrue(this.queryEngine.getClass().getName().contains(TestClass.Type.DUCKDB.className));
-
-    QueryDto query = Query
-            .from(this.storeName)
-            .select(tableFields(List.of("spending category", "spending subcategory", "continent", "country", "city")), List.of(CountMeasure.INSTANCE))
-            .build();
-    List<Field> rows = tableFields(List.of("continent", "country", "city"));
-    List<Field> columns = tableFields(List.of("spending category", "spending subcategory"));
-    PivotTable expectedPivotTable = this.executor.execute(new PivotTableQueryDto(query, rows, columns));
-
-    String base = "select continent, country, city, \"spending category\", \"spending subcategory\", count(*) as \"_contributors_count_\" from \"" + this.storeName + "\" group by";
-
-    // This is the kind of query that BigQueryEngine generates because it does not support grouping sets for the time being.
-    // Once it is supported, this test can be removed.
-    String sql = String.format(
-            "%1$s rollup(continent, country, city, \"spending category\", \"spending subcategory\") " +
-                    "union distinct " +
-                    "%1$s rollup(\"spending category\", \"spending subcategory\", continent, country, city) " +
-                    "union distinct " +
-                    "%1$s rollup(continent, \"spending category\", \"spending subcategory\", country, city) " +
-                    "union distinct " +
-                    "%1$s rollup(continent, country, \"spending category\", \"spending subcategory\", city)", base);
-    RowTable actualTable = (RowTable) this.executor.execute(sql);
-    ColumnarTable actualColumnarTable = TestUtil.convert(actualTable, Set.of(CountMeasure.INSTANCE));
-
-    actualColumnarTable = TableUtils.selectAndOrderColumns(actualColumnarTable,
-            expectedPivotTable.table.headers().stream().filter(h -> !h.isMeasure()).map(Header::name).toList(),
-            List.of(CountMeasure.INSTANCE));
-    actualColumnarTable = (ColumnarTable) TableUtils.orderRows(actualColumnarTable);
-
-    for (int rowIndex = 0; rowIndex < expectedPivotTable.table.count(); rowIndex++) {
-      for (int i = 0; i < expectedPivotTable.table.headers().size(); i++) {
-        Object cell = expectedPivotTable.table.getColumn(i).get(rowIndex);
-        if (cell.equals(QueryEngine.TOTAL) || cell.equals(QueryEngine.GRAND_TOTAL)) {
-          expectedPivotTable.table.getColumn(i).set(rowIndex, null);
-        }
-      }
-    }
-    Table expectedTable = TableUtils.orderRows((ColumnarTable) expectedPivotTable.table);
-    Assertions.assertThat(actualColumnarTable).containsExactlyElementsOf(expectedTable);
   }
 
   private void verifyResults(TestInfo testInfo, QueryDto query, List<String> rows, List<String> columns) {

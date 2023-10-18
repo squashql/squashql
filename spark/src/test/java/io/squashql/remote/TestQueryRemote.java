@@ -112,7 +112,7 @@ public class TestQueryRemote {
             .withSelect(new TableTypedField(storeName, SCENARIO_FIELD_NAME, String.class))
             .aggregatedMeasure("p", "price", "sum")
             .aggregatedMeasure("q", "quantity", "sum");
-    Table result = queryEngine.execute(query, null);
+    Table result = queryEngine.execute(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("base", 15.0d, 33l),
             List.of("s1", 17.0d, 33l));
