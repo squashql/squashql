@@ -111,7 +111,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
     QueryDto query = Query
             .from(this.storeName)
-            .where(criterion("city", in("la", "london"))) // to reduce size of the output
+            .where(criterion("city", in(new ConstantField("la"), new ConstantField("london")))) // to reduce size of the output
             .select(tableFields(List.of("spending category", "city")), List.of(amount))
             .build();
     List<Field> rows = tableFields(List.of("city"));
@@ -149,8 +149,8 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .where(all(
-                    criterion("city", in("paris", "lyon", "london")),
-                    criterion("country", in("france", "uk"))
+                    criterion("city", in(new ConstantField("paris"), new ConstantField("lyon"), new ConstantField("london"))),
+                    criterion("country", in(new ConstantField("france"), new ConstantField("uk")))
             )) // to reduce size of the output
             .select(tableFields(List.of("spending category", "spending subcategory", "country", "city")), measures)
             .build();
@@ -252,8 +252,8 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .where(all(
-                    criterion("city", in("paris", "lyon", "london")),
-                    criterion("country", in("france", "uk"))
+                    criterion("city", in(new ConstantField("paris"), new ConstantField("lyon"), new ConstantField("london"))),
+                    criterion("country", in(new ConstantField("france"), new ConstantField("uk")))
             )) // to reduce size of the output
             .select(tableFields(List.of("spending category", "spending subcategory", "continent", "country", "city")), measures)
             .build();

@@ -118,7 +118,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
     // Add a condition
     query = Query
             .from(this.storeName)
-            .where(scenario, eq("s1"))
+            .where(scenario, eq(new ConstantField("s1")))
             .select_(List.of(bucket), List.of(priceComp))
             .build();
 

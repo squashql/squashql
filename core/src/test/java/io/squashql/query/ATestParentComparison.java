@@ -94,7 +94,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, fields);
     QueryDto query = Query
             .from(this.storeName)
-            .where(criterion("city", in("montreal", "toronto")))
+            .where(criterion("city", in(new ConstantField("montreal"), new ConstantField("toronto"))))
             .select(fields, List.of(pOp))
             .build(); // query only parent
 
@@ -105,7 +105,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
 
     query = Query
             .from(this.storeName)
-            .where(criterion("country", eq("canada")))
+            .where(criterion("country", eq(new ConstantField("canada"))))
             .select(tableFields(List.of("continent", "country", "city")), List.of(pOp))
             .build(); // query only parent
 
@@ -117,7 +117,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
 
     query = Query
             .from(this.storeName)
-            .where(criterion("continent", eq("eu")))
+            .where(criterion("continent", eq(new ConstantField("eu"))))
             .select(tableFields(List.of("continent", "country", "city")), List.of(pOp))
             .build(); // query only parent
     result = this.executor.execute(query);
@@ -160,7 +160,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
     ComparisonMeasureReferencePosition pOp2 = new ComparisonMeasureReferencePosition("percentOfParent2", DIVIDE, pop2, select);
     QueryDto query = Query
             .from(this.storeName)
-            .where(criterion("country", eq("canada"))) // use a filter to limit the number of rows
+            .where(criterion("country", eq(new ConstantField("canada")))) // use a filter to limit the number of rows
             .select(select, List.of(pop, pOp, pop2, pOp2))
             .build(); // query only parent
 

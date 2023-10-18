@@ -121,8 +121,8 @@ public abstract class ATestBucketing extends ABaseTestQuery {
     TableField min = new TableField(sensitivities.name, "min");
     TableField max = new TableField(sensitivities.name, "max");
     CriteriaDto criteria = all(
-            criterion(minus(kvi, min), ge(0)),
-            criterion(minus(kvi, max), lt(0)));
+            criterion(minus(kvi, min), ge(new ConstantField(0))),
+            criterion(minus(kvi, max), lt(new ConstantField(0))));
     String bucket = SqlUtils.getFieldFullName(sensitivities.name, "bucket");
     String shop = SqlUtils.getFieldFullName(this.storeName, "shop");
     var query = Query

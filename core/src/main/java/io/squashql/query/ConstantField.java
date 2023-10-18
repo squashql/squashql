@@ -19,6 +19,9 @@ public class ConstantField implements Field {
 
   @Override
   public String sqlExpression(Function<Field, TypedField> fieldProvider, QueryRewriter queryRewriter) {
+    if (value instanceof String) {
+      return "'" + value + "'";
+    }
     return Objects.toString(this.value);
   }
 

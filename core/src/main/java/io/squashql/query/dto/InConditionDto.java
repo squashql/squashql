@@ -1,5 +1,7 @@
 package io.squashql.query.dto;
 
+import io.squashql.query.Field;
+import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -17,21 +19,10 @@ public final class InConditionDto implements ConditionDto {
 
   public final ConditionType type = IN;
 
-  public Set<Object> values;
+  public List<Field> values;
 
-  public InConditionDto(Object value) {
-    Set<Object> set = new HashSet<>();
-    if (value.getClass().isArray()) {
-      Object[] array = (Object[]) value;
-      for (Object e : array) {
-        set.add(e);
-      }
-    } else if (value instanceof Collection<?> collection) {
-      set.addAll(collection);
-    } else {
-      throw new IllegalArgumentException("Unexpected value for in condition " + value);
-    }
-    this.values = set;
+  public InConditionDto(List<Field> values) {
+    this.values = values;
   }
 
   @Override

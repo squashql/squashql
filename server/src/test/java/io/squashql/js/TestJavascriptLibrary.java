@@ -35,7 +35,7 @@ public class TestJavascriptLibrary {
 
     var price = new AggregatedMeasure("price.sum", "price", "sum");
     q.withMeasure(price);
-    var priceFood = new AggregatedMeasure("alias", "price", "sum", criterion("category", eq("food")));
+    var priceFood = new AggregatedMeasure("alias", "price", "sum", criterion("category", eq(new ConstantField("food"))));
     q.withMeasure(priceFood);
     var plus = new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood);
     q.withMeasure(plus);
@@ -70,14 +70,14 @@ public class TestJavascriptLibrary {
             price,
             List.of(tableField("Year"), tableField("Month"))));
 
-    var queryCondition = or(and(eq("a"), eq("b")), lt(5), like("a%"));
+    var queryCondition = or(and(eq(new ConstantField("a")), eq(new ConstantField("b"))), lt(new ConstantField(5)), like(new ConstantField("a%")));
     q.withCondition(tableField("f1"), queryCondition);
-    q.withCondition(tableField("f2"), gt(659));
-    q.withCondition(tableField("f3"), in(0, 1, 2));
+    q.withCondition(tableField("f2"), gt(new ConstantField(659)));
+    q.withCondition(tableField("f3"), in(new ConstantField(0), new ConstantField(1), new ConstantField(2)));
     q.withCondition(tableField("f4"), isNull());
     q.withCondition(tableField("f5"), isNotNull());
 
-    q.withHavingCriteria(all(criterion(price, ge(10)), criterion(expression, lt(100))));
+    q.withHavingCriteria(all(criterion(price, ge(new ConstantField(10))), criterion(expression, lt(new ConstantField(100)))));
 
     q.orderBy(tableField("a"), OrderKeywordDto.ASC);
     q.orderBy(tableField("b"), List.of("1", "l", "p"));
@@ -129,13 +129,13 @@ public class TestJavascriptLibrary {
                     criterion("myTable" + ".a", "refTable" + ".a", ConditionType.EQ)))
             .join(cte, JoinType.INNER)
             .on(all(criterion("myTable.value", "myCte.min", ConditionType.GE), criterion("myTable.value", "myCte.max", ConditionType.LT)))
-            .where(tableField("f2"), gt(659))
-            .where(tableField("f3"), eq(123))
+            .where(tableField("f2"), gt(new ConstantField(659)))
+            .where(tableField("f3"), eq(new ConstantField(123)))
             .select(tableFields(List.of("a", "b")),
                     List.of(bucketColumnSet),
                     List.of(measure, avg("sum", "f1"), measureExpr))
             .rollup(tableField("a"), tableField("b"))
-            .having(all(criterion((BasicMeasure) measure, gt(0)), criterion((BasicMeasure) measureExpr, lt(10))))
+            .having(all(criterion((BasicMeasure) measure, gt(new ConstantField(0))), criterion((BasicMeasure) measureExpr, lt(new ConstantField(10)))))
             .orderBy(tableField("f4"), OrderKeywordDto.ASC)
             .limit(10)
             .build();

@@ -1,5 +1,6 @@
 package io.squashql.query.dto;
 
+import io.squashql.query.Field;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -17,9 +18,9 @@ public final class SingleValueConditionDto implements ConditionDto {
 
   public ConditionType type;
 
-  public Object value;
+  public Field value;
 
-  public SingleValueConditionDto(ConditionType type, Object value) {
+  public SingleValueConditionDto(ConditionType type, Field value) {
     if (!supportedTypes.contains(type)) {
       throw new IllegalArgumentException("Unexpected type for SVC: " + type);
     }

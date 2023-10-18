@@ -144,7 +144,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
 
     query = Query
             .from(this.storeName)
-            .where(tableField("category"), eq("drink"))
+            .where(tableField("category"), eq(new ConstantField("drink")))
             .select(tableFields(List.of("category")), List.of(sum("ps", "price")))
             .build();
     result = this.executor.execute(query);
@@ -157,7 +157,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
 
     query = Query
             .from(this.storeName)
-            .where(tableField("category"), in("food", "cloth"))
+            .where(tableField("category"), in(new ConstantField("food"), new ConstantField("cloth")))
             .select(tableFields(List.of("category")), List.of(sum("ps", "price")))
             .build();
     result = this.executor.execute(query);
@@ -321,7 +321,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     assertCacheStats(cache.stats(), 0, 4);
 
     // Scope 3, should evict an entry in the cache
-    executor.execute(querySupplier.get().withCondition(tableField("category"), Functions.eq("drink")));
+    executor.execute(querySupplier.get().withCondition(tableField("category"), Functions.eq(new ConstantField("drink"))));
     latch.await(60, TimeUnit.SECONDS);
     CacheStatsDto stats = cache.stats();
     assertCacheStats(stats, 0, 6);

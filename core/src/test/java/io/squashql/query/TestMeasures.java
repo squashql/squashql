@@ -29,7 +29,7 @@ public class TestMeasures {
   void testExpressions() {
     Measure agg1 = new AggregatedMeasure("ps", "price", "sum");
     Measure agg2 = new AggregatedMeasure("qs", "quantity", "sum");
-    Measure agg3 = new AggregatedMeasure("qs", "quantity", "sum", criterion("category", eq("drink")));
+    Measure agg3 = new AggregatedMeasure("qs", "quantity", "sum", criterion("category", eq(new ConstantField("drink"))));
     Measure plus = new BinaryOperationMeasure("plus", BinaryOperator.PLUS, agg1, agg2);
     Measure divide = new BinaryOperationMeasure("divide", BinaryOperator.DIVIDE, agg1, plus);
     Measure constant = new DoubleConstantMeasure(100d);
@@ -45,7 +45,7 @@ public class TestMeasures {
     Assertions.assertThat(MeasureUtils.createExpression(divide)).isEqualTo("ps / plus");
 
     AggregatedMeasure amount = new AggregatedMeasure("sum(Amount)", "Amount", AggregationFunction.SUM);
-    AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, criterion("Income/Expense", eq("Revenue")));
+    AggregatedMeasure sales = new AggregatedMeasure("sales", "Amount", AggregationFunction.SUM, criterion("Income/Expense", eq(new ConstantField("Revenue"))));
     Measure ebidtaRatio = Functions.divide("EBITDA %", amount, sales);
     final Period.Year period = new Period.Year(tableField("Year"));
     ComparisonMeasureReferencePosition growth = new ComparisonMeasureReferencePosition(

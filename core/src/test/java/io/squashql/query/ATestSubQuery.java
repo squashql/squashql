@@ -68,7 +68,7 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
             .build();
 
     // Take into account only score.sum >= 100
-    AggregatedMeasure avg = new AggregatedMeasure("avg", "score_sum", AVG, criterion("score_sum", ge(100.0)));
+    AggregatedMeasure avg = new AggregatedMeasure("avg", "score_sum", AVG, criterion("score_sum", ge(new ConstantField(100.0))));
 
     QueryDto queryDto = Query.from(subQuery)
             .select(Collections.emptyList(), List.of(avg))

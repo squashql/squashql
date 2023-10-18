@@ -115,7 +115,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
 
     // Add a condition and make sure condition is cleared during prefetching.s
     query = Query.from(this.storeName)
-            .where(tableField("year_sales"), eq(2023l))
+            .where(tableField("year_sales"), eq(new ConstantField(2023l)))
             .select(tableFields(List.of("year_sales", "quarter_sales")), List.of(m))
             .build();
     finalTable = this.executor.execute(query);
@@ -126,7 +126,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             Arrays.asList(2023l, translate(4), 0d));
 
     query = Query.from(this.storeName)
-            .where(tableField("quarter_sales"), eq(1))
+            .where(tableField("quarter_sales"), eq(new ConstantField(1)))
             .select(tableFields(List.of("year_sales", "quarter_sales")), List.of(m))
             .build();
     finalTable = this.executor.execute(query);
@@ -241,8 +241,8 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     var query = Query.from(this.storeName)
             // Filter to limit the number of rows
             .where(Functions.all(
-                    criterion("year_sales", Functions.in(2022, 2023)),
-                    criterion("month_sales", Functions.in(1, 2, 12))
+                    criterion("year_sales", Functions.in(new ConstantField(2022), new ConstantField(2023))),
+                    criterion("month_sales", Functions.in(new ConstantField(1), new ConstantField(2), new ConstantField(12)))
             ))
             .select(tableFields(List.of("year_sales", "month_sales", SCENARIO_FIELD_NAME)), List.of(m, sales))
             .build();
@@ -300,7 +300,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             period);
 
     var query = Query.from(this.storeName)
-            .where(criterion("year_sales", eq(2023l)))
+            .where(criterion("year_sales", eq(new ConstantField(2023l))))
             .select(tableFields(List.of("year_sales", SCENARIO_FIELD_NAME)), List.of(m, multiply))
             .build();
     Table finalTable = this.executor.execute(query);
@@ -335,7 +335,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     String dateSales = "date_sales";
     var query = Query.from(this.storeName)
             .select(List.of(Functions.year(dateSales)), List.of(CountMeasure.INSTANCE))
-            .having(criterion(Functions.year(dateSales), eq(2022)))
+            .having(criterion(Functions.year(dateSales), eq(new ConstantField(2022))))
             .build();
     final Table finalTable = this.executor.execute(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
@@ -347,7 +347,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   void testYearFunctionAndWhere(boolean fullName) {
     String dateSales = fullName ? SqlUtils.getFieldFullName(this.storeName, "date_sales") : "date_sales";
     var query = Query.from(this.storeName)
-            .where(criterion(Functions.year(dateSales), eq(2022)))
+            .where(criterion(Functions.year(dateSales), eq(new ConstantField(2022))))
             .select(List.of(Functions.year(dateSales)), List.of(CountMeasure.INSTANCE))
             .build();
     final Table finalTable = this.executor.execute(query);
@@ -360,7 +360,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   void testQuarterFunctionAndWhere(boolean fullName) {
     String dateSales = fullName ? SqlUtils.getFieldFullName(this.storeName, "date_sales") : "date_sales";
     var query = Query.from(this.storeName)
-            .where(criterion(Functions.year(dateSales), eq(2022)))
+            .where(criterion(Functions.year(dateSales), eq(new ConstantField(2022))))
             .select(List.of(Functions.year(dateSales), Functions.quarter(dateSales)), List.of(CountMeasure.INSTANCE))
             .build();
     final Table finalTable = this.executor.execute(query);
@@ -376,7 +376,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   void testMonthFunctionAndWhere(boolean fullName) {
     String dateSales = fullName ? SqlUtils.getFieldFullName(this.storeName, "date_sales") : "date_sales";
     var query = Query.from(this.storeName)
-            .where(criterion(Functions.year(dateSales), eq(2022)))
+            .where(criterion(Functions.year(dateSales), eq(new ConstantField(2022))))
             .select(List.of(Functions.year(dateSales), Functions.month(dateSales)), List.of(CountMeasure.INSTANCE))
             .build();
     final Table finalTable = this.executor.execute(query);

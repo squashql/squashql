@@ -27,7 +27,7 @@ public class TestQueryS13n {
             .withColumn(tableField("ean"))
             .withMeasure(new AggregatedMeasure("p", "price", "sum"))
             .withMeasure(new AggregatedMeasure("q", "quantity", "sum"))
-            .withMeasure(new AggregatedMeasure("priceAlias", "price", "sum", Functions.criterion("category", Functions.eq("food"))))
+            .withMeasure(new AggregatedMeasure("priceAlias", "price", "sum", Functions.criterion("category", Functions.eq(new ConstantField("food")))))
             .withMeasure(new ExpressionMeasure("alias1", "firstMyExpression"))
             .withMeasure(new ExpressionMeasure("alias2", "secondMyExpression"))
             .withMeasure(new BinaryOperationMeasure("plus1",
@@ -63,12 +63,12 @@ public class TestQueryS13n {
     query.withMeasure(new ExpressionMeasure("alias", "expression"));
 
     // Conditions
-    ConditionDto december = and(gt("1/12/1996"), lt("31/12/1996"));
-    ConditionDto october = and(ge("1/10/1996"), le("31/10/1996"));
+    ConditionDto december = and(gt(new ConstantField("1/12/1996")), lt(new ConstantField("31/12/1996")));
+    ConditionDto october = and(ge(new ConstantField("1/10/1996")), le(new ConstantField("31/10/1996")));
     query.withCondition(tableField("orderDate"), or(december, october));
-    query.withCondition(tableField("city"), in("paris", "london"));
-    query.withCondition(tableField("country"), eq("france"));
-    query.withCondition(tableField("shipper"), neq("aramex"));
+    query.withCondition(tableField("city"), in(new ConstantField("paris"), new ConstantField("london")));
+    query.withCondition(tableField("country"), eq(new ConstantField("france")));
+    query.withCondition(tableField("shipper"), neq(new ConstantField("aramex")));
 
     String serialize = query.json();
     QueryDto deserialize = JacksonUtil.deserialize(serialize, QueryDto.class);
@@ -143,19 +143,19 @@ public class TestQueryS13n {
 
   @Test
   void testConditions() {
-    ConditionDto c1 = new SingleValueConditionDto(ConditionType.EQ, 5);
+    ConditionDto c1 = new SingleValueConditionDto(ConditionType.EQ, new ConstantField(5));
     String serialize = JacksonUtil.serialize(c1);
     ConditionDto deserialize = JacksonUtil.deserialize(serialize, ConditionDto.class);
     Assertions.assertThat(deserialize).isEqualTo(c1);
 
-    ConditionDto december = and(gt("1/12/1996"), lt("31/12/1996"));
-    ConditionDto october = and(ge("1/10/1996"), le("31/10/1996"));
+    ConditionDto december = and(gt(new ConstantField("1/12/1996")), lt(new ConstantField("31/12/1996")));
+    ConditionDto october = and(ge(new ConstantField("1/10/1996")), le(new ConstantField("31/10/1996")));
     ConditionDto c2 = or(december, october);
     serialize = JacksonUtil.serialize(c2);
     deserialize = JacksonUtil.deserialize(serialize, ConditionDto.class);
     Assertions.assertThat(deserialize).isEqualTo(c2);
 
-    ConditionDto c3 = in("paris", "london");
+    ConditionDto c3 = in(new ConstantField("paris"), new ConstantField("london"));
     deserialize = JacksonUtil.deserialize(JacksonUtil.serialize(c3), ConditionDto.class);
     Assertions.assertThat(deserialize).isEqualTo(c3);
   }

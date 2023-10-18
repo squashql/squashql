@@ -131,7 +131,7 @@ public class TestSQLTranslator {
                      grouping(`scenario`), grouping(`type`),
                      sum(`price`) as `pnl.sum`
                      from `baseStore` group by rollup(`scenario`, `type`)
-                    """.replaceAll(System.lineSeparator(), ""));
+                    """.replaceAll("\n", ""));
   }
 
   @Test
@@ -151,7 +151,7 @@ public class TestSQLTranslator {
                      grouping(`baseStore`.`scenario`), grouping(`baseStore`.`type`),
                      sum(`price`) as `pnl.sum`
                      from `baseStore` group by rollup(`baseStore`.`scenario`, `baseStore`.`type`)
-                    """.replaceAll(System.lineSeparator(), ""));
+                    """.replaceAll("\n", ""));
   }
 
   @Test
@@ -235,11 +235,11 @@ public class TestSQLTranslator {
             .withSelect(fp.apply(tableField("type")))
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
             .whereCriteria(all(
-                    criterion(SCENARIO_FIELD_NAME, or(eq("base"), eq("s1"), eq("s2"))),
-                    criterion("delta", ge(123d)),
-                    criterion("type", or(eq("A"), eq("B"))),
-                    criterion("pnl", lt(10d)),
-                    criterion(minus(new TableField("pnl"), new ConstantField(1)), lt(11d)))
+                    criterion(SCENARIO_FIELD_NAME, or(eq(new ConstantField("base")), eq(new ConstantField("s1")), eq(new ConstantField("s2")))),
+                    criterion("delta", ge(new ConstantField(123d))),
+                    criterion("type", or(eq(new ConstantField("A")), eq(new ConstantField("B")))),
+                    criterion("pnl", lt(new ConstantField(10d))),
+                    criterion(minus(new TableField("pnl"), new ConstantField(1)), lt(new ConstantField(11d))))
             )
             .table(BASE_STORE_NAME);
     Assertions.assertThat(translate(query, fp))
@@ -257,8 +257,8 @@ public class TestSQLTranslator {
             .withSelect(field)
             .aggregatedMeasure("pnl.sum", "pnl", "sum")
             .whereCriteria(criterion(SqlUtils.getFieldFullName(field), or(
-                    eq("base"),
-                    eq("s2"),
+                    eq(new ConstantField("base")),
+                    eq(new ConstantField("s2")),
                     isNull())))
             .table(BASE_STORE_NAME);
     Assertions.assertThat(translate(query, fp))
@@ -282,7 +282,7 @@ public class TestSQLTranslator {
             .subQuery(subQuery)
             .withSelect(fp.apply(tableField("c3"))) // c3 needs to be in the subquery
             .withMeasure(sum("sum GT", "mean"))
-            .whereCriteria(criterion("type", eq("myType")));
+            .whereCriteria(criterion("type", eq(new ConstantField("myType"))));
     Assertions.assertThat(translate(query, fp))
             .isEqualTo("select `c3`, sum(`mean`) as `sum GT` from (select `c1`, `c3`, avg(`c2`) as `mean` from `a` group by `c1`, `c3`) where `type` = 'myType' group by `c3`");
   }
@@ -306,7 +306,7 @@ public class TestSQLTranslator {
     DatabaseQuery query = new DatabaseQuery()
             .table(a)
             .withMeasure(sum("pnlSum", "pnl"))
-            .withMeasure(sumIf("pnlSumFiltered", "pnl", criterion("country", eq("france"))));
+            .withMeasure(sumIf("pnlSumFiltered", "pnl", criterion("country", eq(new ConstantField("france")))));
     Assertions.assertThat(translate(query, fp))
             .isEqualTo("select sum(`pnl`) as `pnlSum`, sum(case when `country` = 'france' then `pnl` end) as `pnlSumFiltered` from `" + BASE_STORE_NAME + "`");
 
@@ -314,7 +314,7 @@ public class TestSQLTranslator {
     query = new DatabaseQuery()
             .table(a)
             .withMeasure(sum("pnlSum", a.name + ".pnl"))
-            .withMeasure(sumIf("pnlSumFiltered", a.name + ".pnl", criterion(a.name + ".country", eq("france"))));
+            .withMeasure(sumIf("pnlSumFiltered", a.name + ".pnl", criterion(a.name + ".country", eq(new ConstantField("france")))));
     String format = "select sum(`%1$s`.`pnl`) as `pnlSum`, sum(case when `%1$s`.`country` = 'france' then `%1$s`.`pnl` end) as `pnlSumFiltered` from `%1$s`";
     Assertions.assertThat(translate(query, fp))
             .isEqualTo(String.format(
@@ -391,12 +391,12 @@ public class TestSQLTranslator {
     Field recoPrice = new TableField("recommendation.recoprice");
     Measure measure = sumIf("increase_sum", minus(finalPrice, recoPrice), all(
             criterion(finalPrice, recoPrice, ConditionType.GT),
-            criterion(recoPrice, gt(0))
+            criterion(recoPrice, gt(new ConstantField(0)))
     ));
 
     String expression = measure.sqlExpression(fp, DefaultQueryRewriter.INSTANCE, true);
     Assertions.assertThat(expression)
-            .isEqualTo("sum(case when (`recommendation`.`finalprice` > `recommendation`.`recoprice` and `recommendation`.`recoprice` > '0')" +
+            .isEqualTo("sum(case when (`recommendation`.`finalprice` > `recommendation`.`recoprice` and `recommendation`.`recoprice` > 0)" +
                     " then (`recommendation`.`finalprice`-`recommendation`.`recoprice`) end)" +
                     " as `increase_sum`");
 

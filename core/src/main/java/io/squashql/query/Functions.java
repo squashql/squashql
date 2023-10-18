@@ -3,6 +3,7 @@ package io.squashql.query;
 import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.dto.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static io.squashql.query.BinaryOperator.*;
@@ -70,7 +71,7 @@ public class Functions {
     return c;
   }
 
-  public static ConditionDto eq(Object value) {
+  public static ConditionDto eq(Field value) {
     return new SingleValueConditionDto(ConditionType.EQ, value);
   }
 
@@ -82,31 +83,35 @@ public class Functions {
     return ConditionDto.NOT_NULL_CONDITION;
   }
 
-  public static ConditionDto neq(Object value) {
+  public static ConditionDto neq(Field value) {
     return new SingleValueConditionDto(ConditionType.NEQ, value);
   }
 
-  public static ConditionDto in(Object... values) {
+  public static ConditionDto in(Field... values) {
+    return new InConditionDto(Arrays.asList(values));
+  }
+
+  public static ConditionDto in(List<Field> values) {
     return new InConditionDto(values);
   }
 
-  public static ConditionDto lt(Object value) {
+  public static ConditionDto lt(Field value) {
     return new SingleValueConditionDto(ConditionType.LT, value);
   }
 
-  public static ConditionDto le(Object value) {
+  public static ConditionDto le(Field value) {
     return new SingleValueConditionDto(ConditionType.LE, value);
   }
 
-  public static ConditionDto gt(Object value) {
+  public static ConditionDto gt(Field value) {
     return new SingleValueConditionDto(ConditionType.GT, value);
   }
 
-  public static ConditionDto ge(Object value) {
+  public static ConditionDto ge(Field value) {
     return new SingleValueConditionDto(ConditionType.GE, value);
   }
 
-  public static ConditionDto like(String value) {
+  public static ConditionDto like(Field value) {
     return new SingleValueConditionDto(ConditionType.LIKE, value);
   }
 

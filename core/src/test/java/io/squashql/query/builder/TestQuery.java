@@ -2,6 +2,7 @@ package io.squashql.query.builder;
 
 import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.ColumnSetKey;
+import io.squashql.query.ConstantField;
 import io.squashql.query.Functions;
 import io.squashql.query.Measure;
 import io.squashql.query.dto.*;
@@ -39,23 +40,24 @@ public class TestQuery {
     // Only one condition
     build = Query
             .from("saas")
-            .where(tableField("f1"), eq("A"))
+            .where(tableField("f1"), eq(new ConstantField("A")))
             .select(tableFields(List.of("col1", "col2")), List.of(columnSet), List.of(sum))
             .build();
 
-    Assertions.assertThat(build).isEqualTo(q.withCondition(tableField("f1"), eq("A")));
+    Assertions.assertThat(build).isEqualTo(q.withCondition(tableField("f1"), eq(new ConstantField("A"))));
 
     // Multiple conditions
-    CriteriaDto any = any(criterion("f3", eq("C")), criterion("f3", isNull()));
+    CriteriaDto any = any(criterion("f3", eq(new ConstantField("C"))), criterion("f3", isNull()));
     build = Query
             .from("saas")
-            .where(tableField("f1"), eq("A"))
-            .where(tableField("f2"), eq("B"))
+            .where(tableField("f1"), eq(new ConstantField("A")))
+            .where(tableField("f2"), eq(new ConstantField("B")))
             .where(any)
             .select(tableFields(List.of("col1", "col2")), List.of(columnSet), List.of(sum))
             .build();
 
-    Assertions.assertThat(build).isEqualTo(q.withCondition(tableField("f2"), eq("B")).withWhereCriteria(any));
+    Assertions.assertThat(build).isEqualTo(q.withCondition(tableField("f2"), eq(new ConstantField("B")))
+            .withWhereCriteria(any));
 
     // with limit
     build = Query
@@ -137,7 +139,7 @@ public class TestQuery {
               .withColumn(tableField("col1"))
               .withColumn(tableField("col2"))
               .withMeasure(sum)
-              .withCondition(tableField("f1"), eq("A"));
+              .withCondition(tableField("f1"), eq(new ConstantField("A")));
 
       saas.join(other, JoinType.INNER, criterion(other.name + ".id", saas.name + ".id", EQ));
 
@@ -146,7 +148,7 @@ public class TestQuery {
               .from("saas")
               .join("other", JoinType.INNER)
               .on(criterion(other.name + ".id", saas.name + ".id", ConditionType.EQ))
-              .where(tableField("f1"), eq("A"))
+              .where(tableField("f1"), eq(new ConstantField("A")))
               .select(tableFields(List.of("col1", "col2")), List.of(sum))
               .build();
 
@@ -292,7 +294,7 @@ public class TestQuery {
   @Test
   void testHaving() {
     Measure sum = sum("sum", "f2");
-    CriteriaDto criterion = criterion((AggregatedMeasure) sum, ge(0));
+    CriteriaDto criterion = criterion((AggregatedMeasure) sum, ge(new ConstantField(0)));
     QueryDto buildWoRollup = Query
             .from("saas")
             .select(tableFields(List.of("col1")), List.of(sum))
