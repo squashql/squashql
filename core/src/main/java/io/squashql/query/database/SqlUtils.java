@@ -1,9 +1,9 @@
 package io.squashql.query.database;
 
-import io.squashql.query.TableField;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,10 +29,6 @@ public class SqlUtils {
 
   public static String getFieldFullName(TableTypedField field) {
     return field.store() == null ? field.name() : field.store() + '.' + field.name();
-  }
-
-  public static String getFieldFullName(TableField field) {
-    return field.tableName == null ? field.name() : field.tableName + '.' + field.name();
   }
 
   public static String expression(TypedField f) {
