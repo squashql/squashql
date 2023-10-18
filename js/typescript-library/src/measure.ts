@@ -19,12 +19,14 @@ export class AggregatedMeasure implements BasicMeasure {
   readonly aggregationFunction: string
   readonly alias: string
   readonly expression?: string
+  readonly distinct?: boolean
   readonly criteria?: Criteria
 
-  constructor(alias: string, field: Field, aggregationFunction: string, criterion?: Criteria) {
+  constructor(alias: string, field: Field, aggregationFunction: string, distinct?: boolean, criterion?: Criteria) {
     this.alias = alias
     this.field = field
     this.aggregationFunction = aggregationFunction
+    this.distinct = distinct
     this.criteria = criterion
   }
 
@@ -35,6 +37,7 @@ export class AggregatedMeasure implements BasicMeasure {
       "aggregationFunction": this.aggregationFunction,
       "alias": this.alias,
       "expression": this.expression,
+      "distinct": this.distinct,
       "criteria": this.criteria,
     }
   }
@@ -183,26 +186,35 @@ export function count(alias: string, field: Field): Measure {
   return new AggregatedMeasure(alias, field, "count")
 }
 
+export function countDistinct(alias: string, field: Field): Measure {
+  return new AggregatedMeasure(alias, field, "count", true);
+}
+
+
 // aggIf
 
 export function sumIf(alias: string, field: Field, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, field, "sum", criterion)
+  return new AggregatedMeasure(alias, field, "sum", false, criterion)
 }
 
 export function avgIf(alias: string, field: Field, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, field, "avg", criterion)
+  return new AggregatedMeasure(alias, field, "avg", false, criterion)
 }
 
 export function minIf(alias: string, field: Field, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, field, "min", criterion)
+  return new AggregatedMeasure(alias, field, "min", false, criterion)
 }
 
 export function maxIf(alias: string, field: Field, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, field, "max", criterion)
+  return new AggregatedMeasure(alias, field, "max", false, criterion)
 }
 
 export function countIf(alias: string, field: Field, criterion?: Criteria): Measure {
-  return new AggregatedMeasure(alias, field, "count", criterion)
+  return new AggregatedMeasure(alias, field, "count", false, criterion)
+}
+
+export function countDistinctIf(alias: string, field: Field, criterion?: Criteria): Measure {
+  return new AggregatedMeasure(alias, field, "count", true, criterion);
 }
 
 // BINARY
