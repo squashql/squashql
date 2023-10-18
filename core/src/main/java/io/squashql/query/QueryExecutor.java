@@ -13,7 +13,6 @@ import io.squashql.store.Store;
 import io.squashql.table.*;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -68,7 +67,7 @@ public class QueryExecutor {
 
     PivotTableContext pivotTableContext = new PivotTableContext(pivotTableQueryDto);
     QueryDto preparedQuery = prepareQuery(pivotTableQueryDto.query, pivotTableContext);
-    Table result = execute(preparedQuery, pivotTableContext, cacheStatsDtoBuilder, user, false, limitNotifier);
+    Table result = execute(preparedQuery, cacheStatsDtoBuilder, user, false, limitNotifier);
     result = TableUtils.replaceTotalCellValues((ColumnarTable) result, pivotTableQueryDto.rows.stream().map(Field::name).collect(
             Collectors.toList()), pivotTableQueryDto.columns.stream().map(Field::name).collect(Collectors.toList()));
     result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
@@ -130,7 +129,6 @@ public class QueryExecutor {
   public Table execute(QueryDto query) {
     return execute(
             query,
-            null,
             CacheStatsDto.builder(),
             null,
             true,
@@ -138,7 +136,6 @@ public class QueryExecutor {
   }
 
   public Table execute(QueryDto query,
-                       PivotTableContext pivotTableContext,
                        CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
                        SquashQLUser user,
                        boolean replaceTotalCellsAndOrderRows,
@@ -146,9 +143,6 @@ public class QueryExecutor {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
 
     Function<Field, TypedField> fieldSupplier = createQueryFieldSupplier(this.queryEngine, query.virtualTableDto);
-    if (pivotTableContext != null) {
-      pivotTableContext.init(fieldSupplier);
-    }
     QueryScope queryScope = createQueryScope(query, fieldSupplier);
     Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> dependencyGraph = computeDependencyGraph(query, queryScope, fieldSupplier);
     // Compute what needs to be prefetched
@@ -185,7 +179,7 @@ public class QueryExecutor {
       if (!notCached.isEmpty()) {
         notCached.add(CountMeasure.INSTANCE); // Always add count
         notCached.forEach(prefetchQuery::withMeasure);
-        result = this.queryEngine.execute(prefetchQuery, pivotTableContext);
+        result = this.queryEngine.execute(prefetchQuery);
       } else {
         // Create an empty result that will be populated by the query cache
         result = queryCache.createRawResult(prefetchQueryScope);
@@ -325,19 +319,11 @@ public class QueryExecutor {
                                  int queryLimit) {
   }
 
-
-  /**
-   * This object is temporary until BigQuery supports the grouping sets. See <a href="https://issuetracker.google.com/issues/35905909">issue</a>
-   */
-  public static class PivotTableContext {
+  private static class PivotTableContext {
     private final List<Field> rows;
     private final List<Field> cleansedRows;
     private final List<Field> columns;
     private final List<Field> cleansedColumns;
-    @Getter
-    private List<TypedField> rowFields;
-    @Getter
-    private List<TypedField> columnFields;
 
     public PivotTableContext(PivotTableQueryDto pivotTableQueryDto) {
       this.rows = pivotTableQueryDto.rows;
@@ -351,18 +337,13 @@ public class QueryExecutor {
       // computed. This is why it is removed from the axes.
       ColumnSet columnSet = query.columnSets.get(BUCKET);
       if (columnSet != null) {
-        Field name = ((BucketColumnSetDto) columnSet).name;
+        Field name = ((BucketColumnSetDto) columnSet).newField;
         if (fields.contains(name)) {
           fields = new ArrayList<>(fields);
           fields.remove(name);
         }
       }
       return fields;
-    }
-
-    public void init(Function<Field, TypedField> fieldSupplier) {
-      this.rowFields = this.cleansedRows.stream().map(fieldSupplier).toList();
-      this.columnFields = this.cleansedColumns.stream().map(fieldSupplier).toList();
     }
   }
 
@@ -376,7 +357,6 @@ public class QueryExecutor {
 
     Function<QueryDto, Table> execute = q -> execute(
             q,
-            null,
             CacheStatsDto.builder(),
             user,
             false,

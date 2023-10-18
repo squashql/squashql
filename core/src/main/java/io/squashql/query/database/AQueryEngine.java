@@ -87,7 +87,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   protected abstract Table retrieveAggregates(DatabaseQuery query, String sql);
 
   @Override
-  public Table execute(DatabaseQuery query, QueryExecutor.PivotTableContext context) {
+  public Table execute(DatabaseQuery query) {
     if (query.table != null) {
       String tableName = query.table.name;
       // Can be null if sub-query
@@ -97,13 +97,13 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
                 tableName, this.datastore.storesByName().values().stream().map(Store::name).toList()));
       }
     }
-    String sql = createSqlStatement(query, context);
+    String sql = createSqlStatement(query);
     log.info(query + " translated into " + System.lineSeparator() + "sql=" + sql);
     Table aggregates = retrieveAggregates(query, sql);
     return postProcessDataset(aggregates, query);
   }
 
-  protected String createSqlStatement(DatabaseQuery query, QueryExecutor.PivotTableContext context) {
+  protected String createSqlStatement(DatabaseQuery query) {
     return SQLTranslator.translate(query,
             QueryExecutor.createQueryFieldSupplier(this, query.virtualTableDto),
             this.queryRewriter);

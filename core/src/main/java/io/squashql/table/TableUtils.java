@@ -182,7 +182,7 @@ public class TableUtils {
       }
       BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
       // Remove from the map of comparators to use default one when only none is defined for regular column
-      copy.remove(cs.name.name());
+      copy.remove(cs.newField.name());
       copy.remove(cs.field.name());
     });
 
@@ -209,7 +209,7 @@ public class TableUtils {
     for (ColumnSet columnSet : new HashSet<>(columnSets)) {
       BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
       // cs.field can appear multiple times in the table.
-      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(cs.name.name()));
+      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(cs.newField.name()));
     }
 
     int[] finalIndices = MultipleColumnsSorter.sort(args, comparators, contextIndices);

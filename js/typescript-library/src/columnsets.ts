@@ -13,13 +13,13 @@ export class BucketColumnSet implements ColumnSet {
   readonly class: string = PACKAGE + "dto.BucketColumnSetDto"
   readonly key: ColumnSetKey = ColumnSetKey.BUCKET
 
-  constructor(private columnName: Field, private field: Field, private values: Map<string, Array<string>>) {
+  constructor(private newField: Field, private field: Field, private values: Map<string, Array<string>>) {
   }
 
   toJSON() {
     return {
       "@class": this.class,
-      "name": this.columnName,
+      "newField": this.newField,
       "field": this.field,
       "values": Object.fromEntries(this.values),
     }

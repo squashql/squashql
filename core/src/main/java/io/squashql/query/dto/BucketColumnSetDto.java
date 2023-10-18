@@ -18,14 +18,14 @@ import java.util.Map;
 @NoArgsConstructor // For Jackson
 public class BucketColumnSetDto implements ColumnSet {
 
-  public Field name;
+  public Field newField;
 
   public Field field;
 
   public Map<String, List<String>> values = new LinkedHashMap<>();
 
   public BucketColumnSetDto(String name, Field field) {
-    this.name = new TableField(name);
+    this.newField = new TableField(name);
     this.field = field;
   }
 
@@ -41,7 +41,7 @@ public class BucketColumnSetDto implements ColumnSet {
 
   @Override
   public List<Field> getNewColumns() {
-    return List.of(this.name, this.field);
+    return List.of(this.newField, this.field);
   }
 
   @Override
