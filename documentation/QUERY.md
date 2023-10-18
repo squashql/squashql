@@ -584,6 +584,7 @@ import {
   avg,
   sumIf,
   countDistinct,
+  countDistinctIf,
   eq,
   criterion,      
 } from "@squashql/squashql-js"
@@ -592,9 +593,10 @@ const amountSum = sum("sum_amount", myTable.amount)
 const amountAvg = avg("avg_amount", myTable.amount)
 const sales = sumIf("sales", "amount", criterion(myTable.incomeExpense, eq("Revenue")))
 const distinctStores = countDistinct("distinct_stores", myTable.store)
+const distinctOpenedStores = countDistinctIf("distinct_opened_stores", myTable.store, criterion(myTable.isOpen, eq(true)))
 
 const query = from(myTable._name)
-        .select([], [], [amountSum, amountAvg, sales, distinctStores])
+        .select([], [], [amountSum, amountAvg, sales, distinctStores, distinctStoresSellingFood])
         .build()
 ```
 
@@ -602,7 +604,8 @@ const query = from(myTable._name)
 SELECT SUM(amount)                                                AS sum_amount,
        AVG(amount)                                                AS avg_amount,
        SUM(CASE WHEN IncomeExpense = 'Revenue' THEN amount 0 END) AS sales,
-       SUM(DISTINCT(store))                                       AS distinct_stores
+       SUM(DISTINCT(store))                                       AS distinct_stores,
+       SUM(DISTINCT(CASE WHEN isOpen = true THEN store 0 END))    AS distinct_opened_stores
 FROM myTable
 ```
 
