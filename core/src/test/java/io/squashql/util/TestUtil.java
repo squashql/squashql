@@ -35,7 +35,7 @@ public class TestUtil {
   }
 
   /**
-   * To format the json: https://jsonlint.com/
+   * To format the json: https://jsonformatter.curiousconcept.com/#
    */
   public static String tableToJson(Table table) {
     RowTable rowTable = new RowTable(table.headers(), ImmutableList.copyOf(table.iterator()));

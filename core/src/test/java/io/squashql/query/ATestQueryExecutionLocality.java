@@ -1,10 +1,5 @@
 package io.squashql.query;
 
-import static io.squashql.query.Functions.divide;
-import static io.squashql.query.Functions.multiply;
-import static io.squashql.query.Functions.sum;
-import static io.squashql.query.TableField.tableFields;
-
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.DatabaseQuery;
@@ -14,11 +9,15 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Datastore;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
-import java.util.List;
-import java.util.Map;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+
+import java.util.List;
+import java.util.Map;
+
+import static io.squashql.query.Functions.*;
+import static io.squashql.query.TableField.tableFields;
 
 @TestClass(ignore = {TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE, TestClass.Type.CLICKHOUSE, TestClass.Type.SPARK})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -73,9 +72,9 @@ public abstract class ATestQueryExecutionLocality extends ABaseTestQuery {
     }
 
     @Override
-    public Table execute(DatabaseQuery query, QueryExecutor.PivotTableContext context) {
+    public Table execute(DatabaseQuery query) {
       this.lastExecutedDatabaseQuery = query;
-      return this.underlying.execute(query, context);
+      return this.underlying.execute(query);
     }
 
     @Override

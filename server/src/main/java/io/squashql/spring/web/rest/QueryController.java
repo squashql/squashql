@@ -47,7 +47,6 @@ public class QueryController {
   public ResponseEntity<QueryResultDto> execute(@RequestBody QueryDto query) {
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
     Table table = this.queryExecutor.execute(query,
-            null,
             csBuilder,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(),
             true,
@@ -71,6 +70,7 @@ public class QueryController {
     PivotTable pt = this.queryExecutor.execute(pivotTableQueryDto,
             csBuilder,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(),
+            true,
             null);
     List<String> fields = pt.table.headers().stream().map(Header::name).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()

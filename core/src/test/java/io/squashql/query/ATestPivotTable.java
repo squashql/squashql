@@ -2,11 +2,9 @@ package io.squashql.query;
 
 import com.google.common.collect.ImmutableList;
 import io.squashql.TestClass;
+import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.builder.Query;
-import io.squashql.query.dto.BucketColumnSetDto;
-import io.squashql.query.dto.JoinType;
-import io.squashql.query.dto.PivotTableQueryDto;
-import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.*;
 import io.squashql.table.PivotTable;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
@@ -43,7 +41,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     TableTypedField spendingCategory = new TableTypedField(this.storeSpending, "spending category", String.class);
     TableTypedField spendingSubcategory = new TableTypedField(this.storeSpending, "spending subcategory", String.class);
     TableTypedField amount = new TableTypedField(this.storeSpending, "amount", double.class);
-    TableTypedField population = new TableTypedField(this.storePopulation, "population", int.class);
+    TableTypedField population = new TableTypedField(this.storePopulation, "population", double.class);
     return Map.of(
             this.storeSpending, List.of(city, country, continent, spendingCategory, spendingSubcategory, amount),
             this.storePopulation, List.of(country, continent, population));
@@ -73,9 +71,9 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
 
     this.tm.load(this.storePopulation, List.of(
-            new Object[]{"france", "eu", 70},
-            new Object[]{"uk", "eu", 65},
-            new Object[]{"usa", "am", 330}
+            new Object[]{"france", "eu", 70d},
+            new Object[]{"uk", "eu", 65d},
+            new Object[]{"usa", "am", 330d}
     ));
   }
 
@@ -334,12 +332,11 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     QueryDto query1 = Query
             .from(this.storeSpending)
             .select(tableFields(List.of("spending category", "continent", "country")), measuresSpending)
-//            .rollup(tableFields(List.of("spending category", "continent", "country")))
             .build();
     List<String> rows = List.of("continent", "country");
     List<String> columns = List.of("spending category");
-    this.executor.execute(query1).show();
-    this.executor.execute(new PivotTableQueryDto(query1, tableFields(rows), tableFields(columns))).show();
+//    this.executor.execute(query1).show();
+//    this.executor.execute(new PivotTableQueryDto(query1, tableFields(rows), tableFields(columns))).show();
 
     List<Measure> measuresPop = List.of(pop);
     QueryDto query2 = Query
@@ -347,15 +344,58 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .select(tableFields(List.of("continent", "country")), measuresPop)
             .build();
 //    this.executor.execute(query2).show();
-    this.executor.execute(new PivotTableQueryDto(query2, tableFields(rows), List.of())).show();
+//    this.executor.execute(new PivotTableQueryDto(query2, tableFields(rows), List.of())).show();
 
-    this.executor.execute(query1, query2, JoinType.LEFT, null).show();
-//    verifyResults(testInfo, query, rows, columns);
+//    this.executor.execute(query1, query2, JoinType.LEFT, null).show();
+
+    PivotTable p1 = this.executor.execute(new PivotTableQueryDto(query1, tableFields(List.of("continent", "country")), tableFields(List.of("spending category"))));
+    p1.show();
+    toJson(p1);
+
+    PivotTable p2 = this.executor.execute(new PivotTableQueryDto(query2, tableFields(List.of("continent", "country")), List.of()));
+    p2.show();
+    toJson(p2);
+
+    PivotTable pivotTable = this.executor.executePivot(query1, query2, tableFields(List.of("continent", "country")), tableFields(List.of("spending category")), JoinType.LEFT, null);
+    pivotTable.show();
+    toJson(pivotTable);
+
+    System.out.println(TestUtil.tableToJson(pivotTable.table));
+    System.out.println(JacksonUtil.serialize(pivotTable.pivotTableCells));
+    verifyResults(testInfo, query1, query2, JoinType.LEFT, List.of("continent", "country"), List.of("spending category"));
   }
 
+  // TODO to delete once dev is done
+  public static void toJson(PivotTable pivotTable) {
+    List<String> list = pivotTable.table.headers().stream().map(Header::name).toList();
+
+    SimpleTableDto simpleTable = SimpleTableDto.builder()
+            .rows(ImmutableList.copyOf(pivotTable.table.iterator()))
+            .columns(list)
+            .build();
+
+    Map<String, Object> data = Map.of("rows", pivotTable.rows, "columns", pivotTable.columns, "values", pivotTable.values, "table", simpleTable);
+    System.out.println(JacksonUtil.serialize(data));
+  }
 
   private void verifyResults(TestInfo testInfo, QueryDto query, List<String> rows, List<String> columns) {
     PivotTable pt = this.executor.execute(new PivotTableQueryDto(query, tableFields(rows), tableFields(columns)));
+    Table expectedTabular = tableFromFile(testInfo);
+
+    Assertions.assertThat(pt.table).containsExactlyElementsOf(ImmutableList.copyOf(expectedTabular.iterator()));
+    Assertions.assertThat(pt.table.headers()).containsExactlyElementsOf(expectedTabular.headers());
+
+    List<List<Object>> expectedPivotTable = pivotTableFromFile(testInfo);
+    Assertions.assertThat(pt.pivotTableCells).containsExactlyElementsOf(expectedPivotTable);
+  }
+
+  /**
+   * To save in file '*.tabular.json': System.out.println(TestUtil.tableToJson(pivotTable.table));
+   * To save in file '*.pivottable.json': System.out.println(JacksonUtil.serialize(pivotTable.pivotTableCells));
+   */
+  // FIXME factorize
+  private void verifyResults(TestInfo testInfo, QueryDto query1, QueryDto query2, JoinType joinType, List<String> rows, List<String> columns) {
+    PivotTable pt = this.executor.executePivot(query1, query2, tableFields(rows), tableFields(columns), joinType, null);
     Table expectedTabular = tableFromFile(testInfo);
 
     Assertions.assertThat(pt.table).containsExactlyElementsOf(ImmutableList.copyOf(expectedTabular.iterator()));
