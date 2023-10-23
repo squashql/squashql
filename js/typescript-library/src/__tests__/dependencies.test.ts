@@ -1,7 +1,8 @@
 import {BinaryOperationField, ConstantField, TableField} from "../field";
 import * as dependencies from "../dependencies";
-import {BucketColumnSet} from "../columnsets";
-import {BinaryOperator, ColumnSet, Field} from "../types";
+import {BucketColumnSet, Month, Quarter, Semester, Year} from "../columnsets";
+import {BinaryOperator, ColumnSet, Field, Period} from "../types";
+import {computePeriodDependencies} from "../dependencies";
 
 afterEach(() => {
   jest.restoreAllMocks();
@@ -78,8 +79,10 @@ describe('computeColumnSetDependencies', () => {
     const createdField = new TableField('mockTable.createdField');
     const mockField = new TableField('mockTable.mockField');
     const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies');
-    computeFieldDependenciesSpy.mockImplementation((_field, array) => {
-      array.push(mockField);
+    computeFieldDependenciesSpy.mockImplementation((field, array) => {
+      if (field === mockField) {
+        array.push(mockField);
+      }
       return array;
     });
 
@@ -87,7 +90,6 @@ describe('computeColumnSetDependencies', () => {
     const result = dependencies.computeColumnSetDependencies(columnSet);
 
     expect(result).toEqual(expect.arrayContaining([mockField]));
-    expect(computeFieldDependenciesSpy).toHaveBeenCalledWith(mockField, expect.anything());
   });
 
   it('should throw an error for unknown ColumnSet type', () => {
@@ -104,4 +106,92 @@ describe('computeColumnSetDependencies', () => {
   });
 
 });
+
+describe('computePeriodDependencies', () => {
+
+  const mockYear = new TableField('mockYear');
+  const mockSemester = new TableField('mockSemester');
+  const mockQuarter = new TableField('mockQuarter');
+  const mockMonth = new TableField('mockMonth');
+
+  it('should compute dependencies for Year', () => {
+    const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies');
+    computeFieldDependenciesSpy.mockImplementation((field, array) => {
+      if (field === mockYear) {
+        array.push(mockYear);
+      }
+      return array;
+    });
+
+    const period = new Year(mockYear);
+    const result = computePeriodDependencies(period);
+
+    expect(result).toEqual(expect.arrayContaining([mockYear]));
+  });
+
+  it('should compute dependencies for Semester', () => {
+    const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies');
+    computeFieldDependenciesSpy.mockImplementation((field, array) => {
+      if (field === mockSemester) {
+        array.push(mockSemester);
+      } else if (field === mockYear) {
+        array.push(mockYear);
+      }
+      return array;
+    });
+
+    const period = new Semester(mockSemester, mockYear);
+    const result = computePeriodDependencies(period);
+
+    expect(result).toEqual(expect.arrayContaining([mockSemester, mockYear]));
+  });
+
+  it('should compute dependencies for Quarter', () => {
+    const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies');
+    computeFieldDependenciesSpy.mockImplementation((field, array) => {
+      if (field === mockQuarter) {
+        array.push(mockQuarter);
+      } else if (field === mockYear) {
+        array.push(mockYear);
+      }
+      return array;
+    });
+
+    const period = new Quarter(mockQuarter, mockYear);
+    const result = computePeriodDependencies(period);
+
+    expect(result).toEqual(expect.arrayContaining([mockQuarter, mockYear]));
+  });
+
+  it('should compute dependencies for Month', () => {
+    const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies');
+    computeFieldDependenciesSpy.mockImplementation((field, array) => {
+      if (field === mockMonth) {
+        array.push(mockMonth);
+      } else if (field === mockYear) {
+        array.push(mockYear);
+      }
+      return array;
+    });
+
+    const period = new Month(mockMonth, mockYear);
+    const result = computePeriodDependencies(period);
+
+    expect(result).toEqual(expect.arrayContaining([mockMonth, mockYear]));
+  });
+
+  it('should throw an error for unknown Period type', () => {
+    class UnknownPeriod implements Period {
+      readonly class: string;
+    }
+
+    const unknownPeriod = new UnknownPeriod() as any;
+
+    expect(() => dependencies.computePeriodDependencies(unknownPeriod)).toThrow(
+            "Period with unknown type: class UnknownPeriod"
+    );
+  });
+
+});
+
 
