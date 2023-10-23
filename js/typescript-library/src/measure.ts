@@ -1,17 +1,8 @@
-import {PACKAGE, Period} from "./index"
-import {Criteria} from "./conditions"
-import {ColumnSetKey} from "./columnsets"
-import {Field, TableField} from "./field"
+import Criteria from "./Criteria";
+import {TableField} from "./field"
 import {serializeMap} from "./util"
-
-// Marker type
-export type BasicMeasure = Measure
-
-export interface Measure {
-  readonly class: string
-  readonly alias: string
-  readonly expression?: string
-}
+import {BasicMeasure, BinaryOperator, ColumnSetKey, Field, Measure, Period} from "./types";
+import PACKAGE from "./package";
 
 export class AggregatedMeasure implements BasicMeasure {
   readonly class: string = PACKAGE + "AggregatedMeasure"
@@ -86,13 +77,6 @@ export class BinaryOperationMeasure implements Measure {
       "rightOperand": this.rightOperand,
     }
   }
-}
-
-export enum BinaryOperator {
-  PLUS = "PLUS",
-  MINUS = "MINUS",
-  MULTIPLY = "MULTIPLY",
-  DIVIDE = "DIVIDE",
 }
 
 export const countRows = new AggregatedMeasure("_contributors_count_", new TableField("*"), "count")

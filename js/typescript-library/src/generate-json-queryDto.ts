@@ -3,7 +3,6 @@ import {
   AggregatedMeasure,
   avgIf,
   BinaryOperationMeasure,
-  BinaryOperator,
   comparisonMeasureWithBucket,
   comparisonMeasureWithParent,
   comparisonMeasureWithPeriod,
@@ -19,7 +18,6 @@ import {
   _in,
   all,
   and,
-  ConditionType,
   criterion,
   criterion_,
   eq,
@@ -36,6 +34,7 @@ import * as fs from "fs"
 import {OrderKeyword} from "./order"
 import {BucketColumnSet, Month} from "./columnsets"
 import {ConstantField, TableField, tableField} from "./field"
+import {BinaryOperator, ConditionType} from "./types";
 
 export function generateFromQueryDto() {
   const table = new Table("myTable")

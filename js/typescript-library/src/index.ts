@@ -1,4 +1,4 @@
-export const PACKAGE = "io.squashql.query."
+// noinspection JSUnusedGlobalSymbols
 
 export {
   Query, Table, JoinType, QueryMerge,
@@ -9,8 +9,7 @@ export {
 } from './order'
 
 export {
-  Measure, AggregatedMeasure, ExpressionMeasure, BasicMeasure,
-  sum, min, max, avg, count, countDistinct,
+  AggregatedMeasure, ExpressionMeasure, sum, min, max, avg, count, countDistinct,
   sumIf, minIf, maxIf, avgIf, countIf, countDistinctIf,
   plus, minus, multiply, divide,
   integer, decimal,
@@ -20,17 +19,14 @@ export {
 } from './measure'
 
 export {
-  Condition,
-  ConditionType,
-  Criteria,
   eq, neq, lt, le, gt, ge, _in, like, isNull, isNotNull,
   and, or,
   all, any, criterion, criterion_, havingCriterion,
 } from './conditions'
 
 export {
-  ColumnSet, BucketColumnSet,
-  Period, Month, Year, Quarter, Semester,
+  BucketColumnSet,
+  Month, Year, Quarter, Semester,
 } from './columnsets'
 
 export {
@@ -53,5 +49,11 @@ export {
 } from './queryBuilder'
 
 export {
-  Field, TableField, ConstantField
+  TableField, ConstantField
 } from './field'
+export {
+  Field, Measure, ColumnSet, ConditionType, Condition, BasicMeasure, Period
+} from "./types";
+export {
+  default as Criteria
+} from "./criteria";

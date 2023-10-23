@@ -1,17 +1,5 @@
-import { PACKAGE } from "./index"
-import { BinaryOperator } from "./measure"
-
-export interface Field {
-  readonly class: string
-
-  divide(other: Field): Field
-
-  minus(other: Field): Field
-
-  multiply(other: Field): Field
-
-  plus(other: Field): Field
-}
+import {BinaryOperator, Field} from "./types";
+import PACKAGE from "./package";
 
 abstract class AField implements Field {
   readonly class: string

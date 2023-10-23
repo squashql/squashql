@@ -1,6 +1,6 @@
 import * as fs from "fs"
 import {BucketColumnSet} from "./columnsets"
-import {all, ConditionType, criterion, criterion_, eq, gt, havingCriterion, lt} from "./conditions"
+import {all, criterion, criterion_, eq, gt, havingCriterion, lt} from "./conditions"
 import {TableField, tableField, tableFields} from "./field"
 import {avg, ExpressionMeasure, sum} from "./measure"
 import {OrderKeyword} from "./order"
@@ -8,6 +8,8 @@ import {Action, QueryCacheParameter} from "./parameters"
 import {JoinType} from "./query"
 import {from} from "./queryBuilder"
 import {VirtualTable} from "./virtualtable"
+
+import {ConditionType} from "./types";
 
 export function generateFromQuery() {
   const values = new Map(Object.entries({

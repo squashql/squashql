@@ -1,4 +1,4 @@
-import {PACKAGE} from "./index"
+import PACKAGE from "./package";
 
 export interface Order {
   readonly class: string
