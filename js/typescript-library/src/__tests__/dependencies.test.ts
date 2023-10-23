@@ -1,7 +1,7 @@
-import {BinaryOperationField, ConstantField, Field, TableField} from "../field";
+import {BinaryOperationField, ConstantField, TableField} from "../field";
 import * as dependencies from "../dependencies";
-import {BinaryOperator} from "../measure";
-import {BucketColumnSet, ColumnSet} from "../columnsets";
+import {BucketColumnSet} from "../columnsets";
+import {BinaryOperator, ColumnSet, Field} from "../types";
 
 afterEach(() => {
   jest.restoreAllMocks();
@@ -67,7 +67,7 @@ describe('computeFieldDependencies', () => {
     }
 
     const unknownField = new UnknownField();
-    expect(() => dependencies.computeFieldDependencies(unknownField)).toThrow('Field with unknown type: UnknownField');
+    expect(() => dependencies.computeFieldDependencies(unknownField)).toThrow('Field with unknown type: class UnknownField');
   });
 
 });
@@ -78,7 +78,10 @@ describe('computeColumnSetDependencies', () => {
     const createdField = new TableField('mockTable.createdField');
     const mockField = new TableField('mockTable.mockField');
     const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies');
-    computeFieldDependenciesSpy.mockReturnValue([mockField]);
+    computeFieldDependenciesSpy.mockImplementation((_field, array) => {
+      array.push(mockField);
+      return array;
+    });
 
     const columnSet = new BucketColumnSet(createdField, mockField, new Map());
     const result = dependencies.computeColumnSetDependencies(columnSet);
@@ -96,7 +99,7 @@ describe('computeColumnSetDependencies', () => {
     const unknownBucketColumnSet = new UnknownBucketColumnSet() as any;
 
     expect(() => dependencies.computeColumnSetDependencies(unknownBucketColumnSet)).toThrow(
-            "ColumnSet with unknown type: UnknownBucketColumnSet"
+            "ColumnSet with unknown type: class UnknownBucketColumnSet"
     );
   });
 
