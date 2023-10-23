@@ -12,13 +12,6 @@ import {
 import {ConstantCondition, InCondition, LogicalCondition, SingleValueCondition} from "./conditions";
 import Criteria from "./criteria";
 
-const createResultArrayIfNeeded = (resultArray: TableField[] | undefined): TableField[] => {
-  if (!resultArray) {
-    return [];
-  }
-  return resultArray;
-};
-
 export const computeFieldDependencies = (field: Field, resultArray: TableField[] = []): TableField[] => {
   switch (field.constructor) {
     case TableField:
