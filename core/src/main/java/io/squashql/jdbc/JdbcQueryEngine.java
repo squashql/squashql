@@ -1,5 +1,6 @@
 package io.squashql.jdbc;
 
+import io.squashql.query.database.QueryResultFormat;
 import io.squashql.table.ColumnarTable;
 import io.squashql.query.Header;
 import io.squashql.table.RowTable;
@@ -25,7 +26,7 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
   protected abstract BiFunction<ResultSetMetaData, Integer, Class<?>> typeToClassConverter();
 
   @Override
-  protected Table retrieveAggregates(DatabaseQuery query, String sql) {
+  protected Table retrieveAggregates(QueryResultFormat format, String sql) {
     return executeQuery(sql, this.datastore.getConnection(), tableResult -> {
       List<Class<?>> columnTypes = new ArrayList<>();
       for (int i = 0; i < tableResult.getMetaData().getColumnCount(); i++) {
@@ -33,17 +34,14 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
       }
 
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
-              query,
+              format,
               columnTypes,
-              (columnType, name) -> name,
               (columnType, name) -> columnType,
               new ResultSetIterator(tableResult),
-              (i, fieldValues) -> fieldValues[i],
-              this.queryRewriter
-      );
+              (i, fieldValues) -> fieldValues[i]);
       return new ColumnarTable(
               result.getOne(),
-              new HashSet<>(query.measures),
+              new HashSet<>(format.measures()),
               result.getTwo());
     });
   }

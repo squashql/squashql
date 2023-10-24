@@ -45,7 +45,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
   }
 
   @Override
-  protected Table retrieveAggregates(DatabaseQuery query, String sql) {
+  protected Table retrieveAggregates(QueryResultFormat format, String sql) {
     try (ClickHouseClient client = ClickHouseClient.newInstance(ClickHouseProtocol.HTTP);
          ClickHouseResponse response = client.read(this.nodes)
                  .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
@@ -53,16 +53,14 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
                  .execute()
                  .get()) {
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
-              query,
+              format,
               response.getColumns(),
-              (column, name) -> name,
               (column, name) -> ClickHouseUtil.clickHouseTypeToClass(column.getDataType()),
               response.records().iterator(),
-              (index, r) -> getValue(r, index, response.getColumns()),
-              this.queryRewriter);
+              (index, r) -> getValue(r, index, response.getColumns()));
       return new ColumnarTable(
               result.getOne(),
-              new HashSet<>(query.measures),
+              new HashSet<>(format.measures()),
               result.getTwo());
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);

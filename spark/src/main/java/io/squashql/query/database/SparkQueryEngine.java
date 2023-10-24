@@ -2,8 +2,8 @@ package io.squashql.query.database;
 
 import io.squashql.SparkDatastore;
 import io.squashql.SparkUtil;
-import io.squashql.table.ColumnarTable;
 import io.squashql.query.Header;
+import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
 import org.apache.spark.sql.Dataset;
@@ -42,19 +42,17 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
   }
 
   @Override
-  protected Table retrieveAggregates(DatabaseQuery query, String sql) {
+  protected Table retrieveAggregates(QueryResultFormat format, String sql) {
     Dataset<Row> ds = this.datastore.spark.sql(sql);
     Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
-            query,
+            format,
             Arrays.stream(ds.schema().fields()).toList(),
-            (column, name) -> name,
             (column, name) -> datatypeToClass(column.dataType()),
             ds.toLocalIterator(),
-            (i, r) -> SparkUtil.getTypeValue(r.get(i)),
-            this.queryRewriter);
+            (i, r) -> SparkUtil.getTypeValue(r.get(i)));
     return new ColumnarTable(
             result.getOne(),
-            new HashSet<>(query.measures),
+            new HashSet<>(format.measures()),
             result.getTwo());
   }
 

@@ -4,9 +4,9 @@ import com.google.cloud.bigquery.*;
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryUtil;
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.Field;
 import io.squashql.query.Header;
 import io.squashql.query.QueryExecutor;
+import io.squashql.query.compiled.DatabaseQuery2;
 import io.squashql.query.date.DateFunctions;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
@@ -52,10 +52,9 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   }
 
   @Override
-  protected String createSqlStatement(DatabaseQuery query, QueryExecutor.PivotTableContext context) {
+  protected String createSqlStatement(DatabaseQuery2 query, QueryExecutor.PivotTableContext context) {
     boolean hasRollup = !query.rollup.isEmpty();
     BigQueryQueryRewriter rewriter = (BigQueryQueryRewriter) this.queryRewriter;
-    Function<Field, TypedField> queryFieldSupplier = QueryExecutor.createQueryFieldSupplier(this, query.virtualTableDto);
     if (!query.groupingSets.isEmpty()) {
       // rows = a,b,c; columns = x,y
       // (a,b,c,x,y)
@@ -76,7 +75,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       String unionDistinct = " union distinct ";
 
       for (int i = 0; i < rollups.size(); i++) {
-        DatabaseQuery deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), DatabaseQuery.class);
+        DatabaseQuery2 deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), DatabaseQuery2.class);
         deepCopy.groupingSets = Collections.emptyList();
         deepCopy.rollup = rollups.get(i);
 
@@ -93,9 +92,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     }
 
     if (!hasRollup) {
-      return SQLTranslator.translate(query,
-              queryFieldSupplier,
-              rewriter);
+      return SQLTranslator.translate(query, rewriter);
     } else {
       checkRollupIsValid(
               query.select.stream().map(this.queryRewriter::select).toList(),
@@ -136,39 +133,38 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
       List<TypedField> missingColumnsInRollup = new ArrayList<>(query.select);
       missingColumnsInRollup.removeAll(query.rollup);
-      DatabaseQuery deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), DatabaseQuery.class);
+      DatabaseQuery2 deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), DatabaseQuery2.class);
       // Missing columns needs to be added at the beginning to have the correct sub-totals
       missingColumnsInRollup.addAll(query.rollup);
       deepCopy.rollup = missingColumnsInRollup;
       return SQLTranslator.translate(deepCopy,
-              queryFieldSupplier,
               // The condition on rollup is to handle subquery
               q -> q.rollup.isEmpty() ? this.queryRewriter : newRewriter);
     }
   }
 
   @Override
-  protected Table postProcessDataset(Table input, DatabaseQuery query) {
-    if (query.rollup.isEmpty() && query.groupingSets.isEmpty()) {
+  protected Table postProcessDataset(Table input, QueryResultFormat format) {
+    if (format.rollup().isEmpty() && format.groupingSets().isEmpty()) {
       return input;
     }
 
-    boolean isPartialRollup = !Set.copyOf(query.select).equals(Set.copyOf(query.rollup));
-    List<TypedField> missingColumnsInRollup = new ArrayList<>(query.select);
-    missingColumnsInRollup.removeAll(query.rollup);
+    boolean isPartialRollup = !Set.copyOf(format.select()).equals(Set.copyOf(format.rollup()));
+    List<TypedField> missingColumnsInRollup = new ArrayList<>(format.select());
+    missingColumnsInRollup.removeAll(format.rollup());
     Set<String> missingColumnsInRollupSet = missingColumnsInRollup.stream().map(SqlUtils::expression).collect(Collectors.toSet());
 
     MutableIntSet rowIndicesToRemove = new IntHashSet();
     for (int i = 0; i < input.headers().size(); i++) {
       Header h = input.headers().get(i);
       List<Object> columnValues = input.getColumn(i);
-      if (i < query.select.size()) {
+      if (i < format.select().size()) {
         List<Object> baseColumnValues = input.getColumnValues(h.name());
         for (int rowIndex = 0; rowIndex < input.count(); rowIndex++) {
           Object value = columnValues.get(rowIndex);
           if (value == null) {
             baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
-            if (query.groupingSets.isEmpty() && isPartialRollup && missingColumnsInRollupSet.contains(h.name())) {
+            if (format.groupingSets().isEmpty() && isPartialRollup && missingColumnsInRollupSet.contains(h.name())) {
               // Partial rollup not supported https://issuetracker.google.com/issues/35905909, we let bigquery compute
               // all totals, and we remove here the extra rows.
               rowIndicesToRemove.add(rowIndex);
@@ -204,23 +200,20 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   }
 
   @Override
-  protected Table retrieveAggregates(DatabaseQuery query, String sql) {
+  protected Table retrieveAggregates(QueryResultFormat format, String sql) {
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(sql).build();
     try {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
       Schema schema = tableResult.getSchema();
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
-              query,
+              format,
               schema.getFields(),
-              (column, name) -> name,
               (column, name) -> BigQueryUtil.bigQueryTypeToClass(column.getType()),
               tableResult.iterateAll().iterator(),
-              (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i),
-              this.queryRewriter
-      );
+              (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i));
       return new ColumnarTable(
               result.getOne(),
-              new HashSet<>(query.measures),
+              new HashSet<>(format.measures()),
               result.getTwo());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);

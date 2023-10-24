@@ -76,7 +76,7 @@ public final class MeasureUtils {
           QueryDto query,
           ComparisonMeasureReferencePosition cm,
           QueryExecutor.QueryScope queryScope,
-          Function<Field, TypedField> fieldSupplier) {
+          QueryResolver queryResolver) {
     AtomicReference<CriteriaDto> copy = new AtomicReference<>(queryScope.whereCriteriaDto() == null ? null : CriteriaDto.deepCopy(queryScope.whereCriteriaDto()));
     Consumer<Field> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
@@ -87,7 +87,7 @@ public final class MeasureUtils {
     Optional.ofNullable(cm.ancestors)
             .ifPresent(ancestors -> {
               ancestors.forEach(criteriaRemover);
-              List<TypedField> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).map(fieldSupplier).toList();
+              List<TypedField> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).map(queryResolver::resolveField).toList();
               rollupColumns.addAll(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage reverse order".
             });
     return new QueryExecutor.QueryScope(queryScope.tableDto(),
@@ -144,6 +144,7 @@ public final class MeasureUtils {
   }
 
   public static Function<Field, TypedField> withFallback(Function<Field, TypedField> fieldProvider, Class<?> fallbackType) {
+    // todo-mde
     return field -> {
       try {
         return fieldProvider.apply(field);

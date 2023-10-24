@@ -1,20 +1,13 @@
 package io.squashql.query;
 
 import io.squashql.PrefetchVisitor;
-import io.squashql.PrimitiveMeasureVisitor;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.QueryCache.SubQueryScope;
 import io.squashql.query.QueryCache.TableScope;
-import io.squashql.query.compiled.CompiledCriteria;
-import io.squashql.query.compiled.CompiledMeasure;
-import io.squashql.query.compiled.CompiledTable;
 import io.squashql.query.compiled.DatabaseQuery2;
-import io.squashql.query.database.AQueryEngine;
-import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.parameter.QueryCacheParameter;
-import io.squashql.store.Store;
 import io.squashql.table.*;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
@@ -140,99 +133,6 @@ public class QueryExecutor {
             null);
   }
 
-  private DatabaseQuery2 compileQuery(final QueryScope query, final List<Measure> queriedMeasures, final int limit) {
-    checkQuery(query);
-    final CompiledTable table;
-    final DatabaseQuery2 subQuery;
-    final Function<Field, TypedField> fieldSupplier = createQueryFieldSupplier(this.queryEngine, query.virtualTableDto);
-    if (query.subQuery == null) {
-      subQuery = null;
-      table = compileTable(query.tableDto);
-    } else {
-      subQuery = compileSubQuery(query.subQuery, fieldSupplier);
-      table = null;
-    }
-    final List<TypedField> select = Collections.unmodifiableList(query.columns);
-    final CompiledCriteria whereCriteria = compileCriteria(query.whereCriteriaDto);
-    final CompiledCriteria havingCriteria = compileCriteria(query.havingCriteriaDto);
-    final List<CompiledMeasure> measures = compileMeasure(queriedMeasures);
-    final List<TypedField> rollup = Collections.unmodifiableList(query.rollupColumns);
-    final List<List<TypedField>> groupingSets = Collections.unmodifiableList(query.groupingSets);
-    return new DatabaseQuery2(query.virtualTableDto,
-            table,
-            subQuery,
-            select,
-            whereCriteria,
-            havingCriteria,
-            measures,
-            rollup,
-            groupingSets,
-            limit);
-  }
-
-  private void checkQuery(final QueryScope query) {
-    if (query.tableDto == null && query.subQuery == null) {
-      throw new IllegalArgumentException("A table or sub-query was expected in " + query);
-    } else if (query.tableDto != null && query.subQuery != null) {
-      throw new IllegalArgumentException("Cannot define a table and a sub-query at the same time in " + query);
-    }
-  }
-
-  private DatabaseQuery2 compileSubQuery(final QueryDto subQuery, final Function<Field, TypedField> fieldSupplier) {
-    checkSubQuery(subQuery);
-    final CompiledTable table = compileTable(subQuery.table);
-    final List<TypedField> select = subQuery.columns.stream().map(fieldSupplier).toList();
-    final CompiledCriteria whereCriteria = compileCriteria(subQuery.whereCriteriaDto);
-    final CompiledCriteria havingCriteria = compileCriteria(subQuery.havingCriteriaDto);
-    final List<CompiledMeasure> measures = compileMeasure(subQuery.measures);
-    // should we check groupingSet and rollup as well are empty ?
-    return new DatabaseQuery2(null,
-            table,
-            null,
-            select,
-            whereCriteria,
-            havingCriteria,
-            measures,
-            Collections.emptyList(),
-            Collections.emptyList(),
-            -1);
-  }
-
-  // todo-mde maybe move this part when building the subQuery ?
-  private void checkSubQuery(final QueryDto subQuery) {
-    if (subQuery.subQuery != null) {
-      throw new IllegalArgumentException("sub-query in a sub-query is not supported");
-    }
-    if (subQuery.virtualTableDto != null) {
-      throw new IllegalArgumentException("virtualTableDto in a sub-query is not supported");
-    }
-    if (subQuery.columnSets != null && !subQuery.columnSets.isEmpty()) {
-      throw new IllegalArgumentException("column sets are not expected in sub query: " + subQuery);
-    }
-    if (subQuery.parameters != null && !subQuery.parameters.isEmpty()) {
-      throw new IllegalArgumentException("parameters are not expected in sub query: " + subQuery);
-    }
-    for (Measure measure : subQuery.measures) {
-      if (measure.accept(new PrimitiveMeasureVisitor())) {
-        continue;
-      }
-      throw new IllegalArgumentException("Only measures that can be computed by the underlying database can be used" +
-              " in a sub-query but " + measure + " was provided");
-    }
-  }
-
-  private CompiledTable compileTable(final TableDto table) {
-    return null;
-  }
-
-  private CompiledCriteria compileCriteria(final CriteriaDto whereCriteriaDto) {
-    return null;
-  }
-
-  private List<CompiledMeasure> compileMeasure(final List<Measure> measures) {
-    return null;
-  }
-
   public Table execute(QueryDto query,
                        PivotTableContext pivotTableContext,
                        CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
@@ -241,26 +141,26 @@ public class QueryExecutor {
                        IntConsumer limitNotifier) {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
 
-    Function<Field, TypedField> fieldSupplier = createQueryFieldSupplier(this.queryEngine, query.virtualTableDto);
+    final QueryResolver queryResolver = this.queryEngine.queryResolver(query.virtualTableDto);
     if (pivotTableContext != null) {
-      pivotTableContext.init(fieldSupplier);
+      pivotTableContext.init(queryResolver);
     }
-    QueryScope queryScope = createQueryScope(query, fieldSupplier);
-    DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(query, queryScope, fieldSupplier);
+    QueryScope queryScope = createQueryScope(query, queryResolver);
+    DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(query, queryScope, queryResolver);
     // Compute what needs to be prefetched
-    Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
+    Map<QueryScope, DatabaseQuery2> prefetchQueryByQueryScope = new HashMap<>();
     Map<QueryScope, Set<Measure>> measuresByQueryScope = new HashMap<>();
     ExecutionPlan<QueryPlanNodeKey, Void> prefetchingPlan = new ExecutionPlan<>(dependencyGraph, (node, v) -> {
       QueryScope scope = node.queryScope;
       int limit = scope.equals(queryScope) ? queryLimit : queryLimit + 1; // limit + 1 to detect when results can be wrong
-      prefetchQueryByQueryScope.computeIfAbsent(scope, k -> Queries.queryScopeToDatabaseQuery(scope, fieldSupplier, limit));
+      prefetchQueryByQueryScope.computeIfAbsent(scope, k -> queryResolver.Queries.queryScopeToDatabaseQuery(scope, queryResolver, limit));
       measuresByQueryScope.computeIfAbsent(scope, k -> new HashSet<>()).add(node.measure);
     });
     prefetchingPlan.execute(null);
 
     Map<QueryScope, Table> tableByScope = new HashMap<>();
     for (QueryScope scope : prefetchQueryByQueryScope.keySet()) {
-      DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
+      DatabaseQuery2 prefetchQuery = prefetchQueryByQueryScope.get(scope);
       Set<Measure> measures = measuresByQueryScope.get(scope);
       QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(scope, prefetchQuery, user);
       QueryCache queryCache = getQueryCache((QueryCacheParameter) query.parameters.getOrDefault(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.USE)), user);
@@ -280,7 +180,7 @@ public class QueryExecutor {
       Table result;
       if (!notCached.isEmpty()) {
         notCached.add(CountMeasure.INSTANCE); // Always add count
-        notCached.forEach(prefetchQuery::withMeasure);
+        notCached.forEach(prefetchQuery::withMeasure); // todo-mde should we keep a link to regular measures ?
         result = this.queryEngine.execute(prefetchQuery, pivotTableContext);
       } else {
         // Create an empty result that will be populated by the query cache
@@ -309,7 +209,7 @@ public class QueryExecutor {
         context.accept(queryNode, executionContext);
       }
     });
-    globalPlan.execute(new Evaluator(fieldSupplier));
+    globalPlan.execute(new Evaluator(queryResolver));
 
     Table result = tableByScope.get(queryScope);
 
@@ -334,10 +234,10 @@ public class QueryExecutor {
   private static DependencyGraph<QueryPlanNodeKey> computeDependencyGraph(
           QueryDto query,
           QueryScope queryScope,
-          Function<Field, TypedField> fieldSupplier) {
+          QueryResolver queryResolver) {
 
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
-      Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(query, nodeKey.queryScope, fieldSupplier));
+      Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(query, nodeKey.queryScope, queryResolver));
       Set<QueryPlanNodeKey> set = new HashSet<>();
       for (Map.Entry<QueryScope, Set<Measure>> entry : dependencies.entrySet()) {
         for (Measure measure : entry.getValue()) {
@@ -351,13 +251,13 @@ public class QueryExecutor {
     return builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList());
   }
 
-  public static QueryScope createQueryScope(QueryDto query, Function<Field, TypedField> fieldSupplier) {
+  public static QueryScope createQueryScope(QueryDto query, QueryResolver queryResolver) {
     // If column set, it changes the scope
     List<TypedField> columns = Stream.concat(
             query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
-            query.columns.stream()).map(fieldSupplier).collect(Collectors.toCollection(ArrayList::new));
-    List<TypedField> rollupColumns = query.rollupColumns.stream().map(fieldSupplier).toList();
-    List<List<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(fieldSupplier).toList()).toList();
+            query.columns.stream()).map(queryResolver::resolveField).collect(Collectors.toCollection(ArrayList::new));
+    List<TypedField> rollupColumns = query.rollupColumns.stream().map(queryResolver::resolveField).toList();
+    List<List<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(queryResolver::resolveField).toList()).toList();
     return new QueryScope(query.table,
             query.subQuery,
             columns,
@@ -370,7 +270,7 @@ public class QueryExecutor {
 
   private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(
           QueryScope queryScope,
-          DatabaseQuery prefetchQuery,
+          DatabaseQuery2 prefetchQuery,
           SquashQLUser user) {
     Set<TypedField> fields = new HashSet<>(prefetchQuery.select);
     if (queryScope.tableDto != null) {
@@ -393,6 +293,7 @@ public class QueryExecutor {
     }
   }
 
+  //todo-mde maybe resolve everything ?
   public record QueryScope(TableDto tableDto,
                            QueryDto subQuery,
                            List<TypedField> columns,
@@ -450,9 +351,9 @@ public class QueryExecutor {
       return fields;
     }
 
-    public void init(Function<Field, TypedField> fieldSupplier) {
-      this.rowFields = this.cleansedRows.stream().map(fieldSupplier).toList();
-      this.columnFields = this.cleansedColumns.stream().map(fieldSupplier).toList();
+    public void init(final QueryResolver queryResolver) {
+      this.rowFields = this.cleansedRows.stream().map(queryResolver::resolveField).toList();
+      this.columnFields = this.cleansedColumns.stream().map(queryResolver::resolveField).toList();
     }
   }
 
@@ -484,11 +385,4 @@ public class QueryExecutor {
     return TableUtils.replaceTotalCellValues(table, true);
   }
 
-  public static Function<Field, TypedField> createQueryFieldSupplier(QueryEngine<?> queryEngine, VirtualTableDto vt) {
-    Map<String, Store> storesByName = new HashMap<>(queryEngine.datastore().storesByName());
-    if (vt != null) {
-      storesByName.put(vt.name, VirtualTableDto.toStore(vt));
-    }
-    return AQueryEngine.createFieldSupplier(storesByName);
-  }
 }

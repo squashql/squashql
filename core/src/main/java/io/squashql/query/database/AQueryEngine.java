@@ -1,7 +1,10 @@
 package io.squashql.query.database;
 
-import io.squashql.query.*;
-import io.squashql.query.exception.FieldNotFoundException;
+import io.squashql.query.Header;
+import io.squashql.query.QueryExecutor;
+import io.squashql.query.QueryResolver;
+import io.squashql.query.compiled.DatabaseQuery2;
+import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.Datastore;
 import io.squashql.store.Store;
 import io.squashql.table.ColumnarTable;
@@ -36,60 +39,17 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     return this.queryRewriter;
   }
 
-  public static Function<Field, TypedField> createFieldSupplier(Map<String, Store> storesByName) {
-    return field -> {
-      if (field instanceof TableField tf) {
-        return getTableTypedField(tf.name(), storesByName);
-      } else if (field instanceof FunctionField ff) {
-        return new FunctionTypedField(getTableTypedField(ff.field.name(), storesByName), ff.function);
-      } else {
-        throw new IllegalArgumentException(field.getClass().getName());
-      }
-    };
-  }
-
-  private static TableTypedField getTableTypedField(String fieldName, Map<String, Store> storesByName) {
-    String[] split = fieldName.split("\\.");
-    if (split.length > 1) {
-      String tableName = split[0];
-      String fieldNameInTable = split[1];
-      Store store = storesByName.get(tableName);
-      if (store != null) {
-        for (TableTypedField field : store.fields()) {
-          if (field.name().equals(fieldNameInTable)) {
-            return field;
-          }
-        }
-      }
-    } else {
-      for (Store store : storesByName.values()) {
-        for (TableTypedField field : store.fields()) {
-          if (field.name().equals(fieldName)) {
-            // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
-            // if any ambiguity, the DB will raise an exception.
-            return new TableTypedField(null, fieldName, field.type());
-          }
-        }
-      }
-    }
-
-    if (fieldName.equals(CountMeasure.INSTANCE.alias())) {
-      return new TableTypedField(null, CountMeasure.INSTANCE.alias(), long.class);
-    }
-    throw new FieldNotFoundException("Cannot find field with name " + fieldName);
-  }
-
   @Override
   public T datastore() {
     return this.datastore;
   }
 
-  protected abstract Table retrieveAggregates(DatabaseQuery query, String sql);
 
   @Override
-  public Table execute(DatabaseQuery query, QueryExecutor.PivotTableContext context) {
+  public Table execute(DatabaseQuery2 query, QueryExecutor.PivotTableContext context) {
+    // todo-mde use queryResultFormat and enhance encapsulation
     if (query.table != null) {
-      String tableName = query.table.name;
+      String tableName = query.table.name();
       // Can be null if sub-query
       Store store = this.datastore.storesByName().get(tableName);
       if (store == null) {
@@ -103,11 +63,11 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     return postProcessDataset(aggregates, query);
   }
 
-  protected String createSqlStatement(DatabaseQuery query, QueryExecutor.PivotTableContext context) {
-    return SQLTranslator.translate(query,
-            QueryExecutor.createQueryFieldSupplier(this, query.virtualTableDto),
-            this.queryRewriter);
+  protected String createSqlStatement(DatabaseQuery2 query, QueryExecutor.PivotTableContext context) {
+    return SQLTranslator.translate(query, this.queryRewriter);
   }
+
+  protected abstract Table retrieveAggregates(QueryResultFormat query, String sql);
 
   /**
    * Changes the content of the input table to remove columns corresponding to grouping() (columns that help to identify
@@ -136,15 +96,15 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
    *   +-------------+-------------+------+----------------------+----+
    * </pre>
    */
-  protected Table postProcessDataset(Table input, DatabaseQuery query) {
-    List<TypedField> groupingSelects = Queries.generateGroupingSelect(query);
+  protected Table postProcessDataset(Table input, QueryResultFormat format) {
+    List<TypedField> groupingSelects = Queries.generateGroupingSelect(format);
     if (this.queryRewriter.useGroupingFunction() && !groupingSelects.isEmpty()) {
       List<Header> newHeaders = new ArrayList<>();
       List<List<Object>> newValues = new ArrayList<>();
       for (int i = 0; i < input.headers().size(); i++) {
         Header header = input.headers().get(i);
         List<Object> columnValues = input.getColumn(i);
-        if (i < query.select.size() || i >= query.select.size() + groupingSelects.size()) {
+        if (i < format.select().size() || i >= format.select().size() + groupingSelects.size()) {
           newHeaders.add(header);
           newValues.add(columnValues);
         } else {
@@ -169,14 +129,12 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     }
   }
 
-  public static <Column, Record> Pair<List<Header>, List<List<Object>>> transformToColumnFormat(
-          DatabaseQuery query,
+  public <Column, Record> Pair<List<Header>, List<List<Object>>> transformToColumnFormat(
+          QueryResultFormat format,
           List<Column> columns,
-          BiFunction<Column, String, String> columnNameProvider,
           BiFunction<Column, String, Class<?>> columnTypeProvider,
           Iterator<Record> recordIterator,
-          BiFunction<Integer, Record, Object> recordToFieldValue,
-          QueryRewriter queryRewriter) {
+          BiFunction<Integer, Record, Object> recordToFieldValue) {
     List<Header> headers = new ArrayList<>();
     Function<TypedField, String> typedFieldStringFunction = f -> {
       if (f instanceof TableTypedField ttf) {
@@ -187,18 +145,18 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
         throw new IllegalArgumentException(f.getClass().getName());
       }
     };
-    List<String> fieldNames = new ArrayList<>(query.select.stream().map(typedFieldStringFunction).toList());
-    List<TypedField> groupingSelects = Queries.generateGroupingSelect(query);
-    if (queryRewriter.useGroupingFunction()) {
+    List<String> fieldNames = new ArrayList<>(format.select().stream().map(typedFieldStringFunction).toList());
+    List<TypedField> groupingSelects = Queries.generateGroupingSelect(format);
+    if (this.queryRewriter.useGroupingFunction()) {
       groupingSelects.forEach(r -> fieldNames.add(SqlUtils.groupingAlias(typedFieldStringFunction.apply(r))));
     }
-    query.measures.forEach(m -> fieldNames.add(m.alias()));
+    format.measures().forEach(m -> fieldNames.add(m.alias()));
     List<List<Object>> values = new ArrayList<>(columns.size());
     for (int i = 0; i < columns.size(); i++) {
       headers.add(new Header(
-              columnNameProvider.apply(columns.get(i), fieldNames.get(i)),
+              fieldNames.get(i),
               columnTypeProvider.apply(columns.get(i), fieldNames.get(i)),
-              i >= query.select.size() + (queryRewriter.useGroupingFunction() ? groupingSelects.size() : 0)));
+              i >= format.select().size() + (this.queryRewriter.useGroupingFunction() ? groupingSelects.size() : 0)));
       values.add(new ArrayList<>());
     }
     recordIterator.forEachRemaining(r -> {
@@ -220,5 +178,14 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     recordIterator.forEachRemaining(r -> rows.add(
             IntStream.range(0, headers.size()).mapToObj(i -> recordToFieldValue.apply(i, r)).toList()));
     return Tuples.pair(headers, rows);
+  }
+
+  @Override
+  public QueryResolver queryResolver(final VirtualTableDto vt) {
+    final Map<String, Store> storesByName = new HashMap<>(datastore().storesByName());
+    if (vt != null) {
+      storesByName.put(vt.name, VirtualTableDto.toStore(vt));
+    }
+    return new QueryResolver(storesByName);
   }
 }

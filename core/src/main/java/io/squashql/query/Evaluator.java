@@ -18,11 +18,11 @@ import static io.squashql.query.ColumnSetKey.BUCKET;
 
 public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>, MeasureVisitor<Void> {
 
-  private final Function<Field, TypedField> fieldSupplier;
+  private final QueryResolver queryResolver;
   private ExecutionContext executionContext;
 
-  public Evaluator(Function<Field, TypedField> fieldSupplier) {
-    this.fieldSupplier = fieldSupplier;
+  public Evaluator(final QueryResolver queryResolver) {
+    this.queryResolver = queryResolver;
   }
 
   @Override
@@ -76,7 +76,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     }
 
     QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(
-            this.executionContext.query(), cm, this.executionContext.queryScope(), this.fieldSupplier);
+            this.executionContext.query(), cm, this.executionContext.queryScope(), this.queryResolver);
     Table readFromTable = this.executionContext.tableByScope().get(readScope); // Table where to read the aggregates
     if (readFromTable.count() == this.executionContext.queryLimit()) {
       throw new RuntimeException("Too many rows, some intermediate results exceed the limit " + this.executionContext.queryLimit());
