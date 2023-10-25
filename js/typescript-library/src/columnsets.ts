@@ -1,6 +1,14 @@
-import PACKAGE from "./package";
-import {Field} from "./types/field";
-import {ColumnSet, ColumnSetKey, Period} from "./types/columnsets";
+import PACKAGE from "./package"
+import {Field} from "./field"
+
+export interface ColumnSet {
+  readonly class: string
+  readonly key: string
+}
+
+export enum ColumnSetKey {
+  BUCKET = "BUCKET",
+}
 
 export class BucketColumnSet implements ColumnSet {
   readonly class: string = PACKAGE + "dto.BucketColumnSetDto"
@@ -17,6 +25,10 @@ export class BucketColumnSet implements ColumnSet {
       "values": Object.fromEntries(this.values),
     }
   }
+}
+
+export interface Period {
+  readonly class: string,
 }
 
 export class Month implements Period {

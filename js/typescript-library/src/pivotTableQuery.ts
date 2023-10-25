@@ -1,5 +1,5 @@
 import {Query} from "./query"
-import {Field} from "./types/field";
+import {Field} from "./field"
 
 export interface PivotTableQuery {
   query: Query

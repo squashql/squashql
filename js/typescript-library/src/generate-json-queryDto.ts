@@ -2,12 +2,11 @@ import {JoinType, Query, Table} from "./query"
 import {
   AggregatedMeasure,
   avgIf,
-  BinaryOperationMeasure,
+  BinaryOperationMeasure, BinaryOperator,
   comparisonMeasureWithBucket,
   comparisonMeasureWithParent,
   comparisonMeasureWithPeriod,
   ComparisonMethod,
-  countRows,
   decimal,
   ExpressionMeasure,
   integer,
@@ -17,7 +16,7 @@ import {
 import {
   _in,
   all,
-  and,
+  and, ConditionType,
   criterion,
   criterion_,
   eq,
@@ -33,9 +32,7 @@ import {
 import * as fs from "fs"
 import {OrderKeyword} from "./order"
 import {BucketColumnSet, Month} from "./columnsets"
-import {ConstantField, TableField, tableField} from "./field"
-import {BinaryOperator} from "./types/measure";
-import {ConditionType} from "./types/conditions";
+import {ConstantField, countRows, TableField, tableField} from "./field"
 
 export function generateFromQueryDto() {
   const table = new Table("myTable")

@@ -1,6 +1,17 @@
-import PACKAGE from "./package";
-import {Field} from "./types/field";
-import {BinaryOperator} from "./types/measure";
+import PACKAGE from "./package"
+import {AggregatedMeasure, BinaryOperator} from "./measure"
+
+export interface Field {
+  readonly class: string
+
+  divide(other: Field): Field
+
+  minus(other: Field): Field
+
+  multiply(other: Field): Field
+
+  plus(other: Field): Field
+}
 
 abstract class AField implements Field {
   readonly class: string
@@ -59,7 +70,6 @@ export class TableField extends AField {
     }
   }
 
-
   toJSON() {
     return {
       "@class": this.class,
@@ -70,6 +80,7 @@ export class TableField extends AField {
   }
 }
 
+export let countRows = new AggregatedMeasure("_contributors_count_", new TableField("*"), "count")
 
 export function tableField(fullName:string) {
   return new TableField(fullName)
@@ -78,7 +89,6 @@ export function tableField(fullName:string) {
 export function tableFields(fullNames:string[]) {
   return fullNames.map(f => new TableField(f))
 }
-
 
 export class BinaryOperationField extends AField {
   readonly class: string = PACKAGE + "BinaryOperationField"

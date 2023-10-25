@@ -1,5 +1,3 @@
-// noinspection JSUnusedGlobalSymbols
-
 export {
   Query, Table, JoinType, QueryMerge,
 } from './query'
@@ -9,24 +7,25 @@ export {
 } from './order'
 
 export {
-  AggregatedMeasure, ExpressionMeasure, sum, min, max, avg, count, countDistinct,
+  Measure, BasicMeasure, AggregatedMeasure, ExpressionMeasure, sum, min, max, avg, count, countDistinct,
   sumIf, minIf, maxIf, avgIf, countIf, countDistinctIf,
   plus, minus, multiply, divide,
   integer, decimal,
   comparisonMeasureWithPeriod, comparisonMeasureWithBucket, comparisonMeasureWithParent,
-  countRows, totalCount,
+  totalCount,
   ComparisonMethod,
 } from './measure'
 
 export {
+  Condition, ConditionType,
   eq, neq, lt, le, gt, ge, _in, like, isNull, isNotNull,
   and, or,
   all, any, criterion, criterion_, havingCriterion,
 } from './conditions'
 
 export {
-  BucketColumnSet,
-  Month, Year, Quarter, Semester,
+  ColumnSet, BucketColumnSet,
+  Period, Month, Year, Quarter, Semester,
 } from './columnsets'
 
 export {
@@ -49,12 +48,9 @@ export {
 } from './queryBuilder'
 
 export {
-  TableField, ConstantField
+  TableField, ConstantField, Field, tableFields, tableField,
+  countRows
 } from './field'
 export {
   default as Criteria
 } from "./criteria";
-export {Field} from "./types/field";
-export {BasicMeasure, Measure} from "./types/measure";
-export {Period, ColumnSet} from "./types/columnsets";
-export {ConditionType, Condition} from "./types/conditions";

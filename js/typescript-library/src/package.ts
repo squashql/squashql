@@ -1,2 +1,2 @@
-const PACKAGE = "io.squashql.query.";
+const PACKAGE = "io.squashql.query."
 export default PACKAGE;

@@ -1,10 +1,29 @@
-import PACKAGE from "./package";
-import Criteria from "./criteria";
-import {Field} from "./types/field";
-import {BasicMeasure} from "./types/measure";
-import {Condition, ConditionType} from "./types/conditions";
+import PACKAGE from "./package"
+import Criteria from "./criteria"
+import {Field} from "./field";
+import {BasicMeasure} from "./measure";
 
-type Primitive = string | number | boolean;
+type Primitive = string | number | boolean
+
+export interface Condition {
+  readonly class: string
+  readonly type: ConditionType
+}
+
+export enum ConditionType {
+  EQ = "EQ",
+  NEQ = "NEQ",
+  LT = "LT",
+  LE = "LE",
+  GT = "GT",
+  GE = "GE",
+  IN = "IN",
+  LIKE = "LIKE",
+  AND = "AND",
+  OR = "OR",
+  NULL = "NULL",
+  NOT_NULL = "NOT_NULL",
+}
 
 function toJSON(c: Condition) {
   return {

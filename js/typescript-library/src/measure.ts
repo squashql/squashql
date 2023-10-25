@@ -1,11 +1,16 @@
-import Criteria from "./criteria";
-import {TableField} from "./field"
+import PACKAGE from "./package"
+import Criteria from "./criteria"
 import {serializeMap} from "./util"
-import PACKAGE from "./package";
-import {Field} from "./types/field";
-import {BasicMeasure, BinaryOperator, Measure} from "./types/measure";
-import {ColumnSetKey, Period} from "./types/columnsets";
+import {ColumnSetKey, Period} from "./columnsets"
+import {Field} from "./field"
 
+export interface Measure {
+  readonly class: string
+  readonly alias: string
+  readonly expression?: string
+}
+
+export type BasicMeasure = Measure
 export class AggregatedMeasure implements BasicMeasure {
   readonly class: string = PACKAGE + "AggregatedMeasure"
   readonly field: Field
@@ -81,7 +86,12 @@ export class BinaryOperationMeasure implements Measure {
   }
 }
 
-export const countRows = new AggregatedMeasure("_contributors_count_", new TableField("*"), "count")
+export enum BinaryOperator {
+  PLUS = "PLUS",
+  MINUS = "MINUS",
+  MULTIPLY = "MULTIPLY",
+  DIVIDE = "DIVIDE",
+}
 
 export class ComparisonMeasureReferencePosition implements Measure {
   readonly class: string = PACKAGE + "ComparisonMeasureReferencePosition"
@@ -173,7 +183,7 @@ export function count(alias: string, field: Field): Measure {
 }
 
 export function countDistinct(alias: string, field: Field): Measure {
-  return new AggregatedMeasure(alias, field, "count", true);
+  return new AggregatedMeasure(alias, field, "count", true)
 }
 
 
@@ -200,7 +210,7 @@ export function countIf(alias: string, field: Field, criterion?: Criteria): Meas
 }
 
 export function countDistinctIf(alias: string, field: Field, criterion?: Criteria): Measure {
-  return new AggregatedMeasure(alias, field, "count", true, criterion);
+  return new AggregatedMeasure(alias, field, "count", true, criterion)
 }
 
 // BINARY
