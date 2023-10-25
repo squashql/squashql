@@ -8,8 +8,8 @@ import {
 } from "./measure"
 import {Condition, ConstantCondition, InCondition, LogicalCondition, SingleValueCondition} from "./conditions"
 import Criteria from "./criteria"
-import {BinaryOperationField, ConstantField, Field, TableField} from "./field";
-import {BucketColumnSet, ColumnSet, Month, Period, Quarter, Semester, Year} from "./columnsets";
+import {BinaryOperationField, ConstantField, Field, TableField} from "./field"
+import {BucketColumnSet, ColumnSet, Month, Period, Quarter, Semester, Year} from "./columnsets"
 
 export const computeFieldDependencies = (field: Field, resultArray: TableField[] = []): TableField[] => {
   switch (field.constructor) {

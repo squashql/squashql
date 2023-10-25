@@ -80,7 +80,7 @@ export class TableField extends AField {
   }
 }
 
-export let countRows = new AggregatedMeasure("_contributors_count_", new TableField("*"), "count")
+export const countRows = new AggregatedMeasure("_contributors_count_", new TableField("*"), "count")
 
 export function tableField(fullName:string) {
   return new TableField(fullName)
