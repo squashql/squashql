@@ -107,6 +107,29 @@ public class QueryController {
     return ResponseEntity.ok(result);
   }
 
+
+  @PostMapping(MAPPING_QUERY_MERGE_PIVOT)
+  public ResponseEntity<PivotTableQueryResultDto> executeQueryMergePivot(@RequestBody PivotTableQueryMergeDto pivotTableQueryMergeDto) {
+    PivotTable pt = this.queryExecutor.executePivotQueryMerge(
+            pivotTableQueryMergeDto.query.first,
+            pivotTableQueryMergeDto.query.second,
+            pivotTableQueryMergeDto.rows,
+            pivotTableQueryMergeDto.columns,
+            pivotTableQueryMergeDto.query.joinType,
+            this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get()
+    );
+    List<String> fields = pt.table.headers().stream().map(Header::name).collect(Collectors.toList());
+    SimpleTableDto simpleTable = SimpleTableDto.builder()
+            .rows(ImmutableList.copyOf(pt.table.iterator()))
+            .columns(fields)
+            .build();
+    QueryResultDto result = QueryResultDto.builder()
+            .table(simpleTable)
+            .metadata(TableUtils.buildTableMetadata(pt.table))
+            .build();
+    return ResponseEntity.ok(new PivotTableQueryResultDto(result, pt.rows, pt.columns, pt.values));
+  }
+
   @PostMapping(MAPPING_QUERY_STRINGIFY)
   public ResponseEntity<String> executeStringify(@RequestBody QueryDto query) {
     Table table = this.queryExecutor.executeQuery(query);
@@ -129,8 +152,8 @@ public class QueryController {
     return ResponseEntity.ok(table.toString());
   }
 
-  @PostMapping(MAPPING_QUERY_MERGE_PIVOT)
-  public ResponseEntity<PivotTableQueryResultDto> executeQueryMergePivot(@RequestBody PivotTableQueryMergeDto pivotTableQueryMergeDto) {
+  @PostMapping(MAPPING_QUERY_MERGE_PIVOT_STRINGIFY)
+  public ResponseEntity<String> executeAndMergePivotStringify(@RequestBody PivotTableQueryMergeDto pivotTableQueryMergeDto) {
     PivotTable pt = this.queryExecutor.executePivotQueryMerge(
             pivotTableQueryMergeDto.query.first,
             pivotTableQueryMergeDto.query.second,
@@ -139,16 +162,7 @@ public class QueryController {
             pivotTableQueryMergeDto.query.joinType,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get()
     );
-    List<String> fields = pt.table.headers().stream().map(Header::name).collect(Collectors.toList());
-    SimpleTableDto simpleTable = SimpleTableDto.builder()
-            .rows(ImmutableList.copyOf(pt.table.iterator()))
-            .columns(fields)
-            .build();
-    QueryResultDto result = QueryResultDto.builder()
-            .table(simpleTable)
-            .metadata(TableUtils.buildTableMetadata(pt.table))
-            .build();
-    return ResponseEntity.ok(new PivotTableQueryResultDto(result, pt.rows, pt.columns, pt.values));
+    return ResponseEntity.ok(pt.toString());
   }
 
   @GetMapping(MAPPING_METADATA)

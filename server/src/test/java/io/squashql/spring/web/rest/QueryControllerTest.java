@@ -249,4 +249,9 @@ public class QueryControllerTest {
               Assertions.assertThat(queryResult.table.columns).containsExactly("ean", "capdv-sum", "capdv-avg");
             });
   }
+
+  @Test
+  void testQueryMergePivot() {
+    Assertions.fail("to do");
+  }
 }
