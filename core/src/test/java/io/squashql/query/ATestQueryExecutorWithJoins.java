@@ -88,7 +88,7 @@ public abstract class ATestQueryExecutorWithJoins {
             .select(tableFields(List.of("CategoryName")), List.of(Functions.sum("Q", "Quantity"), CountMeasure.INSTANCE))
             .build();
 
-    Table table = this.queryExecutor.execute(query);
+    Table table = this.queryExecutor.executeQuery(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
             List.of("Dairy Products", 2601.0, 100L),
             List.of("Meat/Poultry", 1288.0, 50L),

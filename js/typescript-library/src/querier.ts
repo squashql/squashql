@@ -44,9 +44,37 @@ export class Querier {
             .post("/expression", measures)
             .then(r => r.data)
   }
+
+  async executeQuery2(query: Query | QueryMerge, stringify = false): Promise<QueryResult | string> {
+    let promise
+    const urlSuffix = stringify ? "-stringify" : ""
+    switch (query.type) {
+      case "query":
+        promise = this.axiosInstance.post(`/query${urlSuffix}`, query)
+        break;
+      case "querymerge":
+        promise = this.axiosInstance.post(`/query-merge${urlSuffix}`, query)
+        break;
+    }
+    return promise.then(r => r.data)
+  }
+
+  async executePivotQuery(query: Query | QueryMerge, pivotConfig: PivotConfig, stringify = false): Promise<PivotTableQueryResult | string> {
+    let promise
+    const urlSuffix = stringify ? "-stringify" : ""
+    switch (query.type) {
+      case "query":
+        promise = this.axiosInstance.post(`/query-pivot${urlSuffix}`, query)
+        break;
+      case "querymerge":
+        promise = this.axiosInstance.post(`/query-merge${urlSuffix}`, createPivotTableQuery(query, pivotConfig))
+        break;
+    }
+    return promise.then(r => r.data)
+  }
 }
 
-export function createPivotTableQuery(query: Query, pivotConfig?: PivotConfig): PivotTableQuery {
+export function createPivotTableQuery(query: Query, pivotConfig: PivotConfig): PivotTableQuery {
   return {query, rows: pivotConfig.rows, columns: pivotConfig.columns}
 }
 

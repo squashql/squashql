@@ -61,7 +61,7 @@ public abstract class ATestDocBucketComparison extends ABaseTestQuery {
 //            .select(List.of(SCENARIO_FIELD_NAME, "saleprice", "loavessold", "pointofsale"),List.of(CountMeasure.INSTANCE, revenue))
             .select(List.of(), List.of(bucketCS), List.of(CountMeasure.INSTANCE, revenue, revenueComparison))
             .build();
-    Table result = this.executor.execute(queryDto);
+    Table result = this.executor.executeQuery(queryDto);
     result.show();
   }
 }

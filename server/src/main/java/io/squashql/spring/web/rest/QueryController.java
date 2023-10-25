@@ -27,10 +27,13 @@ import java.util.stream.Collectors;
 public class QueryController {
 
   public static final String MAPPING_QUERY = "/query";
-  public static final String MAPPING_QUERY_MERGE = "/query-merge";
-  public static final String MAPPING_QUERY_PIVOT = "/query-pivot";
   public static final String MAPPING_QUERY_STRINGIFY = "/query-stringify";
+  public static final String MAPPING_QUERY_MERGE = "/query-merge";
+  public static final String MAPPING_QUERY_MERGE_STRINGIFY = "/query-merge-stringify";
+  public static final String MAPPING_QUERY_PIVOT = "/query-pivot";
   public static final String MAPPING_QUERY_PIVOT_STRINGIFY = "/query-pivot-stringify";
+  public static final String MAPPING_QUERY_MERGE_PIVOT = "/query-merge-pivot";
+  public static final String MAPPING_QUERY_MERGE_PIVOT_STRINGIFY = "/query-merge-pivot-stringify";
   public static final String MAPPING_METADATA = "/metadata";
   public static final String MAPPING_EXPRESSION = "/expression";
   protected final QueryEngine<?> queryEngine;
@@ -46,7 +49,7 @@ public class QueryController {
   @PostMapping(MAPPING_QUERY)
   public ResponseEntity<QueryResultDto> execute(@RequestBody QueryDto query) {
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
-    Table table = this.queryExecutor.execute(query,
+    Table table = this.queryExecutor.executeQuery(query,
             csBuilder,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(),
             true,
@@ -67,7 +70,7 @@ public class QueryController {
   @PostMapping(MAPPING_QUERY_PIVOT)
   public ResponseEntity<PivotTableQueryResultDto> execute(@RequestBody PivotTableQueryDto pivotTableQueryDto) {
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
-    PivotTable pt = this.queryExecutor.execute(pivotTableQueryDto,
+    PivotTable pt = this.queryExecutor.executePivotQuery(pivotTableQueryDto,
             csBuilder,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(),
             true,
@@ -87,7 +90,7 @@ public class QueryController {
 
   @PostMapping(MAPPING_QUERY_MERGE)
   public ResponseEntity<QueryResultDto> executeAndMerge(@RequestBody QueryMergeDto queryMergeDto) {
-    Table table = this.queryExecutor.execute(
+    Table table = this.queryExecutor.executeQueryMerge(
             queryMergeDto.first,
             queryMergeDto.second,
             queryMergeDto.joinType,
@@ -106,14 +109,46 @@ public class QueryController {
 
   @PostMapping(MAPPING_QUERY_STRINGIFY)
   public ResponseEntity<String> executeStringify(@RequestBody QueryDto query) {
-    Table table = this.queryExecutor.execute(query);
+    Table table = this.queryExecutor.executeQuery(query);
+    return ResponseEntity.ok(table.toString());
+  }
+
+  @PostMapping(MAPPING_QUERY_MERGE_STRINGIFY)
+  public ResponseEntity<String> executeAndMergeStringify(@RequestBody QueryMergeDto queryMergeDto) {
+    Table table = this.queryExecutor.executeQueryMerge(
+            queryMergeDto.first,
+            queryMergeDto.second,
+            queryMergeDto.joinType,
+            this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get());
     return ResponseEntity.ok(table.toString());
   }
 
   @PostMapping(MAPPING_QUERY_PIVOT_STRINGIFY)
   public ResponseEntity<String> executePivotStringify(@RequestBody PivotTableQueryDto query) {
-    PivotTable table = this.queryExecutor.execute(query);
+    PivotTable table = this.queryExecutor.executePivotQuery(query);
     return ResponseEntity.ok(table.toString());
+  }
+
+  @PostMapping(MAPPING_QUERY_MERGE_PIVOT)
+  public ResponseEntity<PivotTableQueryResultDto> executeQueryMergePivot(@RequestBody PivotTableQueryMergeDto pivotTableQueryMergeDto) {
+    PivotTable pt = this.queryExecutor.executePivotQueryMerge(
+            pivotTableQueryMergeDto.query.first,
+            pivotTableQueryMergeDto.query.second,
+            pivotTableQueryMergeDto.rows,
+            pivotTableQueryMergeDto.columns,
+            pivotTableQueryMergeDto.query.joinType,
+            this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get()
+    );
+    List<String> fields = pt.table.headers().stream().map(Header::name).collect(Collectors.toList());
+    SimpleTableDto simpleTable = SimpleTableDto.builder()
+            .rows(ImmutableList.copyOf(pt.table.iterator()))
+            .columns(fields)
+            .build();
+    QueryResultDto result = QueryResultDto.builder()
+            .table(simpleTable)
+            .metadata(TableUtils.buildTableMetadata(pt.table))
+            .build();
+    return ResponseEntity.ok(new PivotTableQueryResultDto(result, pt.rows, pt.columns, pt.values));
   }
 
   @GetMapping(MAPPING_METADATA)
