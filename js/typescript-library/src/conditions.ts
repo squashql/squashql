@@ -1,6 +1,9 @@
-import {BasicMeasure, Field, PACKAGE} from "./index"
+import PACKAGE from "./package"
+import Criteria from "./criteria"
+import {Field} from "./field";
+import {BasicMeasure} from "./measure";
 
-type Primitive = string | number | boolean;
+type Primitive = string | number | boolean
 
 export interface Condition {
   readonly class: string
@@ -32,7 +35,7 @@ function toJSON(c: Condition) {
 /**
  * Generic condition on a string, number or boolean constant.
  */
-class SingleValueCondition implements Condition {
+export class SingleValueCondition implements Condition {
   class: string = PACKAGE + "dto.SingleValueConditionDto"
 
   constructor(readonly type: ConditionType, private value: Primitive) {
@@ -46,7 +49,7 @@ class SingleValueCondition implements Condition {
   }
 }
 
-class ConstantCondition implements Condition {
+export class ConstantCondition implements Condition {
   class: string = PACKAGE + "dto.ConstantConditionDto"
 
   constructor(readonly type: ConditionType) {
@@ -62,7 +65,7 @@ class ConstantCondition implements Condition {
 /**
  * In condition on a list of string, number or boolean constants.
  */
-class InCondition implements Condition {
+export class InCondition implements Condition {
   type: ConditionType = ConditionType.IN
   class: string = PACKAGE + "dto.InConditionDto"
 
@@ -77,7 +80,7 @@ class InCondition implements Condition {
   }
 }
 
-class LogicalCondition implements Condition {
+export class LogicalCondition implements Condition {
   class: string = PACKAGE + "dto.LogicalConditionDto"
 
   constructor(readonly type: ConditionType, private one: Condition, private two: Condition) {
@@ -89,17 +92,6 @@ class LogicalCondition implements Condition {
       "one": this.one,
       "two": this.two,
     }
-  }
-}
-
-export class Criteria {
-
-  constructor(public field: Field,
-              public fieldOther: Field,
-              private measure: BasicMeasure,
-              private condition: Condition,
-              public conditionType: ConditionType,
-              public children: Criteria[]) {
   }
 }
 
