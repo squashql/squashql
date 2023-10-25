@@ -1,5 +1,5 @@
-import { PACKAGE } from "./index"
-import { BinaryOperator } from "./measure"
+import PACKAGE from "./package"
+import {AggregatedMeasure, BinaryOperator} from "./measure"
 
 export interface Field {
   readonly class: string
@@ -70,7 +70,6 @@ export class TableField extends AField {
     }
   }
 
-
   toJSON() {
     return {
       "@class": this.class,
@@ -81,6 +80,7 @@ export class TableField extends AField {
   }
 }
 
+export const countRows = new AggregatedMeasure("_contributors_count_", new TableField("*"), "count")
 
 export function tableField(fullName:string) {
   return new TableField(fullName)
@@ -89,7 +89,6 @@ export function tableField(fullName:string) {
 export function tableFields(fullNames:string[]) {
   return fullNames.map(f => new TableField(f))
 }
-
 
 export class BinaryOperationField extends AField {
   readonly class: string = PACKAGE + "BinaryOperationField"

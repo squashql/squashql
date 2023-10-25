@@ -1,11 +1,11 @@
-import { BucketColumnSet, ColumnSet, ColumnSetKey } from "./columnsets"
-import { ConditionType, Criteria } from "./conditions"
-import { Field } from "./field"
-import { Measure } from "./measure"
-import { ExplicitOrderDto, Order, OrderKeyword, SimpleOrder } from "./order"
-import { Parameter } from "./parameters"
-import { VirtualTable } from "./virtualtable"
+import {BucketColumnSet, ColumnSet, ColumnSetKey} from "./columnsets"
+import {Field} from "./field"
+import {Measure} from "./measure"
+import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order"
+import {Parameter} from "./parameters"
+import {VirtualTable} from "./virtualtable"
 import {serializeMap} from "./util"
+import Criteria from "./criteria"
 
 export class QueryMerge {
   type: "querymerge"
