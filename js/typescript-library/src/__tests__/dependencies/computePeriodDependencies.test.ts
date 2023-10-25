@@ -1,7 +1,8 @@
 import {TableField} from "../../field";
 import * as dependencies from "../../dependencies";
 import {Month, Quarter, Semester, Year} from "../../columnsets";
-import {Period} from "../../types";
+
+import {Period} from "../../types/columnsets";
 
 afterEach(() => {
   jest.restoreAllMocks();

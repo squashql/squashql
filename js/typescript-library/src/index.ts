@@ -52,8 +52,9 @@ export {
   TableField, ConstantField
 } from './field'
 export {
-  Field, Measure, ColumnSet, ConditionType, Condition, BasicMeasure, Period
-} from "./types";
-export {
   default as Criteria
 } from "./criteria";
+export {Field} from "./types/field";
+export {BasicMeasure, Measure} from "./types/measure";
+export {Period, ColumnSet} from "./types/columnsets";
+export {ConditionType, Condition} from "./types/conditions";

@@ -8,8 +8,7 @@ import {Action, QueryCacheParameter} from "./parameters"
 import {JoinType} from "./query"
 import {from} from "./queryBuilder"
 import {VirtualTable} from "./virtualtable"
-
-import {ConditionType} from "./types";
+import {ConditionType} from "./types/conditions";
 
 export function generateFromQuery() {
   const values = new Map(Object.entries({

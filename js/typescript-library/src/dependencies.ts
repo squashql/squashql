@@ -1,4 +1,3 @@
-import {ColumnSet, Condition, Field, Measure, Period} from "./types";
 import {BinaryOperationField, ConstantField, TableField} from "./field";
 import {BucketColumnSet, Month, Quarter, Semester, Year} from "./columnsets";
 import {
@@ -11,6 +10,10 @@ import {
 } from "./measure";
 import {ConstantCondition, InCondition, LogicalCondition, SingleValueCondition} from "./conditions";
 import Criteria from "./criteria";
+import {Field} from "./types/field";
+import {Measure} from "./types/measure";
+import {ColumnSet, Period} from "./types/columnsets";
+import {Condition} from "./types/conditions";
 
 export const computeFieldDependencies = (field: Field, resultArray: TableField[] = []): TableField[] => {
   switch (field.constructor) {

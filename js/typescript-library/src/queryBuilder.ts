@@ -1,9 +1,10 @@
 import {JoinType, Query, Table} from "./query"
 import {OrderKeyword} from "./order"
 import {VirtualTable} from "./virtualtable"
-
-import {ColumnSet, Field, Measure} from "./types";
 import Criteria from "./criteria";
+import {Field} from "./types/field";
+import {Measure} from "./types/measure";
+import {ColumnSet} from "./types/columnsets";
 
 export interface CanAddOrderBy {
   orderBy(column: Field, order: OrderKeyword): HasHaving

@@ -3,8 +3,10 @@ import { ExplicitOrderDto, Order, OrderKeyword, SimpleOrder } from "./order"
 import { Parameter } from "./parameters"
 import { VirtualTable } from "./virtualtable"
 import {serializeMap} from "./util"
-import {ColumnSet, ColumnSetKey, Field, Measure} from "./types";
 import Criteria from "./criteria";
+import {Field} from "./types/field";
+import {Measure} from "./types/measure";
+import {ColumnSet, ColumnSetKey} from "./types/columnsets";
 
 export class QueryMerge {
   constructor(readonly first: Query, readonly second: Query, readonly joinType: JoinType) {

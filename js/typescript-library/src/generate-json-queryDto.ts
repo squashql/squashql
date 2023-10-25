@@ -34,7 +34,8 @@ import * as fs from "fs"
 import {OrderKeyword} from "./order"
 import {BucketColumnSet, Month} from "./columnsets"
 import {ConstantField, TableField, tableField} from "./field"
-import {BinaryOperator, ConditionType} from "./types";
+import {BinaryOperator} from "./types/measure";
+import {ConditionType} from "./types/conditions";
 
 export function generateFromQueryDto() {
   const table = new Table("myTable")

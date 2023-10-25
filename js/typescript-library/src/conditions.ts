@@ -1,6 +1,8 @@
 import PACKAGE from "./package";
-import {Condition, BasicMeasure, ConditionType, Field} from "./types";
 import Criteria from "./criteria";
+import {Field} from "./types/field";
+import {BasicMeasure} from "./types/measure";
+import {Condition, ConditionType} from "./types/conditions";
 
 type Primitive = string | number | boolean;
 

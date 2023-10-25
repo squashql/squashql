@@ -3,7 +3,8 @@ import {InCondition} from "../../conditions";
 import Criteria from "../../criteria";
 import * as dependencies from "../../dependencies";
 import {AggregatedMeasure} from "../../measure";
-import {ConditionType} from "../../types";
+
+import {ConditionType} from "../../types/conditions";
 
 afterEach(() => {
   jest.restoreAllMocks();

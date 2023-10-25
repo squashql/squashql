@@ -1,5 +1,6 @@
-import {BinaryOperator, Field} from "./types";
 import PACKAGE from "./package";
+import {Field} from "./types/field";
+import {BinaryOperator} from "./types/measure";
 
 abstract class AField implements Field {
   readonly class: string

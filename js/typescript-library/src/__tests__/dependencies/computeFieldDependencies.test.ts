@@ -1,6 +1,7 @@
 import {BinaryOperationField, ConstantField, TableField} from "../../field";
 import * as dependencies from "../../dependencies";
-import {BinaryOperator, Field} from "../../types";
+import {Field} from "../../types/field";
+import {BinaryOperator} from "../../types/measure";
 
 describe('computeFieldDependencies', () => {
 

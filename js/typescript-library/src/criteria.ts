@@ -1,4 +1,6 @@
-import {BasicMeasure, Condition, ConditionType, Field} from "./types";
+import {Field} from "./types/field";
+import {BasicMeasure} from "./types/measure";
+import {Condition, ConditionType} from "./types/conditions";
 
 export default class Criteria {
 

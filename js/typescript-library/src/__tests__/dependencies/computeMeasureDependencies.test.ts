@@ -7,8 +7,9 @@ import {
 } from "../../measure";
 import * as dependencies from "../../dependencies";
 import Criteria from "../../criteria";
-import {BinaryOperator, ColumnSetKey, Measure} from "../../types";
 import {Year} from "../../columnsets";
+import {BinaryOperator, Measure} from "../../types/measure";
+import {ColumnSetKey} from "../../types/columnsets";
 
 afterEach(() => {
   jest.restoreAllMocks();

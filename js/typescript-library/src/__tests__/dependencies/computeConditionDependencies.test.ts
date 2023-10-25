@@ -1,7 +1,8 @@
 import * as dependencies from "../../dependencies";
 import {TableField} from "../../field";
 import {ConstantCondition, InCondition, LogicalCondition, SingleValueCondition} from "../../conditions";
-import {Condition, ConditionType} from "../../types";
+
+import {Condition, ConditionType} from "../../types/conditions";
 
 afterEach(() => {
   jest.restoreAllMocks();

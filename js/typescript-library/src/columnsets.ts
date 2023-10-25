@@ -1,5 +1,6 @@
 import PACKAGE from "./package";
-import {ColumnSet, ColumnSetKey, Field, Period} from "./types";
+import {Field} from "./types/field";
+import {ColumnSet, ColumnSetKey, Period} from "./types/columnsets";
 
 export class BucketColumnSet implements ColumnSet {
   readonly class: string = PACKAGE + "dto.BucketColumnSetDto"

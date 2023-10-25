@@ -1,7 +1,8 @@
 import {TableField} from "../../field";
 import * as dependencies from "../../dependencies";
 import {BucketColumnSet} from "../../columnsets";
-import {ColumnSet} from "../../types";
+
+import {ColumnSet} from "../../types/columnsets";
 
 afterEach(() => {
   jest.restoreAllMocks();

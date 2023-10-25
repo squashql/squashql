@@ -1,8 +1,10 @@
 import Criteria from "./Criteria";
 import {TableField} from "./field"
 import {serializeMap} from "./util"
-import {BasicMeasure, BinaryOperator, ColumnSetKey, Field, Measure, Period} from "./types";
 import PACKAGE from "./package";
+import {Field} from "./types/field";
+import {BasicMeasure, BinaryOperator, Measure} from "./types/measure";
+import {ColumnSetKey, Period} from "./types/columnsets";
 
 export class AggregatedMeasure implements BasicMeasure {
   readonly class: string = PACKAGE + "AggregatedMeasure"
