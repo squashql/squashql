@@ -87,7 +87,7 @@ export const computeMeasureDependencies = (measure: Measure, resultArray: TableF
       }
       if ((measure as ComparisonMeasureReferencePosition)["ancestors"]) {
         (measure as ComparisonMeasureReferencePosition)["ancestors"]
-                .forEach((field) => computeFieldDependencies(field, resultArray));
+        .forEach((field) => computeFieldDependencies(field, resultArray));
       }
       break;
     case DoubleConstantMeasure:
@@ -103,16 +103,12 @@ export const computeMeasureDependencies = (measure: Measure, resultArray: TableF
 
 export const computeConditionDependencies = (condition: Condition, resultArray: TableField[] = []): TableField[] => {
   switch (condition.constructor) {
-    case SingleValueCondition:
-      computeFieldDependencies((condition as SingleValueCondition)["value"], resultArray);
-      break;
-    case InCondition:
-      (condition as InCondition)["values"].forEach((field) => computeFieldDependencies(field, resultArray));
-      break;
     case LogicalCondition:
       computeConditionDependencies((condition as LogicalCondition)["one"], resultArray);
       computeConditionDependencies((condition as LogicalCondition)["two"], resultArray);
       break;
+    case SingleValueCondition:
+    case InCondition:
     case ConstantCondition:
       break;
     default:

@@ -17,8 +17,8 @@ describe('computeCriteriaDependencies', () => {
   const mockField4 = new TableField('mockField4');
   const mockField5 = new TableField('mockField5');
   const mockField6 = new TableField('mockField6');
-  const mockCondition2 = new InCondition([mockField1, mockField2]);
-  const mockCondition4 = new InCondition([mockField4]);
+  const mockCondition2 = new InCondition([33, 44]);
+  const mockCondition4 = new InCondition([22]);
 
   it('should compute dependencies for Criteria with fields', () => {
     const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies');
@@ -52,19 +52,11 @@ describe('computeCriteriaDependencies', () => {
     expect(result).toEqual(expect.arrayContaining([mockField1]));
   });
 
-  it('should compute dependencies for Criteria with conditions', () => {
-    const computeConditionDependenciesSpy = jest.spyOn(dependencies, 'computeConditionDependencies');
-    computeConditionDependenciesSpy.mockImplementation((condition, array) => {
-      if (condition === mockCondition2) {
-        array.push(mockField1, mockField2);
-      }
-      return array;
-    });
-
+  it('should compute no dependencies for Criteria with conditions', () => {
     const criteria = new Criteria(undefined, undefined, undefined, mockCondition2, undefined, []);
     const result = dependencies.computeCriteriaDependencies(criteria);
 
-    expect(result).toEqual(expect.arrayContaining([mockField1, mockField2]));
+    expect(result.length).toEqual(0);
   });
 
   it('should compute dependencies for Criteria with nested criteria', () => {
@@ -103,21 +95,13 @@ describe('computeCriteriaDependencies', () => {
       return array;
     });
 
-    const computeConditionDependenciesSpy = jest.spyOn(dependencies, 'computeConditionDependencies');
-    computeConditionDependenciesSpy.mockImplementation((condition, array) => {
-      if (condition === mockCondition4) {
-        array.push(mockField4);
-      }
-      return array;
-    });
-
     const nestedCriteria1 = new Criteria(mockField5, undefined, undefined, undefined, undefined, []);
     const nestedCriteria2 = new Criteria(mockField6, undefined, undefined, undefined, undefined, []);
 
     const criteria = new Criteria(mockField1, mockField2, mockMeasure, mockCondition4, ConditionType.EQ, [nestedCriteria1, nestedCriteria2]);
     const result = dependencies.computeCriteriaDependencies(criteria);
 
-    expect(result).toEqual(expect.arrayContaining([mockField1, mockField2, mockField3, mockField4, mockField5, mockField6]));
+    expect(result).toEqual(expect.arrayContaining([mockField1, mockField2, mockField3, mockField5, mockField6]));
   });
 
 });

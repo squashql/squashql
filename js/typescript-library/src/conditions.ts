@@ -14,7 +14,7 @@ function toJSON(c: Condition) {
 /**
  * Generic condition on a string, number or boolean constant.
  */
-class SingleValueCondition implements Condition {
+export class SingleValueCondition implements Condition {
   class: string = PACKAGE + "dto.SingleValueConditionDto"
 
   constructor(readonly type: ConditionType, private value: Primitive) {
@@ -28,7 +28,7 @@ class SingleValueCondition implements Condition {
   }
 }
 
-class ConstantCondition implements Condition {
+export class ConstantCondition implements Condition {
   class: string = PACKAGE + "dto.ConstantConditionDto"
 
   constructor(readonly type: ConditionType) {
@@ -44,7 +44,7 @@ class ConstantCondition implements Condition {
 /**
  * In condition on a list of string, number or boolean constants.
  */
-class InCondition implements Condition {
+export class InCondition implements Condition {
   type: ConditionType = ConditionType.IN
   class: string = PACKAGE + "dto.InConditionDto"
 
@@ -59,7 +59,7 @@ class InCondition implements Condition {
   }
 }
 
-class LogicalCondition implements Condition {
+export class LogicalCondition implements Condition {
   class: string = PACKAGE + "dto.LogicalConditionDto"
 
   constructor(readonly type: ConditionType, private one: Condition, private two: Condition) {

@@ -81,7 +81,7 @@ export class BinaryOperationMeasure implements Measure {
 
 export const countRows = new AggregatedMeasure("_contributors_count_", new TableField("*"), "count")
 
-class ComparisonMeasureReferencePosition implements Measure {
+export class ComparisonMeasureReferencePosition implements Measure {
   readonly class: string = PACKAGE + "ComparisonMeasureReferencePosition"
   readonly alias: string
   readonly expression?: string
@@ -116,7 +116,7 @@ export enum ComparisonMethod {
   DIVIDE = "DIVIDE",
 }
 
-class LongConstantMeasure implements Measure {
+export class LongConstantMeasure implements Measure {
   readonly class: string = PACKAGE + "LongConstantMeasure"
   readonly alias: string
 
@@ -131,7 +131,7 @@ class LongConstantMeasure implements Measure {
   }
 }
 
-class DoubleConstantMeasure implements Measure {
+export class DoubleConstantMeasure implements Measure {
   readonly class: string = PACKAGE + "DoubleConstantMeasure"
   readonly alias: string
 

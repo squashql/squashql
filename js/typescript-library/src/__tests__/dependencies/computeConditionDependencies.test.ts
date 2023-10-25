@@ -9,54 +9,27 @@ afterEach(() => {
 
 describe('computeConditionDependencies', () => {
 
-  const mockField1 = new TableField('mockField1');
-  const mockField2 = new TableField('mockField2');
-
-  it('should compute dependencies for SingleValueCondition', () => {
-    const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies');
-    computeFieldDependenciesSpy.mockImplementation((field, array) => {
-      if (field === mockField1) {
-        array.push(field as TableField);
-      }
-      return array;
-    });
-
-    const condition = new SingleValueCondition(ConditionType.EQ, mockField1);
+  it('should compute no dependencies for SingleValueCondition', () => {
+    const condition = new SingleValueCondition(ConditionType.EQ, 77);
     const result = dependencies.computeConditionDependencies(condition);
 
-    expect(result).toEqual(expect.arrayContaining([mockField1]));
+    expect(result.length).toEqual(0);
   });
 
-  it('should compute dependencies for InCondition', () => {
-    const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies');
-    computeFieldDependenciesSpy.mockImplementation((field, array) => {
-      if (field === mockField1) {
-        array.push(field as TableField);
-      }
-      return array;
-    });
-
-    const condition = new InCondition([mockField1]);
+  it('should compute no dependencies for InCondition', () => {
+    const condition = new InCondition([88]);
     const result = dependencies.computeConditionDependencies(condition);
 
-    expect(result).toEqual(expect.arrayContaining([mockField1]));
+    expect(result.length).toEqual(0);
   });
 
-  it('should compute dependencies for LogicalCondition', () => {
-    const spy = jest.spyOn(dependencies, 'computeFieldDependencies');
-    spy.mockImplementation((field, array) => {
-      if (field === mockField1 || field === mockField2) {
-        array.push(field as TableField);
-      }
-      return array;
-    });
-
-    const conditionOne = new SingleValueCondition(ConditionType.EQ, mockField1);
-    const conditionTwo = new SingleValueCondition(ConditionType.EQ, mockField2);
+  it('should compute no dependencies for LogicalCondition', () => {
+    const conditionOne = new SingleValueCondition(ConditionType.EQ, 77);
+    const conditionTwo = new SingleValueCondition(ConditionType.EQ, 88);
     const condition = new LogicalCondition(ConditionType.AND, conditionOne, conditionTwo);
     const result = dependencies.computeConditionDependencies(condition);
 
-    expect(result).toEqual(expect.arrayContaining([mockField1, mockField2]));
+    expect(result.length).toEqual(0);
   });
 
   it('should compute no dependencies for ConstantCondition', () => {
