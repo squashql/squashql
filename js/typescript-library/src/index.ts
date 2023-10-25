@@ -25,7 +25,7 @@ export {
   Criteria,
   eq, neq, lt, le, gt, ge, _in, like, isNull, isNotNull,
   and, or,
-  all, any, criterion, havingCriterion,
+  all, any, criterion, criterion_, havingCriterion,
 } from './conditions'
 
 export {

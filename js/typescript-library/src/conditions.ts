@@ -1,5 +1,7 @@
 import {BasicMeasure, Field, PACKAGE} from "./index"
 
+type Primitive = string | number | boolean;
+
 export interface Condition {
   readonly class: string
   readonly type: ConditionType
@@ -27,10 +29,13 @@ function toJSON(c: Condition) {
   }
 }
 
+/**
+ * Generic condition on a string, number or boolean constant.
+ */
 class SingleValueCondition implements Condition {
   class: string = PACKAGE + "dto.SingleValueConditionDto"
 
-  constructor(readonly type: ConditionType, private value: any) {
+  constructor(readonly type: ConditionType, private value: Primitive) {
   }
 
   toJSON() {
@@ -54,11 +59,14 @@ class ConstantCondition implements Condition {
   }
 }
 
+/**
+ * In condition on a list of string, number or boolean constants.
+ */
 class InCondition implements Condition {
   type: ConditionType = ConditionType.IN
   class: string = PACKAGE + "dto.InConditionDto"
 
-  constructor(private values: Array<any>) {
+  constructor(private values: Array<Primitive>) {
   }
 
   toJSON() {
@@ -95,10 +103,16 @@ export class Criteria {
   }
 }
 
+/**
+ * Criteria on a single field. The condition can only be based on constants.
+ */
 export function criterion(field: Field, condition: Condition): Criteria {
   return new Criteria(field, undefined, undefined, condition, undefined, undefined)
 }
 
+/**
+ * Criteria based on the comparison of 2 fields.
+ */
 export function criterion_(field: Field, fieldOther: Field, conditionType: ConditionType): Criteria {
   return new Criteria(field, fieldOther, undefined, undefined, conditionType, undefined)
 }
@@ -131,34 +145,58 @@ export function isNotNull(): Condition {
   return new ConstantCondition(ConditionType.NOT_NULL)
 }
 
-export function _in(value: Array<any>): Condition {
+/**
+ * In condition on a list of string, number or boolean constants.
+ */
+export function _in(value: Array<Primitive>): Condition {
   return new InCondition(value)
 }
 
-export function eq(value: any): Condition {
+/**
+ * Equal condition on a string, number or boolean constant.
+ */
+export function eq(value: Primitive): Condition {
   return new SingleValueCondition(ConditionType.EQ, value)
 }
 
-export function neq(value: any): Condition {
+/**
+ * Not equal condition on a string, number or boolean constant.
+ */
+export function neq(value: Primitive): Condition {
   return new SingleValueCondition(ConditionType.NEQ, value)
 }
 
-export function lt(value: any): Condition {
+/**
+ * Lower than condition on a string, number or boolean constant.
+ */
+export function lt(value: Primitive): Condition {
   return new SingleValueCondition(ConditionType.LT, value)
 }
 
-export function le(value: any): Condition {
+/**
+ * Lower or equal condition on a string, number or boolean constant.
+ */
+export function le(value: Primitive): Condition {
   return new SingleValueCondition(ConditionType.LE, value)
 }
 
-export function gt(value: any): Condition {
+/**
+ * Greater than condition on a string, number or boolean constant.
+ */
+export function gt(value: Primitive): Condition {
   return new SingleValueCondition(ConditionType.GT, value)
 }
 
-export function ge(value: any): Condition {
+/**
+ * Greater or equal condition on a string, number or boolean constant.
+ */
+export function ge(value: Primitive): Condition {
   return new SingleValueCondition(ConditionType.GE, value)
 }
 
+/**
+ * Like condition on a string pattern.
+ */
 export function like(value: string): Condition {
   return new SingleValueCondition(ConditionType.LIKE, value)
 }
