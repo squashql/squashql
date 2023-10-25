@@ -1,4 +1,4 @@
-import Criteria from "./Criteria";
+import Criteria from "./criteria";
 import {TableField} from "./field"
 import {serializeMap} from "./util"
 import PACKAGE from "./package";
