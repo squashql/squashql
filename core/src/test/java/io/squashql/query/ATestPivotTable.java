@@ -342,10 +342,69 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .select(tableFields(List.of("continent", "country")), measuresPop)
             .build();
 
-    PivotTable pivotTable = this.executor.executePivotQueryMerge(query1, query2, tableFields(List.of("continent", "country")), tableFields(List.of("spending category")), JoinType.LEFT, null);
-    pivotTable.show();
-
     verifyResults(testInfo, query1, query2, JoinType.LEFT, List.of("continent", "country"), List.of("spending category"));
+  }
+
+  @Test
+  void testDrillingAcrossAndColumnSet(TestInfo testInfo) {
+    // TODO write a test with the first query containing a columnset.
+    Measure amount = Functions.sum("amount", "amount");
+    Measure pop = Functions.sum("population", "population");
+
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", tableField("spending category"))
+            .withNewBucket("group1", List.of("extra"))
+            .withNewBucket("group2", List.of("extra", "minimum expenditure"));
+
+    List<Measure> measuresSpending = List.of(amount);
+    QueryDto query1 = Query
+            .from(this.storeSpending)
+            .select(tableFields(List.of("country")), List.of(bucketCS), measuresSpending)
+            .build();
+
+    executor.executeQuery(query1).show();
+    PivotTableQueryDto pivotTableQueryDto = new PivotTableQueryDto(query1, tableFields(List.of("group", "spending category")), List.of(tableField("country")));
+    executor.executePivotQuery(pivotTableQueryDto).show();
+    /*
+    +---------+---------------------+-------------+--------+--------+--------+
+    | country |             country | Grand Total | france |     uk |    usa |
+    |   group |   spending category |      amount | amount | amount | amount |
+    +---------+---------------------+-------------+--------+--------+--------+
+    |  group1 |               extra |        17.0 |    2.0 |    5.0 |   10.0 |
+    |  group2 |               extra |        17.0 |    2.0 |    5.0 |   10.0 |
+    |  group2 | minimum expenditure |        39.0 |    6.0 |    4.0 |   29.0 |
+    +---------+---------------------+-------------+--------+--------+--------+
+     */
+    List<Measure> measuresPop = List.of(pop);
+    QueryDto query2 = Query
+            .from(this.storePopulation)
+            .select(tableFields(List.of("country")), measuresPop)
+            .build();
+    pivotTableQueryDto = new PivotTableQueryDto(query2, List.of(), List.of(tableField("country")));
+    executor.executePivotQuery(pivotTableQueryDto).show();
+    /*
+    +-------------+------------+------------+------------+
+    | Grand Total |     france |         uk |        usa |
+    |  population | population | population | population |
+    +-------------+------------+------------+------------+
+    |       465.0 |       70.0 |       65.0 |      330.0 |
+    +-------------+------------+------------+------------+
+     */
+
+    executor.executePivotQueryMerge(query1, query2, tableFields(List.of("group", "spending category")), List.of(tableField("country")), JoinType.INNER, null)
+            .show();
+    /*
+    +-------------+---------------------+-------------+-------------+--------+------------+--------+------------+--------+------------+
+    |     country |             country | Grand Total | Grand Total | france |     france |     uk |         uk |    usa |        usa |
+    |       group |   spending category |      amount |  population | amount | population | amount | population | amount | population |
+    +-------------+---------------------+-------------+-------------+--------+------------+--------+------------+--------+------------+
+    |      group1 |               extra |        17.0 |        null |    2.0 |       null |    5.0 |       null |   10.0 |       null |
+    |      group2 |               extra |        17.0 |        null |    2.0 |       null |    5.0 |       null |   10.0 |       null |
+    |      group2 | minimum expenditure |        39.0 |        null |    6.0 |       null |    4.0 |       null |   29.0 |       null |
+    | Grand Total |         Grand Total |        null |       465.0 |   null |       70.0 |   null |       65.0 |   null |      330.0 |
+    +-------------+---------------------+-------------+-------------+--------+------------+--------+------------+--------+------------+
+     */
+    // TODO write the results in files and add the check below.
+    Assertions.fail("to do");
   }
 
   private void verifyResults(TestInfo testInfo, QueryDto query, List<String> rows, List<String> columns) {

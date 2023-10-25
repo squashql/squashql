@@ -31,15 +31,20 @@ public class QueryMergeExecutor {
   }
 
   public static PivotTable executePivotQueryMerge(QueryExecutor queryExecutor, QueryDto first, QueryDto second, List<Field> rows, List<Field> columns, JoinType joinType, SquashQLUser user) {
-    Function<QueryDto, Table> executor = query -> queryExecutor.executePivotQuery(// FIXME handle column sets
-            new PivotTableQueryDto(query, rows.stream().filter(r -> query.columns.contains(r)).toList(), columns.stream().filter(r -> query.columns.contains(r)).toList()),
-            CacheStatsDto.builder(),
-            user,
-            false,
-            limit -> {
-              throw new RuntimeException("Result of " + query + " is too big (limit=" + limit + ")");
-            })
-            .table;
+    Function<QueryDto, Table> executor = query -> {
+      Set<Field> columnsFromColumnSets = query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream()).collect(Collectors.toSet());
+      return queryExecutor.executePivotQuery(
+              new PivotTableQueryDto(query,
+                      rows.stream().filter(r -> query.columns.contains(r) || columnsFromColumnSets.contains(r)).toList(),
+                      columns.stream().filter(r -> query.columns.contains(r) || columnsFromColumnSets.contains(r)).toList()),
+              CacheStatsDto.builder(),
+              user,
+              false,
+              limit -> {
+                throw new RuntimeException("Result of " + query + " is too big (limit=" + limit + ")");
+              })
+              .table;
+    };
 
     Function<Table, ColumnarTable> replaceTotalCellValuesFunction = t -> (ColumnarTable) TableUtils.replaceTotalCellValues((ColumnarTable) t,
             rows.stream().map(Field::name).toList(),
