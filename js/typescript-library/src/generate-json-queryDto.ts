@@ -51,7 +51,7 @@ export function generateFromQueryDto() {
 
   const price = new AggregatedMeasure("price.sum", new TableField("price"), "sum")
   q.withMeasure(price)
-  const priceFood = new AggregatedMeasure("alias", new TableField("price"), "sum", criterion(new TableField("category"), eq("food")))
+  const priceFood = new AggregatedMeasure("alias", new TableField("price"), "sum", false, criterion(new TableField("category"), eq("food")))
   q.withMeasure(priceFood)
   const plus = new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood)
   q.withMeasure(plus)

@@ -126,6 +126,46 @@ public class Functions {
     return new BinaryOperationMeasure(alias, PLUS, a, b);
   }
 
+  public static Measure count(String alias, String field) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.COUNT);
+  }
+
+  public static Measure count(String alias, Field field) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.COUNT, null);
+  }
+
+  public static Measure countIf(String alias, String field, CriteriaDto criteriaDto) {
+    return new AggregatedMeasure(alias, new TableField(field), AggregationFunction.COUNT, criteriaDto);
+  }
+
+  public static Measure countIf(String alias, Field field, CriteriaDto criteriaDto) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.COUNT, criteriaDto);
+  }
+
+  public static Measure countDistinct(String alias, String field) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.COUNT, true);
+  }
+
+  public static Measure countDistinct(String alias, Field field) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.COUNT, true);
+  }
+
+  public static Measure countDistinctIf(String alias, String field, CriteriaDto criteriaDto) {
+    return new AggregatedMeasure(alias, new TableField(field), AggregationFunction.COUNT, true, criteriaDto);
+  }
+
+  public static Measure countDistinctIf(String alias, Field field, CriteriaDto criteriaDto) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.COUNT, true, criteriaDto);
+  }
+
+  public static Measure max(String alias, String field) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.MAX);
+  }
+
+  public static Measure max(String alias, Field field) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.MAX, null);
+  }
+
   public static Measure min(String alias, String field) {
     return new AggregatedMeasure(alias, field, AggregationFunction.MIN);
   }
@@ -152,6 +192,14 @@ public class Functions {
 
   public static Measure avg(String alias, String field) {
     return new AggregatedMeasure(alias, field, AggregationFunction.AVG);
+  }
+
+  public static Measure avg(String alias, Field field) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.AVG, null);
+  }
+
+  public static Measure avgIf(String alias, String field, CriteriaDto criteriaDto) {
+    return new AggregatedMeasure(alias, field, AggregationFunction.AVG, criteriaDto);
   }
 
   public static Measure avgIf(String alias, Field field, CriteriaDto criteriaDto) {
