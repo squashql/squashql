@@ -4,6 +4,7 @@ import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
+import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.spring.dataset.DatasetTestConfig;
 import org.assertj.core.api.Assertions;
@@ -251,7 +252,28 @@ public class QueryControllerTest {
   }
 
   @Test
-  void testQueryMergePivot() {
-    Assertions.fail("to do");
+  void testQueryMergePivot() throws Exception {
+    var query1 = Query
+            .from("our_prices")
+            .select(tableFields(List.of("ean")), List.of(Functions.sum("capdv-sum", "capdv")))
+            .build();
+    var query2 = Query
+            .from("our_prices")
+            .select(tableFields(List.of("ean")), List.of(Functions.avg("capdv-avg", "capdv")))
+            .build();
+
+    QueryMergeDto queryMergeDto = new QueryMergeDto(query1, query2, JoinType.FULL);
+    this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_MERGE_PIVOT)
+                    .content(JacksonUtil.serialize(new PivotTableQueryMergeDto(queryMergeDto, tableFields(List.of("ean")), List.of())))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(result -> {
+              String contentAsString = result.getResponse().getContentAsString();
+              PivotTableQueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, PivotTableQueryResultDto.class);
+              Assertions.assertThat(queryResult.queryResult.table.rows).containsExactlyInAnyOrder(
+                      List.of(QueryEngine.GRAND_TOTAL, 102000d * 2, 10200d),
+                      List.of("ITMella 250g", 102000d, 10200d),
+                      List.of("Nutella 250g", 102000d, 10200d));
+              Assertions.assertThat(queryResult.queryResult.table.columns).containsExactly("ean", "capdv-sum", "capdv-avg");
+            });
   }
 }

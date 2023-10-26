@@ -347,7 +347,6 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
   @Test
   void testDrillingAcrossAndColumnSet(TestInfo testInfo) {
-    // TODO write a test with the first query containing a columnset.
     Measure amount = Functions.sum("amount", "amount");
     Measure pop = Functions.sum("population", "population");
 
@@ -360,10 +359,6 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .from(this.storeSpending)
             .select(tableFields(List.of("country")), List.of(bucketCS), measuresSpending)
             .build();
-
-    executor.executeQuery(query1).show();
-    PivotTableQueryDto pivotTableQueryDto = new PivotTableQueryDto(query1, tableFields(List.of("group", "spending category")), List.of(tableField("country")));
-    executor.executePivotQuery(pivotTableQueryDto).show();
     /*
     +---------+---------------------+-------------+--------+--------+--------+
     | country |             country | Grand Total | france |     uk |    usa |
@@ -379,8 +374,6 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .from(this.storePopulation)
             .select(tableFields(List.of("country")), measuresPop)
             .build();
-    pivotTableQueryDto = new PivotTableQueryDto(query2, List.of(), List.of(tableField("country")));
-    executor.executePivotQuery(pivotTableQueryDto).show();
     /*
     +-------------+------------+------------+------------+
     | Grand Total |     france |         uk |        usa |
@@ -390,8 +383,6 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     +-------------+------------+------------+------------+
      */
 
-    executor.executePivotQueryMerge(query1, query2, tableFields(List.of("group", "spending category")), List.of(tableField("country")), JoinType.INNER, null)
-            .show();
     /*
     +-------------+---------------------+-------------+-------------+--------+------------+--------+------------+--------+------------+
     |     country |             country | Grand Total | Grand Total | france |     france |     uk |         uk |    usa |        usa |
@@ -403,8 +394,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     | Grand Total |         Grand Total |        null |       465.0 |   null |       70.0 |   null |       65.0 |   null |      330.0 |
     +-------------+---------------------+-------------+-------------+--------+------------+--------+------------+--------+------------+
      */
-    // TODO write the results in files and add the check below.
-    Assertions.fail("to do");
+    verifyResults(testInfo, query1, query2, JoinType.INNER, List.of("group", "spending category"), List.of("country"));
   }
 
   private void verifyResults(TestInfo testInfo, QueryDto query, List<String> rows, List<String> columns) {
