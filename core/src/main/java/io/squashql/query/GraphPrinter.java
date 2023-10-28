@@ -70,10 +70,10 @@ public class GraphPrinter {
 
   private static String printQueryPlanNodeKey(QueryExecutor.QueryScope scope) {
     StringBuilder sb = new StringBuilder();
-    appendIfNotNullOrNotEmpty(sb, null, scope.tableDto());
+    appendIfNotNullOrNotEmpty(sb, null, scope.table());
     appendIfNotNullOrNotEmpty(sb, null, scope.subQuery());
     appendIfNotNullOrNotEmpty(sb, "columns=", scope.columns().stream().map(TypedField::toString).toList());
-    appendIfNotNullOrNotEmpty(sb, null, scope.whereCriteriaDto());
+    appendIfNotNullOrNotEmpty(sb, null, scope.whereCriteria());
     appendIfNotNullOrNotEmpty(sb, "rollup=", scope.rollupColumns().stream().map(TypedField::toString).toList());
     return sb.toString();
   }

@@ -5,7 +5,6 @@ import io.squashql.query.compiled.CompiledCriteria;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.compiled.CompiledTable;
 import io.squashql.query.compiled.DatabaseQuery2;
-import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.dto.TableDto;
@@ -16,133 +15,67 @@ import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.Value;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Value
 public class QueryResolver {
 
   Map<String, Store> storesByName;
 
-
-//  public static DatabaseQuery queryScopeToDatabaseQuery(QueryExecutor.QueryScope queryScope, QueryResolver queryResolver, int limit) {
-//    Set<TypedField> selects = new HashSet<>(queryScope.columns());
-//    DatabaseQuery prefetchQuery = new DatabaseQuery();
-//    if (queryScope.tableDto() != null) {
-//      prefetchQuery.table(queryScope.tableDto());
-//    } else if (queryScope.subQuery() != null) {
-//      prefetchQuery.subQuery(toSubDatabaseQuery(queryScope.subQuery(), fieldSupplier));
-//    } else {
-//      throw new IllegalArgumentException("A table or sub-query was expected in " + queryScope);
-//    }
-//    prefetchQuery.whereCriteria(queryScope.whereCriteriaDto());
-//    prefetchQuery.havingCriteria(queryScope.havingCriteriaDto());
-//    selects.forEach(prefetchQuery::withSelect);
-//    prefetchQuery.rollup(queryScope.rollupColumns());
-//    prefetchQuery.groupingSets(queryScope.groupingSets());
-//    prefetchQuery.limit(limit);
-//    prefetchQuery.virtualTable(queryScope.virtualTableDto());
-//    return prefetchQuery;
-//  }
-//
-//  public static DatabaseQuery toSubDatabaseQuery(QueryDto query, Function<Field, TypedField> fieldSupplier) {
-//    if (query.subQuery != null) {
-//      throw new IllegalArgumentException("sub-query in a sub-query is not supported");
-//    }
-//
-//    if (query.virtualTableDto != null) {
-//      throw new IllegalArgumentException("virtualTableDto in a sub-query is not supported");
-//    }
-//
-//    Set<Field> cols = new HashSet<>(query.columns);
-//    if (query.columnSets != null && !query.columnSets.isEmpty()) {
-//      throw new IllegalArgumentException("column sets are not expected in sub query: " + query);
-//    }
-//    if (query.parameters != null && !query.parameters.isEmpty()) {
-//      throw new IllegalArgumentException("parameters are not expected in sub query: " + query);
-//    }
-//
-//    for (Measure measure : query.measures) {
-//      if (measure.accept(new PrimitiveMeasureVisitor())) {
-//        continue;
-//      }
-//      throw new IllegalArgumentException("Only measures that can be computed by the underlying database can be used" +
-//              " in a sub-query but " + measure + " was provided");
-//    }
-//
-//    DatabaseQuery prefetchQuery = new DatabaseQuery().table(query.table);
-//    prefetchQuery.whereCriteriaDto = query.whereCriteriaDto;
-//    prefetchQuery.havingCriteriaDto = query.havingCriteriaDto;
-//    cols.stream().map(fieldSupplier).forEach(prefetchQuery::withSelect);
-//    query.measures.forEach(prefetchQuery::withMeasure);
-//    return prefetchQuery;
-//  }
-
-  public DatabaseQuery2 compileQuery(final QueryExecutor.QueryScope query, final List<Measure> queriedMeasures, final int limit) {
+  public QueryExecutor.QueryScope toQueryScope(final QueryDto query) {
     checkQuery(query);
-    final CompiledTable table;
-    final DatabaseQuery2 subQuery;
-    if (query.subQuery() == null) {
-      subQuery = null;
-      table = compileTable(query.tableDto());
-    } else {
-      subQuery = compileSubQuery(query.subQuery());
-      table = null;
-    }
-    final List<TypedField> select = Collections.unmodifiableList(query.columns());
-    final CompiledCriteria whereCriteria = compileCriteria(query.whereCriteriaDto());
-    final CompiledCriteria havingCriteria = compileCriteria(query.havingCriteriaDto());
-    final List<CompiledMeasure> measures = compileMeasure(queriedMeasures);
-    final List<TypedField> rollup = Collections.unmodifiableList(query.rollupColumns());
-    final List<List<TypedField>> groupingSets = Collections.unmodifiableList(query.groupingSets());
-    return new DatabaseQuery2(query.virtualTableDto(),
-            table,
-            subQuery,
-            select,
-            whereCriteria,
-            havingCriteria,
-            measures,
-            rollup,
+    List<TypedField> columns = Stream.concat(
+            query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
+            query.columns.stream()).map(this::resolveField).collect(Collectors.toCollection(ArrayList::new));
+    List<TypedField> rollupColumns = query.rollupColumns.stream().map(this::resolveField).toList();
+    List<List<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(this::resolveField).toList()).toList();
+    return new QueryExecutor.QueryScope(compileTable(query.table),
+            toSubQuery(query.subQuery),
+            columns,
+            compileCriteria(query.whereCriteriaDto),
+            compileCriteria(query.havingCriteriaDto),
+            rollupColumns,
             groupingSets,
-            limit);
-
+            query.virtualTableDto);
   }
 
-  private void checkQuery(final QueryExecutor.QueryScope query) {
-    if (query.tableDto() == null && query.subQuery() == null) {
+  private void checkQuery(final QueryDto query) {
+    if (query.table == null && query.subQuery == null) {
       throw new IllegalArgumentException("A table or sub-query was expected in " + query);
-    } else if (query.tableDto() != null && query.subQuery() != null) {
+    } else if (query.table != null && query.subQuery != null) {
       throw new IllegalArgumentException("Cannot define a table and a sub-query at the same time in " + query);
     }
   }
 
-  private DatabaseQuery2 compileSubQuery(final QueryDto subQuery) {
+  private QueryExecutor.QueryScope toSubQuery(final QueryDto subQuery) {
     checkSubQuery(subQuery);
     final CompiledTable table = compileTable(subQuery.table);
     final List<TypedField> select = subQuery.columns.stream().map(this::resolveField).toList();
     final CompiledCriteria whereCriteria = compileCriteria(subQuery.whereCriteriaDto);
     final CompiledCriteria havingCriteria = compileCriteria(subQuery.havingCriteriaDto);
-    final List<CompiledMeasure> measures = compileMeasure(subQuery.measures);
     // should we check groupingSet and rollup as well are empty ?
-    return new DatabaseQuery2(null,
-            table,
+    return new QueryExecutor.QueryScope(table,
             null,
             select,
             whereCriteria,
             havingCriteria,
-            measures,
             Collections.emptyList(),
             Collections.emptyList(),
-            -1);
+            null);
   }
 
-  // todo-mde maybe move this part when building the subQuery ?
   private void checkSubQuery(final QueryDto subQuery) {
     if (subQuery.subQuery != null) {
       throw new IllegalArgumentException("sub-query in a sub-query is not supported");
     }
     if (subQuery.virtualTableDto != null) {
-      throw new IllegalArgumentException("virtualTableDto in a sub-query is not supported");
+      throw new IllegalArgumentException("virtualTable in a sub-query is not supported");
     }
     if (subQuery.columnSets != null && !subQuery.columnSets.isEmpty()) {
       throw new IllegalArgumentException("column sets are not expected in sub query: " + subQuery);
@@ -159,6 +92,33 @@ public class QueryResolver {
     }
   }
 
+  public DatabaseQuery2 toDatabaseQuery(final QueryExecutor.QueryScope query, final List<Measure> measures, final int limit) {
+    return new DatabaseQuery2(query.virtualTable(),
+            query.table(),
+            toSubQuery(query.subQuery(), measures),
+            query.columns(),
+            query.whereCriteria(),
+            query.havingCriteria(),
+            Collections.emptyList(),
+            query.rollupColumns(),
+            query.groupingSets(),
+            limit);
+  }
+
+  private DatabaseQuery2 toSubQuery(final QueryExecutor.QueryScope subQuery, final List<Measure> measures) {
+    return new DatabaseQuery2(subQuery.virtualTable(),
+            subQuery.table(),
+            null,
+            subQuery.columns(),
+            subQuery.whereCriteria(),
+            subQuery.havingCriteria(),
+            Collections.emptyList(),
+            subQuery.rollupColumns(),
+            subQuery.groupingSets(),
+            -1);
+  }
+
+  // todo-mde to implement
   private CompiledTable compileTable(final TableDto table) {
     return null;
   }
@@ -169,6 +129,19 @@ public class QueryResolver {
 
   private List<CompiledMeasure> compileMeasure(final List<Measure> measures) {
     return null;
+  }
+
+  public static Function<Field, TypedField> withFallback(Function<Field, TypedField> fieldProvider, Class<?> fallbackType) {
+    // todo-mde
+    return field -> {
+      try {
+        return fieldProvider.apply(field);
+      } catch (FieldNotFoundException e) {
+        // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
+        // contains only "raw" fields, it will throw an exception.
+        return new TableTypedField(null, field.name(), fallbackType);
+      }
+    };
   }
 
   public TypedField resolveField(final Field field) {

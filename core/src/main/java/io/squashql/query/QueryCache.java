@@ -1,6 +1,9 @@
 package io.squashql.query;
 
-import io.squashql.query.dto.*;
+import io.squashql.query.compiled.CompiledCriteria;
+import io.squashql.query.compiled.CompiledTable;
+import io.squashql.query.dto.CacheStatsDto;
+import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;
@@ -32,21 +35,21 @@ public interface QueryCache {
 
   CacheStatsDto stats(SquashQLUser user);
 
-  record TableScope(TableDto tableDto,
+  record TableScope(CompiledTable table,
                     Set<TypedField> columns,
-                    CriteriaDto whereCriteriaDto,
-                    CriteriaDto havingCriteriaDto,
+                    CompiledCriteria whereCriteria,
+                    CompiledCriteria havingCriteria,
                     List<TypedField> rollupColumns,
                     List<List<TypedField>> groupingSets,
-                    VirtualTableDto virtualTableDto,
+                    VirtualTableDto virtualTable,
                     SquashQLUser user,
                     int limit) implements PrefetchQueryScope {
   }
 
-  record SubQueryScope(QueryDto subQueryDto,
+  record SubQueryScope(QueryExecutor.QueryScope subQuery, //todo-mde include measure or different subscope ? prefetch scope ?
                        Set<TypedField> columns,
-                       CriteriaDto whereCriteriaDto,
-                       CriteriaDto havingCriteriaDto,
+                       CompiledCriteria whereCriteriaDto,
+                       CompiledCriteria havingCriteriaDto,
                        SquashQLUser user,
                        int limit) implements PrefetchQueryScope {
   }

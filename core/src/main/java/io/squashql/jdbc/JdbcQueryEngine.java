@@ -1,13 +1,12 @@
 package io.squashql.jdbc;
 
-import io.squashql.query.database.QueryResultFormat;
-import io.squashql.table.ColumnarTable;
 import io.squashql.query.Header;
+import io.squashql.query.compiled.DatabaseQuery2;
+import io.squashql.query.database.AQueryEngine;
+import io.squashql.query.database.QueryRewriter;
+import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
-import io.squashql.query.database.AQueryEngine;
-import io.squashql.query.database.DatabaseQuery;
-import io.squashql.query.database.QueryRewriter;
 import org.eclipse.collections.api.tuple.Pair;
 
 import java.io.Serializable;
@@ -26,7 +25,7 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
   protected abstract BiFunction<ResultSetMetaData, Integer, Class<?>> typeToClassConverter();
 
   @Override
-  protected Table retrieveAggregates(QueryResultFormat format, String sql) {
+  protected Table retrieveAggregates(DatabaseQuery2 query, String sql) {
     return executeQuery(sql, this.datastore.getConnection(), tableResult -> {
       List<Class<?>> columnTypes = new ArrayList<>();
       for (int i = 0; i < tableResult.getMetaData().getColumnCount(); i++) {
@@ -34,14 +33,14 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
       }
 
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
-              format,
+              query,
               columnTypes,
               (columnType, name) -> columnType,
               new ResultSetIterator(tableResult),
               (i, fieldValues) -> fieldValues[i]);
       return new ColumnarTable(
               result.getOne(),
-              new HashSet<>(format.measures()),
+              new HashSet<>(query.measures),
               result.getTwo());
     });
   }

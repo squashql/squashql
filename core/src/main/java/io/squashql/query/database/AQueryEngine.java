@@ -67,7 +67,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     return SQLTranslator.translate(query, this.queryRewriter);
   }
 
-  protected abstract Table retrieveAggregates(QueryResultFormat query, String sql);
+  protected abstract Table retrieveAggregates(DatabaseQuery2 query, String sql);
 
   /**
    * Changes the content of the input table to remove columns corresponding to grouping() (columns that help to identify
@@ -96,15 +96,15 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
    *   +-------------+-------------+------+----------------------+----+
    * </pre>
    */
-  protected Table postProcessDataset(Table input, QueryResultFormat format) {
-    List<TypedField> groupingSelects = Queries.generateGroupingSelect(format);
+  protected Table postProcessDataset(Table input, DatabaseQuery2 query) {
+    List<TypedField> groupingSelects = Queries.generateGroupingSelect(query);
     if (this.queryRewriter.useGroupingFunction() && !groupingSelects.isEmpty()) {
       List<Header> newHeaders = new ArrayList<>();
       List<List<Object>> newValues = new ArrayList<>();
       for (int i = 0; i < input.headers().size(); i++) {
         Header header = input.headers().get(i);
         List<Object> columnValues = input.getColumn(i);
-        if (i < format.select().size() || i >= format.select().size() + groupingSelects.size()) {
+        if (i < query.select.size() || i >= query.select.size() + groupingSelects.size()) {
           newHeaders.add(header);
           newValues.add(columnValues);
         } else {
@@ -130,7 +130,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   }
 
   public <Column, Record> Pair<List<Header>, List<List<Object>>> transformToColumnFormat(
-          QueryResultFormat format,
+          DatabaseQuery2 query,
           List<Column> columns,
           BiFunction<Column, String, Class<?>> columnTypeProvider,
           Iterator<Record> recordIterator,
@@ -145,18 +145,18 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
         throw new IllegalArgumentException(f.getClass().getName());
       }
     };
-    List<String> fieldNames = new ArrayList<>(format.select().stream().map(typedFieldStringFunction).toList());
-    List<TypedField> groupingSelects = Queries.generateGroupingSelect(format);
+    List<String> fieldNames = new ArrayList<>(query.select.stream().map(typedFieldStringFunction).toList());
+    List<TypedField> groupingSelects = Queries.generateGroupingSelect(query);
     if (this.queryRewriter.useGroupingFunction()) {
       groupingSelects.forEach(r -> fieldNames.add(SqlUtils.groupingAlias(typedFieldStringFunction.apply(r))));
     }
-    format.measures().forEach(m -> fieldNames.add(m.alias()));
+    query.measures.forEach(m -> fieldNames.add(m.alias()));
     List<List<Object>> values = new ArrayList<>(columns.size());
     for (int i = 0; i < columns.size(); i++) {
       headers.add(new Header(
               fieldNames.get(i),
               columnTypeProvider.apply(columns.get(i), fieldNames.get(i)),
-              i >= format.select().size() + (this.queryRewriter.useGroupingFunction() ? groupingSelects.size() : 0)));
+              i >= query.select.size() + (this.queryRewriter.useGroupingFunction() ? groupingSelects.size() : 0)));
       values.add(new ArrayList<>());
     }
     recordIterator.forEachRemaining(r -> {

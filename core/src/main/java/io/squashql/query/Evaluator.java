@@ -5,25 +5,18 @@ import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import io.squashql.query.comp.BinaryOperations;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.table.Table;
-import io.squashql.type.TypedField;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import static io.squashql.query.ColumnSetKey.BUCKET;
 
 public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>, MeasureVisitor<Void> {
 
-  private final QueryResolver queryResolver;
   private ExecutionContext executionContext;
-
-  public Evaluator(final QueryResolver queryResolver) {
-    this.queryResolver = queryResolver;
-  }
 
   @Override
   public void accept(QueryPlanNodeKey queryPlanNodeKey, ExecutionContext executionContext) {
@@ -76,7 +69,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     }
 
     QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(
-            this.executionContext.query(), cm, this.executionContext.queryScope(), this.queryResolver);
+            this.executionContext.query(), cm, this.executionContext.queryScope());
     Table readFromTable = this.executionContext.tableByScope().get(readScope); // Table where to read the aggregates
     if (readFromTable.count() == this.executionContext.queryLimit()) {
       throw new RuntimeException("Too many rows, some intermediate results exceed the limit " + this.executionContext.queryLimit());

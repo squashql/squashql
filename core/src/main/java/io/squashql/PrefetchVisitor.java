@@ -16,7 +16,6 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Measu
 
   private final QueryDto query;
   private final QueryScope originalQueryScope;
-  private final QueryResolver queryResolver;
 
   private Map<QueryScope, Set<Measure>> empty() {
     return Collections.emptyMap();
@@ -43,7 +42,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Measu
 
   @Override
   public Map<QueryScope, Set<Measure>> visit(ComparisonMeasureReferencePosition cmrp) {
-    QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.query, cmrp, this.originalQueryScope, this.queryResolver);
+    QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.query, cmrp, this.originalQueryScope);
     Map<QueryScope, Set<Measure>> result = new HashMap<>(Map.of(this.originalQueryScope, Set.of(cmrp.measure)));
     result.put(readScope, Set.of(cmrp.measure));
     return result;

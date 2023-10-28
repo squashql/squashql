@@ -144,27 +144,27 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   }
 
   @Override
-  protected Table postProcessDataset(Table input, QueryResultFormat format) {
-    if (format.rollup().isEmpty() && format.groupingSets().isEmpty()) {
+  protected Table postProcessDataset(Table input, DatabaseQuery2 query) {
+    if (query.rollup.isEmpty() && query.groupingSets.isEmpty()) {
       return input;
     }
 
-    boolean isPartialRollup = !Set.copyOf(format.select()).equals(Set.copyOf(format.rollup()));
-    List<TypedField> missingColumnsInRollup = new ArrayList<>(format.select());
-    missingColumnsInRollup.removeAll(format.rollup());
+    boolean isPartialRollup = !Set.copyOf(query.select).equals(Set.copyOf(query.rollup));
+    List<TypedField> missingColumnsInRollup = new ArrayList<>(query.select);
+    missingColumnsInRollup.removeAll(query.rollup);
     Set<String> missingColumnsInRollupSet = missingColumnsInRollup.stream().map(SqlUtils::expression).collect(Collectors.toSet());
 
     MutableIntSet rowIndicesToRemove = new IntHashSet();
     for (int i = 0; i < input.headers().size(); i++) {
       Header h = input.headers().get(i);
       List<Object> columnValues = input.getColumn(i);
-      if (i < format.select().size()) {
+      if (i < query.select.size()) {
         List<Object> baseColumnValues = input.getColumnValues(h.name());
         for (int rowIndex = 0; rowIndex < input.count(); rowIndex++) {
           Object value = columnValues.get(rowIndex);
           if (value == null) {
             baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
-            if (format.groupingSets().isEmpty() && isPartialRollup && missingColumnsInRollupSet.contains(h.name())) {
+            if (query.groupingSets.isEmpty() && isPartialRollup && missingColumnsInRollupSet.contains(h.name())) {
               // Partial rollup not supported https://issuetracker.google.com/issues/35905909, we let bigquery compute
               // all totals, and we remove here the extra rows.
               rowIndicesToRemove.add(rowIndex);
@@ -200,20 +200,20 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   }
 
   @Override
-  protected Table retrieveAggregates(QueryResultFormat format, String sql) {
+  protected Table retrieveAggregates(DatabaseQuery2 query, String sql) {
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(sql).build();
     try {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
       Schema schema = tableResult.getSchema();
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
-              format,
+              query,
               schema.getFields(),
               (column, name) -> BigQueryUtil.bigQueryTypeToClass(column.getType()),
               tableResult.iterateAll().iterator(),
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i));
       return new ColumnarTable(
               result.getOne(),
-              new HashSet<>(format.measures()),
+              new HashSet<>(query.measures),
               result.getTwo());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);

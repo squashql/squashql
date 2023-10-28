@@ -1,12 +1,12 @@
 package io.squashql.query;
 
 import io.squashql.PrimitiveMeasureVisitor;
+import io.squashql.query.compiled.CompiledCriteria;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.Period;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.NoArgsConstructor;
@@ -75,10 +75,9 @@ public final class MeasureUtils {
   public static QueryExecutor.QueryScope getReadScopeComparisonMeasureReferencePosition(
           QueryDto query,
           ComparisonMeasureReferencePosition cm,
-          QueryExecutor.QueryScope queryScope,
-          QueryResolver queryResolver) {
-    AtomicReference<CriteriaDto> copy = new AtomicReference<>(queryScope.whereCriteriaDto() == null ? null : CriteriaDto.deepCopy(queryScope.whereCriteriaDto()));
-    Consumer<Field> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
+          QueryExecutor.QueryScope queryScope) {
+    AtomicReference<CompiledCriteria> copy = new AtomicReference<>(queryScope.whereCriteria() == null ? null : CriteriaDto.deepCopy(queryScope.whereCriteria()));
+    Consumer<TypedField> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(criteriaRemover));
     Optional.ofNullable(cm.period)
@@ -90,37 +89,37 @@ public final class MeasureUtils {
               List<TypedField> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).map(queryResolver::resolveField).toList();
               rollupColumns.addAll(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage reverse order".
             });
-    return new QueryExecutor.QueryScope(queryScope.tableDto(),
+    return new QueryExecutor.QueryScope(queryScope.table(),
             queryScope.subQuery(),
             queryScope.columns(),
             copy.get(),
-            queryScope.havingCriteriaDto(),
+            queryScope.havingCriteria(),
             new ArrayList<>(rollupColumns),
             new ArrayList<>(queryScope.groupingSets()), // FIXME should handle groupingSets
-            queryScope.virtualTableDto());
+            queryScope.virtualTable());
   }
 
-  private static CriteriaDto removeCriteriaOnField(Field field, CriteriaDto root) {
+  private static CompiledCriteria removeCriteriaOnField(TypedField field, CompiledCriteria root) {
     if (root == null) {
       return null;
-    } else if (root.field != null && root.condition != null) { // where clause condition
-      return root.field.equals(field) ? null : root;
+    } else if (root.field() != null && root.condition() != null) { // where clause condition
+      return root.field().equals(field) ? null : root;
     } else {
-      removeCriteriaOnField(field, root.children);
+      removeCriteriaOnField(field, root.children());
       return root;
     }
   }
 
-  private static void removeCriteriaOnField(Field field, List<CriteriaDto> children) {
-    Iterator<CriteriaDto> iterator = children.iterator();
+  private static void removeCriteriaOnField(TypedField field, List<CompiledCriteria> children) {
+    Iterator<CompiledCriteria> iterator = children.iterator();
     while (iterator.hasNext()) {
-      CriteriaDto criteriaDto = iterator.next();
-      if (criteriaDto.field != null && criteriaDto.condition != null) { // where clause condition
-        if (criteriaDto.field.equals(field)) {
+      CompiledCriteria criteriaDto = iterator.next();
+      if (criteriaDto.field() != null && criteriaDto.condition() != null) { // where clause condition
+        if (criteriaDto.field().equals(field)) {
           iterator.remove();
         }
       } else {
-        removeCriteriaOnField(field, criteriaDto.children);
+        removeCriteriaOnField(field, criteriaDto.children());
       }
     }
   }
@@ -143,16 +142,4 @@ public final class MeasureUtils {
     }
   }
 
-  public static Function<Field, TypedField> withFallback(Function<Field, TypedField> fieldProvider, Class<?> fallbackType) {
-    // todo-mde
-    return field -> {
-      try {
-        return fieldProvider.apply(field);
-      } catch (FieldNotFoundException e) {
-        // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
-        // contains only "raw" fields, it will throw an exception.
-        return new TableTypedField(null, field.name(), fallbackType);
-      }
-    };
-  }
 }

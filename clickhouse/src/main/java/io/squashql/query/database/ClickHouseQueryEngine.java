@@ -4,11 +4,15 @@ import com.clickhouse.client.ClickHouseClient;
 import com.clickhouse.client.ClickHouseNodes;
 import com.clickhouse.client.ClickHouseProtocol;
 import com.clickhouse.client.ClickHouseResponse;
-import com.clickhouse.data.*;
+import com.clickhouse.data.ClickHouseColumn;
+import com.clickhouse.data.ClickHouseFormat;
+import com.clickhouse.data.ClickHouseRecord;
+import com.clickhouse.data.ClickHouseValue;
 import io.squashql.ClickHouseDatastore;
 import io.squashql.ClickHouseUtil;
-import io.squashql.table.ColumnarTable;
 import io.squashql.query.Header;
+import io.squashql.query.compiled.DatabaseQuery2;
+import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
 import org.eclipse.collections.api.tuple.Pair;
@@ -45,7 +49,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
   }
 
   @Override
-  protected Table retrieveAggregates(QueryResultFormat format, String sql) {
+  protected Table retrieveAggregates(DatabaseQuery2 query, String sql) {
     try (ClickHouseClient client = ClickHouseClient.newInstance(ClickHouseProtocol.HTTP);
          ClickHouseResponse response = client.read(this.nodes)
                  .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)
@@ -53,14 +57,14 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
                  .execute()
                  .get()) {
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
-              format,
+              query,
               response.getColumns(),
               (column, name) -> ClickHouseUtil.clickHouseTypeToClass(column.getDataType()),
               response.records().iterator(),
               (index, r) -> getValue(r, index, response.getColumns()));
       return new ColumnarTable(
               result.getOne(),
-              new HashSet<>(format.measures()),
+              new HashSet<>(query.measures),
               result.getTwo());
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);

@@ -4,6 +4,8 @@ import io.squashql.PrefetchVisitor;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.QueryCache.SubQueryScope;
 import io.squashql.query.QueryCache.TableScope;
+import io.squashql.query.compiled.CompiledCriteria;
+import io.squashql.query.compiled.CompiledTable;
 import io.squashql.query.compiled.DatabaseQuery2;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
@@ -145,15 +147,15 @@ public class QueryExecutor {
     if (pivotTableContext != null) {
       pivotTableContext.init(queryResolver);
     }
-    QueryScope queryScope = createQueryScope(query, queryResolver);
-    DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(query, queryScope, queryResolver);
+    QueryScope queryScope = queryResolver.toQueryScope(query);
+    DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(query, queryScope);
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery2> prefetchQueryByQueryScope = new HashMap<>();
     Map<QueryScope, Set<Measure>> measuresByQueryScope = new HashMap<>();
     ExecutionPlan<QueryPlanNodeKey, Void> prefetchingPlan = new ExecutionPlan<>(dependencyGraph, (node, v) -> {
       QueryScope scope = node.queryScope;
       int limit = scope.equals(queryScope) ? queryLimit : queryLimit + 1; // limit + 1 to detect when results can be wrong
-      prefetchQueryByQueryScope.computeIfAbsent(scope, k -> queryResolver.Queries.queryScopeToDatabaseQuery(scope, queryResolver, limit));
+      prefetchQueryByQueryScope.computeIfAbsent(scope, k -> queryResolver.toDatabaseQuery(scope, node.measure, limit));
       measuresByQueryScope.computeIfAbsent(scope, k -> new HashSet<>()).add(node.measure);
     });
     prefetchingPlan.execute(null);
@@ -209,7 +211,7 @@ public class QueryExecutor {
         context.accept(queryNode, executionContext);
       }
     });
-    globalPlan.execute(new Evaluator(queryResolver));
+    globalPlan.execute(new Evaluator());
 
     Table result = tableByScope.get(queryScope);
 
@@ -233,11 +235,10 @@ public class QueryExecutor {
 
   private static DependencyGraph<QueryPlanNodeKey> computeDependencyGraph(
           QueryDto query,
-          QueryScope queryScope,
-          QueryResolver queryResolver) {
+          QueryScope queryScope) {
 
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
-      Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(query, nodeKey.queryScope, queryResolver));
+      Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(query, nodeKey.queryScope));
       Set<QueryPlanNodeKey> set = new HashSet<>();
       for (Map.Entry<QueryScope, Set<Measure>> entry : dependencies.entrySet()) {
         for (Measure measure : entry.getValue()) {
@@ -251,57 +252,40 @@ public class QueryExecutor {
     return builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList());
   }
 
-  public static QueryScope createQueryScope(QueryDto query, QueryResolver queryResolver) {
-    // If column set, it changes the scope
-    List<TypedField> columns = Stream.concat(
-            query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
-            query.columns.stream()).map(queryResolver::resolveField).collect(Collectors.toCollection(ArrayList::new));
-    List<TypedField> rollupColumns = query.rollupColumns.stream().map(queryResolver::resolveField).toList();
-    List<List<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(queryResolver::resolveField).toList()).toList();
-    return new QueryScope(query.table,
-            query.subQuery,
-            columns,
-            query.whereCriteriaDto,
-            query.havingCriteriaDto,
-            rollupColumns,
-            groupingSets,
-            query.virtualTableDto);
-  }
-
   private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(
           QueryScope queryScope,
           DatabaseQuery2 prefetchQuery,
           SquashQLUser user) {
     Set<TypedField> fields = new HashSet<>(prefetchQuery.select);
-    if (queryScope.tableDto != null) {
-      return new TableScope(queryScope.tableDto,
+    if (queryScope.table != null) {
+      return new TableScope(queryScope.table,
               fields,
-              queryScope.whereCriteriaDto,
-              queryScope.havingCriteriaDto,
+              queryScope.whereCriteria,
+              queryScope.havingCriteria,
               queryScope.rollupColumns,
               queryScope.groupingSets,
-              queryScope.virtualTableDto,
+              queryScope.virtualTable,
               user,
               prefetchQuery.limit);
     } else {
       return new SubQueryScope(queryScope.subQuery,
               fields,
-              queryScope.whereCriteriaDto,
-              queryScope.havingCriteriaDto,
+              queryScope.whereCriteria,
+              queryScope.havingCriteria,
               user,
               prefetchQuery.limit);
     }
   }
 
   //todo-mde maybe resolve everything ?
-  public record QueryScope(TableDto tableDto,
-                           QueryDto subQuery,
+  public record QueryScope(CompiledTable table,
+                           QueryScope subQuery,
                            List<TypedField> columns,
-                           CriteriaDto whereCriteriaDto,
-                           CriteriaDto havingCriteriaDto,
+                           CompiledCriteria whereCriteria,
+                           CompiledCriteria havingCriteria,
                            List<TypedField> rollupColumns,
                            List<List<TypedField>> groupingSets,
-                           VirtualTableDto virtualTableDto) {
+                           VirtualTableDto virtualTable) {
   }
 
   public record QueryPlanNodeKey(QueryScope queryScope, Measure measure) {

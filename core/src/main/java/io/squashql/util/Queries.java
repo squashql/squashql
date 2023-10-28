@@ -3,7 +3,7 @@ package io.squashql.util;
 import io.squashql.query.ColumnSet;
 import io.squashql.query.ColumnSetKey;
 import io.squashql.query.Field;
-import io.squashql.query.database.QueryResultFormat;
+import io.squashql.query.compiled.DatabaseQuery2;
 import io.squashql.query.dto.*;
 import io.squashql.type.TypedField;
 
@@ -47,11 +47,11 @@ public final class Queries {
     return res;
   }
 
-  public static List<TypedField> generateGroupingSelect(QueryResultFormat format) {
+  public static List<TypedField> generateGroupingSelect(DatabaseQuery2 query) {
     List<TypedField> selects = new ArrayList<>();
-    selects.addAll(format.rollup());
+    selects.addAll(query.rollup);
     // order matters, this is why a LinkedHashSet is used.
-    selects.addAll(format.groupingSets()
+    selects.addAll(query.groupingSets
             .stream()
             .flatMap(Collection::stream)
             .collect(Collectors.toCollection(LinkedHashSet::new)));
