@@ -53,4 +53,4 @@ export {
 } from './field'
 export {
   default as Criteria
-} from "./criteria";
+} from "./criteria"

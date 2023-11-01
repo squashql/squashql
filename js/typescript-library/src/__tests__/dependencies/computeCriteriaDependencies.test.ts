@@ -15,7 +15,6 @@ describe('computeCriteriaDependencies', () => {
   const mockField3 = new TableField('mockField3')
   const mockField4 = new TableField('mockField4')
   const mockField5 = new TableField('mockField5')
-  const mockField6 = new TableField('mockField6')
   const mockCondition2 = new InCondition([33, 44])
   const mockCondition4 = new InCondition([22])
 
@@ -78,7 +77,7 @@ describe('computeCriteriaDependencies', () => {
   it('should compute dependencies for Criteria with fields, measure, conditions, and nested criteria', () => {
     const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies')
     computeFieldDependenciesSpy.mockImplementation((field, array) => {
-      if ([mockField1, mockField2, mockField5, mockField6]
+      if ([mockField1, mockField2, mockField4, mockField5]
               .find((mockField) => mockField === field) !== undefined) {
         array.push(field as TableField)
       }
@@ -94,13 +93,13 @@ describe('computeCriteriaDependencies', () => {
       return array
     })
 
-    const nestedCriteria1 = new Criteria(mockField5, undefined, undefined, undefined, undefined, [])
-    const nestedCriteria2 = new Criteria(mockField6, undefined, undefined, undefined, undefined, [])
+    const nestedCriteria1 = new Criteria(mockField4, undefined, undefined, undefined, undefined, [])
+    const nestedCriteria2 = new Criteria(mockField5, undefined, undefined, undefined, undefined, [])
 
     const criteria = new Criteria(mockField1, mockField2, mockMeasure, mockCondition4, ConditionType.EQ, [nestedCriteria1, nestedCriteria2])
     const result = dependencies.computeCriteriaDependencies(criteria)
 
-    expect(result).toEqual(expect.arrayContaining([mockField1, mockField2, mockField3, mockField5, mockField6]))
+    expect(result).toEqual(expect.arrayContaining([mockField1, mockField2, mockField3, mockField4, mockField5]))
   })
 
 })

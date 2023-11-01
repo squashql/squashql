@@ -1,7 +1,7 @@
 import PACKAGE from "./package"
 import Criteria from "./criteria"
-import {Field} from "./field";
-import {BasicMeasure} from "./measure";
+import {Field} from "./field"
+import {BasicMeasure} from "./measure"
 
 type Primitive = string | number | boolean
 
