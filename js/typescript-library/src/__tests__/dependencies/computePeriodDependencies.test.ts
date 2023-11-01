@@ -14,14 +14,6 @@ describe('computePeriodDependencies', () => {
   const mockMonth = new TableField('mockMonth')
 
   it('should compute dependencies for Year', () => {
-    const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies')
-    computeFieldDependenciesSpy.mockImplementation((field, array) => {
-      if (field === mockYear) {
-        array.push(mockYear)
-      }
-      return array
-    })
-
     const period = new Year(mockYear)
     const result = dependencies.computePeriodDependencies(period)
 
@@ -29,16 +21,6 @@ describe('computePeriodDependencies', () => {
   })
 
   it('should compute dependencies for Semester', () => {
-    const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies')
-    computeFieldDependenciesSpy.mockImplementation((field, array) => {
-      if (field === mockSemester) {
-        array.push(mockSemester)
-      } else if (field === mockYear) {
-        array.push(mockYear)
-      }
-      return array
-    })
-
     const period = new Semester(mockSemester, mockYear)
     const result = dependencies.computePeriodDependencies(period)
 
@@ -46,16 +28,6 @@ describe('computePeriodDependencies', () => {
   })
 
   it('should compute dependencies for Quarter', () => {
-    const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies')
-    computeFieldDependenciesSpy.mockImplementation((field, array) => {
-      if (field === mockQuarter) {
-        array.push(mockQuarter)
-      } else if (field === mockYear) {
-        array.push(mockYear)
-      }
-      return array
-    })
-
     const period = new Quarter(mockQuarter, mockYear)
     const result = dependencies.computePeriodDependencies(period)
 
@@ -63,16 +35,6 @@ describe('computePeriodDependencies', () => {
   })
 
   it('should compute dependencies for Month', () => {
-    const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies')
-    computeFieldDependenciesSpy.mockImplementation((field, array) => {
-      if (field === mockMonth) {
-        array.push(mockMonth)
-      } else if (field === mockYear) {
-        array.push(mockYear)
-      }
-      return array
-    })
-
     const period = new Month(mockMonth, mockYear)
     const result = dependencies.computePeriodDependencies(period)
 

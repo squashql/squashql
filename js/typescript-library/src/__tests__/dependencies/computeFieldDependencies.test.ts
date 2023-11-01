@@ -44,18 +44,22 @@ describe('computeFieldDependencies', () => {
     class UnknownField implements Field {
       readonly class: string
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       divide(other: Field): Field {
         return undefined
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       minus(other: Field): Field {
         return undefined
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       multiply(other: Field): Field {
         return undefined
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       plus(other: Field): Field {
         return undefined
       }

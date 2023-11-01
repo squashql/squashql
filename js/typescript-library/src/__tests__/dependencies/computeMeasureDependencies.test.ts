@@ -23,93 +23,40 @@ describe('computeMeasureDependencies', () => {
   const mockMeasure2 = new AggregatedMeasure('alias2', mockField2, 'SUM')
 
   it('should compute dependencies for AggregatedMeasure', () => {
-    const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies')
-    computeFieldDependenciesSpy.mockImplementation((field, array) => {
-      if (field === mockField1) {
-        array.push(field as TableField)
-      }
-      return array
-    })
-
     const measure = new AggregatedMeasure('alias', mockField1, 'SUM')
-    const result = dependencies.computeMeasureDependencies(measure)
+    const array = []
+    const result = dependencies.computeMeasureDependencies(measure, array)
 
     expect(result).toEqual(expect.arrayContaining([mockField1]))
   })
 
   it('should compute dependencies for AggregatedMeasure with criteria', () => {
-    const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies')
-    computeFieldDependenciesSpy.mockImplementation((field, array) => {
-      if (field === mockField1) {
-        array.push(mockField1)
-      }
-      return array
-    })
-
     const mockCriteria = new Criteria(mockField2, null, mockMeasure2, null, null, [])
-    const computeCriteriaDependenciesSpy = jest.spyOn(dependencies, 'computeCriteriaDependencies')
-    computeCriteriaDependenciesSpy.mockImplementation((criteria, array) => {
-      if (criteria == mockCriteria) {
-        array.push(mockField2)
-      }
-      return array
-    })
-
     const measure = new AggregatedMeasure('alias', mockField1, 'SUM', false, mockCriteria)
-    const result = dependencies.computeMeasureDependencies(measure)
+    const array = []
+    const result = dependencies.computeMeasureDependencies(measure, array)
 
     expect(result).toEqual(expect.arrayContaining([mockField1, mockField2]))
   })
 
   it('should compute dependencies for BinaryOperationMeasure', () => {
-    const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies')
-
-    computeFieldDependenciesSpy.mockImplementation((field, array) => {
-      if (field === mockField1 || field === mockField2) {
-        array.push(field as TableField)
-      }
-      return array
-    })
-
+    const array = []
     const measure = new BinaryOperationMeasure('alias', BinaryOperator.PLUS, mockMeasure1, mockMeasure2)
-    const result = dependencies.computeMeasureDependencies(measure)
+    const result = dependencies.computeMeasureDependencies(measure, array)
 
     expect(result).toEqual(expect.arrayContaining([mockField1, mockField2]))
   })
 
   it('should compute dependencies for ComparisonMeasureReferencePosition', () => {
-    const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies')
-    computeFieldDependenciesSpy.mockImplementation((field, array) => {
-      if (field === mockField1) {
-        array.push(field as TableField)
-      }
-      return array
-    })
-
+    const array = []
     const measure = new ComparisonMeasureReferencePosition('alias', ComparisonMethod.ABSOLUTE_DIFFERENCE, mockMeasure1, new Map([[mockField1, 'value1']]))
-    const result = dependencies.computeMeasureDependencies(measure)
+    const result = dependencies.computeMeasureDependencies(measure, array)
 
     expect(result).toEqual(expect.arrayContaining([mockField1]))
   })
 
   it('should compute dependencies for ComparisonMeasureReferencePosition with all optional arguments', () => {
     const mockPeriod = new Year(mockField2)
-    const computePeriodDependenciesSpy = jest.spyOn(dependencies, 'computePeriodDependencies')
-    computePeriodDependenciesSpy.mockImplementation((period, array) => {
-      if (period === mockPeriod) {
-        array.push(mockField2)
-      }
-      return array
-    })
-
-    const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies')
-    computeFieldDependenciesSpy.mockImplementation((field, array) => {
-      if (field === mockField1 || field === mockField3 || field === mockField4) {
-        array.push(field as TableField)
-      }
-      return array
-    })
-
     const referencePosition = new Map([[mockField1, 'value1']])
     const ancestors = [mockField3, mockField4]
     const measure = new ComparisonMeasureReferencePosition(
@@ -121,7 +68,8 @@ describe('computeMeasureDependencies', () => {
             mockPeriod,
             ancestors
     )
-    const result = dependencies.computeMeasureDependencies(measure)
+    const array = []
+    const result = dependencies.computeMeasureDependencies(measure, array)
 
     expect(result).toEqual(expect.arrayContaining([mockField1, mockField2, mockField3, mockField4]))
   })

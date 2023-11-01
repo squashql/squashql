@@ -100,7 +100,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .select(tableFields(List.of("year_sales", "quarter_sales")), List.of(m, sales))
             .build();
 
-    Table finalTable = this.executor.execute(query);
+    Table finalTable = this.executor.executeQuery(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2022l, translate(1), null, 100d),
             Arrays.asList(2022l, translate(2), null, 80d),
@@ -118,7 +118,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .where(tableField("year_sales"), eq(2023l))
             .select(tableFields(List.of("year_sales", "quarter_sales")), List.of(m))
             .build();
-    finalTable = this.executor.execute(query);
+    finalTable = this.executor.executeQuery(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2023l, translate(1), 0d),
             Arrays.asList(2023l, translate(2), 0d),
@@ -129,7 +129,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .where(tableField("quarter_sales"), eq(1))
             .select(tableFields(List.of("year_sales", "quarter_sales")), List.of(m))
             .build();
-    finalTable = this.executor.execute(query);
+    finalTable = this.executor.executeQuery(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2022l, translate(1), null),
             Arrays.asList(2023l, translate(1), 0d));
@@ -150,7 +150,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .select(tableFields(List.of("year_sales", "quarter_sales", SCENARIO_FIELD_NAME)), List.of(m, sales))
             .build();
 
-    Table finalTable = this.executor.execute(query);
+    Table finalTable = this.executor.executeQuery(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2022l, translate(1), "base", null, 100d),
             Arrays.asList(2022l, translate(2), "base", -20d, 80d),
@@ -179,7 +179,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     var query = Query.from(this.storeName)
             .select(tableFields(List.of("year_sales", SCENARIO_FIELD_NAME)), List.of(m, sales))
             .build();
-    Table finalTable = this.executor.execute(query);
+    Table finalTable = this.executor.executeQuery(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2022l, "base", null, 300d),
             Arrays.asList(2023l, "base", 0d, 300d));
@@ -193,7 +193,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .select(tableFields(List.of("year_sales", SCENARIO_FIELD_NAME)), List.of(m, sales))
             .rollup(tableFields(List.of("year_sales", SCENARIO_FIELD_NAME)))
             .build();
-    finalTable = this.executor.execute(query);
+    finalTable = this.executor.executeQuery(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, null, 600d),
             Arrays.asList(2022l, TOTAL, null, 300d),
@@ -217,7 +217,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .select(tableFields(List.of("year_sales", "semester_sales", SCENARIO_FIELD_NAME)), List.of(m, sales))
             .build();
 
-    Table finalTable = this.executor.execute(query);
+    Table finalTable = this.executor.executeQuery(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2022l, translate(1), "base", null, 180d),
             Arrays.asList(2022l, translate(2), "base", -60d, 120d),
@@ -247,7 +247,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .select(tableFields(List.of("year_sales", "month_sales", SCENARIO_FIELD_NAME)), List.of(m, sales))
             .build();
 
-    Table finalTable = this.executor.execute(query);
+    Table finalTable = this.executor.executeQuery(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2022l, translate(1), "base", null, 20d),
             Arrays.asList(2022l, translate(2), "base", 40d, 60d),
@@ -274,7 +274,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     var query = Query.from(this.storeName)
             .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(m))
             .build();
-    Assertions.assertThatThrownBy(() -> this.executor.execute(query))
+    Assertions.assertThatThrownBy(() -> this.executor.executeQuery(query))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("year_sales is not specified in the query but is used in a comparison measure");
   }
@@ -303,7 +303,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .where(criterion("year_sales", eq(2023l)))
             .select(tableFields(List.of("year_sales", SCENARIO_FIELD_NAME)), List.of(m, multiply))
             .build();
-    Table finalTable = this.executor.execute(query);
+    Table finalTable = this.executor.executeQuery(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             Arrays.asList(2023l, "base", 0d, 600d));
   }
@@ -324,7 +324,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .limit(2)
             .build();
 
-    Assertions.assertThatThrownBy(() -> this.executor.execute(query)).hasMessageContaining("Too many rows");
+    Assertions.assertThatThrownBy(() -> this.executor.executeQuery(query)).hasMessageContaining("Too many rows");
   }
 
   @Test
@@ -337,7 +337,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .select(List.of(Functions.year(dateSales)), List.of(CountMeasure.INSTANCE))
             .having(criterion(Functions.year(dateSales), eq(2022)))
             .build();
-    final Table finalTable = this.executor.execute(query);
+    final Table finalTable = this.executor.executeQuery(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             List.of(yearType(2022), 12L));
   }
@@ -350,7 +350,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .where(criterion(Functions.year(dateSales), eq(2022)))
             .select(List.of(Functions.year(dateSales)), List.of(CountMeasure.INSTANCE))
             .build();
-    final Table finalTable = this.executor.execute(query);
+    final Table finalTable = this.executor.executeQuery(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             List.of(yearType(2022), 12L));
   }
@@ -363,7 +363,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .where(criterion(Functions.year(dateSales), eq(2022)))
             .select(List.of(Functions.year(dateSales), Functions.quarter(dateSales)), List.of(CountMeasure.INSTANCE))
             .build();
-    final Table finalTable = this.executor.execute(query);
+    final Table finalTable = this.executor.executeQuery(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             List.of(yearType(2022), quarterType(1), 3L),
             List.of(yearType(2022), quarterType(2), 3L),
@@ -379,7 +379,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .where(criterion(Functions.year(dateSales), eq(2022)))
             .select(List.of(Functions.year(dateSales), Functions.month(dateSales)), List.of(CountMeasure.INSTANCE))
             .build();
-    final Table finalTable = this.executor.execute(query);
+    final Table finalTable = this.executor.executeQuery(query);
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             List.of(yearType(2022), monthType(1), 1L),
             List.of(yearType(2022), monthType(2), 1L),
@@ -403,7 +403,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .select(List.of(Functions.year(dateSales)), List.of(CountMeasure.INSTANCE))
             .rollup(Functions.year(dateSales))
             .build();
-    final Table finalTable = this.executor.execute(query);
+    final Table finalTable = this.executor.executeQuery(query);
     finalTable.show();
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             List.of(yearType(2022), 12L),

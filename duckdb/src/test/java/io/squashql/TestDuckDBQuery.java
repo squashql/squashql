@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.squashql.query.Functions.sum;
+import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 
 public class TestDuckDBQuery {
@@ -64,12 +65,12 @@ public class TestDuckDBQuery {
             .build();
 
     AtomicInteger limitCapture = new AtomicInteger(-1);
-    this.executor.execute(query, CacheStatsDto.builder(), null, true, limitCapture::set);
+    this.executor.executeQuery(query, CacheStatsDto.builder(), null, true, limitCapture::set);
     Assertions.assertThat(limitCapture.get()).isEqualTo(-1);
 
     int limit = 2;
     query.limit = limit;
-    this.executor.execute(query, CacheStatsDto.builder(), null, true, limitCapture::set);
+    this.executor.executeQuery(query, CacheStatsDto.builder(), null, true, limitCapture::set);
     Assertions.assertThat(limitCapture.get()).isEqualTo(limit);
   }
 
@@ -88,7 +89,9 @@ public class TestDuckDBQuery {
             .build();
 
     query1.limit = 2;
-    TestUtil.assertThatThrownBy(() -> this.executor.execute(query1, query2, JoinType.INNER, null))
+    TestUtil.assertThatThrownBy(() -> this.executor.executeQueryMerge(query1, query2, JoinType.INNER, null))
+            .hasMessageContaining("too big");
+    TestUtil.assertThatThrownBy(() -> this.executor.executePivotQueryMerge(query1, query2, List.of(tableField("eanId")), List.of(), JoinType.INNER, null))
             .hasMessageContaining("too big");
   }
 }
