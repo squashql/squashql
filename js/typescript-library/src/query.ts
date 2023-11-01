@@ -8,13 +8,11 @@ import {serializeMap} from "./util"
 import Criteria from "./criteria"
 
 export class QueryMerge {
-  type: "querymerge"
   constructor(readonly first: Query, readonly second: Query, readonly joinType: JoinType) {
   }
 }
 
 export class Query {
-  type: "query"
   columns: Array<Field>
   rollupColumns: Array<Field>
   columnSets: Map<string, ColumnSet>

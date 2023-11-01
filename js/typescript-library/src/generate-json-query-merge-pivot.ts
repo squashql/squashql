@@ -3,7 +3,7 @@ import {TableField, tableField, tableFields} from "./field"
 import {avg, sum} from "./measure"
 import {createPivotTableQueryMerge} from "./querier"
 import {from} from "./queryBuilder"
-import {JoinType, QueryMerge} from "./query";
+import {JoinType, QueryMerge} from "./query"
 
 export function generateFromQueryMergePivot() {
   const fields = tableFields(["a", "b"])
