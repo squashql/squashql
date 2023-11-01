@@ -15,7 +15,6 @@
   <properties>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
-    <duckdb.version>0.8.0</duckdb.version>
   </properties>
 
   <dependencies>

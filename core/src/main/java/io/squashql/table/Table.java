@@ -23,7 +23,14 @@ public interface Table extends Iterable<List<Object>> {
 
   Set<Measure> measures();
 
+  /**
+   * Adds the given aggregates values corresponding to this measure to the table (adds a new column). The order of the
+   * aggregates is expected to match the order of the rows in this table. If the order is not known, it is better to use
+   * {@link #transferAggregates(Table, Measure)}.
+   */
   void addAggregates(Header header, Measure measure, List<Object> values);
+
+  void transferAggregates(Table from, Measure measure);
 
   default List<Object> getColumn(int columnIndex) {
     List<Object> elements = new ArrayList<>();

@@ -5,13 +5,7 @@ import io.squashql.query.Header;
 import io.squashql.query.Measure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Supplier;
 
 public class ColumnarTable implements Table {
@@ -55,6 +49,28 @@ public class ColumnarTable implements Table {
     this.headers.add(new Header(header.name(), header.type(), true));
     this.measures.add(measure);
     this.values.add(values);
+  }
+
+  public void transferAggregates(Table from, Measure measure) {
+    if (from instanceof ColumnarTable ct) {
+      List<Object> values = new ArrayList<>((int) count());
+      for (int i = 0; i < (int) count(); i++) {
+        values.add(null);
+      }
+      List<Object> aggregateValues = from.getAggregateValues(measure);
+      this.pointDictionary.get().forEach((point, index) -> {
+        int position = ct.pointDictionary.get().getPosition(point);
+        if (position >= 0) {
+          values.set(index, aggregateValues.get(position));
+        }
+      });
+      Header header = from.getHeader(measure);
+      this.headers.add(new Header(header.name(), header.type(), true));
+      this.measures.add(measure);
+      this.values.add(values);
+    } else {
+      throw new IllegalArgumentException();
+    }
   }
 
   @Override
