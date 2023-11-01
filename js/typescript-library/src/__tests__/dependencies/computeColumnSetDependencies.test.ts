@@ -11,14 +11,6 @@ describe('computeColumnSetDependencies', () => {
   it('should compute dependencies for BucketColumnSet', () => {
     const createdField = new TableField('mockTable.createdField')
     const mockField = new TableField('mockTable.mockField')
-    const computeFieldDependenciesSpy = jest.spyOn(dependencies, 'computeFieldDependencies')
-    computeFieldDependenciesSpy.mockImplementation((field, array) => {
-      if (field === mockField) {
-        array.push(mockField)
-      }
-      return array
-    })
-
     const columnSet = new BucketColumnSet(createdField, mockField, new Map())
     const result = dependencies.computeColumnSetDependencies(columnSet)
 
