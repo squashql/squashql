@@ -1,0 +1,82 @@
+[
+  [
+    "spending category",
+    "spending category",
+    "Grand Total",
+    "Grand Total",
+    "extra",
+    "extra",
+    "minimum expenditure",
+    "minimum expenditure"
+  ],
+  [
+    "continent",
+    "country",
+    "amount",
+    "population",
+    "amount",
+    "population",
+    "amount",
+    "population"
+  ],
+  [
+    "Grand Total",
+    "Grand Total",
+    56.0,
+    465.0,
+    17.0,
+    null,
+    39.0,
+    null
+  ],
+  [
+    "am",
+    "Total",
+    39.0,
+    330.0,
+    10.0,
+    null,
+    29.0,
+    null
+  ],
+  [
+    "am",
+    "usa",
+    39.0,
+    330.0,
+    10.0,
+    null,
+    29.0,
+    null
+  ],
+  [
+    "eu",
+    "Total",
+    17.0,
+    135.0,
+    7.0,
+    null,
+    10.0,
+    null
+  ],
+  [
+    "eu",
+    "france",
+    8.0,
+    70.0,
+    2.0,
+    null,
+    6.0,
+    null
+  ],
+  [
+    "eu",
+    "uk",
+    9.0,
+    65.0,
+    5.0,
+    null,
+    4.0,
+    null
+  ]
+]

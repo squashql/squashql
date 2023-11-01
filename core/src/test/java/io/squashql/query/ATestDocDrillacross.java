@@ -60,7 +60,7 @@ public abstract class ATestDocDrillacross extends ABaseTestQuery {
             .rollup(tableFields(List.of("product", "reason")))
             .build();
 
-    BiConsumer<QueryDto, QueryDto> runnable = (q1, q2) -> this.executor.execute(q1, q2, JoinType.FULL, null).show();
+    BiConsumer<QueryDto, QueryDto> runnable = (q1, q2) -> this.executor.executeQueryMerge(q1, q2, JoinType.FULL, null).show();
     runnable.accept(query1, query2);
   }
 }

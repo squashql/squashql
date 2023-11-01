@@ -78,7 +78,7 @@ public abstract class ATestDocPeriodComparison extends ABaseTestQuery {
     QueryDto queryDto = Query.from("student")
             .select(tableFields(List.of("year", "semester", "name")), List.of(sum, comp))
             .build();
-    Table result = this.executor.execute(queryDto);
+    Table result = this.executor.executeQuery(queryDto);
     result.show();
   }
 
@@ -96,7 +96,7 @@ public abstract class ATestDocPeriodComparison extends ABaseTestQuery {
     QueryDto queryDto = Query.from("student")
             .select(tableFields(List.of("year", "name")), List.of(sum, Functions.multiply("progression in %", comp, Functions.decimal(100))))
             .build();
-    Table result = this.executor.execute(queryDto);
+    Table result = this.executor.executeQuery(queryDto);
     result.show();
   }
 }

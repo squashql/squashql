@@ -239,7 +239,7 @@ public class TableUtils {
   }
 
   /**
-   * Same as {@link #replaceTotalCellValues(ColumnarTable, boolean)} but for adapted to pivot table.
+   * Same as {@link #replaceTotalCellValues(ColumnarTable, boolean)} but adapted to pivot table.
    */
   public static Table replaceTotalCellValues(ColumnarTable table, List<String> rows, List<String> columns) {
     // To lazily copy the table when needed.

@@ -132,7 +132,7 @@ export class LongConstantMeasure implements Measure {
   readonly class: string = PACKAGE + "LongConstantMeasure"
   readonly alias: string
 
-  constructor(private value: Number) {
+  constructor(private value: number) {
   }
 
   toJSON() {
@@ -147,7 +147,7 @@ export class DoubleConstantMeasure implements Measure {
   readonly class: string = PACKAGE + "DoubleConstantMeasure"
   readonly alias: string
 
-  constructor(private value: Number) {
+  constructor(private value: number) {
   }
 
   toJSON() {
@@ -233,11 +233,11 @@ export function divide(alias: string, measure1: Measure, measure2: Measure): Mea
 
 // CONSTANT
 
-export function integer(value: Number): Measure {
+export function integer(value: number): Measure {
   return new LongConstantMeasure(value)
 }
 
-export function decimal(value: Number): Measure {
+export function decimal(value: number): Measure {
   return new DoubleConstantMeasure(value)
 }
 

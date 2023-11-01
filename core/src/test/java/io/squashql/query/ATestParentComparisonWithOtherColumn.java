@@ -57,7 +57,7 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
             .select(fields, List.of(amount, pOp))
             .build();
 
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("eu", "france", "lyon", 3.1d, 3.1d / (4d + 3.1d)),
             Arrays.asList("eu", "france", "paris", 4d, 4d / (4d + 3.1d)),
@@ -73,7 +73,7 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
             .select(tableFields(List.of("continent", "country", "city")), List.of(amount, pOp))
             .build();
 
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     // Note: contrary to what you might expect, the result here is the same as having List.of("city", "country","continent")
     // and it is not meant to compute the percent of the grandparent.
     Assertions.assertThat(result).containsExactly(
@@ -91,7 +91,7 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
             .select(tableFields(List.of("spending_category", "continent", "country", "city")), List.of(amount, pOp))
             .build();
 
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("car", "eu", "france", "lyon", 0.1d, 0.1d / (0.1d + 1d)),
             Arrays.asList("car", "eu", "france", "paris", 1d, 1d / (0.1d + 1d)),
@@ -113,7 +113,7 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
             .select(tableFields(List.of("spending_category", "city")), List.of(amount, pOp))
             .build();
 
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("car", "london", 2d, 2d / (0.1d + 1d + 2d)),
             Arrays.asList("car", "lyon", 0.1d, 0.1d / (0.1d + 1d + 2d)),

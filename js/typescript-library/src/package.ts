@@ -1,2 +1,2 @@
 const PACKAGE = "io.squashql.query."
-export default PACKAGE;
+export default PACKAGE

@@ -63,7 +63,7 @@ const orders = new Orders()
 
 const q = from(orders._name)
     .select([orders.customer_id], [], [avg("average_spends", orders.amount)])
-    .build();
+    .build()
 ```
 
 SquashQL comes with a [Spring Controller](./server/src/main/java/io/squashql/spring/web/rest/QueryController.java) to expose 
@@ -78,7 +78,7 @@ The object `Querier` uses [Axios](https://axios-http.com/) under the hood as HTT
 const axiosConfig = {
   timeout: 10000
 }
-const serverUrl = "http://localhost:8080";
+const serverUrl = "http://localhost:8080"
 const querier = new Querier(serverUrl, axiosConfig)
 ```
 
@@ -131,7 +131,7 @@ const expenditure = sumIf("Expenditure", budget.amount, criterion(budget.incomeE
 const query = from(budget._name)
         .select([budget.year, budget.month, budget.category], [], [income, expenditure])
         .build()
-querier.execute(query).then(r => console.log(JSON.stringify(r)));
+querier.executeQuery(query).then(r => console.log(JSON.stringify(r)))
 ```
  
 The `execute` method accepts two other arguments:
@@ -140,7 +140,7 @@ The `execute` method accepts two other arguments:
 to display the result table:
 
 ```typescript
-querier.execute(query, undefined, true).then(r => console.log(r));
+querier.executeQuery(query, true).then(r => console.log(r))
 ```
 
 ```
@@ -178,12 +178,12 @@ const expenditure = sumIf("Expenditure", budget.amount, criterion(budget.incomeE
 const query = from(budget._name)
         .select([budget.year, budget.month, budget.category], [], [income, expenditure])
         .build()
-querier.execute(query, pivotConfig).then(r => console.log(JSON.stringify(r)));
+querier.executePivotQuery(query, pivotConfig).then(r => console.log(JSON.stringify(r)))
 ```
 
 With `stringify = true`
 ```typescript
-querier.execute(query, pivotConfig, true).then(r => console.log(r));
+querier.executePivotQuery(query, pivotConfig, true).then(r => console.log(r))
 ```
 
 ```
@@ -232,14 +232,14 @@ const myFirstQuery = from(myTable._name)
 const mySecondQuery = from(otherTable._name)
         .select([otherTable.col1, otherTable.col2], [], [sum("alias", otherTable.field)])
         .build()
-querier.executeQueryMerge(new QueryMerge(myFirstQuery, mySecondQuery)).then(response => console.log(response))
+querier.executeQuery(new QueryMerge(myFirstQuery, mySecondQuery)).then(response => console.log(response))
 ```
 
 Full documentation of [Drilling across in the dedicated page](./documentation/DRILLING-ACROSS.md).
 
 ### Under the hood
 
-SquashQL helps you executing multi-dimensional queries compatible with several databases. The syntax is closed to SQL but... 
+SquashQL helps you to execute multi-dimensional queries compatible with several databases. The syntax is closed to SQL but... 
 
 > What happens exactly when the query is sent to SquashQL?
 

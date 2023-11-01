@@ -86,12 +86,12 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .from(this.storeName)
             .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("ps", "price"), sum("qs", "quantity")))
             .build();
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
     assertCacheStats(0, 3);
 
     // Execute the same
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     assertCacheStats(3, 3);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
 
@@ -100,7 +100,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .from(this.storeName)
             .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("qs", "quantity")))
             .build();
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 33l));
     assertCacheStats(5, 3);
   }
@@ -111,7 +111,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .from(this.storeName)
             .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("ps", "price")))
             .build();
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d));
     assertCacheStats(0, 2);
 
@@ -120,11 +120,11 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .from(this.storeName)
             .select(List.of(), List.of(sum("ps", "price")))
             .build();
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15.0d));
     assertCacheStats(0, 4);
 
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15.0d));
     assertCacheStats(2, 4);
   }
@@ -135,7 +135,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .from(this.storeName)
             .select(tableFields(List.of("category")), List.of(sum("ps", "price")))
             .build();
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("drink", 2d),
             List.of("cloth", 10d),
@@ -147,11 +147,11 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .where(tableField("category"), eq("drink"))
             .select(tableFields(List.of("category")), List.of(sum("ps", "price")))
             .build();
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("drink", 2d));
     assertCacheStats(0, 4);
 
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("drink", 2d));
     assertCacheStats(2, 4);
 
@@ -160,7 +160,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .where(tableField("category"), in("food", "cloth"))
             .select(tableFields(List.of("category")), List.of(sum("ps", "price")))
             .build();
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("cloth", 10d),
             List.of("food", 3d));
@@ -175,7 +175,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .on(criterion(this.storeName + ".ean", this.competitorStoreName + ".comp_ean", ConditionType.EQ))
             .select(tableFields(List.of("category")), List.of(sum("ps", "price")))
             .build();
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("drink", 4d), // value are doubled because of the join
             List.of("cloth", 20d),
@@ -187,7 +187,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .from(this.storeName)
             .select(tableFields(List.of("category")), List.of(sum("ps", "price")))
             .build();
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("drink", 2d),
             List.of("cloth", 10d),
@@ -211,7 +211,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .from(firstSubQuery)
             .select(List.of(), List.of(avg_ca)) // avg of ca
             .build();
-    Table result = this.executor.execute(queryDto);
+    Table result = this.executor.executeQuery(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(5d));
     assertCacheStats(0, 2);
 
@@ -224,7 +224,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .from(secondSubQuery)
             .select(List.of(), List.of(avg_ca)) // avg of ca
             .build();
-    result = this.executor.execute(queryDto);
+    result = this.executor.executeQuery(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(5d));
     assertCacheStats(0, 4);
 
@@ -237,7 +237,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .from(secondSubQuery)
             .select(List.of(), List.of(avg_ca)) // avg of ca
             .build();
-    result = this.executor.execute(queryDto);
+    result = this.executor.executeQuery(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(5d));
     assertCacheStats(0, 6);
 
@@ -246,7 +246,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .from(firstSubQuery) // same first sub-query
             .select(List.of(), List.of(avg_ca, sum_ca)) // ask for another measure
             .build();
-    result = this.executor.execute(queryDto);
+    result = this.executor.executeQuery(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(5d, 15d));
     assertCacheStats(2, 7); // avg_ca and count hit the cache
   }
@@ -262,7 +262,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .from(firstSubQuery)
             .select(tableFields(List.of("ean")), List.of(avg("mean", "ca"))) // ean needs to be in the subquery to make it work!
             .build();
-    Table result = this.executor.execute(queryDto);
+    Table result = this.executor.executeQuery(queryDto);
     Assertions.assertThat(result).containsExactly(
             List.of("bottle", 2d),
             List.of("cookie", 3d),
@@ -275,24 +275,24 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .from(this.storeName)
             .select(List.of(), List.of(sum("ps", "price")))
             .build();
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15d));
     assertCacheStats(0, 2);
 
     // Execute the same
-    result = this.executor.execute(query.withParameter(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.NOT_USE)));
+    result = this.executor.executeQuery(query.withParameter(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.NOT_USE)));
     // No cache so no hitCount, no missCount changes
     assertCacheStats(0, 2);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15d));
 
     query.withParameter(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.USE));
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15d));
     assertCacheStats(2, 2);
 
     query.withParameter(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.INVALIDATE));
     // Invalidate should empty the cache and fill it with new values.
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(15d));
     assertCacheStats(0, 2);
   }
@@ -313,15 +313,15 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .withColumn(tableField(SCENARIO_FIELD_NAME))
             .withMeasure(new AggregatedMeasure("ps", "price", AggregationFunction.SUM));
     // Scope 1 added to the cache
-    executor.execute(querySupplier.get());
+    executor.executeQuery(querySupplier.get());
     assertCacheStats(cache.stats(), 0, 2);
 
     // Scope 2 added to the cache
-    executor.execute(querySupplier.get().withColumn(tableField("category")));
+    executor.executeQuery(querySupplier.get().withColumn(tableField("category")));
     assertCacheStats(cache.stats(), 0, 4);
 
     // Scope 3, should evict an entry in the cache
-    executor.execute(querySupplier.get().withCondition(tableField("category"), Functions.eq("drink")));
+    executor.executeQuery(querySupplier.get().withCondition(tableField("category"), Functions.eq("drink")));
     latch.await(60, TimeUnit.SECONDS);
     CacheStatsDto stats = cache.stats();
     assertCacheStats(stats, 0, 6);
@@ -399,7 +399,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .from(this.storeName)
             .select(tableFields(List.of("ean")), List.of(sum("ps", "price")))
             .build();
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("bottle", 2d),
             List.of("cookie", 3d),
@@ -408,19 +408,19 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
 
     int limit = 2;
     query.withLimit(limit);
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     assertCacheStats(0, 4);
     Assertions.assertThat(result.count()).isEqualTo(limit);
 
     // Same with same limit
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     assertCacheStats(2, 4);
     Assertions.assertThat(result.count()).isEqualTo(limit);
 
     // Same with different limit
     int otherLimit = 1;
     query.withLimit(otherLimit);
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     assertCacheStats(2, 6);
     Assertions.assertThat(result.count()).isEqualTo(otherLimit);
   }
@@ -440,14 +440,14 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
                     criterion("price", "max", ConditionType.LT)))
             .select(tableFields(List.of("ean", "bucket")), List.of())
             .build();
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
             List.of("bottle", "cheap"),
             List.of("cookie", "cheap"),
             List.of("shirt", "notcheap"));
     assertCacheStats(0, 1);
 
-    this.executor.execute(query);
+    this.executor.executeQuery(query);
     assertCacheStats(1, 1);
 
     // Change cte
@@ -461,7 +461,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
                     criterion("price", "max", ConditionType.LT)))
             .select(tableFields(List.of("ean", "bucket")), List.of())
             .build();
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
             List.of("bottle", "cheap"),
             List.of("cookie", "notcheap"),
@@ -475,14 +475,14 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .from(this.storeName)
             .select(tableFields(List.of(this.storeName + "." + SCENARIO_FIELD_NAME)), List.of())
             .build();
-    this.executor.execute(query);
+    this.executor.executeQuery(query);
     assertCacheStats(0, 1);
 
     query = Query
             .from(this.storeName)
             .select(tableFields(List.of(this.storeName + "." + SCENARIO_FIELD_NAME)), List.of())
             .build();
-    this.executor.execute(query);
+    this.executor.executeQuery(query);
     assertCacheStats(1, 1);
   }
 
@@ -495,16 +495,16 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .select(List.of(category, ean), List.of(sum("ca", "price")))
             .build();
     int base = 0;
-    this.executor.execute(new PivotTableQueryDto(q, List.of(category), List.of(ean)));
+    this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category), List.of(ean)));
     assertCacheStats(0, (base = base + 2));
-    this.executor.execute(new PivotTableQueryDto(q, List.of(category, ean), List.of()));
+    this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category, ean), List.of()));
     assertCacheStats(0, (base = base + 2));
-    this.executor.execute(new PivotTableQueryDto(q, List.of(), List.of(category, ean)));
+    this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(), List.of(category, ean)));
     assertCacheStats(2, base); // same as the previous
-    this.executor.execute(new PivotTableQueryDto(q, List.of(ean), List.of(category)));
+    this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(ean), List.of(category)));
     assertCacheStats(2, (base = base + 2));
     // Same as the first query
-    this.executor.execute(new PivotTableQueryDto(q, List.of(category), List.of(ean)));
+    this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category), List.of(ean)));
     assertCacheStats(4, base);
   }
 
@@ -524,7 +524,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   }
 
   private static Table execute(QueryExecutor executor, QueryDto query, SquashQLUser user) {
-    return executor.execute(
+    return executor.executeQuery(
             query,
             CacheStatsDto.builder(),
             user,

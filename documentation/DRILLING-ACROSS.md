@@ -110,7 +110,7 @@ Missing values will be filled with `null`.
 ##### FULL
 
 ```typescript
-querier.executeQueryMerge(new QueryMerge(queryShipment, queryReturn, JoinType.FULL))
+querier.executeQuery(new QueryMerge(queryShipment, queryReturn, JoinType.FULL))
         .then(result => console.log(result))
 ```
 
@@ -133,7 +133,7 @@ entries are kept.
 ##### LEFT
 
 ```typescript
-querier.executeQueryMerge(new QueryMerge(queryShipment, queryReturn, JoinType.LEFT))
+querier.executeQuery(new QueryMerge(queryShipment, queryReturn, JoinType.LEFT))
         .then(result => console.log(result))
 ```
 
@@ -154,7 +154,7 @@ table, there is no entry for product `D` but the join type is `LEFT` so this ent
 ##### INNER
 
 ```typescript
-querier.executeQueryMerge(new QueryMerge(queryShipment, queryReturn, JoinType.INNER))
+querier.executeQuery(new QueryMerge(queryShipment, queryReturn, JoinType.INNER))
         .then(result => console.log(result))
 ```
 
@@ -207,7 +207,7 @@ const queryReturnWithReason = from(returnTable._name)
         .rollup([returnTable.product, returnTable.reason])
         .build()
 
-querier.executeQueryMerge(new QueryMerge(queryShipment, queryReturnWithReason, JoinType.FULL))
+querier.executeQuery(new QueryMerge(queryShipment, queryReturnWithReason, JoinType.FULL))
         .then(result => console.log(result))
 ```
 
