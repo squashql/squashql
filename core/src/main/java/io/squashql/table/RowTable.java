@@ -29,6 +29,11 @@ public class RowTable implements Table {
   }
 
   @Override
+  public void transferAggregates(Table from, Measure measure) {
+    throwNotSupportedException();
+  }
+
+  @Override
   public List<Object> getColumn(int columnIndex) {
     throwNotSupportedException();
     return null;

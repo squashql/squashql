@@ -82,9 +82,7 @@ public class CaffeineQueryCache implements QueryCache {
     for (Measure measure : measures) {
       if (!cache.measures().contains(measure)) {
         // Not in the previousResult, add it.
-        List<Object> aggregateValues = result.getAggregateValues(measure);
-        Header header = result.getHeader(measure);
-        cache.addAggregates(header, measure, aggregateValues);
+        cache.transferAggregates(result, measure);
         this.measureCounter.recordMisses(1);
       }
     }
@@ -97,9 +95,7 @@ public class CaffeineQueryCache implements QueryCache {
     }
     Table cacheResult = this.results.getIfPresent(scope);
     for (Measure measure : measures) {
-      List<Object> aggregateValues = cacheResult.getAggregateValues(measure);
-      Header header = cacheResult.getHeader(measure);
-      result.addAggregates(header, measure, aggregateValues);
+      result.transferAggregates(cacheResult, measure);
       this.measureCounter.recordHits(1);
     }
   }
