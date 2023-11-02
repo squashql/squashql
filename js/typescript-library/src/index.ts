@@ -55,7 +55,4 @@ export {
   default as Criteria
 } from "./criteria"
 
-export {
-  computeFieldDependencies, computeColumnSetDependencies, computePeriodDependencies,
-  computeMeasureDependencies, computeConditionDependencies, computeCriteriaDependencies
-} from "./dependencies"
+export * from "./dependencies"
