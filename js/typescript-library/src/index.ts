@@ -54,3 +54,5 @@ export {
 export {
   default as Criteria
 } from "./criteria"
+
+export * from "./dependencies"
