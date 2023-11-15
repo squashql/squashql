@@ -81,13 +81,4 @@ public interface QueryRewriter {
    * </a>.
    */
   boolean usePartialRollupSyntax();
-
-  /**
-   * Indicates the grouping function can be used to identify extra rows added by rollup. <br>
-   * See documentation
-   * <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/grouping-transact-sql?view=sql-server-ver16">
-   * https://learn.microsoft.com/en-us/sql/t-sql/functions/grouping-transact-sql?view=sql-server-ver16
-   * </a>.
-   */
-  boolean useGroupingFunction();
 }

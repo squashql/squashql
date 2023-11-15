@@ -137,10 +137,5 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
       // Tested with version https://github.com/ClickHouse/ClickHouse/tree/v22.10.2.11-stable
       return false;
     }
-
-    @Override
-    public boolean useGroupingFunction() {
-      return true;
-    }
   }
 }

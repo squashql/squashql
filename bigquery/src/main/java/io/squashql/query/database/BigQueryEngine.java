@@ -156,10 +156,5 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       // Not supported https://issuetracker.google.com/issues/35905909
       return false;
     }
-
-    @Override
-    public boolean useGroupingFunction() {
-      return true;
-    }
   }
 }
