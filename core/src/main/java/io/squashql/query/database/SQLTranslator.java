@@ -43,10 +43,8 @@ public class SQLTranslator {
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(fieldProvider, queryRewriter, true))); // Alias is needed when using sub-queries
 
     selects.addAll(groupBy); // coord first, then aggregates
-    if (queryRewriter.useGroupingFunction()) {
-      // use grouping to identify totals
-      Queries.generateGroupingSelect(query).forEach(f -> selects.add(String.format("grouping(%s)", queryRewriter.select(f))));
-    }
+    // Use grouping to identify totals
+    Queries.generateGroupingSelect(query).forEach(f -> selects.add(String.format("grouping(%s)", queryRewriter.select(f))));
     selects.addAll(aggregates);
 
     StringBuilder statement = new StringBuilder();

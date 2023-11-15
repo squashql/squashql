@@ -59,9 +59,4 @@ public class QueryAwareQueryRewriter implements QueryRewriter {
   public boolean usePartialRollupSyntax() {
     return this.underlying.usePartialRollupSyntax();
   }
-
-  @Override
-  public boolean useGroupingFunction() {
-    return this.underlying.useGroupingFunction();
-  }
 }

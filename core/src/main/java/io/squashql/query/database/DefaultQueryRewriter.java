@@ -26,9 +26,4 @@ public class DefaultQueryRewriter implements QueryRewriter {
   public boolean usePartialRollupSyntax() {
     return true;
   }
-
-  @Override
-  public boolean useGroupingFunction() {
-    return true;
-  }
 }
