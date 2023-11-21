@@ -41,8 +41,4 @@ public class AggregatedMeasure implements BasicMeasure {
     return this.expression;
   }
 
-  @Override
-  public <R> R accept(MeasureVisitor<R> visitor) {
-    return visitor.visit(this);
-  }
 }

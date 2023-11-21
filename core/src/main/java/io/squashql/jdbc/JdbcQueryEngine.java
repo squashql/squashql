@@ -1,6 +1,7 @@
 package io.squashql.jdbc;
 
 import io.squashql.query.Header;
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.compiled.DatabaseQuery2;
 import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.QueryRewriter;
@@ -14,6 +15,7 @@ import java.math.BigInteger;
 import java.sql.*;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEngine<T> {
@@ -40,7 +42,7 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
               (i, fieldValues) -> fieldValues[i]);
       return new ColumnarTable(
               result.getOne(),
-              new HashSet<>(query.measures),
+              query.measures.stream().map(CompiledMeasure::measure).collect(Collectors.toSet()),
               result.getTwo());
     });
   }

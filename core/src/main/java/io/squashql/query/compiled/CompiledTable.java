@@ -13,15 +13,14 @@ public record CompiledTable(String name, List<CompiledJoin> joins) {
     final Function<String, String> tableNameFunc = tableName -> virtualTable != null && virtualTable.name.equals(tableName)
             ? queryRewriter.cteName(tableName) : queryRewriter.tableName(tableName);
     final StringBuilder statement = new StringBuilder();
-    this.joins.forEach(j -> j.sqlExpression(statement, queryRewriter, tableNameFunc));
+    this.joins.forEach(j -> statement.append(j.sqlExpression(queryRewriter, tableNameFunc)));
     return statement.toString();
   }
 
   public record CompiledJoin(CompiledTable table, JoinType type, CompiledCriteria joinCriteria) {
-    // todo-mde should me use void everywhere and pass a single StringBuilder everywhere ?
-    void sqlExpression(final StringBuilder statement, final QueryRewriter queryRewriter, final Function<String, String> tableNameFunc) {
-      statement
-              .append(" ")
+    String sqlExpression(final QueryRewriter queryRewriter, final Function<String, String> tableNameFunc) {
+      final StringBuilder statement = new StringBuilder();
+      statement.append(" ")
               .append(this.type.name().toLowerCase())
               .append(" join ")
               .append(tableNameFunc.apply(this.table.name()))
@@ -29,8 +28,9 @@ public record CompiledTable(String name, List<CompiledJoin> joins) {
       statement.append(joinCriteria().sqlExpression(queryRewriter));
 
       if (!this.table.joins().isEmpty()) {
-        this.table.joins.forEach(j -> j.sqlExpression(statement, queryRewriter, tableNameFunc));
+        this.table.joins.forEach(j -> statement.append(j.sqlExpression(queryRewriter, tableNameFunc)));
       }
+      return statement.toString();
     }
   }
 }

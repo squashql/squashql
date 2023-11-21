@@ -1,22 +1,32 @@
 package io.squashql.query.compiled;
 
-import io.squashql.query.BinaryOperator;
+import io.squashql.query.BinaryOperationMeasure;
+import io.squashql.query.MeasureVisitor;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SqlUtils;
-import lombok.NonNull;
 
-public record CompiledBinaryOperationMeasure(@NonNull String alias, @NonNull BinaryOperator operator,
-                                             @NonNull CompiledMeasure leftOperand, @NonNull CompiledMeasure rightOperand) implements CompiledMeasure {
+public record CompiledBinaryOperationMeasure(BinaryOperationMeasure measure,
+                                             CompiledMeasure leftOperand,
+                                             CompiledMeasure rightOperand) implements CompiledMeasure {
   @Override
   public String sqlExpression(QueryRewriter queryRewriter, boolean withAlias) {
     String sql = new StringBuilder()
             .append("(")
             .append(this.leftOperand.sqlExpression(queryRewriter, false))
-            .append(this.operator.infix)
+            .append(this.measure.operator.infix)
             .append(this.rightOperand.sqlExpression(queryRewriter, false))
             .append(")")
             .toString();
     return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.alias) : sql;
   }
 
+  @Override
+  public String alias() {
+    return this.measure.alias();
+  }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
+  }
 }

@@ -1,6 +1,7 @@
-package io.squashql;
+package io.squashql.query.compiled;
 
-import io.squashql.query.*;
+import io.squashql.query.Measure;
+import io.squashql.query.MeasureUtils;
 import io.squashql.query.QueryExecutor.QueryScope;
 import io.squashql.query.dto.QueryDto;
 import lombok.RequiredArgsConstructor;
@@ -12,36 +13,36 @@ import java.util.Map;
 import java.util.Set;
 
 @RequiredArgsConstructor
-public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Measure>>> {
+public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<CompiledMeasure>>> {
 
   private final QueryDto query;
   private final QueryScope originalQueryScope;
 
-  private Map<QueryScope, Set<Measure>> empty() {
+  private Map<QueryScope, Set<CompiledMeasure>> empty() {
     return Collections.emptyMap();
   }
 
   @Override
-  public Map<QueryScope, Set<Measure>> visit(AggregatedMeasure measure) {
+  public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledAggregatedMeasure measure) {
     return empty();
   }
 
   @Override
-  public Map<QueryScope, Set<Measure>> visit(ExpressionMeasure measure) {
+  public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledExpressionMeasure measure) {
     return empty();
   }
 
   @Override
-  public Map<QueryScope, Set<Measure>> visit(BinaryOperationMeasure measure) {
+  public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledBinaryOperationMeasure measure) {
     if (new PrimitiveMeasureVisitor().visit(measure)) {
       return empty();
     } else {
-      return Map.of(this.originalQueryScope, MutableSetFactoryImpl.INSTANCE.of(measure.leftOperand, measure.rightOperand));
+      return Map.of(this.originalQueryScope, MutableSetFactoryImpl.INSTANCE.of(measure.leftOperand(), measure.rightOperand()));
     }
   }
 
   @Override
-  public Map<QueryScope, Set<Measure>> visit(ComparisonMeasureReferencePosition cmrp) {
+  public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledComparisonMeasure cmrp) {
     QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.query, cmrp, this.originalQueryScope);
     Map<QueryScope, Set<Measure>> result = new HashMap<>(Map.of(this.originalQueryScope, Set.of(cmrp.measure)));
     result.put(readScope, Set.of(cmrp.measure));
@@ -49,12 +50,8 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Measu
   }
 
   @Override
-  public Map<QueryScope, Set<Measure>> visit(LongConstantMeasure measure) {
+  public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledConstantMeasure measure) {
     return empty();
   }
 
-  @Override
-  public Map<QueryScope, Set<Measure>> visit(DoubleConstantMeasure measure) {
-    return empty();
-  }
 }

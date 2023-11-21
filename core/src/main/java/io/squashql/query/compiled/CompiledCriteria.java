@@ -6,6 +6,7 @@ import io.squashql.query.dto.*;
 import io.squashql.type.TypedField;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
@@ -71,6 +72,25 @@ public record CompiledCriteria(TypedField field, TypedField fieldOther, Compiled
       };
     } else {
       throw new RuntimeException("Not supported condition " + dto);
+    }
+  }
+
+  public static CompiledCriteria deepCopy(CompiledCriteria criteriaDto) {
+    if (criteriaDto.children == null || criteriaDto.children.isEmpty()) {
+      return new CriteriaDto(
+              criteriaDto.field,
+              criteriaDto.fieldOther,
+              criteriaDto.measure,
+              criteriaDto.condition,
+              criteriaDto.conditionType,
+              Collections.emptyList());
+    } else {
+      List<CriteriaDto> list = new ArrayList<>(criteriaDto.children.size());
+      for (CriteriaDto dto : criteriaDto.children) {
+        CriteriaDto copy = deepCopy(dto);
+        list.add(copy);
+      }
+      return new CriteriaDto(criteriaDto.conditionType, list);
     }
   }
 

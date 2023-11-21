@@ -1,11 +1,11 @@
 package io.squashql.query;
 
 import io.squashql.PrimitiveMeasureVisitor;
+import io.squashql.query.compiled.CompiledComparisonMeasure;
 import io.squashql.query.compiled.CompiledCriteria;
+import io.squashql.query.compiled.CompiledPeriod;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SQLTranslator;
-import io.squashql.query.dto.CriteriaDto;
-import io.squashql.query.dto.Period;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
@@ -74,19 +74,19 @@ public final class MeasureUtils {
 
   public static QueryExecutor.QueryScope getReadScopeComparisonMeasureReferencePosition(
           QueryDto query,
-          ComparisonMeasureReferencePosition cm,
+          CompiledComparisonMeasure cm,
           QueryExecutor.QueryScope queryScope) {
-    AtomicReference<CompiledCriteria> copy = new AtomicReference<>(queryScope.whereCriteria() == null ? null : CriteriaDto.deepCopy(queryScope.whereCriteria()));
+    AtomicReference<CompiledCriteria> copy = new AtomicReference<>(queryScope.whereCriteria() == null ? null : CompiledCriteria.deepCopy(queryScope.whereCriteria()));
     Consumer<TypedField> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
     Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(criteriaRemover));
-    Optional.ofNullable(cm.period)
+    Optional.ofNullable(cm.period())
             .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover));
     Set<TypedField> rollupColumns = new LinkedHashSet<>(queryScope.rollupColumns()); // order does matter
-    Optional.ofNullable(cm.ancestors)
+    Optional.ofNullable(cm.ancestors())
             .ifPresent(ancestors -> {
               ancestors.forEach(criteriaRemover);
-              List<TypedField> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).map(queryResolver::resolveField).toList();
+              List<TypedField> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).toList();
               rollupColumns.addAll(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage reverse order".
             });
     return new QueryExecutor.QueryScope(queryScope.table(),
@@ -128,14 +128,14 @@ public final class MeasureUtils {
     return m.accept(new PrimitiveMeasureVisitor());
   }
 
-  public static List<Field> getColumnsForPrefetching(Period period) {
-    if (period instanceof Period.Quarter q) {
+  public static List<TypedField> getColumnsForPrefetching(CompiledPeriod period) {
+    if (period instanceof CompiledPeriod.Quarter q) {
       return List.of(q.year(), q.quarter());
-    } else if (period instanceof Period.Year y) {
+    } else if (period instanceof CompiledPeriod.Year y) {
       return List.of(y.year());
-    } else if (period instanceof Period.Month m) {
+    } else if (period instanceof CompiledPeriod.Month m) {
       return List.of(m.year(), m.month());
-    } else if (period instanceof Period.Semester s) {
+    } else if (period instanceof CompiledPeriod.Semester s) {
       return List.of(s.year(), s.semester());
     } else {
       throw new RuntimeException(period + " not supported yet");

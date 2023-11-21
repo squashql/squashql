@@ -5,18 +5,18 @@ import io.squashql.query.DependencyGraph.NodeWithId;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class ExecutionPlan<N, Context> {
+public class ExecutionPlan<N> {
 
-  private final BiConsumer<N, Context> consumer;
+  private final Consumer<N> consumer;
   private final DependencyGraph<N> graph;
   private final Set<N> processed = new HashSet<>();
   private final Set<NodeWithId<N>> roots = new HashSet<>();
   private final Set<NodeWithId<N>> leaves = new HashSet<>();
 
-  public ExecutionPlan(DependencyGraph<N> graph, BiConsumer<N, Context> consumer) {
+  public ExecutionPlan(DependencyGraph<N> graph, Consumer<N> consumer) {
     this.graph = graph;
     this.consumer = consumer;
 
@@ -32,28 +32,28 @@ public class ExecutionPlan<N, Context> {
     }
   }
 
-  public void execute(Context context) {
+  public void execute() {
     for (NodeWithId<N> node : this.roots) {
-      executeRecursively(node, context);
+      executeRecursively(node);
     }
   }
 
-  private void executeRecursively(NodeWithId<N> node, Context context) {
+  private void executeRecursively(NodeWithId<N> node) {
     boolean hasBeenProcessed = this.processed.contains(node);
     if (!hasBeenProcessed) {
       Set<NodeWithId<N>> successors = this.graph.successors(node);
       for (NodeWithId<N> successor : successors) {
         if (!this.processed.contains(successor.node)) {
-          executeRecursively(successor, context);
+          executeRecursively(successor);
         }
       }
-      consumeAndMarkAsProcessed(node, context);
+      consumeAndMarkAsProcessed(node);
     }
   }
 
-  private void consumeAndMarkAsProcessed(NodeWithId<N> node, Context context) {
+  private void consumeAndMarkAsProcessed(NodeWithId<N> node) {
     if (this.processed.add(node.node)) {
-      this.consumer.accept(node.node, context);
+      this.consumer.accept(node.node);
     }
   }
 

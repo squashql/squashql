@@ -1,4 +1,4 @@
-package io.squashql.query;
+package io.squashql.query.compiled;
 
 import io.squashql.query.QueryExecutor.ExecutionContext;
 import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
@@ -20,7 +20,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
 
   @Override
   public void accept(QueryPlanNodeKey queryPlanNodeKey, ExecutionContext executionContext) {
-    Measure measure = queryPlanNodeKey.measure();
+    CompiledMeasure measure = queryPlanNodeKey.measure();
     if (executionContext.getWriteToTable().measures().contains(measure)) {
       return; // Nothing to do
     }
@@ -29,10 +29,10 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
   }
 
   @Override
-  public Void visit(BinaryOperationMeasure bom) {
+  public Void visit(CompiledBinaryOperationMeasure bom) {
     Table intermediateResult = this.executionContext.getWriteToTable();
-    List<Object> lo = intermediateResult.getAggregateValues(bom.leftOperand);
-    List<Object> ro = intermediateResult.getAggregateValues(bom.rightOperand);
+    List<Object> lo = intermediateResult.getAggregateValues(bom.leftOperand());
+    List<Object> ro = intermediateResult.getAggregateValues(bom.rightOperand());
     List<Object> r = new ArrayList<>(lo.size());
 
     Class<?> lType = intermediateResult.getHeader(bom.leftOperand).type();

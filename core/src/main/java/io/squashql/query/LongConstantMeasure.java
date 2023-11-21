@@ -13,11 +13,6 @@ public class LongConstantMeasure extends ConstantMeasure<Long> {
   }
 
   @Override
-  public <R> R accept(MeasureVisitor<R> visitor) {
-    return visitor.visit(this);
-  }
-
-  @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder(getClass().getSimpleName() + "{");
     sb.append("value=").append(value);

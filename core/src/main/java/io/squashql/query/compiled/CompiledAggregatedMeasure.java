@@ -1,10 +1,12 @@
 package io.squashql.query.compiled;
 
+import io.squashql.query.AggregatedMeasure;
+import io.squashql.query.MeasureVisitor;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.type.TypedField;
 
-public record CompiledAggregatedMeasure(String alias, TypedField field, String aggregationFunction,
+public record CompiledAggregatedMeasure(AggregatedMeasure measure, TypedField field,
                                         CompiledCriteria criteria) implements CompiledMeasure {
 
   @Override
@@ -12,11 +14,21 @@ public record CompiledAggregatedMeasure(String alias, TypedField field, String a
     String sql;
     String fieldExpression = this.field.sqlExpression(queryRewriter);
     if (this.criteria != null) {
-      sql = this.aggregationFunction + "(case when " + this.criteria.sqlExpression(queryRewriter) + " then " + fieldExpression + " end)";
+      sql = this.measure.aggregationFunction + "(case when " + this.criteria.sqlExpression(queryRewriter) + " then " + fieldExpression + " end)";
     } else {
-      sql = this.aggregationFunction + "(" + fieldExpression + ")";
+      sql = this.measure.aggregationFunction + "(" + fieldExpression + ")";
     }
-    return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.alias) : sql;
+    return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, alias()) : sql;
+  }
+
+  @Override
+  public String alias() {
+    return measure().alias();
+  }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
   }
 
 }
