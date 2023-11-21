@@ -1,10 +1,10 @@
 package io.squashql.query;
 
-import io.squashql.PrimitiveMeasureVisitor;
 import io.squashql.query.compiled.*;
 import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.dto.TableDto;
+import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.store.Store;
 import io.squashql.type.FunctionTypedField;
@@ -12,47 +12,32 @@ import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.Value;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 @Value
+//todo-mde rename to compiled query
 public class QueryResolver {
-
+  // todo-mde remove storesByName
   Map<String, Store> storesByName;
+  QueryExecutor.QueryScope scope;
+  List<CompiledMeasure> measures;
+  List<TypedField> columnSets;
+  List<TypedField> columns;
 
-  public CompiledQuery compileQuery(final QueryDto query) {
-    final List<TypedField> columns = query.columns.stream().map(this::resolveField).toList();
-    final List<TypedField> columnSets = query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
-    List<TypedField> combinedColumns = Stream.concat(columns.stream(), columnSets.stream()).toList();
-    return new CompiledQuery(toQueryScope(combinedColumns, query), compileMeasure(query.measures), columnSets, columns);
-  }
-
-  private static DependencyGraph<QueryExecutor.QueryPlanNodeKey> computeDependencyGraph(
-          QueryDto query,
-          QueryExecutor.QueryScope queryScope) {
-
-    GraphDependencyBuilder<QueryExecutor.QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
-      Map<QueryExecutor.QueryScope, Set<CompiledMeasure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(query, nodeKey.queryScope));
-      Set<QueryExecutor.QueryPlanNodeKey> set = new HashSet<>();
-      for (Map.Entry<QueryExecutor.QueryScope, Set<CompiledMeasure>> entry : dependencies.entrySet()) {
-        for (CompiledMeasure measure : entry.getValue()) {
-          set.add(new QueryExecutor.QueryPlanNodeKey(entry.getKey(), measure));
-        }
-      }
-      return set;
-    });
-    Set<CompiledMeasure> queriedMeasures = new HashSet<>(query.measures);
-    queriedMeasures.add(CountMeasure.INSTANCE); // Always add count
-    return builder.build(queriedMeasures.stream().map(m -> new QueryExecutor.QueryPlanNodeKey(queryScope, m)).toList());
-  }
-
-  @Value
-  class CompiledQuery {
-    QueryExecutor.QueryScope scope;
-    List<CompiledMeasure> measures;
-    List<TypedField> columnSets;
-    List<TypedField> columns;
+  public QueryResolver(QueryDto query, Map<String, Store> storesByName) {
+    this.storesByName = storesByName;
+    if (query.virtualTableDto != null) {
+      this.storesByName.put(query.virtualTableDto.name, VirtualTableDto.toStore(query.virtualTableDto));
+    }
+    this.columns = query.columns.stream().map(this::resolveField).toList();
+    this.columnSets = query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
+    final List<TypedField> combinedColumns = Stream.concat(columns.stream(), columnSets.stream()).toList();
+    this.scope = toQueryScope(combinedColumns, query);
+    this.measures = compileMeasure(query.measures);
   }
 
   private QueryExecutor.QueryScope toQueryScope(final List<TypedField> combinedColumns, final QueryDto query) {

@@ -4,7 +4,7 @@ import io.squashql.query.Header;
 import io.squashql.query.QueryExecutor;
 import io.squashql.query.QueryResolver;
 import io.squashql.query.compiled.DatabaseQuery2;
-import io.squashql.query.dto.VirtualTableDto;
+import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Datastore;
 import io.squashql.store.Store;
 import io.squashql.table.ColumnarTable;
@@ -181,11 +181,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   }
 
   @Override
-  public QueryResolver queryResolver(final VirtualTableDto vt) {
-    final Map<String, Store> storesByName = new HashMap<>(datastore().storesByName());
-    if (vt != null) {
-      storesByName.put(vt.name, VirtualTableDto.toStore(vt));
-    }
-    return new QueryResolver(storesByName);
+  public QueryResolver queryResolver(final QueryDto query) {
+    return new QueryResolver(query, new HashMap<>(datastore().storesByName()));
   }
 }

@@ -140,12 +140,11 @@ public class QueryExecutor {
                        IntConsumer limitNotifier) {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
 
-    final QueryResolver queryResolver = this.queryEngine.queryResolver(query.virtualTableDto);
+    final QueryResolver queryResolver = this.queryEngine.queryResolver(query);
     if (pivotTableContext != null) {
       pivotTableContext.init(queryResolver);
     }
-    QueryResolver.CompiledQuery compiledQuery = queryResolver.compileQuery(query);
-    DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(compiledQuery);
+    DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(queryResolver);
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery2> prefetchQueryByQueryScope = new HashMap<>();
     Map<QueryScope, Set<CompiledMeasure>> measuresByQueryScope = new HashMap<>();
@@ -230,12 +229,9 @@ public class QueryExecutor {
     return result;
   }
 
-  private static DependencyGraph<QueryPlanNodeKey> computeDependencyGraph(
-          QueryDto query,
-          QueryScope queryScope) {
-
+  private static DependencyGraph<QueryPlanNodeKey> computeDependencyGraph(QueryResolver queryResolver) {
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
-      Map<QueryScope, Set<CompiledMeasure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(query, nodeKey.queryScope));
+      Map<QueryScope, Set<CompiledMeasure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(queryResolver, nodeKey.queryScope));
       Set<QueryPlanNodeKey> set = new HashSet<>();
       for (Map.Entry<QueryScope, Set<CompiledMeasure>> entry : dependencies.entrySet()) {
         for (CompiledMeasure measure : entry.getValue()) {
