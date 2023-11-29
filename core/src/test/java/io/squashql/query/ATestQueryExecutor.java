@@ -1,23 +1,22 @@
 package io.squashql.query;
 
-import static io.squashql.query.Functions.all;
-import static io.squashql.query.Functions.avg;
-import static io.squashql.query.Functions.count;
-import static io.squashql.query.Functions.countDistinct;
-import static io.squashql.query.Functions.countDistinctIf;
-import static io.squashql.query.Functions.countIf;
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.Functions.eq;
-import static io.squashql.query.Functions.ge;
-import static io.squashql.query.Functions.in;
-import static io.squashql.query.Functions.isNotNull;
-import static io.squashql.query.Functions.isNull;
-import static io.squashql.query.Functions.le;
-import static io.squashql.query.Functions.min;
-import static io.squashql.query.Functions.multiply;
-import static io.squashql.query.Functions.or;
-import static io.squashql.query.Functions.sum;
-import static io.squashql.query.Functions.sumIf;
+import io.squashql.TestClass;
+import io.squashql.query.builder.Query;
+import io.squashql.query.database.QueryRewriter;
+import io.squashql.query.database.SqlUtils;
+import io.squashql.query.dto.*;
+import io.squashql.table.Table;
+import io.squashql.type.TableTypedField;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import static io.squashql.query.Functions.*;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
@@ -26,25 +25,6 @@ import static io.squashql.query.dto.OrderKeywordDto.ASC;
 import static io.squashql.query.dto.OrderKeywordDto.DESC;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
-import io.squashql.TestClass;
-import io.squashql.query.builder.Query;
-import io.squashql.query.database.QueryRewriter;
-import io.squashql.query.database.SqlUtils;
-import io.squashql.query.dto.BucketColumnSetDto;
-import io.squashql.query.dto.ConditionDto;
-import io.squashql.query.dto.CriteriaDto;
-import io.squashql.query.dto.JoinType;
-import io.squashql.query.dto.OrderKeywordDto;
-import io.squashql.query.dto.QueryDto;
-import io.squashql.table.Table;
-import io.squashql.type.TableTypedField;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -67,19 +47,19 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   @Override
   protected void loadData() {
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
-            new Object[]{0, "bottle", "drink", null, 2d, 10, true},
+            new Object[]{0, "starbuck's coffee", "drink", null, 2d, 10, true}, // use a string with '
             new Object[]{1, "cookie", "food", "biscuit", 3d, 20, true},
             new Object[]{2, "shirt", "cloth", null, 10d, 3, false}
     ));
 
     this.tm.load("s1", this.storeName, List.of(
-            new Object[]{0, "bottle", "drink", null, 4d, 10, true},
+            new Object[]{0, "starbuck's coffee", "drink", null, 4d, 10, true},
             new Object[]{1, "cookie", "food", "biscuit", 3d, 20, true},
             new Object[]{2, "shirt", "cloth", null, 10d, 3, false}
     ));
 
     this.tm.load("s2", this.storeName, List.of(
-            new Object[]{0, "bottle", "drink", null, 1.5d, 10, true},
+            new Object[]{0, "starbuck's coffee", "drink", null, 1.5d, 10, true},
             new Object[]{1, "cookie", "food", "biscuit", 3d, 20, true},
             new Object[]{2, "shirt", "cloth", null, 10d, 3, false}
     ));
@@ -301,19 +281,19 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .where(Functions.all(
-                    criterion("ean", eq("bottle")),
+                    criterion("ean", eq("starbuck's coffee")),
                     criterion(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)),
                     criterion("category", in("cloth", "drink"))))
             .select(tableFields(List.of("category", "ean")), List.of(sum("q", "quantity")))
             .build();
 
     Table table = this.executor.executeQuery(query);
-    Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("drink", "bottle", 10l));
+    Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("drink", "starbuck's coffee", 10l));
 
     query = Query
             .from(this.storeName)
             .where(Functions.all(
-                    criterion("ean", eq("bottle")),
+                    criterion("ean", eq("starbuck's coffee")),
                     criterion(SCENARIO_FIELD_NAME, eq(MAIN_SCENARIO_NAME)),
                     criterion("category", in("cloth", "drink")),
                     criterion("quantity", Functions.gt(10))))
@@ -338,8 +318,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .build();
     table = this.executor.executeQuery(query);
     Assertions.assertThat(table).containsExactly(
-            List.of("bottle", 3l),
-            List.of("shirt", 3l));
+            List.of("shirt", 3l),
+            List.of("starbuck's coffee", 3l));
   }
 
   @Test
@@ -361,7 +341,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .select(tableFields(List.of("ean")), List.of())
             .build();
     Table table = this.executor.executeQuery(query);
-    Assertions.assertThat(table).containsExactly(List.of("bottle"), List.of("cookie"));
+    Assertions.assertThat(table).containsExactly(List.of("cookie"), List.of("starbuck's coffee"));
   }
 
   /**
@@ -634,9 +614,9 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     Assertions.assertThat(result.headers().stream().map(header -> header.name()).toList())
             .containsExactly("ean", "SUMPRICE");
     Assertions.assertThat(result).containsExactly(
-            List.of("bottle", 7.5d),
             List.of("cookie", 9.0d),
-            List.of("shirt", 30d));
+            List.of("shirt", 30d),
+            List.of("starbuck's coffee", 7.5d));
   }
 
   @Test
@@ -802,7 +782,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .build();
     table = this.executor.executeQuery(query);
     Assertions.assertThat(table).containsExactly(
-            List.of("bottle", 7.5d, 7.5d),
-            List.of("cookie", 9.0d, 9.0d));
+            List.of("cookie", 9.0d, 9.0d),
+            List.of("starbuck's coffee", 7.5d, 7.5d));
   }
 }

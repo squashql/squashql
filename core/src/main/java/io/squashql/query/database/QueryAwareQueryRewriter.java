@@ -59,4 +59,9 @@ public class QueryAwareQueryRewriter implements QueryRewriter {
   public boolean usePartialRollupSyntax() {
     return this.underlying.usePartialRollupSyntax();
   }
+
+  @Override
+  public String escapeSingleQuote(String s) {
+    return this.underlying.escapeSingleQuote(s);
+  }
 }

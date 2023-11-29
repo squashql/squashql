@@ -56,12 +56,15 @@ public class SqlUtils {
     return null;
   }
 
-
   /**
    * Returns the name of the column used for grouping(). If it is modified, please modify also
    * {@link SqlUtils#GROUPING_PATTERN}.
    */
   public static String groupingAlias(String column) {
     return String.format("___grouping___%s___", column);
+  }
+
+  public static String escapeSingleQuote(String s, String escapeCharacter) {
+    return s.replace("'", escapeCharacter);
   }
 }
