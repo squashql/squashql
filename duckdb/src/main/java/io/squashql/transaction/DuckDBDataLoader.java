@@ -2,6 +2,7 @@ package io.squashql.transaction;
 
 import io.squashql.DuckDBDatastore;
 import io.squashql.jdbc.JdbcUtil;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
@@ -89,7 +90,7 @@ public class DuckDBDataLoader implements DataLoader {
           }
 
           if (o instanceof String) {
-            sb.append('\'').append(o).append('\'');
+            sb.append('\'').append(SqlUtils.escapeSingleQuote((String) o, "''")).append('\'');
           } else {
             sb.append(o);
           }

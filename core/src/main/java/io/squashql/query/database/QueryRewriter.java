@@ -81,4 +81,8 @@ public interface QueryRewriter {
    * </a>.
    */
   boolean usePartialRollupSyntax();
+
+  default String escapeSingleQuote(String s) {
+    return SqlUtils.escapeSingleQuote(s, "''");
+  }
 }

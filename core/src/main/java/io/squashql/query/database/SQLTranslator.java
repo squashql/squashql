@@ -208,7 +208,7 @@ public class SQLTranslator {
   public static String toSql(Field field, ConditionDto dto, Function<Field, TypedField> fieldProvider, QueryRewriter queryRewriter) {
     String expression = field.sqlExpression(fieldProvider, queryRewriter);
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
-      Function<Object, String> sqlMapper = field instanceof TableField ? getQuoteFn(fieldProvider.apply(field)) : String::valueOf; // FIXME dirty workaround
+      Function<Object, String> sqlMapper = field instanceof TableField ? getQuoteFn(queryRewriter, fieldProvider.apply(field)) : String::valueOf; // FIXME dirty workaround
       return switch (dto.type()) {
         case IN -> expression + " " + dto.type().sqlInfix + " (" +
                 ((InConditionDto) dto).values
@@ -266,7 +266,7 @@ public class SQLTranslator {
     }
   }
 
-  public static Function<Object, String> getQuoteFn(TypedField field) {
+  public static Function<Object, String> getQuoteFn(QueryRewriter queryRewriter, TypedField field) {
     if (Number.class.isAssignableFrom(field.type())
             || field.type().equals(double.class)
             || field.type().equals(int.class)
@@ -279,7 +279,7 @@ public class SQLTranslator {
       return String::valueOf;
     } else if (field.type().equals(String.class)) {
       // quote
-      return s -> "'" + s + "'";
+      return s -> "'" + queryRewriter.escapeSingleQuote(String.valueOf(s)) + "'";
     } else {
       throw new RuntimeException("Not supported " + field.type());
     }
