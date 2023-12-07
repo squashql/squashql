@@ -26,9 +26,4 @@ class DuckDBQueryRewriter implements QueryRewriter {
   public boolean usePartialRollupSyntax() {
     return true;
   }
-
-  @Override
-  public boolean useGroupingFunction() {
-    return true;
-  }
 }

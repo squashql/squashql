@@ -1,11 +1,8 @@
-import {PACKAGE, Period} from "./index"
-import {Criteria} from "./conditions"
-import {ColumnSetKey} from "./columnsets"
-import {Field, TableField} from "./field"
+import PACKAGE from "./package"
+import Criteria from "./criteria"
 import {serializeMap} from "./util"
-
-// Marker type
-export type BasicMeasure = Measure
+import {ColumnSetKey, Period} from "./columnsets"
+import {Field} from "./field"
 
 export interface Measure {
   readonly class: string
@@ -13,18 +10,21 @@ export interface Measure {
   readonly expression?: string
 }
 
+export type BasicMeasure = Measure
 export class AggregatedMeasure implements BasicMeasure {
   readonly class: string = PACKAGE + "AggregatedMeasure"
   readonly field: Field
   readonly aggregationFunction: string
   readonly alias: string
   readonly expression?: string
+  readonly distinct?: boolean
   readonly criteria?: Criteria
 
-  constructor(alias: string, field: Field, aggregationFunction: string, criterion?: Criteria) {
+  constructor(alias: string, field: Field, aggregationFunction: string, distinct?: boolean, criterion?: Criteria) {
     this.alias = alias
     this.field = field
     this.aggregationFunction = aggregationFunction
+    this.distinct = distinct
     this.criteria = criterion
   }
 
@@ -35,6 +35,7 @@ export class AggregatedMeasure implements BasicMeasure {
       "aggregationFunction": this.aggregationFunction,
       "alias": this.alias,
       "expression": this.expression,
+      "distinct": this.distinct,
       "criteria": this.criteria,
     }
   }
@@ -92,9 +93,7 @@ export enum BinaryOperator {
   DIVIDE = "DIVIDE",
 }
 
-export const countRows = new AggregatedMeasure("_contributors_count_", new TableField("*"), "count")
-
-class ComparisonMeasureReferencePosition implements Measure {
+export class ComparisonMeasureReferencePosition implements Measure {
   readonly class: string = PACKAGE + "ComparisonMeasureReferencePosition"
   readonly alias: string
   readonly expression?: string
@@ -129,11 +128,11 @@ export enum ComparisonMethod {
   DIVIDE = "DIVIDE",
 }
 
-class LongConstantMeasure implements Measure {
+export class LongConstantMeasure implements Measure {
   readonly class: string = PACKAGE + "LongConstantMeasure"
   readonly alias: string
 
-  constructor(private value: Number) {
+  constructor(private value: number) {
   }
 
   toJSON() {
@@ -144,11 +143,11 @@ class LongConstantMeasure implements Measure {
   }
 }
 
-class DoubleConstantMeasure implements Measure {
+export class DoubleConstantMeasure implements Measure {
   readonly class: string = PACKAGE + "DoubleConstantMeasure"
   readonly alias: string
 
-  constructor(private value: Number) {
+  constructor(private value: number) {
   }
 
   toJSON() {
@@ -183,26 +182,35 @@ export function count(alias: string, field: Field): Measure {
   return new AggregatedMeasure(alias, field, "count")
 }
 
+export function countDistinct(alias: string, field: Field): Measure {
+  return new AggregatedMeasure(alias, field, "count", true)
+}
+
+
 // aggIf
 
 export function sumIf(alias: string, field: Field, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, field, "sum", criterion)
+  return new AggregatedMeasure(alias, field, "sum", false, criterion)
 }
 
 export function avgIf(alias: string, field: Field, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, field, "avg", criterion)
+  return new AggregatedMeasure(alias, field, "avg", false, criterion)
 }
 
 export function minIf(alias: string, field: Field, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, field, "min", criterion)
+  return new AggregatedMeasure(alias, field, "min", false, criterion)
 }
 
 export function maxIf(alias: string, field: Field, criterion: Criteria): Measure {
-  return new AggregatedMeasure(alias, field, "max", criterion)
+  return new AggregatedMeasure(alias, field, "max", false, criterion)
 }
 
 export function countIf(alias: string, field: Field, criterion?: Criteria): Measure {
-  return new AggregatedMeasure(alias, field, "count", criterion)
+  return new AggregatedMeasure(alias, field, "count", false, criterion)
+}
+
+export function countDistinctIf(alias: string, field: Field, criterion?: Criteria): Measure {
+  return new AggregatedMeasure(alias, field, "count", true, criterion)
 }
 
 // BINARY
@@ -225,11 +233,11 @@ export function divide(alias: string, measure1: Measure, measure2: Measure): Mea
 
 // CONSTANT
 
-export function integer(value: Number): Measure {
+export function integer(value: number): Measure {
   return new LongConstantMeasure(value)
 }
 
-export function decimal(value: Number): Measure {
+export function decimal(value: number): Measure {
   return new DoubleConstantMeasure(value)
 }
 

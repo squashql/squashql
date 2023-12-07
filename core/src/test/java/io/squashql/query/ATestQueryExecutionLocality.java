@@ -54,7 +54,7 @@ public abstract class ATestQueryExecutionLocality extends ABaseTestQuery {
             .from(this.storeName)
             .select(tableFields(List.of("ean")), List.of(divide))
             .build();
-    Table table = this.executor.execute(query);
+    Table table = this.executor.executeQuery(query);
     Assertions.assertThat(table).containsExactlyInAnyOrder(
             List.of("bottle", 10d),
             List.of("cookie", 30d),
@@ -73,9 +73,9 @@ public abstract class ATestQueryExecutionLocality extends ABaseTestQuery {
     }
 
     @Override
-    public Table execute(DatabaseQuery2 query, QueryExecutor.PivotTableContext context) {
+    public Table execute(DatabaseQuery2 query) {
       this.lastExecutedDatabaseQuery = query;
-      return this.underlying.execute(query, context);
+      return this.underlying.execute(query);
     }
 
     @Override

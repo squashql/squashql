@@ -1,9 +1,9 @@
 package io.squashql.query.database;
 
-import io.squashql.query.TableField;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,10 +31,6 @@ public class SqlUtils {
     return field.store() == null ? field.name() : field.store() + '.' + field.name();
   }
 
-  public static String getFieldFullName(TableField field) {
-    return field.tableName == null ? field.name() : field.tableName + '.' + field.name();
-  }
-
   public static String expression(TypedField f) {
     if (f instanceof TableTypedField ttf) {
       return getFieldFullName(ttf);
@@ -60,12 +56,15 @@ public class SqlUtils {
     return null;
   }
 
-
   /**
    * Returns the name of the column used for grouping(). If it is modified, please modify also
    * {@link SqlUtils#GROUPING_PATTERN}.
    */
   public static String groupingAlias(String column) {
     return String.format("___grouping___%s___", column);
+  }
+
+  public static String escapeSingleQuote(String s, String escapeCharacter) {
+    return s.replace("'", escapeCharacter);
   }
 }

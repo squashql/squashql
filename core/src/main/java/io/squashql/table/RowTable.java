@@ -29,6 +29,11 @@ public class RowTable implements Table {
   }
 
   @Override
+  public void transferAggregates(Table from, Measure measure) {
+    throwNotSupportedException();
+  }
+
+  @Override
   public List<Object> getColumn(int columnIndex) {
     throwNotSupportedException();
     return null;
@@ -56,13 +61,8 @@ public class RowTable implements Table {
   }
 
   @Override
-  public void show(int numRows) {
-    System.out.println(this);
-  }
-
-  @Override
   public String toString() {
-    return TableUtils.toString(this.headers, this, h -> ((Header) h).name(), String::valueOf);
+    return toString(Integer.MAX_VALUE);
   }
 
   @Override

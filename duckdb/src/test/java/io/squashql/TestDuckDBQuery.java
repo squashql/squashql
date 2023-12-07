@@ -1,8 +1,5 @@
 package io.squashql;
 
-import static io.squashql.query.Functions.sum;
-import static io.squashql.query.TableField.tableFields;
-
 import io.squashql.query.QueryExecutor;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
@@ -12,11 +9,16 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.transaction.DuckDBDataLoader;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.TestUtil;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
+
+import static io.squashql.query.Functions.sum;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 
 public class TestDuckDBQuery {
   protected String storeName = "myStore";
@@ -55,7 +57,7 @@ public class TestDuckDBQuery {
 
   @Test
   void testQueryLimitNotifier() {
-    setup(getFieldsByStore(), () -> loadData());
+    setup(getFieldsByStore(), this::loadData);
 
     QueryDto query = Query
             .from(this.storeName)
@@ -63,18 +65,18 @@ public class TestDuckDBQuery {
             .build();
 
     AtomicInteger limitCapture = new AtomicInteger(-1);
-    this.executor.execute(query, null, CacheStatsDto.builder(), null, true, limitCapture::set);
+    this.executor.executeQuery(query, CacheStatsDto.builder(), null, true, limitCapture::set);
     Assertions.assertThat(limitCapture.get()).isEqualTo(-1);
 
     int limit = 2;
     query.limit = limit;
-    this.executor.execute(query, null, CacheStatsDto.builder(), null, true, limitCapture::set);
+    this.executor.executeQuery(query, CacheStatsDto.builder(), null, true, limitCapture::set);
     Assertions.assertThat(limitCapture.get()).isEqualTo(limit);
   }
 
   @Test
   void testMergeTablesAboveQueryLimit() {
-    setup(getFieldsByStore(), () -> loadData());
+    setup(getFieldsByStore(), this::loadData);
 
     QueryDto query1 = Query
             .from(this.storeName)
@@ -87,7 +89,9 @@ public class TestDuckDBQuery {
             .build();
 
     query1.limit = 2;
-    TestUtil.assertThatThrownBy(() -> this.executor.execute(query1, query2, JoinType.INNER, null))
+    TestUtil.assertThatThrownBy(() -> this.executor.executeQueryMerge(query1, query2, JoinType.INNER, null))
+            .hasMessageContaining("too big");
+    TestUtil.assertThatThrownBy(() -> this.executor.executePivotQueryMerge(query1, query2, List.of(tableField("eanId")), List.of(), JoinType.INNER, null))
             .hasMessageContaining("too big");
   }
 }

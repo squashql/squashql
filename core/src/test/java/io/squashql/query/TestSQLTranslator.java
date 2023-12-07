@@ -29,7 +29,8 @@ public class TestSQLTranslator {
 
   private static final String BASE_STORE_NAME = "baseStore";
   private static final String BASE_STORE_NAME_ESCAPED = SqlUtils.backtickEscape(BASE_STORE_NAME);
-//tdo-mde move to query compiled test translation
+
+  //todo-mde move to query translation
 //  /**
 //   * A simple implementation that has the same logic as {@link AQueryEngine#createFieldSupplier(Map)} but does not verify
 //   * a store/field does exist.
@@ -237,7 +238,7 @@ public class TestSQLTranslator {
 //            .whereCriteria(all(
 //                    criterion(SCENARIO_FIELD_NAME, or(eq("base"), eq("s1"), eq("s2"))),
 //                    criterion("delta", ge(123d)),
-//                    criterion("type", or(eq("A"), eq("B"))),
+//                    criterion("type", or(eq("A'"), eq("B"))),
 //                    criterion("pnl", lt(10d)),
 //                    criterion(minus(new TableField("pnl"), new ConstantField(1)), lt(11d)))
 //            )
@@ -245,7 +246,7 @@ public class TestSQLTranslator {
 //    Assertions.assertThat(translate(query, fp))
 //            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum` from " + BASE_STORE_NAME_ESCAPED
 //                    + " where (((`scenario` = 'base' or `scenario` = 's1') or `scenario` = 's2')"
-//                    + " and `delta` >= 123.0 and (`type` = 'A' or `type` = 'B') and `pnl` < 10.0 and (`pnl`-1) < 11.0)"
+//                    + " and `delta` >= 123.0 and (`type` = 'A''' or `type` = 'B') and `pnl` < 10.0 and (`pnl`-1) < 11.0)"
 //                    + " group by `scenario`, `type`"
 //            );
 //  }

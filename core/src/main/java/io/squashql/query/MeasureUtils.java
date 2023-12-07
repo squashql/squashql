@@ -15,17 +15,7 @@ import java.util.function.Function;
 @NoArgsConstructor
 public final class MeasureUtils {
 
-  public static final QueryRewriter BASIC = new QueryRewriter() {
-    @Override
-    public boolean usePartialRollupSyntax() {
-      return false;
-    }
-
-    @Override
-    public boolean useGroupingFunction() {
-      return false;
-    }
-  };
+  public static final QueryRewriter BASIC = () -> false;
 
   //todo-mde
 //  public static String createExpression(Measure m) {

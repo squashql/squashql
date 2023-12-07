@@ -1,11 +1,13 @@
 package io.squashql.query;
 
+import io.squashql.query.database.SqlUtils;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @ToString
@@ -31,6 +33,7 @@ public class TableField implements Field {
   public TableField(String tableName, String fieldName) {
     this.tableName = tableName;
     this.fieldName = fieldName;
+    setAttributes();
   }
 
   private void setAttributes() {
@@ -42,6 +45,8 @@ public class TableField implements Field {
       } else {
         this.fieldName = split[0];
       }
+    } else {
+      this.fullName = SqlUtils.getFieldFullName(Objects.requireNonNull(this.tableName), Objects.requireNonNull(this.fieldName));
     }
   }
 

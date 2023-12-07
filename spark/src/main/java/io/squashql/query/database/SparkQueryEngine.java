@@ -41,7 +41,7 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
           "variance");
 
   public SparkQueryEngine(SparkDatastore datastore) {
-    super(datastore, DefaultQueryRewriter.INSTANCE);
+    super(datastore, new SparkQueryRewriter());
   }
 
   @Override

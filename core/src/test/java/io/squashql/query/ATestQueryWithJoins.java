@@ -106,7 +106,7 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
             .select(tableFields(List.of(this.categories + ".name", this.products + ".name")), List.of(Functions.sum("quantity_sum", "quantity")))
             .build();
 
-    Table table = this.executor.execute(query);
+    Table table = this.executor.executeQuery(query);
     Assertions.assertThat(table).containsExactly(
             List.of("Beverages", "Chang", 1l),
             List.of("Condiments", "Aniseed Syrup", 4l),
@@ -134,7 +134,7 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
             // by the user by indicating the table from which the field should come from.
             .select(tableFields(List.of("name")), List.of(Functions.sum("quantity_sum", "quantity")))
             .build();
-    TestUtil.assertThatThrownBy(() -> this.executor.execute(query)).hasMessageContaining(ambiguousNameMessage());
+    TestUtil.assertThatThrownBy(() -> this.executor.executeQuery(query)).hasMessageContaining(ambiguousNameMessage());
   }
 
   protected String ambiguousNameMessage() {

@@ -48,7 +48,7 @@ public record CompiledCriteria(TypedField field, TypedField fieldOther, Compiled
   public static String toSql(TypedField field, ConditionDto dto, QueryRewriter queryRewriter) {
     String expression = field.sqlExpression(queryRewriter);
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
-      Function<Object, String> sqlMapper = field instanceof TableField ? SQLTranslator.getQuoteFn(field) : String::valueOf; // FIXME dirty workaround
+      Function<Object, String> sqlMapper = field instanceof TableField ? SQLTranslator.getQuoteFn(field, queryRewriter) : String::valueOf; // FIXME dirty workaround
       return switch (dto.type()) {
         case IN -> expression + " " + dto.type().sqlInfix + " (" +
                 ((InConditionDto) dto).values

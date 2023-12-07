@@ -4,7 +4,7 @@ public class DefaultQueryRewriter implements QueryRewriter {
 
   public static final DefaultQueryRewriter INSTANCE = new DefaultQueryRewriter();
 
-  private DefaultQueryRewriter() {
+  public DefaultQueryRewriter() {
   }
 
   @Override
@@ -24,11 +24,6 @@ public class DefaultQueryRewriter implements QueryRewriter {
 
   @Override
   public boolean usePartialRollupSyntax() {
-    return true;
-  }
-
-  @Override
-  public boolean useGroupingFunction() {
     return true;
   }
 }

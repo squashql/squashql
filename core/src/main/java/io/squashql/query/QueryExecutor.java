@@ -7,18 +7,17 @@ import io.squashql.query.compiled.*;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.parameter.QueryCacheParameter;
-import io.squashql.table.*;
+import io.squashql.table.ColumnarTable;
+import io.squashql.table.PivotTable;
+import io.squashql.table.Table;
+import io.squashql.table.TableUtils;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static io.squashql.query.ColumnSetKey.BUCKET;
 
@@ -49,30 +48,34 @@ public class QueryExecutor {
     };
   }
 
-  public PivotTable execute(PivotTableQueryDto pivotTableQueryDto) {
-    return execute(pivotTableQueryDto, CacheStatsDto.builder(), null, null);
+  public PivotTable executePivotQuery(PivotTableQueryDto pivotTableQueryDto) {
+    return executePivotQuery(pivotTableQueryDto, CacheStatsDto.builder(), null, true, null);
   }
 
-  public PivotTable execute(PivotTableQueryDto pivotTableQueryDto,
-                            CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
-                            SquashQLUser user,
-                            IntConsumer limitNotifier) {
+  public PivotTable executePivotQuery(PivotTableQueryDto pivotTableQueryDto,
+                                      CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
+                                      SquashQLUser user,
+                                      boolean replaceTotalCellsAndOrderRows,
+                                      IntConsumer limitNotifier) {
     if (!pivotTableQueryDto.query.rollupColumns.isEmpty()) {
       throw new IllegalArgumentException("Rollup is not supported by this API");
     }
 
     PivotTableContext pivotTableContext = new PivotTableContext(pivotTableQueryDto);
     QueryDto preparedQuery = prepareQuery(pivotTableQueryDto.query, pivotTableContext);
-    Table result = execute(preparedQuery, pivotTableContext, cacheStatsDtoBuilder, user, false, limitNotifier);
-    result = TableUtils.replaceTotalCellValues((ColumnarTable) result, pivotTableQueryDto.rows.stream().map(Field::name).collect(
-            Collectors.toList()), pivotTableQueryDto.columns.stream().map(Field::name).collect(Collectors.toList()));
-    result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
+    Table result = executeQuery(preparedQuery, cacheStatsDtoBuilder, user, false, limitNotifier);
+    if (replaceTotalCellsAndOrderRows) {
+      result = TableUtils.replaceTotalCellValues((ColumnarTable) result,
+              pivotTableQueryDto.rows.stream().map(Field::name).toList(),
+              pivotTableQueryDto.columns.stream().map(Field::name).toList());
+      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
+    }
 
     List<String> values = pivotTableQueryDto.query.measures.stream().map(Measure::alias).toList();
     return new PivotTable(result, pivotTableQueryDto.rows.stream().map(Field::name).toList(), pivotTableQueryDto.columns.stream().map(Field::name).toList(), values);
   }
 
-  public static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
+  private static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
     Set<Field> axes = new HashSet<>(context.rows);
     axes.addAll(context.columns);
     Set<Field> select = new HashSet<>(query.columns);
@@ -118,32 +121,27 @@ public class QueryExecutor {
     return deepCopy;
   }
 
-  public Table execute(String rawSqlQuery) {
+  public Table executeRaw(String rawSqlQuery) {
     return this.queryEngine.executeRawSql(rawSqlQuery);
   }
 
-  public Table execute(QueryDto query) {
-    return execute(
+  public Table executeQuery(QueryDto query) {
+    return executeQuery(
             query,
-            null,
             CacheStatsDto.builder(),
             null,
             true,
             null);
   }
 
-  public Table execute(QueryDto query,
-                       PivotTableContext pivotTableContext,
-                       CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
-                       SquashQLUser user,
-                       boolean replaceTotalCellsAndOrderRows,
-                       IntConsumer limitNotifier) {
+  public Table executeQuery(QueryDto query,
+                            CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
+                            SquashQLUser user,
+                            boolean replaceTotalCellsAndOrderRows,
+                            IntConsumer limitNotifier) {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
 
     final QueryResolver queryResolver = new QueryResolver(query, new HashMap<>(this.queryEngine.datastore().storesByName()));
-    if (pivotTableContext != null) {
-      pivotTableContext.init(queryResolver);
-    }
     DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
             queryResolver.getColumns(), queryResolver.getBucketColumns(), queryResolver.getMeasures(), queryResolver.getScope());
     // Compute what needs to be prefetched
@@ -180,7 +178,7 @@ public class QueryExecutor {
       if (!notCached.isEmpty()) {
 //        notCached.add(CountMeasure.INSTANCE); // Always add count todo-mde
         notCached.forEach((k, v) -> prefetchQuery.withMeasure(v));
-        result = this.queryEngine.execute(prefetchQuery, pivotTableContext);
+        result = this.queryEngine.execute(prefetchQuery);
       } else {
         // Create an empty result that will be populated by the query cache
         result = queryCache.createRawResult(prefetchQueryScope);
@@ -299,20 +297,14 @@ public class QueryExecutor {
     }
   }
 
-
   /**
    * This object is temporary until BigQuery supports the grouping sets. See <a href="https://issuetracker.google.com/issues/35905909">issue</a>
    */
-  //todo-mde should be created by the resolver
-  public static class PivotTableContext {
+  private static class PivotTableContext {
     private final List<Field> rows;
     private final List<Field> cleansedRows;
     private final List<Field> columns;
     private final List<Field> cleansedColumns;
-    @Getter
-    private List<TypedField> rowFields;
-    @Getter
-    private List<TypedField> columnFields;
 
     public PivotTableContext(PivotTableQueryDto pivotTableQueryDto) {
       this.rows = pivotTableQueryDto.rows;
@@ -326,7 +318,7 @@ public class QueryExecutor {
       // computed. This is why it is removed from the axes.
       ColumnSet columnSet = query.columnSets.get(BUCKET);
       if (columnSet != null) {
-        Field name = ((BucketColumnSetDto) columnSet).name;
+        Field name = ((BucketColumnSetDto) columnSet).newField;
         if (fields.contains(name)) {
           fields = new ArrayList<>(fields);
           fields.remove(name);
@@ -335,38 +327,14 @@ public class QueryExecutor {
       return fields;
     }
 
-    public void init(final QueryResolver queryResolver) {
-      this.rowFields = this.cleansedRows.stream().map(queryResolver::resolveField).toList();
-      this.columnFields = this.cleansedColumns.stream().map(queryResolver::resolveField).toList();
-    }
   }
 
-  public Table execute(QueryDto first, QueryDto second, JoinType joinType, SquashQLUser user) {
-    Map<String, Comparator<?>> firstComparators = Queries.getComparators(first);
-    Map<String, Comparator<?>> secondComparators = Queries.getComparators(second);
-    secondComparators.putAll(firstComparators); // the comparators of the first query take precedence over the second's
-
-    Set<ColumnSet> columnSets = Stream.concat(first.columnSets.values().stream(), second.columnSets.values().stream())
-            .collect(Collectors.toSet());
-
-    Function<QueryDto, Table> execute = q -> execute(
-            q,
-            null,
-            CacheStatsDto.builder(),
-            user,
-            false,
-            limit -> {
-              throw new RuntimeException("Result of " + q + " is too big (limit=" + limit + ")");
-            });
-    CompletableFuture<Table> f1 = CompletableFuture.supplyAsync(() -> execute.apply(first));
-    CompletableFuture<Table> f2 = CompletableFuture.supplyAsync(() -> execute.apply(second));
-    return CompletableFuture.allOf(f1, f2).thenApply(__ -> merge(f1.join(), f2.join(), joinType, secondComparators, columnSets)).join();
+  public PivotTable executePivotQueryMerge(QueryDto first, QueryDto second, List<Field> rows, List<Field> columns, JoinType joinType, SquashQLUser user) {
+    return QueryMergeExecutor.executePivotQueryMerge(this, first, second, rows, columns, joinType, user);
   }
 
-  public static Table merge(Table table1, Table table2, JoinType joinType, Map<String, Comparator<?>> comparators, Set<ColumnSet> columnSets) {
-    ColumnarTable table = (ColumnarTable) MergeTables.mergeTables(table1, table2, joinType);
-    table = (ColumnarTable) TableUtils.orderRows(table, comparators, columnSets);
-    return TableUtils.replaceTotalCellValues(table, true);
+  public Table executeQueryMerge(QueryDto first, QueryDto second, JoinType joinType, SquashQLUser user) {
+    return QueryMergeExecutor.executeQueryMerge(this, first, second, joinType, user);
   }
 
 }

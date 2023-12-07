@@ -1,9 +1,6 @@
 package io.squashql.query.database;
 
-import io.squashql.query.Measure;
-import io.squashql.query.QueryExecutor;
 import io.squashql.query.compiled.DatabaseQuery2;
-import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Datastore;
 import io.squashql.table.Table;
 
@@ -14,7 +11,7 @@ public interface QueryEngine<T extends Datastore> {
   String GRAND_TOTAL = "Grand Total";
   String TOTAL = "Total";
 
-  Table execute(DatabaseQuery2 query, QueryExecutor.PivotTableContext context);
+  Table execute(DatabaseQuery2 query);
 
   Table executeRawSql(String sql);
 

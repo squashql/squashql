@@ -1,23 +1,27 @@
 package io.squashql.query;
 
+import io.squashql.TestClass;
+import io.squashql.query.builder.Query;
+import io.squashql.query.database.SqlUtils;
+import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.dto.QueryDto;
+import io.squashql.table.Table;
+import io.squashql.type.TableTypedField;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.util.List;
+import java.util.Map;
+
 import static io.squashql.query.ComparisonMethod.RELATIVE_DIFFERENCE;
 import static io.squashql.query.Functions.eq;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
-
-import io.squashql.TestClass;
-import io.squashql.query.builder.Query;
-import io.squashql.query.dto.BucketColumnSetDto;
-import io.squashql.query.dto.QueryDto;
-import io.squashql.table.Table;
-import io.squashql.type.TableTypedField;
-import java.util.List;
-import java.util.Map;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -62,15 +66,22 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
     ));
   }
 
-  @Test
-  void testAbsoluteDifferenceWithFirst() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testAbsoluteDifferenceWithFirst(boolean fullName) {
+    Field scenario = fullName ? new TableField(this.storeName, SCENARIO_FIELD_NAME) : new TableField(SCENARIO_FIELD_NAME);
+    BucketColumnSetDto bucket = new BucketColumnSetDto(this.groupOfScenario, scenario)
+            .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
+            .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
+            .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
+
     AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
     ComparisonMeasureReferencePosition priceComp = new ComparisonMeasureReferencePosition(
             "priceDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
             Map.of(
-                    tableField(SCENARIO_FIELD_NAME), AComparisonExecutor.REF_POS_FIRST,
+                    scenario, AComparisonExecutor.REF_POS_FIRST,
                     tableField(this.groupOfScenario), "g"
             ),
             ColumnSetKey.BUCKET);
@@ -80,19 +91,19 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
             Map.of(
-                    tableField(SCENARIO_FIELD_NAME), AComparisonExecutor.REF_POS_FIRST,
+                    scenario, AComparisonExecutor.REF_POS_FIRST,
                     tableField(this.groupOfScenario), "g"
             ),
             ColumnSetKey.BUCKET);
 
     var query = Query
             .from(this.storeName)
-            .select_(List.of(this.bucketCS), List.of(priceComp, price, quantityComp, quantity))
+            .select_(List.of(bucket), List.of(priceComp, price, quantityComp, quantity))
             .build();
 
-    Table dataset = this.executor.execute(query);
+    Table dataset = this.executor.executeQuery(query);
     Assertions.assertThat(dataset.headers().stream().map(Header::name)).containsExactly(
-            this.groupOfScenario, SCENARIO_FIELD_NAME,
+            this.groupOfScenario, fullName ? SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME) : SCENARIO_FIELD_NAME,
             "priceDiff", "p",
             "quantityDiff", "q");
     Assertions.assertThat(dataset).containsExactlyInAnyOrder(
@@ -105,13 +116,13 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             List.of("group3", "s2", -0.5d, 14.5d, 1l, 35l));
 
     // Add a condition
-    query = new QueryDto()
-            .table(this.storeName)
-            .withColumnSet(ColumnSetKey.BUCKET, this.bucketCS)
-            .withCondition(tableField(SCENARIO_FIELD_NAME), eq("s1"))
-            .withMeasure(priceComp);
+    query = Query
+            .from(this.storeName)
+            .where(scenario, eq("s1"))
+            .select_(List.of(bucket), List.of(priceComp))
+            .build();
 
-    dataset = this.executor.execute(query);
+    dataset = this.executor.executeQuery(query);
     Assertions.assertThat(dataset).containsExactlyInAnyOrder(
             List.of("group1", "s1", 2d),
             List.of("group3", "s1", 2d));
@@ -145,7 +156,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             .withMeasure(quantityComp)
             .withMeasure(quantity);
 
-    Table dataset = this.executor.execute(query);
+    Table dataset = this.executor.executeQuery(query);
     Assertions.assertThat(dataset.headers().stream().map(Header::name)).containsExactly(
             this.groupOfScenario, SCENARIO_FIELD_NAME,
             "priceDiff", "p",
@@ -191,7 +202,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             .withMeasure(quantityComp)
             .withMeasure(quantity);
 
-    Table dataset = this.executor.execute(query);
+    Table dataset = this.executor.executeQuery(query);
     Assertions.assertThat(dataset.headers().stream().map(Header::name)).containsExactly(
             this.groupOfScenario, SCENARIO_FIELD_NAME,
             "priceDiff", "p",
@@ -219,7 +230,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             .select_(List.of(bucketCS), List.of(CountMeasure.INSTANCE))
             .build();
 
-    Table dataset = this.executor.execute(query);
+    Table dataset = this.executor.executeQuery(query);
     Assertions.assertThat(dataset.headers().stream().map(Header::name))
             .containsExactly(this.groupOfScenario, SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
     Assertions.assertThat(dataset).containsExactly(
@@ -247,7 +258,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             .select(tableFields(List.of("category")), List.of(bucketCS), List.of(CountMeasure.INSTANCE))
             .build();
 
-    Table dataset = this.executor.execute(query);
+    Table dataset = this.executor.executeQuery(query);
     Assertions.assertThat(dataset).containsExactly(
             List.of("B", "s1", "cloth", 1l),
             List.of("B", "s1", "drink", 1l),
@@ -278,7 +289,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
             .rollup(tableFields(List.of(SCENARIO_FIELD_NAME))) // should not affect the comparison engine
             .build();
 
-    Table dataset = this.executor.execute(query);
+    Table dataset = this.executor.executeQuery(query);
     Assertions.assertThat(dataset.headers().stream().map(Header::name))
             .containsExactly(this.groupOfScenario, SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
     Assertions.assertThat(dataset).containsExactly(

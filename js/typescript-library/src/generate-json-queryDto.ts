@@ -2,13 +2,11 @@ import {JoinType, Query, Table} from "./query"
 import {
   AggregatedMeasure,
   avgIf,
-  BinaryOperationMeasure,
-  BinaryOperator,
+  BinaryOperationMeasure, BinaryOperator,
   comparisonMeasureWithBucket,
   comparisonMeasureWithParent,
   comparisonMeasureWithPeriod,
   ComparisonMethod,
-  countRows,
   decimal,
   ExpressionMeasure,
   integer,
@@ -18,8 +16,7 @@ import {
 import {
   _in,
   all,
-  and,
-  ConditionType,
+  and, ConditionType,
   criterion,
   criterion_,
   eq,
@@ -35,7 +32,7 @@ import {
 import * as fs from "fs"
 import {OrderKeyword} from "./order"
 import {BucketColumnSet, Month} from "./columnsets"
-import {ConstantField, TableField, tableField} from "./field"
+import {ConstantField, countRows, TableField, tableField} from "./field"
 
 export function generateFromQueryDto() {
   const table = new Table("myTable")
@@ -51,7 +48,7 @@ export function generateFromQueryDto() {
 
   const price = new AggregatedMeasure("price.sum", new TableField("price"), "sum")
   q.withMeasure(price)
-  const priceFood = new AggregatedMeasure("alias", new TableField("price"), "sum", criterion(new TableField("category"), eq("food")))
+  const priceFood = new AggregatedMeasure("alias", new TableField("price"), "sum", false, criterion(new TableField("category"), eq("food")))
   q.withMeasure(priceFood)
   const plus = new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood)
   q.withMeasure(plus)

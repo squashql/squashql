@@ -1,10 +1,9 @@
 package io.squashql.query.database;
 
 import com.google.common.collect.Ordering;
-import io.squashql.query.TableField;
 import io.squashql.query.compiled.CompiledCriteria;
 import io.squashql.query.compiled.DatabaseQuery2;
-import io.squashql.query.dto.*;
+import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.UnknownType;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
@@ -41,10 +40,8 @@ public class SQLTranslator {
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(queryRewriter, true))); // Alias is needed when using sub-queries
 
     selects.addAll(groupBy); // coord first, then aggregates
-    if (queryRewriter.useGroupingFunction()) {
-      // use grouping to identify totals
-      Queries.generateGroupingSelect(query).forEach(f -> selects.add(String.format("grouping(%s)", queryRewriter.select(f))));
-    }
+    // Use grouping to identify totals
+    Queries.generateGroupingSelect(query).forEach(f -> selects.add(String.format("grouping(%s)", queryRewriter.select(f))));
     selects.addAll(aggregates);
 
     StringBuilder statement = new StringBuilder();
@@ -187,7 +184,7 @@ public class SQLTranslator {
     }
   }
 
-  public static Function<Object, String> getQuoteFn(TypedField field) {
+  public static Function<Object, String> getQuoteFn(TypedField field, QueryRewriter queryRewriter) {
     if (Number.class.isAssignableFrom(field.type())
             || field.type().equals(double.class)
             || field.type().equals(int.class)
@@ -200,7 +197,7 @@ public class SQLTranslator {
       return String::valueOf;
     } else if (field.type().equals(String.class)) {
       // quote
-      return s -> "'" + s + "'";
+      return s -> "'" + queryRewriter.escapeSingleQuote(String.valueOf(s)) + "'";
     } else {
       throw new RuntimeException("Not supported " + field.type());
     }

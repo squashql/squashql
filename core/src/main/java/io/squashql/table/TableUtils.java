@@ -1,33 +1,16 @@
 package io.squashql.table;
 
 import com.google.common.base.Suppliers;
-import io.squashql.query.ColumnSet;
-import io.squashql.query.ColumnSetKey;
-import io.squashql.query.Field;
-import io.squashql.query.Header;
-import io.squashql.query.Measure;
-import io.squashql.query.MeasureUtils;
-import io.squashql.query.TableField;
+import io.squashql.query.*;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
-import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.NullAndTotalComparator;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -159,7 +142,7 @@ public class TableUtils {
     queryDto.columnSets.values()
             .forEach(cs -> finalColumns.addAll(cs.getNewColumns()
                     .stream()
-                    .map(f -> SqlUtils.getFieldFullName((TableField) f))
+                    .map(Field::name)
                     .toList()));
     finalColumns.addAll(queryDto.columns.stream().map(Field::name).toList());
     return selectAndOrderColumns(table, finalColumns, queryDto.measures);
@@ -199,7 +182,7 @@ public class TableUtils {
       }
       BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
       // Remove from the map of comparators to use default one when only none is defined for regular column
-      copy.remove(cs.name.name());
+      copy.remove(cs.newField.name());
       copy.remove(cs.field.name());
     });
 
@@ -226,7 +209,7 @@ public class TableUtils {
     for (ColumnSet columnSet : new HashSet<>(columnSets)) {
       BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
       // cs.field can appear multiple times in the table.
-      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(cs.name.name()));
+      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(cs.newField.name()));
     }
 
     int[] finalIndices = MultipleColumnsSorter.sort(args, comparators, contextIndices);
@@ -256,7 +239,7 @@ public class TableUtils {
   }
 
   /**
-   * Same as {@link #replaceTotalCellValues(ColumnarTable, boolean)} but for adapted to pivot table.
+   * Same as {@link #replaceTotalCellValues(ColumnarTable, boolean)} but adapted to pivot table.
    */
   public static Table replaceTotalCellValues(ColumnarTable table, List<String> rows, List<String> columns) {
     // To lazily copy the table when needed.

@@ -37,7 +37,7 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
       this.indexByColumn = indexByColumn;
       this.transformationByColumn = new ArrayList<>();
       // Order does matter here
-      this.transformationByColumn.add(Tuples.pair(cSet.name.name(), parse(referencePosition.get(cSet.name))));
+      this.transformationByColumn.add(Tuples.pair(cSet.newField.name(), parse(referencePosition.get(cSet.newField))));
       this.transformationByColumn.add(Tuples.pair(cSet.field.name(), parse(referencePosition.get(cSet.field))));
     }
 

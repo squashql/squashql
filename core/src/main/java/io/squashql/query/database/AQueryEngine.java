@@ -1,7 +1,6 @@
 package io.squashql.query.database;
 
 import io.squashql.query.Header;
-import io.squashql.query.QueryExecutor;
 import io.squashql.query.compiled.DatabaseQuery2;
 import io.squashql.store.Datastore;
 import io.squashql.store.Store;
@@ -46,7 +45,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   }
 
   @Override
-  public Table execute(DatabaseQuery2 query, QueryExecutor.PivotTableContext context) {
+  public Table execute(DatabaseQuery2 query) {
     if (query.table != null) {
       String tableName = query.table.name();
       // Can be null if sub-query
@@ -56,13 +55,13 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
                 tableName, this.datastore.storesByName().values().stream().map(Store::name).toList()));
       }
     }
-    String sql = createSqlStatement(query, context);
+    String sql = createSqlStatement(query);
     log.info(query + " translated into " + System.lineSeparator() + "sql=" + sql);
     Table aggregates = retrieveAggregates(query, sql);
     return postProcessDataset(aggregates, query);
   }
 
-  protected String createSqlStatement(DatabaseQuery2 query, QueryExecutor.PivotTableContext context) {
+  protected String createSqlStatement(DatabaseQuery2 query) {
     return SQLTranslator.translate(query, this.queryRewriter);
   }
 
@@ -97,7 +96,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
    */
   protected Table postProcessDataset(Table input, DatabaseQuery2 query) {
     List<TypedField> groupingSelects = Queries.generateGroupingSelect(query);
-    if (this.queryRewriter.useGroupingFunction() && !groupingSelects.isEmpty()) {
+    if (!groupingSelects.isEmpty()) {
       List<Header> newHeaders = new ArrayList<>();
       List<List<Object>> newValues = new ArrayList<>();
       for (int i = 0; i < input.headers().size(); i++) {
@@ -146,16 +145,14 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     };
     List<String> fieldNames = new ArrayList<>(query.select.stream().map(typedFieldStringFunction).toList());
     List<TypedField> groupingSelects = Queries.generateGroupingSelect(query);
-    if (this.queryRewriter.useGroupingFunction()) {
-      groupingSelects.forEach(r -> fieldNames.add(SqlUtils.groupingAlias(typedFieldStringFunction.apply(r))));
-    }
+    groupingSelects.forEach(r -> fieldNames.add(SqlUtils.groupingAlias(typedFieldStringFunction.apply(r))));
     query.measures.forEach(m -> fieldNames.add(m.alias()));
     List<List<Object>> values = new ArrayList<>(columns.size());
     for (int i = 0; i < columns.size(); i++) {
       headers.add(new Header(
               fieldNames.get(i),
               columnTypeProvider.apply(columns.get(i), fieldNames.get(i)),
-              i >= query.select.size() + (this.queryRewriter.useGroupingFunction() ? groupingSelects.size() : 0)));
+              i >= query.select.size() + groupingSelects.size()));
       values.add(new ArrayList<>());
     }
     recordIterator.forEachRemaining(r -> {

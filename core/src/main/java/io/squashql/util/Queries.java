@@ -40,7 +40,7 @@ public final class Queries {
         List<Object> l = new ArrayList<>(v);
         m.put(k, l);
       });
-      res.put(cs.name.name(), new CustomExplicitOrdering(new ArrayList<>(m.keySet())));
+      res.put(cs.newField.name(), new CustomExplicitOrdering(new ArrayList<>(m.keySet())));
       res.put(cs.field.name(), DependentExplicitOrdering.create(m));
     }
 

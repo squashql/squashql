@@ -17,6 +17,9 @@ public record CompiledAggregatedMeasure(AggregatedMeasure measure, TypedField fi
     } else {
       sql = this.measure.aggregationFunction + "(" + fieldExpression + ")";
     }
+    if (measure.distinct) {
+      sql = "distinct(" + sql + ")";
+    }
     return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, alias()) : sql;
   }
 

@@ -53,7 +53,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
             .withMeasure(new BinaryOperationMeasure("plus2", BinaryOperator.PLUS, sales, quantity))
             .withMeasure(new BinaryOperationMeasure("plus3", BinaryOperator.PLUS, quantity, quantity));
 
-    Table table = this.executor.execute(query);
+    Table table = this.executor.executeQuery(query);
     double salesV = 50d;
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV + salesV, salesV + qtyV, qtyV + qtyV));
@@ -78,7 +78,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
             .withMeasure(new BinaryOperationMeasure("minus2", BinaryOperator.MINUS, sales, quantity))
             .withMeasure(new BinaryOperationMeasure("minus3", BinaryOperator.MINUS, quantity, quantity));
 
-    Table table = this.executor.execute(query);
+    Table table = this.executor.executeQuery(query);
     double salesV = 50d;
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV - salesV, salesV - qtyV, qtyV - qtyV));
@@ -103,7 +103,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
             .withMeasure(new BinaryOperationMeasure("multiply2", BinaryOperator.MULTIPLY, sales, quantity))
             .withMeasure(new BinaryOperationMeasure("multiply3", BinaryOperator.MULTIPLY, quantity, quantity));
 
-    Table table = this.executor.execute(query);
+    Table table = this.executor.executeQuery(query);
     double salesV = 50d;
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV * salesV, salesV * qtyV, qtyV * qtyV));
@@ -128,7 +128,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
             .withMeasure(new BinaryOperationMeasure("divide2", BinaryOperator.DIVIDE, sales, quantity))
             .withMeasure(new BinaryOperationMeasure("divide3", BinaryOperator.DIVIDE, quantity, quantity));
 
-    Table table = this.executor.execute(query);
+    Table table = this.executor.executeQuery(query);
     double salesV = 50d;
     long qtyV = 20l;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV / salesV, salesV / qtyV, (double) qtyV / qtyV));

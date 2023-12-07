@@ -1,7 +1,7 @@
 import {Measure} from "./measure"
 import {ColumnSet} from "./columnsets"
 import {JoinType, Query, Table} from "./query"
-import {Criteria} from "./conditions"
+import Criteria from "./criteria"
 import {OrderKeyword} from "./order"
 import {VirtualTable} from "./virtualtable"
 import {Field} from "./field"

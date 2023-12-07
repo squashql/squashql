@@ -79,7 +79,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
             .select(List.of(shop, bucket), List.of(sales))
             .build();
 
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(shop.name(), bucket.name(), "sales");
     Assertions.assertThat(result).containsExactly(
@@ -97,7 +97,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
             .select(List.of(shop, bucket), List.of(sales))
             .rollup(shop, bucket)
             .build();
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(shop.name(), bucket.name(), "sales");
     Assertions.assertThat(result).containsExactly(
@@ -132,7 +132,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
             .select(tableFields(List.of(shop, bucket)), List.of(sales))
             .build();
 
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(shop, bucket, "sales");
     Assertions.assertThat(result).containsExactly(

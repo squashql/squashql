@@ -6,12 +6,14 @@ import io.squashql.query.Measure;
 import io.squashql.query.TotalCountMeasure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.QueryDto;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import org.eclipse.collections.api.list.primitive.IntList;
 import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.impl.list.mutable.primitive.MutableIntListFactoryImpl;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 public interface Table extends Iterable<List<Object>> {
 
@@ -21,7 +23,14 @@ public interface Table extends Iterable<List<Object>> {
 
   Set<Measure> measures();
 
+  /**
+   * Adds the given aggregates values corresponding to this measure to the table (adds a new column). The order of the
+   * aggregates is expected to match the order of the rows in this table. If the order is not known, it is better to use
+   * {@link #transferAggregates(Table, Measure)}.
+   */
   void addAggregates(Header header, Measure measure, List<Object> values);
+
+  void transferAggregates(Table from, Measure measure);
 
   default List<Object> getColumn(int columnIndex) {
     List<Object> elements = new ArrayList<>();
@@ -102,9 +111,30 @@ public interface Table extends Iterable<List<Object>> {
             ? (long) getAggregateValues(TotalCountMeasure.INSTANCE).get(0) : -1;
   }
 
-  void show(int numRows);
+  default void show(int numRows) {
+    System.out.println(toString(numRows));
+  }
 
   default void show() {
     show(Integer.MAX_VALUE);
+  }
+
+  default String toString(int numRows) {
+    return TableUtils.toString(headers(), () -> new Iterator<>() {
+
+      Iterator<List<Object>> underlying = iterator();
+      int[] c = new int[1];
+
+      @Override
+      public boolean hasNext() {
+        return c[0] < numRows ? underlying.hasNext() : false;
+      }
+
+      @Override
+      public List<Object> next() {
+        c[0]++;
+        return underlying.next();
+      }
+    }, h -> ((Header) h).name(), String::valueOf);
   }
 }

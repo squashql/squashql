@@ -57,7 +57,7 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
     QueryDto queryDto = Query.from(subQuery)
             .select(Collections.emptyList(), List.of(avg("avg", "score_sum")))
             .build();
-    Table result = this.executor.execute(queryDto);
+    Table result = this.executor.executeQuery(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(132d));
   }
 
@@ -73,7 +73,7 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
     QueryDto queryDto = Query.from(subQuery)
             .select(Collections.emptyList(), List.of(avg))
             .build();
-    Table result = this.executor.execute(queryDto);
+    Table result = this.executor.executeQuery(queryDto);
     Assertions.assertThat(result).containsExactly(List.of(160d));
   }
 
@@ -89,7 +89,7 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
             .select(tableFields(List.of("name")), List.of(avg("avg", "score_min")))
             .rollup(tableFields(List.of("name")))
             .build();
-    Table result = this.executor.execute(queryDto);
+    Table result = this.executor.executeQuery(queryDto);
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, 66d),
             List.of("Paul", 74d),

@@ -14,21 +14,35 @@ public class AggregatedMeasure implements BasicMeasure {
   public String expression;
   public Field field;
   public String aggregationFunction;
+  public boolean distinct;
   public CriteriaDto criteria;
 
-  public AggregatedMeasure(@NonNull String alias, @NonNull String field, @NonNull String aggregationFunction) {
-    this(alias, field, aggregationFunction, null);
-  }
-
-  public AggregatedMeasure(@NonNull String alias, @NonNull String field, @NonNull String aggregationFunction, CriteriaDto criteria) {
-    this(alias, new TableField(field), aggregationFunction, criteria);
-  }
-
-  public AggregatedMeasure(@NonNull String alias, @NonNull Field field, @NonNull String aggregationFunction, CriteriaDto criteria) {
+  public AggregatedMeasure(@NonNull String alias, @NonNull Field field, @NonNull String aggregationFunction, boolean distinct, CriteriaDto criteria) {
     this.alias = alias;
     this.field = field;
     this.aggregationFunction = aggregationFunction;
+    this.distinct = distinct;
     this.criteria = criteria;
+  }
+  public AggregatedMeasure(@NonNull String alias, @NonNull Field field, @NonNull String aggregationFunction, boolean distinct) {
+    this(alias, field, aggregationFunction, distinct, null);
+  }
+  public AggregatedMeasure(@NonNull String alias, @NonNull Field field, @NonNull String aggregationFunction, CriteriaDto criteria) {
+    this(alias, field, aggregationFunction, false, criteria);
+  }
+
+  public AggregatedMeasure(@NonNull String alias, @NonNull String field, @NonNull String aggregationFunction, boolean distinct, CriteriaDto criteria) {
+    this(alias, new TableField(field), aggregationFunction, distinct, criteria);
+  }
+  public AggregatedMeasure(@NonNull String alias, @NonNull String field, @NonNull String aggregationFunction, boolean distinct) {
+    this(alias, field, aggregationFunction, distinct, null);
+  }
+  public AggregatedMeasure(@NonNull String alias, @NonNull String field, @NonNull String aggregationFunction, CriteriaDto criteria) {
+    this(alias, field, aggregationFunction, false, criteria);
+  }
+
+  public AggregatedMeasure(@NonNull String alias, @NonNull String field, @NonNull String aggregationFunction) {
+    this(alias, field, aggregationFunction, null);
   }
 
   @Override

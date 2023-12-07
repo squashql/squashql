@@ -574,15 +574,17 @@ A basic measure **is always computed by the underlying database**.
 
 #### Aggregate measure
 
-An aggregate measure is computed by applying an aggregation function over a list of field values such as `count`, `sum`, `min`, `max`, `avg`...
+An aggregate measure is computed by applying an aggregation function over a list of field values such as `sum`, `min`, `max`, `avg`, `count`, `countDistinct`...
 
-Aggregation can also be applied to only the rows matching a [condition](#filtering) with `sumIf`, `minIf`, `maxIf`, `avgIf`, `countIf`...
+Aggregation can also be applied to only the rows matching a [condition](#filtering) with `sumIf`, `minIf`, `maxIf`, `avgIf`, `countIf`, `countDistinctIf`...
 
 ```typescript
 import {
   sum,
   avg,
   sumIf,
+  countDistinct,
+  countDistinctIf,
   eq,
   criterion,      
 } from "@squashql/squashql-js"
@@ -590,16 +592,20 @@ import {
 const amountSum = sum("sum_amount", myTable.amount)
 const amountAvg = avg("avg_amount", myTable.amount)
 const sales = sumIf("sales", "amount", criterion(myTable.incomeExpense, eq("Revenue")))
+const distinctStores = countDistinct("distinct_stores", myTable.store)
+const distinctOpenedStores = countDistinctIf("distinct_opened_stores", myTable.store, criterion(myTable.isOpen, eq(true)))
 
 const query = from(myTable._name)
-        .select([], [], [amountSum, amountAvg, sales])
+        .select([], [], [amountSum, amountAvg, sales, distinctStores, distinctStoresSellingFood])
         .build()
 ```
 
 ```sql
 SELECT SUM(amount)                                                AS sum_amount,
        AVG(amount)                                                AS avg_amount,
-       SUM(CASE WHEN IncomeExpense = 'Revenue' THEN amount 0 END) AS sales
+       SUM(CASE WHEN IncomeExpense = 'Revenue' THEN amount 0 END) AS sales,
+       SUM(DISTINCT(store))                                       AS distinct_stores,
+       SUM(DISTINCT(CASE WHEN isOpen = true THEN store 0 END))    AS distinct_opened_stores
 FROM myTable
 ```
 

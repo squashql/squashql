@@ -62,7 +62,7 @@ public class QueryAwareQueryRewriter implements QueryRewriter {
   }
 
   @Override
-  public boolean useGroupingFunction() {
-    return this.underlying.useGroupingFunction();
+  public String escapeSingleQuote(String s) {
+    return this.underlying.escapeSingleQuote(s);
   }
 }

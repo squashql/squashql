@@ -32,7 +32,7 @@ public class TestDuckDBDataLoader {
     loader.createOrReplaceTable("myTable", table);
 
     QueryExecutor executor = new QueryExecutor(new DuckDBQueryEngine(ds));
-    Table result = executor.execute("select * from myTable");
+    Table result = executor.executeRaw("select * from myTable");
     Assertions.assertThat(result).containsExactly(
             List.of("MN", "A", 2),
             List.of("MN", "B", 3),

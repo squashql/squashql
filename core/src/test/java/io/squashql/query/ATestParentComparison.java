@@ -6,6 +6,7 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -59,7 +60,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
             .select(fields, List.of(pop, pOp))
             .build();
 
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("am", "canada", "montreal", 2d, .3333333333333333),
             Arrays.asList("am", "canada", "otawa", 1d, .16666666666666666),
@@ -75,7 +76,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
             .select(tableFields(List.of("continent", "country", "city")), List.of(pOp))
             .build(); // query only parent
 
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("am", "canada", "montreal", .3333333333333333),
             Arrays.asList("am", "canada", "otawa", .16666666666666666),
@@ -98,7 +99,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
             .select(fields, List.of(pOp))
             .build(); // query only parent
 
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("am", "canada", "montreal", .3333333333333333),
             Arrays.asList("am", "canada", "toronto", 0.5));
@@ -109,7 +110,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
             .select(tableFields(List.of("continent", "country", "city")), List.of(pOp))
             .build(); // query only parent
 
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("am", "canada", "montreal", .3333333333333333),
             Arrays.asList("am", "canada", "otawa", .16666666666666666),
@@ -120,7 +121,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
             .where(criterion("continent", eq("eu")))
             .select(tableFields(List.of("continent", "country", "city")), List.of(pOp))
             .build(); // query only parent
-    result = this.executor.execute(query);
+    result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("eu", "france", "lyon", 0.2),
             Arrays.asList("eu", "france", "paris", 0.8),
@@ -136,7 +137,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
             .select(tableFields(List.of("continent", "country", "city")), List.of(pop, pOp))
             .build(); // query only parent
 
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     // Always 1 because the parent scope will be [city, continent] so each cell value is compared to itself.
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("am", "canada", "montreal", 2d, 1d),
@@ -164,7 +165,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
             .select(select, List.of(pop, pOp, pop2, pOp2))
             .build(); // query only parent
 
-    Table table = this.executor.execute(query);
+    Table table = this.executor.executeQuery(query);
     double canadaTotalPlus2 = 2d + 1d + 3d + 2;
     Assertions.assertThat(table).containsExactly(
             Arrays.asList("am", "canada", "montreal", 2d, .3333333333333333, 2d + 2, (2d + 2) / canadaTotalPlus2),
@@ -183,7 +184,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
             .rollup(fields)
             .build();
 
-    Table result = this.executor.execute(query);
+    Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, GRAND_TOTAL, 28.5d, 1d),
             Arrays.asList("am", TOTAL, TOTAL, 17d, 0.5964912280701754d),
