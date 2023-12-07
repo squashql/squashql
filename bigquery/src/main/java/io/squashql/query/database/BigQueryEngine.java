@@ -6,6 +6,7 @@ import io.squashql.BigQueryUtil;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.Header;
 import io.squashql.query.QueryExecutor;
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.compiled.DatabaseQuery2;
 import io.squashql.query.date.DateFunctions;
 import io.squashql.table.ColumnarTable;
@@ -213,7 +214,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i));
       return new ColumnarTable(
               result.getOne(),
-              new HashSet<>(query.measures),
+              query.measures.stream().map(CompiledMeasure::measure).collect(Collectors.toSet()),
               result.getTwo());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);

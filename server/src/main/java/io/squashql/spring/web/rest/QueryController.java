@@ -1,7 +1,10 @@
 package io.squashql.spring.web.rest;
 
 import com.google.common.collect.ImmutableList;
-import io.squashql.query.*;
+import io.squashql.query.Header;
+import io.squashql.query.Measure;
+import io.squashql.query.QueryExecutor;
+import io.squashql.query.SquashQLUser;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.store.Store;
@@ -131,7 +134,7 @@ public class QueryController {
       String expression = measure.expression();
       Measure m = measure;
       if (expression == null) {
-        m = measure.withExpression(MeasureUtils.createExpression(measure));
+        m = measure.withExpression("todo mde");
       }
       res.add(m);
     }

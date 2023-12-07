@@ -3,6 +3,7 @@ package io.squashql.query.database;
 import io.squashql.SparkDatastore;
 import io.squashql.SparkUtil;
 import io.squashql.query.Header;
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.compiled.DatabaseQuery2;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
@@ -14,6 +15,7 @@ import org.eclipse.collections.api.tuple.Pair;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static io.squashql.SparkUtil.datatypeToClass;
 
@@ -53,7 +55,7 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
             (i, r) -> SparkUtil.getTypeValue(r.get(i)));
     return new ColumnarTable(
             result.getOne(),
-            new HashSet<>(query.measures),
+            query.measures.stream().map(CompiledMeasure::measure).collect(Collectors.toSet()),
             result.getTwo());
   }
 

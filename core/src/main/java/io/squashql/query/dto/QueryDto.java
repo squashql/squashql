@@ -6,10 +6,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.ColumnSet;
-import io.squashql.query.ColumnSetKey;
-import io.squashql.query.Field;
-import io.squashql.query.Measure;
+import io.squashql.query.*;
 import io.squashql.query.parameter.Parameter;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -71,6 +68,16 @@ public class QueryDto {
 
   public QueryDto withMeasure(Measure m) {
     this.measures.add(m);
+    return this;
+  }
+
+  public QueryDto aggregatedMeasure(String alias, String field, String agg) {
+    withMeasure(new AggregatedMeasure(alias, field, agg));
+    return this;
+  }
+
+  public QueryDto expressionMeasure(String alias, String expression) {
+    withMeasure(new ExpressionMeasure(alias, expression));
     return this;
   }
 

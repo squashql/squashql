@@ -1,24 +1,24 @@
 package io.squashql.query;
 
-import static io.squashql.query.Functions.divide;
-import static io.squashql.query.Functions.multiply;
-import static io.squashql.query.Functions.sum;
-import static io.squashql.query.TableField.tableFields;
-
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
-import io.squashql.query.database.DatabaseQuery;
+import io.squashql.query.compiled.CompiledMeasure;
+import io.squashql.query.compiled.DatabaseQuery2;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Datastore;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
-import java.util.List;
-import java.util.Map;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+
+import java.util.List;
+import java.util.Map;
+
+import static io.squashql.query.Functions.*;
+import static io.squashql.query.TableField.tableFields;
 
 @TestClass(ignore = {TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE, TestClass.Type.CLICKHOUSE, TestClass.Type.SPARK})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -59,21 +59,21 @@ public abstract class ATestQueryExecutionLocality extends ABaseTestQuery {
             List.of("bottle", 10d),
             List.of("cookie", 30d),
             List.of("shirt", 15d));
-    Assertions.assertThat(interceptor.lastExecutedDatabaseQuery.measures).contains(divide);
+    Assertions.assertThat(interceptor.lastExecutedDatabaseQuery.measures.stream().map(CompiledMeasure::measure)).contains(divide);
   }
 
   private static class QueryEngineInterceptor<T extends Datastore> implements QueryEngine<T> {
 
     private final QueryEngine<T> underlying;
 
-    protected DatabaseQuery lastExecutedDatabaseQuery;
+    protected DatabaseQuery2 lastExecutedDatabaseQuery;
 
     private QueryEngineInterceptor(QueryEngine<T> underlying) {
       this.underlying = underlying;
     }
 
     @Override
-    public Table execute(DatabaseQuery query, QueryExecutor.PivotTableContext context) {
+    public Table execute(DatabaseQuery2 query, QueryExecutor.PivotTableContext context) {
       this.lastExecutedDatabaseQuery = query;
       return this.underlying.execute(query, context);
     }
@@ -97,5 +97,6 @@ public abstract class ATestQueryExecutionLocality extends ABaseTestQuery {
     public QueryRewriter queryRewriter() {
       return this.underlying.queryRewriter();
     }
+
   }
 }

@@ -42,7 +42,7 @@ public class TestExecutionPlan {
 
   @Test
   void test() {
-    GraphDependencyBuilder<Node> builder = new GraphDependencyBuilder<>(e -> e.children.stream().collect(Collectors.toSet()));
+    GraphDependencyBuilder<Node> builder = new GraphDependencyBuilder<>(e -> new HashSet<>(e.children));
     Node e3 = new Node("e3");
     Node f3 = new Node("f3");
     Node g3 = new Node("g3");
@@ -53,9 +53,9 @@ public class TestExecutionPlan {
 
     DependencyGraph<Node> graph = builder.build(List.of(a1, b1));
     List<Node> nodes = new ArrayList<>();
-    ExecutionPlan<Node, Void> plan = new ExecutionPlan<>(graph, (n, c) -> nodes.add(n));
+    ExecutionPlan<Node> plan = new ExecutionPlan<>(graph, nodes::add);
 
-    plan.execute(null);
+    plan.execute();
 
     Assertions.assertThat(plan.getLeaves()).containsExactlyInAnyOrder(e3, f3, g3);
     Assertions.assertThat(plan.getRoots()).containsExactlyInAnyOrder(a1, b1);

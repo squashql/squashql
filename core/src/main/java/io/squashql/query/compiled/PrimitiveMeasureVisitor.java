@@ -1,5 +1,5 @@
 package io.squashql.query.compiled;
-//todo-mde should we remove in favor of method isPrimitive ?
+
 public class PrimitiveMeasureVisitor implements MeasureVisitor<Boolean> {
 
   @Override

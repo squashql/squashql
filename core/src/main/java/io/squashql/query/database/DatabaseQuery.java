@@ -1,7 +1,5 @@
 package io.squashql.query.database;
 
-import io.squashql.query.AggregatedMeasure;
-import io.squashql.query.ExpressionMeasure;
 import io.squashql.query.Measure;
 import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.TableDto;
@@ -42,16 +40,6 @@ public class DatabaseQuery {
 
   public DatabaseQuery groupingSets(List<List<TypedField>> groupingSets) {
     this.groupingSets = groupingSets;
-    return this;
-  }
-
-  public DatabaseQuery aggregatedMeasure(String alias, String field, String agg) {
-    withMeasure(new AggregatedMeasure(alias, field, agg));
-    return this;
-  }
-
-  public DatabaseQuery expressionMeasure(String alias, String expression) {
-    withMeasure(new ExpressionMeasure(alias, expression));
     return this;
   }
 

@@ -97,11 +97,14 @@ public class QueryResolver {
       throw new IllegalArgumentException("parameters are not expected in sub query: " + subQuery);
     }
   }
+  public DatabaseQuery2 toDatabaseQuery() {
+    return toDatabaseQuery(this.scope, -1); // todo-mde
+  }
 
-  public DatabaseQuery2 toDatabaseQuery(final QueryExecutor.QueryScope query, final List<Measure> measures, final int limit) {
+  public DatabaseQuery2 toDatabaseQuery(final QueryExecutor.QueryScope query, final int limit) {
     return new DatabaseQuery2(query.virtualTable(),
             query.table(),
-            toSubQuery(query.subQuery(), measures),
+            toSubQuery(query.subQuery()),
             query.columns(),
             query.whereCriteria(),
             query.havingCriteria(),
@@ -111,22 +114,14 @@ public class QueryResolver {
             limit);
   }
 
-  private DatabaseQuery2 toSubQuery(final QueryExecutor.QueryScope subQuery, final List<Measure> measures) {
-    final List<CompiledMeasure> compiledMeasures = compileMeasure(measures);
-    for (final CompiledMeasure measure : compiledMeasures) {
-      if (measure.accept(new PrimitiveMeasureVisitor())) {
-        continue;
-      }
-      throw new IllegalArgumentException("Only measures that can be computed by the underlying database can be used" +
-              " in a sub-query but " + measure + " was provided");
-    }
+  private DatabaseQuery2 toSubQuery(final QueryExecutor.QueryScope subQuery) {
     return new DatabaseQuery2(subQuery.virtualTable(),
             subQuery.table(),
             null,
             subQuery.columns(),
             subQuery.whereCriteria(),
             subQuery.havingCriteria(),
-            Collections.emptyList(),
+            this.measures,
             subQuery.rollupColumns(),
             subQuery.groupingSets(),
             -1);
@@ -142,6 +137,13 @@ public class QueryResolver {
   }
 
   private List<CompiledMeasure> compileMeasure(final List<Measure> measures) {
+    for (final CompiledMeasure measure : this.measures) {
+      if (measure.accept(new PrimitiveMeasureVisitor())) {
+        continue;
+      }
+      throw new IllegalArgumentException("Only measures that can be computed by the underlying database can be used" +
+              " in a sub-query but " + measure + " was provided");
+    }
     return null;
   }
 

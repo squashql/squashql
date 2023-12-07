@@ -45,10 +45,8 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     return this.datastore;
   }
 
-
   @Override
   public Table execute(DatabaseQuery2 query, QueryExecutor.PivotTableContext context) {
-    // todo-mde use queryResultFormat and enhance encapsulation
     if (query.table != null) {
       String tableName = query.table.name();
       // Can be null if sub-query
