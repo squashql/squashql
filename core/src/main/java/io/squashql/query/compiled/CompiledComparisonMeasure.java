@@ -5,8 +5,9 @@ import io.squashql.query.database.QueryRewriter;
 import io.squashql.type.TypedField;
 
 import java.util.List;
+import java.util.Map;
 
-public record CompiledComparisonMeasure(ComparisonMeasureReferencePosition measure, CompiledPeriod period, List<TypedField> ancestors) implements CompiledMeasure {
+public record CompiledComparisonMeasure(ComparisonMeasureReferencePosition measure, CompiledMeasure reference, Map<TypedField, String> referencePosition, CompiledPeriod period, List<TypedField> ancestors) implements CompiledMeasure {
 
 
   @Override

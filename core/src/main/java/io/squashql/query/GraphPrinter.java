@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import io.squashql.query.database.DefaultQueryRewriter;
 import io.squashql.type.TypedField;
 
 import java.util.*;
@@ -61,7 +62,7 @@ public class GraphPrinter {
     if (o instanceof QueryExecutor.QueryPlanNodeKey key) {
       StringBuilder sb = new StringBuilder();
       sb.append("scope=").append("#").append(idProvider.apply(key.queryScope()));
-      sb.append(", measure=[").append(key.measure().alias()).append("]; [").append(key.measure().withExpression(MeasureUtils.createExpression(key.measure())).expression()).append("]");
+      sb.append(", measure=[").append(key.measure().alias()).append("]; [").append(key.measure().sqlExpression(DefaultQueryRewriter.INSTANCE, true)).append("]");
       return sb.toString();
     } else {
       return String.valueOf(o);

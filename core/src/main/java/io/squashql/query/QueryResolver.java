@@ -15,6 +15,7 @@ import lombok.Value;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -25,7 +26,7 @@ public class QueryResolver {
   Map<String, Store> storesByName;
   QueryExecutor.QueryScope scope;
   List<CompiledMeasure> measures;
-  List<TypedField> columnSets;
+  List<TypedField> bucketColumns;
   List<TypedField> columns;
 
   public QueryResolver(QueryDto query, Map<String, Store> storesByName) {
@@ -34,14 +35,17 @@ public class QueryResolver {
       this.storesByName.put(query.virtualTableDto.name, VirtualTableDto.toStore(query.virtualTableDto));
     }
     this.columns = query.columns.stream().map(this::resolveField).toList();
-    this.columnSets = query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
-    final List<TypedField> combinedColumns = Stream.concat(columns.stream(), columnSets.stream()).toList();
-    this.scope = toQueryScope(combinedColumns, query);
+    this.bucketColumns = Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
+            .stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
+    this.scope = toQueryScope(query);
     this.measures = compileMeasure(query.measures);
   }
 
-  private QueryExecutor.QueryScope toQueryScope(final List<TypedField> combinedColumns, final QueryDto query) {
+  private QueryExecutor.QueryScope toQueryScope(final QueryDto query) {
     checkQuery(query);
+    final List<TypedField> columnSets = query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
+    final List<TypedField> combinedColumns = Stream.concat(columns.stream(), columnSets.stream()).toList();
+
     List<TypedField> rollupColumns = query.rollupColumns.stream().map(this::resolveField).toList();
     List<List<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(this::resolveField).toList()).toList();
     return new QueryExecutor.QueryScope(compileTable(query.table),
@@ -92,13 +96,6 @@ public class QueryResolver {
     if (subQuery.parameters != null && !subQuery.parameters.isEmpty()) {
       throw new IllegalArgumentException("parameters are not expected in sub query: " + subQuery);
     }
-    for (Measure measure : subQuery.measures) {
-      if (measure.accept(new PrimitiveMeasureVisitor())) {
-        continue;
-      }
-      throw new IllegalArgumentException("Only measures that can be computed by the underlying database can be used" +
-              " in a sub-query but " + measure + " was provided");
-    }
   }
 
   public DatabaseQuery2 toDatabaseQuery(final QueryExecutor.QueryScope query, final List<Measure> measures, final int limit) {
@@ -115,6 +112,14 @@ public class QueryResolver {
   }
 
   private DatabaseQuery2 toSubQuery(final QueryExecutor.QueryScope subQuery, final List<Measure> measures) {
+    final List<CompiledMeasure> compiledMeasures = compileMeasure(measures);
+    for (final CompiledMeasure measure : compiledMeasures) {
+      if (measure.accept(new PrimitiveMeasureVisitor())) {
+        continue;
+      }
+      throw new IllegalArgumentException("Only measures that can be computed by the underlying database can be used" +
+              " in a sub-query but " + measure + " was provided");
+    }
     return new DatabaseQuery2(subQuery.virtualTable(),
             subQuery.table(),
             null,

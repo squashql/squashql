@@ -1,12 +1,10 @@
 package io.squashql.query.database;
 
-import io.squashql.query.QueryResolver;
 import io.squashql.query.QueryExecutor;
 import io.squashql.query.compiled.DatabaseQuery2;
-import io.squashql.query.dto.QueryDto;
-import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.Datastore;
 import io.squashql.table.Table;
+
 import java.util.List;
 
 public interface QueryEngine<T extends Datastore> {
@@ -27,5 +25,4 @@ public interface QueryEngine<T extends Datastore> {
 
   QueryRewriter queryRewriter();
 
-  QueryResolver queryResolver(final QueryDto query);
 }

@@ -1,14 +1,17 @@
 package io.squashql.query;
 
+import io.squashql.query.compiled.CompiledComparisonMeasure;
 import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.type.TypedField;
+import org.eclipse.collections.api.map.primitive.ObjectIntMap;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
-import org.eclipse.collections.api.map.primitive.ObjectIntMap;
-import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.impl.tuple.Tuples;
 
 public class BucketComparisonExecutor extends AComparisonExecutor {
 
@@ -19,8 +22,8 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
   }
 
   @Override
-  protected BiPredicate<Object[], Header[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
-    return new ShiftProcedure(this.cSet, cm.referencePosition, indexByColumn);
+  protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasure cm, ObjectIntMap<String> indexByColumn) {
+    return new ShiftProcedure(this.cSet, cm.referencePosition(), indexByColumn);
   }
 
   static class ShiftProcedure implements BiPredicate<Object[], Header[]> {
@@ -29,7 +32,7 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
     final ObjectIntMap<String> indexByColumn;
     final Map<String, List<String>> valuesByBucket = new LinkedHashMap<>();
 
-    ShiftProcedure(BucketColumnSetDto cSet, Map<Field, String> referencePosition, ObjectIntMap<String> indexByColumn) {
+    ShiftProcedure(BucketColumnSetDto cSet, Map<TypedField, String> referencePosition, ObjectIntMap<String> indexByColumn) {
       this.valuesByBucket.putAll(cSet.values);
       this.indexByColumn = indexByColumn;
       this.transformationByColumn = new ArrayList<>();

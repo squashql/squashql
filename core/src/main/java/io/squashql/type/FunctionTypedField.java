@@ -20,4 +20,9 @@ public record FunctionTypedField(TableTypedField field, String function) impleme
       return UnknownType.class;
     }
   }
+
+  @Override
+  public String name() {
+    return this.field.name();
+  }
 }

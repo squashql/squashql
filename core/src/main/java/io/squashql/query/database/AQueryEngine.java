@@ -2,9 +2,7 @@ package io.squashql.query.database;
 
 import io.squashql.query.Header;
 import io.squashql.query.QueryExecutor;
-import io.squashql.query.QueryResolver;
 import io.squashql.query.compiled.DatabaseQuery2;
-import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Datastore;
 import io.squashql.store.Store;
 import io.squashql.table.ColumnarTable;
@@ -17,7 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -180,8 +181,4 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     return Tuples.pair(headers, rows);
   }
 
-  @Override
-  public QueryResolver queryResolver(final QueryDto query) {
-    return new QueryResolver(query, new HashMap<>(datastore().storesByName()));
-  }
 }

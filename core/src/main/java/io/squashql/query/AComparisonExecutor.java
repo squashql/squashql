@@ -1,6 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.comp.BinaryOperations;
+import io.squashql.query.compiled.CompiledComparisonMeasure;
 import io.squashql.table.Table;
 import org.eclipse.collections.api.map.primitive.IntIntMap;
 import org.eclipse.collections.api.map.primitive.MutableIntIntMap;
@@ -20,11 +21,11 @@ public abstract class AComparisonExecutor {
 
   public static final String REF_POS_FIRST = "first";
 
-  protected abstract BiPredicate<Object[], Header[]> createShiftProcedure(ComparisonMeasureReferencePosition cm,
+  protected abstract BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasure cm,
                                                                          ObjectIntMap<String> indexByColumn);
 
   public List<Object> compare(
-          ComparisonMeasureReferencePosition cm,
+          CompiledComparisonMeasure cm,
           Table writeToTable,
           Table readFromTable) {
     MutableObjectIntMap<String> indexByColumn = new ObjectIntHashMap<>();
@@ -41,10 +42,10 @@ public abstract class AComparisonExecutor {
     Object[] buffer = new Object[readFromTableColumnsCount];
     Header[] headers = new Header[readFromTableColumnsCount];
     List<Object> result = new ArrayList<>((int) writeToTable.count());
-    List<Object> readAggregateValues = readFromTable.getAggregateValues(cm.measure);
-    List<Object> writeAggregateValues = writeToTable.getAggregateValues(cm.measure);
+    List<Object> readAggregateValues = readFromTable.getAggregateValues(cm.reference().measure());
+    List<Object> writeAggregateValues = writeToTable.getAggregateValues(cm.reference().measure());
     BiFunction<Number, Number, Number> comparisonBiFunction = BinaryOperations.createComparisonBiFunction(
-            cm.comparisonMethod, readFromTable.getHeader(cm.measure).type());
+            cm.measure().comparisonMethod, readFromTable.getHeader(cm.reference().measure()).type());
     int[] rowIndex = new int[1];
     IntIntMap mapping = buildMapping(writeToTable, readFromTable); // columns might be in a different order
     writeToTable.forEach(row -> {

@@ -1,12 +1,8 @@
 package io.squashql.query;
 
-import io.squashql.PrimitiveMeasureVisitor;
-import io.squashql.query.compiled.CompiledComparisonMeasure;
-import io.squashql.query.compiled.CompiledCriteria;
-import io.squashql.query.compiled.CompiledPeriod;
+import io.squashql.query.compiled.*;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SQLTranslator;
-import io.squashql.query.dto.QueryDto;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.NoArgsConstructor;
@@ -31,34 +27,35 @@ public final class MeasureUtils {
     }
   };
 
-  public static String createExpression(Measure m) {
-    if (m instanceof AggregatedMeasure a) {
-      Function<Field, TypedField> fieldProvider = s -> new TableTypedField(null, s.name(), String.class);
-      if (a.criteria != null) {
-        String conditionSt = SQLTranslator.toSql(fieldProvider, a.criteria, BASIC);
-        return a.aggregationFunction + "If(" + a.field.sqlExpression(fieldProvider, BASIC) + ", " + conditionSt + ")";
-      } else {
-        return a.aggregationFunction + "(" + a.field.sqlExpression(fieldProvider, BASIC) + ")";
-      }
-    } else if (m instanceof BinaryOperationMeasure bom) {
-      return quoteExpression(bom.leftOperand) + " " + bom.operator.infix + " " + quoteExpression(bom.rightOperand);
-    } else if (m instanceof ComparisonMeasureReferencePosition cm) {
-      String alias = cm.getMeasure().alias();
-      if (cm.ancestors != null) {
-        String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
-        return formula + ", ancestors = " + cm.ancestors.stream().map(Field::name).toList();
-      } else {
-        String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current)", alias + "(reference)");
-        return formula + ", reference = " + cm.referencePosition.entrySet().stream().map(e -> String.join("=", e.getKey().name(), e.getValue())).toList();
-      }
-    } else if (m instanceof ExpressionMeasure em) {
-      return em.expression;
-    } else if (m instanceof ConstantMeasure<?> cm) {
-      return String.valueOf(cm.value);
-    } else {
-      throw new IllegalArgumentException("Unexpected type " + m.getClass());
-    }
-  }
+  //todo-mde
+//  public static String createExpression(Measure m) {
+//    if (m instanceof AggregatedMeasure a) {
+//      Function<Field, TypedField> fieldProvider = s -> new TableTypedField(null, s.name(), String.class);
+//      if (a.criteria != null) {
+//        String conditionSt = SQLTranslator.toSql(fieldProvider, a.criteria, BASIC);
+//        return a.aggregationFunction + "If(" + a.field.sqlExpression(fieldProvider, BASIC) + ", " + conditionSt + ")";
+//      } else {
+//        return a.aggregationFunction + "(" + a.field.sqlExpression(fieldProvider, BASIC) + ")";
+//      }
+//    } else if (m instanceof BinaryOperationMeasure bom) {
+//      return quoteExpression(bom.leftOperand) + " " + bom.operator.infix + " " + quoteExpression(bom.rightOperand);
+//    } else if (m instanceof ComparisonMeasureReferencePosition cm) {
+//      String alias = cm.getMeasure().alias();
+//      if (cm.ancestors != null) {
+//        String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
+//        return formula + ", ancestors = " + cm.ancestors.stream().map(Field::name).toList();
+//      } else {
+//        String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current)", alias + "(reference)");
+//        return formula + ", reference = " + cm.referencePosition.entrySet().stream().map(e -> String.join("=", e.getKey().name(), e.getValue())).toList();
+//      }
+//    } else if (m instanceof ExpressionMeasure em) {
+//      return em.expression;
+//    } else if (m instanceof ConstantMeasure<?> cm) {
+//      return String.valueOf(cm.value);
+//    } else {
+//      throw new IllegalArgumentException("Unexpected type " + m.getClass());
+//    }
+//  }
 
   private static String quoteExpression(Measure m) {
     if (m.alias() != null) {
@@ -73,20 +70,20 @@ public final class MeasureUtils {
   }
 
   public static QueryExecutor.QueryScope getReadScopeComparisonMeasureReferencePosition(
-          QueryDto query,
+          List<TypedField> columns,
+          List<TypedField> bucketColumns,
           CompiledComparisonMeasure cm,
           QueryExecutor.QueryScope queryScope) {
     AtomicReference<CompiledCriteria> copy = new AtomicReference<>(queryScope.whereCriteria() == null ? null : CompiledCriteria.deepCopy(queryScope.whereCriteria()));
     Consumer<TypedField> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
-    Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
-            .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(criteriaRemover));
+    bucketColumns.forEach(criteriaRemover);
     Optional.ofNullable(cm.period())
             .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover));
     Set<TypedField> rollupColumns = new LinkedHashSet<>(queryScope.rollupColumns()); // order does matter
     Optional.ofNullable(cm.ancestors())
             .ifPresent(ancestors -> {
               ancestors.forEach(criteriaRemover);
-              List<TypedField> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).toList();
+              List<TypedField> ancestorFields = ancestors.stream().filter(columns::contains).toList();
               rollupColumns.addAll(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage reverse order".
             });
     return new QueryExecutor.QueryScope(queryScope.table(),
@@ -124,7 +121,7 @@ public final class MeasureUtils {
     }
   }
 
-  public static boolean isPrimitive(Measure m) {
+  public static boolean isPrimitive(CompiledMeasure m) {
     return m.accept(new PrimitiveMeasureVisitor());
   }
 

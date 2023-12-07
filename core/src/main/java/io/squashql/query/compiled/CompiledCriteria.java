@@ -2,7 +2,9 @@ package io.squashql.query.compiled;
 
 import io.squashql.query.TableField;
 import io.squashql.query.database.QueryRewriter;
+import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.*;
+import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 
 import java.util.ArrayList;
@@ -18,7 +20,7 @@ public record CompiledCriteria(TypedField field, TypedField fieldOther, Compiled
     if (this.field != null && this.condition != null) {
       return toSql(this.field, this.condition, queryRewriter);
     } else if (this.measure != null && this.condition != null) {
-      return toSql(new TableField(this.measure.alias()), this.condition, queryRewriter);
+      return toSql(new TableTypedField(null, this.measure.alias(), Number.class), this.condition, queryRewriter);
     } else if (this.field != null && this.fieldOther != null && this.conditionType != null) {
       String left = this.field.sqlExpression(queryRewriter);
       String right = this.fieldOther.sqlExpression(queryRewriter);
@@ -46,7 +48,7 @@ public record CompiledCriteria(TypedField field, TypedField fieldOther, Compiled
   public static String toSql(TypedField field, ConditionDto dto, QueryRewriter queryRewriter) {
     String expression = field.sqlExpression(queryRewriter);
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
-      Function<Object, String> sqlMapper = field instanceof TableField ? getQuoteFn(field) : String::valueOf; // FIXME dirty workaround
+      Function<Object, String> sqlMapper = field instanceof TableField ? SQLTranslator.getQuoteFn(field) : String::valueOf; // FIXME dirty workaround
       return switch (dto.type()) {
         case IN -> expression + " " + dto.type().sqlInfix + " (" +
                 ((InConditionDto) dto).values
@@ -77,7 +79,7 @@ public record CompiledCriteria(TypedField field, TypedField fieldOther, Compiled
 
   public static CompiledCriteria deepCopy(CompiledCriteria criteriaDto) {
     if (criteriaDto.children == null || criteriaDto.children.isEmpty()) {
-      return new CriteriaDto(
+      return new CompiledCriteria(
               criteriaDto.field,
               criteriaDto.fieldOther,
               criteriaDto.measure,
@@ -85,12 +87,12 @@ public record CompiledCriteria(TypedField field, TypedField fieldOther, Compiled
               criteriaDto.conditionType,
               Collections.emptyList());
     } else {
-      List<CriteriaDto> list = new ArrayList<>(criteriaDto.children.size());
-      for (CriteriaDto dto : criteriaDto.children) {
-        CriteriaDto copy = deepCopy(dto);
+      List<CompiledCriteria> list = new ArrayList<>(criteriaDto.children.size());
+      for (CompiledCriteria dto : criteriaDto.children) {
+        CompiledCriteria copy = deepCopy(dto);
         list.add(copy);
       }
-      return new CriteriaDto(criteriaDto.conditionType, list);
+      return new CompiledCriteria(null, null, null, null, criteriaDto.conditionType, list);
     }
   }
 

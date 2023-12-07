@@ -140,17 +140,18 @@ public class QueryExecutor {
                        IntConsumer limitNotifier) {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
 
-    final QueryResolver queryResolver = this.queryEngine.queryResolver(query);
+    final QueryResolver queryResolver = new QueryResolver(query, new HashMap<>(this.queryEngine.datastore().storesByName()));
     if (pivotTableContext != null) {
       pivotTableContext.init(queryResolver);
     }
-    DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(queryResolver);
+    DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
+            queryResolver.getColumns(), queryResolver.getBucketColumns(), queryResolver.getMeasures(), queryResolver.getScope());
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery2> prefetchQueryByQueryScope = new HashMap<>();
     Map<QueryScope, Set<CompiledMeasure>> measuresByQueryScope = new HashMap<>();
     ExecutionPlan<QueryPlanNodeKey> prefetchingPlan = new ExecutionPlan<>(dependencyGraph, (node) -> {
       QueryScope scope = node.queryScope;
-      int limit = scope.equals(compiledQuery) ? queryLimit : queryLimit + 1; // limit + 1 to detect when results can be wrong
+      int limit = scope.equals(queryResolver.getScope()) ? queryLimit : queryLimit + 1; // limit + 1 to detect when results can be wrong
       prefetchQueryByQueryScope.computeIfAbsent(scope, k -> queryResolver.toDatabaseQuery(scope, query.subQuery.measures, limit));
       measuresByQueryScope.computeIfAbsent(scope, k -> new HashSet<>()).add(node.measure);
     });
@@ -163,22 +164,22 @@ public class QueryExecutor {
       QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(scope, prefetchQuery, user);
       QueryCache queryCache = getQueryCache((QueryCacheParameter) query.parameters.getOrDefault(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.USE)), user);
 
-      // Finish to prepare the query
       Set<Measure> cached = new HashSet<>();
-      Set<Measure> notCached = new HashSet<>();
-      Set<Measure> primitives = measures.stream().map(CompiledMeasure::measure).filter(MeasureUtils::isPrimitive).collect(Collectors.toSet());
-      for (Measure primitive : primitives) {
-        if (queryCache.contains(primitive, prefetchQueryScope)) {
-          cached.add(primitive);
-        } else {
-          notCached.add(primitive);
+      Map<Measure, CompiledMeasure> notCached = new HashMap<>();
+      for (CompiledMeasure measure : measures) {
+        if (MeasureUtils.isPrimitive(measure)) {
+          if (queryCache.contains(measure.measure(), prefetchQueryScope)) {
+            cached.add(measure.measure());
+          } else {
+            notCached.put(measure.measure(), measure);
+          }
         }
       }
 
       Table result;
       if (!notCached.isEmpty()) {
-        notCached.add(CountMeasure.INSTANCE); // Always add count
-        notCached.forEach(prefetchQuery::withMeasure); // todo-mde should we keep a link to regular measures ?
+//        notCached.add(CountMeasure.INSTANCE); // Always add count todo-mde
+        notCached.forEach((k, v) -> prefetchQuery.withMeasure(v));
         result = this.queryEngine.execute(prefetchQuery, pivotTableContext);
       } else {
         // Create an empty result that will be populated by the query cache
@@ -186,7 +187,7 @@ public class QueryExecutor {
       }
 
       queryCache.contributeToResult(result, cached, prefetchQueryScope);
-      queryCache.contributeToCache(result, notCached, prefetchQueryScope);
+      queryCache.contributeToCache(result, notCached.keySet(), prefetchQueryScope);
 
       tableByScope.put(scope, result);
     }
@@ -201,15 +202,16 @@ public class QueryExecutor {
     // Here we take the global plan and execute the plans for a given scope one by one, in dependency order. The order
     // is given by the graph itself.
     final Set<QueryPlanNodeKey> visited = new HashSet<>();
-    ExecutionPlan<QueryPlanNodeKey, Evaluator> globalPlan = new ExecutionPlan<>(dependencyGraph, (queryNode, context) -> {
+    final Evaluator evaluator = new Evaluator();
+    ExecutionPlan<QueryPlanNodeKey> globalPlan = new ExecutionPlan<>(dependencyGraph, (queryNode) -> {
       if (visited.add(queryNode)) {
-        final ExecutionContext executionContext = new ExecutionContext(queryNode.queryScope, tableByScope, query, queryLimit);
-        context.accept(queryNode, executionContext);
+        final ExecutionContext executionContext = new ExecutionContext(queryNode.queryScope, tableByScope, queryResolver.getColumns(), queryResolver.getBucketColumns(), queryLimit);
+        evaluator.accept(queryNode, executionContext);
       }
     });
-    globalPlan.execute(new Evaluator());
+    globalPlan.execute();
 
-    Table result = tableByScope.get(compiledQuery);
+    Table result = tableByScope.get(queryResolver.getScope());
 
     if (limitNotifier != null && result.count() == queryLimit) {
       limitNotifier.accept(queryLimit);
@@ -229,9 +231,13 @@ public class QueryExecutor {
     return result;
   }
 
-  private static DependencyGraph<QueryPlanNodeKey> computeDependencyGraph(QueryResolver queryResolver) {
+  private static DependencyGraph<QueryPlanNodeKey> computeDependencyGraph(
+          List<TypedField> columns,
+          List<TypedField> bucketColumns,
+          List<CompiledMeasure> measures,
+          QueryScope queryScope) {
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
-      Map<QueryScope, Set<CompiledMeasure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(queryResolver, nodeKey.queryScope));
+      Map<QueryScope, Set<CompiledMeasure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(columns, bucketColumns, nodeKey.queryScope));
       Set<QueryPlanNodeKey> set = new HashSet<>();
       for (Map.Entry<QueryScope, Set<CompiledMeasure>> entry : dependencies.entrySet()) {
         for (CompiledMeasure measure : entry.getValue()) {
@@ -240,8 +246,8 @@ public class QueryExecutor {
       }
       return set;
     });
-    Set<CompiledMeasure> queriedMeasures = new HashSet<>(query.measures);
-    queriedMeasures.add(CountMeasure.INSTANCE); // Always add count
+    Set<CompiledMeasure> queriedMeasures = new HashSet<>(measures);
+//    queriedMeasures.add(CountMeasure.INSTANCE); // Always add count todo-mde
     return builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList());
   }
 
@@ -285,9 +291,10 @@ public class QueryExecutor {
 
   public record ExecutionContext(QueryScope queryScope,
                                  Map<QueryScope, Table> tableByScope,
-                                 QueryDto query,
+                                 List<TypedField> columns,
+                                 List<TypedField> bucketColumns,
                                  int queryLimit) {
-    Table getWriteToTable() {
+    public Table getWriteToTable() {
       return tableByScope.get(queryScope);
     }
   }
@@ -296,6 +303,7 @@ public class QueryExecutor {
   /**
    * This object is temporary until BigQuery supports the grouping sets. See <a href="https://issuetracker.google.com/issues/35905909">issue</a>
    */
+  //todo-mde should be created by the resolver
   public static class PivotTableContext {
     private final List<Field> rows;
     private final List<Field> cleansedRows;

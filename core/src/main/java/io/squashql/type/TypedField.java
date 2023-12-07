@@ -9,4 +9,6 @@ public interface TypedField {
   String sqlExpression(QueryRewriter queryRewriter);
 
   Class<?> type();
+
+  default String name() {return "todo-mde";}
 }

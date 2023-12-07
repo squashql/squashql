@@ -1,10 +1,9 @@
 package io.squashql.query.compiled;
 
-import io.squashql.query.Measure;
-import io.squashql.query.MeasureVisitor;
+import io.squashql.query.ConstantMeasure;
 import io.squashql.query.database.QueryRewriter;
 
-public record CompiledConstantMeasure(Measure measure, Object value) implements CompiledMeasure {
+public record CompiledConstantMeasure(ConstantMeasure<?> measure, Object value) implements CompiledMeasure {
 
   @Override
   public String sqlExpression(QueryRewriter queryRewriter, boolean withAlias) {

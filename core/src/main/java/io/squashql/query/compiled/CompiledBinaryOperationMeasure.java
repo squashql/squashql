@@ -1,7 +1,6 @@
 package io.squashql.query.compiled;
 
 import io.squashql.query.BinaryOperationMeasure;
-import io.squashql.query.MeasureVisitor;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SqlUtils;
 
@@ -17,7 +16,7 @@ public record CompiledBinaryOperationMeasure(BinaryOperationMeasure measure,
             .append(this.rightOperand.sqlExpression(queryRewriter, false))
             .append(")")
             .toString();
-    return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.alias) : sql;
+    return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.measure.alias) : sql;
   }
 
   @Override
