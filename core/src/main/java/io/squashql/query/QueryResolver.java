@@ -10,6 +10,7 @@ import io.squashql.type.TypedField;
 import lombok.Value;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -51,6 +52,16 @@ public class QueryResolver {
     });
   }
 
+  private TypedField resolveWithFallback(Field field) {
+    try {
+      return resolveField(field);
+    } catch (FieldNotFoundException e) {
+      // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
+      // contains only "raw" fields, it will throw an exception.
+      return new TableTypedField(null, field.name(), Number.class);
+    }
+  }
+
   private TableTypedField getTableTypedField(String fieldName) {
     final String[] split = fieldName.split("\\.");
     if (split.length > 1) {
@@ -86,12 +97,12 @@ public class QueryResolver {
   private QueryExecutor.QueryScope toQueryScope(final QueryDto query) {
     checkQuery(query);
     final List<TypedField> columnSets = query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
-    final List<TypedField> combinedColumns = Stream.concat(columns.stream(), columnSets.stream()).toList();
+    final List<TypedField> combinedColumns = Stream.concat(this.columns.stream(), columnSets.stream()).toList();
 
     List<TypedField> rollupColumns = query.rollupColumns.stream().map(this::resolveField).toList();
     List<List<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(this::resolveField).toList()).toList();
     return new QueryExecutor.QueryScope(compileTable(query.table),
-            toSubQuery(query.subQuery),
+            query.subQuery == null ? null : toSubQuery(query.subQuery),
             combinedColumns,
             compileCriteria(query.whereCriteriaDto),
             compileCriteria(query.havingCriteriaDto),
@@ -146,14 +157,16 @@ public class QueryResolver {
             query.columns(),
             query.whereCriteria(),
             query.havingCriteria(),
-            Collections.emptyList(),
+            new ArrayList<>(),
             query.rollupColumns(),
             query.groupingSets(),
             limit);
   }
 
   private DatabaseQuery2 toSubQuery(final QueryExecutor.QueryScope subQuery) {
-    return new DatabaseQuery2(subQuery.virtualTable(),
+    return subQuery == null
+            ? null
+            : new DatabaseQuery2(subQuery.virtualTable(),
             subQuery.table(),
             null,
             subQuery.columns(),
@@ -176,9 +189,11 @@ public class QueryResolver {
 
   /** Criteria */
   private CompiledCriteria compileCriteria(final CriteriaDto criteria) {
-    return this.cache.computeIfAbsent(criteria, c ->
-            new CompiledCriteria(c, resolveField(c.field), resolveField(c.fieldOther), compileMeasure(c.measure),
-                    c.children.stream().map(child -> compileCriteria(c)).collect(Collectors.toList())));
+    return criteria == null
+            ? null
+            : this.cache.computeIfAbsent(criteria, c -> new CompiledCriteria(c, c.field == null ? null : resolveWithFallback(c.field), c.fieldOther == null ? null : resolveWithFallback(c.fieldOther),
+                    c.measure == null ? null : compileMeasure(c.measure),
+                    c.children.stream().map(this::compileCriteria).collect(Collectors.toList())));
   }
 
   /** measures */
@@ -248,35 +263,22 @@ public class QueryResolver {
     }
   }
 
-  public static Function<Field, TypedField> withFallback(Function<Field, TypedField> fieldProvider, Class<?> fallbackType) {
-    // todo-mde
-    return field -> {
-      try {
-        return fieldProvider.apply(field);
-      } catch (FieldNotFoundException e) {
-        // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
-        // contains only "raw" fields, it will throw an exception.
-        return new TableTypedField(null, field.name(), fallbackType);
-      }
-    };
-  }
-
   @Value
   private static class CompilationCache {
-    Map<Field, TypedField> compiledFields = new HashMap<>();
-    Map<Measure, CompiledMeasure> compiledMeasure = new HashMap<>();
-    Map<CriteriaDto, CompiledCriteria> compiledCriteria = new HashMap<>();
+    Map<Field, TypedField> compiledFields = new ConcurrentHashMap<>();
+    Map<Measure, CompiledMeasure> compiledMeasure = new ConcurrentHashMap<>();
+    Map<CriteriaDto, CompiledCriteria> compiledCriteria = new ConcurrentHashMap<>();
 
     private TypedField computeIfAbsent(final Field field, final Function<Field, TypedField> mappingFunction) {
       return this.compiledFields.computeIfAbsent(field, mappingFunction);
     }
 
-    private CompiledMeasure computeIfAbsent(final Measure field, final Function<Measure, CompiledMeasure> mappingFunction) {
-      return this.compiledMeasure.computeIfAbsent(field, mappingFunction);
+    private CompiledMeasure computeIfAbsent(final Measure measure, final Function<Measure, CompiledMeasure> mappingFunction) {
+      return this.compiledMeasure.computeIfAbsent(measure, mappingFunction);
     }
 
-    private CompiledCriteria computeIfAbsent(final CriteriaDto field, final Function<CriteriaDto, CompiledCriteria> mappingFunction) {
-      return this.compiledCriteria.computeIfAbsent(field, mappingFunction);
+    private CompiledCriteria computeIfAbsent(final CriteriaDto criteria, final Function<CriteriaDto, CompiledCriteria> mappingFunction) {
+      return this.compiledCriteria.computeIfAbsent(criteria, mappingFunction);
     }
   }
 }

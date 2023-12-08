@@ -42,16 +42,6 @@ public class DatabaseQuery2 {
     return this;
   }
 
-//  public DatabaseQuery2 aggregatedMeasure(String alias, String field, String agg) {
-//    withMeasure(new AggregatedMeasure(alias, field, agg));
-//    return this;
-//  }
-//
-//  public DatabaseQuery2 expressionMeasure(String alias, String expression) {
-//    withMeasure(new ExpressionMeasure(alias, expression));
-//    return this;
-//  }
-
   public DatabaseQuery2 withMeasure(CompiledMeasure m) {
     this.measures.add(m);
     return this;
@@ -61,11 +51,6 @@ public class DatabaseQuery2 {
     this.table = table;
     return this;
   }
-
-//  public DatabaseQuery2 table(String tableName) {
-//    this.table = new TableDto(tableName);
-//    return this;
-//  }
 
   public DatabaseQuery2 subQuery(DatabaseQuery2 subQuery) {
     this.subQuery = subQuery;
