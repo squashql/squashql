@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @ToString
 @EqualsAndHashCode
@@ -22,7 +24,7 @@ public class DatabaseQuery2 {
   public List<TypedField> select = new ArrayList<>();
   public CompiledCriteria whereCriteriaDto = null;
   public CompiledCriteria havingCriteriaDto = null;
-  public List<CompiledMeasure> measures = new ArrayList<>();
+  public Set<CompiledMeasure> measures = new HashSet<>(); // todo-review measure scope in Queryexecutor
   public List<TypedField> rollup = new ArrayList<>();
   public List<List<TypedField>> groupingSets = new ArrayList<>();
   public int limit = -1;

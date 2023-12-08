@@ -10,9 +10,10 @@ import java.util.function.Function;
 public record CompiledTable(String name, List<CompiledJoin> joins) {
 
   public String sqlExpression(final QueryRewriter queryRewriter, final VirtualTableDto virtualTable) {
+    final StringBuilder statement = new StringBuilder();
+    statement.append(queryRewriter.tableName(this.name));
     final Function<String, String> tableNameFunc = tableName -> virtualTable != null && virtualTable.name.equals(tableName)
             ? queryRewriter.cteName(tableName) : queryRewriter.tableName(tableName);
-    final StringBuilder statement = new StringBuilder();
     this.joins.forEach(j -> statement.append(j.sqlExpression(queryRewriter, tableNameFunc)));
     return statement.toString();
   }

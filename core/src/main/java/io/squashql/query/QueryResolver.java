@@ -9,10 +9,7 @@ import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.Value;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -156,26 +153,24 @@ public class QueryResolver {
   public DatabaseQuery2 toDatabaseQuery(final QueryExecutor.QueryScope query, final int limit) {
     return new DatabaseQuery2(query.virtualTable(),
             query.table(),
-            toSubQuery(query.subQuery()),
+            query.subQuery() == null ? null : toSubQuery(query.subQuery()),
             query.columns(),
             query.whereCriteria(),
             query.havingCriteria(),
-            query.measures(),
+            new HashSet<>(query.measures()),
             query.rollupColumns(),
             query.groupingSets(),
             limit);
   }
 
   private DatabaseQuery2 toSubQuery(final QueryExecutor.QueryScope subQuery) {
-    return subQuery == null
-            ? null
-            : new DatabaseQuery2(subQuery.virtualTable(),
+    return new DatabaseQuery2(subQuery.virtualTable(),
             subQuery.table(),
             null,
             subQuery.columns(),
             subQuery.whereCriteria(),
             subQuery.havingCriteria(),
-            subQuery.measures(),
+            new HashSet<>(subQuery.measures()),
             subQuery.rollupColumns(),
             subQuery.groupingSets(),
             -1);
@@ -272,16 +267,35 @@ public class QueryResolver {
     Map<Measure, CompiledMeasure> compiledMeasure = new ConcurrentHashMap<>();
     Map<CriteriaDto, CompiledCriteria> compiledCriteria = new ConcurrentHashMap<>();
 
+    /** We don't rely on Map.computeIfAbsent directly as it doesn't allow recursive updates */
     private TypedField computeIfAbsent(final Field field, final Function<Field, TypedField> mappingFunction) {
-      return this.compiledFields.computeIfAbsent(field, mappingFunction);
+      if (this.compiledFields.containsKey(field)) {
+        return this.compiledFields.get(field);
+      } else {
+        final TypedField typedField = mappingFunction.apply(field);
+        this.compiledFields.put(field, typedField);
+        return typedField;
+      }
     }
 
     private CompiledMeasure computeIfAbsent(final Measure measure, final Function<Measure, CompiledMeasure> mappingFunction) {
-      return this.compiledMeasure.computeIfAbsent(measure, mappingFunction);
+      if (this.compiledMeasure.containsKey(measure)) {
+        return this.compiledMeasure.get(measure);
+      } else {
+        final CompiledMeasure compiledMeasure = mappingFunction.apply(measure);
+        this.compiledMeasure.put(measure, compiledMeasure);
+        return compiledMeasure;
+      }
     }
 
     private CompiledCriteria computeIfAbsent(final CriteriaDto criteria, final Function<CriteriaDto, CompiledCriteria> mappingFunction) {
-      return this.compiledCriteria.computeIfAbsent(criteria, mappingFunction);
+      if (this.compiledCriteria.containsKey(criteria)) {
+        return this.compiledCriteria.get(criteria);
+      } else {
+        final CompiledCriteria compiledCriteria = mappingFunction.apply(criteria);
+        this.compiledCriteria.computeIfAbsent(criteria, mappingFunction);
+        return compiledCriteria;
+      }
     }
   }
 }
