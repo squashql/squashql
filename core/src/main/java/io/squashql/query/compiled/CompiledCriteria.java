@@ -14,22 +14,22 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public record CompiledCriteria(TypedField field, TypedField fieldOther, CompiledMeasure measure, ConditionDto condition, ConditionType conditionType, List<CompiledCriteria> children){
+public record CompiledCriteria(CriteriaDto criteria, TypedField field, TypedField fieldOther, CompiledMeasure measure, List<CompiledCriteria> children){
 
   public String sqlExpression(QueryRewriter queryRewriter) {
-    if (this.field != null && this.condition != null) {
-      return toSql(this.field, this.condition, queryRewriter);
-    } else if (this.measure != null && this.condition != null) {
-      return toSql(new TableTypedField(null, this.measure.alias(), Number.class), this.condition, queryRewriter);
-    } else if (this.field != null && this.fieldOther != null && this.conditionType != null) {
+    if (this.field != null && condition() != null) {
+      return toSql(this.field, condition(), queryRewriter);
+    } else if (this.measure != null && condition() != null) {
+      return toSql(new TableTypedField(null, this.measure.alias(), Number.class), condition(), queryRewriter);
+    } else if (this.field != null && this.fieldOther != null && conditionType() != null) {
       String left = this.field.sqlExpression(queryRewriter);
       String right = this.fieldOther.sqlExpression(queryRewriter);
-      return String.join(" ", left, this.conditionType.sqlInfix, right);
+      return String.join(" ", left, conditionType().sqlInfix, right);
     } else if (!this.children.isEmpty()) {
-      String sep = switch (this.conditionType) {
+      String sep = switch (conditionType()) {
         case AND -> " and ";
         case OR -> " or ";
-        default -> throw new IllegalStateException("Unexpected value: " + this.conditionType);
+        default -> throw new IllegalStateException("Unexpected value: " + conditionType());
       };
       Iterator<CompiledCriteria> iterator = this.children.iterator();
       List<String> conditions = new ArrayList<>();
@@ -43,6 +43,14 @@ public record CompiledCriteria(TypedField field, TypedField fieldOther, Compiled
     } else {
       return null;
     }
+  }
+
+  public ConditionDto condition() {
+    return this.criteria.condition;
+  }
+
+  private ConditionType conditionType() {
+    return this.criteria.conditionType;
   }
 
   public static String toSql(TypedField field, ConditionDto dto, QueryRewriter queryRewriter) {
@@ -77,22 +85,21 @@ public record CompiledCriteria(TypedField field, TypedField fieldOther, Compiled
     }
   }
 
-  public static CompiledCriteria deepCopy(CompiledCriteria criteriaDto) {
-    if (criteriaDto.children == null || criteriaDto.children.isEmpty()) {
+  public static CompiledCriteria deepCopy(CompiledCriteria criteria) {
+    if (criteria.children == null || criteria.children.isEmpty()) {
       return new CompiledCriteria(
-              criteriaDto.field,
-              criteriaDto.fieldOther,
-              criteriaDto.measure,
-              criteriaDto.condition,
-              criteriaDto.conditionType,
+              criteria.criteria,
+              criteria.field,
+              criteria.fieldOther,
+              criteria.measure,
               Collections.emptyList());
     } else {
-      List<CompiledCriteria> list = new ArrayList<>(criteriaDto.children.size());
-      for (CompiledCriteria dto : criteriaDto.children) {
+      List<CompiledCriteria> list = new ArrayList<>(criteria.children.size());
+      for (CompiledCriteria dto : criteria.children) {
         CompiledCriteria copy = deepCopy(dto);
         list.add(copy);
       }
-      return new CompiledCriteria(null, null, null, null, criteriaDto.conditionType, list);
+      return new CompiledCriteria(criteria.criteria, null, null, null, list);
     }
   }
 

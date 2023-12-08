@@ -3,11 +3,11 @@ package io.squashql.query.compiled;
 import io.squashql.query.ConstantMeasure;
 import io.squashql.query.database.QueryRewriter;
 
-public record CompiledConstantMeasure(ConstantMeasure<?> measure, Object value) implements CompiledMeasure {
+public record CompiledConstantMeasure(ConstantMeasure<?> measure) implements CompiledMeasure {
 
   @Override
   public String sqlExpression(QueryRewriter queryRewriter, boolean withAlias) {
-    return this.value.toString();
+    return this.measure.getValue().toString();
   }
 
   @Override
