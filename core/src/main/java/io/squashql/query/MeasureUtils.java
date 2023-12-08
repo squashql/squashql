@@ -79,6 +79,7 @@ public final class MeasureUtils {
     return new QueryExecutor.QueryScope(queryScope.table(),
             queryScope.subQuery(),
             queryScope.columns(),
+            queryScope.measures(),
             copy.get(),
             queryScope.havingCriteria(),
             new ArrayList<>(rollupColumns),

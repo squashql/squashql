@@ -143,7 +143,7 @@ public class QueryExecutor {
 
     final QueryResolver queryResolver = new QueryResolver(query, new HashMap<>(this.queryEngine.datastore().storesByName()));
     DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
-            queryResolver.getColumns(), queryResolver.getBucketColumns(), queryResolver.getMeasures(), queryResolver.getScope());
+            queryResolver.getColumns(), queryResolver.getBucketColumns(), queryResolver.getScope());
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery2> prefetchQueryByQueryScope = new HashMap<>();
     Map<QueryScope, Set<CompiledMeasure>> measuresByQueryScope = new HashMap<>();
@@ -232,7 +232,6 @@ public class QueryExecutor {
   private static DependencyGraph<QueryPlanNodeKey> computeDependencyGraph(
           List<TypedField> columns,
           List<TypedField> bucketColumns,
-          List<CompiledMeasure> measures,
           QueryScope queryScope) {
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
       Map<QueryScope, Set<CompiledMeasure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(columns, bucketColumns, nodeKey.queryScope));
@@ -244,7 +243,7 @@ public class QueryExecutor {
       }
       return set;
     });
-    Set<CompiledMeasure> queriedMeasures = new HashSet<>(measures);
+    Set<CompiledMeasure> queriedMeasures = new HashSet<>(queryScope.measures);
 //    queriedMeasures.add(CountMeasure.INSTANCE); // Always add count todo-mde
     return builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList());
   }
@@ -277,6 +276,7 @@ public class QueryExecutor {
   public record QueryScope(CompiledTable table,
                            QueryScope subQuery,
                            List<TypedField> columns,
+                           List<CompiledMeasure> measures,
                            CompiledCriteria whereCriteria,
                            CompiledCriteria havingCriteria,
                            List<TypedField> rollupColumns,
