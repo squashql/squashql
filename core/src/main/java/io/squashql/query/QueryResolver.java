@@ -28,6 +28,7 @@ public class QueryResolver {
   List<TypedField> bucketColumns;
   List<TypedField> columns;
   CompilationCache cache;
+  List<CompiledMeasure> subQueryMeasures;
   List<CompiledMeasure> measures;
 
   public QueryResolver(QueryDto query, Map<String, Store> storesByName) {
@@ -40,7 +41,8 @@ public class QueryResolver {
     this.bucketColumns = Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
     this.scope = toQueryScope(query);
-    this.measures = compileMeasures(query.measures);
+    this.subQueryMeasures = query.subQuery == null ? Collections.emptyList() : compileMeasures(query.subQuery.measures, false);
+    this.measures = compileMeasures(query.measures, true);
   }
 
   /** Filed resolver */
@@ -59,7 +61,6 @@ public class QueryResolver {
       }
     });
   }
-
   private TypedField resolveWithFallback(Field field) {
     try {
       return resolveField(field);
@@ -171,7 +172,7 @@ public class QueryResolver {
   }
 
   private DatabaseQuery toSubQuery(final QueryExecutor.QueryScope subQuery) {
-    return new DatabaseQuery(subQuery.virtualTable(),
+    final DatabaseQuery query = new DatabaseQuery(subQuery.virtualTable(),
             subQuery.table(),
             null,
             subQuery.columns(),
@@ -180,6 +181,8 @@ public class QueryResolver {
             subQuery.rollupColumns(),
             subQuery.groupingSets(),
             -1); // no limit for subQuery
+    this.subQueryMeasures.forEach(query::withMeasure);
+    return query;
   }
 
   /** Table */
@@ -198,16 +201,16 @@ public class QueryResolver {
     return criteria == null
             ? null
             : this.cache.computeIfAbsent(criteria, c -> new CompiledCriteria(c, c.field == null ? null : resolveWithFallback(c.field), c.fieldOther == null ? null : resolveWithFallback(c.fieldOther),
-                    c.measure == null ? null : compileMeasure(c.measure),
+                    c.measure == null ? null : compileMeasure(c.measure, true),
                     c.children.stream().map(this::compileCriteria).collect(Collectors.toList())));
   }
 
   /** measures */
-  private List<CompiledMeasure> compileMeasures(final List<Measure> measures) {
-    return measures.stream().map(this::compileMeasure).collect(Collectors.toList());
+  private List<CompiledMeasure> compileMeasures(final List<Measure> measures, boolean topMeasures) {
+    return measures.stream().map(m -> compileMeasure(m, topMeasures)).collect(Collectors.toList());
   }
 
-  private CompiledMeasure compileMeasure(Measure measure) {
+  private CompiledMeasure compileMeasure(Measure measure, boolean topMeasure) {
     return this.cache.computeIfAbsent(measure, m -> {
       final CompiledMeasure compiledMeasure;
       if (m instanceof AggregatedMeasure) {
@@ -217,18 +220,19 @@ public class QueryResolver {
       } else if (m instanceof ConstantMeasure<?>) {
         compiledMeasure = compileConstantMeasure((ConstantMeasure<?>) m);
       } else if (m instanceof BinaryOperationMeasure) {
-        compiledMeasure = compileBinaryOperationMeasure((BinaryOperationMeasure) m);
+        compiledMeasure = compileBinaryOperationMeasure((BinaryOperationMeasure) m, topMeasure);
       } else if (m instanceof ComparisonMeasureReferencePosition) {
-        compiledMeasure = compileComparisonMeasure((ComparisonMeasureReferencePosition) m);
+        compiledMeasure = compileComparisonMeasure((ComparisonMeasureReferencePosition) m, topMeasure);
       } else {
         throw new IllegalArgumentException("Unknown type of measure " + m.getClass().getSimpleName());
       }
-      return compiledMeasure;
-//      if (compiledMeasure.accept(new PrimitiveMeasureVisitor())) {
-//        return compiledMeasure;
-//      } todo-mde sub-query
-//      throw new IllegalArgumentException("Only measures that can be computed by the underlying database can be used" +
-//              " in a sub-query but " + m + " was provided");
+      if (topMeasure) {
+        return compiledMeasure;
+      } else if (compiledMeasure.accept(new PrimitiveMeasureVisitor())) {
+        return compiledMeasure;
+      }
+      throw new IllegalArgumentException("Only measures that can be computed by the underlying database can be used" +
+              " in a sub-query but " + m + " was provided");
     });
   }
 
@@ -236,7 +240,7 @@ public class QueryResolver {
     if (m.equals(CountMeasure.INSTANCE)) {
       return COMPILED_COUNT;
     }
-    return new CompiledAggregatedMeasure(m, resolveField(m.field), compileCriteria(m.criteria));
+    return new CompiledAggregatedMeasure(m, resolveWithFallback(m.field), compileCriteria(m.criteria));
   }
 
   private CompiledMeasure compileExpressionMeasure(ExpressionMeasure m) {
@@ -247,12 +251,12 @@ public class QueryResolver {
     return new CompiledConstantMeasure(m);
   }
 
-  private CompiledMeasure compileBinaryOperationMeasure(BinaryOperationMeasure m) {
-    return new CompiledBinaryOperationMeasure(m, compileMeasure(m.leftOperand), compileMeasure(m.rightOperand));
+  private CompiledMeasure compileBinaryOperationMeasure(BinaryOperationMeasure m, boolean topMeasure) {
+    return new CompiledBinaryOperationMeasure(m, compileMeasure(m.leftOperand, topMeasure), compileMeasure(m.rightOperand, topMeasure));
   }
 
-  private CompiledMeasure compileComparisonMeasure(ComparisonMeasureReferencePosition m) {
-    return new CompiledComparisonMeasure(m, compileMeasure(m.measure),
+  private CompiledMeasure compileComparisonMeasure(ComparisonMeasureReferencePosition m, boolean topMeasure) {
+    return new CompiledComparisonMeasure(m, compileMeasure(m.measure, topMeasure),
             compilePeriod(m.period),
             m.ancestors == null ? null : m.ancestors.stream().map(this::resolveField).collect(Collectors.toList()));
   }
