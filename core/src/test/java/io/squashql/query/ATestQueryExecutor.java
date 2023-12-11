@@ -301,9 +301,6 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .build();
     table = this.executor.executeQuery(query);
     Assertions.assertThat(table).isEmpty();
-//    sql=select "ean", "category", sum("quantity") as "q", count(*) as "_contributors_count_" from "storetestduckdbqueryexecutor" where ("ean" = 'starbuck''s coffee' and "scenario" = 'base' and "category" in ('drink', 'cloth')) group by "ean", "category" limit 10000
-//    sql=select "category", "ean", sum("quantity") as "q" from "storetestduckdbqueryexecutor" where ("ean" = starbuck's coffee and "scenario" = base and "category" in (drink, cloth)) group by "category", "ean" limit 10000
-
   }
 
   @Test

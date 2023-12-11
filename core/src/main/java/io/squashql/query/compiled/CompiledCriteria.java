@@ -1,6 +1,5 @@
 package io.squashql.query.compiled;
 
-import io.squashql.query.TableField;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.*;
@@ -56,7 +55,7 @@ public record CompiledCriteria(CriteriaDto criteria, TypedField field, TypedFiel
   public static String toSql(TypedField field, ConditionDto dto, QueryRewriter queryRewriter) {
     String expression = field.sqlExpression(queryRewriter);
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
-      Function<Object, String> sqlMapper = field instanceof TableField ? SQLTranslator.getQuoteFn(field, queryRewriter) : String::valueOf; // FIXME dirty workaround
+      Function<Object, String> sqlMapper = field instanceof TableTypedField ? SQLTranslator.getQuoteFn(field, queryRewriter) : String::valueOf; // FIXME dirty workaround
       return switch (dto.type()) {
         case IN -> expression + " " + dto.type().sqlInfix + " (" +
                 ((InConditionDto) dto).values
