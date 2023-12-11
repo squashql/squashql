@@ -205,9 +205,7 @@ public class SQLTranslator {
 
   protected static void addHavingConditions(StringBuilder statement, CompiledCriteria havingCriteria, QueryRewriter queryRewriter) {
     if (havingCriteria != null) {
-      //todo-mde fallback for having
-//      String havingClause = toSql(MeasureUtils.withFallback(fieldProvider, Number.class), havingCriteria, queryRewriter);
-      String havingClause = havingCriteria.sqlExpression(queryRewriter);
+      final String havingClause = havingCriteria.sqlExpression(queryRewriter);
       if (havingClause != null) {
         statement
                 .append(" having ")

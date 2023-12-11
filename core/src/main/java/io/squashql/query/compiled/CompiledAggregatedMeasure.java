@@ -1,12 +1,17 @@
 package io.squashql.query.compiled;
 
 import io.squashql.query.AggregatedMeasure;
+import io.squashql.query.CountMeasure;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SqlUtils;
+import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 
 public record CompiledAggregatedMeasure(AggregatedMeasure measure, TypedField field,
                                         CompiledCriteria criteria) implements CompiledMeasure {
+
+  public static final CompiledMeasure COMPILED_COUNT = new CompiledAggregatedMeasure(
+          CountMeasure.INSTANCE, new TableTypedField(null, CountMeasure.FIELD_NAME, long.class), null);
 
   @Override
   public String sqlExpression(QueryRewriter queryRewriter, boolean withAlias) {

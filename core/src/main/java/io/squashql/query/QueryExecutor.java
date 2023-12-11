@@ -20,6 +20,7 @@ import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
 import static io.squashql.query.ColumnSetKey.BUCKET;
+import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUNT;
 
 @Slf4j
 public class QueryExecutor {
@@ -176,7 +177,7 @@ public class QueryExecutor {
 
       Table result;
       if (!notCached.isEmpty()) {
-//        notCached.add(CountMeasure.INSTANCE); // Always add count todo-mde
+        notCached.put(CountMeasure.INSTANCE, COMPILED_COUNT);
         notCached.forEach((k, v) -> prefetchQuery.withMeasure(v));
         result = this.queryEngine.execute(prefetchQuery);
       } else {
@@ -244,7 +245,7 @@ public class QueryExecutor {
       return set;
     });
     Set<CompiledMeasure> queriedMeasures = new HashSet<>(queryScope.measures);
-//    queriedMeasures.add(CountMeasure.INSTANCE); // Always add count todo-mde
+    queriedMeasures.add(COMPILED_COUNT);
     return builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList());
   }
 
