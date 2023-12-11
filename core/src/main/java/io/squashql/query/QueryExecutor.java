@@ -268,6 +268,7 @@ public class QueryExecutor {
               prefetchQuery.limit);
     } else {
       return new SubQueryScope(queryScope.subQuery,
+              prefetchQuery.subQuery == null ? Collections.emptyList() : prefetchQuery.subQuery.measures,
               fields,
               queryScope.whereCriteria,
               queryScope.havingCriteria,

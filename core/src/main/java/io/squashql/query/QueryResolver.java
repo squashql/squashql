@@ -181,7 +181,7 @@ public class QueryResolver {
             subQuery.rollupColumns(),
             subQuery.groupingSets(),
             -1); // no limit for subQuery
-    this.subQueryMeasures.forEach(query::withMeasure);
+    this.subQueryMeasures.forEach(query::withMeasure); // sub-query measures are included for all the same way
     return query;
   }
 

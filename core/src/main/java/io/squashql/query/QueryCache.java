@@ -1,6 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.compiled.CompiledCriteria;
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.compiled.CompiledTable;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.query.dto.VirtualTableDto;
@@ -47,6 +48,7 @@ public interface QueryCache {
   }
 
   record SubQueryScope(QueryExecutor.QueryScope subQuery,
+                       List<CompiledMeasure> measures,
                        Set<TypedField> columns,
                        CompiledCriteria whereCriteriaDto,
                        CompiledCriteria havingCriteriaDto,
