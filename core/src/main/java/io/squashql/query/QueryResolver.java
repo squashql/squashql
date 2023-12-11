@@ -24,7 +24,7 @@ import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUN
 @Value
 //todo-mde rename to compiled query
 public class QueryResolver {
-  // todo-mde remove storesByName
+
   Map<String, Store> storesByName;
   QueryExecutor.QueryScope scope;
   List<TypedField> bucketColumns;

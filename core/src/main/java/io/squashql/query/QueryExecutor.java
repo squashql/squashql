@@ -205,7 +205,7 @@ public class QueryExecutor {
     final Evaluator evaluator = new Evaluator();
     ExecutionPlan<QueryPlanNodeKey> globalPlan = new ExecutionPlan<>(dependencyGraph, (queryNode) -> {
       if (visited.add(queryNode)) {
-        final ExecutionContext executionContext = new ExecutionContext(queryNode.queryScope, tableByScope, queryResolver.getColumns(), queryResolver.getBucketColumns(), queryLimit);
+        final ExecutionContext executionContext = new ExecutionContext(queryNode.queryScope, tableByScope, queryResolver.getColumns(), queryResolver.getBucketColumns(), query.columnSets, queryLimit);
         evaluator.accept(queryNode, executionContext);
       }
     });
@@ -293,6 +293,7 @@ public class QueryExecutor {
                                  Map<QueryScope, Table> tableByScope,
                                  List<TypedField> columns,
                                  List<TypedField> bucketColumns,
+                                 Map<ColumnSetKey, ColumnSet> columnSets,
                                  int queryLimit) {
     public Table getWriteToTable() {
       return tableByScope.get(queryScope);

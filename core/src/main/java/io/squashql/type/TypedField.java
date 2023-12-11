@@ -10,5 +10,6 @@ public interface TypedField {
 
   Class<?> type();
 
-  default String name() {return "todo-mde";}
+  String name();
+
 }

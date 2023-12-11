@@ -52,10 +52,11 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
   public Void visit(CompiledComparisonMeasure cm) {
     AComparisonExecutor executor;
     if (cm.measure().columnSetKey == BUCKET) {
-      if (this.executionContext.bucketColumns().isEmpty()) { //todo-mde generalize for other bucket types
-        throw new IllegalArgumentException(String.format("columnSet %s is not specified in the query but is used in a comparison measure: %s", cm.measure().columnSetKey, cm));
+      ColumnSet cs = this.executionContext.columnSets().get(BUCKET);
+      if (cs == null) {
+        throw new IllegalArgumentException(String.format("columnSet %s is not specified in the query but is used in a comparison measure: %s", BUCKET, cm));
       }
-      executor = new BucketComparisonExecutor((BucketColumnSetDto) null); //todo-mde compiled columnset
+      executor = new BucketComparisonExecutor((BucketColumnSetDto) cs);
     } else if (cm.period() != null) {
       for (TypedField field : cm.period().getTypedFields()) {
         if (!this.executionContext.columns().contains(field)) {

@@ -46,7 +46,7 @@ public interface QueryCache {
                     int limit) implements PrefetchQueryScope {
   }
 
-  record SubQueryScope(QueryExecutor.QueryScope subQuery, //todo-mde include measure or different subscope ? prefetch scope ?
+  record SubQueryScope(QueryExecutor.QueryScope subQuery,
                        Set<TypedField> columns,
                        CompiledCriteria whereCriteriaDto,
                        CompiledCriteria havingCriteriaDto,
