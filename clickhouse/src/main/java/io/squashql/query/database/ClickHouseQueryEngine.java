@@ -12,7 +12,6 @@ import io.squashql.ClickHouseDatastore;
 import io.squashql.ClickHouseUtil;
 import io.squashql.query.Header;
 import io.squashql.query.compiled.CompiledMeasure;
-import io.squashql.query.compiled.DatabaseQuery2;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
@@ -50,7 +49,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
   }
 
   @Override
-  protected Table retrieveAggregates(DatabaseQuery2 query, String sql) {
+  protected Table retrieveAggregates(DatabaseQuery query, String sql) {
     try (ClickHouseClient client = ClickHouseClient.newInstance(ClickHouseProtocol.HTTP);
          ClickHouseResponse response = client.read(this.nodes)
                  .format(ClickHouseFormat.RowBinaryWithNamesAndTypes)

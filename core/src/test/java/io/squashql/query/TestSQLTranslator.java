@@ -1,7 +1,6 @@
 package io.squashql.query;
 
 import io.squashql.query.database.AQueryEngine;
-import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.DefaultQueryRewriter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.ConditionType;

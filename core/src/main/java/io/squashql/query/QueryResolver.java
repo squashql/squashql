@@ -1,6 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.compiled.*;
+import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.store.Store;
@@ -9,7 +10,10 @@ import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.Value;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -24,6 +28,7 @@ public class QueryResolver {
   List<TypedField> bucketColumns;
   List<TypedField> columns;
   CompilationCache cache;
+  List<CompiledMeasure> measures;
 
   public QueryResolver(QueryDto query, Map<String, Store> storesByName) {
     this.storesByName = storesByName;
@@ -35,6 +40,7 @@ public class QueryResolver {
     this.bucketColumns = Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
     this.scope = toQueryScope(query);
+    this.measures = compileMeasures(query.measures);
   }
 
   /** Filed resolver */
@@ -102,7 +108,6 @@ public class QueryResolver {
     return new QueryExecutor.QueryScope(compileTable(query.table),
             query.subQuery == null ? null : toSubQuery(query.subQuery),
             combinedColumns,
-            compileMeasures(query.measures),
             compileCriteria(query.whereCriteriaDto),
             compileCriteria(query.havingCriteriaDto),
             rollupColumns,
@@ -127,7 +132,6 @@ public class QueryResolver {
     return new QueryExecutor.QueryScope(table,
             null,
             select,
-            compileMeasures(subQuery.measures),
             whereCriteria,
             havingCriteria,
             Collections.emptyList(),
@@ -150,30 +154,28 @@ public class QueryResolver {
     }
   }
 
-  public DatabaseQuery2 toDatabaseQuery(final QueryExecutor.QueryScope query, final int limit) {
-    return new DatabaseQuery2(query.virtualTable(),
+  public DatabaseQuery toDatabaseQuery(final QueryExecutor.QueryScope query, final int limit) {
+    return new DatabaseQuery(query.virtualTable(),
             query.table(),
             query.subQuery() == null ? null : toSubQuery(query.subQuery()),
             query.columns(),
             query.whereCriteria(),
             query.havingCriteria(),
-            new HashSet<>(query.measures()),
             query.rollupColumns(),
             query.groupingSets(),
             limit);
   }
 
-  private DatabaseQuery2 toSubQuery(final QueryExecutor.QueryScope subQuery) {
-    return new DatabaseQuery2(subQuery.virtualTable(),
+  private DatabaseQuery toSubQuery(final QueryExecutor.QueryScope subQuery) {
+    return new DatabaseQuery(subQuery.virtualTable(),
             subQuery.table(),
             null,
             subQuery.columns(),
             subQuery.whereCriteria(),
             subQuery.havingCriteria(),
-            new HashSet<>(subQuery.measures()),
             subQuery.rollupColumns(),
             subQuery.groupingSets(),
-            -1);
+            -1); // no limit for subQuery
   }
 
   /** Table */
@@ -259,6 +261,10 @@ public class QueryResolver {
     } else {
       throw new IllegalArgumentException("Unknown Period type " + period.getClass().getSimpleName());
     }
+  }
+
+  List<CompiledMeasure> getMeasures() {
+    return this.measures;
   }
 
   @Value

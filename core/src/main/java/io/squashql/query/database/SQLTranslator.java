@@ -2,7 +2,6 @@ package io.squashql.query.database;
 
 import com.google.common.collect.Ordering;
 import io.squashql.query.compiled.CompiledCriteria;
-import io.squashql.query.compiled.DatabaseQuery2;
 import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.UnknownType;
 import io.squashql.type.TypedField;
@@ -16,11 +15,11 @@ public class SQLTranslator {
 
   public static final String TOTAL_CELL = "___total___";
 
-  public static String translate(DatabaseQuery2 query) {
+  public static String translate(DatabaseQuery query) {
     return translate(query, DefaultQueryRewriter.INSTANCE);
   }
 
-  public static String translate(DatabaseQuery2 query,
+  public static String translate(DatabaseQuery query,
                                  QueryRewriter queryRewriter) {
     QueryAwareQueryRewriter qr = new QueryAwareQueryRewriter(queryRewriter, query);
     return translate(query, __ -> qr);
@@ -29,8 +28,8 @@ public class SQLTranslator {
   /**
    * Be careful when using this method directly. You may have to leverage {@link QueryAwareQueryRewriter} somehow.
    */
-  public static String translate(DatabaseQuery2 query,
-                                 Function<DatabaseQuery2, QueryRewriter> queryRewriterSupplier) {
+  public static String translate(DatabaseQuery query,
+                                 Function<DatabaseQuery, QueryRewriter> queryRewriterSupplier) {
     QueryRewriter queryRewriter = queryRewriterSupplier.apply(query);
     List<String> selects = new ArrayList<>();
     List<String> groupBy = new ArrayList<>();
@@ -173,7 +172,7 @@ public class SQLTranslator {
     statement.append(")");
   }
 
-  protected static void addWhereConditions(StringBuilder statement, DatabaseQuery2 query, QueryRewriter queryRewriter) {
+  protected static void addWhereConditions(StringBuilder statement, DatabaseQuery query, QueryRewriter queryRewriter) {
     if (query.whereCriteriaDto != null) {
       String whereClause = query.whereCriteriaDto.sqlExpression(queryRewriter);
       if (whereClause != null) {

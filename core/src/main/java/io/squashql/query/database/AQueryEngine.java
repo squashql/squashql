@@ -1,7 +1,6 @@
 package io.squashql.query.database;
 
 import io.squashql.query.Header;
-import io.squashql.query.compiled.DatabaseQuery2;
 import io.squashql.store.Datastore;
 import io.squashql.store.Store;
 import io.squashql.table.ColumnarTable;
@@ -45,7 +44,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   }
 
   @Override
-  public Table execute(DatabaseQuery2 query) {
+  public Table execute(DatabaseQuery query) {
     if (query.table != null) {
       String tableName = query.table.name();
       // Can be null if sub-query
@@ -61,11 +60,11 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     return postProcessDataset(aggregates, query);
   }
 
-  protected String createSqlStatement(DatabaseQuery2 query) {
+  protected String createSqlStatement(DatabaseQuery query) {
     return SQLTranslator.translate(query, this.queryRewriter);
   }
 
-  protected abstract Table retrieveAggregates(DatabaseQuery2 query, String sql);
+  protected abstract Table retrieveAggregates(DatabaseQuery query, String sql);
 
   /**
    * Changes the content of the input table to remove columns corresponding to grouping() (columns that help to identify
@@ -94,7 +93,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
    *   +-------------+-------------+------+----------------------+----+
    * </pre>
    */
-  protected Table postProcessDataset(Table input, DatabaseQuery2 query) {
+  protected Table postProcessDataset(Table input, DatabaseQuery query) {
     List<TypedField> groupingSelects = Queries.generateGroupingSelect(query);
     if (!groupingSelects.isEmpty()) {
       List<Header> newHeaders = new ArrayList<>();
@@ -128,7 +127,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   }
 
   public <Column, Record> Pair<List<Header>, List<List<Object>>> transformToColumnFormat(
-          DatabaseQuery2 query,
+          DatabaseQuery query,
           List<Column> columns,
           BiFunction<Column, String, Class<?>> columnTypeProvider,
           Iterator<Record> recordIterator,

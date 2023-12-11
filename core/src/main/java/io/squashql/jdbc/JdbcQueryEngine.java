@@ -2,7 +2,7 @@ package io.squashql.jdbc;
 
 import io.squashql.query.Header;
 import io.squashql.query.compiled.CompiledMeasure;
-import io.squashql.query.compiled.DatabaseQuery2;
+import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.table.ColumnarTable;
@@ -27,7 +27,7 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
   protected abstract BiFunction<ResultSetMetaData, Integer, Class<?>> typeToClassConverter();
 
   @Override
-  protected Table retrieveAggregates(DatabaseQuery2 query, String sql) {
+  protected Table retrieveAggregates(DatabaseQuery query, String sql) {
     return executeQuery(sql, this.datastore.getConnection(), tableResult -> {
       List<Class<?>> columnTypes = new ArrayList<>();
       for (int i = 0; i < tableResult.getMetaData().getColumnCount(); i++) {

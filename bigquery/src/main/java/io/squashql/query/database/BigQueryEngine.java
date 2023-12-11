@@ -5,7 +5,6 @@ import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryUtil;
 import io.squashql.query.Header;
 import io.squashql.query.compiled.CompiledMeasure;
-import io.squashql.query.compiled.DatabaseQuery2;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
@@ -42,7 +41,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   }
 
   @Override
-  protected Table retrieveAggregates(DatabaseQuery2 query, String sql) {
+  protected Table retrieveAggregates(DatabaseQuery query, String sql) {
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(sql).build();
     try {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);

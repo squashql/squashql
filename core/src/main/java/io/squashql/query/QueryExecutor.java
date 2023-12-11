@@ -4,6 +4,7 @@ import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.QueryCache.SubQueryScope;
 import io.squashql.query.QueryCache.TableScope;
 import io.squashql.query.compiled.*;
+import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.parameter.QueryCacheParameter;
@@ -144,9 +145,9 @@ public class QueryExecutor {
 
     final QueryResolver queryResolver = new QueryResolver(query, new HashMap<>(this.queryEngine.datastore().storesByName()));
     DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
-            queryResolver.getColumns(), queryResolver.getBucketColumns(), queryResolver.getScope());
+            queryResolver.getColumns(), queryResolver.getBucketColumns(), queryResolver.getMeasures(), queryResolver.getScope());
     // Compute what needs to be prefetched
-    Map<QueryScope, DatabaseQuery2> prefetchQueryByQueryScope = new HashMap<>();
+    Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
     Map<QueryScope, Set<CompiledMeasure>> measuresByQueryScope = new HashMap<>();
     ExecutionPlan<QueryPlanNodeKey> prefetchingPlan = new ExecutionPlan<>(dependencyGraph, (node) -> {
       QueryScope scope = node.queryScope;
@@ -158,7 +159,7 @@ public class QueryExecutor {
 
     Map<QueryScope, Table> tableByScope = new HashMap<>();
     for (QueryScope scope : prefetchQueryByQueryScope.keySet()) {
-      DatabaseQuery2 prefetchQuery = prefetchQueryByQueryScope.get(scope);
+      DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
       Set<CompiledMeasure> measures = measuresByQueryScope.get(scope);
       QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(scope, prefetchQuery, user);
       QueryCache queryCache = getQueryCache((QueryCacheParameter) query.parameters.getOrDefault(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.USE)), user);
@@ -233,6 +234,7 @@ public class QueryExecutor {
   private static DependencyGraph<QueryPlanNodeKey> computeDependencyGraph(
           List<TypedField> columns,
           List<TypedField> bucketColumns,
+          List<CompiledMeasure> measures,
           QueryScope queryScope) {
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
       Map<QueryScope, Set<CompiledMeasure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(columns, bucketColumns, nodeKey.queryScope));
@@ -244,14 +246,14 @@ public class QueryExecutor {
       }
       return set;
     });
-    Set<CompiledMeasure> queriedMeasures = new HashSet<>(queryScope.measures);
+    Set<CompiledMeasure> queriedMeasures = new HashSet<>(measures);
     queriedMeasures.add(COMPILED_COUNT);
     return builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList());
   }
 
   private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(
           QueryScope queryScope,
-          DatabaseQuery2 prefetchQuery,
+          DatabaseQuery prefetchQuery,
           SquashQLUser user) {
     Set<TypedField> fields = new HashSet<>(prefetchQuery.select);
     if (queryScope.table != null) {
@@ -277,7 +279,6 @@ public class QueryExecutor {
   public record QueryScope(CompiledTable table,
                            QueryScope subQuery,
                            List<TypedField> columns,
-                           List<CompiledMeasure> measures,
                            CompiledCriteria whereCriteria,
                            CompiledCriteria havingCriteria,
                            List<TypedField> rollupColumns,

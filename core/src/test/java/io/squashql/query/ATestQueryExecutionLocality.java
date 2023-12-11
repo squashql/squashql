@@ -3,7 +3,7 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.compiled.CompiledMeasure;
-import io.squashql.query.compiled.DatabaseQuery2;
+import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.dto.QueryDto;
@@ -66,14 +66,14 @@ public abstract class ATestQueryExecutionLocality extends ABaseTestQuery {
 
     private final QueryEngine<T> underlying;
 
-    protected DatabaseQuery2 lastExecutedDatabaseQuery;
+    protected DatabaseQuery lastExecutedDatabaseQuery;
 
     private QueryEngineInterceptor(QueryEngine<T> underlying) {
       this.underlying = underlying;
     }
 
     @Override
-    public Table execute(DatabaseQuery2 query) {
+    public Table execute(DatabaseQuery query) {
       this.lastExecutedDatabaseQuery = query;
       return this.underlying.execute(query);
     }
