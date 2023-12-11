@@ -19,6 +19,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUNT;
+
 @Value
 //todo-mde rename to compiled query
 public class QueryResolver {
@@ -226,6 +228,9 @@ public class QueryResolver {
   }
 
   private CompiledMeasure compileAggregatedMeasure(AggregatedMeasure m) {
+    if (m.equals(CountMeasure.INSTANCE)) {
+      return COMPILED_COUNT;
+    }
     return new CompiledAggregatedMeasure(m, resolveField(m.field), compileCriteria(m.criteria));
   }
 

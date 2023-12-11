@@ -15,16 +15,17 @@ public record CompiledAggregatedMeasure(AggregatedMeasure measure, TypedField fi
 
   @Override
   public String sqlExpression(QueryRewriter queryRewriter, boolean withAlias) {
-    String sql;
-    String fieldExpression = this.field.sqlExpression(queryRewriter);
+    final String fieldExpression = this.field.sqlExpression(queryRewriter);
+    String valuesToAggregate;
     if (this.criteria != null) {
-      sql = this.measure.aggregationFunction + "(case when " + this.criteria.sqlExpression(queryRewriter) + " then " + fieldExpression + " end)";
+      valuesToAggregate = "case when " + this.criteria.sqlExpression(queryRewriter) + " then " + fieldExpression + " end";
     } else {
-      sql = this.measure.aggregationFunction + "(" + fieldExpression + ")";
+      valuesToAggregate = fieldExpression;
     }
     if (measure.distinct) {
-      sql = "distinct(" + sql + ")";
+      valuesToAggregate = "distinct(" + valuesToAggregate + ")";
     }
+    final String sql = this.measure.aggregationFunction + "(" + valuesToAggregate + ")";
     return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, alias()) : sql;
   }
 
