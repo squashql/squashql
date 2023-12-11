@@ -182,7 +182,9 @@ public class QueryResolver {
 
   /** Table */
   private CompiledTable compileTable(final TableDto table) {
-    return new CompiledTable(table.name, table.joins.stream().map(this::compileJoin).collect(Collectors.toList()));
+    return table == null
+            ? null
+            : new CompiledTable(table.name, table.joins.stream().map(this::compileJoin).collect(Collectors.toList()));
   }
 
   private CompiledTable.CompiledJoin compileJoin(JoinDto join) {
@@ -219,11 +221,12 @@ public class QueryResolver {
       } else {
         throw new IllegalArgumentException("Unknown type of measure " + m.getClass().getSimpleName());
       }
-      if (compiledMeasure.accept(new PrimitiveMeasureVisitor())) {
-        return compiledMeasure;
-      }
-      throw new IllegalArgumentException("Only measures that can be computed by the underlying database can be used" +
-              " in a sub-query but " + m + " was provided");
+      return compiledMeasure;
+//      if (compiledMeasure.accept(new PrimitiveMeasureVisitor())) {
+//        return compiledMeasure;
+//      } todo-mde sub-query
+//      throw new IllegalArgumentException("Only measures that can be computed by the underlying database can be used" +
+//              " in a sub-query but " + m + " was provided");
     });
   }
 
@@ -248,13 +251,14 @@ public class QueryResolver {
 
   private CompiledMeasure compileComparisonMeasure(ComparisonMeasureReferencePosition m) {
     return new CompiledComparisonMeasure(m, compileMeasure(m.measure),
-            m.referencePosition.entrySet().stream().collect(Collectors.toMap(e -> resolveField(e.getKey()), Map.Entry::getValue)),
             compilePeriod(m.period),
-            m.ancestors.stream().map(this::resolveField).collect(Collectors.toList()));
+            m.ancestors == null ? null : m.ancestors.stream().map(this::resolveField).collect(Collectors.toList()));
   }
 
   private CompiledPeriod compilePeriod(Period period) {
-    final List<TypedField> compiledFileds = period.getFields().stream().map(this::resolveField).toList();
+    if (period == null) {
+      return null;
+    }
     if (period instanceof Period.Month month) {
       return new CompiledPeriod.Month(resolveField(month.month()), resolveField(month.year()));
     } else if (period instanceof Period.Quarter quarter) {

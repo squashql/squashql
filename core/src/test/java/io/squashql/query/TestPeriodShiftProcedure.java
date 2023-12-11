@@ -1,22 +1,21 @@
 package io.squashql.query;
 
-import static io.squashql.query.TableField.tableField;
-
-import java.util.Map;
-import java.util.function.BiFunction;
-
-import io.squashql.query.compiled.CompiledPeriod;
-import io.squashql.type.TableTypedField;
+import io.squashql.query.dto.Period;
 import org.assertj.core.api.Assertions;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+import java.util.function.BiFunction;
+
+import static io.squashql.query.TableField.tableField;
+
 public class TestPeriodShiftProcedure {
 
   @Test
   void testQuarterFromQuarterYear() {
-    CompiledPeriod period = new CompiledPeriod.Quarter(new TableTypedField(null, "",null), new TableTypedField(null, "",null));
+    Period period = new Period.Quarter(tableField(""), tableField(""));
     MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
     indexByPeriodUnit.put(PeriodUnit.YEAR, 0);
     indexByPeriodUnit.put(PeriodUnit.QUARTER, 1);
@@ -43,7 +42,7 @@ public class TestPeriodShiftProcedure {
 
   @Test
   void testMonthFromMonthYear() {
-    CompiledPeriod period = new CompiledPeriod.Month(new TableTypedField(null, "",null), new TableTypedField(null, "",null));
+    Period period = new Period.Month(tableField(""), tableField(""));
     MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
     indexByPeriodUnit.put(PeriodUnit.YEAR, 0);
     indexByPeriodUnit.put(PeriodUnit.MONTH, 1);
@@ -70,7 +69,8 @@ public class TestPeriodShiftProcedure {
 
   @Test
   void testSemesterFromSemesterYear() {
-    CompiledPeriod period = new CompiledPeriod.Semester(new TableTypedField(null, "",null), new TableTypedField(null, "",null));    MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
+    Period period = new Period.Semester(tableField(""), tableField(""));
+    MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
     indexByPeriodUnit.put(PeriodUnit.YEAR, 0);
     indexByPeriodUnit.put(PeriodUnit.SEMESTER, 1);
     BiFunction<Object[], String[], Object[]> f = (point, refPos) -> {

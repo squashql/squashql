@@ -3,6 +3,7 @@ package io.squashql.query;
 import io.squashql.query.compiled.CompiledComparisonMeasure;
 import io.squashql.query.compiled.CompiledPeriod;
 import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.dto.Period;
 import io.squashql.type.TypedField;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
@@ -24,14 +25,14 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     this.cmrp = cmrp;
   }
 
-  public Map<TypedField, PeriodUnit> mapping(CompiledPeriod period) {
-    if (period instanceof CompiledPeriod.Quarter q) {
+  public Map<Field, PeriodUnit> mapping(Period period) {
+    if (period instanceof Period.Quarter q) {
       return Map.of(q.quarter(), QUARTER, q.year(), YEAR);
-    } else if (period instanceof CompiledPeriod.Year y) {
+    } else if (period instanceof Period.Year y) {
       return Map.of(y.year(), YEAR);
-    } else if (period instanceof CompiledPeriod.Month m) {
+    } else if (period instanceof Period.Month m) {
       return Map.of(m.month(), MONTH, m.year(), YEAR);
-    } else if (period instanceof CompiledPeriod.Semester s) {
+    } else if (period instanceof Period.Semester s) {
       return Map.of(s.semester(), SEMESTER, s.year(), YEAR);
     } else {
       throw new RuntimeException(period + " not supported yet");
@@ -41,15 +42,15 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
   @Override
   protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasure cm, ObjectIntMap<String> indexByColumn) {
     Map<PeriodUnit, String> referencePosition = new HashMap<>();
-    CompiledPeriod period = this.cmrp.period();
-    Map<TypedField, PeriodUnit> mapping = mapping(period);
+    Period period = this.cmrp.measure().period;
+    Map<Field, PeriodUnit> mapping = mapping(period);
     MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
-    for (Map.Entry<TypedField, String> entry : cm.referencePosition().entrySet()) {
+    for (Map.Entry<Field, String> entry : cm.measure().referencePosition.entrySet()) {
       PeriodUnit pu = mapping.get(entry.getKey());
       referencePosition.put(pu, entry.getValue());
       indexByPeriodUnit.put(pu, indexByColumn.getIfAbsent(entry.getKey().name(), -1));
     }
-    for (Map.Entry<TypedField, PeriodUnit> entry : mapping.entrySet()) {
+    for (Map.Entry<Field, PeriodUnit> entry : mapping.entrySet()) {
       PeriodUnit pu = mapping.get(entry.getKey());
       referencePosition.putIfAbsent(pu, "c"); // constant for missing ref.
       indexByPeriodUnit.getIfAbsentPut(pu, indexByColumn.getIfAbsent(entry.getKey().name(), -1));
@@ -59,12 +60,12 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
 
   static class ShiftProcedure implements BiPredicate<Object[], Header[]> {
 
-    final CompiledPeriod period;
+    final Period period;
     final Map<PeriodUnit, String> referencePosition;
     final ObjectIntMap<PeriodUnit> indexByPeriodUnit;
     final Map<PeriodUnit, Object> transformationByPeriodUnit;
 
-    ShiftProcedure(CompiledPeriod period,
+    ShiftProcedure(Period period,
                    Map<PeriodUnit, String> referencePosition,
                    ObjectIntMap<PeriodUnit> indexByPeriodUnit) {
       this.period = period;
@@ -91,7 +92,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
       Object semesterTransformation = this.transformationByPeriodUnit.get(PeriodUnit.SEMESTER);
       Object quarterTransformation = this.transformationByPeriodUnit.get(PeriodUnit.QUARTER);
       Object monthTransformation = this.transformationByPeriodUnit.get(PeriodUnit.MONTH);
-      if (this.period instanceof CompiledPeriod.Quarter) {
+      if (this.period instanceof Period.Quarter) {
         // YEAR, QUARTER
         if (this.referencePosition.containsKey(PeriodUnit.YEAR) && yearTransformation != null) {
           int year = readAsLong(row[yearIndex]);
@@ -110,7 +111,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
           write(row, quarterIndex, headers[quarterIndex], (int) IsoFields.QUARTER_OF_YEAR.getFrom(newDate));
           write(row, yearIndex, headers[yearIndex], newDate.getYear());// year might have changed
         }
-      } else if (this.period instanceof CompiledPeriod.Year) {
+      } else if (this.period instanceof Period.Year) {
         // YEAR
         if (this.referencePosition.containsKey(PeriodUnit.YEAR) && yearTransformation != null) {
           int year = readAsLong(row[yearIndex]);
@@ -119,7 +120,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
           }
           write(row, yearIndex, headers[yearIndex], year + (int) yearTransformation);
         }
-      } else if (this.period instanceof CompiledPeriod.Month) {
+      } else if (this.period instanceof Period.Month) {
         // YEAR, MONTH
         if (this.referencePosition.containsKey(PeriodUnit.YEAR) && yearTransformation != null) {
           int year = readAsLong(row[yearIndex]);
@@ -138,7 +139,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
           write(row, monthIndex, headers[monthIndex], newDate.getMonthValue());
           write(row, yearIndex, headers[yearIndex], newDate.getYear()); // year might have changed
         }
-      } else if (this.period instanceof CompiledPeriod.Semester) {
+      } else if (this.period instanceof Period.Semester) {
         // YEAR, SEMESTER
         if (this.referencePosition.containsKey(PeriodUnit.YEAR) && yearTransformation != null) {
           int year = readAsLong(row[yearIndex]);
@@ -180,14 +181,14 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
       }
     }
 
-    private static PeriodUnit[] getPeriodUnits(CompiledPeriod period) {
-      if (period instanceof CompiledPeriod.Quarter) {
+    private static PeriodUnit[] getPeriodUnits(Period period) {
+      if (period instanceof Period.Quarter) {
         return new PeriodUnit[]{PeriodUnit.YEAR, PeriodUnit.QUARTER};
-      } else if (period instanceof CompiledPeriod.Year) {
+      } else if (period instanceof Period.Year) {
         return new PeriodUnit[]{PeriodUnit.YEAR};
-      } else if (period instanceof CompiledPeriod.Month) {
+      } else if (period instanceof Period.Month) {
         return new PeriodUnit[]{PeriodUnit.YEAR, PeriodUnit.MONTH};
-      } else if (period instanceof CompiledPeriod.Semester) {
+      } else if (period instanceof Period.Semester) {
         return new PeriodUnit[]{PeriodUnit.YEAR, PeriodUnit.SEMESTER};
       } else {
         throw new RuntimeException(period + " not supported yet");
