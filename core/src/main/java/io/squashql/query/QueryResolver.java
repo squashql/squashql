@@ -5,9 +5,7 @@ import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.store.Store;
-import io.squashql.type.FunctionTypedField;
-import io.squashql.type.TableTypedField;
-import io.squashql.type.TypedField;
+import io.squashql.type.*;
 import lombok.Value;
 
 import java.util.Collections;
@@ -52,6 +50,10 @@ public class QueryResolver {
         return getTableTypedField(tf.name());
       } else if (f instanceof FunctionField ff) {
         return new FunctionTypedField(getTableTypedField(ff.field.name()), ff.function);
+      } else if (f instanceof BinaryOperationField ff) {
+        return new BinaryOperationTypedField(ff.operator, resolveField(ff.leftOperand), resolveField(ff.rightOperand));
+      } else if (f instanceof ConstantField ff) {
+        return new ConstantTypedField(ff.value);
       } else {
         throw new IllegalArgumentException(f.getClass().getName());
       }
