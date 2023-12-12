@@ -24,7 +24,5 @@ public record FunctionTypedField(TableTypedField field, String function) impleme
   @Override
   public String name() {
     throw new IllegalStateException("Incorrect path of execution");
-
-//    return this.field.name(); // todo-mde  should we throw ? or wrap with the function ?
   }
 }

@@ -9,10 +9,7 @@ import io.squashql.type.*;
 import lombok.Data;
 import lombok.Value;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -164,7 +161,7 @@ public class QueryResolver {
     return new DatabaseQuery(query.virtualTable(),
             query.table(),
             query.subQuery() == null ? null : toSubQuery(query.subQuery()),
-            query.columns(),
+            new HashSet<>(query.columns()),
             query.whereCriteria(),
             query.havingCriteria(),
             query.rollupColumns(),
@@ -176,7 +173,7 @@ public class QueryResolver {
     final DatabaseQuery query = new DatabaseQuery(subQuery.virtualTable(),
             subQuery.table(),
             null,
-            subQuery.columns(),
+            new HashSet<>(subQuery.columns()),
             subQuery.whereCriteria(),
             subQuery.havingCriteria(),
             subQuery.rollupColumns(),

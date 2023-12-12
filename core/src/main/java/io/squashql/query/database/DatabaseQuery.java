@@ -11,6 +11,7 @@ import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @ToString
 @EqualsAndHashCode
@@ -20,7 +21,7 @@ public class DatabaseQuery {
   public final VirtualTableDto virtualTableDto; // CTE
   public final CompiledTable table;
   public final DatabaseQuery subQuery;
-  public final List<TypedField> select;
+  public final Set<TypedField> select;
   public final CompiledCriteria whereCriteriaDto;
   public final CompiledCriteria havingCriteriaDto;
   public final List<TypedField> rollup;
