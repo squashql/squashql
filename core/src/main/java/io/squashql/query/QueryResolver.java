@@ -211,7 +211,7 @@ public class QueryResolver {
     return measures.stream().map(m -> compileMeasure(m, topMeasures)).collect(Collectors.toList());
   }
 
-  private CompiledMeasure compileMeasure(Measure measure, boolean topMeasure) {
+  protected CompiledMeasure compileMeasure(Measure measure, boolean topMeasure) {
     return this.cache.computeIfAbsent(measure, m -> {
       final CompiledMeasure compiledMeasure;
       if (m instanceof AggregatedMeasure) {
