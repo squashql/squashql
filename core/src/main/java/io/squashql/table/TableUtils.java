@@ -122,7 +122,7 @@ public class TableUtils {
         Measure measure = optionalMeasure.get();
         String expression = measure.expression();
         if (expression == null) {
-          measure = measure.withExpression("todo-mde");
+          measure = measure.withExpression(MeasureUtils.createExpression(measure));
         }
         metadata.add(new MetadataItem(header.name(), measure.expression(), header.type()));
       } else {

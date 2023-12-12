@@ -2,7 +2,7 @@ package io.squashql.query;
 
 import io.squashql.query.compiled.*;
 import io.squashql.query.database.QueryRewriter;
-import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.dto.QueryDto;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.NoArgsConstructor;
@@ -10,44 +10,60 @@ import lombok.NoArgsConstructor;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 @NoArgsConstructor
 public final class MeasureUtils {
 
   public static final QueryRewriter BASIC = () -> false;
 
-  //todo-mde
-//  public static String createExpression(Measure m) {
-//    if (m instanceof AggregatedMeasure a) {
-//      Function<Field, TypedField> fieldProvider = s -> new TableTypedField(null, s.name(), String.class);
-//      if (a.criteria != null) {
-//        String conditionSt = SQLTranslator.toSql(fieldProvider, a.criteria, BASIC);
-//        return a.aggregationFunction + "If(" + a.field.sqlExpression(fieldProvider, BASIC) + ", " + conditionSt + ")";
-//      } else {
-//        return a.aggregationFunction + "(" + a.field.sqlExpression(fieldProvider, BASIC) + ")";
-//      }
-//    } else if (m instanceof BinaryOperationMeasure bom) {
-//      return quoteExpression(bom.leftOperand) + " " + bom.operator.infix + " " + quoteExpression(bom.rightOperand);
-//    } else if (m instanceof ComparisonMeasureReferencePosition cm) {
-//      String alias = cm.getMeasure().alias();
-//      if (cm.ancestors != null) {
-//        String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
-//        return formula + ", ancestors = " + cm.ancestors.stream().map(Field::name).toList();
-//      } else {
-//        String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current)", alias + "(reference)");
-//        return formula + ", reference = " + cm.referencePosition.entrySet().stream().map(e -> String.join("=", e.getKey().name(), e.getValue())).toList();
-//      }
-//    } else if (m instanceof ExpressionMeasure em) {
-//      return em.expression;
-//    } else if (m instanceof ConstantMeasure<?> cm) {
-//      return String.valueOf(cm.value);
-//    } else {
-//      throw new IllegalArgumentException("Unexpected type " + m.getClass());
-//    }
-//  }
+  public static String createExpression(Measure m) {
+    if (m instanceof AggregatedMeasure a) {
+      final CompiledAggregatedMeasure compiled = (CompiledAggregatedMeasure) new ExpressionResolver(m).getMeasures().get(0);
+      final String fieldExpression = compiled.field().sqlExpression(BASIC);
+      if (compiled.criteria() == null) {
+        return a.aggregationFunction + "(" + fieldExpression + ")";
+      } else {
+        return a.aggregationFunction + "If(" + fieldExpression + ", " + compiled.criteria().sqlExpression(BASIC) + ")";
+      }
+    } else if (m instanceof BinaryOperationMeasure bom) {
+      return quoteExpression(bom.leftOperand) + " " + bom.operator.infix + " " + quoteExpression(bom.rightOperand);
+    } else if (m instanceof ComparisonMeasureReferencePosition cm) {
+      String alias = cm.getMeasure().alias();
+      if (cm.ancestors != null) {
+        String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
+        return formula + ", ancestors = " + cm.ancestors.stream().map(Field::name).toList();
+      } else {
+        String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current)", alias + "(reference)");
+        return formula + ", reference = " + cm.referencePosition.entrySet().stream().map(e -> String.join("=", e.getKey().name(), e.getValue())).toList();
+      }
+    } else if (m instanceof ExpressionMeasure em) {
+      return em.expression;
+    } else if (m instanceof ConstantMeasure<?> cm) {
+      return String.valueOf(cm.value);
+    } else {
+      throw new IllegalArgumentException("Unexpected type " + m.getClass());
+    }
+  }
 
-  private static String quoteExpression(Measure m) {
+  private static class ExpressionResolver extends QueryResolver {
+
+    public ExpressionResolver(Measure m) {
+      super(new QueryDto().withMeasure(m), Collections.emptyMap());
+    }
+
+    @Override
+    protected TypedField resolveField(Field field) {
+      return new TableTypedField(null, field.name(), String.class);
+    }
+
+    @Override
+    protected void checkQuery(QueryDto query) {
+      // nothing to do
+    }
+  }
+
+
+   private static String quoteExpression(Measure m) {
     if (m.alias() != null) {
       return m.alias();
     }

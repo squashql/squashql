@@ -6,6 +6,7 @@ import io.squashql.query.dto.*;
 import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.store.Store;
 import io.squashql.type.*;
+import lombok.Data;
 import lombok.Value;
 
 import java.util.Collections;
@@ -19,17 +20,17 @@ import java.util.stream.Stream;
 
 import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUNT;
 
-@Value
+@Data
 //todo-mde rename to compiled query
 public class QueryResolver {
 
-  Map<String, Store> storesByName;
-  QueryExecutor.QueryScope scope;
-  List<TypedField> bucketColumns;
-  List<TypedField> columns;
-  CompilationCache cache;
-  List<CompiledMeasure> subQueryMeasures;
-  List<CompiledMeasure> measures;
+  private final Map<String, Store> storesByName;
+  private final QueryExecutor.QueryScope scope;
+  private final List<TypedField> bucketColumns;
+  private final List<TypedField> columns;
+  private final CompilationCache cache;
+  private final List<CompiledMeasure> subQueryMeasures;
+  private final List<CompiledMeasure> measures;
 
   public QueryResolver(QueryDto query, Map<String, Store> storesByName) {
     this.storesByName = storesByName;
@@ -46,7 +47,7 @@ public class QueryResolver {
   }
 
   /** Filed resolver */
-  private TypedField resolveField(final Field field) {
+  protected TypedField resolveField(final Field field) {
     return this.cache.computeIfAbsent(field, f -> {
       if (f instanceof TableField tf) {
         return getTableTypedField(tf.name());
@@ -120,7 +121,7 @@ public class QueryResolver {
             query.virtualTableDto);
   }
 
-  private void checkQuery(final QueryDto query) {
+  protected void checkQuery(final QueryDto query) {
     if (query.table == null && query.subQuery == null) {
       throw new IllegalArgumentException("A table or sub-query was expected in " + query);
     } else if (query.table != null && query.subQuery != null) {
@@ -228,7 +229,7 @@ public class QueryResolver {
       }
       if (topMeasure) {
         return compiledMeasure;
-      } else if (compiledMeasure.accept(new PrimitiveMeasureVisitor())) {
+      } else if (MeasureUtils.isPrimitive(compiledMeasure)) {
         return compiledMeasure;
       }
       throw new IllegalArgumentException("Only measures that can be computed by the underlying database can be used" +
