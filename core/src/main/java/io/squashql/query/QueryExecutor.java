@@ -255,7 +255,7 @@ public class QueryExecutor {
           QueryScope queryScope,
           DatabaseQuery prefetchQuery,
           SquashQLUser user) {
-    Set<TypedField> fields = new HashSet<>(prefetchQuery.select);
+    Set<TypedField> fields = new LinkedHashSet<>(prefetchQuery.select);
     if (queryScope.table != null) {
       return new TableScope(queryScope.table,
               fields,
