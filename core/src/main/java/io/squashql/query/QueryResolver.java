@@ -18,7 +18,6 @@ import java.util.stream.Stream;
 import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUNT;
 
 @Data
-//todo-mde rename to compiled query
 public class QueryResolver {
 
   private final Map<String, Store> storesByName;
@@ -43,7 +42,9 @@ public class QueryResolver {
     this.measures = compileMeasures(query.measures, true);
   }
 
-  /** Filed resolver */
+  /**
+   * Filed resolver
+   */
   protected TypedField resolveField(final Field field) {
     return this.cache.computeIfAbsent(field, f -> {
       if (f instanceof TableField tf) {
@@ -59,6 +60,7 @@ public class QueryResolver {
       }
     });
   }
+
   private TypedField resolveWithFallback(Field field) {
     try {
       return resolveField(field);
@@ -100,7 +102,9 @@ public class QueryResolver {
     throw new FieldNotFoundException("Cannot find field with name " + fieldName);
   }
 
-  /** Queries */
+  /**
+   * Queries
+   */
   private QueryExecutor.QueryScope toQueryScope(final QueryDto query) {
     checkQuery(query);
     final List<TypedField> columnSets = query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
@@ -125,6 +129,7 @@ public class QueryResolver {
       throw new IllegalArgumentException("Cannot define a table and a sub-query at the same time in " + query);
     }
   }
+
   private QueryExecutor.QueryScope toSubQuery(final QueryDto subQuery) {
     checkSubQuery(subQuery);
     final CompiledTable table = compileTable(subQuery.table);
@@ -183,7 +188,9 @@ public class QueryResolver {
     return query;
   }
 
-  /** Table */
+  /**
+   * Table
+   */
   private CompiledTable compileTable(final TableDto table) {
     return table == null
             ? null
@@ -194,16 +201,20 @@ public class QueryResolver {
     return new CompiledTable.CompiledJoin(compileTable(join.table), join.type, compileCriteria(join.joinCriteria));
   }
 
-  /** Criteria */
+  /**
+   * Criteria
+   */
   private CompiledCriteria compileCriteria(final CriteriaDto criteria) {
     return criteria == null
             ? null
-            : this.cache.computeIfAbsent(criteria, c -> new CompiledCriteria(c, c.field == null ? null : resolveWithFallback(c.field), c.fieldOther == null ? null : resolveWithFallback(c.fieldOther),
-                    c.measure == null ? null : compileMeasure(c.measure, true),
-                    c.children.stream().map(this::compileCriteria).collect(Collectors.toList())));
+            : this.cache.computeIfAbsent(criteria, c -> new CompiledCriteria(c.condition, c.conditionType, c.field == null ? null : resolveWithFallback(c.field), c.fieldOther == null ? null : resolveWithFallback(c.fieldOther),
+            c.measure == null ? null : compileMeasure(c.measure, true),
+            c.children.stream().map(this::compileCriteria).collect(Collectors.toList())));
   }
 
-  /** measures */
+  /**
+   * measures
+   */
   private List<CompiledMeasure> compileMeasures(final List<Measure> measures, boolean topMeasures) {
     return measures.stream().map(m -> compileMeasure(m, topMeasures)).collect(Collectors.toList());
   }
@@ -286,7 +297,9 @@ public class QueryResolver {
     Map<Measure, CompiledMeasure> compiledMeasure = new ConcurrentHashMap<>();
     Map<CriteriaDto, CompiledCriteria> compiledCriteria = new ConcurrentHashMap<>();
 
-    /** We don't rely on Map.computeIfAbsent directly as it doesn't allow recursive updates */
+    /**
+     * We don't rely on Map.computeIfAbsent directly as it doesn't allow recursive updates
+     */
     private TypedField computeIfAbsent(final Field field, final Function<Field, TypedField> mappingFunction) {
       if (this.compiledFields.containsKey(field)) {
         return this.compiledFields.get(field);

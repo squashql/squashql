@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.github.dockerjava.api.command.LogContainerCmd;
 import io.squashql.SparkDatastore;
+import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.QueryExecutor;
 import io.squashql.query.database.SparkQueryEngine;
 import io.squashql.query.dto.QueryDto;
@@ -112,8 +113,8 @@ public class TestQueryRemote {
     QueryDto query = new QueryDto()
             .table(storeName)
             .withColumn(tableField(storeName, SCENARIO_FIELD_NAME))
-            .aggregatedMeasure("p", "price", "sum")
-            .aggregatedMeasure("q", "quantity", "sum");
+            .withMeasure(new AggregatedMeasure("p", "price", "sum"))
+            .withMeasure(new AggregatedMeasure("q", "quantity", "sum"));
     Table result = executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("base", 15.0d, 33l),

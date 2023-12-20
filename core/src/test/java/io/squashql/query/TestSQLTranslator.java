@@ -13,7 +13,6 @@ import io.squashql.type.TypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -98,10 +97,10 @@ public class TestSQLTranslator {
   @Test
   void testGrandTotal() {
     final QueryDto query = new QueryDto()
-            .aggregatedMeasure("pnl.sum", "pnl", "sum")
-            .aggregatedMeasure("delta.sum", "delta", "sum")
-            .aggregatedMeasure("pnl.avg", "pnl", "avg")
-            .aggregatedMeasure("mean pnl", "pnl", "avg")
+            .withMeasure(new AggregatedMeasure("pnl.sum", "pnl", "sum"))
+            .withMeasure(new AggregatedMeasure("delta.sum", "delta", "sum"))
+            .withMeasure(new AggregatedMeasure("pnl.avg", "pnl", "avg"))
+            .withMeasure(new AggregatedMeasure("mean pnl", "pnl", "avg"))
             .table(BASE_STORE_NAME);
     Assertions.assertThat(translate(compileQuery(query)))
             .isEqualTo("select sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg`, avg(`pnl`) as `mean pnl` from " + BASE_STORE_NAME_ESCAPED);
@@ -110,7 +109,7 @@ public class TestSQLTranslator {
   @Test
   void testLimit() {
     final QueryDto query = new QueryDto()
-            .aggregatedMeasure("pnl.sum", "pnl", "sum")
+            .withMeasure(new AggregatedMeasure("pnl.sum", "pnl", "sum"))
             .withLimit(8)
             .table(BASE_STORE_NAME);
 
@@ -123,9 +122,9 @@ public class TestSQLTranslator {
     final QueryDto query = new QueryDto()
             .withColumn(tableField(SCENARIO_FIELD_NAME))
             .withColumn(tableField("type"))
-            .aggregatedMeasure("pnl.sum", "pnl", "sum")
-            .aggregatedMeasure("delta.sum", "delta", "sum")
-            .aggregatedMeasure("pnl.avg", "pnl", "avg")
+            .withMeasure(new AggregatedMeasure("pnl.sum", "pnl", "sum"))
+            .withMeasure(new AggregatedMeasure("delta.sum", "delta", "sum"))
+            .withMeasure(new AggregatedMeasure("pnl.avg", "pnl", "avg"))
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(translate(compileQuery(query)))
@@ -138,8 +137,8 @@ public class TestSQLTranslator {
     final QueryDto query = new QueryDto()
             .withColumn(tableField(SqlUtils.getFieldFullName(BASE_STORE_NAME, SCENARIO_FIELD_NAME)))
             .withColumn(tableField(SqlUtils.getFieldFullName(BASE_STORE_NAME, "type")))
-            .aggregatedMeasure("pnl.sum", SqlUtils.getFieldFullName(BASE_STORE_NAME, "pnl"), "sum")
-            .aggregatedMeasure("delta.sum", SqlUtils.getFieldFullName(BASE_STORE_NAME, "delta"), "sum")
+            .withMeasure(new AggregatedMeasure("pnl.sum", SqlUtils.getFieldFullName(BASE_STORE_NAME, "pnl"), "sum"))
+            .withMeasure(new AggregatedMeasure("delta.sum", SqlUtils.getFieldFullName(BASE_STORE_NAME, "delta"), "sum"))
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(translate(compileQuery(query)))
@@ -151,8 +150,8 @@ public class TestSQLTranslator {
   void testDifferentMeasures() {
     final QueryDto query = new QueryDto()
             .table(BASE_STORE_NAME)
-            .aggregatedMeasure("pnl.sum", "pnl", "sum")
-            .expressionMeasure("indice", "100 * sum(`delta`) / sum(`pnl`)");
+            .withMeasure(new AggregatedMeasure("pnl.sum", "pnl", "sum"))
+            .withMeasure(new ExpressionMeasure("indice", "100 * sum(`delta`) / sum(`pnl`)"));
 
     Assertions.assertThat(translate(compileQuery(query)))
             .isEqualTo("select sum(`pnl`) as `pnl.sum`, 100 * sum(`delta`) / sum(`pnl`) as `indice` from " + BASE_STORE_NAME_ESCAPED);
@@ -167,7 +166,7 @@ public class TestSQLTranslator {
             .withColumn(type)
             .withRollup(scenario)
             .withRollup(type)
-            .aggregatedMeasure("pnl.sum", "price", "sum")
+            .withMeasure(new AggregatedMeasure("pnl.sum", "price", "sum"))
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(translate(compileQuery(query)))
@@ -188,7 +187,7 @@ public class TestSQLTranslator {
             .withColumn(type)
             .withRollup(scenario)
             .withRollup(type)
-            .aggregatedMeasure("pnl.sum", "price", "sum")
+            .withMeasure(new AggregatedMeasure("pnl.sum", "price", "sum"))
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(translate(compileQuery(query)))
@@ -206,7 +205,7 @@ public class TestSQLTranslator {
             .withColumn(tableField(SCENARIO_FIELD_NAME))
             .withColumn(tableField("type"))
             .withRollup(tableField(SCENARIO_FIELD_NAME))
-            .aggregatedMeasure("pnl.sum", "price", "sum")
+            .withMeasure(new AggregatedMeasure("pnl.sum", "price", "sum"))
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(translate(compileQuery(query)))
@@ -235,7 +234,7 @@ public class TestSQLTranslator {
 
     final QueryDto query = new QueryDto()
             .table(baseStore)
-            .aggregatedMeasure("pnl.avg", "pnl", "avg");
+            .withMeasure(new AggregatedMeasure("pnl.avg", "pnl", "avg"));
 
     Assertions.assertThat(translate(compileQuery(query)))
             .isEqualTo("select avg(`pnl`) as `pnl.avg` from " + BASE_STORE_NAME_ESCAPED
@@ -279,7 +278,7 @@ public class TestSQLTranslator {
     final QueryDto query = new QueryDto()
             .withColumn(tableField(SCENARIO_FIELD_NAME))
             .withColumn(tableField("type"))
-            .aggregatedMeasure("pnl.sum", "pnl", "sum")
+            .withMeasure(new AggregatedMeasure("pnl.sum", "pnl", "sum"))
             .withWhereCriteria(all(
                     criterion(SCENARIO_FIELD_NAME, or(eq("base"), eq("s1"), eq("s2"))),
                     criterion("delta", ge(123d)),
@@ -302,7 +301,7 @@ public class TestSQLTranslator {
     TableTypedField typedField = new TableTypedField(BASE_STORE_NAME, SCENARIO_FIELD_NAME, String.class);
     final QueryDto query = new QueryDto()
             .withColumn(field)
-            .aggregatedMeasure("pnl.sum", "pnl", "sum")
+            .withMeasure(new AggregatedMeasure("pnl.sum", "pnl", "sum"))
             .withWhereCriteria(criterion(SqlUtils.getFieldFullName(typedField), or(
                     eq("base"),
                     eq("s2"),
@@ -421,7 +420,7 @@ public class TestSQLTranslator {
     final QueryDto query = new QueryDto()
             .withColumn(a)
             .withColumn(b)
-            .aggregatedMeasure("pnl.sum", "pnl", "sum")
+            .withMeasure(new AggregatedMeasure("pnl.sum", "pnl", "sum"))
             .table(BASE_STORE_NAME);
     query.groupingSets = List.of(
             List.of(), // GT

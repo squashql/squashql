@@ -71,16 +71,6 @@ public class QueryDto {
     return this;
   }
 
-  public QueryDto aggregatedMeasure(String alias, String field, String agg) {
-    withMeasure(new AggregatedMeasure(alias, field, agg));
-    return this;
-  }
-
-  public QueryDto expressionMeasure(String alias, String expression) {
-    withMeasure(new ExpressionMeasure(alias, expression));
-    return this;
-  }
-
   public QueryDto withParameter(String key, Parameter value) {
     this.parameters.put(key, value);
     return this;

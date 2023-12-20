@@ -280,6 +280,10 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   }
 
   /**
+   * FIXME this test does not test what it tested initially due to the fact that multiply measure is not computed in the
+   * db directly. We could remove it but I think the query plan execution is not correct after the change PR #193 but I
+   * cannot prove it.
+   *
    * This test is making sure that the following case is supported:
    * 1) Two execution plans are created. One for the scope of the query with filter (Plan1), another one for the scope of the
    * query without the filter (Plan2).

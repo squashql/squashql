@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public record CompiledCriteria(CriteriaDto criteria, TypedField field, TypedField fieldOther, CompiledMeasure measure, List<CompiledCriteria> children){
+public record CompiledCriteria(ConditionDto condition, ConditionType conditionType, TypedField field, TypedField fieldOther, CompiledMeasure measure, List<CompiledCriteria> children){
 
   public String sqlExpression(QueryRewriter queryRewriter) {
     if (this.field != null && condition() != null) {
@@ -42,14 +42,6 @@ public record CompiledCriteria(CriteriaDto criteria, TypedField field, TypedFiel
     } else {
       return null;
     }
-  }
-
-  public ConditionDto condition() {
-    return this.criteria.condition;
-  }
-
-  private ConditionType conditionType() {
-    return this.criteria.conditionType;
   }
 
   public static String toSql(TypedField field, ConditionDto dto, QueryRewriter queryRewriter) {
@@ -87,7 +79,8 @@ public record CompiledCriteria(CriteriaDto criteria, TypedField field, TypedFiel
   public static CompiledCriteria deepCopy(CompiledCriteria criteria) {
     if (criteria.children == null || criteria.children.isEmpty()) {
       return new CompiledCriteria(
-              criteria.criteria,
+              criteria.condition(),
+              criteria.conditionType(),
               criteria.field,
               criteria.fieldOther,
               criteria.measure,
@@ -98,7 +91,7 @@ public record CompiledCriteria(CriteriaDto criteria, TypedField field, TypedFiel
         CompiledCriteria copy = deepCopy(dto);
         list.add(copy);
       }
-      return new CompiledCriteria(criteria.criteria, null, null, null, list);
+      return new CompiledCriteria(criteria.condition(), criteria.conditionType(), null, null, null, list);
     }
   }
 

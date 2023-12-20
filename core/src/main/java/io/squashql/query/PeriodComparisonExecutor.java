@@ -1,10 +1,8 @@
 package io.squashql.query;
 
 import io.squashql.query.compiled.CompiledComparisonMeasure;
-import io.squashql.query.compiled.CompiledPeriod;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.Period;
-import io.squashql.type.TypedField;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;

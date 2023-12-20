@@ -209,6 +209,7 @@ public class QueryExecutor {
         evaluator.accept(queryNode, executionContext);
       }
     });
+    GraphPrinter.print(dependencyGraph);
     globalPlan.execute();
 
     Table result = tableByScope.get(queryResolver.getScope());
