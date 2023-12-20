@@ -1,15 +1,13 @@
 package io.squashql.query;
 
-import io.squashql.PrefetchVisitor;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.QueryCache.SubQueryScope;
 import io.squashql.query.QueryCache.TableScope;
-import io.squashql.query.database.AQueryEngine;
+import io.squashql.query.compiled.*;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.parameter.QueryCacheParameter;
-import io.squashql.store.Store;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.PivotTable;
 import io.squashql.table.Table;
@@ -17,16 +15,13 @@ import io.squashql.table.TableUtils;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static io.squashql.query.ColumnSetKey.BUCKET;
+import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUNT;
 
 @Slf4j
 public class QueryExecutor {
@@ -148,43 +143,43 @@ public class QueryExecutor {
                             IntConsumer limitNotifier) {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
 
-    Function<Field, TypedField> fieldSupplier = createQueryFieldSupplier(this.queryEngine, query.virtualTableDto);
-    QueryScope queryScope = createQueryScope(query, fieldSupplier);
-    Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> dependencyGraph = computeDependencyGraph(query, queryScope, fieldSupplier);
+    final QueryResolver queryResolver = new QueryResolver(query, new HashMap<>(this.queryEngine.datastore().storesByName()));
+    DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
+            queryResolver.getColumns(), queryResolver.getBucketColumns(), queryResolver.getMeasures(), queryResolver.getScope());
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
-    Map<QueryScope, Set<Measure>> measuresByQueryScope = new HashMap<>();
-    ExecutionPlan<QueryPlanNodeKey, Void> prefetchingPlan = new ExecutionPlan<>(dependencyGraph.getOne(), (node, v) -> {
+    Map<QueryScope, Set<CompiledMeasure>> measuresByQueryScope = new HashMap<>();
+    ExecutionPlan<QueryPlanNodeKey> prefetchingPlan = new ExecutionPlan<>(dependencyGraph, (node) -> {
       QueryScope scope = node.queryScope;
-      int limit = scope.equals(queryScope) ? queryLimit : queryLimit + 1; // limit + 1 to detect when results can be wrong
-      prefetchQueryByQueryScope.computeIfAbsent(scope, k -> Queries.queryScopeToDatabaseQuery(scope, fieldSupplier, limit));
+      int limit = scope.equals(queryResolver.getScope()) ? queryLimit : queryLimit + 1; // limit + 1 to detect when results can be wrong
+      prefetchQueryByQueryScope.computeIfAbsent(scope, k -> queryResolver.toDatabaseQuery(scope, limit));
       measuresByQueryScope.computeIfAbsent(scope, k -> new HashSet<>()).add(node.measure);
     });
-    prefetchingPlan.execute(null);
+    prefetchingPlan.execute();
 
     Map<QueryScope, Table> tableByScope = new HashMap<>();
     for (QueryScope scope : prefetchQueryByQueryScope.keySet()) {
       DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
-      Set<Measure> measures = measuresByQueryScope.get(scope);
+      Set<CompiledMeasure> measures = measuresByQueryScope.get(scope);
       QueryCache.PrefetchQueryScope prefetchQueryScope = createPrefetchQueryScope(scope, prefetchQuery, user);
       QueryCache queryCache = getQueryCache((QueryCacheParameter) query.parameters.getOrDefault(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.USE)), user);
 
-      // Finish to prepare the query
       Set<Measure> cached = new HashSet<>();
-      Set<Measure> notCached = new HashSet<>();
-      Set<Measure> primitives = measures.stream().filter(MeasureUtils::isPrimitive).collect(Collectors.toSet());
-      for (Measure primitive : primitives) {
-        if (queryCache.contains(primitive, prefetchQueryScope)) {
-          cached.add(primitive);
-        } else {
-          notCached.add(primitive);
+      Map<Measure, CompiledMeasure> notCached = new HashMap<>();
+      for (CompiledMeasure measure : measures) {
+        if (MeasureUtils.isPrimitive(measure)) {
+          if (queryCache.contains(measure.measure(), prefetchQueryScope)) {
+            cached.add(measure.measure());
+          } else {
+            notCached.put(measure.measure(), measure);
+          }
         }
       }
 
       Table result;
       if (!notCached.isEmpty()) {
-        notCached.add(CountMeasure.INSTANCE); // Always add count
-        notCached.forEach(prefetchQuery::withMeasure);
+        notCached.put(CountMeasure.INSTANCE, COMPILED_COUNT);
+        notCached.forEach((k, v) -> prefetchQuery.withMeasure(v));
         result = this.queryEngine.execute(prefetchQuery);
       } else {
         // Create an empty result that will be populated by the query cache
@@ -192,7 +187,7 @@ public class QueryExecutor {
       }
 
       queryCache.contributeToResult(result, cached, prefetchQueryScope);
-      queryCache.contributeToCache(result, notCached, prefetchQueryScope);
+      queryCache.contributeToCache(result, notCached.keySet(), prefetchQueryScope);
 
       tableByScope.put(scope, result);
     }
@@ -206,13 +201,18 @@ public class QueryExecutor {
 
     // Here we take the global plan and execute the plans for a given scope one by one, in dependency order. The order
     // is given by the graph itself.
-    ExecutionPlan<QueryScope, Void> globalPlan = new ExecutionPlan<>(dependencyGraph.getTwo(), (scope, context) -> {
-      ExecutionPlan<QueryPlanNodeKey, ExecutionContext> scopedPlan = new ExecutionPlan<>(dependencyGraph.getOne(), new Evaluator(fieldSupplier));
-      scopedPlan.execute(new ExecutionContext(tableByScope.get(scope), scope, tableByScope, query, queryLimit));
+    final Set<QueryPlanNodeKey> visited = new HashSet<>();
+    final Evaluator evaluator = new Evaluator();
+    ExecutionPlan<QueryPlanNodeKey> globalPlan = new ExecutionPlan<>(dependencyGraph, (queryNode) -> {
+      if (visited.add(queryNode)) {
+        final ExecutionContext executionContext = new ExecutionContext(queryNode.queryScope, tableByScope, queryResolver.getColumns(), queryResolver.getBucketColumns(), query.columnSets, queryLimit);
+        evaluator.accept(queryNode, executionContext);
+      }
     });
-    globalPlan.execute(null);
+    GraphPrinter.print(dependencyGraph);
+    globalPlan.execute();
 
-    Table result = tableByScope.get(queryScope);
+    Table result = tableByScope.get(queryResolver.getScope());
 
     if (limitNotifier != null && result.count() == queryLimit) {
       limitNotifier.accept(queryLimit);
@@ -232,99 +232,79 @@ public class QueryExecutor {
     return result;
   }
 
-  private static Pair<DependencyGraph<QueryPlanNodeKey>, DependencyGraph<QueryScope>> computeDependencyGraph(
-          QueryDto query,
-          QueryScope queryScope,
-          Function<Field, TypedField> fieldSupplier) {
-    // This graph is used to keep track of dependency between execution plans. An Execution Plan is bound to a given scope.
-    DependencyGraph<QueryScope> executionGraph = new DependencyGraph<>();
-
+  private static DependencyGraph<QueryPlanNodeKey> computeDependencyGraph(
+          List<TypedField> columns,
+          List<TypedField> bucketColumns,
+          List<CompiledMeasure> measures,
+          QueryScope queryScope) {
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
-      Map<QueryScope, Set<Measure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(query, nodeKey.queryScope, fieldSupplier));
+      Map<QueryScope, Set<CompiledMeasure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(columns, bucketColumns, nodeKey.queryScope));
       Set<QueryPlanNodeKey> set = new HashSet<>();
-      executionGraph.addNode(nodeKey.queryScope);
-      for (Map.Entry<QueryScope, Set<Measure>> entry : dependencies.entrySet()) {
-
-        executionGraph.addNode(entry.getKey());
-        if (!nodeKey.queryScope.equals(entry.getKey())) {
-          executionGraph.putEdge(nodeKey.queryScope, entry.getKey());
-        }
-
-        for (Measure measure : entry.getValue()) {
+      for (Map.Entry<QueryScope, Set<CompiledMeasure>> entry : dependencies.entrySet()) {
+        for (CompiledMeasure measure : entry.getValue()) {
           set.add(new QueryPlanNodeKey(entry.getKey(), measure));
         }
       }
       return set;
     });
-    Set<Measure> queriedMeasures = new HashSet<>(query.measures);
-    queriedMeasures.add(CountMeasure.INSTANCE); // Always add count
-    return Tuples.pair(
-            builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList()),
-            executionGraph);
-  }
-
-  public static QueryScope createQueryScope(QueryDto query, Function<Field, TypedField> fieldSupplier) {
-    // If column set, it changes the scope
-    List<TypedField> columns = Stream.concat(
-            query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()),
-            query.columns.stream()).map(fieldSupplier).collect(Collectors.toCollection(ArrayList::new));
-    List<TypedField> rollupColumns = query.rollupColumns.stream().map(fieldSupplier).toList();
-    List<List<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(fieldSupplier).toList()).toList();
-    return new QueryScope(query.table,
-            query.subQuery,
-            columns,
-            query.whereCriteriaDto,
-            query.havingCriteriaDto,
-            rollupColumns,
-            groupingSets,
-            query.virtualTableDto);
+    Set<CompiledMeasure> queriedMeasures = new HashSet<>(measures);
+    queriedMeasures.add(COMPILED_COUNT);
+    return builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList());
   }
 
   private static QueryCache.PrefetchQueryScope createPrefetchQueryScope(
           QueryScope queryScope,
           DatabaseQuery prefetchQuery,
           SquashQLUser user) {
-    Set<TypedField> fields = new HashSet<>(prefetchQuery.select);
-    if (queryScope.tableDto != null) {
-      return new TableScope(queryScope.tableDto,
+    Set<TypedField> fields = new LinkedHashSet<>(prefetchQuery.select);
+    if (queryScope.table != null) {
+      return new TableScope(queryScope.table,
               fields,
-              queryScope.whereCriteriaDto,
-              queryScope.havingCriteriaDto,
+              queryScope.whereCriteria,
+              queryScope.havingCriteria,
               queryScope.rollupColumns,
               queryScope.groupingSets,
-              queryScope.virtualTableDto,
+              queryScope.virtualTable,
               user,
               prefetchQuery.limit);
     } else {
       return new SubQueryScope(queryScope.subQuery,
+              prefetchQuery.subQuery == null ? Collections.emptyList() : prefetchQuery.subQuery.measures,
               fields,
-              queryScope.whereCriteriaDto,
-              queryScope.havingCriteriaDto,
+              queryScope.whereCriteria,
+              queryScope.havingCriteria,
               user,
               prefetchQuery.limit);
     }
   }
 
-  public record QueryScope(TableDto tableDto,
-                           QueryDto subQuery,
+  public record QueryScope(CompiledTable table,
+                           QueryScope subQuery,
                            List<TypedField> columns,
-                           CriteriaDto whereCriteriaDto,
-                           CriteriaDto havingCriteriaDto,
+                           CompiledCriteria whereCriteria,
+                           CompiledCriteria havingCriteria,
                            List<TypedField> rollupColumns,
                            List<List<TypedField>> groupingSets,
-                           VirtualTableDto virtualTableDto) {
+                           VirtualTableDto virtualTable) {
   }
 
-  public record QueryPlanNodeKey(QueryScope queryScope, Measure measure) {
+  public record QueryPlanNodeKey(QueryScope queryScope, CompiledMeasure measure) {
   }
 
-  public record ExecutionContext(Table writeToTable,
-                                 QueryScope queryScope,
+  public record ExecutionContext(QueryScope queryScope,
                                  Map<QueryScope, Table> tableByScope,
-                                 QueryDto query,
+                                 List<TypedField> columns,
+                                 List<TypedField> bucketColumns,
+                                 Map<ColumnSetKey, ColumnSet> columnSets,
                                  int queryLimit) {
+    public Table getWriteToTable() {
+      return tableByScope.get(queryScope);
+    }
   }
 
+  /**
+   * This object is temporary until BigQuery supports the grouping sets. See <a href="https://issuetracker.google.com/issues/35905909">issue</a>
+   */
   private static class PivotTableContext {
     private final List<Field> rows;
     private final List<Field> cleansedRows;
@@ -351,6 +331,7 @@ public class QueryExecutor {
       }
       return fields;
     }
+
   }
 
   public PivotTable executePivotQueryMerge(QueryDto first, QueryDto second, List<Field> rows, List<Field> columns, JoinType joinType, SquashQLUser user) {
@@ -361,11 +342,4 @@ public class QueryExecutor {
     return QueryMergeExecutor.executeQueryMerge(this, first, second, joinType, user);
   }
 
-  public static Function<Field, TypedField> createQueryFieldSupplier(QueryEngine<?> queryEngine, VirtualTableDto vt) {
-    Map<String, Store> storesByName = new HashMap<>(queryEngine.datastore().storesByName());
-    if (vt != null) {
-      storesByName.put(vt.name, VirtualTableDto.toStore(vt));
-    }
-    return AQueryEngine.createFieldSupplier(storesByName);
-  }
 }

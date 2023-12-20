@@ -1,15 +1,6 @@
 package io.squashql.query;
 
-import io.squashql.query.database.QueryRewriter;
-import io.squashql.query.database.SqlUtils;
-import io.squashql.type.TypedField;
-import java.util.function.Function;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.ToString;
-import lombok.With;
+import lombok.*;
 
 @ToString
 @EqualsAndHashCode
@@ -35,18 +26,6 @@ public class BinaryOperationMeasure implements Measure {
   }
 
   @Override
-  public String sqlExpression(Function<Field, TypedField> fp, QueryRewriter qr, boolean withAlias) {
-    String sql = new StringBuilder()
-            .append("(")
-            .append(this.leftOperand.sqlExpression(fp, qr, false))
-            .append(this.operator.infix)
-            .append(this.rightOperand.sqlExpression(fp, qr, false))
-            .append(")")
-            .toString();
-    return withAlias ? SqlUtils.appendAlias(sql, qr, this.alias) : sql;
-  }
-
-  @Override
   public String alias() {
     return this.alias;
   }
@@ -56,8 +35,4 @@ public class BinaryOperationMeasure implements Measure {
     return this.expression;
   }
 
-  @Override
-  public <R> R accept(MeasureVisitor<R> visitor) {
-    return visitor.visit(this);
-  }
 }

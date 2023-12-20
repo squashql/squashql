@@ -1,7 +1,6 @@
 package io.squashql.query.database;
 
-import io.squashql.query.*;
-import io.squashql.query.exception.FieldNotFoundException;
+import io.squashql.query.Header;
 import io.squashql.store.Datastore;
 import io.squashql.store.Store;
 import io.squashql.table.ColumnarTable;
@@ -14,7 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -36,60 +38,15 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     return this.queryRewriter;
   }
 
-  public static Function<Field, TypedField> createFieldSupplier(Map<String, Store> storesByName) {
-    return field -> {
-      if (field instanceof TableField tf) {
-        return getTableTypedField(tf.name(), storesByName);
-      } else if (field instanceof FunctionField ff) {
-        return new FunctionTypedField(getTableTypedField(ff.field.name(), storesByName), ff.function);
-      } else {
-        throw new IllegalArgumentException(field.getClass().getName());
-      }
-    };
-  }
-
-  private static TableTypedField getTableTypedField(String fieldName, Map<String, Store> storesByName) {
-    String[] split = fieldName.split("\\.");
-    if (split.length > 1) {
-      String tableName = split[0];
-      String fieldNameInTable = split[1];
-      Store store = storesByName.get(tableName);
-      if (store != null) {
-        for (TableTypedField field : store.fields()) {
-          if (field.name().equals(fieldNameInTable)) {
-            return field;
-          }
-        }
-      }
-    } else {
-      for (Store store : storesByName.values()) {
-        for (TableTypedField field : store.fields()) {
-          if (field.name().equals(fieldName)) {
-            // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
-            // if any ambiguity, the DB will raise an exception.
-            return new TableTypedField(null, fieldName, field.type());
-          }
-        }
-      }
-    }
-
-    if (fieldName.equals(CountMeasure.INSTANCE.alias())) {
-      return new TableTypedField(null, CountMeasure.INSTANCE.alias(), long.class);
-    }
-    throw new FieldNotFoundException("Cannot find field with name " + fieldName);
-  }
-
   @Override
   public T datastore() {
     return this.datastore;
   }
 
-  protected abstract Table retrieveAggregates(DatabaseQuery query, String sql);
-
   @Override
   public Table execute(DatabaseQuery query) {
     if (query.table != null) {
-      String tableName = query.table.name;
+      String tableName = query.table.name();
       // Can be null if sub-query
       Store store = this.datastore.storesByName().get(tableName);
       if (store == null) {
@@ -104,10 +61,10 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   }
 
   protected String createSqlStatement(DatabaseQuery query) {
-    return SQLTranslator.translate(query,
-            QueryExecutor.createQueryFieldSupplier(this, query.virtualTableDto),
-            this.queryRewriter);
+    return SQLTranslator.translate(query, this.queryRewriter);
   }
+
+  protected abstract Table retrieveAggregates(DatabaseQuery query, String sql);
 
   /**
    * Changes the content of the input table to remove columns corresponding to grouping() (columns that help to identify
@@ -169,14 +126,12 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     }
   }
 
-  public static <Column, Record> Pair<List<Header>, List<List<Object>>> transformToColumnFormat(
+  public <Column, Record> Pair<List<Header>, List<List<Object>>> transformToColumnFormat(
           DatabaseQuery query,
           List<Column> columns,
-          BiFunction<Column, String, String> columnNameProvider,
           BiFunction<Column, String, Class<?>> columnTypeProvider,
           Iterator<Record> recordIterator,
-          BiFunction<Integer, Record, Object> recordToFieldValue,
-          QueryRewriter queryRewriter) {
+          BiFunction<Integer, Record, Object> recordToFieldValue) {
     List<Header> headers = new ArrayList<>();
     Function<TypedField, String> typedFieldStringFunction = f -> {
       if (f instanceof TableTypedField ttf) {
@@ -194,7 +149,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
     List<List<Object>> values = new ArrayList<>(columns.size());
     for (int i = 0; i < columns.size(); i++) {
       headers.add(new Header(
-              columnNameProvider.apply(columns.get(i), fieldNames.get(i)),
+              fieldNames.get(i),
               columnTypeProvider.apply(columns.get(i), fieldNames.get(i)),
               i >= query.select.size() + groupingSelects.size()));
       values.add(new ArrayList<>());
@@ -219,4 +174,5 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
             IntStream.range(0, headers.size()).mapToObj(i -> recordToFieldValue.apply(i, r)).toList()));
     return Tuples.pair(headers, rows);
   }
+
 }

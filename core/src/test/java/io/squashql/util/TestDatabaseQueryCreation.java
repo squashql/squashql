@@ -1,30 +1,22 @@
 package io.squashql.util;
 
-import static io.squashql.query.TableField.tableField;
-
-import io.squashql.query.ColumnSetKey;
-import io.squashql.query.ComparisonMeasureReferencePosition;
-import io.squashql.query.ComparisonMethod;
-import io.squashql.query.Field;
-import io.squashql.query.Measure;
-import io.squashql.query.QueryExecutor;
+import io.squashql.query.*;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.parameter.Parameter;
-import io.squashql.type.TypedField;
-import java.util.Collections;
-import java.util.function.Function;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-public class TestDatabaseQueryCreation {
+import java.util.Collections;
 
-  private final Function<Field, TypedField> fieldSupplier = Mockito.mock(Function.class);
+import static io.squashql.query.TableField.tableField;
+
+public class TestDatabaseQueryCreation {
 
   @Test
   void testNoTable() {
-    Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(new QueryDto(), this.fieldSupplier), this.fieldSupplier, -1))
+    Assertions.assertThatThrownBy(() -> new QueryResolver(new QueryDto(), Collections.emptyMap()))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("table or sub-query was expected");
   }
@@ -35,7 +27,7 @@ public class TestDatabaseQueryCreation {
     QueryDto subQuery = new QueryDto().table(subSubQuery);
     QueryDto queryDto = new QueryDto().table(subQuery);
 
-    Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier), this.fieldSupplier, -1))
+    Assertions.assertThatThrownBy(() -> new QueryResolver(queryDto, Collections.emptyMap()))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("not supported");
   }
@@ -46,7 +38,7 @@ public class TestDatabaseQueryCreation {
             .withColumnSet(ColumnSetKey.BUCKET, new BucketColumnSetDto("a", tableField("b")));
     QueryDto queryDto = new QueryDto().table(subQuery);
 
-    Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier), this.fieldSupplier, -1))
+    Assertions.assertThatThrownBy(() -> new QueryResolver(queryDto, Collections.emptyMap()))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("column sets are not expected");
   }
@@ -57,7 +49,7 @@ public class TestDatabaseQueryCreation {
     subQuery.withParameter("any", Mockito.mock(Parameter.class));
     QueryDto queryDto = new QueryDto().table(subQuery);
 
-    Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier), this.fieldSupplier, -1))
+    Assertions.assertThatThrownBy(() -> new QueryResolver(queryDto, Collections.emptyMap()))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("parameters are not expected");
   }
@@ -65,10 +57,10 @@ public class TestDatabaseQueryCreation {
   @Test
   void testUnsupportedMeasureInSubQuery() {
     QueryDto subQuery = new QueryDto().table("table")
-            .withMeasure(new ComparisonMeasureReferencePosition("alias", ComparisonMethod.DIVIDE, Mockito.mock(Measure.class), Collections.emptyMap(), ColumnSetKey.BUCKET));
+            .withMeasure(new ComparisonMeasureReferencePosition("alias", ComparisonMethod.DIVIDE, new AggregatedMeasure("p", "price", "sum"), Collections.emptyMap(), ColumnSetKey.BUCKET));
     QueryDto queryDto = new QueryDto().table(subQuery);
 
-    Assertions.assertThatThrownBy(() -> Queries.queryScopeToDatabaseQuery(QueryExecutor.createQueryScope(queryDto, this.fieldSupplier), this.fieldSupplier, -1))
+    Assertions.assertThatThrownBy(() -> new QueryResolver(queryDto, Collections.emptyMap()))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Only measures that can be computed by the underlying database can be used in a sub-query");
   }

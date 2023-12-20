@@ -15,7 +15,7 @@ public class DependencyGraph<N> {
 
   private final IntSupplier idGenerator = new AtomicInteger()::getAndIncrement;
   private final Map<N, Integer> idByNode = new HashMap<>();
-  private final Function<N, NodeWithId<N>> transformer = m -> new NodeWithId<>(m, this.idByNode.computeIfAbsent(m, __ -> this.idGenerator.getAsInt()));
+  private final Function<N, NodeWithId<N>> transformer = node -> new NodeWithId<>(node, this.idByNode.computeIfAbsent(node, __ -> this.idGenerator.getAsInt()));
   private final MutableGraph<NodeWithId<N>> graph;
 
   public DependencyGraph() {

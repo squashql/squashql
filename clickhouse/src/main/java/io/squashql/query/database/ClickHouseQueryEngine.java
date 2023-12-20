@@ -4,18 +4,22 @@ import com.clickhouse.client.ClickHouseClient;
 import com.clickhouse.client.ClickHouseNodes;
 import com.clickhouse.client.ClickHouseProtocol;
 import com.clickhouse.client.ClickHouseResponse;
-import com.clickhouse.data.*;
+import com.clickhouse.data.ClickHouseColumn;
+import com.clickhouse.data.ClickHouseFormat;
+import com.clickhouse.data.ClickHouseRecord;
+import com.clickhouse.data.ClickHouseValue;
 import io.squashql.ClickHouseDatastore;
 import io.squashql.ClickHouseUtil;
-import io.squashql.table.ColumnarTable;
 import io.squashql.query.Header;
+import io.squashql.query.compiled.CompiledMeasure;
+import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
 import org.eclipse.collections.api.tuple.Pair;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
 
@@ -55,14 +59,12 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
               query,
               response.getColumns(),
-              (column, name) -> name,
               (column, name) -> ClickHouseUtil.clickHouseTypeToClass(column.getDataType()),
               response.records().iterator(),
-              (index, r) -> getValue(r, index, response.getColumns()),
-              this.queryRewriter);
+              (index, r) -> getValue(r, index, response.getColumns()));
       return new ColumnarTable(
               result.getOne(),
-              new HashSet<>(query.measures),
+              query.measures.stream().map(CompiledMeasure::measure).collect(Collectors.toSet()),
               result.getTwo());
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);

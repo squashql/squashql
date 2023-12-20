@@ -1,14 +1,15 @@
 package io.squashql.query;
 
-import static io.squashql.query.TableField.tableField;
-
 import io.squashql.query.dto.Period;
-import java.util.Map;
-import java.util.function.BiFunction;
 import org.assertj.core.api.Assertions;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 import org.junit.jupiter.api.Test;
+
+import java.util.Map;
+import java.util.function.BiFunction;
+
+import static io.squashql.query.TableField.tableField;
 
 public class TestPeriodShiftProcedure {
 

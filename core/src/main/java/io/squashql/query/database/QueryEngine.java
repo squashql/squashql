@@ -22,4 +22,5 @@ public interface QueryEngine<T extends Datastore> {
   List<String> supportedAggregationFunctions();
 
   QueryRewriter queryRewriter();
+
 }

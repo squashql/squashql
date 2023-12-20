@@ -1,12 +1,13 @@
 package io.squashql.jdbc;
 
-import io.squashql.table.ColumnarTable;
 import io.squashql.query.Header;
+import io.squashql.query.compiled.CompiledMeasure;
+import io.squashql.query.database.DatabaseQuery;
+import io.squashql.query.database.AQueryEngine;
+import io.squashql.query.database.QueryRewriter;
+import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
-import io.squashql.query.database.AQueryEngine;
-import io.squashql.query.database.DatabaseQuery;
-import io.squashql.query.database.QueryRewriter;
 import org.eclipse.collections.api.tuple.Pair;
 
 import java.io.Serializable;
@@ -14,6 +15,7 @@ import java.math.BigInteger;
 import java.sql.*;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEngine<T> {
@@ -35,15 +37,12 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
               query,
               columnTypes,
-              (columnType, name) -> name,
               (columnType, name) -> columnType,
               new ResultSetIterator(tableResult),
-              (i, fieldValues) -> fieldValues[i],
-              this.queryRewriter
-      );
+              (i, fieldValues) -> fieldValues[i]);
       return new ColumnarTable(
               result.getOne(),
-              new HashSet<>(query.measures),
+              query.measures.stream().map(CompiledMeasure::measure).collect(Collectors.toSet()),
               result.getTwo());
     });
   }

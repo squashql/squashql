@@ -1,17 +1,7 @@
 package io.squashql.query;
 
-import io.squashql.query.database.QueryRewriter;
-import io.squashql.query.database.SQLTranslator;
-import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.CriteriaDto;
-import io.squashql.type.TypedField;
-import java.util.function.Function;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.ToString;
-import lombok.With;
+import lombok.*;
 
 @ToString
 @EqualsAndHashCode
@@ -56,24 +46,6 @@ public class AggregatedMeasure implements BasicMeasure {
   }
 
   @Override
-  public String sqlExpression(Function<Field, TypedField> fieldProvider, QueryRewriter queryRewriter, boolean withAlias) {
-    String fieldExpression = this.field.sqlExpression(fieldProvider, queryRewriter);
-    String valuesToAggregate;
-    if (this.criteria != null) {
-      Function<Field, TypedField> fp = MeasureUtils.withFallback(fieldProvider, Number.class);
-      String conditionSt = SQLTranslator.toSql(fp, this.criteria, queryRewriter);
-      valuesToAggregate = "case when " + conditionSt + " then " + fieldExpression + " end";
-    } else {
-      valuesToAggregate = fieldExpression;
-    }
-    if (distinct) {
-      valuesToAggregate = "distinct(" + valuesToAggregate + ")";
-    }
-    String sql = this.aggregationFunction + "(" + valuesToAggregate + ")";
-    return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.alias) : sql;
-  }
-
-  @Override
   public String alias() {
     return this.alias;
   }
@@ -83,8 +55,4 @@ public class AggregatedMeasure implements BasicMeasure {
     return this.expression;
   }
 
-  @Override
-  public <R> R accept(MeasureVisitor<R> visitor) {
-    return visitor.visit(this);
-  }
 }

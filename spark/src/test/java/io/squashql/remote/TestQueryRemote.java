@@ -4,8 +4,10 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import com.github.dockerjava.api.command.LogContainerCmd;
 import io.squashql.SparkDatastore;
-import io.squashql.query.database.DatabaseQuery;
+import io.squashql.query.AggregatedMeasure;
+import io.squashql.query.QueryExecutor;
 import io.squashql.query.database.SparkQueryEngine;
+import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Datastore;
 import io.squashql.table.Table;
 import io.squashql.transaction.SparkDataLoader;
@@ -35,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
+import static io.squashql.query.TableField.tableField;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 import static org.testcontainers.containers.output.OutputFrame.OutputType.STDERR;
@@ -86,7 +89,7 @@ public class TestQueryRemote {
   void testQuery() {
     String storeName = "storeName";
     SparkDatastore datastore = (SparkDatastore) createDatastore();
-    SparkQueryEngine queryEngine = new SparkQueryEngine(datastore);
+    QueryExecutor executor = new QueryExecutor(new SparkQueryEngine(datastore));
     SparkDataLoader tm = new SparkDataLoader(datastore.spark);
 
     TableTypedField ean = new TableTypedField(storeName, "ean", String.class);
@@ -107,12 +110,12 @@ public class TestQueryRemote {
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
 
-    DatabaseQuery query = new DatabaseQuery()
+    QueryDto query = new QueryDto()
             .table(storeName)
-            .withSelect(new TableTypedField(storeName, SCENARIO_FIELD_NAME, String.class))
-            .aggregatedMeasure("p", "price", "sum")
-            .aggregatedMeasure("q", "quantity", "sum");
-    Table result = queryEngine.execute(query);
+            .withColumn(tableField(storeName, SCENARIO_FIELD_NAME))
+            .withMeasure(new AggregatedMeasure("p", "price", "sum"))
+            .withMeasure(new AggregatedMeasure("q", "quantity", "sum"));
+    Table result = executor.executeQuery(query);
     Assertions.assertThat(result).containsExactlyInAnyOrder(
             List.of("base", 15.0d, 33l),
             List.of("s1", 17.0d, 33l));

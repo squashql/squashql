@@ -1,26 +1,25 @@
 package io.squashql.query;
 
-import static io.squashql.query.PeriodUnit.MONTH;
-import static io.squashql.query.PeriodUnit.QUARTER;
-import static io.squashql.query.PeriodUnit.SEMESTER;
-import static io.squashql.query.PeriodUnit.YEAR;
-
+import io.squashql.query.compiled.CompiledComparisonMeasure;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.Period;
+import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
+import org.eclipse.collections.api.map.primitive.ObjectIntMap;
+import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
+
 import java.time.LocalDate;
 import java.time.temporal.IsoFields;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiPredicate;
-import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
-import org.eclipse.collections.api.map.primitive.ObjectIntMap;
-import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
+
+import static io.squashql.query.PeriodUnit.*;
 
 public class PeriodComparisonExecutor extends AComparisonExecutor {
 
-  final ComparisonMeasureReferencePosition cmrp;
+  final CompiledComparisonMeasure cmrp;
 
-  public PeriodComparisonExecutor(ComparisonMeasureReferencePosition cmrp) {
+  public PeriodComparisonExecutor(CompiledComparisonMeasure cmrp) {
     this.cmrp = cmrp;
   }
 
@@ -39,12 +38,12 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
   }
 
   @Override
-  protected BiPredicate<Object[], Header[]> createShiftProcedure(ComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
+  protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasure cm, ObjectIntMap<String> indexByColumn) {
     Map<PeriodUnit, String> referencePosition = new HashMap<>();
-    Period period = this.cmrp.period;
+    Period period = this.cmrp.measure().period;
     Map<Field, PeriodUnit> mapping = mapping(period);
     MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
-    for (Map.Entry<Field, String> entry : cm.referencePosition.entrySet()) {
+    for (Map.Entry<Field, String> entry : cm.measure().referencePosition.entrySet()) {
       PeriodUnit pu = mapping.get(entry.getKey());
       referencePosition.put(pu, entry.getValue());
       indexByPeriodUnit.put(pu, indexByColumn.getIfAbsent(entry.getKey().name(), -1));

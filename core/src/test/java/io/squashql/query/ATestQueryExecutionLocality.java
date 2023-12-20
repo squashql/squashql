@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.QueryRewriter;
@@ -58,7 +59,7 @@ public abstract class ATestQueryExecutionLocality extends ABaseTestQuery {
             List.of("bottle", 10d),
             List.of("cookie", 30d),
             List.of("shirt", 15d));
-    Assertions.assertThat(interceptor.lastExecutedDatabaseQuery.measures).contains(divide);
+    Assertions.assertThat(interceptor.lastExecutedDatabaseQuery.measures.stream().map(CompiledMeasure::measure)).contains(divide);
   }
 
   private static class QueryEngineInterceptor<T extends Datastore> implements QueryEngine<T> {
@@ -96,5 +97,6 @@ public abstract class ATestQueryExecutionLocality extends ABaseTestQuery {
     public QueryRewriter queryRewriter() {
       return this.underlying.queryRewriter();
     }
+
   }
 }

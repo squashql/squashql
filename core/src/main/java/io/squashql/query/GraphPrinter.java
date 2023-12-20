@@ -61,7 +61,7 @@ public class GraphPrinter {
     if (o instanceof QueryExecutor.QueryPlanNodeKey key) {
       StringBuilder sb = new StringBuilder();
       sb.append("scope=").append("#").append(idProvider.apply(key.queryScope()));
-      sb.append(", measure=[").append(key.measure().alias()).append("]; [").append(key.measure().withExpression(MeasureUtils.createExpression(key.measure())).expression()).append("]");
+      sb.append(", measure=[").append(key.measure().alias()).append("]; [").append(MeasureUtils.createExpression(key.measure().measure())).append("]");
       return sb.toString();
     } else {
       return String.valueOf(o);
@@ -70,10 +70,10 @@ public class GraphPrinter {
 
   private static String printQueryPlanNodeKey(QueryExecutor.QueryScope scope) {
     StringBuilder sb = new StringBuilder();
-    appendIfNotNullOrNotEmpty(sb, null, scope.tableDto());
+    appendIfNotNullOrNotEmpty(sb, null, scope.table());
     appendIfNotNullOrNotEmpty(sb, null, scope.subQuery());
     appendIfNotNullOrNotEmpty(sb, "columns=", scope.columns().stream().map(TypedField::toString).toList());
-    appendIfNotNullOrNotEmpty(sb, null, scope.whereCriteriaDto());
+    appendIfNotNullOrNotEmpty(sb, null, scope.whereCriteria());
     appendIfNotNullOrNotEmpty(sb, "rollup=", scope.rollupColumns().stream().map(TypedField::toString).toList());
     return sb.toString();
   }

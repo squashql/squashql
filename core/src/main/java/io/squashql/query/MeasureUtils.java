@@ -1,12 +1,8 @@
 package io.squashql.query;
 
-import io.squashql.PrimitiveMeasureVisitor;
+import io.squashql.query.compiled.*;
 import io.squashql.query.database.QueryRewriter;
-import io.squashql.query.database.SQLTranslator;
-import io.squashql.query.dto.CriteriaDto;
-import io.squashql.query.dto.Period;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.NoArgsConstructor;
@@ -14,7 +10,6 @@ import lombok.NoArgsConstructor;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 @NoArgsConstructor
 public final class MeasureUtils {
@@ -23,12 +18,12 @@ public final class MeasureUtils {
 
   public static String createExpression(Measure m) {
     if (m instanceof AggregatedMeasure a) {
-      Function<Field, TypedField> fieldProvider = s -> new TableTypedField(null, s.name(), String.class);
-      if (a.criteria != null) {
-        String conditionSt = SQLTranslator.toSql(fieldProvider, a.criteria, BASIC);
-        return a.aggregationFunction + "If(" + a.field.sqlExpression(fieldProvider, BASIC) + ", " + conditionSt + ")";
+      final CompiledAggregatedMeasure compiled = (CompiledAggregatedMeasure) new ExpressionResolver(m).getMeasures().get(0);
+      final String fieldExpression = compiled.field().sqlExpression(BASIC);
+      if (compiled.criteria() == null) {
+        return a.aggregationFunction + "(" + fieldExpression + ")";
       } else {
-        return a.aggregationFunction + "(" + a.field.sqlExpression(fieldProvider, BASIC) + ")";
+        return a.aggregationFunction + "If(" + fieldExpression + ", " + compiled.criteria().sqlExpression(BASIC) + ")";
       }
     } else if (m instanceof BinaryOperationMeasure bom) {
       return quoteExpression(bom.leftOperand) + " " + bom.operator.infix + " " + quoteExpression(bom.rightOperand);
@@ -50,7 +45,25 @@ public final class MeasureUtils {
     }
   }
 
-  private static String quoteExpression(Measure m) {
+  private static class ExpressionResolver extends QueryResolver {
+
+    public ExpressionResolver(Measure m) {
+      super(new QueryDto().withMeasure(m), Collections.emptyMap());
+    }
+
+    @Override
+    protected TypedField resolveField(Field field) {
+      return new TableTypedField(null, field.name(), String.class);
+    }
+
+    @Override
+    protected void checkQuery(QueryDto query) {
+      // nothing to do
+    }
+  }
+
+
+   private static String quoteExpression(Measure m) {
     if (m.alias() != null) {
       return m.alias();
     }
@@ -63,85 +76,73 @@ public final class MeasureUtils {
   }
 
   public static QueryExecutor.QueryScope getReadScopeComparisonMeasureReferencePosition(
-          QueryDto query,
-          ComparisonMeasureReferencePosition cm,
-          QueryExecutor.QueryScope queryScope,
-          Function<Field, TypedField> fieldSupplier) {
-    AtomicReference<CriteriaDto> copy = new AtomicReference<>(queryScope.whereCriteriaDto() == null ? null : CriteriaDto.deepCopy(queryScope.whereCriteriaDto()));
-    Consumer<Field> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
-    Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
-            .ifPresent(cs -> cs.getColumnsForPrefetching().forEach(criteriaRemover));
-    Optional.ofNullable(cm.period)
+          List<TypedField> columns,
+          List<TypedField> bucketColumns,
+          CompiledComparisonMeasure cm,
+          QueryExecutor.QueryScope queryScope) {
+    AtomicReference<CompiledCriteria> copy = new AtomicReference<>(queryScope.whereCriteria() == null ? null : CompiledCriteria.deepCopy(queryScope.whereCriteria()));
+    Consumer<TypedField> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
+    bucketColumns.forEach(criteriaRemover);
+    Optional.ofNullable(cm.period())
             .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover));
     Set<TypedField> rollupColumns = new LinkedHashSet<>(queryScope.rollupColumns()); // order does matter
-    Optional.ofNullable(cm.ancestors)
+    Optional.ofNullable(cm.ancestors())
             .ifPresent(ancestors -> {
               ancestors.forEach(criteriaRemover);
-              List<TypedField> ancestorFields = ancestors.stream().filter(ancestor -> query.columns.contains(ancestor)).map(fieldSupplier).toList();
+              List<TypedField> ancestorFields = ancestors.stream().filter(columns::contains).toList();
               rollupColumns.addAll(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage reverse order".
             });
-    return new QueryExecutor.QueryScope(queryScope.tableDto(),
+    return new QueryExecutor.QueryScope(queryScope.table(),
             queryScope.subQuery(),
             queryScope.columns(),
             copy.get(),
-            queryScope.havingCriteriaDto(),
+            queryScope.havingCriteria(),
             new ArrayList<>(rollupColumns),
             new ArrayList<>(queryScope.groupingSets()), // FIXME should handle groupingSets
-            queryScope.virtualTableDto());
+            queryScope.virtualTable());
   }
 
-  private static CriteriaDto removeCriteriaOnField(Field field, CriteriaDto root) {
+  private static CompiledCriteria removeCriteriaOnField(TypedField field, CompiledCriteria root) {
     if (root == null) {
       return null;
-    } else if (root.field != null && root.condition != null) { // where clause condition
-      return root.field.equals(field) ? null : root;
+    } else if (root.field() != null && root.condition() != null) { // where clause condition
+      return root.field().equals(field) ? null : root;
     } else {
-      removeCriteriaOnField(field, root.children);
+      removeCriteriaOnField(field, root.children());
       return root;
     }
   }
 
-  private static void removeCriteriaOnField(Field field, List<CriteriaDto> children) {
-    Iterator<CriteriaDto> iterator = children.iterator();
+  private static void removeCriteriaOnField(TypedField field, List<CompiledCriteria> children) {
+    Iterator<CompiledCriteria> iterator = children.iterator();
     while (iterator.hasNext()) {
-      CriteriaDto criteriaDto = iterator.next();
-      if (criteriaDto.field != null && criteriaDto.condition != null) { // where clause condition
-        if (criteriaDto.field.equals(field)) {
+      CompiledCriteria criteriaDto = iterator.next();
+      if (criteriaDto.field() != null && criteriaDto.condition() != null) { // where clause condition
+        if (criteriaDto.field().equals(field)) {
           iterator.remove();
         }
       } else {
-        removeCriteriaOnField(field, criteriaDto.children);
+        removeCriteriaOnField(field, criteriaDto.children());
       }
     }
   }
 
-  public static boolean isPrimitive(Measure m) {
+  public static boolean isPrimitive(CompiledMeasure m) {
     return m.accept(new PrimitiveMeasureVisitor());
   }
 
-  public static List<Field> getColumnsForPrefetching(Period period) {
-    if (period instanceof Period.Quarter q) {
+  public static List<TypedField> getColumnsForPrefetching(CompiledPeriod period) {
+    if (period instanceof CompiledPeriod.Quarter q) {
       return List.of(q.year(), q.quarter());
-    } else if (period instanceof Period.Year y) {
+    } else if (period instanceof CompiledPeriod.Year y) {
       return List.of(y.year());
-    } else if (period instanceof Period.Month m) {
+    } else if (period instanceof CompiledPeriod.Month m) {
       return List.of(m.year(), m.month());
-    } else if (period instanceof Period.Semester s) {
+    } else if (period instanceof CompiledPeriod.Semester s) {
       return List.of(s.year(), s.semester());
     } else {
       throw new RuntimeException(period + " not supported yet");
     }
   }
 
-  public static Function<Field, TypedField> withFallback(Function<Field, TypedField> fieldProvider, Class<?> fallbackType) {
-    return field -> {
-      try {
-        return fieldProvider.apply(field);
-      } catch (FieldNotFoundException e) {
-        // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
-        // contains only "raw" fields, it will throw an exception.
-        return new TableTypedField(null, field.name(), fallbackType);
-      }
-    };
-  }
 }
