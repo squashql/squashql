@@ -46,7 +46,7 @@ public class TestSQLTranslator {
         default -> String.class;
       };
       if (field instanceof BinaryOperationField bf) {
-        return new BinaryOperationTypedField(bf.operator, resolveField(bf.leftOperand), resolveField(bf.rightOperand));
+        return new BinaryOperationTypedField(bf.operator, resolveField(bf.leftOperand), resolveField(bf.rightOperand), field.alias());
       } else if (field instanceof ConstantField cf) {
         return new ConstantTypedField(cf.value);
       }

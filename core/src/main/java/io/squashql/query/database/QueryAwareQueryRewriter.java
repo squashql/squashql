@@ -51,8 +51,8 @@ public class QueryAwareQueryRewriter implements QueryRewriter {
   }
 
   @Override
-  public String measureAlias(String alias) {
-    return this.underlying.measureAlias(alias);
+  public String escapeAlias(String alias) {
+    return this.underlying.escapeAlias(alias);
   }
 
   @Override

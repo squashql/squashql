@@ -129,7 +129,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
     }
 
     @Override
-    public String measureAlias(String alias) {
+    public String escapeAlias(String alias) {
       return SqlUtils.backtickEscape(alias);
     }
 

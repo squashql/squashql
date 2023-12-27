@@ -209,7 +209,6 @@ public class QueryExecutor {
         evaluator.accept(queryNode, executionContext);
       }
     });
-    GraphPrinter.print(dependencyGraph);
     globalPlan.execute();
 
     Table result = tableByScope.get(queryResolver.getScope());
@@ -218,7 +217,7 @@ public class QueryExecutor {
       limitNotifier.accept(queryLimit);
     }
 
-    result = TableUtils.selectAndOrderColumns((ColumnarTable) result, query);
+    result = TableUtils.selectAndOrderColumns(queryResolver, (ColumnarTable) result, query);
     if (replaceTotalCellsAndOrderRows) {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result, !query.rollupColumns.isEmpty());
       result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
@@ -323,10 +322,10 @@ public class QueryExecutor {
       // computed. This is why it is removed from the axes.
       ColumnSet columnSet = query.columnSets.get(BUCKET);
       if (columnSet != null) {
-        Field name = ((BucketColumnSetDto) columnSet).newField;
-        if (fields.contains(name)) {
+        Field newField = ((BucketColumnSetDto) columnSet).newField;
+        if (fields.contains(newField)) {
           fields = new ArrayList<>(fields);
-          fields.remove(name);
+          fields.remove(newField);
         }
       }
       return fields;

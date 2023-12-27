@@ -18,7 +18,7 @@ class DuckDBQueryRewriter implements QueryRewriter {
   }
 
   @Override
-  public String measureAlias(String alias) {
+  public String escapeAlias(String alias) {
     return SqlUtils.doubleQuoteEscape(alias);
   }
 

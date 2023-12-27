@@ -17,4 +17,14 @@ public class ConstantField implements Field {
   public String name() {
     throw new IllegalStateException("Incorrect path of execution");
   }
+
+  @Override
+  public Field as(String alias) {
+    throw new RuntimeException("Not supported");
+  }
+
+  @Override
+  public String alias() {
+    throw new IllegalStateException("Incorrect path of execution");
+  }
 }

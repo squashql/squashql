@@ -40,13 +40,44 @@ public interface QueryRewriter {
    * @return the customized argument
    */
   default String select(TypedField f) {
+    return _select(f, true);
+  }
+
+  /**
+   * Customizes what's written in the SELECT statement AND GROUP BY for the given selected column.
+   * See {@link SQLTranslator}.
+   *
+   * @param f field to use in select
+   * @return the customized argument
+   */
+  default String groupBy(TypedField f) {
+    return aliasOrFullExpression(f);
+  }
+
+  /**
+   * Customizes what's written in the grouping function. See {@link SQLTranslator}.
+   *
+   * @param f field to use in select
+   * @return the customized argument
+   */
+  default String grouping(TypedField f) {
+    return aliasOrFullExpression(f);
+  }
+
+  default String _select(TypedField f, boolean withAlias) {
+    StringBuilder sb = new StringBuilder();
     if (f instanceof TableTypedField ttf) {
-      return getFieldFullName(ttf);
+      sb.append(getFieldFullName(ttf));
     } else if (f instanceof FunctionTypedField ftf) {
-      return functionExpression(ftf);
+      sb.append(functionExpression(ftf));
     } else {
       throw new IllegalArgumentException(f.getClass().getName());
     }
+    String alias = f.alias();
+    if (withAlias && alias != null) {
+      sb.append(" AS ").append(escapeAlias(alias));
+    }
+    return sb.toString();
   }
 
   /**
@@ -56,10 +87,19 @@ public interface QueryRewriter {
    * @return the customized argument
    */
   default String rollup(TypedField f) {
-    return select(f);
+    return aliasOrFullExpression(f);
   }
 
-  default String measureAlias(String alias) {
+  default String aliasOrFullExpression(TypedField f) {
+    String alias = f.alias();
+    if (alias != null) {
+      return escapeAlias(alias);
+    } else {
+      return _select(f, false);
+    }
+  }
+
+  default String escapeAlias(String alias) {
     return alias;
   }
 

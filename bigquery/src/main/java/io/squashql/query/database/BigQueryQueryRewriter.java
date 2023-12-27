@@ -40,7 +40,7 @@ public class BigQueryQueryRewriter implements QueryRewriter {
    * FIXME must used a regex instead to replace incorrect characters.
    */
   @Override
-  public String measureAlias(String alias) {
+  public String escapeAlias(String alias) {
     return SqlUtils.backtickEscape(alias)
             .replace("(", "_")
             .replace(")", "_")

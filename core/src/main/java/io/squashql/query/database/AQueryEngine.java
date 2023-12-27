@@ -5,8 +5,6 @@ import io.squashql.store.Datastore;
 import io.squashql.store.Store;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
-import io.squashql.type.FunctionTypedField;
-import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
@@ -133,18 +131,9 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue) {
     List<Header> headers = new ArrayList<>();
-    Function<TypedField, String> typedFieldStringFunction = f -> {
-      if (f instanceof TableTypedField ttf) {
-        return SqlUtils.getFieldFullName(ttf);
-      } else if (f instanceof FunctionTypedField ftf) {
-        return SqlUtils.singleOperandFunctionName(ftf.function(), SqlUtils.getFieldFullName(ftf.field()));
-      } else {
-        throw new IllegalArgumentException(f.getClass().getName());
-      }
-    };
-    List<String> fieldNames = new ArrayList<>(query.select.stream().map(typedFieldStringFunction).toList());
+    List<String> fieldNames = new ArrayList<>(query.select.stream().map(SqlUtils::squashqlExpression).toList());
     List<TypedField> groupingSelects = Queries.generateGroupingSelect(query);
-    groupingSelects.forEach(r -> fieldNames.add(SqlUtils.groupingAlias(typedFieldStringFunction.apply(r))));
+    groupingSelects.forEach(r -> fieldNames.add(SqlUtils.groupingAlias(SqlUtils.squashqlExpression(r))));
     query.measures.forEach(m -> fieldNames.add(m.alias()));
     List<List<Object>> values = new ArrayList<>(columns.size());
     for (int i = 0; i < columns.size(); i++) {

@@ -15,25 +15,27 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.squashql.query.ColumnSetKey.BUCKET;
 import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUNT;
 
 @Data
 public class QueryResolver {
 
+  private final QueryDto query;
   private final Map<String, Store> storesByName;
   private final QueryExecutor.QueryScope scope;
   private final List<TypedField> bucketColumns;
   private final List<TypedField> columns;
-  private final CompilationCache cache;
+  private final CompilationCache cache = new CompilationCache();
   private final List<CompiledMeasure> subQueryMeasures;
   private final List<CompiledMeasure> measures;
 
   public QueryResolver(QueryDto query, Map<String, Store> storesByName) {
+    this.query = query;
     this.storesByName = storesByName;
     if (query.virtualTableDto != null) {
       this.storesByName.put(query.virtualTableDto.name, VirtualTableDto.toStore(query.virtualTableDto));
     }
-    this.cache = new CompilationCache();
     this.columns = query.columns.stream().map(this::resolveField).toList();
     this.bucketColumns = Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
@@ -42,17 +44,30 @@ public class QueryResolver {
     this.measures = compileMeasures(query.measures, true);
   }
 
+  public TypedField getTypedField(Field field) {
+    return resolveField(field);
+  }
+
   /**
-   * Filed resolver
+   * Field resolver
    */
   protected TypedField resolveField(final Field field) {
     return this.cache.computeIfAbsent(field, f -> {
+      // Special case for the column that is created due to the column set.
+      ColumnSet columnSet = this.query.columnSets.get(BUCKET);
+      if (columnSet != null) {
+        Field newField = ((BucketColumnSetDto) columnSet).newField;
+        if (field.equals(newField)) {
+          return new TableTypedField(null, newField.name(), String.class, null);
+        }
+      }
+
       if (f instanceof TableField tf) {
-        return getTableTypedField(tf.name());
+        return getTableTypedField(tf.name(), field.alias());
       } else if (f instanceof FunctionField ff) {
-        return new FunctionTypedField(getTableTypedField(ff.field.name()), ff.function);
+        return new FunctionTypedField(getTableTypedField(ff.field.name(), ff.field.alias()), ff.function, ff.alias);
       } else if (f instanceof BinaryOperationField ff) {
-        return new BinaryOperationTypedField(ff.operator, resolveField(ff.leftOperand), resolveField(ff.rightOperand));
+        return new BinaryOperationTypedField(ff.operator, resolveField(ff.leftOperand), resolveField(ff.rightOperand), ff.alias);
       } else if (f instanceof ConstantField ff) {
         return new ConstantTypedField(ff.value);
       } else {
@@ -67,11 +82,11 @@ public class QueryResolver {
     } catch (FieldNotFoundException e) {
       // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
       // contains only "raw" fields, it will throw an exception.
-      return new TableTypedField(null, field.name(), Number.class);
+      return new TableTypedField(null, field.name(), Number.class, field.alias());
     }
   }
 
-  private TableTypedField getTableTypedField(String fieldName) {
+  private TableTypedField getTableTypedField(String fieldName, String alias) {
     final String[] split = fieldName.split("\\.");
     if (split.length > 1) {
       final String tableName = split[0];
@@ -80,7 +95,7 @@ public class QueryResolver {
       if (store != null) {
         for (TableTypedField field : store.fields()) {
           if (field.name().equals(fieldNameInTable)) {
-            return field;
+            return alias == null ? field : new TableTypedField(field.store(), field.name(), field.type(), alias);
           }
         }
       }
@@ -90,14 +105,14 @@ public class QueryResolver {
           if (field.name().equals(fieldName)) {
             // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
             // if any ambiguity, the DB will raise an exception.
-            return new TableTypedField(null, fieldName, field.type());
+            return new TableTypedField(null, fieldName, field.type(), alias);
           }
         }
       }
     }
 
     if (fieldName.equals(CountMeasure.INSTANCE.alias())) {
-      return new TableTypedField(null, CountMeasure.INSTANCE.alias(), long.class);
+      return new TableTypedField(null, CountMeasure.INSTANCE.alias(), long.class, alias);
     }
     throw new FieldNotFoundException("Cannot find field with name " + fieldName);
   }
