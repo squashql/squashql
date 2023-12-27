@@ -8,6 +8,7 @@ import io.squashql.query.dto.*;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -113,6 +114,9 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Test
   void testQueryWildcardWithFullRollupWithAliases() {
+    // Spark. See https://github.com/squashql/squashql/issues/186
+    Assumptions.assumeFalse(this.queryEngine.getClass().getSimpleName().contains(TestClass.Type.SPARK.className));
+
     Field scenario = tableField(SCENARIO_FIELD_NAME).as("scenario_alias");
     Field category = tableField("category").as("category_alias");
     QueryDto query = Query
