@@ -625,7 +625,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   @Test
   void testConstantMeasures() {
     Measure integer = Functions.integer(100);
-    Measure decimal = Functions.decimal(100);
+    Measure decimal = Functions.decimal(100.5);
     Measure ca = sum("ca", "price");
     Measure qty = sum("qty", "quantity");
     QueryDto query = Query
@@ -639,9 +639,9 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
                     decimal))
             .build();
     Table result = this.executor.executeQuery(query);
-    Assertions.assertThat(result).containsExactly(List.of(4650d, 4650d, 9900L, 9900d, translate(100), 100d));
+    Assertions.assertThat(result).containsExactly(List.of(4650d, 4673.25d, 9900L, 9949.5d, translate(100), 100.5));
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
-            .containsExactly("a1", "a2", "b1", "b2", "constant(100)", "constant(100.0)");
+            .containsExactly("a1", "a2", "b1", "b2", "constant(100)", "constant(100.5)");
   }
 
   @Test
