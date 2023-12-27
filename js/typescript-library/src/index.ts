@@ -48,7 +48,7 @@ export {
 } from './queryBuilder'
 
 export {
-  TableField, ConstantField, Field, tableFields, tableField,
+  TableField, ConstantField, Field, AliasedField, tableFields, tableField,
   countRows
 } from './field'
 export {

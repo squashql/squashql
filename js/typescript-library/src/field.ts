@@ -11,6 +11,8 @@ export interface Field {
   multiply(other: Field): Field
 
   plus(other: Field): Field
+
+  as(alias: string): Field
 }
 
 abstract class AField implements Field {
@@ -31,6 +33,27 @@ abstract class AField implements Field {
   plus(other: Field): Field {
     return new BinaryOperationField(BinaryOperator.PLUS, this, other)
   }
+
+  abstract as(alias: string): Field
+}
+
+export class AliasedField extends AField {
+  readonly class: string = PACKAGE + "AliasedField"
+
+  constructor(readonly alias: string) {
+    super()
+  }
+
+  as(alias: string): Field {
+    return new AliasedField(alias)
+  }
+
+  toJSON() {
+    return {
+      "@class": this.class,
+      "alias": this.alias,
+    }
+  }
 }
 
 export class ConstantField extends AField {
@@ -38,6 +61,11 @@ export class ConstantField extends AField {
 
   constructor(readonly value: any) {
     super()
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  as(alias: string): Field {
+    throw new Error("not supported")
   }
 
   toJSON() {
@@ -53,7 +81,7 @@ export class TableField extends AField {
   tableName: string
   fieldName: string
 
-  constructor(readonly fullName: string) {
+  constructor(readonly fullName: string, readonly alias?: string) {
     super()
     this.setAttributes()
   }
@@ -70,31 +98,40 @@ export class TableField extends AField {
     }
   }
 
+  as(alias: string): Field {
+    return new TableField(this.fullName, alias)
+  }
+
   toJSON() {
     return {
       "@class": this.class,
       "fullName": this.fullName,
       "tableName": this.tableName,
       "fieldName": this.fieldName,
+      "alias": this.alias,
     }
   }
 }
 
 export const countRows = new AggregatedMeasure("_contributors_count_", new TableField("*"), "count")
 
-export function tableField(fullName:string) {
+export function tableField(fullName: string) {
   return new TableField(fullName)
 }
 
-export function tableFields(fullNames:string[]) {
+export function tableFields(fullNames: string[]) {
   return fullNames.map(f => new TableField(f))
 }
 
 export class BinaryOperationField extends AField {
   readonly class: string = PACKAGE + "BinaryOperationField"
 
-  constructor(readonly operator: BinaryOperator, readonly leftOperand: Field, readonly rightOperand: Field) {
+  constructor(readonly operator: BinaryOperator, readonly leftOperand: Field, readonly rightOperand: Field, readonly alias?: string) {
     super()
+  }
+
+  as(alias: string): Field {
+    return new BinaryOperationField(this.operator, this.leftOperand, this.rightOperand, alias)
   }
 
   toJSON() {
@@ -103,6 +140,7 @@ export class BinaryOperationField extends AField {
       "operator": this.operator,
       "leftOperand": this.leftOperand,
       "rightOperand": this.rightOperand,
+      "alias": this.alias,
     }
   }
 }
