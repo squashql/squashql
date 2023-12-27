@@ -70,6 +70,8 @@ public class QueryResolver {
         return new BinaryOperationTypedField(ff.operator, resolveField(ff.leftOperand), resolveField(ff.rightOperand), ff.alias);
       } else if (f instanceof ConstantField ff) {
         return new ConstantTypedField(ff.value);
+      } else if (f instanceof AliasedField af) {
+        return new AliasedTypedField(af.alias());
       } else {
         throw new IllegalArgumentException(f.getClass().getName());
       }

@@ -3,6 +3,7 @@ package io.squashql.query.database;
 import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
+import io.squashql.type.TypedField;
 
 /**
  * A {@link QueryRewriter} whose logic depends on the query being executed. See {@link #getFieldFullName(TableTypedField)}.
@@ -63,5 +64,10 @@ public class QueryAwareQueryRewriter implements QueryRewriter {
   @Override
   public String escapeSingleQuote(String s) {
     return this.underlying.escapeSingleQuote(s);
+  }
+
+  @Override
+  public String grouping(TypedField f) {
+    return this.underlying.grouping(f);
   }
 }

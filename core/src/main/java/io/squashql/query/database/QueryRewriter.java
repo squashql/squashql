@@ -1,5 +1,6 @@
 package io.squashql.query.database;
 
+import io.squashql.type.AliasedTypedField;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
@@ -70,6 +71,8 @@ public interface QueryRewriter {
       sb.append(getFieldFullName(ttf));
     } else if (f instanceof FunctionTypedField ftf) {
       sb.append(functionExpression(ftf));
+    } else if (f instanceof AliasedTypedField atf) {
+      sb.append(escapeAlias(atf.alias()));
     } else {
       throw new IllegalArgumentException(f.getClass().getName());
     }

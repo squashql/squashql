@@ -2,6 +2,7 @@ package io.squashql.query.database;
 
 import io.squashql.query.date.DateFunctions;
 import io.squashql.type.FunctionTypedField;
+import io.squashql.type.TypedField;
 
 public class BigQueryQueryRewriter implements QueryRewriter {
 
@@ -56,5 +57,11 @@ public class BigQueryQueryRewriter implements QueryRewriter {
   @Override
   public String escapeSingleQuote(String s) {
     return SqlUtils.escapeSingleQuote(s, "\\'");
+  }
+
+  @Override
+  public String grouping(TypedField f) {
+    // BQ does not support using the alias
+    return _select(f, false);
   }
 }
