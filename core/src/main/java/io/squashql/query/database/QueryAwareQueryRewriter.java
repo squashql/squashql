@@ -70,4 +70,14 @@ public class QueryAwareQueryRewriter implements QueryRewriter {
   public String grouping(TypedField f) {
     return this.underlying.grouping(f);
   }
+
+  @Override
+  public String rollup(TypedField f) {
+    return this.underlying.rollup(f);
+  }
+
+  @Override
+  public String groupBy(TypedField f) {
+    return this.underlying.groupBy(f);
+  }
 }
