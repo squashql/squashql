@@ -24,16 +24,8 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   public final T datastore;
 
-  protected final QueryRewriter queryRewriter;
-
-  protected AQueryEngine(T datastore, QueryRewriter queryRewriter) {
+  protected AQueryEngine(T datastore) {
     this.datastore = datastore;
-    this.queryRewriter = queryRewriter;
-  }
-
-  @Override
-  public QueryRewriter queryRewriter() {
-    return this.queryRewriter;
   }
 
   @Override
@@ -59,7 +51,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   }
 
   protected String createSqlStatement(DatabaseQuery query) {
-    return SQLTranslator.translate(query, this.queryRewriter);
+    return SQLTranslator.translate(query, this.queryRewriter(query));
   }
 
   protected abstract Table retrieveAggregates(DatabaseQuery query, String sql);

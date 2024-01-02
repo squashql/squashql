@@ -63,7 +63,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void test(boolean useFullName) {
-    QueryRewriter qr = this.executor.queryEngine.queryRewriter();
+    QueryRewriter qr = this.executor.queryEngine.queryRewriter(null);
     String expression = String.format("sum(%s * %s)", qr.fieldName("unitPrice"), qr.fieldName("qtySold"));
     ExpressionMeasure sales = new ExpressionMeasure("sales", expression);
     BiFunction<String, String, String> fieldNameGenerator = (table, field) -> useFullName ? SqlUtils.getFieldFullName(table, field) : field;
@@ -114,7 +114,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 
   @Test
   void testConditionFieldCombined() {
-    QueryRewriter qr = this.executor.queryEngine.queryRewriter();
+    QueryRewriter qr = this.executor.queryEngine.queryRewriter(null);
     String expression = String.format("sum(%s * %s)", qr.fieldName("unitPrice"), qr.fieldName("qtySold"));
     ExpressionMeasure sales = new ExpressionMeasure("sales", expression);
     TableField kvi = new TableField(this.storeName, "kvi");

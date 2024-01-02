@@ -4,6 +4,10 @@ import io.squashql.type.TypedField;
 
 public class SparkQueryRewriter extends DefaultQueryRewriter {
 
+  public SparkQueryRewriter(DatabaseQuery query) {
+    super(query);
+  }
+
   @Override
   public String escapeSingleQuote(String s) {
     return SqlUtils.escapeSingleQuote(s, "\\'");

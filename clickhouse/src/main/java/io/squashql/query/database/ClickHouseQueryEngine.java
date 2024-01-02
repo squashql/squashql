@@ -44,7 +44,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
   protected final ClickHouseNodes nodes;
 
   public ClickHouseQueryEngine(ClickHouseDatastore datastore) {
-    super(datastore, new ClickHouseQueryRewriter());
+    super(datastore);
     this.nodes = datastore.servers;
   }
 
@@ -121,7 +121,23 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
     return SUPPORTED_AGGREGATION_FUNCTIONS;
   }
 
+  @Override
+  public QueryRewriter queryRewriter(DatabaseQuery query) {
+    return new ClickHouseQueryRewriter(query);
+  }
+
   static class ClickHouseQueryRewriter implements QueryRewriter {
+
+    private final DatabaseQuery query;
+
+    ClickHouseQueryRewriter(DatabaseQuery query) {
+      this.query = query;
+    }
+
+    @Override
+    public DatabaseQuery query() {
+      return this.query;
+    }
 
     @Override
     public String fieldName(String field) {

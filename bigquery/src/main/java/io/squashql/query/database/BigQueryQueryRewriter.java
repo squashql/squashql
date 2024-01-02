@@ -8,10 +8,17 @@ public class BigQueryQueryRewriter implements QueryRewriter {
 
   private final String projectId;
   private final String datasetName;
+  private final DatabaseQuery query;
 
-  BigQueryQueryRewriter(String projectId, String datasetName) {
+  BigQueryQueryRewriter(String projectId, String datasetName, DatabaseQuery query) {
     this.projectId = projectId;
     this.datasetName = datasetName;
+    this.query = query;
+  }
+
+  @Override
+  public DatabaseQuery query() {
+    return this.query;
   }
 
   @Override

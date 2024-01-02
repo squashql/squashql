@@ -1,6 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.compiled.*;
+import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.type.TableTypedField;
@@ -14,7 +15,17 @@ import java.util.function.Consumer;
 @NoArgsConstructor
 public final class MeasureUtils {
 
-  public static final QueryRewriter BASIC = () -> false;
+  public static final QueryRewriter BASIC = new QueryRewriter() {
+    @Override
+    public DatabaseQuery query() {
+      return null;
+    }
+
+    @Override
+    public boolean usePartialRollupSyntax() {
+      return false;
+    }
+  };
 
   public static String createExpression(Measure m) {
     if (m instanceof AggregatedMeasure a) {

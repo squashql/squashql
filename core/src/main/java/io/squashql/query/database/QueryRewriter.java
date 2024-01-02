@@ -1,5 +1,6 @@
 package io.squashql.query.database;
 
+import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.type.AliasedTypedField;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
@@ -7,8 +8,17 @@ import io.squashql.type.TypedField;
 
 public interface QueryRewriter {
 
+  DatabaseQuery query();
+
   default String getFieldFullName(TableTypedField f) {
-    return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
+    VirtualTableDto vt = query() != null ? query().virtualTableDto : null;
+    if (vt != null
+            && vt.name.equals(f.store())
+            && vt.fields.contains(f.name())) {
+      return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
+    } else {
+      return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
+    }
   }
 
   default String fieldName(String field) {
