@@ -20,7 +20,7 @@ public class SqlUtils {
   }
 
   public static String appendAlias(String sql, QueryRewriter queryRewriter, String alias) {
-    return sql + " as " + queryRewriter.measureAlias(alias);
+    return sql + " as " + queryRewriter.escapeAlias(alias);
   }
 
   public static String getFieldFullName(String store, String name) {
@@ -31,7 +31,15 @@ public class SqlUtils {
     return field.store() == null ? field.name() : field.store() + '.' + field.name();
   }
 
-  public static String expression(TypedField f) {
+  /**
+   * This expression is different than {@link TypedField#sqlExpression(QueryRewriter)} because it is valid only for SquashQL
+   * and not for the underlying DB.
+   */
+  public static String squashqlExpression(TypedField f) {
+    if (f.alias() != null) {
+      return f.alias();
+    }
+
     if (f instanceof TableTypedField ttf) {
       return getFieldFullName(ttf);
     } else if (f instanceof FunctionTypedField ftf) {

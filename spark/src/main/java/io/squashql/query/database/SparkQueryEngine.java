@@ -39,7 +39,7 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
           "variance");
 
   public SparkQueryEngine(SparkDatastore datastore) {
-    super(datastore, new SparkQueryRewriter());
+    super(datastore);
   }
 
   @Override
@@ -72,5 +72,10 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
   @Override
   public List<String> supportedAggregationFunctions() {
     return SUPPORTED_AGGREGATION_FUNCTIONS;
+  }
+
+  @Override
+  public QueryRewriter queryRewriter(DatabaseQuery query) {
+    return new SparkQueryRewriter(query);
   }
 }

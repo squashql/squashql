@@ -46,7 +46,7 @@ public class TestSQLTranslator {
         default -> String.class;
       };
       if (field instanceof BinaryOperationField bf) {
-        return new BinaryOperationTypedField(bf.operator, resolveField(bf.leftOperand), resolveField(bf.rightOperand));
+        return new BinaryOperationTypedField(bf.operator, resolveField(bf.leftOperand), resolveField(bf.rightOperand), field.alias());
       } else if (field instanceof ConstantField cf) {
         return new ConstantTypedField(cf.value);
       }
@@ -439,7 +439,8 @@ public class TestSQLTranslator {
             criterion(recoPrice, gt(0))
     ));
 
-    String expression = compiledMeasure(measure).sqlExpression(DefaultQueryRewriter.INSTANCE, true);
+    DefaultQueryRewriter qr = new DefaultQueryRewriter(null);
+    String expression = compiledMeasure(measure).sqlExpression(qr, true);
     Assertions.assertThat(expression)
             .isEqualTo("sum(case when (`recommendation`.`finalprice` > `recommendation`.`recoprice` and `recommendation`.`recoprice` > '0')" +
                     " then (`recommendation`.`finalprice`-`recommendation`.`recoprice`) end)" +
@@ -449,12 +450,13 @@ public class TestSQLTranslator {
     Field one = new ConstantField(1);
     Field tvaRate = new TableField("product.tva_rate");
     Measure whatever = sum("whatever", divide(initial_price, plus(one, tvaRate)));
-    Assertions.assertThat(compiledMeasure(whatever).sqlExpression(DefaultQueryRewriter.INSTANCE, true))
+    Assertions.assertThat(compiledMeasure(whatever).sqlExpression(qr, true))
             .isEqualTo("sum((`recommendation`.`initial_price`/(1+`product`.`tva_rate`))) as `whatever`");
   }
 
   @Test
   void testComplexFieldCalculation() {
+    DefaultQueryRewriter qr = new DefaultQueryRewriter(null);
     Field f1 = new TableField("f1");
     Field f2 = new TableField("f2");
     Field f3 = new TableField("f3");
@@ -463,7 +465,7 @@ public class TestSQLTranslator {
     BinaryOperationField divide = new BinaryOperationField(BinaryOperator.DIVIDE, f1_minus_f2, f1);
     BinaryOperationField multiply = new BinaryOperationField(BinaryOperator.MULTIPLY, divide, f3);
     BinaryOperationField plus = new BinaryOperationField(BinaryOperator.PLUS, multiply, new ConstantField(2));
-    Assertions.assertThat(compileField(plus).sqlExpression(DefaultQueryRewriter.INSTANCE))
+    Assertions.assertThat(compileField(plus).sqlExpression(qr))
             .isEqualTo("((((`f1`-`f2`)/`f1`)*`f3`)+2)");
   }
 }

@@ -2,15 +2,23 @@ package io.squashql.query.database;
 
 import io.squashql.query.date.DateFunctions;
 import io.squashql.type.FunctionTypedField;
+import io.squashql.type.TypedField;
 
 public class BigQueryQueryRewriter implements QueryRewriter {
 
   private final String projectId;
   private final String datasetName;
+  private final DatabaseQuery query;
 
-  BigQueryQueryRewriter(String projectId, String datasetName) {
+  BigQueryQueryRewriter(String projectId, String datasetName, DatabaseQuery query) {
     this.projectId = projectId;
     this.datasetName = datasetName;
+    this.query = query;
+  }
+
+  @Override
+  public DatabaseQuery query() {
+    return this.query;
   }
 
   @Override
@@ -40,7 +48,7 @@ public class BigQueryQueryRewriter implements QueryRewriter {
    * FIXME must used a regex instead to replace incorrect characters.
    */
   @Override
-  public String measureAlias(String alias) {
+  public String escapeAlias(String alias) {
     return SqlUtils.backtickEscape(alias)
             .replace("(", "_")
             .replace(")", "_")
@@ -56,5 +64,11 @@ public class BigQueryQueryRewriter implements QueryRewriter {
   @Override
   public String escapeSingleQuote(String s) {
     return SqlUtils.escapeSingleQuote(s, "\\'");
+  }
+
+  @Override
+  public String grouping(TypedField f) {
+    // BQ does not support using the alias
+    return _select(f, false);
   }
 }

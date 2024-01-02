@@ -6,4 +6,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public interface Field {
 
   String name();
+
+  Field as(String alias);
+
+  String alias();
 }

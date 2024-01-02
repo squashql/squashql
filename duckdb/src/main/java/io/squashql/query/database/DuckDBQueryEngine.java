@@ -30,7 +30,7 @@ public class DuckDBQueryEngine extends JdbcQueryEngine<DuckDBDatastore> {
           "VAR_SAMP");
 
   public DuckDBQueryEngine(DuckDBDatastore datastore) {
-    super(datastore, new DuckDBQueryRewriter());
+    super(datastore);
   }
 
   @Override
@@ -41,5 +41,10 @@ public class DuckDBQueryEngine extends JdbcQueryEngine<DuckDBDatastore> {
   @Override
   public List<String> supportedAggregationFunctions() {
     return SUPPORTED_AGGREGATION_FUNCTIONS;
+  }
+
+  @Override
+  public QueryRewriter queryRewriter(DatabaseQuery query) {
+    return new DuckDBQueryRewriter(query);
   }
 }

@@ -37,7 +37,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
   );
 
   public BigQueryEngine(BigQueryDatastore datastore) {
-    super(datastore, new BigQueryQueryRewriter(datastore.getProjectId(), datastore.getDatasetName()));
+    super(datastore);
   }
 
   @Override
@@ -103,4 +103,8 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
     return SUPPORTED_AGGREGATION_FUNCTIONS;
   }
 
+  @Override
+  public QueryRewriter queryRewriter(DatabaseQuery query) {
+    return new BigQueryQueryRewriter(this.datastore.getProjectId(), this.datastore.getDatasetName(), query);
+  }
 }

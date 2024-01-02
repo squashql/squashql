@@ -3,7 +3,18 @@ package io.squashql.type;
 import io.squashql.query.CountMeasure;
 import io.squashql.query.database.QueryRewriter;
 
-public record TableTypedField(String store, String name, Class<?> type) implements TypedField {
+import java.util.Objects;
+
+public record TableTypedField(String store, String name, Class<?> type, String alias) implements TypedField {
+
+  public TableTypedField {
+    Objects.requireNonNull(name);
+    Objects.requireNonNull(type);
+  }
+
+  public TableTypedField(String store, String name, Class<?> type) {
+    this(store, name, type, null);
+  }
 
   @Override
   public String sqlExpression(QueryRewriter queryRewriter) {

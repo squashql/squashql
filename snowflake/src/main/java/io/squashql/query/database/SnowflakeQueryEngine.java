@@ -35,7 +35,7 @@ public class SnowflakeQueryEngine extends JdbcQueryEngine<SnowflakeDatastore> {
           "VAR_SAMP");
 
   public SnowflakeQueryEngine(SnowflakeDatastore datastore) {
-    super(datastore, new SnowflakeQueryRewriter());
+    super(datastore);
   }
 
   @Override
@@ -52,5 +52,10 @@ public class SnowflakeQueryEngine extends JdbcQueryEngine<SnowflakeDatastore> {
   @Override
   public List<String> supportedAggregationFunctions() {
     return SUPPORTED_AGGREGATION_FUNCTIONS;
+  }
+
+  @Override
+  public QueryRewriter queryRewriter(DatabaseQuery query) {
+    return new SnowflakeQueryRewriter(query);
   }
 }

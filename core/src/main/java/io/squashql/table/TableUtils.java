@@ -4,9 +4,11 @@ import com.google.common.base.Suppliers;
 import io.squashql.query.*;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.type.TypedField;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.NullAndTotalComparator;
 
@@ -136,15 +138,20 @@ public class TableUtils {
   /**
    * Selects and reorder the columns to match the selection and order in the query.
    */
-  public static ColumnarTable selectAndOrderColumns(ColumnarTable table,
+  public static ColumnarTable selectAndOrderColumns(QueryResolver queryResolver,
+                                                    ColumnarTable table,
                                                     QueryDto queryDto) {
-    List<String> finalColumns = new ArrayList<>();
+    // Resolve fields...
+    List<TypedField> finalFields = new ArrayList<>();
     queryDto.columnSets.values()
-            .forEach(cs -> finalColumns.addAll(cs.getNewColumns()
+            .forEach(cs -> finalFields.addAll(cs.getNewColumns()
                     .stream()
-                    .map(Field::name)
+                    .map(queryResolver::getTypedField)
                     .toList()));
-    finalColumns.addAll(queryDto.columns.stream().map(Field::name).toList());
+    finalFields.addAll(queryDto.columns.stream().map(queryResolver::getTypedField).toList());
+
+    // ... and then get their string representation.
+    List<String> finalColumns = finalFields.stream().map(SqlUtils::squashqlExpression).toList();
     return selectAndOrderColumns(table, finalColumns, queryDto.measures);
   }
 

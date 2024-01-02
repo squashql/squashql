@@ -15,9 +15,25 @@ public class FunctionField implements Field {
 
   public String function;
   public Field field;
+  public String alias;
+
+  public FunctionField(String function, Field field) {
+    this.function = function;
+    this.field = field;
+  }
 
   @Override
   public String name() {
     return singleOperandFunctionName(this.function, this.field.name());
+  }
+
+  @Override
+  public Field as(String alias) {
+    return new FunctionField(this.function, this.field, alias);
+  }
+
+  @Override
+  public String alias() {
+    return this.alias;
   }
 }

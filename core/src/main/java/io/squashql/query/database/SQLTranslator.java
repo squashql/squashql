@@ -16,31 +16,23 @@ public class SQLTranslator {
   public static final String TOTAL_CELL = "___total___";
 
   public static String translate(DatabaseQuery query) {
-    return translate(query, DefaultQueryRewriter.INSTANCE);
+    return translate(query, new DefaultQueryRewriter(query));
   }
 
-  public static String translate(DatabaseQuery query,
-                                 QueryRewriter queryRewriter) {
-    QueryAwareQueryRewriter qr = new QueryAwareQueryRewriter(queryRewriter, query);
-    return translate(query, __ -> qr);
-  }
-
-  /**
-   * Be careful when using this method directly. You may have to leverage {@link QueryAwareQueryRewriter} somehow.
-   */
-  public static String translate(DatabaseQuery query,
-                                 Function<DatabaseQuery, QueryRewriter> queryRewriterSupplier) {
-    QueryRewriter queryRewriter = queryRewriterSupplier.apply(query);
+  public static String translate(DatabaseQuery query, QueryRewriter queryRewriter) {
     List<String> selects = new ArrayList<>();
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
 
-    query.select.forEach(f -> groupBy.add(queryRewriter.select(f)));
+    query.select.forEach(f -> {
+      selects.add(queryRewriter.select(f));
+      groupBy.add(queryRewriter.groupBy(f));
+    });
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(queryRewriter, true))); // Alias is needed when using sub-queries
 
-    selects.addAll(groupBy); // coord first, then aggregates
     // Use grouping to identify totals
-    Queries.generateGroupingSelect(query).forEach(f -> selects.add(String.format("grouping(%s)", queryRewriter.select(f))));
+    Queries.generateGroupingSelect(query).forEach(f -> selects.add(String.format("grouping(%s)", queryRewriter.grouping(f))));
+
     selects.addAll(aggregates);
 
     StringBuilder statement = new StringBuilder();
@@ -50,7 +42,7 @@ public class SQLTranslator {
     statement.append(" from ");
     if (query.subQuery != null) {
       statement.append("(");
-      statement.append(translate(query.subQuery, queryRewriterSupplier));
+      statement.append(translate(query.subQuery, queryRewriter));
       statement.append(")");
     } else {
       statement.append(query.table.sqlExpression(queryRewriter, query.virtualTableDto));

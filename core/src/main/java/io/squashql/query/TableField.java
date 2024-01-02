@@ -25,6 +25,8 @@ public class TableField implements Field {
    */
   public String fullName;
 
+  public String alias;
+
   public TableField(String fullName) {
     this.fullName = fullName;
     setAttributes();
@@ -55,12 +57,22 @@ public class TableField implements Field {
     return this.fullName;
   }
 
+  @Override
+  public Field as(String alias) {
+    return new TableField(this.tableName, this.fieldName, this.fullName, alias);
+  }
+
+  @Override
+  public String alias() {
+    return this.alias;
+  }
+
   /*
    * Syntactic sugar helpers.
    */
 
   public static Field tableField(final String tableName, final String name) {
-    return new TableField(tableName);
+    return new TableField(tableName, name);
   }
 
   public static Field tableField(final String name) {
@@ -74,6 +86,4 @@ public class TableField implements Field {
   public static List<Field> tableFields(List<String> fields) {
     return fields.stream().map(TableField::new).collect(Collectors.toList());
   }
-
-
 }

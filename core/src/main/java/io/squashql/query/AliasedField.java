@@ -9,9 +9,9 @@ import lombok.ToString;
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
 @AllArgsConstructor
-public class ConstantField implements Field {
+public class AliasedField implements Field {
 
-  public Object value;
+  public String alias;
 
   @Override
   public String name() {
@@ -20,11 +20,11 @@ public class ConstantField implements Field {
 
   @Override
   public Field as(String alias) {
-    throw new RuntimeException("Not supported");
+    return new AliasedField(alias); // does not make sense...
   }
 
   @Override
   public String alias() {
-    throw new IllegalStateException("Incorrect path of execution");
+    return this.alias;
   }
 }

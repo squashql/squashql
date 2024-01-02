@@ -529,6 +529,7 @@ FROM (SELECT SUM(score) AS score_sum FROM student GROUP BY name)
 The interface `Field` can be used to represent either:
 - A column/field of a table: `TableField` e.g. `const a = new TableField("myTable.a")`
 - A constant value: `ConstantField` e.g. `const one = new ConstantField(1)`
+- An aliased column: `AliasedField` e.g. `const aliased = new AliasedField("myColumn")`
 
 Fields can be combined to produce other fields to be used in calculations and perform more complex computations.
 
@@ -553,6 +554,36 @@ const query = from("myTable")
 ```sql
 SELECT AVG(myTable.a / (1 + myTable.rate)) AS myMeasure
 FROM myTable
+```
+
+Fields can be aliased to change the name of the returning columns by using `as()`. Using `as()` on a `TableField` produces
+a new instance of `TableField`.
+
+```typescript
+const id = new TableField("myTable.customerId").as("id")
+
+const query = from("myTable")
+        .select([id], [], [countRows])
+        .build()
+```
+
+```sql
+SELECT myTable.customerId AS id, count(*)
+FROM myTable
+```
+
+`AliasedField` is useful when using subqueries to reference a field in the top query from the subquery.
+
+```typescript
+const f1 = new TableField("myTable.f1").as("f1_alias")
+const f2 = new TableField("myTable.f2").as("f2_alias")
+const subQuery = from("myTable")
+        .select([f1, f2], [], [sum("score_sum", student.score)])
+        .build()
+
+const query = fromSubQuery(subQuery)
+        .select([new AliasedField("f1_alias")], [], [avg("result", new TableField("score_sum"))])
+        .build()
 ```
 
 ## Measures

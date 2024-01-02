@@ -2,9 +2,15 @@ package io.squashql.query.database;
 
 public class DefaultQueryRewriter implements QueryRewriter {
 
-  public static final DefaultQueryRewriter INSTANCE = new DefaultQueryRewriter();
+  private final DatabaseQuery query;
 
-  public DefaultQueryRewriter() {
+  public DefaultQueryRewriter(DatabaseQuery query) {
+    this.query = query;
+  }
+
+  @Override
+  public DatabaseQuery query() {
+    return this.query;
   }
 
   @Override
@@ -18,7 +24,7 @@ public class DefaultQueryRewriter implements QueryRewriter {
   }
 
   @Override
-  public String measureAlias(String alias) {
+  public String escapeAlias(String alias) {
     return SqlUtils.backtickEscape(alias);
   }
 

@@ -12,4 +12,5 @@ public interface TypedField {
 
   String name();
 
+  String alias();
 }

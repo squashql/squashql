@@ -408,7 +408,6 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .rollup(Functions.year(dateSales))
             .build();
     final Table finalTable = this.executor.executeQuery(query);
-    finalTable.show();
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             List.of(yearType(2022), 12L),
             List.of(yearType(2023), 12L),

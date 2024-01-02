@@ -48,13 +48,13 @@ public class CaffeineQueryCache implements QueryCache {
   @Override
   public ColumnarTable createRawResult(PrefetchQueryScope scope) {
     Set<TypedField> columns = scope.columns();
-    List<Header> headers = new ArrayList<>(columns.stream().map(column -> new Header(SqlUtils.expression(column), column.type(), false)).toList());
+    List<Header> headers = new ArrayList<>(columns.stream().map(column -> new Header(SqlUtils.squashqlExpression(column), column.type(), false)).toList());
     headers.add(new Header(CountMeasure.ALIAS, long.class, true));
 
     List<List<Object>> values = new ArrayList<>();
     Table table = this.results.getIfPresent(scope);
     for (TypedField f : columns) {
-      values.add(table.getColumnValues(SqlUtils.expression(f)));
+      values.add(table.getColumnValues(SqlUtils.squashqlExpression(f)));
     }
     values.add(table.getAggregateValues(CountMeasure.INSTANCE));
     return new ColumnarTable(

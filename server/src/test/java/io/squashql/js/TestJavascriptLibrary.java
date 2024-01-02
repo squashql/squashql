@@ -28,10 +28,12 @@ public class TestJavascriptLibrary {
     table.join(refTable, JoinType.INNER, criterion("fromField", "toField", ConditionType.EQ));
     table.join(new TableDto("a"), JoinType.LEFT, criterion("a" + ".a_id", "myTable" + ".id", ConditionType.EQ));
 
+    Field a = tableField("a");
+    Field b = tableField("b").as("b_alias");
     QueryDto q = new QueryDto()
             .table(table)
-            .withColumn(tableField("a"))
-            .withColumn(tableField("b"));
+            .withColumn(a)
+            .withColumn(b);
 
     var price = new AggregatedMeasure("price.sum", "price", "sum");
     q.withMeasure(price);
@@ -50,7 +52,7 @@ public class TestJavascriptLibrary {
     var f2 = new TableField("myTable.f2");
     var rate = new TableField("rate");
     var one = new ConstantField(1);
-    q.withMeasure(avgIf("whatever", divide(f1, plus(one, rate)), criterion(plus(f1, f2), one, ConditionType.GT)));
+    q.withMeasure(avgIf("whatever", divide(f1, plus(one, rate)), criterion(plus(f1, f2).as("f1+f2"), one, ConditionType.GT)));
 
     q.withMeasure(new ComparisonMeasureReferencePosition("comp bucket",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
@@ -79,8 +81,8 @@ public class TestJavascriptLibrary {
 
     q.withHavingCriteria(all(criterion(price, ge(10)), criterion(expression, lt(100))));
 
-    q.orderBy(tableField("a"), OrderKeywordDto.ASC);
-    q.orderBy(tableField("b"), List.of("1", "l", "p"));
+    q.orderBy(a, OrderKeywordDto.ASC);
+    q.orderBy(b, List.of("1", "l", "p"));
 
     BucketColumnSetDto columnSet = new BucketColumnSetDto("group", tableField("scenario"))
             .withNewBucket("a", List.of("a1", "a2"))
@@ -90,6 +92,7 @@ public class TestJavascriptLibrary {
     QueryDto subQuery = new QueryDto()
             .table(table)
             .withColumn(tableField("aa"))
+            .withColumn(new AliasedField("bb"))
             .withMeasure(sum("sum_aa", "f"));
     q.table(subQuery);
 

@@ -2,9 +2,8 @@ package io.squashql.jdbc;
 
 import io.squashql.query.Header;
 import io.squashql.query.compiled.CompiledMeasure;
-import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.AQueryEngine;
-import io.squashql.query.database.QueryRewriter;
+import io.squashql.query.database.DatabaseQuery;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
@@ -20,8 +19,8 @@ import java.util.stream.IntStream;
 
 public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEngine<T> {
 
-  public JdbcQueryEngine(T datastore, QueryRewriter queryRewriter) {
-    super(datastore, queryRewriter);
+  public JdbcQueryEngine(T datastore) {
+    super(datastore);
   }
 
   protected abstract BiFunction<ResultSetMetaData, Integer, Class<?>> typeToClassConverter();

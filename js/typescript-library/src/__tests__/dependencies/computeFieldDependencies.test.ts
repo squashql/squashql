@@ -63,6 +63,11 @@ describe('computeFieldDependencies', () => {
       plus(other: Field): Field {
         return undefined
       }
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      as(alias: string): Field {
+        return undefined
+      }
     }
 
     const unknownField = new UnknownField()
