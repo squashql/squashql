@@ -7,7 +7,8 @@ import io.squashql.query.database.SqlUtils;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 
-public record CompiledAggregatedMeasure(AggregatedMeasure measure, TypedField field,
+public record CompiledAggregatedMeasure(AggregatedMeasure measure,
+                                        TypedField field,
                                         CompiledCriteria criteria) implements CompiledMeasure {
 
   public static final CompiledMeasure COMPILED_COUNT = new CompiledAggregatedMeasure(
@@ -22,7 +23,7 @@ public record CompiledAggregatedMeasure(AggregatedMeasure measure, TypedField fi
     } else {
       valuesToAggregate = fieldExpression;
     }
-    if (measure.distinct) {
+    if (this.measure.distinct) {
       valuesToAggregate = "distinct(" + valuesToAggregate + ")";
     }
     final String sql = this.measure.aggregationFunction + "(" + valuesToAggregate + ")";
@@ -38,5 +39,4 @@ public record CompiledAggregatedMeasure(AggregatedMeasure measure, TypedField fi
   public <R> R accept(MeasureVisitor<R> visitor) {
     return visitor.visit(this);
   }
-
 }

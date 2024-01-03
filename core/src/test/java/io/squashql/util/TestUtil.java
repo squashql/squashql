@@ -3,6 +3,7 @@ package io.squashql.util;
 import com.google.common.collect.ImmutableList;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
+import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
@@ -22,6 +23,21 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class TestUtil {
+
+  public static void assertCacheStats(GlobalCache cache, int hitCount, int missCount) {
+    CacheStatsDto stats = cache.stats(null);
+    assertCacheStats(stats, hitCount, missCount);
+  }
+
+  public static void assertCacheStats(GlobalCache cache, int hitCount, int missCount, SquashQLUser user) {
+    CacheStatsDto stats = cache.stats(user);
+    assertCacheStats(stats, hitCount, missCount);
+  }
+
+  public static void assertCacheStats(CacheStatsDto stats, int hitCount, int missCount) {
+    Assertions.assertThat(stats.hitCount).isEqualTo(hitCount);
+    Assertions.assertThat(stats.missCount).isEqualTo(missCount);
+  }
 
   public static ThrowableAssert<Throwable> assertThatThrownBy(ThrowableAssert.ThrowingCallable shouldRaiseThrowable) {
     try {

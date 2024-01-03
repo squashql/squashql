@@ -82,7 +82,7 @@ public interface QueryRewriter {
     } else if (f instanceof FunctionTypedField ftf) {
       sb.append(functionExpression(ftf));
     } else if (f instanceof AliasedTypedField atf) {
-      sb.append(escapeAlias(atf.alias()));
+      return escapeAlias(atf.alias());
     } else {
       throw new IllegalArgumentException(f.getClass().getName());
     }

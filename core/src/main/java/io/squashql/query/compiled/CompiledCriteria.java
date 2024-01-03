@@ -13,7 +13,8 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public record CompiledCriteria(ConditionDto condition, ConditionType conditionType, TypedField field, TypedField fieldOther, CompiledMeasure measure, List<CompiledCriteria> children){
+public record CompiledCriteria(ConditionDto condition, ConditionType conditionType, TypedField field,
+                               TypedField fieldOther, CompiledMeasure measure, List<CompiledCriteria> children) {
 
   public String sqlExpression(QueryRewriter queryRewriter) {
     if (this.field != null && condition() != null) {

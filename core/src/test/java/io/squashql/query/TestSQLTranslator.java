@@ -6,10 +6,7 @@ import io.squashql.query.database.DefaultQueryRewriter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.store.Store;
-import io.squashql.type.BinaryOperationTypedField;
-import io.squashql.type.ConstantTypedField;
-import io.squashql.type.TableTypedField;
-import io.squashql.type.TypedField;
+import io.squashql.type.*;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -49,14 +46,16 @@ public class TestSQLTranslator {
         return new BinaryOperationTypedField(bf.operator, resolveField(bf.leftOperand), resolveField(bf.rightOperand), field.alias());
       } else if (field instanceof ConstantField cf) {
         return new ConstantTypedField(cf.value);
+      } else if (field instanceof AliasedField) {
+        return new AliasedTypedField(field.alias());
       }
       String[] split = field.name().split("\\.");
       if (split.length > 1) {
         String tableName = split[0];
         String fieldNameInTable = split[1];
-        return new TableTypedField(tableName, fieldNameInTable, type.apply(fieldNameInTable));
+        return new TableTypedField(tableName, fieldNameInTable, type.apply(fieldNameInTable), field.alias());
       } else {
-        return new TableTypedField(null, split[0], type.apply(split[0]));
+        return new TableTypedField(null, split[0], type.apply(split[0]), field.alias());
       }
     }
 
@@ -315,22 +314,23 @@ public class TestSQLTranslator {
   }
 
   @Test
-  void testSelectFromSelect() {
+  void testSelectFromSelectWithAlias() {
     // Kind of leaf agg. !!!
     TableDto a = new TableDto("a");
     final QueryDto subQuery = new QueryDto()
             .table(a)
-            .withColumn(tableField("c1"))
+            .withColumn(tableField("c1").as("alias_c1"))
             .withColumn(tableField("c3"))
             .withMeasure(avg("mean", "c2"));
 
     final QueryDto query = new QueryDto()
             .table(subQuery)
             .withColumn(tableField("c3")) // c3 needs to be in the subquery
+            .withMeasure(sum("sum c1", new AliasedField("alias_c1"))) // alias_c1 is a field from the subquery
             .withMeasure(sum("sum GT", "mean"))
             .withWhereCriteria(criterion("type", eq("myType")));
     Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select `c3`, sum(`mean`) as `sum GT` from (select `c1`, `c3`, avg(`c2`) as `mean` from `a` group by `c1`, `c3`) where `type` = 'myType' group by `c3`");
+            .isEqualTo("select `c3`, sum(`alias_c1`) as `sum c1`, sum(`mean`) as `sum GT` from (select `c3`, `c1` AS `alias_c1`, avg(`c2`) as `mean` from `a` group by `c3`, `alias_c1`) where `type` = 'myType' group by `c3`");
   }
 
   @Test

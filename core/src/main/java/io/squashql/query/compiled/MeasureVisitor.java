@@ -12,4 +12,5 @@ public interface MeasureVisitor<R> {
 
   R visit(CompiledConstantMeasure measure);
 
+  R visit(CompiledVectorAggMeasure measure);
 }

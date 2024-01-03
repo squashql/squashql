@@ -1,26 +1,20 @@
 package io.squashql.query;
 
-import io.squashql.query.compiled.CompiledCriteria;
-import io.squashql.query.compiled.CompiledMeasure;
-import io.squashql.query.compiled.CompiledTable;
 import io.squashql.query.dto.CacheStatsDto;
-import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
-import io.squashql.type.TypedField;
 
-import java.util.List;
 import java.util.Set;
 
 public interface QueryCache {
 
-  ColumnarTable createRawResult(PrefetchQueryScope scope);
+  ColumnarTable createRawResult(QueryCacheKey scope);
 
-  boolean contains(Measure measure, PrefetchQueryScope scope);
+  boolean contains(Measure measure, QueryCacheKey scope);
 
-  void contributeToCache(Table result, Set<Measure> measures, PrefetchQueryScope scope);
+  void contributeToCache(Table result, Set<Measure> measures, QueryCacheKey scope);
 
-  void contributeToResult(Table result, Set<Measure> measures, PrefetchQueryScope scope);
+  void contributeToResult(Table result, Set<Measure> measures, QueryCacheKey scope);
 
   /**
    * Invalidates the cache associated to the given user.
@@ -36,32 +30,6 @@ public interface QueryCache {
 
   CacheStatsDto stats(SquashQLUser user);
 
-  record TableScope(CompiledTable table,
-                    Set<TypedField> columns,
-                    CompiledCriteria whereCriteria,
-                    CompiledCriteria havingCriteria,
-                    List<TypedField> rollupColumns,
-                    List<List<TypedField>> groupingSets,
-                    VirtualTableDto virtualTable,
-                    SquashQLUser user,
-                    int limit) implements PrefetchQueryScope {
-  }
-
-  record SubQueryScope(QueryExecutor.QueryScope subQuery,
-                       List<CompiledMeasure> measures,
-                       Set<TypedField> columns,
-                       CompiledCriteria whereCriteriaDto,
-                       CompiledCriteria havingCriteriaDto,
-                       SquashQLUser user,
-                       int limit) implements PrefetchQueryScope {
-  }
-
-  /**
-   * Marker interface.
-   */
-  interface PrefetchQueryScope {
-    Set<TypedField> columns();
-
-    SquashQLUser user();
+  record QueryCacheKey(QueryExecutor.QueryScope scope, SquashQLUser user) {
   }
 }

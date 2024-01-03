@@ -5,7 +5,6 @@ import io.squashql.query.compiled.CompiledCriteria;
 import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.store.UnknownType;
 import io.squashql.type.TypedField;
-import io.squashql.util.Queries;
 
 import java.util.*;
 import java.util.function.Function;
@@ -29,9 +28,6 @@ public class SQLTranslator {
       groupBy.add(queryRewriter.groupBy(f));
     });
     query.measures.forEach(m -> aggregates.add(m.sqlExpression(queryRewriter, true))); // Alias is needed when using sub-queries
-
-    // Use grouping to identify totals
-    Queries.generateGroupingSelect(query).forEach(f -> selects.add(String.format("grouping(%s)", queryRewriter.grouping(f))));
 
     selects.addAll(aggregates);
 

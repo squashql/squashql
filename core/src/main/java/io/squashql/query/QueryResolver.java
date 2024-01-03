@@ -39,8 +39,8 @@ public class QueryResolver {
     this.columns = query.columns.stream().map(this::resolveField).toList();
     this.bucketColumns = Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
-    this.scope = toQueryScope(query);
     this.subQueryMeasures = query.subQuery == null ? Collections.emptyList() : compileMeasures(query.subQuery.measures, false);
+    this.scope = toQueryScope(query);
     this.measures = compileMeasures(query.measures, true);
   }
 
@@ -147,21 +147,24 @@ public class QueryResolver {
     }
   }
 
-  private QueryExecutor.QueryScope toSubQuery(final QueryDto subQuery) {
+  private DatabaseQuery toSubQuery(final QueryDto subQuery) {
     checkSubQuery(subQuery);
     final CompiledTable table = compileTable(subQuery.table);
     final List<TypedField> select = subQuery.columns.stream().map(this::resolveField).toList();
     final CompiledCriteria whereCriteria = compileCriteria(subQuery.whereCriteriaDto);
     final CompiledCriteria havingCriteria = compileCriteria(subQuery.havingCriteriaDto);
     // should we check groupingSet and rollup as well are empty ?
-    return new QueryExecutor.QueryScope(table,
+    DatabaseQuery query = new DatabaseQuery(null,
+            table,
             null,
-            select,
+            new HashSet<>(select),
             whereCriteria,
             havingCriteria,
             Collections.emptyList(),
             Collections.emptyList(),
-            null);
+            subQuery.limit);
+    this.subQueryMeasures.forEach(query::withMeasure);
+    return query;
   }
 
   private void checkSubQuery(final QueryDto subQuery) {
@@ -182,7 +185,7 @@ public class QueryResolver {
   public DatabaseQuery toDatabaseQuery(final QueryExecutor.QueryScope query, final int limit) {
     return new DatabaseQuery(query.virtualTable(),
             query.table(),
-            query.subQuery() == null ? null : toSubQuery(query.subQuery()),
+            query.subQuery(),
             new LinkedHashSet<>(query.columns()),
             query.whereCriteria(),
             query.havingCriteria(),
@@ -249,7 +252,9 @@ public class QueryResolver {
         compiledMeasure = compileBinaryOperationMeasure((BinaryOperationMeasure) m, topMeasure);
       } else if (m instanceof ComparisonMeasureReferencePosition) {
         compiledMeasure = compileComparisonMeasure((ComparisonMeasureReferencePosition) m, topMeasure);
-      } else {
+      } else if (m instanceof VectorAggMeasure v) {
+        compiledMeasure = compileVectorAggMeasure(v);
+      }else {
         throw new IllegalArgumentException("Unknown type of measure " + m.getClass().getSimpleName());
       }
       if (topMeasure) {
@@ -302,6 +307,10 @@ public class QueryResolver {
     } else {
       throw new IllegalArgumentException("Unknown Period type " + period.getClass().getSimpleName());
     }
+  }
+
+  private CompiledMeasure compileVectorAggMeasure(VectorAggMeasure m) {
+    return new CompiledVectorAggMeasure(m, resolveField(m.fieldToAggregate), resolveField(m.vectorAxis));
   }
 
   List<CompiledMeasure> getMeasures() {

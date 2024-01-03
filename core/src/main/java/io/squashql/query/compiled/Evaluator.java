@@ -120,4 +120,19 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
   public Void visit(CompiledExpressionMeasure measure) {
     throw new IllegalStateException(CompiledExpressionMeasure.class.getSimpleName());
   }
+
+  @Override
+  public Void visit(CompiledVectorAggMeasure measure) {
+    // Retrieve the query scope use for the prefetch, the logic should be the same to retrieve the result.
+    QueryExecutor.QueryScope prefetchQueryScope = new PrefetchVisitor(this.executionContext.columns(), this.executionContext.bucketColumns(), this.executionContext.queryScope())
+            .visit(measure)
+            .keySet()
+            .iterator()
+            .next();
+//    Queries.modifyQueryLimit(this.executionContext.queryScope(), prefetchQueryScope);
+    Table readTable = this.executionContext.tableByScope().get(prefetchQueryScope);
+    Table writeToTable = this.executionContext.getWriteToTable();
+    writeToTable.transferAggregates(readTable, measure.measure());
+    return null;
+  }
 }

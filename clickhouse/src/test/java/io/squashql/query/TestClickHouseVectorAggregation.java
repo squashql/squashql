@@ -10,10 +10,12 @@ import io.squashql.transaction.DataLoader;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
+import java.util.List;
+
 /**
  * Do not edit this class, it has been generated automatically by {@link ClickHouseClassTemplateGenerator}.
  */
-public class TestClickHousePeriodComparison extends ATestPeriodComparison {
+public class TestClickHouseVectorAggregation extends ATestVectorAggregation {
 
   public org.testcontainers.containers.GenericContainer container = ClickHouseTestUtil.createClickHouseContainer();
 
@@ -49,5 +51,10 @@ public class TestClickHousePeriodComparison extends ATestPeriodComparison {
   @Override
   protected DataLoader createDataLoader() {
     return new ClickHouseDataLoader(((ClickHouseDatastore) this.datastore).dataSource);
+  }
+
+  @Override
+  protected List<Number> getVectorValue(Object actualVector) {
+    return (List<Number>) actualVector;
   }
 }

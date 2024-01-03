@@ -17,6 +17,7 @@ import io.squashql.table.RowTable;
 import io.squashql.table.Table;
 import org.eclipse.collections.api.tuple.Pair;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -112,6 +113,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
       case Float32 -> fieldValue.asFloat();
       case Float64 -> fieldValue.asDouble();
       case String, FixedString -> fieldValue.asString();
+      case Array -> Arrays.stream(fieldValue.asArray()).toList();
       default -> throw new RuntimeException("Unexpected type " + column.getDataType());
     };
   }

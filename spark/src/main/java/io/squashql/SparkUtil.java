@@ -2,6 +2,7 @@ package io.squashql;
 
 import io.squashql.type.TableTypedField;
 import io.squashql.util.Types;
+import org.apache.spark.sql.types.ArrayType;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
@@ -36,6 +37,8 @@ public final class SparkUtil {
     } else {
       if (type.sql().contains("DECIMAL")) {
         return BigDecimal.class;
+      } else if (type.getClass().equals(ArrayType.class)) {
+        return Object.class;
       }
       throw new IllegalArgumentException("Unsupported field type " + type);
     }
@@ -69,11 +72,12 @@ public final class SparkUtil {
   public static Object getTypeValue(Object o) {
     if (o instanceof BigDecimal bd) {
       return Types.castToDouble(bd);
+    } else if (o instanceof java.sql.Date d) {
+      return d.toLocalDate();
     } else {
       return o;
     }
   }
-
 
   public static StructType createSchema(List<TableTypedField> fields) {
     StructType schema = new StructType();

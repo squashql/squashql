@@ -12,6 +12,7 @@ import org.eclipse.collections.api.tuple.Pair;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.sql.*;
+import java.sql.Date;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -113,7 +114,10 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
         case Types.REAL, Types.FLOAT -> tableResult.getFloat(1 + index);
         case Types.DECIMAL, Types.DOUBLE -> tableResult.getDouble(1 + index);
         case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> tableResult.getBytes(1 + index);
-        case Types.DATE -> tableResult.getDate(1 + index);
+        case Types.DATE -> {
+          Date d = tableResult.getDate(1 + index);
+          yield d == null ? null : d.toLocalDate();
+        }
         case Types.TIME -> tableResult.getTime(1 + index);
         case Types.TIMESTAMP -> tableResult.getTimestamp(1 + index);
         default -> {

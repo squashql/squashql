@@ -24,4 +24,9 @@ public record TableTypedField(String store, String name, Class<?> type, String a
       return queryRewriter.getFieldFullName(this);
     }
   }
+
+  @Override
+  public TypedField as(String alias) {
+    return new TableTypedField(this.store, this.name, this.type, alias);
+  }
 }

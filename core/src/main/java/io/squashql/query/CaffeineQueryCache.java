@@ -13,10 +13,7 @@ import io.squashql.table.Table;
 import io.squashql.type.TypedField;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class CaffeineQueryCache implements QueryCache {
 
@@ -28,14 +25,14 @@ public class CaffeineQueryCache implements QueryCache {
   /**
    * The cached results.
    */
-  private final Cache<PrefetchQueryScope, Table> results;
+  private final Cache<QueryCacheKey, Table> results;
 
   public CaffeineQueryCache() {
     this(MAX_SIZE, (a, b, c) -> {
     });
   }
 
-  public CaffeineQueryCache(int maxSize, RemovalListener<PrefetchQueryScope, Table> evictionListener) {
+  public CaffeineQueryCache(int maxSize, RemovalListener<QueryCacheKey, Table> evictionListener) {
     this.results = Caffeine.newBuilder()
             .maximumSize(maxSize)
             .expireAfterWrite(Duration.ofMinutes(5))
@@ -46,13 +43,13 @@ public class CaffeineQueryCache implements QueryCache {
   }
 
   @Override
-  public ColumnarTable createRawResult(PrefetchQueryScope scope) {
-    Set<TypedField> columns = scope.columns();
+  public ColumnarTable createRawResult(QueryCacheKey key) {
+    Set<TypedField> columns = new LinkedHashSet<>(key.scope().columns());
     List<Header> headers = new ArrayList<>(columns.stream().map(column -> new Header(SqlUtils.squashqlExpression(column), column.type(), false)).toList());
     headers.add(new Header(CountMeasure.ALIAS, long.class, true));
 
     List<List<Object>> values = new ArrayList<>();
-    Table table = this.results.getIfPresent(scope);
+    Table table = this.results.getIfPresent(key);
     for (TypedField f : columns) {
       values.add(table.getColumnValues(SqlUtils.squashqlExpression(f)));
     }
@@ -64,7 +61,7 @@ public class CaffeineQueryCache implements QueryCache {
   }
 
   @Override
-  public boolean contains(Measure measure, PrefetchQueryScope scope) {
+  public boolean contains(Measure measure, QueryCacheKey scope) {
     Table table = this.results.getIfPresent(scope);
     if (table != null) {
       return table.measures().contains(measure);
@@ -73,7 +70,7 @@ public class CaffeineQueryCache implements QueryCache {
   }
 
   @Override
-  public void contributeToCache(Table result, Set<Measure> measures, PrefetchQueryScope scope) {
+  public void contributeToCache(Table result, Set<Measure> measures, QueryCacheKey scope) {
     Table cache = this.results.get(scope, s -> {
       this.measureCounter.recordMisses(measures.size());
       return result;
@@ -89,7 +86,7 @@ public class CaffeineQueryCache implements QueryCache {
   }
 
   @Override
-  public void contributeToResult(Table result, Set<Measure> measures, PrefetchQueryScope scope) {
+  public void contributeToResult(Table result, Set<Measure> measures, QueryCacheKey scope) {
     if (measures.isEmpty()) {
       return;
     }

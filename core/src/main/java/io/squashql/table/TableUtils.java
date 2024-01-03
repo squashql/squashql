@@ -11,12 +11,15 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.type.TypedField;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.NullAndTotalComparator;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TableUtils {
@@ -298,5 +301,80 @@ public class TableUtils {
     }
 
     return lazilyCreated[0] ? finalTable.get() : table;
+  }
+
+  /**
+   * Changes the content of the input table to remove columns corresponding to grouping() (columns that help to identify
+   * rows containing totals) and write {@link SQLTranslator#TOTAL_CELL} in the corresponding cells. The input table is
+   * <b>NOT</b> modified, a copy is created instead.
+   * <pre>
+   *   Input:
+   *   +----------+----------+---------------------------+---------------------------+------+----------------------+----+
+   *   | scenario | category | ___grouping___scenario___ | ___grouping___category___ |    p | _contributors_count_ |  q |
+   *   +----------+----------+---------------------------+---------------------------+------+----------------------+----+
+   *   |     base |    drink |                         0 |                         0 |  2.0 |                    1 | 10 |
+   *   |     base |     food |                         0 |                         0 |  3.0 |                    1 | 20 |
+   *   |     base |    cloth |                         0 |                         0 | 10.0 |                    1 |  3 |
+   *   |     null |     null |                         1 |                         1 | 15.0 |                    3 | 33 |
+   *   |     base |     null |                         0 |                         1 | 15.0 |                    3 | 33 |
+   *   +----------+----------+---------------------------+---------------------------+------+----------------------+----+
+   *   Output:
+   *   +-------------+-------------+------+----------------------+----+
+   *   |    scenario |    category |    p | _contributors_count_ |  q |
+   *   +-------------+-------------+------+----------------------+----+
+   *   |        base |       drink |  2.0 |                    1 | 10 |
+   *   |        base |        food |  3.0 |                    1 | 20 |
+   *   |        base |       cloth | 10.0 |                    1 |  3 |
+   *   | ___total___ | ___total___ | 15.0 |                    3 | 33 |
+   *   |        base | ___total___ | 15.0 |                    3 | 33 |
+   *   +-------------+-------------+------+----------------------+----+
+   * </pre>
+   */
+  public static Table replaceNullCellsByTotal(Table input) {
+    List<Pair<String, String>> groupingHeaders = findGroupingHeaderNamesByBaseName(input.headers());
+    if (!groupingHeaders.isEmpty()) {
+
+      List<List<Object>> newValues = new ArrayList<>();
+      for (int i = 0; i < input.headers().size(); i++) {
+        newValues.add(new ArrayList<>(input.getColumn(i)));
+      }
+      ColumnarTable copy = new ColumnarTable(input.headers(), input.measures(), newValues);
+
+      Set<String> groupingNames = groupingHeaders.stream().map(Pair::getTwo).collect(Collectors.toSet());
+      for (int i = 0; i < copy.headers().size(); i++) {
+        Header header = copy.headers().get(i);
+        List<Object> columnValues = copy.getColumn(i);
+        if (groupingNames.contains(header.name())) {
+          Pair<String, String> nameByBaseName = groupingHeaders.stream().filter(r -> r.getTwo().equals(header.name())).findFirst().get();
+
+          List<Object> baseColumnValues = copy.getColumnValues(nameByBaseName.getOne());
+          for (int rowIndex = 0; rowIndex < columnValues.size(); rowIndex++) {
+            if (((Number) columnValues.get(rowIndex)).longValue() == 1) {
+              // It is a total if == 1. It is cast as Number because the type is Byte with Spark, Long with
+              // ClickHouse...
+              baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
+            }
+          }
+        }
+      }
+      return copy;
+    }
+    return input;
+  }
+
+  /**
+   * [field_name_a, ___grouping___field_name_a___]
+   * [field_name_b, ___grouping___field_name_b___]
+   * ...
+   */
+  private static List<Pair<String, String>> findGroupingHeaderNamesByBaseName(List<Header> headers) {
+    List<Pair<String, String>> groupingHeaders = new ArrayList<>();
+    for (Header header : headers) {
+      String baseName = SqlUtils.extractFieldFromGroupingAlias(header.name());
+      if (baseName != null) {
+        groupingHeaders.add(Tuples.pair(baseName, header.name()));
+      }
+    }
+    return groupingHeaders;
   }
 }
