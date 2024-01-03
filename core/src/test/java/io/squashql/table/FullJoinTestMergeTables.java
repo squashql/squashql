@@ -1,6 +1,5 @@
 package io.squashql.table;
 
-import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.Header;
 import io.squashql.query.dto.JoinType;
 
@@ -31,8 +30,7 @@ class FullJoinTestMergeTables extends ATestMergeTables {
                     new Header("category", String.class, false),
                     new Header("price.sum", int.class, true),
                     new Header("price.avg", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
-                    new AggregatedMeasure("price.avg", "price", "avg")),
+            Set.of(priceSum, priceAvg),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MDD", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("A", "C", "A", "B")),
@@ -55,8 +53,7 @@ class FullJoinTestMergeTables extends ATestMergeTables {
                     new Header("category", String.class, false),
                     new Header("price.sum", int.class, true),
                     new Header("price.avg", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
-                    new AggregatedMeasure("price.avg", "price", "avg")),
+            Set.of(priceSum, priceAvg),
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MDD", "MDD")),
                     new ArrayList<>(Arrays.asList("A", "B", "A", "C")),
@@ -83,8 +80,7 @@ class FullJoinTestMergeTables extends ATestMergeTables {
                     new Header("company", String.class, false),
                     new Header("price.sum", int.class, true),
                     new Header("price.avg", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
-                    new AggregatedMeasure("price.avg", "price", "avg")),
+            Set.of(priceSum, priceAvg),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MDD", "MN", "MN", "MN", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("A", "C", "A", "A", "A", "B", "B")),
@@ -112,8 +108,7 @@ class FullJoinTestMergeTables extends ATestMergeTables {
                     new Header("company", String.class, false),
                     new Header("price.sum", int.class, true),
                     new Header("price.avg", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
-                    new AggregatedMeasure("price.avg", "price", "avg")),
+            Set.of(priceSum, priceAvg),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN", "MN", "MN", "MDD")),
                     new ArrayList<>(Arrays.asList("C", "A", "A", "B", "B", "A")),
@@ -143,8 +138,7 @@ class FullJoinTestMergeTables extends ATestMergeTables {
                     new Header("company", String.class, false),
                     new Header("price.sum", int.class, true),
                     new Header("price.avg", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
-                    new AggregatedMeasure("price.avg", "price", "avg")),
+            Set.of(priceSum, priceAvg),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MDD", "MN", "MN", "MN", "MN", "MN", "XX", "ZZ")),
                     new ArrayList<>(
@@ -171,8 +165,7 @@ class FullJoinTestMergeTables extends ATestMergeTables {
                     new Header("category", String.class, false),
                     new Header("price.sum", int.class, true),
                     new Header("price.avg", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
-                    new AggregatedMeasure("price.avg", "price", "avg")),
+            Set.of(priceSum, priceAvg),
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "MDD", "MDD", "MN", "MN", "PP")),
                     new ArrayList<>(
@@ -198,8 +191,7 @@ class FullJoinTestMergeTables extends ATestMergeTables {
                     new Header("category", String.class, false),
                     new Header("price.sum", int.class, true),
                     new Header("price.avg", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum"),
-                    new AggregatedMeasure("price.avg", "price", "avg")),
+            Set.of(priceSum, priceAvg),
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "___total___", "___total___", "MDD", "MN", "PP")),
                     new ArrayList<>(

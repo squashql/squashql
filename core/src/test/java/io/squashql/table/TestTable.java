@@ -1,7 +1,8 @@
 package io.squashql.table;
 
-import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.Header;
+import io.squashql.query.compiled.CompiledAggregatedMeasure;
+import io.squashql.type.AliasedTypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -9,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import static io.squashql.query.agg.AggregationFunction.AVG;
 import static io.squashql.table.ATestMergeTables.orderRows;
 
 public class TestTable {
@@ -18,7 +20,7 @@ public class TestTable {
     Header pop = new Header("population.avg", double.class, true);
     Header city = new Header("city", String.class, false);
     Header country = new Header("country", String.class, false);
-    AggregatedMeasure popAvg = new AggregatedMeasure("population.avg", "population", "avg");
+    CompiledAggregatedMeasure popAvg = new CompiledAggregatedMeasure("population.avg", new AliasedTypedField("population"), AVG, null, false);
     ColumnarTable table = new ColumnarTable(
             List.of(country, city, pop),
             Set.of(popAvg),
@@ -28,7 +30,7 @@ public class TestTable {
                     Arrays.asList(1d, 2d, 3d, 4d)));
     // Make sure the order of rows in table 2 is different.
     Header emission = new Header("co2emission.avg", double.class, true);
-    AggregatedMeasure emissionAvg = new AggregatedMeasure("co2emission.avg", "co2emission", "avg");
+    CompiledAggregatedMeasure emissionAvg = new CompiledAggregatedMeasure("co2emission.avg", new AliasedTypedField("co2emission"), AVG, null, false);
     ColumnarTable from = new ColumnarTable(
             List.of(country, city, emission),
             Set.of(emissionAvg),

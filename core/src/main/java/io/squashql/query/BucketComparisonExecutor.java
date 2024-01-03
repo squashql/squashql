@@ -1,7 +1,9 @@
 package io.squashql.query;
 
+import io.squashql.query.compiled.CompiledBucketColumnSet;
 import io.squashql.query.compiled.CompiledComparisonMeasure;
-import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.database.SqlUtils;
+import io.squashql.type.TypedField;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -14,15 +16,15 @@ import java.util.function.BiPredicate;
 
 public class BucketComparisonExecutor extends AComparisonExecutor {
 
-  final BucketColumnSetDto cSet;
+  final CompiledBucketColumnSet cSet;
 
-  public BucketComparisonExecutor(BucketColumnSetDto cSet) {
+  public BucketComparisonExecutor(CompiledBucketColumnSet cSet) {
     this.cSet = cSet;
   }
 
   @Override
   protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasure cm, ObjectIntMap<String> indexByColumn) {
-    return new ShiftProcedure(this.cSet, cm.measure().referencePosition, indexByColumn);
+    return new ShiftProcedure(this.cSet, cm.referencePosition(), indexByColumn);
   }
 
   static class ShiftProcedure implements BiPredicate<Object[], Header[]> {
@@ -31,13 +33,13 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
     final ObjectIntMap<String> indexByColumn;
     final Map<String, List<String>> valuesByBucket = new LinkedHashMap<>();
 
-    ShiftProcedure(BucketColumnSetDto cSet, Map<Field, String> referencePosition, ObjectIntMap<String> indexByColumn) {
-      this.valuesByBucket.putAll(cSet.values);
+    ShiftProcedure(CompiledBucketColumnSet cSet, Map<TypedField, String> referencePosition, ObjectIntMap<String> indexByColumn) {
+      this.valuesByBucket.putAll(cSet.values());
       this.indexByColumn = indexByColumn;
       this.transformationByColumn = new ArrayList<>();
       // Order does matter here
-      this.transformationByColumn.add(Tuples.pair(cSet.newField.name(), parse(referencePosition.get(cSet.newField))));
-      this.transformationByColumn.add(Tuples.pair(cSet.field.name(), parse(referencePosition.get(cSet.field))));
+      this.transformationByColumn.add(Tuples.pair(SqlUtils.squashqlExpression(cSet.newField()), parse(referencePosition.get(cSet.newField()))));
+      this.transformationByColumn.add(Tuples.pair(SqlUtils.squashqlExpression(cSet.field()), parse(referencePosition.get(cSet.field()))));
     }
 
     @Override

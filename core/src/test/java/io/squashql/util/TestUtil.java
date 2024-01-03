@@ -3,6 +3,7 @@ package io.squashql.util;
 import com.google.common.collect.ImmutableList;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
@@ -93,7 +94,7 @@ public class TestUtil {
     return content.toString();
   }
 
-  public static ColumnarTable convert(RowTable rowTable, Set<Measure> measures) {
+  public static ColumnarTable convert(RowTable rowTable, Set<CompiledMeasure> measures) {
     List<List<Object>> values = new ArrayList<>(rowTable.headers().size());
     for (int i = 0; i < rowTable.headers().size(); i++) {
       values.add(new ArrayList<>());
@@ -104,7 +105,7 @@ public class TestUtil {
       }
     });
     List<Header> headers = new ArrayList<>();
-    Set<String> measureNames = measures.stream().map(Measure::alias).collect(Collectors.toSet());
+    Set<String> measureNames = measures.stream().map(CompiledMeasure::alias).collect(Collectors.toSet());
     for (Header header : rowTable.headers()) {
       if (measureNames.contains(header.name())) {
         headers.add(new Header(header.name(), header.type(), true));

@@ -29,7 +29,7 @@ public final class MeasureUtils {
 
   public static String createExpression(Measure m) {
     if (m instanceof AggregatedMeasure a) {
-      final CompiledAggregatedMeasure compiled = (CompiledAggregatedMeasure) new ExpressionResolver(m).getMeasures().get(0);
+      final CompiledAggregatedMeasure compiled = (CompiledAggregatedMeasure) new ExpressionResolver(m).getMeasures().values().iterator().next();
       final String fieldExpression = compiled.field().sqlExpression(BASIC);
       if (compiled.criteria() == null) {
         return a.aggregationFunction + "(" + fieldExpression + ")";

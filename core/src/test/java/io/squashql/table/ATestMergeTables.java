@@ -1,7 +1,10 @@
 package io.squashql.table;
 
-import io.squashql.query.*;
+import io.squashql.query.Header;
+import io.squashql.query.compiled.CompiledAggregatedMeasure;
 import io.squashql.query.dto.JoinType;
+import io.squashql.type.TableTypedField;
+import io.squashql.type.TypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -10,7 +13,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import static io.squashql.query.agg.AggregationFunction.AVG;
+import static io.squashql.query.agg.AggregationFunction.SUM;
+
 abstract class ATestMergeTables {
+
+  static TypedField price = new TableTypedField(null, "price", double.class, null);
+  static CompiledAggregatedMeasure priceSum = new CompiledAggregatedMeasure("price.sum", price, SUM, null, false);
+  static CompiledAggregatedMeasure priceAvg = new CompiledAggregatedMeasure("price.avg", price, AVG, null, false);
 
   abstract JoinType getJoinType();
 
@@ -27,7 +37,7 @@ abstract class ATestMergeTables {
             List.of(new Header("typology", String.class, false),
                     new Header("category", String.class, false),
                     new Header("price.sum", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
+            Set.of(priceSum),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("C", "A", "B")),
@@ -43,7 +53,7 @@ abstract class ATestMergeTables {
             List.of(new Header("typology", String.class, false),
                     new Header("category", String.class, false),
                     new Header("price.avg", int.class, true)),
-            Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
+            Set.of(priceAvg),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("A", "A", "B")),
@@ -78,7 +88,7 @@ abstract class ATestMergeTables {
             List.of(new Header("typology", String.class, false),
                     new Header("category", String.class, false),
                     new Header("price.sum", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
+            Set.of(priceSum),
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MDD", "MDD")),
                     new ArrayList<>(Arrays.asList("A", "B", "A", "C")),
@@ -95,7 +105,7 @@ abstract class ATestMergeTables {
             List.of(new Header("typology", String.class, false),
                     new Header("category", String.class, false),
                     new Header("price.avg", int.class, true)),
-            Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
+            Set.of(priceAvg),
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MDD", "MDD")),
                     new ArrayList<>(Arrays.asList("A", "B", "A", "C")),
@@ -129,7 +139,7 @@ abstract class ATestMergeTables {
             List.of(new Header("typology", String.class, false),
                     new Header("category", String.class, false),
                     new Header("price.sum", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
+            Set.of(priceSum),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("C", "A", "B")),
@@ -147,7 +157,7 @@ abstract class ATestMergeTables {
                     new Header("category", String.class, false),
                     new Header("company", String.class, false),
                     new Header("price.avg", int.class, true)),
-            Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
+            Set.of(priceAvg),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("A", "A", "A", "B")),
@@ -182,7 +192,7 @@ abstract class ATestMergeTables {
             List.of(new Header("typology", String.class, false),
                     new Header("category", String.class, false),
                     new Header("price.sum", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
+            Set.of(priceSum),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("C", "A", "B")),
@@ -200,7 +210,7 @@ abstract class ATestMergeTables {
                     new Header("category", String.class, false),
                     new Header("company", String.class, false),
                     new Header("price.avg", int.class, true)),
-            Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
+            Set.of(priceAvg),
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MDD", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("A", "A", "A", "B")),
@@ -239,7 +249,7 @@ abstract class ATestMergeTables {
             List.of(new Header("typology", String.class, false),
                     new Header("category", String.class, false),
                     new Header("price.sum", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
+            Set.of(priceSum),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("C", "A", "B")),
@@ -257,7 +267,7 @@ abstract class ATestMergeTables {
                     new Header("category", String.class, false),
                     new Header("typology", String.class, false),
                     new Header("price.avg", int.class, true)),
-            Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
+            Set.of(priceAvg),
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "AUCHAN", "LECLERC", "SUPER U")),
                     new ArrayList<>(Arrays.asList("A", "A", "A", "B")),
@@ -291,7 +301,7 @@ abstract class ATestMergeTables {
             List.of(new Header("typology", String.class, false),
                     new Header("category", String.class, false),
                     new Header("price.sum", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
+            Set.of(priceSum),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN", "ZZ")),
                     new ArrayList<>(Arrays.asList("A", "A", "B", "B")),
@@ -309,7 +319,7 @@ abstract class ATestMergeTables {
             List.of(new Header("typology", String.class, false),
                     new Header("company", String.class, false),
                     new Header("price.avg", int.class, true)),
-            Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
+            Set.of(priceAvg),
             List.of(
                     new ArrayList<>(Arrays.asList("MDD", "MN", "MN", "MN", "XX")),
                     new ArrayList<>(Arrays.asList("CARREFOUR", "___total___", "LECLERC", "SUPER U", "AUCHAN")),
@@ -345,7 +355,7 @@ abstract class ATestMergeTables {
             List.of(new Header("typology", String.class, false),
                     new Header("category", String.class, false),
                     new Header("price.sum", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
+            Set.of(priceSum),
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "MDD", "MDD", "MN", "MN")),
                     new ArrayList<>(Arrays.asList("___total___", "___total___", "B", "___total___", "A")),
@@ -360,7 +370,7 @@ abstract class ATestMergeTables {
     Table rightTable = new ColumnarTable(
             List.of(new Header("typology", String.class, false),
                     new Header("price.avg", int.class, true)),
-            Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
+            Set.of(priceAvg),
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "MDD", "PP")),
                     new ArrayList<>(Arrays.asList(5.3, 2.3, 3.))));
@@ -393,7 +403,7 @@ abstract class ATestMergeTables {
     Table leftTable = new ColumnarTable(
             List.of(new Header("typology", String.class, false),
                     new Header("price.sum", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
+            Set.of(priceSum),
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "MDD", "MN", "PP")),
                     new ArrayList<>(Arrays.asList(45, 15, 12, 18))));
@@ -407,7 +417,7 @@ abstract class ATestMergeTables {
     Table rightTable = new ColumnarTable(
             List.of(new Header("category", String.class, false),
                     new Header("price.avg", int.class, true)),
-            Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
+            Set.of(priceAvg),
             List.of(
                     new ArrayList<>(Arrays.asList("___total___", "A", "B")),
                     new ArrayList<>(Arrays.asList(5.3, 2.3, 3))));

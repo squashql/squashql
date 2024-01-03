@@ -1,13 +1,10 @@
 package io.squashql.table;
 
 import io.squashql.query.Header;
-import io.squashql.query.Measure;
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+
+import java.util.*;
 
 public class RowTable implements Table {
 
@@ -24,12 +21,12 @@ public class RowTable implements Table {
   }
 
   @Override
-  public void addAggregates(Header header, Measure measure, List<Object> values) {
+  public void addAggregates(Header header, CompiledMeasure measure, List<Object> values) {
     throwNotSupportedException();
   }
 
   @Override
-  public void transferAggregates(Table from, Measure measure) {
+  public void transferAggregates(Table from, CompiledMeasure measure) {
     throwNotSupportedException();
   }
 
@@ -51,7 +48,7 @@ public class RowTable implements Table {
   }
 
   @Override
-  public Set<Measure> measures() {
+  public Set<CompiledMeasure> measures() {
     return Collections.emptySet();
   }
 

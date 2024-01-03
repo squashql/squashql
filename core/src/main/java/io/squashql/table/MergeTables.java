@@ -3,7 +3,7 @@ package io.squashql.table;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import io.squashql.query.Header;
-import io.squashql.query.Measure;
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.JoinType;
@@ -51,7 +51,7 @@ public class MergeTables {
     }
 
     final Holder mergedTableHeaders = mergeHeaders(leftTable, rightTable);
-    final Set<Measure> mergedTableMeasures = mergeMeasures(leftTable.measures(), rightTable.measures());
+    final Set<CompiledMeasure> mergedTableMeasures = mergeMeasures(leftTable.measures(), rightTable.measures());
     final List<List<Object>> mergedValues = mergeValues(mergedTableHeaders, leftTable, rightTable, joinType);
 
     return new ColumnarTable(
@@ -95,7 +95,7 @@ public class MergeTables {
     return new Holder(leftTable, rightTable, mergedTableHeaders, leftMappingList, rightMappingList);
   }
 
-  private static Set<Measure> mergeMeasures(Set<Measure> leftMeasures, Set<Measure> rightMeasures) {
+  private static Set<CompiledMeasure> mergeMeasures(Set<CompiledMeasure> leftMeasures, Set<CompiledMeasure> rightMeasures) {
     return Sets.newHashSet(Iterables.concat(leftMeasures, rightMeasures));
   }
 
@@ -116,8 +116,8 @@ public class MergeTables {
 
     BitSet alreadyVisited = new BitSet();
 
-    List<Measure> leftMeasures = getMeasures((ColumnarTable) leftTable);
-    List<Measure> rightMeasures = getMeasures((ColumnarTable) rightTable);
+    List<CompiledMeasure> leftMeasures = getMeasures((ColumnarTable) leftTable);
+    List<CompiledMeasure> rightMeasures = getMeasures((ColumnarTable) rightTable);
     final int[] position = {-1};
 
     leftTable.pointDictionary().forEach((point, row) -> {
@@ -194,7 +194,7 @@ public class MergeTables {
     return result;
   }
 
-  private static List<Measure> getMeasures(ColumnarTable table) {
+  private static List<CompiledMeasure> getMeasures(ColumnarTable table) {
     return table.headers().stream()
             .filter(Header::isMeasure)
             .map(h -> table.measures().stream().filter(m -> m.alias().equals(h.name())).findFirst().orElseThrow(() -> new IllegalStateException("Cannot find measure with name " + h.name())))

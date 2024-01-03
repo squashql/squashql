@@ -1,10 +1,11 @@
 package io.squashql.query.compiled;
 
-import io.squashql.query.BinaryOperationMeasure;
+import io.squashql.query.BinaryOperator;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SqlUtils;
 
-public record CompiledBinaryOperationMeasure(BinaryOperationMeasure measure,
+public record CompiledBinaryOperationMeasure(String alias,
+                                             BinaryOperator operator,
                                              CompiledMeasure leftOperand,
                                              CompiledMeasure rightOperand) implements CompiledMeasure {
   @Override
@@ -12,16 +13,16 @@ public record CompiledBinaryOperationMeasure(BinaryOperationMeasure measure,
     String sql = new StringBuilder()
             .append("(")
             .append(this.leftOperand.sqlExpression(queryRewriter, false))
-            .append(this.measure.operator.infix)
+            .append(this.operator.infix)
             .append(this.rightOperand.sqlExpression(queryRewriter, false))
             .append(")")
             .toString();
-    return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.measure.alias) : sql;
+    return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.alias) : sql;
   }
 
   @Override
   public String alias() {
-    return this.measure.alias();
+    return this.alias;
   }
 
   @Override

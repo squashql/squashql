@@ -317,7 +317,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
   }
 
   private void assertVectorValues(ColumnarTable result, Measure vectorMeasure, List<List<Object>> points, List<List<Number>> expectedVectors) {
-    List<Object> aggregateValues = result.getAggregateValues(vectorMeasure);
+    List<Object> aggregateValues = result.getColumnValues(vectorMeasure.alias());
     for (int i = 0; i < points.size(); i++) {
       ObjectArrayDictionary dictionary = result.pointDictionary.get();
       int position = dictionary.getPosition(points.get(i).toArray());
@@ -330,7 +330,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
   }
 
   private void assertValues(ColumnarTable result, Measure otherMeasure, List<List<Object>> points, List<Number> expectedValues) {
-    List<Object> aggregateValues = result.getAggregateValues(otherMeasure);
+    List<Object> aggregateValues = result.getColumnValues(otherMeasure.alias());
     for (int i = 0; i < points.size(); i++) {
       ObjectArrayDictionary dictionary = result.pointDictionary.get();
       int position = dictionary.getPosition(points.get(i).toArray());

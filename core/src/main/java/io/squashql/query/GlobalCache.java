@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
@@ -36,17 +37,17 @@ public class GlobalCache implements QueryCache {
   }
 
   @Override
-  public boolean contains(Measure measure, QueryCacheKey scope) {
+  public boolean contains(CompiledMeasure measure, QueryCacheKey scope) {
     return getCache(scope).contains(measure, scope);
   }
 
   @Override
-  public void contributeToCache(Table result, Set<Measure> measures, QueryCacheKey scope) {
+  public void contributeToCache(Table result, Set<CompiledMeasure> measures, QueryCacheKey scope) {
     getCache(scope).contributeToCache(result, measures, scope);
   }
 
   @Override
-  public void contributeToResult(Table result, Set<Measure> measures, QueryCacheKey scope) {
+  public void contributeToResult(Table result, Set<CompiledMeasure> measures, QueryCacheKey scope) {
     getCache(scope).contributeToResult(result, measures, scope);
   }
 

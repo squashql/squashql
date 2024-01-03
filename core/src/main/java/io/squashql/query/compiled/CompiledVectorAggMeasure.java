@@ -1,12 +1,11 @@
 package io.squashql.query.compiled;
 
-import io.squashql.query.Measure;
-import io.squashql.query.VectorAggMeasure;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.type.TypedField;
 
-public record CompiledVectorAggMeasure(VectorAggMeasure vectorAggMeasure,
+public record CompiledVectorAggMeasure(String alias,
                                        TypedField fieldToAggregate,
+                                       String aggregationFunction,
                                        TypedField vectorAxis) implements CompiledMeasure {
 
   @Override
@@ -16,13 +15,13 @@ public record CompiledVectorAggMeasure(VectorAggMeasure vectorAggMeasure,
 
   @Override
   public String alias() {
-    return measure().alias();
+    return this.alias;
   }
 
-  @Override
-  public Measure measure() {
-    return this.vectorAggMeasure;
-  }
+//  @Override
+//  public Measure measure() {
+//    return this.vectorAggMeasure;
+//  }
 
   @Override
   public <R> R accept(MeasureVisitor<R> visitor) {

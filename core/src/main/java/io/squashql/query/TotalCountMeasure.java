@@ -9,5 +9,4 @@ public class TotalCountMeasure extends ExpressionMeasure {
   private TotalCountMeasure() {
     super(ALIAS, EXPRESSION);
   }
-
 }

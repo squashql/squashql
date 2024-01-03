@@ -2,6 +2,7 @@ package io.squashql.table;
 
 import com.google.common.base.Suppliers;
 import io.squashql.query.*;
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
@@ -120,16 +121,13 @@ public class TableUtils {
   public static List<MetadataItem> buildTableMetadata(Table t) {
     List<MetadataItem> metadata = new ArrayList<>();
     for (Header header : t.headers()) {
-      Optional<Measure> optionalMeasure = t.measures().stream()
+      Optional<CompiledMeasure> optionalMeasure = t.measures().stream()
               .filter(m -> m.alias().equals(header.name()))
               .findAny();
       if (header.isMeasure() && optionalMeasure.isPresent()) {
-        Measure measure = optionalMeasure.get();
-        String expression = measure.expression();
-        if (expression == null) {
-          measure = measure.withExpression(MeasureUtils.createExpression(measure));
-        }
-        metadata.add(new MetadataItem(header.name(), measure.expression(), header.type()));
+        // FIXME deactivate for now
+        metadata.add(new MetadataItem(header.name(), header.name(), header.type()));
+//        metadata.add(new MetadataItem(header.name(), MeasureUtils.createExpression(optionalMeasure.get()), header.type()));
       } else {
         metadata.add(new MetadataItem(header.name(), header.name(), header.type()));
       }
@@ -155,17 +153,24 @@ public class TableUtils {
 
     // ... and then get their string representation.
     List<String> finalColumns = finalFields.stream().map(SqlUtils::squashqlExpression).toList();
-    return selectAndOrderColumns(table, finalColumns, queryDto.measures);
+    List<CompiledMeasure> measures = new ArrayList<>();
+    for (Measure measure : queryDto.measures) {
+      CompiledMeasure compiledMeasure = queryResolver.getMeasures().get(measure);
+      if (compiledMeasure != null) {
+        measures.add(compiledMeasure);
+      }
+    }
+    return selectAndOrderColumns(table, finalColumns, measures);
   }
 
-  public static ColumnarTable selectAndOrderColumns(ColumnarTable table, List<String> columns, List<Measure> measures) {
+  public static ColumnarTable selectAndOrderColumns(ColumnarTable table, List<String> columns, List<CompiledMeasure> measures) {
     List<Header> headers = new ArrayList<>();
     List<List<Object>> values = new ArrayList<>();
     for (String finalColumn : columns) {
       headers.add(table.getHeader(finalColumn));
       values.add(Objects.requireNonNull(table.getColumnValues(finalColumn)));
     }
-    for (Measure measure : measures) {
+    for (CompiledMeasure measure : measures) {
       headers.add(table.getHeader(measure));
       values.add(Objects.requireNonNull(table.getAggregateValues(measure)));
     }

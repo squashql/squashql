@@ -2,7 +2,7 @@ package io.squashql.table;
 
 import com.google.common.base.Suppliers;
 import io.squashql.query.Header;
-import io.squashql.query.Measure;
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 
 import java.util.*;
@@ -11,14 +11,14 @@ import java.util.function.Supplier;
 public class ColumnarTable implements Table {
 
   protected final List<Header> headers;
-  protected final Set<Measure> measures;
+  protected final Set<CompiledMeasure> measures;
 
   public final Supplier<ObjectArrayDictionary> pointDictionary;
   protected final List<List<Object>> values;
 
-  public ColumnarTable(List<Header> headers, Set<Measure> measures, List<List<Object>> values) {
+  public ColumnarTable(List<Header> headers, Set<CompiledMeasure> measures, List<List<Object>> values) {
     if (headers.stream().filter(Header::isMeasure)
-            .anyMatch(measureHeader -> !measures.stream().map(Measure::alias).toList()
+            .anyMatch(measureHeader -> !measures.stream().map(CompiledMeasure::alias).toList()
                     .contains(measureHeader.name()))) {
       throw new IllegalArgumentException("Every header measure should have its description in measures.");
     }
@@ -45,13 +45,13 @@ public class ColumnarTable implements Table {
   }
 
   @Override
-  public void addAggregates(Header header, Measure measure, List<Object> values) {
+  public void addAggregates(Header header, CompiledMeasure measure, List<Object> values) {
     this.headers.add(new Header(header.name(), header.type(), true));
     this.measures.add(measure);
     this.values.add(values);
   }
 
-  public void transferAggregates(Table from, Measure measure) {
+  public void transferAggregates(Table from, CompiledMeasure measure) {
     if (from instanceof ColumnarTable ct) {
       List<Header> l1 = ct.headers.stream().filter(h -> !h.isMeasure()).toList();
       List<Header> l2 = this.headers.stream().filter(h -> !h.isMeasure()).toList();
@@ -101,7 +101,7 @@ public class ColumnarTable implements Table {
   }
 
   @Override
-  public Set<Measure> measures() {
+  public Set<CompiledMeasure> measures() {
     return this.measures;
   }
 

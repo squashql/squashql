@@ -146,7 +146,7 @@ public class QueryExecutor {
 
     final QueryResolver queryResolver = new QueryResolver(query, new HashMap<>(this.queryEngine.datastore().storesByName()));
     DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
-            queryResolver.getColumns(), queryResolver.getBucketColumns(), queryResolver.getMeasures(), queryResolver.getScope());
+            queryResolver.getColumns(), queryResolver.getBucketColumns(), queryResolver.getMeasures().values(), queryResolver.getScope());
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
     Map<QueryScope, Set<CompiledMeasure>> measuresByQueryScope = new HashMap<>();
@@ -165,22 +165,22 @@ public class QueryExecutor {
       QueryCache.QueryCacheKey queryCacheKey = new QueryCache.QueryCacheKey(scope, user);
       QueryCache queryCache = getQueryCache((QueryCacheParameter) query.parameters.getOrDefault(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.USE)), user);
 
-      Set<Measure> cached = new HashSet<>();
-      Map<Measure, CompiledMeasure> notCached = new HashMap<>();
+      Set<CompiledMeasure> cached = new HashSet<>();
+      Set<CompiledMeasure> notCached = new HashSet<>();
       for (CompiledMeasure measure : measures) {
         if (MeasureUtils.isPrimitive(measure)) {
-          if (queryCache.contains(measure.measure(), queryCacheKey)) {
-            cached.add(measure.measure());
+          if (queryCache.contains(measure, queryCacheKey)) {
+            cached.add(measure);
           } else {
-            notCached.put(measure.measure(), measure);
+            notCached.add(measure);
           }
         }
       }
 
       Table result;
       if (!notCached.isEmpty()) {
-        notCached.put(CountMeasure.INSTANCE, COMPILED_COUNT);
-        notCached.forEach((k, v) -> prefetchQuery.withMeasure(v));
+        notCached.add(COMPILED_COUNT);
+        notCached.forEach(prefetchQuery::withMeasure);
         result = this.queryEngine.execute(prefetchQuery);
       } else {
         // Create an empty result that will be populated by the query cache
@@ -188,7 +188,7 @@ public class QueryExecutor {
       }
 
       queryCache.contributeToResult(result, cached, queryCacheKey);
-      queryCache.contributeToCache(result, notCached.keySet(), queryCacheKey);
+      queryCache.contributeToCache(result, notCached, queryCacheKey);
 
       // The table in the cache contains null values for totals but in this map, we need to replace the nulls with totals
       tableByScope.put(scope, TableUtils.replaceNullCellsByTotal(result));
@@ -207,7 +207,12 @@ public class QueryExecutor {
     final Evaluator evaluator = new Evaluator();
     ExecutionPlan<QueryPlanNodeKey> globalPlan = new ExecutionPlan<>(dependencyGraph, (queryNode) -> {
       if (visited.add(queryNode)) {
-        final ExecutionContext executionContext = new ExecutionContext(queryNode.queryScope, tableByScope, queryResolver.getColumns(), queryResolver.getBucketColumns(), query.columnSets, queryLimit);
+        final ExecutionContext executionContext = new ExecutionContext(queryNode.queryScope,
+                tableByScope,
+                queryResolver.getColumns(),
+                queryResolver.getBucketColumns(),
+                queryResolver.getCompiledColumnSets(),
+                queryLimit);
         evaluator.accept(queryNode, executionContext);
       }
     });
@@ -236,7 +241,7 @@ public class QueryExecutor {
   private static DependencyGraph<QueryPlanNodeKey> computeDependencyGraph(
           List<TypedField> columns,
           List<TypedField> bucketColumns,
-          List<CompiledMeasure> measures,
+          Collection<CompiledMeasure> measures,
           QueryScope queryScope) {
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
       Map<QueryScope, Set<CompiledMeasure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(columns, bucketColumns, nodeKey.queryScope));
@@ -278,7 +283,7 @@ public class QueryExecutor {
                                  Map<QueryScope, Table> tableByScope,
                                  List<TypedField> columns,
                                  List<TypedField> bucketColumns,
-                                 Map<ColumnSetKey, ColumnSet> columnSets,
+                                 Map<ColumnSetKey, CompiledColumnSet> columnSets,
                                  int queryLimit) {
     public Table getWriteToTable() {
       return this.tableByScope.get(this.queryScope);
@@ -337,8 +342,8 @@ public class QueryExecutor {
     if (!rollups.isEmpty()) {
       rollups.forEach(f -> {
         String expression = SqlUtils.squashqlExpression(f);
-        AggregatedMeasure m = new AggregatedMeasure(SqlUtils.groupingAlias(expression), "f.name()", GROUPING); // FIXME this is dirty. Need to clean the API
-        measures.add(new CompiledAggregatedMeasure(m, f, null));
+//        AggregatedMeasure m = new AggregatedMeasure(SqlUtils.groupingAlias(expression), "f.name()", GROUPING); // FIXME this is dirty. Need to clean the API
+        measures.add(new CompiledAggregatedMeasure(SqlUtils.groupingAlias(expression), f, GROUPING, null, false));
       });
     }
     return measures;

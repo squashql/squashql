@@ -61,7 +61,13 @@ public class TestSQLTranslator {
 
     DatabaseQuery toDatabaseQuery() {
       final DatabaseQuery compiled = toDatabaseQuery(getScope(), this.limit);
-      getMeasures().forEach(compiled::withMeasure);
+      // Keep the order
+      for (Measure measure : getQuery().measures) {
+        CompiledMeasure compiledMeasure = getMeasures().get(measure);
+        if (compiledMeasure != null) {
+          compiled.withMeasure(compiledMeasure);
+        }
+      }
       return compiled;
     }
 
@@ -87,7 +93,7 @@ public class TestSQLTranslator {
     return new QueryResolver(query, stores) {
       DatabaseQuery toDatabaseQuery() {
         final DatabaseQuery compiled = toDatabaseQuery(getScope(), query.limit);
-        getMeasures().forEach(compiled::withMeasure);
+        getMeasures().values().forEach(compiled::withMeasure);
         return compiled;
       }
     }.toDatabaseQuery();

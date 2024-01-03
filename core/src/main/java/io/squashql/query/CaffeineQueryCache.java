@@ -6,6 +6,8 @@ import com.github.benmanes.caffeine.cache.RemovalListener;
 import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import com.github.benmanes.caffeine.cache.stats.ConcurrentStatsCounter;
 import com.github.benmanes.caffeine.cache.stats.StatsCounter;
+import io.squashql.query.compiled.CompiledAggregatedMeasure;
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.table.ColumnarTable;
@@ -53,15 +55,15 @@ public class CaffeineQueryCache implements QueryCache {
     for (TypedField f : columns) {
       values.add(table.getColumnValues(SqlUtils.squashqlExpression(f)));
     }
-    values.add(table.getAggregateValues(CountMeasure.INSTANCE));
+    values.add(table.getAggregateValues(CompiledAggregatedMeasure.COMPILED_COUNT));
     return new ColumnarTable(
             headers,
-            Collections.singleton(CountMeasure.INSTANCE),
+            Collections.singleton(CompiledAggregatedMeasure.COMPILED_COUNT),
             values);
   }
 
   @Override
-  public boolean contains(Measure measure, QueryCacheKey scope) {
+  public boolean contains(CompiledMeasure measure, QueryCacheKey scope) {
     Table table = this.results.getIfPresent(scope);
     if (table != null) {
       return table.measures().contains(measure);
@@ -70,13 +72,13 @@ public class CaffeineQueryCache implements QueryCache {
   }
 
   @Override
-  public void contributeToCache(Table result, Set<Measure> measures, QueryCacheKey scope) {
+  public void contributeToCache(Table result, Set<CompiledMeasure> measures, QueryCacheKey scope) {
     Table cache = this.results.get(scope, s -> {
       this.measureCounter.recordMisses(measures.size());
       return result;
     });
 
-    for (Measure measure : measures) {
+    for (CompiledMeasure measure : measures) {
       if (!cache.measures().contains(measure)) {
         // Not in the previousResult, add it.
         cache.transferAggregates(result, measure);
@@ -86,12 +88,12 @@ public class CaffeineQueryCache implements QueryCache {
   }
 
   @Override
-  public void contributeToResult(Table result, Set<Measure> measures, QueryCacheKey scope) {
+  public void contributeToResult(Table result, Set<CompiledMeasure> measures, QueryCacheKey scope) {
     if (measures.isEmpty()) {
       return;
     }
     Table cacheResult = this.results.getIfPresent(scope);
-    for (Measure measure : measures) {
+    for (CompiledMeasure measure : measures) {
       result.transferAggregates(cacheResult, measure);
       this.measureCounter.recordHits(1);
     }

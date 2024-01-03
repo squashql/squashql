@@ -42,10 +42,10 @@ public abstract class AComparisonExecutor {
     Object[] buffer = new Object[readFromTableColumnsCount];
     Header[] headers = new Header[readFromTableColumnsCount];
     List<Object> result = new ArrayList<>((int) writeToTable.count());
-    List<Object> readAggregateValues = readFromTable.getAggregateValues(cm.reference().measure());
-    List<Object> writeAggregateValues = writeToTable.getAggregateValues(cm.reference().measure());
+    List<Object> readAggregateValues = readFromTable.getAggregateValues(cm.measure());
+    List<Object> writeAggregateValues = writeToTable.getAggregateValues(cm.measure());
     BiFunction<Number, Number, Number> comparisonBiFunction = BinaryOperations.createComparisonBiFunction(
-            cm.measure().comparisonMethod, readFromTable.getHeader(cm.reference().measure()).type());
+            cm.comparisonMethod(), readFromTable.getHeader(cm.measure()).type());
     int[] rowIndex = new int[1];
     IntIntMap mapping = buildMapping(writeToTable, readFromTable); // columns might be in a different order
     writeToTable.forEach(row -> {

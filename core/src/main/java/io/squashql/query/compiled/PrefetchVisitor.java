@@ -1,7 +1,5 @@
 package io.squashql.query.compiled;
 
-import io.squashql.query.AggregatedMeasure;
-import io.squashql.query.AliasedField;
 import io.squashql.query.MeasureUtils;
 import io.squashql.query.QueryExecutor.QueryScope;
 import io.squashql.query.database.DatabaseQuery;
@@ -48,13 +46,18 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
   @Override
   public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledComparisonMeasure cmrp) {
     QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.columns, this.bucketColumns, cmrp, this.originalQueryScope);
-    Map<QueryScope, Set<CompiledMeasure>> result = new HashMap<>(Map.of(this.originalQueryScope, Set.of(cmrp.reference())));
-    result.put(readScope, Set.of(cmrp.reference()));
+    Map<QueryScope, Set<CompiledMeasure>> result = new HashMap<>(Map.of(this.originalQueryScope, Set.of(cmrp.measure())));
+    result.put(readScope, Set.of(cmrp.measure()));
     return result;
   }
 
   @Override
-  public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledConstantMeasure measure) {
+  public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledDoubleConstantMeasure measure) {
+    return empty();
+  }
+
+  @Override
+  public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledLongConstantMeasure measure) {
     return empty();
   }
 
@@ -106,8 +109,8 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
      */
     TypedField vectorAxis = vectorAggMeasure.vectorAxis();
     if (this.originalQueryScope.columns().contains(vectorAggMeasure.vectorAxis())) {
-      AggregatedMeasure aggMeasure = new AggregatedMeasure(vectorAggMeasure.alias(), vectorAggMeasure.vectorAggMeasure().fieldToAggregate, vectorAggMeasure.vectorAggMeasure().aggregationFunction, false);
-      return Map.of(this.originalQueryScope, Set.of(new CompiledAggregatedMeasure(aggMeasure, vectorAggMeasure.fieldToAggregate(), null)));
+      var m = new CompiledAggregatedMeasure(vectorAggMeasure.alias(), vectorAggMeasure.fieldToAggregate(), vectorAggMeasure.aggregationFunction(), null, false);
+      return Map.of(this.originalQueryScope, Set.of(m));
     } else {
 //      QueryScope subQuery = new QueryScope(
 //              this.originalQueryScope.table(),
@@ -135,16 +138,18 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
           String groupingAlias = SqlUtils.columnAlias("grouping_" + expression);
 //          // groupingAlias should not contain '.' !! this is a defect that will be fixed in the future
           groupingAlias = groupingAlias.replace(".", "_");
-          subQueryMeasures.add(new CompiledAggregatedMeasure(new AggregatedMeasure(groupingAlias, expression, GROUPING), selectColumn, null));
-          topQueryMeasures.add(new CompiledAggregatedMeasure(new AggregatedMeasure(SqlUtils.groupingAlias(alias), groupingAlias, MAX), new AliasedTypedField(groupingAlias), null));
+//          subQueryMeasures.add(new CompiledAggregatedMeasure(new AggregatedMeasure(groupingAlias, expression, GROUPING), selectColumn, null));
+          subQueryMeasures.add(new CompiledAggregatedMeasure(groupingAlias, selectColumn, GROUPING, null, false));
+//          topQueryMeasures.add(new CompiledAggregatedMeasure(new AggregatedMeasure(SqlUtils.groupingAlias(alias), groupingAlias, MAX), new AliasedTypedField(groupingAlias), null));
+          topQueryMeasures.add(new CompiledAggregatedMeasure(SqlUtils.groupingAlias(alias), new AliasedTypedField(groupingAlias), MAX, null, false));
         }
       }
       String vectorAxisAlias = SqlUtils.columnAlias(SqlUtils.squashqlExpression(vectorAxis)).replace(".", "_");
       subQuerySelectColumns.add(vectorAxis.as(vectorAxisAlias));
 
-      String subQueryMeasureAlias = (vectorAggMeasure.fieldToAggregate().name() + "_" + vectorAggMeasure.vectorAggMeasure().aggregationFunction).replace(".", "_");
-      AggregatedMeasure aggregatedMeasure = new AggregatedMeasure(subQueryMeasureAlias, vectorAggMeasure.fieldToAggregate().name(), vectorAggMeasure.vectorAggMeasure().aggregationFunction);
-      subQueryMeasures.add(new CompiledAggregatedMeasure(aggregatedMeasure, vectorAggMeasure.fieldToAggregate(), null));
+      String subQueryMeasureAlias = (vectorAggMeasure.fieldToAggregate().name() + "_" + vectorAggMeasure.aggregationFunction()).replace(".", "_");
+//      AggregatedMeasure aggregatedMeasure = new AggregatedMeasure(subQueryMeasureAlias, vectorAggMeasure.fieldToAggregate().name(), vectorAggMeasure.vectorAggMeasure().aggregationFunction);
+      subQueryMeasures.add(new CompiledAggregatedMeasure(subQueryMeasureAlias, vectorAggMeasure.fieldToAggregate(), vectorAggMeasure.aggregationFunction(), null, false));
 
       List<TypedField> subQueryRollupColumns = new ArrayList<>();
       for (TypedField r : this.originalQueryScope.rollupColumns()) {
@@ -177,8 +182,8 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
               this.originalQueryScope.virtualTable(),
               this.originalQueryScope.limit());
 
-      AggregatedMeasure m = new AggregatedMeasure(vectorAggMeasure.alias(), new AliasedField(subQueryMeasureAlias), ARRAY_AGG, null);
-      topQueryMeasures.add(new CompiledAggregatedMeasure(m, new AliasedTypedField(subQueryMeasureAlias), null));
+//      AggregatedMeasure m = new AggregatedMeasure(vectorAggMeasure.alias(), new AliasedField(subQueryMeasureAlias), ARRAY_AGG, null);
+      topQueryMeasures.add(new CompiledAggregatedMeasure(vectorAggMeasure.alias(), new AliasedTypedField(subQueryMeasureAlias), ARRAY_AGG, null, false));
       return Map.of(topQueryScope, topQueryMeasures);
     }
   }

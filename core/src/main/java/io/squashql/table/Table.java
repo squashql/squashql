@@ -2,8 +2,7 @@ package io.squashql.table;
 
 import io.squashql.query.Field;
 import io.squashql.query.Header;
-import io.squashql.query.Measure;
-import io.squashql.query.TotalCountMeasure;
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.QueryDto;
 import org.eclipse.collections.api.list.primitive.IntList;
@@ -15,22 +14,24 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import static io.squashql.query.compiled.CompiledExpressionMeasure.COMPILED_TOTAL_COUNT;
+
 public interface Table extends Iterable<List<Object>> {
 
   ObjectArrayDictionary pointDictionary();
 
   List<Header> headers();
 
-  Set<Measure> measures();
+  Set<CompiledMeasure> measures();
 
   /**
    * Adds the given aggregates values corresponding to this measure to the table (adds a new column). The order of the
    * aggregates is expected to match the order of the rows in this table. If the order is not known, it is better to use
-   * {@link #transferAggregates(Table, Measure)}.
+   * {@link #transferAggregates(Table, CompiledMeasure)}.
    */
-  void addAggregates(Header header, Measure measure, List<Object> values);
+  void addAggregates(Header header, CompiledMeasure measure, List<Object> values);
 
-  void transferAggregates(Table from, Measure measure);
+  void transferAggregates(Table from, CompiledMeasure measure);
 
   default List<Object> getColumn(int columnIndex) {
     List<Object> elements = new ArrayList<>();
@@ -44,7 +45,7 @@ public interface Table extends Iterable<List<Object>> {
     return getColumn(columnIndex(column));
   }
 
-  default List<Object> getAggregateValues(Measure measure) {
+  default List<Object> getAggregateValues(CompiledMeasure measure) {
     int index = headers().indexOf(getHeader(measure));
     if (index < 0) {
       throw new IllegalArgumentException("no aggregate values for " + measure);
@@ -52,7 +53,7 @@ public interface Table extends Iterable<List<Object>> {
     return getColumn(index);
   }
 
-  default Header getHeader(Measure measure) {
+  default Header getHeader(CompiledMeasure measure) {
     return headers().stream().filter(header -> header.name().equals(measure.alias()))
             .findAny().orElseThrow(() -> new IllegalArgumentException("no header for " + measure));
   }
@@ -107,8 +108,9 @@ public interface Table extends Iterable<List<Object>> {
    * Returns the total number of rows before applying the query limit as in {@link QueryDto#limit}.
    */
   default long totalCount() {
-    return measures().contains(TotalCountMeasure.INSTANCE)
-            ? (long) getAggregateValues(TotalCountMeasure.INSTANCE).get(0) : -1;
+    return measures().contains(COMPILED_TOTAL_COUNT)
+            ? (long) getAggregateValues(COMPILED_TOTAL_COUNT).get(0)
+            : -1;
   }
 
   default void show(int numRows) {
@@ -127,13 +129,13 @@ public interface Table extends Iterable<List<Object>> {
 
       @Override
       public boolean hasNext() {
-        return c[0] < numRows ? underlying.hasNext() : false;
+        return this.c[0] < numRows ? this.underlying.hasNext() : false;
       }
 
       @Override
       public List<Object> next() {
-        c[0]++;
-        return underlying.next();
+        this.c[0]++;
+        return this.underlying.next();
       }
     }, h -> ((Header) h).name(), String::valueOf);
   }

@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
@@ -10,11 +11,11 @@ public interface QueryCache {
 
   ColumnarTable createRawResult(QueryCacheKey scope);
 
-  boolean contains(Measure measure, QueryCacheKey scope);
+  boolean contains(CompiledMeasure measure, QueryCacheKey scope);
 
-  void contributeToCache(Table result, Set<Measure> measures, QueryCacheKey scope);
+  void contributeToCache(Table result, Set<CompiledMeasure> measures, QueryCacheKey scope);
 
-  void contributeToResult(Table result, Set<Measure> measures, QueryCacheKey scope);
+  void contributeToResult(Table result, Set<CompiledMeasure> measures, QueryCacheKey scope);
 
   /**
    * Invalidates the cache associated to the given user.

@@ -83,9 +83,13 @@ public class QueryControllerTest {
               Assertions.assertThat(queryResult.metadata).containsExactly(
                       new MetadataItem(SCENARIO_FIELD_NAME, SCENARIO_FIELD_NAME, String.class),
                       new MetadataItem("ean", "ean", String.class),
-                      new MetadataItem("capdv", "sum(capdv)", double.class),
-                      new MetadataItem("capdv_concurrents", "sum(competitor_price * quantity)", double.class),
-                      new MetadataItem("indice_prix", "sum(capdv) / sum(competitor_price * quantity)", double.class)
+                      // Expression of measures is deactivate for now.
+                      // new MetadataItem("capdv", "sum(capdv)", double.class),
+                      // new MetadataItem("capdv_concurrents", "sum(competitor_price * quantity)", double.class),
+                      // new MetadataItem("indice_prix", "sum(capdv) / sum(competitor_price * quantity)", double.class)
+                      new MetadataItem("capdv", "capdv", double.class),
+                      new MetadataItem("capdv_concurrents", "capdv_concurrents", double.class),
+                      new MetadataItem("indice_prix", "indice_prix", double.class)
               );
 
               Assertions.assertThat(queryResult.debug.cache).isNotNull();

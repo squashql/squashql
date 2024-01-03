@@ -4,14 +4,13 @@ import com.google.cloud.bigquery.*;
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryUtil;
 import io.squashql.query.Header;
-import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
 import org.eclipse.collections.api.tuple.Pair;
 
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
@@ -54,7 +53,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i));
       return new ColumnarTable(
               result.getOne(),
-              query.measures.stream().map(CompiledMeasure::measure).collect(Collectors.toSet()),
+              new HashSet<>(query.measures),
               result.getTwo());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);

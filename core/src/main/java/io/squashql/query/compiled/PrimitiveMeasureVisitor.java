@@ -18,7 +18,12 @@ public class PrimitiveMeasureVisitor implements MeasureVisitor<Boolean> {
   }
 
   @Override
-  public Boolean visit(CompiledConstantMeasure measure) {
+  public Boolean visit(CompiledDoubleConstantMeasure measure) {
+    return true;
+  }
+
+  @Override
+  public Boolean visit(CompiledLongConstantMeasure measure) {
     return true;
   }
 
