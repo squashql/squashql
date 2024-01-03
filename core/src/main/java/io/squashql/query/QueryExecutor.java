@@ -142,6 +142,7 @@ public class QueryExecutor {
                             boolean replaceTotalCellsAndOrderRows,
                             IntConsumer limitNotifier) {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
+    query.limit = queryLimit;
 
     final QueryResolver queryResolver = new QueryResolver(query, new HashMap<>(this.queryEngine.datastore().storesByName()));
     DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
@@ -266,7 +267,8 @@ public class QueryExecutor {
                            CompiledCriteria havingCriteria,
                            List<TypedField> rollupColumns,
                            List<List<TypedField>> groupingSets,
-                           VirtualTableDto virtualTable) {
+                           VirtualTableDto virtualTable,
+                           int limit) {
   }
 
   public record QueryPlanNodeKey(QueryScope queryScope, CompiledMeasure measure) {
@@ -335,7 +337,7 @@ public class QueryExecutor {
     if (!rollups.isEmpty()) {
       rollups.forEach(f -> {
         String expression = SqlUtils.squashqlExpression(f);
-        AggregatedMeasure m = new AggregatedMeasure(SqlUtils.groupingAlias(expression), f.name(), GROUPING);
+        AggregatedMeasure m = new AggregatedMeasure(SqlUtils.groupingAlias(expression), "f.name()", GROUPING); // FIXME this is dirty. Need to clean the API
         measures.add(new CompiledAggregatedMeasure(m, f, null));
       });
     }

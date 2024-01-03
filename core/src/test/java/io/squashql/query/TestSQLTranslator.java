@@ -171,7 +171,6 @@ public class TestSQLTranslator {
     Assertions.assertThat(translate(compileQuery(query)))
             .isEqualTo("""
                     select `scenario`, `type`,
-                     grouping(`scenario`), grouping(`type`),
                      sum(`price`) as `pnl.sum`
                      from `baseStore` group by rollup(`scenario`, `type`)
                     """.replaceAll(System.lineSeparator(), ""));
@@ -192,7 +191,6 @@ public class TestSQLTranslator {
     Assertions.assertThat(translate(compileQuery(query)))
             .isEqualTo("""
                     select `baseStore`.`scenario`, `baseStore`.`type`,
-                     grouping(`baseStore`.`scenario`), grouping(`baseStore`.`type`),
                      sum(`price`) as `pnl.sum`
                      from `baseStore` group by rollup(`baseStore`.`scenario`, `baseStore`.`type`)
                     """.replaceAll(System.lineSeparator(), ""));
@@ -209,7 +207,6 @@ public class TestSQLTranslator {
 
     Assertions.assertThat(translate(compileQuery(query)))
             .isEqualTo("select `scenario`, `type`," +
-                    " grouping(`scenario`)," +
                     " sum(`price`) as `pnl.sum`" +
                     " from `baseStore` group by `type`, rollup(`scenario`)");
   }
@@ -427,7 +424,7 @@ public class TestSQLTranslator {
             List.of(a), // total a
             List.of(a, b));
     Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select `a`, `b`, grouping(`a`), grouping(`b`), sum(`pnl`) as `pnl.sum` from `baseStore` group by grouping sets((), (`a`), (`a`,`b`))");
+            .isEqualTo("select `a`, `b`, sum(`pnl`) as `pnl.sum` from `baseStore` group by grouping sets((), (`a`), (`a`,`b`))");
   }
 
   @Test

@@ -88,5 +88,4 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
             IntStream.range(0, headers.size()).mapToObj(i -> recordToFieldValue.apply(i, r)).toList()));
     return Tuples.pair(headers, rows);
   }
-
 }

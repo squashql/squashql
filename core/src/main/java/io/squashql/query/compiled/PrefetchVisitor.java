@@ -156,7 +156,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
 
       DatabaseQuery sq = new DatabaseQuery(this.originalQueryScope.virtualTable(),
               this.originalQueryScope.table(),
-              null, // FIXME should be subquery
+              null, // FIXME should be subquery??
               new HashSet<>(subQuerySelectColumns),
               this.originalQueryScope.whereCriteria(),
               this.originalQueryScope.havingCriteria(),
@@ -174,7 +174,8 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
               this.originalQueryScope.havingCriteria(),
               Collections.emptyList(), // remove rollup, it has been computed in the subquery
               Collections.emptyList(),
-              this.originalQueryScope.virtualTable());
+              this.originalQueryScope.virtualTable(),
+              this.originalQueryScope.limit());
 
       AggregatedMeasure m = new AggregatedMeasure(vectorAggMeasure.alias(), new AliasedField(subQueryMeasureAlias), ARRAY_AGG, null);
       topQueryMeasures.add(new CompiledAggregatedMeasure(m, new AliasedTypedField(subQueryMeasureAlias), null));

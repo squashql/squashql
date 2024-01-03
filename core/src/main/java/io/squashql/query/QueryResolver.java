@@ -136,7 +136,8 @@ public class QueryResolver {
             compileCriteria(query.havingCriteriaDto),
             rollupColumns,
             groupingSets,
-            query.virtualTableDto);
+            query.virtualTableDto,
+            query.limit);
   }
 
   protected void checkQuery(final QueryDto query) {

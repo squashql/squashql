@@ -110,7 +110,8 @@ public final class MeasureUtils {
             queryScope.havingCriteria(),
             new ArrayList<>(rollupColumns),
             new ArrayList<>(queryScope.groupingSets()), // FIXME should handle groupingSets
-            queryScope.virtualTable());
+            queryScope.virtualTable(),
+            queryScope.limit());
   }
 
   private static CompiledCriteria removeCriteriaOnField(TypedField field, CompiledCriteria root) {
