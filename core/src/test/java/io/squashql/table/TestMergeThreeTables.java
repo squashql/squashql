@@ -198,10 +198,7 @@ class TestMergeThreeTables {
                     new Header("Margin", double.class, true),
                     new Header("PriceVariation", double.class, true),
                     new Header("PriceIndex", double.class, true)),
-            Set.of(new CompiledAggregatedMeasure("Turnover", new AliasedTypedField("unit_turnover"), SUM, null, false),
-                    new CompiledAggregatedMeasure("Margin", new AliasedTypedField("unit_margin"), SUM, null, false),
-                    new CompiledAggregatedMeasure("PriceVariation", new AliasedTypedField("price_variation"), AVG, null, false),
-                    new CompiledAggregatedMeasure("PriceIndex", new AliasedTypedField("price_index"), AVG, null, false)),
+            Set.of(turnover, margin, priceVariation, priceIndex),
             List.of(
                     new ArrayList<>(
                             Arrays.asList(TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, "MDD", "MDD",

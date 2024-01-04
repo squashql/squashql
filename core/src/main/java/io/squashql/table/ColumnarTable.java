@@ -51,16 +51,13 @@ public class ColumnarTable implements Table {
     this.values.add(values);
   }
 
+
+  /**
+   * BE CAREFUL !! This method assumes this table and the table from passed in arguments have the same headers
+   * {@code Header#isMeasure == false} in the same order.
+   */
   public void transferAggregates(Table from, CompiledMeasure measure) {
     if (from instanceof ColumnarTable ct) {
-      List<Header> l1 = ct.headers.stream().filter(h -> !h.isMeasure()).toList();
-      List<Header> l2 = this.headers.stream().filter(h -> !h.isMeasure()).toList();
-      // FIXME should we keep this?
-//      if (!l1.equals(l2)) {
-//        throw new IllegalArgumentException("Cannot transfer aggregates between the two tables: the headers are not the same." +
-//                " from headers: " + l1.stream().map(Header::name).toList() + ". to headers: " + l2.stream().map(Header::name).toList());
-//      }
-
       List<Object> values = new ArrayList<>((int) count());
       for (int i = 0; i < (int) count(); i++) {
         values.add(null);

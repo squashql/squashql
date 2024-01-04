@@ -8,8 +8,5 @@ public interface CompiledMeasure {
 
   String alias();
 
-//  Measure measure();
-
   <R> R accept(MeasureVisitor<R> visitor);
-
 }

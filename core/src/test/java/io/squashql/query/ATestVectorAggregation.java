@@ -25,10 +25,8 @@ import static io.squashql.query.database.QueryEngine.TOTAL;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
-  String storeName = "MYTABLE"; // FIXME
-  //  String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  String storeName = "store" + getClass().getSimpleName().toLowerCase();
   GlobalCache queryCache;
-
   LocalDate d1 = LocalDate.of(2023, 1, 1);
   LocalDate d2 = LocalDate.of(2023, 1, 2);
   LocalDate d3 = LocalDate.of(2023, 1, 3);

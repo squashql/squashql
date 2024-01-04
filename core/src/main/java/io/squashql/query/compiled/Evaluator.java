@@ -4,7 +4,6 @@ import io.squashql.query.*;
 import io.squashql.query.QueryExecutor.ExecutionContext;
 import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import io.squashql.query.comp.BinaryOperations;
-import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;
 
@@ -135,7 +134,6 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
             .keySet()
             .iterator()
             .next();
-//    Queries.modifyQueryLimit(this.executionContext.queryScope(), prefetchQueryScope); FIXME
     Table readTable = this.executionContext.tableByScope().get(prefetchQueryScope);
     Table writeToTable = this.executionContext.getWriteToTable();
     writeToTable.transferAggregates(readTable, measure);

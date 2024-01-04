@@ -18,11 +18,6 @@ public record CompiledVectorAggMeasure(String alias,
     return this.alias;
   }
 
-//  @Override
-//  public Measure measure() {
-//    return this.vectorAggMeasure;
-//  }
-
   @Override
   public <R> R accept(MeasureVisitor<R> visitor) {
     return visitor.visit(this);

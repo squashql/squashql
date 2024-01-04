@@ -71,41 +71,41 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
      * The following db query is generated:
      *
      * subquery = select
-     *                    a as alias_a,
-     *                    b as alias_b,
-     *                    date as alias_date,
-     *                    sum(c) as c_sum,
-     *                    grouping(a) as grouping_a,
-     *                    grouping(b) as grouping_b
-     *                    from table
-     *                    group by alias_date, rollup(alias_a, alias_b)
+     *                   ticker AS ___alias___ticker___,
+     *                   date AS ___alias___date___,
+     *                   riskType AS ___alias___riskType___,
+     *                   grouping(ticker) as ___alias___grouping_ticker___,
+     *                   grouping(riskType) as ___alias___grouping_riskType___,
+     *                   sum(value) as value_sum
+     *                   from MYTABLE
+     *                   group by ___alias___date___, rollup(___alias___ticker___, ___alias___riskType___)
      * (we do not care about totals on date)
      *
      * query = select
-     *                    alias_a,
-     *                    alias_b,
-     *                    max(grouping_a) as ___grouping___grouping_a___ // to make __total__ appear
-     *                    max(grouping_b) as ___grouping___grouping_b___ // to make __total__ appear
-     *                    array_agg(c_sum order by alias_c) as vectorAlias
-     *                    from (subquery)
-     *                    group by alias_a, alias_b
+     *          			___alias___ticker___,
+     *          			___alias___riskType___,
+     *          			array_agg(value_sum) as vector,
+     *          			max(___alias___grouping_riskType___) as ___grouping______alias___riskType______, // To make __total__ appear
+     *          			max(___alias___grouping_ticker___) as ___grouping______alias___ticker______ // To make __total__ appear
+     *          			from (subquery)
+     *          			group by ___alias___ticker___, ___alias___riskType___
      *
      * If there is no rollup, it is much simpler:
      *
      * subquery = select
-     *             a as alias_a,
-     *             b as alias_b,
-     *             date as alias_date,
-     *             sum(c) as c_sum,
-     *             from table
-     *             group by alias_date, alias_a, alias_b
+     *                  ticker AS ___alias___ticker___,
+     *                  date AS ___alias___date___,
+     *                  riskType AS ___alias___riskType___,
+     *                  sum(value) as value_sum
+     *                  from MYTABLE
+     *                  group by ___alias___ticker___, ___alias___date___, ___alias___riskType___
      *
      * query = select
-     *             alias_a,
-     *             alias_b,
-     *             array_agg(c_sum order by alias_c) as vectorAlias
-     *             from (subquery)
-     *             group by alias_a, alias_b
+		 *               ___alias___ticker___,
+		 *               ___alias___riskType___,
+		 *               array_agg(value_sum) as vector,
+		 *               from (subquery)
+		 *               group by ___alias___ticker___, ___alias___riskType___
      */
     TypedField vectorAxis = vectorAggMeasure.vectorAxis();
     if (this.originalQueryScope.columns().contains(vectorAggMeasure.vectorAxis())) {
@@ -146,20 +146,20 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
         subQueryRollupColumns.add(r.as(alias));
       }
 
-      DatabaseQuery sq = new DatabaseQuery(this.originalQueryScope.virtualTable(),
+      DatabaseQuery subQuery = new DatabaseQuery(this.originalQueryScope.virtualTable(),
               this.originalQueryScope.table(),
-              null, // FIXME should be subquery??
+              this.originalQueryScope.subQuery(),
               new HashSet<>(subQuerySelectColumns),
               this.originalQueryScope.whereCriteria(),
               this.originalQueryScope.havingCriteria(),
               subQueryRollupColumns,
               this.originalQueryScope.groupingSets(),
-              -1); // FIXME issue with limit, what value to put?
-      subQueryMeasures.forEach(sq::withMeasure);
+              -1);
+      subQueryMeasures.forEach(subQuery::withMeasure);
 
       QueryScope topQueryScope = new QueryScope(
               this.originalQueryScope.table(),
-              sq,
+              subQuery,
               topQuerySelectColumns,
               this.originalQueryScope.whereCriteria(),
               this.originalQueryScope.havingCriteria(),
