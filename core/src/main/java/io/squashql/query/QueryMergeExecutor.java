@@ -43,7 +43,7 @@ public class QueryMergeExecutor {
               user,
               false,
               limit -> {
-                throw new RuntimeException("Result of " + query + " is too big (limit=" + limit + ")");
+                throw new LimitExceedException("Result of " + query + " is too big (limit=" + limit + ")");
               })
               .table;
     };
