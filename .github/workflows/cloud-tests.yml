@@ -27,3 +27,23 @@ jobs:
           SERVICE_ACCOUNT_KEY: ${{ secrets.SERVICE_ACCOUNT_KEY }}
           PROJECT_ID: ${{ secrets.PROJECT_ID }}
           DATASET_NAME: ${{ secrets.DATASET_NAME }}
+
+  snowflake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: Build with Maven
+        run: mvn -pl :squashql-snowflake -am clean install --no-transfer-progress -DskipTests
+      - name: Run snowflake tests
+        run: mvn -pl :squashql-snowflake --no-transfer-progress -Psnowflake-test test
+        env:
+          SNOWFLAKE_JDBC_URL: ${{ secrets.SNOWFLAKE_JDBC_URL }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
