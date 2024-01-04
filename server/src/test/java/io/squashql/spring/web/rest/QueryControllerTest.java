@@ -6,6 +6,7 @@ import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
+import io.squashql.query.exception.LimitExceedException;
 import io.squashql.spring.dataset.DatasetTestConfig;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -279,5 +280,26 @@ public class QueryControllerTest {
                       List.of("Nutella 250g", 102000d, 10200d));
               Assertions.assertThat(queryResult.queryResult.table.columns).containsExactly("ean", "capdv-sum", "capdv-avg");
             });
+  }
+
+  @Test
+  void testQueryMergeWhenLimitIsReached() throws Exception {
+    var query1 = Query
+            .from("our_prices")
+            .select(tableFields(List.of("ean")), List.of(Functions.sum("capdv-sum", "capdv")))
+            .limit(1)
+            .build();
+    var query2 = Query
+            .from("our_prices")
+            .select(tableFields(List.of("ean")), List.of(Functions.avg("capdv-avg", "capdv")))
+            .limit(1)
+            .build();
+
+    this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_MERGE)
+                    .content(JacksonUtil.serialize(new QueryMergeDto(query1, query2, JoinType.FULL)))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isInternalServerError())
+            .andExpect(result -> Assertions.assertThat(result.getResolvedException()).isInstanceOf(LimitExceedException.class))
+            .andExpect(result -> Assertions.assertThat(result.getResponse().getContentAsString()).contains("query limit exceeded"));
   }
 }

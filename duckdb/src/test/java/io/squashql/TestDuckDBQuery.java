@@ -6,6 +6,7 @@ import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.query.exception.LimitExceedException;
 import io.squashql.transaction.DuckDBDataLoader;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.TestUtil;
@@ -90,8 +91,10 @@ public class TestDuckDBQuery {
 
     query1.limit = 2;
     TestUtil.assertThatThrownBy(() -> this.executor.executeQueryMerge(query1, query2, JoinType.INNER, null))
+            .isInstanceOf(LimitExceedException.class)
             .hasMessageContaining("too big");
     TestUtil.assertThatThrownBy(() -> this.executor.executePivotQueryMerge(query1, query2, List.of(tableField("eanId")), List.of(), JoinType.INNER, null))
+            .isInstanceOf(LimitExceedException.class)
             .hasMessageContaining("too big");
   }
 }

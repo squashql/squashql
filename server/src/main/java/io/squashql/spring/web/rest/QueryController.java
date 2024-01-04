@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-@Import(JacksonConfiguration.class)
+@Import({JacksonConfiguration.class, SquashQLErrorHandler.class})
 @RestController
 public class QueryController {
 
