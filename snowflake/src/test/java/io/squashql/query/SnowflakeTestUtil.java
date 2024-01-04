@@ -4,7 +4,7 @@ import java.util.Properties;
 
 public class SnowflakeTestUtil {
 
-  public static final String jdbcUrl = System.getenv().getOrDefault("JDBC_URL", System.getProperty("snowflake.test.jdbc.url"));
+  public static final String jdbcUrl = System.getenv().getOrDefault("SNOWFLAKE_JDBC_URL", System.getProperty("snowflake.test.jdbc.url"));
   public static final String schema = "PUBLIC";
   public static final String database = "TEST";
 
