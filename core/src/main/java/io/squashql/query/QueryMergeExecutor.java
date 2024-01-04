@@ -4,6 +4,7 @@ import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.PivotTableQueryDto;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.query.exception.LimitExceedException;
 import io.squashql.table.*;
 import io.squashql.util.Queries;
 
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,7 +27,7 @@ public class QueryMergeExecutor {
             user,
             false,
             limit -> {
-              throw new RuntimeException("Result of " + query + " is too big (limit=" + limit + ")");
+              throw new LimitExceedException("Result of " + query + " is too big (limit=" + limit + ")");
             });
     return execute(first, second, joinType, t -> (ColumnarTable) TableUtils.replaceTotalCellValues((ColumnarTable) t, true), executor);
   }
@@ -41,7 +43,7 @@ public class QueryMergeExecutor {
               user,
               false,
               limit -> {
-                throw new RuntimeException("Result of " + query + " is too big (limit=" + limit + ")");
+                throw new LimitExceedException("Result of " + query + " is too big (limit=" + limit + ")");
               })
               .table;
     };
@@ -69,12 +71,22 @@ public class QueryMergeExecutor {
 
     CompletableFuture<Table> f1 = CompletableFuture.supplyAsync(() -> executor.apply(first));
     CompletableFuture<Table> f2 = CompletableFuture.supplyAsync(() -> executor.apply(second));
-    return CompletableFuture.allOf(f1, f2)
-            .thenApply(__ -> {
-              ColumnarTable table = (ColumnarTable) MergeTables.mergeTables(f1.join(), f2.join(), joinType);
-              table = replaceTotalCellValuesFunction.apply(table);
-              return (ColumnarTable) TableUtils.orderRows(table, secondComparators, columnSets);
-            })
-            .join();
+    try {
+      return CompletableFuture.allOf(f1, f2)
+              .thenApply(__ -> {
+                ColumnarTable table = (ColumnarTable) MergeTables.mergeTables(f1.join(), f2.join(), joinType);
+                table = replaceTotalCellValuesFunction.apply(table);
+                return (ColumnarTable) TableUtils.orderRows(table, secondComparators, columnSets);
+              })
+              .join();
+    } catch (Exception e) {
+      if (e instanceof CompletionException) {
+        Throwable cause = e.getCause();
+        if (cause instanceof LimitExceedException lee) {
+          throw lee;
+        }
+      }
+      throw new RuntimeException(e);
+    }
   }
 }

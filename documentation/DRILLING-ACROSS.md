@@ -237,3 +237,10 @@ values for quantity sold are simply copy from the first result.
 |           D |    unwanted |          null |                 1 |
 +-------------+-------------+---------------+-------------------+
 ```
+
+## Limit
+
+SquashQL has an implicit limit query result set to 10000. In case of drilling across, this limit is applied to the queries
+used in the `QueryMerge` before combining the result. Since the final result can be wrong if at least one of the results
+exceeds the limit, an `LimitExceedException` exception is thrown with the following message: `query limit exceeded`.
+
