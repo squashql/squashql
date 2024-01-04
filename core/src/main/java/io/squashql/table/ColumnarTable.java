@@ -57,6 +57,15 @@ public class ColumnarTable implements Table {
    * {@code Header#isMeasure == false} in the same order.
    */
   public void transferAggregates(Table from, CompiledMeasure measure) {
+    if (this.headers.stream().filter(h -> !h.isMeasure()).count() !=
+            from.headers().stream().filter(h -> !h.isMeasure()).count()) {
+      List<String> toHeaderNames = this.headers.stream().filter(h -> !h.isMeasure()).map(Header::name).toList();
+      List<String> fromHeaderNames = from.headers().stream().filter(h -> !h.isMeasure()).map(Header::name).toList();
+      throw new IllegalArgumentException(
+              "The aggregates you are trying to transfer comes from a table that has the following headers " + fromHeaderNames
+                      + " but does not match the headers of the destination table " + toHeaderNames);
+    }
+
     if (from instanceof ColumnarTable ct) {
       List<Object> values = new ArrayList<>((int) count());
       for (int i = 0; i < (int) count(); i++) {

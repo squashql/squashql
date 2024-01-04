@@ -52,4 +52,27 @@ public class TestTable {
     table.transferAggregates(from, emissionAvg);
     Assertions.assertThat(orderRows(table)).containsExactlyInAnyOrderElementsOf(orderRows(result));
   }
+
+  @Test
+  void testIncorrectTransferAggregates() {
+    Header pop = new Header("population.avg", double.class, true);
+    Header city = new Header("city", String.class, false);
+    Header country = new Header("country", String.class, false);
+    CompiledAggregatedMeasure popAvg = new CompiledAggregatedMeasure("population.avg", new AliasedTypedField("population"), AVG, null, false);
+    ColumnarTable table = new ColumnarTable(
+            List.of(country, city, pop),
+            Set.of(popAvg),
+            List.of());
+    // Make sure the order of rows in table 2 is different.
+    Header emission = new Header("co2emission.avg", double.class, true);
+    CompiledAggregatedMeasure emissionAvg = new CompiledAggregatedMeasure("co2emission.avg", new AliasedTypedField("co2emission"), AVG, null, false);
+    ColumnarTable from = new ColumnarTable(
+            List.of(country, emission),
+            Set.of(emissionAvg),
+            List.of());
+
+    Assertions.assertThatThrownBy(() -> table.transferAggregates(from, emissionAvg))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("does not match the headers of the destination table");
+  }
 }
