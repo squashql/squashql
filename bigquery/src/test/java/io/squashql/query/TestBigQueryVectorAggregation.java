@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import com.google.cloud.bigquery.FieldValueList;
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryServiceAccountDatastore;
 import io.squashql.query.database.BigQueryEngine;
@@ -8,6 +9,10 @@ import io.squashql.store.Datastore;
 import io.squashql.transaction.BigQueryDataLoader;
 import io.squashql.transaction.DataLoader;
 import org.junit.jupiter.api.AfterAll;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 import static io.squashql.query.BigQueryTestUtil.DATASET_NAME;
 import static io.squashql.query.BigQueryTestUtil.PROJECT_ID;
@@ -47,5 +52,12 @@ public class TestBigQueryVectorAggregation extends ATestVectorAggregation {
   @Override
   protected Object translate(Object o) {
     return BigQueryTestUtil.translate(o);
+  }
+
+  @Override
+  protected List<Number> getVectorValue(Object actualVector) {
+    List<Number> r = new ArrayList<>();
+    ((FieldValueList) actualVector).forEach(e -> r.add(new BigDecimal((String) e.getValue()).doubleValue()));
+    return r;
   }
 }

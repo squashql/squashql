@@ -9,6 +9,7 @@ import io.squashql.table.RowTable;
 import io.squashql.table.Table;
 import org.eclipse.collections.api.tuple.Pair;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 
@@ -88,13 +89,18 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       return null;
     }
     com.google.cloud.bigquery.Field field = schema.getFields().get(index);
-    return switch (field.getType().getStandardType()) {
-      case BOOL -> fieldValue.getBooleanValue();
-      case INT64 -> fieldValue.getLongValue();
-      case FLOAT64 -> fieldValue.getDoubleValue();
-      case BYTES -> fieldValue.getBytesValue();
-      default -> fieldValue.getValue();
-    };
+    if (field.getMode() != Field.Mode.REPEATED) {
+      return switch (field.getType().getStandardType()) {
+        case BOOL -> fieldValue.getBooleanValue();
+        case INT64 -> fieldValue.getLongValue();
+        case FLOAT64 -> fieldValue.getDoubleValue();
+        case BYTES -> fieldValue.getBytesValue();
+        case DATE -> LocalDate.parse(fieldValue.getStringValue());
+        default -> fieldValue.getValue();
+      };
+    } else {
+      return fieldValue.getValue(); // FieldValueList
+    }
   }
 
   @Override

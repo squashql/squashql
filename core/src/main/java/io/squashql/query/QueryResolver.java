@@ -197,21 +197,6 @@ public class QueryResolver {
             limit);
   }
 
-  // FIXME remove??
-  private DatabaseQuery toSubQuery(final QueryExecutor.QueryScope subQuery) {
-    final DatabaseQuery query = new DatabaseQuery(subQuery.virtualTable(),
-            subQuery.table(),
-            null,
-            new LinkedHashSet<>(subQuery.columns()),
-            subQuery.whereCriteria(),
-            subQuery.havingCriteria(),
-            subQuery.rollupColumns(),
-            subQuery.groupingSets(),
-            -1); // no limit for subQuery
-    this.subQueryMeasures.values().forEach(query::withMeasure); // sub-query measures are included for all the same way
-    return query;
-  }
-
   /**
    * Table
    */

@@ -191,7 +191,7 @@ public class QueryExecutor {
       queryCache.contributeToCache(result, notCached, queryCacheKey);
 
       // The table in the cache contains null values for totals but in this map, we need to replace the nulls with totals
-      tableByScope.put(scope, TableUtils.replaceNullCellsByTotal(result));
+      tableByScope.put(scope, TableUtils.replaceNullCellsByTotal(result, scope));
     }
 
     if (query.columnSets.containsKey(BUCKET)) {
@@ -252,7 +252,7 @@ public class QueryExecutor {
           set.add(new QueryPlanNodeKey(key, measure));
         }
 
-        Set<CompiledMeasure> additionalMeasures = generateGroupingMeasures(key);
+        Collection<CompiledMeasure> additionalMeasures = generateGroupingMeasures(key).values();
         for (CompiledMeasure measure : additionalMeasures) {
           set.add(new QueryPlanNodeKey(key, measure));
         }
@@ -261,7 +261,7 @@ public class QueryExecutor {
     });
     Set<CompiledMeasure> queriedMeasures = new HashSet<>(measures);
     queriedMeasures.add(COMPILED_COUNT);
-    queriedMeasures.addAll(generateGroupingMeasures(queryScope));
+    queriedMeasures.addAll(generateGroupingMeasures(queryScope).values());
     return builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList());
   }
 
@@ -330,11 +330,18 @@ public class QueryExecutor {
     return QueryMergeExecutor.executeQueryMerge(this, first, second, joinType, user);
   }
 
-  public static Set<CompiledMeasure> generateGroupingMeasures(QueryScope queryScope) {
-    Set<CompiledMeasure> measures = new HashSet<>();
+  /**
+   * Generates grouping measures based on the provided query scope.
+   *
+   * @param queryScope The query scope containing rollup columns and grouping sets.
+   *
+   * @return A map of compiled measures, where the key is the squashql expression of the fields used in the rollup and
+   * the value is the compiled measure.
+   */
+  public static Map<String, CompiledMeasure> generateGroupingMeasures(QueryScope queryScope) {
+    Map<String, CompiledMeasure> measures = new HashMap();
     List<TypedField> rollups = new ArrayList<>();
     rollups.addAll(queryScope.rollupColumns);
-    // order matters, this is why a LinkedHashSet is used.
     rollups.addAll(queryScope.groupingSets
             .stream()
             .flatMap(Collection::stream)
@@ -342,8 +349,7 @@ public class QueryExecutor {
     if (!rollups.isEmpty()) {
       rollups.forEach(f -> {
         String expression = SqlUtils.squashqlExpression(f);
-//        AggregatedMeasure m = new AggregatedMeasure(SqlUtils.groupingAlias(expression), "f.name()", GROUPING); // FIXME this is dirty. Need to clean the API
-        measures.add(new CompiledAggregatedMeasure(SqlUtils.groupingAlias(expression), f, GROUPING, null, false));
+        measures.put(expression, new CompiledAggregatedMeasure(SqlUtils.groupingAlias(expression.replace(".", "_")), f, GROUPING, null, false));
       });
     }
     return measures;

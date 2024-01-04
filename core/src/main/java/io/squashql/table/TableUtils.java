@@ -12,15 +12,12 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.type.TypedField;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.NullAndTotalComparator;
-import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TableUtils {
@@ -125,7 +122,7 @@ public class TableUtils {
               .filter(m -> m.alias().equals(header.name()))
               .findAny();
       if (header.isMeasure() && optionalMeasure.isPresent()) {
-        // FIXME deactivate for now
+        // FIXME deactivated for now
         metadata.add(new MetadataItem(header.name(), header.name(), header.type()));
 //        metadata.add(new MetadataItem(header.name(), MeasureUtils.createExpression(optionalMeasure.get()), header.type()));
       } else {
@@ -335,24 +332,22 @@ public class TableUtils {
    *   +-------------+-------------+------+----------------------+----+
    * </pre>
    */
-  public static Table replaceNullCellsByTotal(Table input) {
-    List<Pair<String, String>> groupingHeaders = findGroupingHeaderNamesByBaseName(input.headers());
+  public static Table replaceNullCellsByTotal(Table input, QueryExecutor.QueryScope scope) {
+    Map<String, String> groupingHeaders = findGroupingHeaderNamesByBaseName(input.headers(), scope);
     if (!groupingHeaders.isEmpty()) {
-
       List<List<Object>> newValues = new ArrayList<>();
       for (int i = 0; i < input.headers().size(); i++) {
         newValues.add(new ArrayList<>(input.getColumn(i)));
       }
       ColumnarTable copy = new ColumnarTable(input.headers(), input.measures(), newValues);
 
-      Set<String> groupingNames = groupingHeaders.stream().map(Pair::getTwo).collect(Collectors.toSet());
+      Set<String> groupingNames = groupingHeaders.keySet();
       for (int i = 0; i < copy.headers().size(); i++) {
         Header header = copy.headers().get(i);
         List<Object> columnValues = copy.getColumn(i);
         if (groupingNames.contains(header.name())) {
-          Pair<String, String> nameByBaseName = groupingHeaders.stream().filter(r -> r.getTwo().equals(header.name())).findFirst().get();
-
-          List<Object> baseColumnValues = copy.getColumnValues(nameByBaseName.getOne());
+          String baseName = groupingHeaders.get(header.name());
+          List<Object> baseColumnValues = copy.getColumnValues(baseName);
           for (int rowIndex = 0; rowIndex < columnValues.size(); rowIndex++) {
             if (((Number) columnValues.get(rowIndex)).longValue() == 1) {
               // It is a total if == 1. It is cast as Number because the type is Byte with Spark, Long with
@@ -368,16 +363,34 @@ public class TableUtils {
   }
 
   /**
-   * [field_name_a, ___grouping___field_name_a___]
-   * [field_name_b, ___grouping___field_name_b___]
+   * [___grouping___field_name_a___, field_name_a]
+   * [___grouping___field_name_b___, field_name_b]
    * ...
    */
-  private static List<Pair<String, String>> findGroupingHeaderNamesByBaseName(List<Header> headers) {
-    List<Pair<String, String>> groupingHeaders = new ArrayList<>();
+  private static Map<String, String> findGroupingHeaderNamesByBaseName(List<Header> headers, QueryExecutor.QueryScope scope) {
+    Set<String> rollupExpressions = QueryExecutor.generateGroupingMeasures(scope).keySet();
+    Map<String, String> groupingHeaders = new HashMap<>();
+    // rollupExpressions can be empty when working with vector. In that case, we rely on the header name only.
+    // Do it in that order. First this...
     for (Header header : headers) {
       String baseName = SqlUtils.extractFieldFromGroupingAlias(header.name());
       if (baseName != null) {
-        groupingHeaders.add(Tuples.pair(baseName, header.name()));
+        groupingHeaders.put(header.name(), baseName);
+      }
+    }
+
+    // Then this.
+    for (Header header : headers) {
+      if (!header.isMeasure() && rollupExpressions.contains(header.name())) {
+        String groupingAlias = SqlUtils.groupingAlias(header.name().replace(".", "_")); // The alias we are looking for
+        for (Header m : headers) {
+          if (m.isMeasure() && m.name().equals(groupingAlias)) {
+            String baseName = SqlUtils.extractFieldFromGroupingAlias(groupingAlias);
+            if (baseName != null) {
+              groupingHeaders.put(m.name(), header.name());
+            }
+          }
+        }
       }
     }
     return groupingHeaders;

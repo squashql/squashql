@@ -112,16 +112,6 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
       var m = new CompiledAggregatedMeasure(vectorAggMeasure.alias(), vectorAggMeasure.fieldToAggregate(), vectorAggMeasure.aggregationFunction(), null, false);
       return Map.of(this.originalQueryScope, Set.of(m));
     } else {
-//      QueryScope subQuery = new QueryScope(
-//              this.originalQueryScope.table(),
-//              this.originalQueryScope.subQuery(),
-//              new ArrayList<>(this.originalQueryScope.columns()),
-//              this.originalQueryScope.whereCriteria(),
-//              this.originalQueryScope.havingCriteria(),
-//              new ArrayList<>(this.originalQueryScope.rollupColumns()),
-//              new ArrayList<>(this.originalQueryScope.groupingSets()),
-//              this.originalQueryScope.virtualTable());
-
       boolean hasRollup = !this.originalQueryScope.rollupColumns().isEmpty();
 
       List<CompiledMeasure> subQueryMeasures = new ArrayList<>();
@@ -136,11 +126,9 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
         topQuerySelectColumns.add(new AliasedTypedField(alias));
         if (hasRollup) {
           String groupingAlias = SqlUtils.columnAlias("grouping_" + expression);
-//          // groupingAlias should not contain '.' !! this is a defect that will be fixed in the future
+          // groupingAlias should not contain '.' !! this is a defect that will be fixed in the future
           groupingAlias = groupingAlias.replace(".", "_");
-//          subQueryMeasures.add(new CompiledAggregatedMeasure(new AggregatedMeasure(groupingAlias, expression, GROUPING), selectColumn, null));
           subQueryMeasures.add(new CompiledAggregatedMeasure(groupingAlias, selectColumn, GROUPING, null, false));
-//          topQueryMeasures.add(new CompiledAggregatedMeasure(new AggregatedMeasure(SqlUtils.groupingAlias(alias), groupingAlias, MAX), new AliasedTypedField(groupingAlias), null));
           topQueryMeasures.add(new CompiledAggregatedMeasure(SqlUtils.groupingAlias(alias), new AliasedTypedField(groupingAlias), MAX, null, false));
         }
       }
@@ -148,7 +136,6 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
       subQuerySelectColumns.add(vectorAxis.as(vectorAxisAlias));
 
       String subQueryMeasureAlias = (vectorAggMeasure.fieldToAggregate().name() + "_" + vectorAggMeasure.aggregationFunction()).replace(".", "_");
-//      AggregatedMeasure aggregatedMeasure = new AggregatedMeasure(subQueryMeasureAlias, vectorAggMeasure.fieldToAggregate().name(), vectorAggMeasure.vectorAggMeasure().aggregationFunction);
       subQueryMeasures.add(new CompiledAggregatedMeasure(subQueryMeasureAlias, vectorAggMeasure.fieldToAggregate(), vectorAggMeasure.aggregationFunction(), null, false));
 
       List<TypedField> subQueryRollupColumns = new ArrayList<>();
@@ -170,7 +157,6 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
               -1); // FIXME issue with limit, what value to put?
       subQueryMeasures.forEach(sq::withMeasure);
 
-
       QueryScope topQueryScope = new QueryScope(
               this.originalQueryScope.table(),
               sq,
@@ -182,7 +168,6 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
               this.originalQueryScope.virtualTable(),
               this.originalQueryScope.limit());
 
-//      AggregatedMeasure m = new AggregatedMeasure(vectorAggMeasure.alias(), new AliasedField(subQueryMeasureAlias), ARRAY_AGG, null);
       topQueryMeasures.add(new CompiledAggregatedMeasure(vectorAggMeasure.alias(), new AliasedTypedField(subQueryMeasureAlias), ARRAY_AGG, null, false));
       return Map.of(topQueryScope, topQueryMeasures);
     }
