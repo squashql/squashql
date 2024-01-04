@@ -340,5 +340,4 @@ public class QueryExecutor {
   public Table executeQueryMerge(QueryDto first, QueryDto second, JoinType joinType, SquashQLUser user) {
     return QueryMergeExecutor.executeQueryMerge(this, first, second, joinType, user);
   }
-
 }
