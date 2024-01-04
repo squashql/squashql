@@ -56,6 +56,7 @@ public class TestSnowflakeVectorAggregation extends ATestVectorAggregation {
 
   @Override
   protected List<Number> getVectorValue(Object actualVector) {
+    // It is a string that needs to be parsed, see https://github.com/snowflakedb/snowflake-jdbc/issues/462
     String[] split = ((String) actualVector).replace("\n", "")
             .replace("[", "")
             .replace("]", "")

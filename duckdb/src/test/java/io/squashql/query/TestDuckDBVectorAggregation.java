@@ -40,20 +40,16 @@ public class TestDuckDBVectorAggregation extends ATestVectorAggregation {
 
   @Override
   protected List<Number> getVectorValue(Object actualVector) {
-    if (actualVector instanceof DuckDBArray) {
-      DuckDBArray v = (DuckDBArray) actualVector;
-      try {
-        Object[] a = (Object[]) v.getArray();
-        List<Number> l = new ArrayList<>();
-        for (int i = 0; i < a.length; i++) {
-          l.add((Number) a[i]);
-        }
-        return l;
-      } catch (SQLException e) {
-        throw new RuntimeException(e);
+    DuckDBArray v = (DuckDBArray) actualVector;
+    try {
+      Object[] a = (Object[]) v.getArray();
+      List<Number> l = new ArrayList<>();
+      for (int i = 0; i < a.length; i++) {
+        l.add((Number) a[i]);
       }
-    } else {
-      throw new IllegalArgumentException("expected instance of " + DuckDBArray.class + " but was " + actualVector.getClass());
+      return l;
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
     }
   }
 }
