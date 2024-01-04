@@ -1,6 +1,5 @@
 package io.squashql.query;
 
-import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.QueryDto;
@@ -21,7 +20,6 @@ import static io.squashql.query.agg.AggregationFunction.SUM;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
 
-@TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestVectorAggregation extends ABaseTestQuery {
 

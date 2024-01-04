@@ -7,15 +7,11 @@ import io.squashql.store.Datastore;
 import io.squashql.transaction.DataLoader;
 import io.squashql.transaction.SparkDataLoader;
 import org.junit.jupiter.api.AfterAll;
-import scala.collection.JavaConverters;
-import scala.collection.mutable.WrappedArray;
-
-import java.util.List;
 
 /**
  * Do not edit this class, it has been generated automatically by {@link io.squashql.template.SparkClassTemplateGenerator}.
  */
-public class TestSparkVectorAggregation extends ATestVectorAggregation {
+public class TestSparkVectorAggregation extends ATestSparkVectorAggregation {
 
   @AfterAll
   void tearDown() {
@@ -42,10 +38,5 @@ public class TestSparkVectorAggregation extends ATestVectorAggregation {
   protected void createTables() {
     SparkDataLoader tm = (SparkDataLoader) this.tm;
     this.fieldsByStore.forEach((store, fields) -> tm.createTemporaryTable(store, fields));
-  }
-
-  @Override
-  protected List<Number> getVectorValue(Object actualVector) {
-    return JavaConverters.seqAsJavaList(((WrappedArray.ofRef) actualVector).seq());
   }
 }

@@ -6,16 +6,11 @@ import io.squashql.query.database.QueryEngine;
 import io.squashql.store.Datastore;
 import io.squashql.transaction.DataLoader;
 import io.squashql.transaction.DuckDBDataLoader;
-import org.duckdb.DuckDBArray;
-
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Do not edit this class, it has been generated automatically by {@link io.squashql.template.DuckDBClassTemplateGenerator}.
  */
-public class TestDuckDBVectorAggregation extends ATestVectorAggregation {
+public class TestDuckDBVectorAggregation extends ATestDuckDBVectorAggregation {
 
   @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {
@@ -36,20 +31,5 @@ public class TestDuckDBVectorAggregation extends ATestVectorAggregation {
   protected void createTables() {
     DuckDBDataLoader tm = (DuckDBDataLoader) this.tm;
     this.fieldsByStore.forEach(tm::createOrReplaceTable);
-  }
-
-  @Override
-  protected List<Number> getVectorValue(Object actualVector) {
-    DuckDBArray v = (DuckDBArray) actualVector;
-    try {
-      Object[] a = (Object[]) v.getArray();
-      List<Number> l = new ArrayList<>();
-      for (int i = 0; i < a.length; i++) {
-        l.add((Number) a[i]);
-      }
-      return l;
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
   }
 }
