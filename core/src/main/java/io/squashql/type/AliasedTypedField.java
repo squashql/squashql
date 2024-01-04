@@ -7,7 +7,7 @@ public record AliasedTypedField(String alias) implements TypedField {
 
   @Override
   public String sqlExpression(QueryRewriter queryRewriter) {
-    return this.alias;
+    return queryRewriter.escapeAlias(this.alias);
   }
 
   @Override
@@ -18,5 +18,10 @@ public record AliasedTypedField(String alias) implements TypedField {
   @Override
   public String name() {
     return this.alias;
+  }
+
+  @Override
+  public TypedField as(String alias) {
+    return new AliasedTypedField(alias); // does not make sense...
   }
 }

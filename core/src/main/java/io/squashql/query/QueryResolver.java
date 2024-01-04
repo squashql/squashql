@@ -27,8 +27,9 @@ public class QueryResolver {
   private final List<TypedField> bucketColumns;
   private final List<TypedField> columns;
   private final CompilationCache cache = new CompilationCache();
-  private final List<CompiledMeasure> subQueryMeasures;
-  private final List<CompiledMeasure> measures;
+  private final Map<Measure, CompiledMeasure> subQueryMeasures;
+  private final Map<Measure, CompiledMeasure> measures;
+  private final Map<ColumnSetKey, CompiledColumnSet> compiledColumnSets;
 
   public QueryResolver(QueryDto query, Map<String, Store> storesByName) {
     this.query = query;
@@ -39,9 +40,10 @@ public class QueryResolver {
     this.columns = query.columns.stream().map(this::resolveField).toList();
     this.bucketColumns = Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
             .stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
+    this.subQueryMeasures = query.subQuery == null ? Collections.emptyMap() : compileMeasures(query.subQuery.measures, false);
     this.scope = toQueryScope(query);
-    this.subQueryMeasures = query.subQuery == null ? Collections.emptyList() : compileMeasures(query.subQuery.measures, false);
     this.measures = compileMeasures(query.measures, true);
+    this.compiledColumnSets = compiledColumnSets(query.columnSets);
   }
 
   public TypedField getTypedField(Field field) {
@@ -136,7 +138,8 @@ public class QueryResolver {
             compileCriteria(query.havingCriteriaDto),
             rollupColumns,
             groupingSets,
-            query.virtualTableDto);
+            query.virtualTableDto,
+            query.limit);
   }
 
   protected void checkQuery(final QueryDto query) {
@@ -147,21 +150,24 @@ public class QueryResolver {
     }
   }
 
-  private QueryExecutor.QueryScope toSubQuery(final QueryDto subQuery) {
+  private DatabaseQuery toSubQuery(final QueryDto subQuery) {
     checkSubQuery(subQuery);
     final CompiledTable table = compileTable(subQuery.table);
     final List<TypedField> select = subQuery.columns.stream().map(this::resolveField).toList();
     final CompiledCriteria whereCriteria = compileCriteria(subQuery.whereCriteriaDto);
     final CompiledCriteria havingCriteria = compileCriteria(subQuery.havingCriteriaDto);
     // should we check groupingSet and rollup as well are empty ?
-    return new QueryExecutor.QueryScope(table,
+    DatabaseQuery query = new DatabaseQuery(null,
+            table,
             null,
-            select,
+            new HashSet<>(select),
             whereCriteria,
             havingCriteria,
             Collections.emptyList(),
             Collections.emptyList(),
-            null);
+            subQuery.limit);
+    this.subQueryMeasures.values().forEach(query::withMeasure);
+    return query;
   }
 
   private void checkSubQuery(final QueryDto subQuery) {
@@ -182,27 +188,13 @@ public class QueryResolver {
   public DatabaseQuery toDatabaseQuery(final QueryExecutor.QueryScope query, final int limit) {
     return new DatabaseQuery(query.virtualTable(),
             query.table(),
-            query.subQuery() == null ? null : toSubQuery(query.subQuery()),
+            query.subQuery(),
             new LinkedHashSet<>(query.columns()),
             query.whereCriteria(),
             query.havingCriteria(),
             query.rollupColumns(),
             query.groupingSets(),
             limit);
-  }
-
-  private DatabaseQuery toSubQuery(final QueryExecutor.QueryScope subQuery) {
-    final DatabaseQuery query = new DatabaseQuery(subQuery.virtualTable(),
-            subQuery.table(),
-            null,
-            new LinkedHashSet<>(subQuery.columns()),
-            subQuery.whereCriteria(),
-            subQuery.havingCriteria(),
-            subQuery.rollupColumns(),
-            subQuery.groupingSets(),
-            -1); // no limit for subQuery
-    this.subQueryMeasures.forEach(query::withMeasure); // sub-query measures are included for all the same way
-    return query;
   }
 
   /**
@@ -230,10 +222,12 @@ public class QueryResolver {
   }
 
   /**
-   * measures
+   * Compiles measures
    */
-  private List<CompiledMeasure> compileMeasures(final List<Measure> measures, boolean topMeasures) {
-    return measures.stream().map(m -> compileMeasure(m, topMeasures)).collect(Collectors.toList());
+  private Map<Measure, CompiledMeasure> compileMeasures(final List<Measure> measures, boolean topMeasures) {
+    return measures
+            .stream()
+            .collect(Collectors.toMap(Function.identity(), m -> compileMeasure(m, topMeasures)));
   }
 
   protected CompiledMeasure compileMeasure(Measure measure, boolean topMeasure) {
@@ -249,6 +243,8 @@ public class QueryResolver {
         compiledMeasure = compileBinaryOperationMeasure((BinaryOperationMeasure) m, topMeasure);
       } else if (m instanceof ComparisonMeasureReferencePosition) {
         compiledMeasure = compileComparisonMeasure((ComparisonMeasureReferencePosition) m, topMeasure);
+      } else if (m instanceof VectorAggMeasure v) {
+        compiledMeasure = compileVectorAggMeasure(v);
       } else {
         throw new IllegalArgumentException("Unknown type of measure " + m.getClass().getSimpleName());
       }
@@ -266,24 +262,35 @@ public class QueryResolver {
     if (m.equals(CountMeasure.INSTANCE)) {
       return COMPILED_COUNT;
     }
-    return new CompiledAggregatedMeasure(m, resolveWithFallback(m.field), compileCriteria(m.criteria));
+    return new CompiledAggregatedMeasure(m.alias, resolveWithFallback(m.field), m.aggregationFunction, compileCriteria(m.criteria), m.distinct);
   }
 
   private CompiledMeasure compileExpressionMeasure(ExpressionMeasure m) {
-    return new CompiledExpressionMeasure(m);
+    return new CompiledExpressionMeasure(m.alias, m.expression);
   }
 
   private CompiledMeasure compileConstantMeasure(ConstantMeasure<?> m) {
-    return new CompiledConstantMeasure(m);
+    if (m instanceof DoubleConstantMeasure dc) {
+      return new CompiledDoubleConstantMeasure(dc.value);
+    } else if (m instanceof LongConstantMeasure lc) {
+      return new CompiledLongConstantMeasure(lc.value);
+    } else {
+      throw new IllegalArgumentException("unexpected type " + m.getClass());
+    }
   }
 
   private CompiledMeasure compileBinaryOperationMeasure(BinaryOperationMeasure m, boolean topMeasure) {
-    return new CompiledBinaryOperationMeasure(m, compileMeasure(m.leftOperand, topMeasure), compileMeasure(m.rightOperand, topMeasure));
+    return new CompiledBinaryOperationMeasure(m.alias, m.operator, compileMeasure(m.leftOperand, topMeasure), compileMeasure(m.rightOperand, topMeasure));
   }
 
   private CompiledMeasure compileComparisonMeasure(ComparisonMeasureReferencePosition m, boolean topMeasure) {
-    return new CompiledComparisonMeasure(m, compileMeasure(m.measure, topMeasure),
+    return new CompiledComparisonMeasure(
+            m.alias,
+            m.comparisonMethod,
+            compileMeasure(m.measure, topMeasure),
+            m.referencePosition == null ? null : m.referencePosition.entrySet().stream().collect(Collectors.toMap(e -> resolveField(e.getKey()), Map.Entry::getValue)),
             compilePeriod(m.period),
+            m.columnSetKey,
             m.ancestors == null ? null : m.ancestors.stream().map(this::resolveField).collect(Collectors.toList()));
   }
 
@@ -304,8 +311,24 @@ public class QueryResolver {
     }
   }
 
-  List<CompiledMeasure> getMeasures() {
-    return this.measures;
+  private CompiledMeasure compileVectorAggMeasure(VectorAggMeasure m) {
+    return new CompiledVectorAggMeasure(m.alias, resolveField(m.fieldToAggregate), m.aggregationFunction, resolveField(m.vectorAxis));
+  }
+
+  private Map<ColumnSetKey, CompiledColumnSet> compiledColumnSets(Map<ColumnSetKey, ColumnSet> columnSets) {
+    Map<ColumnSetKey, CompiledColumnSet> m = new HashMap<>();
+    for (Map.Entry<ColumnSetKey, ColumnSet> entry : columnSets.entrySet()) {
+      if (entry.getKey() != BUCKET) {
+        throw new IllegalArgumentException("unexpected column set " + entry.getValue());
+      }
+      BucketColumnSetDto bucket = (BucketColumnSetDto) entry.getValue();
+      m.put(entry.getKey(), new CompiledBucketColumnSet(
+              bucket.getColumnsForPrefetching().stream().map(this::resolveField).toList(),
+              bucket.getNewColumns().stream().map(this::resolveField).toList(),
+              entry.getKey(),
+              bucket.values));
+    }
+    return m;
   }
 
   @Value

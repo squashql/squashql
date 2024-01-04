@@ -2,7 +2,7 @@ package io.squashql.table;
 
 import com.google.common.base.Suppliers;
 import io.squashql.query.Header;
-import io.squashql.query.Measure;
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 
 import java.util.*;
@@ -11,14 +11,14 @@ import java.util.function.Supplier;
 public class ColumnarTable implements Table {
 
   protected final List<Header> headers;
-  protected final Set<Measure> measures;
+  protected final Set<CompiledMeasure> measures;
 
   public final Supplier<ObjectArrayDictionary> pointDictionary;
   protected final List<List<Object>> values;
 
-  public ColumnarTable(List<Header> headers, Set<Measure> measures, List<List<Object>> values) {
+  public ColumnarTable(List<Header> headers, Set<CompiledMeasure> measures, List<List<Object>> values) {
     if (headers.stream().filter(Header::isMeasure)
-            .anyMatch(measureHeader -> !measures.stream().map(Measure::alias).toList()
+            .anyMatch(measureHeader -> !measures.stream().map(CompiledMeasure::alias).toList()
                     .contains(measureHeader.name()))) {
       throw new IllegalArgumentException("Every header measure should have its description in measures.");
     }
@@ -45,13 +45,27 @@ public class ColumnarTable implements Table {
   }
 
   @Override
-  public void addAggregates(Header header, Measure measure, List<Object> values) {
+  public void addAggregates(Header header, CompiledMeasure measure, List<Object> values) {
     this.headers.add(new Header(header.name(), header.type(), true));
     this.measures.add(measure);
     this.values.add(values);
   }
 
-  public void transferAggregates(Table from, Measure measure) {
+
+  /**
+   * BE CAREFUL !! This method assumes this table and the table from passed in arguments have the same headers
+   * {@code Header#isMeasure == false} in the same order.
+   */
+  public void transferAggregates(Table from, CompiledMeasure measure) {
+    if (this.headers.stream().filter(h -> !h.isMeasure()).count() !=
+            from.headers().stream().filter(h -> !h.isMeasure()).count()) {
+      List<String> toHeaderNames = this.headers.stream().filter(h -> !h.isMeasure()).map(Header::name).toList();
+      List<String> fromHeaderNames = from.headers().stream().filter(h -> !h.isMeasure()).map(Header::name).toList();
+      throw new IllegalArgumentException(
+              "The aggregates you are trying to transfer comes from a table that has the following headers " + fromHeaderNames
+                      + " but does not match the headers of the destination table " + toHeaderNames);
+    }
+
     if (from instanceof ColumnarTable ct) {
       List<Object> values = new ArrayList<>((int) count());
       for (int i = 0; i < (int) count(); i++) {
@@ -93,7 +107,7 @@ public class ColumnarTable implements Table {
   }
 
   @Override
-  public Set<Measure> measures() {
+  public Set<CompiledMeasure> measures() {
     return this.measures;
   }
 

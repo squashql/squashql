@@ -7,6 +7,8 @@ import io.squashql.type.TableTypedField;
 import io.squashql.store.Store;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -67,8 +69,8 @@ public final class JdbcUtil {
       case Types.REAL, Types.FLOAT -> float.class;
       case Types.DECIMAL, Types.DOUBLE -> double.class;
       case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> byte[].class;
-      case Types.DATE -> Date.class;
-      case Types.TIME -> Time.class;
+      case Types.DATE -> LocalDate.class;
+      case Types.TIME -> LocalDateTime.class;
       case Types.TIMESTAMP -> Timestamp.class;
       default -> Object.class;
     };

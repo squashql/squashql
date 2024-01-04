@@ -1,7 +1,6 @@
 package io.squashql.jdbc;
 
 import io.squashql.query.Header;
-import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.AQueryEngine;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.table.ColumnarTable;
@@ -11,10 +10,10 @@ import org.eclipse.collections.api.tuple.Pair;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.sql.Date;
 import java.sql.*;
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEngine<T> {
@@ -41,7 +40,7 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
               (i, fieldValues) -> fieldValues[i]);
       return new ColumnarTable(
               result.getOne(),
-              query.measures.stream().map(CompiledMeasure::measure).collect(Collectors.toSet()),
+              new HashSet<>(query.measures),
               result.getTwo());
     });
   }
@@ -113,7 +112,10 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
         case Types.REAL, Types.FLOAT -> tableResult.getFloat(1 + index);
         case Types.DECIMAL, Types.DOUBLE -> tableResult.getDouble(1 + index);
         case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> tableResult.getBytes(1 + index);
-        case Types.DATE -> tableResult.getDate(1 + index);
+        case Types.DATE -> {
+          Date d = tableResult.getDate(1 + index);
+          yield d == null ? null : d.toLocalDate();
+        }
         case Types.TIME -> tableResult.getTime(1 + index);
         case Types.TIMESTAMP -> tableResult.getTimestamp(1 + index);
         default -> {

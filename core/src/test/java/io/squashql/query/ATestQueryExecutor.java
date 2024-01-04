@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.compiled.CompiledExpressionMeasure;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
@@ -791,7 +792,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.count()).isEqualTo(limit); // we don't care about the result, and we can't know what lines will be returned
-    Assertions.assertThat(result.getAggregateValues(TotalCountMeasure.INSTANCE).get(0)).isEqualTo(3L);
+    Assertions.assertThat(result.getAggregateValues(CompiledExpressionMeasure.COMPILED_TOTAL_COUNT).get(0)).isEqualTo(3L);
   }
 
   @Test

@@ -4,14 +4,14 @@ import com.google.cloud.bigquery.*;
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryUtil;
 import io.squashql.query.Header;
-import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
 import org.eclipse.collections.api.tuple.Pair;
 
+import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
@@ -54,7 +54,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i));
       return new ColumnarTable(
               result.getOne(),
-              query.measures.stream().map(CompiledMeasure::measure).collect(Collectors.toSet()),
+              new HashSet<>(query.measures),
               result.getTwo());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
@@ -89,13 +89,18 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       return null;
     }
     com.google.cloud.bigquery.Field field = schema.getFields().get(index);
-    return switch (field.getType().getStandardType()) {
-      case BOOL -> fieldValue.getBooleanValue();
-      case INT64 -> fieldValue.getLongValue();
-      case FLOAT64 -> fieldValue.getDoubleValue();
-      case BYTES -> fieldValue.getBytesValue();
-      default -> fieldValue.getValue();
-    };
+    if (field.getMode() != Field.Mode.REPEATED) {
+      return switch (field.getType().getStandardType()) {
+        case BOOL -> fieldValue.getBooleanValue();
+        case INT64 -> fieldValue.getLongValue();
+        case FLOAT64 -> fieldValue.getDoubleValue();
+        case BYTES -> fieldValue.getBytesValue();
+        case DATE -> LocalDate.parse(fieldValue.getStringValue());
+        default -> fieldValue.getValue();
+      };
+    } else {
+      return fieldValue.getValue(); // FieldValueList
+    }
   }
 
   @Override

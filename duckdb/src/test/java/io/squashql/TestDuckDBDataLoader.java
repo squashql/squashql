@@ -1,10 +1,12 @@
 package io.squashql;
 
 import io.squashql.query.*;
+import io.squashql.query.compiled.CompiledAggregatedMeasure;
 import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.transaction.DuckDBDataLoader;
+import io.squashql.type.AliasedTypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +23,7 @@ public class TestDuckDBDataLoader {
             List.of(new Header("typology", String.class, false),
                     new Header("category", String.class, false),
                     new Header("price.avg", int.class, true)),
-            Set.of(new AggregatedMeasure("price.avg", "price", "avg")),
+            Set.of(new CompiledAggregatedMeasure("price.avg", new AliasedTypedField("price"), "avg", null, false)),
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MDD", "MDD")),
                     new ArrayList<>(Arrays.asList("A", "B", "A", "C")),

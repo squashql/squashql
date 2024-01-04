@@ -7,6 +7,7 @@ import io.squashql.query.dto.*;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
+import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +33,6 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
 
   protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
   protected String competitorStoreName = "competitor" + getClass().getSimpleName().toLowerCase();
-
   protected GlobalCache queryCache;
 
   @Override
@@ -314,17 +314,17 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .withMeasure(new AggregatedMeasure("ps", "price", AggregationFunction.SUM));
     // Scope 1 added to the cache
     executor.executeQuery(querySupplier.get());
-    assertCacheStats(cache.stats(), 0, 2);
+    TestUtil.assertCacheStats(cache.stats(), 0, 2);
 
     // Scope 2 added to the cache
     executor.executeQuery(querySupplier.get().withColumn(tableField("category")));
-    assertCacheStats(cache.stats(), 0, 4);
+    TestUtil.assertCacheStats(cache.stats(), 0, 4);
 
     // Scope 3, should evict an entry in the cache
     executor.executeQuery(querySupplier.get().withCondition(tableField("category"), Functions.eq("drink")));
     latch.await(60, TimeUnit.SECONDS);
     CacheStatsDto stats = cache.stats();
-    assertCacheStats(stats, 0, 6);
+    TestUtil.assertCacheStats(cache.stats(), 0, 6);
     Assertions.assertThat(c.getAndIncrement()).isEqualTo(1);
     Assertions.assertThat(stats.evictionCount).isEqualTo(1);
   }
@@ -496,31 +496,24 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .build();
     int base = 0;
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category), List.of(ean)));
-    assertCacheStats(0, (base = base + 2));
+    assertCacheStats(0, (base = base + 4));
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category, ean), List.of()));
-    assertCacheStats(0, (base = base + 2));
+    assertCacheStats(0, (base = base + 4));
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(), List.of(category, ean)));
-    assertCacheStats(2, base); // same as the previous
+    assertCacheStats(4, base); // same as the previous
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(ean), List.of(category)));
-    assertCacheStats(2, (base = base + 2));
+    assertCacheStats(4, (base = base + 4));
     // Same as the first query
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category), List.of(ean)));
-    assertCacheStats(4, base);
+    assertCacheStats(8, base);
   }
 
   private void assertCacheStats(int hitCount, int missCount) {
-    CacheStatsDto stats = this.queryCache.stats(null);
-    assertCacheStats(stats, hitCount, missCount);
+    TestUtil.assertCacheStats(this.queryCache, hitCount, missCount);
   }
 
   private void assertCacheStats(int hitCount, int missCount, SquashQLUser user) {
-    CacheStatsDto stats = this.queryCache.stats(user);
-    assertCacheStats(stats, hitCount, missCount);
-  }
-
-  private void assertCacheStats(CacheStatsDto stats, int hitCount, int missCount) {
-    Assertions.assertThat(stats.hitCount).isEqualTo(hitCount);
-    Assertions.assertThat(stats.missCount).isEqualTo(missCount);
+    TestUtil.assertCacheStats(this.queryCache, hitCount, missCount, user);
   }
 
   private static Table execute(QueryExecutor executor, QueryDto query, SquashQLUser user) {

@@ -3,12 +3,9 @@ package io.squashql.util;
 import io.squashql.query.ColumnSet;
 import io.squashql.query.ColumnSetKey;
 import io.squashql.query.Field;
-import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.dto.*;
-import io.squashql.type.TypedField;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static io.squashql.query.dto.OrderKeywordDto.DESC;
 
@@ -45,16 +42,5 @@ public final class Queries {
     }
 
     return res;
-  }
-
-  public static List<TypedField> generateGroupingSelect(DatabaseQuery query) {
-    List<TypedField> selects = new ArrayList<>();
-    selects.addAll(query.rollup);
-    // order matters, this is why a LinkedHashSet is used.
-    selects.addAll(query.groupingSets
-            .stream()
-            .flatMap(Collection::stream)
-            .collect(Collectors.toCollection(LinkedHashSet::new)));
-    return selects;
   }
 }

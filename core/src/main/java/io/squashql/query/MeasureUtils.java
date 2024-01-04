@@ -29,7 +29,7 @@ public final class MeasureUtils {
 
   public static String createExpression(Measure m) {
     if (m instanceof AggregatedMeasure a) {
-      final CompiledAggregatedMeasure compiled = (CompiledAggregatedMeasure) new ExpressionResolver(m).getMeasures().get(0);
+      final CompiledAggregatedMeasure compiled = (CompiledAggregatedMeasure) new ExpressionResolver(m).getMeasures().values().iterator().next();
       final String fieldExpression = compiled.field().sqlExpression(BASIC);
       if (compiled.criteria() == null) {
         return a.aggregationFunction + "(" + fieldExpression + ")";
@@ -110,7 +110,8 @@ public final class MeasureUtils {
             queryScope.havingCriteria(),
             new ArrayList<>(rollupColumns),
             new ArrayList<>(queryScope.groupingSets()), // FIXME should handle groupingSets
-            queryScope.virtualTable());
+            queryScope.virtualTable(),
+            queryScope.limit());
   }
 
   private static CompiledCriteria removeCriteriaOnField(TypedField field, CompiledCriteria root) {

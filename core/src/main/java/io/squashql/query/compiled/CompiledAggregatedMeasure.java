@@ -1,17 +1,20 @@
 package io.squashql.query.compiled;
 
-import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.CountMeasure;
+import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 
-public record CompiledAggregatedMeasure(AggregatedMeasure measure, TypedField field,
-                                        CompiledCriteria criteria) implements CompiledMeasure {
+public record CompiledAggregatedMeasure(String alias,
+                                        TypedField field,
+                                        String aggregationFunction,
+                                        CompiledCriteria criteria,
+                                        boolean distinct) implements CompiledMeasure {
 
   public static final CompiledMeasure COMPILED_COUNT = new CompiledAggregatedMeasure(
-          CountMeasure.INSTANCE, new TableTypedField(null, CountMeasure.FIELD_NAME, long.class), null);
+          CountMeasure.INSTANCE.alias, new TableTypedField(null, CountMeasure.FIELD_NAME, long.class), AggregationFunction.COUNT, null, false);
 
   @Override
   public String sqlExpression(QueryRewriter queryRewriter, boolean withAlias) {
@@ -22,21 +25,20 @@ public record CompiledAggregatedMeasure(AggregatedMeasure measure, TypedField fi
     } else {
       valuesToAggregate = fieldExpression;
     }
-    if (measure.distinct) {
+    if (this.distinct) {
       valuesToAggregate = "distinct(" + valuesToAggregate + ")";
     }
-    final String sql = this.measure.aggregationFunction + "(" + valuesToAggregate + ")";
+    final String sql = this.aggregationFunction + "(" + valuesToAggregate + ")";
     return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, alias()) : sql;
   }
 
   @Override
   public String alias() {
-    return measure().alias();
+    return this.alias;
   }
 
   @Override
   public <R> R accept(MeasureVisitor<R> visitor) {
     return visitor.visit(this);
   }
-
 }

@@ -1,6 +1,5 @@
 package io.squashql.table;
 
-import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.Header;
 import io.squashql.query.dto.JoinType;
 import org.assertj.core.api.Assertions;
@@ -11,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+
+import static io.squashql.table.ATestMergeTables.priceSum;
 
 class TestMergeTablesEdgeCases {
 
@@ -28,7 +29,7 @@ class TestMergeTablesEdgeCases {
             List.of(new Header("typology", String.class, false),
                     new Header("category", String.class, false),
                     new Header("price.sum", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
+            Set.of(priceSum),
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MN", "MDD", "MDD")),
                     new ArrayList<>(Arrays.asList("A", "B", "A", "C")),
@@ -54,7 +55,7 @@ class TestMergeTablesEdgeCases {
     Table leftTable = new ColumnarTable(
             List.of(new Header("typology", String.class, false),
                     new Header("price.sum", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
+            Set.of(priceSum),
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MDD")),
                     new ArrayList<>(Arrays.asList(20, 12))));
@@ -68,7 +69,7 @@ class TestMergeTablesEdgeCases {
     Table rightTable = new ColumnarTable(
             List.of(new Header("category", String.class, false),
                     new Header("price.sum", int.class, true)),
-            Set.of(new AggregatedMeasure("price.sum", "price", "sum")),
+            Set.of(priceSum),
             List.of(
                     new ArrayList<>(Arrays.asList("A", "B", "C")),
                     new ArrayList<>(Arrays.asList(2.3, 3, 5))));

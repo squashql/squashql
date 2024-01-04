@@ -61,7 +61,7 @@ public class GraphPrinter {
     if (o instanceof QueryExecutor.QueryPlanNodeKey key) {
       StringBuilder sb = new StringBuilder();
       sb.append("scope=").append("#").append(idProvider.apply(key.queryScope()));
-      sb.append(", measure=[").append(key.measure().alias()).append("]; [").append(MeasureUtils.createExpression(key.measure().measure())).append("]");
+      sb.append(", measure=[").append(key.measure().alias()).append("]; [").append(key.measure()).append("]");
       return sb.toString();
     } else {
       return String.valueOf(o);

@@ -1,8 +1,9 @@
 package io.squashql.table;
 
-import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.Header;
+import io.squashql.query.compiled.CompiledAggregatedMeasure;
 import io.squashql.query.dto.JoinType;
+import io.squashql.type.AliasedTypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -11,10 +12,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import static io.squashql.query.agg.AggregationFunction.AVG;
+import static io.squashql.query.agg.AggregationFunction.SUM;
 import static io.squashql.query.database.SQLTranslator.TOTAL_CELL;
 import static io.squashql.table.ATestMergeTables.orderRows;
 
 class TestMergeThreeTables {
+
+  static CompiledAggregatedMeasure turnover = new CompiledAggregatedMeasure("Turnover", new AliasedTypedField("unit_turnover"), SUM, null, false);
+  static CompiledAggregatedMeasure margin = new CompiledAggregatedMeasure("Margin", new AliasedTypedField("unit_margin"), SUM, null, false);
+  static CompiledAggregatedMeasure priceVariation = new CompiledAggregatedMeasure("PriceVariation", new AliasedTypedField("price_variation"), AVG, null, false);
+  static CompiledAggregatedMeasure priceIndex = new CompiledAggregatedMeasure("PriceIndex", new AliasedTypedField("price_index"), AVG, null, false);
 
   @Test
   void mergeThreeTables() {
@@ -30,8 +38,7 @@ class TestMergeThreeTables {
             List.of(new Header("typology", String.class, false),
                     new Header("Turnover", double.class, true),
                     new Header("Margin", double.class, true)),
-            Set.of(new AggregatedMeasure("Turnover", "unit_turnover", "sum"),
-                    new AggregatedMeasure("Margin", "unit_margin", "sum")),
+            Set.of(turnover, margin),
             List.of(
                     new ArrayList<>(Arrays.asList(TOTAL_CELL, "MDD", "MN", "PP")),
                     new ArrayList<>(Arrays.asList(2950, 1000, 2500, 450)),
@@ -50,7 +57,7 @@ class TestMergeThreeTables {
             List.of(new Header("typology", String.class, false),
                     new Header("category", String.class, false),
                     new Header("PriceVariation", double.class, true)),
-            Set.of(new AggregatedMeasure("PriceVariation", "price_variation", "avg")),
+            Set.of(priceVariation),
             List.of(
                     new ArrayList<>(Arrays.asList(TOTAL_CELL, "MDD", "MDD", "MN", "MN", "MN")),
                     new ArrayList<>(Arrays.asList(TOTAL_CELL, TOTAL_CELL, "A", TOTAL_CELL, "B", "C")),
@@ -67,7 +74,7 @@ class TestMergeThreeTables {
     Table table3 = new ColumnarTable(
             List.of(new Header("company", String.class, false),
                     new Header("PriceIndex", double.class, true)),
-            Set.of(new AggregatedMeasure("PriceIndex", "price_index", "avg")),
+            Set.of(priceIndex),
             List.of(
                     new ArrayList<>(Arrays.asList(TOTAL_CELL, "CARREFOUR", "LECLERC", "SUPER U")),
                     new ArrayList<>(Arrays.asList(101.5, 99.27, 105.1, 101))));
@@ -95,10 +102,7 @@ class TestMergeThreeTables {
                     new Header("Margin", double.class, true),
                     new Header("PriceVariation", double.class, true),
                     new Header("PriceIndex", double.class, true)),
-            Set.of(new AggregatedMeasure("Turnover", "unit_turnover", "sum"),
-                    new AggregatedMeasure("Margin", "unit_margin", "sum"),
-                    new AggregatedMeasure("PriceVariation", "price_variation", "avg"),
-                    new AggregatedMeasure("PriceIndex", "price_index", "avg")),
+            Set.of(turnover, margin, priceVariation, priceIndex),
             List.of(
                     new ArrayList<>(
                             Arrays.asList(TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, "MDD", "MDD",
@@ -130,8 +134,7 @@ class TestMergeThreeTables {
             List.of(new Header("typology", String.class, false),
                     new Header("Turnover", double.class, true),
                     new Header("Margin", double.class, true)),
-            Set.of(new AggregatedMeasure("Turnover", "unit_turnover", "sum"),
-                    new AggregatedMeasure("Margin", "unit_margin", "sum")),
+            Set.of(turnover, margin),
             List.of(
                     new ArrayList<>(Arrays.asList("MN", "MDD", "PP", TOTAL_CELL)),
                     new ArrayList<>(Arrays.asList(2500, 1000, 450, 2950)),
@@ -150,7 +153,7 @@ class TestMergeThreeTables {
             List.of(new Header("PriceVariation", double.class, true),
                     new Header("category", String.class, false),
                     new Header("typology", String.class, false)),
-            Set.of(new AggregatedMeasure("PriceVariation", "price_variation", "avg")),
+            Set.of(priceVariation),
             List.of(
                     new ArrayList<>(Arrays.asList(0.09, -0.01, 0.02, -0.05, 0.15, 0.15)),
                     new ArrayList<>(Arrays.asList(TOTAL_CELL, TOTAL_CELL, "B", "C", TOTAL_CELL, "A")),
@@ -167,7 +170,7 @@ class TestMergeThreeTables {
     Table table3 = new ColumnarTable(
             List.of(new Header("company", String.class, false),
                     new Header("PriceIndex", double.class, true)),
-            Set.of(new AggregatedMeasure("PriceIndex", "price_index", "avg")),
+            Set.of(priceIndex),
             List.of(
                     new ArrayList<>(Arrays.asList(TOTAL_CELL, "CARREFOUR", "LECLERC", "SUPER U")),
                     new ArrayList<>(Arrays.asList(101.5, 99.27, 105.1, 101))));
@@ -195,10 +198,7 @@ class TestMergeThreeTables {
                     new Header("Margin", double.class, true),
                     new Header("PriceVariation", double.class, true),
                     new Header("PriceIndex", double.class, true)),
-            Set.of(new AggregatedMeasure("Turnover", "unit_turnover", "sum"),
-                    new AggregatedMeasure("Margin", "unit_margin", "sum"),
-                    new AggregatedMeasure("PriceVariation", "price_variation", "avg"),
-                    new AggregatedMeasure("PriceIndex", "price_index", "avg")),
+            Set.of(turnover, margin, priceVariation, priceIndex),
             List.of(
                     new ArrayList<>(
                             Arrays.asList(TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, TOTAL_CELL, "MDD", "MDD",

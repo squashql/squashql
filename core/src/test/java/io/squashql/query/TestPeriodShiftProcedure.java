@@ -1,6 +1,7 @@
 package io.squashql.query;
 
-import io.squashql.query.dto.Period;
+import io.squashql.query.compiled.CompiledPeriod;
+import io.squashql.type.AliasedTypedField;
 import org.assertj.core.api.Assertions;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
@@ -9,13 +10,11 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-import static io.squashql.query.TableField.tableField;
-
 public class TestPeriodShiftProcedure {
 
   @Test
   void testQuarterFromQuarterYear() {
-    Period period = new Period.Quarter(tableField(""), tableField(""));
+    CompiledPeriod period = new CompiledPeriod.Quarter(new AliasedTypedField(""), new AliasedTypedField(""));
     MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
     indexByPeriodUnit.put(PeriodUnit.YEAR, 0);
     indexByPeriodUnit.put(PeriodUnit.QUARTER, 1);
@@ -42,7 +41,7 @@ public class TestPeriodShiftProcedure {
 
   @Test
   void testMonthFromMonthYear() {
-    Period period = new Period.Month(tableField(""), tableField(""));
+    CompiledPeriod period = new CompiledPeriod.Month(new AliasedTypedField(""), new AliasedTypedField(""));
     MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
     indexByPeriodUnit.put(PeriodUnit.YEAR, 0);
     indexByPeriodUnit.put(PeriodUnit.MONTH, 1);
@@ -69,7 +68,7 @@ public class TestPeriodShiftProcedure {
 
   @Test
   void testSemesterFromSemesterYear() {
-    Period period = new Period.Semester(tableField(""), tableField(""));
+    CompiledPeriod period = new CompiledPeriod.Semester(new AliasedTypedField(""), new AliasedTypedField(""));
     MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
     indexByPeriodUnit.put(PeriodUnit.YEAR, 0);
     indexByPeriodUnit.put(PeriodUnit.SEMESTER, 1);

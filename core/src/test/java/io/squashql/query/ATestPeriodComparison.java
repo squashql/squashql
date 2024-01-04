@@ -415,15 +415,29 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   }
 
   protected Object yearType(int i) {
-    return (long) i;
+    String qesn = this.queryEngine.getClass().getSimpleName();
+    if (qesn.contains(TestClass.Type.CLICKHOUSE.className) || qesn.contains(TestClass.Type.SPARK.className)) {
+      return i;
+    } else {
+      return (long) i;
+    }
   }
 
   protected Object quarterType(int i) {
-    return (long) i;
+    String qesn = this.queryEngine.getClass().getSimpleName();
+    if (qesn.contains(TestClass.Type.CLICKHOUSE.className) || qesn.contains(TestClass.Type.SPARK.className)) {
+      return i;
+    } else {
+      return (long) i;
+    }
   }
 
   protected Object monthType(int i) {
-    return (long) i;
+    String qesn = this.queryEngine.getClass().getSimpleName();
+    if (qesn.contains(TestClass.Type.CLICKHOUSE.className) || qesn.contains(TestClass.Type.SPARK.className)) {
+      return i;
+    } else {
+      return (long) i;
+    }
   }
-
 }

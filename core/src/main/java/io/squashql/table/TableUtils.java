@@ -2,6 +2,7 @@ package io.squashql.table;
 
 import com.google.common.base.Suppliers;
 import io.squashql.query.*;
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
@@ -117,16 +118,13 @@ public class TableUtils {
   public static List<MetadataItem> buildTableMetadata(Table t) {
     List<MetadataItem> metadata = new ArrayList<>();
     for (Header header : t.headers()) {
-      Optional<Measure> optionalMeasure = t.measures().stream()
+      Optional<CompiledMeasure> optionalMeasure = t.measures().stream()
               .filter(m -> m.alias().equals(header.name()))
               .findAny();
       if (header.isMeasure() && optionalMeasure.isPresent()) {
-        Measure measure = optionalMeasure.get();
-        String expression = measure.expression();
-        if (expression == null) {
-          measure = measure.withExpression(MeasureUtils.createExpression(measure));
-        }
-        metadata.add(new MetadataItem(header.name(), measure.expression(), header.type()));
+        // FIXME deactivated for now
+        metadata.add(new MetadataItem(header.name(), header.name(), header.type()));
+//        metadata.add(new MetadataItem(header.name(), MeasureUtils.createExpression(optionalMeasure.get()), header.type()));
       } else {
         metadata.add(new MetadataItem(header.name(), header.name(), header.type()));
       }
@@ -152,17 +150,24 @@ public class TableUtils {
 
     // ... and then get their string representation.
     List<String> finalColumns = finalFields.stream().map(SqlUtils::squashqlExpression).toList();
-    return selectAndOrderColumns(table, finalColumns, queryDto.measures);
+    List<CompiledMeasure> measures = new ArrayList<>();
+    for (Measure measure : queryDto.measures) {
+      CompiledMeasure compiledMeasure = queryResolver.getMeasures().get(measure);
+      if (compiledMeasure != null) {
+        measures.add(compiledMeasure);
+      }
+    }
+    return selectAndOrderColumns(table, finalColumns, measures);
   }
 
-  public static ColumnarTable selectAndOrderColumns(ColumnarTable table, List<String> columns, List<Measure> measures) {
+  public static ColumnarTable selectAndOrderColumns(ColumnarTable table, List<String> columns, List<CompiledMeasure> measures) {
     List<Header> headers = new ArrayList<>();
     List<List<Object>> values = new ArrayList<>();
     for (String finalColumn : columns) {
       headers.add(table.getHeader(finalColumn));
       values.add(Objects.requireNonNull(table.getColumnValues(finalColumn)));
     }
-    for (Measure measure : measures) {
+    for (CompiledMeasure measure : measures) {
       headers.add(table.getHeader(measure));
       values.add(Objects.requireNonNull(table.getAggregateValues(measure)));
     }
@@ -298,5 +303,96 @@ public class TableUtils {
     }
 
     return lazilyCreated[0] ? finalTable.get() : table;
+  }
+
+  /**
+   * Changes the content of the input table to remove columns corresponding to grouping() (columns that help to identify
+   * rows containing totals) and write {@link SQLTranslator#TOTAL_CELL} in the corresponding cells. The input table is
+   * <b>NOT</b> modified, a copy is created instead.
+   * <pre>
+   *   Input:
+   *   +----------+----------+---------------------------+---------------------------+------+----------------------+----+
+   *   | scenario | category | ___grouping___scenario___ | ___grouping___category___ |    p | _contributors_count_ |  q |
+   *   +----------+----------+---------------------------+---------------------------+------+----------------------+----+
+   *   |     base |    drink |                         0 |                         0 |  2.0 |                    1 | 10 |
+   *   |     base |     food |                         0 |                         0 |  3.0 |                    1 | 20 |
+   *   |     base |    cloth |                         0 |                         0 | 10.0 |                    1 |  3 |
+   *   |     null |     null |                         1 |                         1 | 15.0 |                    3 | 33 |
+   *   |     base |     null |                         0 |                         1 | 15.0 |                    3 | 33 |
+   *   +----------+----------+---------------------------+---------------------------+------+----------------------+----+
+   *   Output:
+   *   +-------------+-------------+------+----------------------+----+
+   *   |    scenario |    category |    p | _contributors_count_ |  q |
+   *   +-------------+-------------+------+----------------------+----+
+   *   |        base |       drink |  2.0 |                    1 | 10 |
+   *   |        base |        food |  3.0 |                    1 | 20 |
+   *   |        base |       cloth | 10.0 |                    1 |  3 |
+   *   | ___total___ | ___total___ | 15.0 |                    3 | 33 |
+   *   |        base | ___total___ | 15.0 |                    3 | 33 |
+   *   +-------------+-------------+------+----------------------+----+
+   * </pre>
+   */
+  public static Table replaceNullCellsByTotal(Table input, QueryExecutor.QueryScope scope) {
+    Map<String, String> groupingHeaders = findGroupingHeaderNamesByBaseName(input.headers(), scope);
+    if (!groupingHeaders.isEmpty()) {
+      List<List<Object>> newValues = new ArrayList<>();
+      for (int i = 0; i < input.headers().size(); i++) {
+        newValues.add(new ArrayList<>(input.getColumn(i)));
+      }
+      ColumnarTable copy = new ColumnarTable(input.headers(), input.measures(), newValues);
+
+      Set<String> groupingNames = groupingHeaders.keySet();
+      for (int i = 0; i < copy.headers().size(); i++) {
+        Header header = copy.headers().get(i);
+        List<Object> columnValues = copy.getColumn(i);
+        if (groupingNames.contains(header.name())) {
+          String baseName = groupingHeaders.get(header.name());
+          List<Object> baseColumnValues = copy.getColumnValues(baseName);
+          for (int rowIndex = 0; rowIndex < columnValues.size(); rowIndex++) {
+            if (((Number) columnValues.get(rowIndex)).longValue() == 1) {
+              // It is a total if == 1. It is cast as Number because the type is Byte with Spark, Long with
+              // ClickHouse...
+              baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
+            }
+          }
+        }
+      }
+      return copy;
+    }
+    return input;
+  }
+
+  /**
+   * [___grouping___field_name_a___, field_name_a]
+   * [___grouping___field_name_b___, field_name_b]
+   * ...
+   */
+  private static Map<String, String> findGroupingHeaderNamesByBaseName(List<Header> headers, QueryExecutor.QueryScope scope) {
+    Set<String> rollupExpressions = QueryExecutor.generateGroupingMeasures(scope).keySet();
+    Map<String, String> groupingHeaders = new HashMap<>();
+    // rollupExpressions can be empty when working with vector. In that case, we rely on the header name only.
+    // Do it in that order. First this...
+    for (Header header : headers) {
+      String baseName = SqlUtils.extractFieldFromGroupingAlias(header.name());
+      if (baseName != null) {
+        groupingHeaders.put(header.name(), baseName);
+      }
+    }
+
+    // Then this.
+    for (Header header : headers) {
+      if (!header.isMeasure() && rollupExpressions.contains(header.name())) {
+        String groupingAlias = SqlUtils.groupingAlias(header.name().replace(".", "_")); // The alias we are looking for
+        for (Header m : headers) {
+          if (m.isMeasure() && m.name().equals(groupingAlias)) {
+            String baseName = SqlUtils.extractFieldFromGroupingAlias(groupingAlias);
+            if (baseName != null) {
+              groupingHeaders.put(m.name(), header.name());
+            }
+          }
+        }
+      }
+    }
+    return groupingHeaders;
   }
 }

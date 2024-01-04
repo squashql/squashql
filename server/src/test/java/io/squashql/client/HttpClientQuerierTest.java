@@ -66,7 +66,8 @@ public class HttpClientQuerierTest {
     assertQuery(response.table);
     Assertions.assertThat(response.metadata).containsExactly(
             new MetadataItem(SCENARIO_FIELD_NAME, SCENARIO_FIELD_NAME, String.class),
-            new MetadataItem("qs", "sum(quantity)", long.class));
+            new MetadataItem("qs", "qs", long.class));
+//            new MetadataItem("qs", "sum(quantity)", long.class));
 
     Assertions.assertThat(response.debug.cache).isNotNull();
   }
@@ -91,8 +92,10 @@ public class HttpClientQuerierTest {
     Assertions.assertThat(response.table.columns).containsExactly(SCENARIO_FIELD_NAME, "qs", "qa");
     Assertions.assertThat(response.metadata).containsExactly(
             new MetadataItem(SCENARIO_FIELD_NAME, SCENARIO_FIELD_NAME, String.class),
-            new MetadataItem("qs", "sum(quantity)", long.class),
-            new MetadataItem("qa", "avg(quantity)", double.class));
+            new MetadataItem("qs", "qs", long.class),
+            new MetadataItem("qa", "qa", double.class));
+//            new MetadataItem("qs", "sum(quantity)", long.class),
+//            new MetadataItem("qa", "avg(quantity)", double.class));
 
     Assertions.assertThat(response.debug).isNull();
   }

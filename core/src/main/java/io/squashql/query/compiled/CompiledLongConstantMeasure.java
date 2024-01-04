@@ -1,23 +1,21 @@
 package io.squashql.query.compiled;
 
-import io.squashql.query.ConstantMeasure;
 import io.squashql.query.database.QueryRewriter;
 
-public record CompiledConstantMeasure(ConstantMeasure<?> measure) implements CompiledMeasure {
+public record CompiledLongConstantMeasure(Long value) implements CompiledMeasure {
 
   @Override
   public String sqlExpression(QueryRewriter queryRewriter, boolean withAlias) {
-    return this.measure.getValue().toString();
+    return String.valueOf(this.value);
   }
 
   @Override
   public String alias() {
-    return this.measure.alias();
+    return "constant(" + this.value + ")";
   }
 
   @Override
   public <R> R accept(MeasureVisitor<R> visitor) {
     return visitor.visit(this);
   }
-
 }

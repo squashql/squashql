@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
@@ -26,27 +27,27 @@ public class GlobalCache implements QueryCache {
     return user == null ? ANONYMOUS : user;
   }
 
-  protected CaffeineQueryCache getCache(PrefetchQueryScope scope) {
+  protected CaffeineQueryCache getCache(QueryCacheKey scope) {
     return this.cacheByUser.computeIfAbsent(user(scope.user()), u -> this.cacheSupplier.get());
   }
 
   @Override
-  public ColumnarTable createRawResult(PrefetchQueryScope scope) {
+  public ColumnarTable createRawResult(QueryCacheKey scope) {
     return getCache(scope).createRawResult(scope);
   }
 
   @Override
-  public boolean contains(Measure measure, PrefetchQueryScope scope) {
+  public boolean contains(CompiledMeasure measure, QueryCacheKey scope) {
     return getCache(scope).contains(measure, scope);
   }
 
   @Override
-  public void contributeToCache(Table result, Set<Measure> measures, PrefetchQueryScope scope) {
+  public void contributeToCache(Table result, Set<CompiledMeasure> measures, QueryCacheKey scope) {
     getCache(scope).contributeToCache(result, measures, scope);
   }
 
   @Override
-  public void contributeToResult(Table result, Set<Measure> measures, PrefetchQueryScope scope) {
+  public void contributeToResult(Table result, Set<CompiledMeasure> measures, QueryCacheKey scope) {
     getCache(scope).contributeToResult(result, measures, scope);
   }
 

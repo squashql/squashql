@@ -7,9 +7,11 @@ import io.squashql.type.TypedField;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static io.squashql.query.agg.AggregationFunction.GROUPING;
+
 public class SqlUtils {
 
-  static final Pattern GROUPING_PATTERN = Pattern.compile("___grouping___(.*)___");
+  static final Pattern GROUPING_PATTERN = Pattern.compile(String.format("___%s___(.*)___", GROUPING));
 
   public static String backtickEscape(String column) {
     return "`" + column + "`";
@@ -69,7 +71,11 @@ public class SqlUtils {
    * {@link SqlUtils#GROUPING_PATTERN}.
    */
   public static String groupingAlias(String column) {
-    return String.format("___grouping___%s___", column);
+    return String.format("___%s___%s___", GROUPING, column);
+  }
+
+  public static String columnAlias(String column) {
+    return String.format("___%s___%s___", "alias", column);
   }
 
   public static String escapeSingleQuote(String s, String escapeCharacter) {

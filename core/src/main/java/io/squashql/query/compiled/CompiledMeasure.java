@@ -1,6 +1,5 @@
 package io.squashql.query.compiled;
 
-import io.squashql.query.Measure;
 import io.squashql.query.database.QueryRewriter;
 
 public interface CompiledMeasure {
@@ -9,8 +8,5 @@ public interface CompiledMeasure {
 
   String alias();
 
-  Measure measure();
-
   <R> R accept(MeasureVisitor<R> visitor);
-
 }

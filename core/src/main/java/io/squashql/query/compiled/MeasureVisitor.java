@@ -10,6 +10,9 @@ public interface MeasureVisitor<R> {
 
   R visit(CompiledComparisonMeasure measure);
 
-  R visit(CompiledConstantMeasure measure);
+  R visit(CompiledDoubleConstantMeasure measure);
 
+  R visit(CompiledLongConstantMeasure measure);
+
+  R visit(CompiledVectorAggMeasure measure);
 }

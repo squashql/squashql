@@ -4,7 +4,6 @@ import io.squashql.query.*;
 import io.squashql.query.QueryExecutor.ExecutionContext;
 import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import io.squashql.query.comp.BinaryOperations;
-import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;
 
@@ -23,7 +22,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
   @Override
   public void accept(QueryPlanNodeKey queryPlanNodeKey, ExecutionContext executionContext) {
     CompiledMeasure measure = queryPlanNodeKey.measure();
-    if (executionContext.getWriteToTable().measures().contains(measure.measure())) {
+    if (executionContext.getWriteToTable().measures().contains(measure)) {
       return; // Nothing to do
     }
     this.executionContext = executionContext;
@@ -33,30 +32,30 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
   @Override
   public Void visit(CompiledBinaryOperationMeasure bom) {
     Table intermediateResult = this.executionContext.getWriteToTable();
-    List<Object> lo = intermediateResult.getAggregateValues(bom.leftOperand().measure());
-    List<Object> ro = intermediateResult.getAggregateValues(bom.rightOperand().measure());
+    List<Object> lo = intermediateResult.getAggregateValues(bom.leftOperand());
+    List<Object> ro = intermediateResult.getAggregateValues(bom.rightOperand());
     List<Object> r = new ArrayList<>(lo.size());
 
-    Class<?> lType = intermediateResult.getHeader(bom.leftOperand().measure()).type();
-    Class<?> rType = intermediateResult.getHeader(bom.rightOperand().measure()).type();
-    BiFunction<Number, Number, Number> operation = BinaryOperations.createBiFunction(bom.measure().operator, lType, rType);
+    Class<?> lType = intermediateResult.getHeader(bom.leftOperand()).type();
+    Class<?> rType = intermediateResult.getHeader(bom.rightOperand()).type();
+    BiFunction<Number, Number, Number> operation = BinaryOperations.createBiFunction(bom.operator(), lType, rType);
     for (int i = 0; i < lo.size(); i++) {
       r.add(operation.apply((Number) lo.get(i), (Number) ro.get(i)));
     }
-    Header header = new Header(bom.alias(), BinaryOperations.getOutputType(bom.measure().operator, lType, rType), true);
-    intermediateResult.addAggregates(header, bom.measure(), r);
+    Header header = new Header(bom.alias(), BinaryOperations.getOutputType(bom.operator(), lType, rType), true);
+    intermediateResult.addAggregates(header, bom, r);
     return null;
   }
 
   @Override
   public Void visit(CompiledComparisonMeasure cm) {
     AComparisonExecutor executor;
-    if (cm.measure().columnSetKey == BUCKET) {
-      ColumnSet cs = this.executionContext.columnSets().get(BUCKET);
+    if (cm.columnSetKey() == BUCKET) {
+      CompiledColumnSet cs = this.executionContext.columnSets().get(BUCKET);
       if (cs == null) {
         throw new IllegalArgumentException(String.format("columnSet %s is not specified in the query but is used in a comparison measure: %s", BUCKET, cm));
       }
-      executor = new BucketComparisonExecutor((BucketColumnSetDto) cs);
+      executor = new BucketComparisonExecutor((CompiledBucketColumnSet) cs);
     } else if (cm.period() != null) {
       for (TypedField field : cm.period().getTypedFields()) {
         if (!this.executionContext.columns().contains(field)) {
@@ -82,17 +81,23 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
 
   private static void executeComparator(CompiledComparisonMeasure cm, Table writeToTable, Table readFromTable, AComparisonExecutor executor) {
     List<Object> agg = executor.compare(cm, writeToTable, readFromTable);
-    Header header = new Header(cm.alias(), BinaryOperations.getComparisonOutputType(cm.measure().comparisonMethod, writeToTable.getHeader(cm.measure().measure).type()), true);
-    writeToTable.addAggregates(header, cm.measure(), agg);
+    Header header = new Header(cm.alias(), BinaryOperations.getComparisonOutputType(cm.comparisonMethod(), writeToTable.getHeader(cm.measure()).type()), true);
+    writeToTable.addAggregates(header, cm, agg);
   }
 
   @Override
-  public Void visit(CompiledConstantMeasure measure) {
-    executeConstantOperation(measure.measure(), this.executionContext.getWriteToTable());
+  public Void visit(CompiledDoubleConstantMeasure measure) {
+    executeConstantOperation(measure, this.executionContext.getWriteToTable());
     return null;
   }
 
-  private static void executeConstantOperation(ConstantMeasure<?> cm, Table intermediateResult) {
+  @Override
+  public Void visit(CompiledLongConstantMeasure measure) {
+    executeConstantOperation(measure, this.executionContext.getWriteToTable());
+    return null;
+  }
+
+  private static void executeConstantOperation(CompiledMeasure cm, Table intermediateResult) {
     Object v;
     Class<?> type;
     if (cm instanceof DoubleConstantMeasure dcm) {
@@ -102,7 +107,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
       v = ((Number) lcm.value).longValue();
       type = long.class;
     } else {
-      throw new IllegalArgumentException("Unexpected type " + cm.getValue().getClass() + ". Only double and long are supported");
+      throw new IllegalArgumentException("Unexpected type " + cm.getClass() + ". Only double and long are supported");
     }
     Header header = new Header(cm.alias(), type, true);
     List<Object> r = Collections.nCopies((int) intermediateResult.count(), v);
@@ -119,5 +124,19 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
   @Override
   public Void visit(CompiledExpressionMeasure measure) {
     throw new IllegalStateException(CompiledExpressionMeasure.class.getSimpleName());
+  }
+
+  @Override
+  public Void visit(CompiledVectorAggMeasure measure) {
+    // Retrieve the query scope use for the prefetch, the logic should be the same to retrieve the result.
+    QueryExecutor.QueryScope prefetchQueryScope = new PrefetchVisitor(this.executionContext.columns(), this.executionContext.bucketColumns(), this.executionContext.queryScope())
+            .visit(measure)
+            .keySet()
+            .iterator()
+            .next();
+    Table readTable = this.executionContext.tableByScope().get(prefetchQueryScope);
+    Table writeToTable = this.executionContext.getWriteToTable();
+    writeToTable.transferAggregates(readTable, measure);
+    return null;
   }
 }

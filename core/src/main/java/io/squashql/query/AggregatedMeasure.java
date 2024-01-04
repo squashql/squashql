@@ -54,5 +54,4 @@ public class AggregatedMeasure implements BasicMeasure {
   public String expression() {
     return this.expression;
   }
-
 }

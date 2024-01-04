@@ -49,7 +49,8 @@ public class ClassTemplateGenerator {
     String prefix = "Test" + testClassType.className;
     List<Path> classGenerated = new ArrayList<>();
     for (ClassPath.ClassInfo parentTestClass : parentTestClasses) {
-      String classSuffix = parentTestClass.getSimpleName().replace("ATest", "");
+      String classSuffix = parentTestClass.getSimpleName().replace("ATest" + testClassType.className, ""); // start with specific parent class
+      classSuffix = classSuffix.replace("ATest", "");
       String fileName = prefix + classSuffix + ".java";
       Path path = Paths.get(rootTestClasses.getAbsolutePath(), fileName);
       classGenerated.add(path);
