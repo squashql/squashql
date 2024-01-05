@@ -159,7 +159,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
         }
       }
 
-      String subQueryMeasureAlias = (fieldToAggregate.name() + "_" + vectorAggFunc).replace(".", "_");
+      String subQueryMeasureAlias = safeColumnAlias(fieldToAggregate.name() + "_" + vectorAggFunc);
       subQueryMeasures.add(new CompiledAggregatedMeasure(subQueryMeasureAlias, fieldToAggregate, vectorAggFunc, null, false));
 
       DatabaseQuery subQuery = new DatabaseQuery(this.originalQueryScope.virtualTable(),
