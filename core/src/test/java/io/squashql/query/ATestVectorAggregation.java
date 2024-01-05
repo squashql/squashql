@@ -30,8 +30,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
   static String volatilityReturn = "VolatilityReturn";
   static String fxReturn = "FXReturn";
   static String equityReturn = "EquityReturn";
-  //  String storeName = "store" + getClass().getSimpleName().toLowerCase();
-  String storeName = "MYTABLE";
+  String storeName = "store" + getClass().getSimpleName().toLowerCase();
   GlobalCache queryCache;
   LocalDate d1 = LocalDate.of(2023, 1, 1);
   LocalDate d2 = LocalDate.of(2023, 1, 2);
