@@ -101,20 +101,20 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
      *                  group by ___alias___ticker___, ___alias___date___, ___alias___riskType___
      *
      * query = select
-		 *               ___alias___ticker___,
-		 *               ___alias___riskType___,
-		 *               array_agg(value_sum) as vector,
-		 *               from (subquery)
-		 *               group by ___alias___ticker___, ___alias___riskType___
+     *               ___alias___ticker___,
+     *               ___alias___riskType___,
+     *               array_agg(value_sum) as vector,
+     *               from (subquery)
+     *               group by ___alias___ticker___, ___alias___riskType___
      */
     TypedField vectorAxis = vectorAggMeasure.vectorAxis();
-    if (this.originalQueryScope.columns().contains(vectorAggMeasure.vectorAxis())) {
-      var m = new CompiledAggregatedMeasure(vectorAggMeasure.alias(), vectorAggMeasure.fieldToAggregate(), vectorAggMeasure.aggregationFunction(), null, false);
+    TypedField fieldToAggregate = vectorAggMeasure.fieldToAggregate();
+    String vectorAggFunc = vectorAggMeasure.aggregationFunction();
+    if (this.originalQueryScope.columns().contains(vectorAxis)) {
+      var m = new CompiledAggregatedMeasure(vectorAggMeasure.alias(), fieldToAggregate, vectorAggFunc, null, false);
       return Map.of(this.originalQueryScope, Set.of(m));
     } else {
-      boolean hasRollup = !this.originalQueryScope.rollupColumns().isEmpty();
-
-      List<CompiledMeasure> subQueryMeasures = new ArrayList<>();
+      Set<CompiledMeasure> subQueryMeasures = new HashSet<>();
       List<TypedField> topQuerySelectColumns = new ArrayList<>();
       List<TypedField> subQuerySelectColumns = new ArrayList<>();
       Set<CompiledMeasure> topQueryMeasures = new HashSet<>();
@@ -124,27 +124,53 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
         String alias = SqlUtils.columnAlias(expression).replace(".", "_");
         subQuerySelectColumns.add(selectColumn.as(alias));
         topQuerySelectColumns.add(new AliasedTypedField(alias));
-        if (hasRollup) {
-          String groupingAlias = SqlUtils.columnAlias("grouping_" + expression);
-          // groupingAlias should not contain '.' !! this is a defect that will be fixed in the future
-          groupingAlias = groupingAlias.replace(".", "_");
-          subQueryMeasures.add(new CompiledAggregatedMeasure(groupingAlias, selectColumn, GROUPING, null, false));
-          topQueryMeasures.add(new CompiledAggregatedMeasure(SqlUtils.groupingAlias(alias), new AliasedTypedField(groupingAlias), MAX, null, false));
+      }
+
+      List<TypedField> rollups = new ArrayList<>();
+      rollups.addAll(this.originalQueryScope.rollupColumns());
+      rollups.addAll(this.originalQueryScope.groupingSets()
+              .stream()
+              .flatMap(Collection::stream)
+              .toList());
+      for (TypedField rollup : rollups) {
+        String expression = SqlUtils.squashqlExpression(rollup);
+        String alias = SqlUtils.columnAlias(expression).replace(".", "_");
+        String groupingAlias = SqlUtils.columnAlias("grouping_" + expression);
+        // groupingAlias should not contain '.' !! this is a defect that will be fixed in the future
+        groupingAlias = groupingAlias.replace(".", "_");
+        subQueryMeasures.add(new CompiledAggregatedMeasure(groupingAlias, rollup, GROUPING, null, false));
+        topQueryMeasures.add(new CompiledAggregatedMeasure(SqlUtils.groupingAlias(alias), new AliasedTypedField(groupingAlias), MAX, null, false));
+      }
+
+
+      String vectorAxisAlias = SqlUtils.columnAlias(SqlUtils.squashqlExpression(vectorAxis)).replace(".", "_");
+      List<TypedField> subQueryRollupColumns = new ArrayList<>();
+      List<List<TypedField>> subQueryGroupingSets = new ArrayList<>();
+      subQuerySelectColumns.add(vectorAxis.as(vectorAxisAlias));// it will end up in the group by if rollup or in the grouping sets
+      if (!this.originalQueryScope.rollupColumns().isEmpty()) {
+        for (TypedField r : this.originalQueryScope.rollupColumns()) {
+          // Here we can choose any alias but for debugging purpose, we create one from the expression.
+          String expression = SqlUtils.squashqlExpression(r);
+          String alias = SqlUtils.columnAlias(expression).replace(".", "_");
+          subQueryRollupColumns.add(r.as(alias));
+        }
+      } else if (!this.originalQueryScope.groupingSets().isEmpty()) {
+        // vectorAxisAlias need to be put in the grouping sets
+        for (List<TypedField> groupingSet : this.originalQueryScope.groupingSets()) {
+          List<TypedField> copy = new ArrayList<>();
+          for (TypedField r : groupingSet) {
+            // Here we can choose any alias but for debugging purpose, we create one from the expression.
+            String expression = SqlUtils.squashqlExpression(r);
+            String alias = SqlUtils.columnAlias(expression).replace(".", "_");
+            copy.add(r.as(alias));
+          }
+          copy.add(vectorAxis.as(vectorAxisAlias));
+          subQueryGroupingSets.add(copy);
         }
       }
-      String vectorAxisAlias = SqlUtils.columnAlias(SqlUtils.squashqlExpression(vectorAxis)).replace(".", "_");
-      subQuerySelectColumns.add(vectorAxis.as(vectorAxisAlias));
 
-      String subQueryMeasureAlias = (vectorAggMeasure.fieldToAggregate().name() + "_" + vectorAggMeasure.aggregationFunction()).replace(".", "_");
-      subQueryMeasures.add(new CompiledAggregatedMeasure(subQueryMeasureAlias, vectorAggMeasure.fieldToAggregate(), vectorAggMeasure.aggregationFunction(), null, false));
-
-      List<TypedField> subQueryRollupColumns = new ArrayList<>();
-      for (TypedField r : this.originalQueryScope.rollupColumns()) {
-        // Here we can choose any alias but for debugging purpose, we create one from the expression.
-        String expression = SqlUtils.squashqlExpression(r);
-        String alias = SqlUtils.columnAlias(expression).replace(".", "_");
-        subQueryRollupColumns.add(r.as(alias));
-      }
+      String subQueryMeasureAlias = (fieldToAggregate.name() + "_" + vectorAggFunc).replace(".", "_");
+      subQueryMeasures.add(new CompiledAggregatedMeasure(subQueryMeasureAlias, fieldToAggregate, vectorAggFunc, null, false));
 
       DatabaseQuery subQuery = new DatabaseQuery(this.originalQueryScope.virtualTable(),
               this.originalQueryScope.table(),
@@ -153,7 +179,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
               this.originalQueryScope.whereCriteria(),
               this.originalQueryScope.havingCriteria(),
               subQueryRollupColumns,
-              this.originalQueryScope.groupingSets(),
+              subQueryGroupingSets,
               -1);
       subQueryMeasures.forEach(subQuery::withMeasure);
 

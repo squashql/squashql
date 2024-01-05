@@ -69,7 +69,7 @@ public class BinaryOperations {
       return b == null ? null : b.longValue();
     }
     if (b == null) {
-      return a == null ? null : a.longValue();
+      return a.longValue();
     }
     return a.longValue() + b.longValue();
   }
@@ -79,7 +79,7 @@ public class BinaryOperations {
       return b == null ? null : b.longValue();
     }
     if (b == null) {
-      return a == null ? null : a.longValue();
+      return a.longValue();
     }
     return a.longValue() - b.longValue();
   }
@@ -98,7 +98,7 @@ public class BinaryOperations {
       return b == null ? null : b.doubleValue();
     }
     if (b == null) {
-      return a == null ? null : a.doubleValue();
+      return a.doubleValue();
     }
     return a.doubleValue() + b.doubleValue();
   }
@@ -108,7 +108,7 @@ public class BinaryOperations {
       return b == null ? null : b.doubleValue();
     }
     if (b == null) {
-      return a == null ? null : a.doubleValue();
+      return a.doubleValue();
     }
     return a.doubleValue() - b.doubleValue();
   }

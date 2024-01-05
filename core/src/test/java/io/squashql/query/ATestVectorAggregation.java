@@ -2,8 +2,10 @@ package io.squashql.query;
 
 import io.squashql.query.builder.Query;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
+import io.squashql.query.dto.PivotTableQueryDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.table.ColumnarTable;
+import io.squashql.table.PivotTable;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.TestUtil;
@@ -23,7 +25,13 @@ import static io.squashql.query.database.QueryEngine.TOTAL;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
-  String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  static String mmm = "MMM";
+  static String vblax = "VBLAX";
+  static String volatilityReturn = "VolatilityReturn";
+  static String fxReturn = "FXReturn";
+  static String equityReturn = "EquityReturn";
+  //  String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  String storeName = "MYTABLE";
   GlobalCache queryCache;
   LocalDate d1 = LocalDate.of(2023, 1, 1);
   LocalDate d2 = LocalDate.of(2023, 1, 2);
@@ -46,29 +54,24 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
   @Override
   protected void loadData() {
-    String mmm = "MMM";
-    String vblax = "VBLAX";
-    String totalReturn = "TotalReturn";
-    String fxReturn = "FXReturn";
-    String equityReturn = "EquityReturn";
     this.tm.load(this.storeName, List.of(
-            new Object[]{mmm, d1, totalReturn, 1d, 1},
+            new Object[]{mmm, d1, volatilityReturn, 1d, 1},
             new Object[]{mmm, d1, fxReturn, 2d, 2},
             new Object[]{mmm, d1, equityReturn, 3d, 3},
-            new Object[]{mmm, d2, totalReturn, 10d, 10},
+            new Object[]{mmm, d2, volatilityReturn, 10d, 10},
             new Object[]{mmm, d2, fxReturn, 11d, 11},
             new Object[]{mmm, d2, equityReturn, 12d, 12},
-            new Object[]{mmm, d3, totalReturn, 100d, 100},
+            new Object[]{mmm, d3, volatilityReturn, 100d, 100},
             new Object[]{mmm, d3, fxReturn, 101d, 101},
             new Object[]{mmm, d3, equityReturn, 102d, 102},
 
-            new Object[]{vblax, d1, totalReturn, 1000d, 1000},
+            new Object[]{vblax, d1, volatilityReturn, 1000d, 1000},
             new Object[]{vblax, d1, fxReturn, 2000d, 2000},
             new Object[]{vblax, d1, equityReturn, 3000d, 3000},
-            new Object[]{vblax, d2, totalReturn, 10000d, 10000},
+            new Object[]{vblax, d2, volatilityReturn, 10000d, 10000},
             new Object[]{vblax, d2, fxReturn, 11000d, 11000},
             new Object[]{vblax, d2, equityReturn, 12000d, 12000},
-            new Object[]{vblax, d3, totalReturn, 100000d, 100000},
+            new Object[]{vblax, d3, volatilityReturn, 100000d, 100000},
             new Object[]{vblax, d3, fxReturn, 101000d, 101000},
             new Object[]{vblax, d3, equityReturn, 102000d, 102000}
     ));
@@ -89,7 +92,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(ticker.name(), vector.alias());
-    List<List<Object>> points = List.of(List.of(GRAND_TOTAL), List.of("MMM"), List.of("VBLAX"));
+    List<List<Object>> points = List.of(List.of(GRAND_TOTAL), List.of(mmm), List.of(vblax));
     List<List<Number>> expectedVectors = List.of(
             List.of(6006d, 33033d, 303303d),
             List.of(6d, 33d, 303d),
@@ -111,7 +114,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(ticker.name(), vector.alias(), CountMeasure.ALIAS);
-    List<List<Object>> points = List.of(List.of("MMM"), List.of("VBLAX"));
+    List<List<Object>> points = List.of(List.of(mmm), List.of(vblax));
     List<List<Number>> expectedVectors = List.of(
             List.of(6d, 33d, 303d),
             List.of(6000d, 33000d, 303000d));
@@ -133,18 +136,19 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
             .rollup(List.of(ticker, riskType))
             .build();
     Table result = this.executor.executeQuery(query);
+    result.show();
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(ticker.name(), riskType.name(), vector.alias());
     List<List<Object>> points = List.of(
             List.of(GRAND_TOTAL, GRAND_TOTAL),
-            List.of("MMM", TOTAL),
-            List.of("MMM", "EquityReturn"),
-            List.of("MMM", "FXReturn"),
-            List.of("MMM", "TotalReturn"),
-            List.of("VBLAX", TOTAL),
-            List.of("VBLAX", "EquityReturn"),
-            List.of("VBLAX", "FXReturn"),
-            List.of("VBLAX", "TotalReturn"));
+            List.of(mmm, TOTAL),
+            List.of(mmm, equityReturn),
+            List.of(mmm, fxReturn),
+            List.of(mmm, volatilityReturn),
+            List.of(vblax, TOTAL),
+            List.of(vblax, equityReturn),
+            List.of(vblax, fxReturn),
+            List.of(vblax, volatilityReturn));
     List<List<Number>> expectedVectors = List.of(
             List.of(6006d, 33033d, 303303d),
             List.of(6d, 33d, 303d),
@@ -174,12 +178,12 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(ticker.name(), riskType.name(), vector.alias(), CountMeasure.ALIAS);
     List<List<Object>> points = List.of(
-            List.of("MMM", "EquityReturn"),
-            List.of("MMM", "FXReturn"),
-            List.of("MMM", "TotalReturn"),
-            List.of("VBLAX", "EquityReturn"),
-            List.of("VBLAX", "FXReturn"),
-            List.of("VBLAX", "TotalReturn"));
+            List.of(mmm, equityReturn),
+            List.of(mmm, fxReturn),
+            List.of(mmm, volatilityReturn),
+            List.of(vblax, equityReturn),
+            List.of(vblax, fxReturn),
+            List.of(vblax, volatilityReturn));
     List<List<Number>> expectedVectors = List.of(
             List.of(3.0, 12.0, 102.0),
             List.of(2.0, 11.0, 101.0),
@@ -211,14 +215,14 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
             .containsExactly(ticker.name(), date.name(), vector.alias(), vectorSum.alias());
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, GRAND_TOTAL, 342342d, 342342d),
-            List.of("MMM", TOTAL, 342d, 342d),
-            List.of("MMM", d1, 6d, 6d),
-            List.of("MMM", d2, 33d, 33d),
-            List.of("MMM", d3, 303d, 303d),
-            List.of("VBLAX", TOTAL, 342000d, 342000d),
-            List.of("VBLAX", d1, 6000d, 6000d),
-            List.of("VBLAX", d2, 33000d, 33000d),
-            List.of("VBLAX", d3, 303000d, 303000d));
+            List.of(mmm, TOTAL, 342d, 342d),
+            List.of(mmm, d1, 6d, 6d),
+            List.of(mmm, d2, 33d, 33d),
+            List.of(mmm, d3, 303d, 303d),
+            List.of(vblax, TOTAL, 342000d, 342000d),
+            List.of(vblax, d1, 6000d, 6000d),
+            List.of(vblax, d2, 33000d, 33000d),
+            List.of(vblax, d3, 303000d, 303000d));
   }
 
   @Test
@@ -239,14 +243,14 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
             .containsExactly(ticker.name(), riskType.name(), vector.alias(), CountMeasure.ALIAS);
     List<List<Object>> points = List.of(
             List.of(GRAND_TOTAL, GRAND_TOTAL),
-            List.of("MMM", TOTAL),
-            List.of("MMM", "EquityReturn"),
-            List.of("MMM", "FXReturn"),
-            List.of("MMM", "TotalReturn"),
-            List.of("VBLAX", TOTAL),
-            List.of("VBLAX", "EquityReturn"),
-            List.of("VBLAX", "FXReturn"),
-            List.of("VBLAX", "TotalReturn"));
+            List.of(mmm, TOTAL),
+            List.of(mmm, equityReturn),
+            List.of(mmm, fxReturn),
+            List.of(mmm, volatilityReturn),
+            List.of(vblax, TOTAL),
+            List.of(vblax, equityReturn),
+            List.of(vblax, fxReturn),
+            List.of(vblax, volatilityReturn));
     List<List<Number>> expectedVectors = List.of(
             List.of(6006d, 33033d, 303303d),
             List.of(6d, 33d, 303d),
@@ -282,14 +286,14 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
               .containsExactly(ticker.name(), riskType.name(), vector.alias());
       List<List<Object>> points = List.of(
               List.of(GRAND_TOTAL, GRAND_TOTAL),
-              List.of("MMM", TOTAL),
-              List.of("MMM", "EquityReturn"),
-              List.of("MMM", "FXReturn"),
-              List.of("MMM", "TotalReturn"),
-              List.of("VBLAX", TOTAL),
-              List.of("VBLAX", "EquityReturn"),
-              List.of("VBLAX", "FXReturn"),
-              List.of("VBLAX", "TotalReturn"));
+              List.of(mmm, TOTAL),
+              List.of(mmm, equityReturn),
+              List.of(mmm, fxReturn),
+              List.of(mmm, volatilityReturn),
+              List.of(vblax, TOTAL),
+              List.of(vblax, equityReturn),
+              List.of(vblax, fxReturn),
+              List.of(vblax, volatilityReturn));
       List<List<Number>> expectedVectors = List.of(
               List.of(6006d, 33033d, 303303d),
               List.of(6d, 33d, 303d),
@@ -310,6 +314,51 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
     r.run();
     TestUtil.assertCacheStats(this.queryCache, hitCount + 6, missCount + 7);
+  }
+
+  @Test
+  void testPivotTable() {
+    Field ticker = new TableField(this.storeName, "ticker");
+    Field riskType = new TableField(this.storeName, "riskType");
+    Field value = new TableField(this.storeName, "value");
+    Field date = new TableField(this.storeName, "date");
+
+    Measure vector = new VectorAggMeasure("vector", value, SUM, date);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(ticker, riskType), List.of(vector))
+            .build();
+
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, List.of(riskType), List.of(ticker)));
+    Assertions.assertThat(result.table.headers().stream().map(Header::name))
+            .containsExactly(ticker.name(), riskType.name(), vector.alias());
+    List<List<Object>> points = List.of(
+            List.of(GRAND_TOTAL, GRAND_TOTAL),
+            List.of(GRAND_TOTAL, equityReturn),
+            List.of(GRAND_TOTAL, fxReturn),
+            List.of(GRAND_TOTAL, volatilityReturn),
+            List.of(mmm, GRAND_TOTAL),
+            List.of(mmm, equityReturn),
+            List.of(mmm, fxReturn),
+            List.of(mmm, volatilityReturn),
+            List.of(vblax, GRAND_TOTAL),
+            List.of(vblax, equityReturn),
+            List.of(vblax, fxReturn),
+            List.of(vblax, volatilityReturn));
+    List<List<Number>> expectedVectors = List.of(
+            List.of(6006d, 33033d, 303303d),
+            List.of(102102d, 12012d, 3003d),
+            List.of(2002d, 11011d, 101101d),
+            List.of(100100d, 1001d, 10010d),
+            List.of(6d, 33d, 303d),
+            List.of(3.0, 12.0, 102.0),
+            List.of(2.0, 11.0, 101.0),
+            List.of(1.0, 10.0, 100.0),
+            List.of(6000d, 33000d, 303000d),
+            List.of(3000.0, 12000.0, 102000.0),
+            List.of(2000.0, 11000.0, 101000.0),
+            List.of(1000.0, 10000.0, 100000.0));
+    assertVectorValues((ColumnarTable) result.table, vector, points, expectedVectors);
   }
 
   private void assertVectorValues(ColumnarTable result, Measure vectorMeasure, List<List<Object>> points, List<List<Number>> expectedVectors) {
