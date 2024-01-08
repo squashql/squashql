@@ -36,7 +36,7 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
               query,
               columnTypes,
               (columnType, name) -> columnType,
-              new ResultSetIterator(tableResult),
+              new ResultSetIterator(columnTypes, tableResult),
               (i, fieldValues) -> fieldValues[i]);
       return new ColumnarTable(
               result.getOne(),
@@ -49,9 +49,15 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
   public Table executeRawSql(String sql) {
     return executeQuery(sql, this.datastore.getConnection(), tableResult -> {
       List<Header> headers = createHeaderList(tableResult, Collections.emptySet());
+
+      List<Class<?>> columnTypes = new ArrayList<>();
+      for (int i = 0; i < tableResult.getMetaData().getColumnCount(); i++) {
+        columnTypes.add(typeToClassConverter().apply(tableResult.getMetaData(), i + 1));
+      }
+
       List<List<Object>> rows = new ArrayList<>();
       while (tableResult.next()) {
-        rows.add(IntStream.range(0, headers.size()).mapToObj(i -> getTypeValue(tableResult, i)).toList());
+        rows.add(IntStream.range(0, headers.size()).mapToObj(i -> getTypeValue(columnTypes, tableResult, i)).toList());
       }
       return new RowTable(headers, rows);
     });
@@ -71,10 +77,12 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
 
   private static class ResultSetIterator implements Iterator<Object[]> {
 
+    private final List<Class<?>> columnTypes;
     private final ResultSet resultSet;
     private final Object[] buffer;
 
-    private ResultSetIterator(ResultSet resultSet) throws SQLException {
+    private ResultSetIterator(List<Class<?>> columnTypes, ResultSet resultSet) throws SQLException {
+      this.columnTypes = columnTypes;
       this.resultSet = resultSet;
       this.buffer = new Object[this.resultSet.getMetaData().getColumnCount()];
     }
@@ -91,7 +99,7 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
     @Override
     public Object[] next() {
       for (int i = 0; i < this.buffer.length; i++) {
-        this.buffer[i] = getTypeValue(this.resultSet, i);
+        this.buffer[i] = getTypeValue(this.columnTypes, this.resultSet, i);
       }
       return this.buffer;
     }
@@ -100,7 +108,7 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
   /**
    * Gets the value with the correct type, otherwise everything is read as Object.
    */
-  public static Object getTypeValue(ResultSet tableResult, int index) {
+  public static Object getTypeValue(List<Class<?>> columnTypes, ResultSet tableResult, int index) {
     try {
       return switch (tableResult.getMetaData().getColumnType(1 + index)) {
         case Types.CHAR, Types.NVARCHAR, Types.VARCHAR, Types.LONGVARCHAR -> tableResult.getString(1 + index);
@@ -122,6 +130,8 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
           Object object = tableResult.getObject(1 + index);
           if (object instanceof BigInteger) {
             yield ((BigInteger) object).longValueExact();
+          } else if (object instanceof Array a) {
+            yield JdbcUtil.sqlArrayToList(columnTypes.get(index), a);
           } else {
             yield object;
           }

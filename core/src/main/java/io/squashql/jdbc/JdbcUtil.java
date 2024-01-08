@@ -1,19 +1,19 @@
 package io.squashql.jdbc;
 
+import io.squashql.list.Lists;
 import io.squashql.query.Header;
+import io.squashql.store.Store;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
-import io.squashql.store.Store;
 
+import java.math.BigInteger;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.IntFunction;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public final class JdbcUtil {
@@ -72,6 +72,7 @@ public final class JdbcUtil {
       case Types.DATE -> LocalDate.class;
       case Types.TIME -> LocalDateTime.class;
       case Types.TIMESTAMP -> Timestamp.class;
+      case Types.ARRAY -> List.class;
       default -> Object.class;
     };
   }
@@ -165,5 +166,28 @@ public final class JdbcUtil {
       headers.add(new Header(fieldName, Object.class, false));
     }
     return headers;
+  }
+
+  public static Object sqlArrayToList(Class<?> listClass, Array a) {
+    try {
+      Object[] objectArray = (Object[]) a.getArray();
+      return objectArrayToList(listClass, objectArray);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static List<?> objectArrayToList(Class<?> listClass, Object[] objectArray) {
+    if (listClass == Lists.LongList.class) {
+      return Arrays.stream(objectArray)
+              .map(e -> e instanceof BigInteger ? ((BigInteger) e).longValueExact() : (Long) e)
+              .collect(Collectors.toCollection(Lists.LongList::new));
+    } else if (listClass == Lists.DoubleList.class) {
+      return Arrays.stream(objectArray)
+              .map(e -> (Double) e)
+              .collect(Collectors.toCollection(Lists.DoubleList::new));
+    } else {
+      return Arrays.stream(objectArray).toList();
+    }
   }
 }
