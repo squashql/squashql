@@ -1,9 +1,12 @@
 package io.squashql;
 
 
+import com.clickhouse.data.ClickHouseColumn;
 import com.clickhouse.data.ClickHouseDataType;
+import io.squashql.list.Lists;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public final class ClickHouseUtil {
 
@@ -32,7 +35,21 @@ public final class ClickHouseUtil {
     return type;
   }
 
-  public static Class<?> clickHouseTypeToClass(ClickHouseDataType dataType) {
-    return dataType.getPrimitiveClass();
+  public static Class<?> clickHouseTypeToClass(ClickHouseColumn column) {
+    ClickHouseDataType dataType = column.getDataType();
+    return switch (dataType) {
+      case Array -> {
+        ClickHouseColumn baseColumn = column.getArrayBaseColumn();
+        Class<?> toClass = clickHouseTypeToClass(baseColumn);
+        if (toClass.equals(double.class) || toClass.equals(float.class)) {
+          yield Lists.DoubleList.class;
+        } else if (toClass.equals(long.class) || toClass.equals(int.class)) {
+          yield Lists.LongList.class;
+        } else {
+          yield List.class; // we convert Array to List
+        }
+      }
+      default -> dataType.getPrimitiveClass();
+    };
   }
 }

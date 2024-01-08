@@ -88,10 +88,20 @@ public abstract class ATestVectorAggregationDataType extends ABaseTestQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     List<List<Object>> points = List.of(List.of(mmm), List.of(vblax));
-    assertVectorValues((ColumnarTable) result, vector, points, (List<List<Number>>) expectedVectorsByType.get(type));
+    assertVectorValues((ColumnarTable) result, vector, points, (List<List<Number>>) expectedVectorsByType.get(type), type);
   }
 
-  private void assertVectorValues(ColumnarTable result, Measure vectorMeasure, List<List<Object>> points, List<List<Number>> expectedVectors) {
+  private void assertVectorValues(ColumnarTable result, Measure vectorMeasure, List<List<Object>> points, List<List<Number>> expectedVectors, String type) {
+    Header header = result.getHeader(vectorMeasure.alias());
+    Class<?> expectedType = null;
+    if (type.equals("Int") || type.equals("Long")) {
+      expectedType = Lists.LongList.class;
+    } else if (type.equals("Double") || type.equals("Float")) {
+      expectedType = Lists.DoubleList.class;
+    } else {
+      Assertions.fail("Unknown type " + type);
+    }
+    Assertions.assertThat(header.type()).isEqualTo(expectedType);
     List<Object> aggregateValues = result.getColumnValues(vectorMeasure.alias());
     for (int i = 0; i < points.size(); i++) {
       ObjectArrayDictionary dictionary = result.pointDictionary.get();
@@ -100,7 +110,16 @@ public abstract class ATestVectorAggregationDataType extends ABaseTestQuery {
       // SORT to have a deterministic comparison
       List<Number> vector = new ArrayList<>(expectedVectors.get(i)).stream().sorted().toList();
       List<Number> actualVector = (List<Number>) new ArrayList<>(actual).stream().sorted().toList();
-      if (result.getHeader(vectorMeasure.alias()).type() == Lists.DoubleList.class) {
+
+      if (type.equals("Int") || type.equals("Long")) {
+        Assertions.assertThat(actual).isInstanceOf(expectedType);
+      } else if (type.equals("Double") || type.equals("Float")) {
+        Assertions.assertThat(actual).isInstanceOf(expectedType);
+      } else {
+        Assertions.fail("Unknown type " + type);
+      }
+
+      if (header.type() == Lists.DoubleList.class) {
         int size = actualVector.size();
         Assertions.assertThat(vector.size()).isEqualTo(size);
         for (int j = 0; j < size; j++) {
