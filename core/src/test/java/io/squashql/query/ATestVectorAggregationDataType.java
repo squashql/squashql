@@ -31,13 +31,8 @@ public abstract class ATestVectorAggregationDataType extends ABaseTestQuery {
   static LocalDate d2 = LocalDate.of(2023, 1, 2);
   static LocalDate d3 = LocalDate.of(2023, 1, 3);
   static LocalDate d4 = LocalDate.of(2023, 1, 4);
-  String storeName = "store" + getClass().getSimpleName().toLowerCase();
-  GlobalCache queryCache;
-
-  @Override
-  protected void afterSetup() {
-    this.queryCache = (GlobalCache) this.executor.queryCache;
-  }
+  String storeName = "store" + getClass().getSimpleName().toLowerCase() + System.currentTimeMillis();
+//  String storeName = "store" + getClass().getSimpleName().toLowerCase(); // FIXME
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {

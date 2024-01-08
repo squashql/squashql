@@ -6,6 +6,7 @@ import io.squashql.query.Header;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
+import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.eclipse.collections.api.tuple.Pair;
@@ -44,12 +45,17 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
   @Override
   protected Table retrieveAggregates(DatabaseQuery query, String sql) {
     Dataset<Row> ds = this.datastore.spark.sql(sql);
+    for (String column : ds.columns()) {
+      Column col = ds.col(column);
+//      Column column1 = ds.metadataColumn(column);
+      System.out.println();
+    }
     Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
             query,
             Arrays.stream(ds.schema().fields()).toList(),
             (column, name) -> datatypeToClass(column.dataType()),
             ds.toLocalIterator(),
-            (i, r) -> SparkUtil.getTypeValue(r.get(i)));
+            (i, r) -> SparkUtil.getTypeValue(r.schema().fields()[i].dataType(), r.get(i)));
     return new ColumnarTable(
             result.getOne(),
             new HashSet<>(query.measures),

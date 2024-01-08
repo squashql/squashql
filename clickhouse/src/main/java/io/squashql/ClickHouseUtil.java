@@ -40,10 +40,10 @@ public final class ClickHouseUtil {
     return switch (dataType) {
       case Array -> {
         ClickHouseColumn baseColumn = column.getArrayBaseColumn();
-        Class<?> toClass = clickHouseTypeToClass(baseColumn);
-        if (toClass.equals(double.class) || toClass.equals(float.class)) {
+        Class<?> elementClass = clickHouseTypeToClass(baseColumn);
+        if (elementClass.equals(double.class) || elementClass.equals(float.class)) {
           yield Lists.DoubleList.class;
-        } else if (toClass.equals(long.class) || toClass.equals(int.class)) {
+        } else if (elementClass.equals(long.class) || elementClass.equals(int.class)) {
           yield Lists.LongList.class;
         } else {
           yield List.class; // we convert Array to List
