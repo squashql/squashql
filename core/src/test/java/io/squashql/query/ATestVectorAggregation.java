@@ -25,16 +25,16 @@ import static io.squashql.query.database.QueryEngine.TOTAL;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
-  static String mmm = "MMM";
-  static String vblax = "VBLAX";
-  static String volatilityReturn = "VolatilityReturn";
-  static String fxReturn = "FXReturn";
-  static String equityReturn = "EquityReturn";
+  static final String mmm = "MMM";
+  static final String vblax = "VBLAX";
+  static final String volatilityReturn = "VolatilityReturn";
+  static final String fxReturn = "FXReturn";
+  static final String equityReturn = "EquityReturn";
+  static final LocalDate d1 = LocalDate.of(2023, 1, 1);
+  static final LocalDate d2 = LocalDate.of(2023, 1, 2);
+  static final LocalDate d3 = LocalDate.of(2023, 1, 3);
   String storeName = "store" + getClass().getSimpleName().toLowerCase();
   GlobalCache queryCache;
-  LocalDate d1 = LocalDate.of(2023, 1, 1);
-  LocalDate d2 = LocalDate.of(2023, 1, 2);
-  LocalDate d3 = LocalDate.of(2023, 1, 3);
 
   @Override
   protected void afterSetup() {
