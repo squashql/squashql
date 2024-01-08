@@ -10,13 +10,13 @@ import com.clickhouse.data.ClickHouseRecord;
 import com.clickhouse.data.ClickHouseValue;
 import io.squashql.ClickHouseDatastore;
 import io.squashql.ClickHouseUtil;
+import io.squashql.jdbc.JdbcUtil;
 import io.squashql.query.Header;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
 import org.eclipse.collections.api.tuple.Pair;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -59,7 +59,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
               query,
               response.getColumns(),
-              (column, name) -> ClickHouseUtil.clickHouseTypeToClass(column.getDataType()),
+              (column, name) -> ClickHouseUtil.clickHouseTypeToClass(column),
               response.records().iterator(),
               (index, r) -> getValue(r, index, response.getColumns()));
       return new ColumnarTable(
@@ -81,8 +81,8 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
                  .get()) {
       Pair<List<Header>, List<List<Object>>> result = transformToRowFormat(
               response.getColumns(),
-              column -> column.getColumnName(),
-              column -> ClickHouseUtil.clickHouseTypeToClass(column.getDataType()),
+              ClickHouseColumn::getColumnName,
+              column -> ClickHouseUtil.clickHouseTypeToClass(column),
               response.records().iterator(),
               (i, r) -> getValue(r, i, response.getColumns()));
       return new RowTable(result.getOne(), result.getTwo());
@@ -112,7 +112,7 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
       case Float32 -> fieldValue.asFloat();
       case Float64 -> fieldValue.asDouble();
       case String, FixedString -> fieldValue.asString();
-      case Array -> Arrays.stream(fieldValue.asArray()).toList();
+      case Array -> JdbcUtil.objectArrayToList(ClickHouseUtil.clickHouseTypeToClass(column), fieldValue.asArray());
       default -> throw new RuntimeException("Unexpected type " + column.getDataType());
     };
   }

@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 /**
  * Do not edit this class, it has been generated automatically by {@link ClickHouseClassTemplateGenerator}.
  */
-public class TestClickHouseVectorAggregation extends ATestVectorAggregation {
+public class TestClickHouseVectorAggregationDataType extends ATestVectorAggregationDataType {
 
   public org.testcontainers.containers.GenericContainer container = ClickHouseTestUtil.createClickHouseContainer();
 

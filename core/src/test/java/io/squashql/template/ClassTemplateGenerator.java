@@ -15,6 +15,11 @@ import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+/**
+ * To have specific code for each db, create an intermediate class such as ATestDuckDBVectorAggregation extends
+ * ATestVectorAggregation. The latter should not be annotated with {@link TestClass} but the former yes. In ATestVectorAggregation,
+ * create the abstract method to be used in the tests and override it in ATestDuckDBVectorAggregation.
+ */
 public class ClassTemplateGenerator {
 
   public static void generateTestClasses(TestClass.Type testClassType) throws Exception {

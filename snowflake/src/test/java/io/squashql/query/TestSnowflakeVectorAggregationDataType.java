@@ -11,7 +11,7 @@ import org.junit.jupiter.api.AfterAll;
 /**
  * Do not edit this class, it has been generated automatically by {@link io.squashql.template.SnowflakeClassTemplateGenerator}.
  */
-public class TestSnowflakeVectorAggregation extends ATestVectorAggregation {
+public class TestSnowflakeVectorAggregationDataType extends ATestVectorAggregationDataType {
 
   @AfterAll
   void tearDown() {

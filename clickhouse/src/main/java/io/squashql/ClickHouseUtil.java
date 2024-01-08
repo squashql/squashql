@@ -1,7 +1,9 @@
 package io.squashql;
 
 
+import com.clickhouse.data.ClickHouseColumn;
 import com.clickhouse.data.ClickHouseDataType;
+import io.squashql.jdbc.JdbcUtil;
 
 import java.time.LocalDate;
 
@@ -32,7 +34,11 @@ public final class ClickHouseUtil {
     return type;
   }
 
-  public static Class<?> clickHouseTypeToClass(ClickHouseDataType dataType) {
-    return dataType.getPrimitiveClass();
+  public static Class<?> clickHouseTypeToClass(ClickHouseColumn column) {
+    ClickHouseDataType dataType = column.getDataType();
+    return switch (dataType) {
+      case Array -> JdbcUtil.getListClassFromElementClass(clickHouseTypeToClass(column.getArrayBaseColumn()));
+      default -> dataType.getPrimitiveClass();
+    };
   }
 }

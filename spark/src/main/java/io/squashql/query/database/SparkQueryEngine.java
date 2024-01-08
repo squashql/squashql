@@ -49,7 +49,7 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
             Arrays.stream(ds.schema().fields()).toList(),
             (column, name) -> datatypeToClass(column.dataType()),
             ds.toLocalIterator(),
-            (i, r) -> SparkUtil.getTypeValue(r.get(i)));
+            (i, r) -> SparkUtil.getTypeValue(r.schema().fields()[i].dataType(), r.get(i)));
     return new ColumnarTable(
             result.getOne(),
             new HashSet<>(query.measures),

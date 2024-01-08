@@ -1,13 +1,16 @@
 package io.squashql;
 
+import io.squashql.jdbc.JdbcUtil;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.Types;
 import org.apache.spark.sql.types.ArrayType;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
+import scala.collection.mutable.WrappedArray;
 
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -38,7 +41,7 @@ public final class SparkUtil {
       if (type.sql().contains("DECIMAL")) {
         return BigDecimal.class;
       } else if (type.getClass().equals(ArrayType.class)) {
-        return Object.class;
+        return JdbcUtil.getListClassFromElementClass(datatypeToClass(((ArrayType) type).elementType()));
       }
       throw new IllegalArgumentException("Unsupported field type " + type);
     }
@@ -69,10 +72,15 @@ public final class SparkUtil {
     return type;
   }
 
-  public static Object getTypeValue(Object o) {
+  public static Object getTypeValue(DataType type, Object o) {
+    if (type.getClass().equals(ArrayType.class)) {
+      Object[] array = ((WrappedArray.ofRef) o).array();
+      return JdbcUtil.objectArrayToList(SparkUtil.datatypeToClass(type), array);
+    }
+
     if (o instanceof BigDecimal bd) {
       return Types.castToDouble(bd);
-    } else if (o instanceof java.sql.Date d) {
+    } else if (o instanceof Date d) {
       return d.toLocalDate();
     } else {
       return o;
