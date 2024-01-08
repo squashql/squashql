@@ -27,16 +27,13 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
   @Override
   protected Table retrieveAggregates(DatabaseQuery query, String sql) {
     return executeQuery(sql, this.datastore.getConnection(), tableResult -> {
-      List<Class<?>> columnTypes = new ArrayList<>();
-      for (int i = 0; i < tableResult.getMetaData().getColumnCount(); i++) {
-        columnTypes.add(typeToClassConverter().apply(tableResult.getMetaData(), i + 1));
-      }
-
+      List<Class<?>> columnTypes = getColumnTypes(tableResult.getMetaData());
+      ResultSetReader reader = createResultSetReader();
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
               query,
               columnTypes,
               (columnType, name) -> columnType,
-              new ResultSetIterator(columnTypes, tableResult),
+              new ResultSetIterator(columnTypes, tableResult, reader),
               (i, fieldValues) -> fieldValues[i]);
       return new ColumnarTable(
               result.getOne(),
@@ -49,15 +46,11 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
   public Table executeRawSql(String sql) {
     return executeQuery(sql, this.datastore.getConnection(), tableResult -> {
       List<Header> headers = createHeaderList(tableResult, Collections.emptySet());
-
-      List<Class<?>> columnTypes = new ArrayList<>();
-      for (int i = 0; i < tableResult.getMetaData().getColumnCount(); i++) {
-        columnTypes.add(typeToClassConverter().apply(tableResult.getMetaData(), i + 1));
-      }
-
+      List<Class<?>> columnTypes = getColumnTypes(tableResult.getMetaData());
+      ResultSetReader reader = createResultSetReader();
       List<List<Object>> rows = new ArrayList<>();
       while (tableResult.next()) {
-        rows.add(IntStream.range(0, headers.size()).mapToObj(i -> getTypeValue(columnTypes, tableResult, i)).toList());
+        rows.add(IntStream.range(0, headers.size()).mapToObj(i -> reader.read(columnTypes, tableResult, i)).toList());
       }
       return new RowTable(headers, rows);
     });
@@ -75,16 +68,31 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
     return headers;
   }
 
+  protected ResultSetReader createResultSetReader() {
+    return new ResultSetReader() {
+    };
+  }
+
+  protected List<Class<?>> getColumnTypes(ResultSetMetaData metaData) throws SQLException {
+    List<Class<?>> columnTypes = new ArrayList<>();
+    for (int i = 0; i < metaData.getColumnCount(); i++) {
+      columnTypes.add(typeToClassConverter().apply(metaData, i + 1));
+    }
+    return columnTypes;
+  }
+
   private static class ResultSetIterator implements Iterator<Object[]> {
 
     private final List<Class<?>> columnTypes;
     private final ResultSet resultSet;
+    private final ResultSetReader reader;
     private final Object[] buffer;
 
-    private ResultSetIterator(List<Class<?>> columnTypes, ResultSet resultSet) throws SQLException {
+    private ResultSetIterator(List<Class<?>> columnTypes, ResultSet resultSet, ResultSetReader reader) {
       this.columnTypes = columnTypes;
       this.resultSet = resultSet;
-      this.buffer = new Object[this.resultSet.getMetaData().getColumnCount()];
+      this.buffer = new Object[columnTypes.size()];
+      this.reader = reader;
     }
 
     @Override
@@ -99,7 +107,7 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
     @Override
     public Object[] next() {
       for (int i = 0; i < this.buffer.length; i++) {
-        this.buffer[i] = getTypeValue(this.columnTypes, this.resultSet, i);
+        this.buffer[i] = this.reader.read(this.columnTypes, this.resultSet, i);
       }
       return this.buffer;
     }

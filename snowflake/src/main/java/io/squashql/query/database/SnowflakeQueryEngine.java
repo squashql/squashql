@@ -3,7 +3,11 @@ package io.squashql.query.database;
 import io.squashql.SnowflakeDatastore;
 import io.squashql.jdbc.JdbcQueryEngine;
 import io.squashql.jdbc.JdbcUtil;
+import io.squashql.jdbc.ResultSetReader;
+import io.squashql.list.Lists;
 
+import java.math.BigDecimal;
+import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
@@ -42,11 +46,57 @@ public class SnowflakeQueryEngine extends JdbcQueryEngine<SnowflakeDatastore> {
   protected BiFunction<ResultSetMetaData, Integer, Class<?>> typeToClassConverter() {
     return (metaData, column) -> {
       try {
-        return JdbcUtil.sqlTypeToClass(metaData.getColumnType(column));
+        String columnTypeName = metaData.getColumnTypeName(column);
+        if (columnTypeName.equals("ARRAY")) {
+          // snowflake does not support array. It will return a string. For now, we simply consider it is an array of object
+          // since we do not have access to the type of the elements... Hopefully it will be fixed in the future...
+          return List.class;
+        } else {
+          return JdbcUtil.sqlTypeToClass(metaData.getColumnType(column));
+        }
       } catch (SQLException e) {
         throw new RuntimeException(e);
       }
     };
+  }
+
+  @Override
+  protected ResultSetReader createResultSetReader() {
+    return new ResultSetReader() {
+      @Override
+      public Object read(List<Class<?>> columnTypes, ResultSet tableResult, int index) {
+        // Special case for Snowflake due to lack of support of Array
+        if (columnTypes.get(index).equals(List.class)) {
+          try {
+            return parseVectorString(tableResult.getString(index + 1));
+          } catch (SQLException e) {
+            throw new RuntimeException(e);
+          }
+        } else {
+          return ResultSetReader.super.read(columnTypes, tableResult, index);
+        }
+      }
+    };
+  }
+
+  /**
+   * Parses a string representation of a vector and returns a list of doubles.
+   *
+   * @param vectorString The string representation of the vector.
+   * @return A list of doubles representing the vector.
+   */
+  public static Lists.DoubleList parseVectorString(String vectorString) {
+    // It is a string that needs to be parsed, see https://github.com/snowflakedb/snowflake-jdbc/issues/462
+    String[] split = vectorString.replace("\n", "")
+            .replace("[", "")
+            .replace("]", "")
+            .split(",");
+    Lists.DoubleList r = new Lists.DoubleList();
+    for (String s : split) {
+      BigDecimal bigDecimal = new BigDecimal(s.trim());
+      r.add(bigDecimal.doubleValue());
+    }
+    return r;
   }
 
   @Override

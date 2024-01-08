@@ -25,14 +25,17 @@ import static io.squashql.query.agg.AggregationFunction.SUM;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestVectorAggregationDataType extends ABaseTestQuery {
 
-  static String mmm = "MMM";
-  static String vblax = "VBLAX";
-  static LocalDate d1 = LocalDate.of(2023, 1, 1);
-  static LocalDate d2 = LocalDate.of(2023, 1, 2);
-  static LocalDate d3 = LocalDate.of(2023, 1, 3);
-  static LocalDate d4 = LocalDate.of(2023, 1, 4);
-  String storeName = "store" + getClass().getSimpleName().toLowerCase() + System.currentTimeMillis();
-//  String storeName = "store" + getClass().getSimpleName().toLowerCase(); // FIXME
+  static final String intType = "Int";
+  static final String longType = "Long";
+  static final String floatType = "Float";
+  static final String doubleType = "Double";
+  static final String mmm = "MMM";
+  static final String vblax = "VBLAX";
+  static final LocalDate d1 = LocalDate.of(2023, 1, 1);
+  static final LocalDate d2 = LocalDate.of(2023, 1, 2);
+  static final LocalDate d3 = LocalDate.of(2023, 1, 3);
+  static final LocalDate d4 = LocalDate.of(2023, 1, 4);
+  String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
@@ -60,18 +63,12 @@ public abstract class ATestVectorAggregationDataType extends ABaseTestQuery {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"Int", "Long", "Float", "Double"})
+  @ValueSource(strings = {intType, longType, floatType, doubleType})
   void testVectorType(String type) {
     assertVectorType(type);
   }
 
   void assertVectorType(String type) {
-    Map<String, List<? extends List<? extends Number>>> expectedVectorsByType = Map.of(
-            "Int", List.of(List.of(1L, 5L, 6L, 7L), List.of(8L, 9L, 2L)),
-            "Long", List.of(List.of(1L, 5L, 6L, 7L), List.of(8L, 9L, 2L)),
-            "Float", List.of(List.of(1.7d, 1.6d, 1.0d, 1.5d), List.of(1.8d, 1.9d, 2.0d)),
-            "Double", List.of(List.of(1.7d, 1.6d, 1.0d, 1.5d), List.of(1.8d, 1.9d, 2.0d)));
-
     Field ticker = new TableField(this.storeName, "ticker");
     Field valueType = new TableField(this.storeName, "value" + type);
     Field date = new TableField(this.storeName, "date");
@@ -83,19 +80,12 @@ public abstract class ATestVectorAggregationDataType extends ABaseTestQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     List<List<Object>> points = List.of(List.of(mmm), List.of(vblax));
-    assertVectorValues((ColumnarTable) result, vector, points, (List<List<Number>>) expectedVectorsByType.get(type), type);
+    assertVectorValues((ColumnarTable) result, vector, points, (List<List<Number>>) getExpectedVectorValues(type), type);
   }
 
   private void assertVectorValues(ColumnarTable result, Measure vectorMeasure, List<List<Object>> points, List<List<Number>> expectedVectors, String type) {
     Header header = result.getHeader(vectorMeasure.alias());
-    Class<?> expectedType = null;
-    if (type.equals("Int") || type.equals("Long")) {
-      expectedType = Lists.LongList.class;
-    } else if (type.equals("Double") || type.equals("Float")) {
-      expectedType = Lists.DoubleList.class;
-    } else {
-      Assertions.fail("Unknown type " + type);
-    }
+    Class<?> expectedType = getExpectedType(type);
     Assertions.assertThat(header.type()).isEqualTo(expectedType);
     List<Object> aggregateValues = result.getColumnValues(vectorMeasure.alias());
     for (int i = 0; i < points.size(); i++) {
@@ -106,9 +96,9 @@ public abstract class ATestVectorAggregationDataType extends ABaseTestQuery {
       List<Number> vector = new ArrayList<>(expectedVectors.get(i)).stream().sorted().toList();
       List<Number> actualVector = (List<Number>) new ArrayList<>(actual).stream().sorted().toList();
 
-      if (type.equals("Int") || type.equals("Long")) {
+      if (type.equals(intType) || type.equals(longType)) {
         Assertions.assertThat(actual).isInstanceOf(expectedType);
-      } else if (type.equals("Double") || type.equals("Float")) {
+      } else if (type.equals(doubleType) || type.equals(floatType)) {
         Assertions.assertThat(actual).isInstanceOf(expectedType);
       } else {
         Assertions.fail("Unknown type " + type);
@@ -123,6 +113,36 @@ public abstract class ATestVectorAggregationDataType extends ABaseTestQuery {
       } else {
         Assertions.assertThat(actualVector).containsExactlyElementsOf(vector);
       }
+    }
+  }
+
+  protected Class<?> getExpectedType(String type) {
+    if (this.executor.queryEngine.getClass().getSimpleName().toLowerCase().contains(TestClass.Type.SNOWFLAKE.name().toLowerCase())) {
+      // special case for snowflake due to lack of support of array in the JDBC driver
+      return List.class;
+    }
+
+    if (type.equals(intType) || type.equals(longType)) {
+      return Lists.LongList.class;
+    } else if (type.equals(doubleType) || type.equals(floatType)) {
+      return Lists.DoubleList.class;
+    } else {
+      throw new RuntimeException("Unknown type " + type);
+    }
+  }
+
+  protected List<? extends List<? extends Number>> getExpectedVectorValues(String type) {
+    Map<String, List<? extends List<? extends Number>>> expectedVectorsByType = Map.of(
+            intType, List.of(List.of(1L, 5L, 6L, 7L), List.of(8L, 9L, 2L)),
+            longType, List.of(List.of(1L, 5L, 6L, 7L), List.of(8L, 9L, 2L)),
+            floatType, List.of(List.of(1.7d, 1.6d, 1.0d, 1.5d), List.of(1.8d, 1.9d, 2.0d)),
+            doubleType, List.of(List.of(1.7d, 1.6d, 1.0d, 1.5d), List.of(1.8d, 1.9d, 2.0d)));
+
+    if (this.executor.queryEngine.getClass().getSimpleName().toLowerCase().contains(TestClass.Type.SNOWFLAKE.name().toLowerCase())) {
+      // special case for snowflake due to lack of support of array in the JDBC driver
+      return type.equals(intType) || type.equals(longType) ? List.of(List.of(1d, 5d, 6d, 7d), List.of(8d, 9d, 2d)) : expectedVectorsByType.get(doubleType);
+    } else {
+      return expectedVectorsByType.get(type);
     }
   }
 }

@@ -178,21 +178,21 @@ public final class JdbcUtil {
     }
   }
 
-  public static List<?> objectArrayToList(Class<?> listClass, Object[] objectArray) {
-    return streamToList(listClass, Arrays.stream(objectArray));
+  public static List<?> objectArrayToList(Class<?> listClass, Object[] array) {
+    return streamToList(listClass, Arrays.stream(array));
   }
 
-  public static List<?> streamToList(Class<?> listClass, Stream<Object> objectStream) {
+  public static List<?> streamToList(Class<?> listClass, Stream<Object> stream) {
     if (listClass == Lists.LongList.class) {
-      return objectStream
+      return stream
               .map(e -> e instanceof BigInteger ? ((BigInteger) e).longValueExact() : (Long) e)
               .collect(Collectors.toCollection(Lists.LongList::new));
     } else if (listClass == Lists.DoubleList.class) {
-      return objectStream
+      return stream
               .map(e -> (Double) e)
               .collect(Collectors.toCollection(Lists.DoubleList::new));
     } else {
-      return objectStream.toList();
+      return stream.toList();
     }
   }
 
