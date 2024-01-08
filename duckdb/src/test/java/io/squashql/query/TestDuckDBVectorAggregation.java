@@ -10,7 +10,7 @@ import io.squashql.transaction.DuckDBDataLoader;
 /**
  * Do not edit this class, it has been generated automatically by {@link io.squashql.template.DuckDBClassTemplateGenerator}.
  */
-public class TestDuckDBVectorAggregation extends ATestDuckDBVectorAggregation {
+public class TestDuckDBVectorAggregation extends ATestVectorAggregation {
 
   @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {

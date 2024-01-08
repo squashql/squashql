@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.PivotTableQueryDto;
@@ -22,6 +23,7 @@ import static io.squashql.query.agg.AggregationFunction.SUM;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
 
+@TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
@@ -368,7 +370,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
       Object actual = aggregateValues.get(position);
       // SORT to have a deterministic comparison
       List<Number> vector = new ArrayList<>(expectedVectors.get(i)).stream().sorted().toList();
-      List<Number> actualVector = new ArrayList<>(getVectorValue(actual)).stream().sorted().toList();
+      List<Number> actualVector = new ArrayList<>((List<Number>) actual).stream().sorted().toList();
       Assertions.assertThat(actualVector).containsExactlyElementsOf(vector);
     }
   }
@@ -381,9 +383,5 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
       Object actual = aggregateValues.get(position);
       Assertions.assertThat(actual).isEqualTo(expectedValues.get(i));
     }
-  }
-
-  protected List<Number> getVectorValue(Object actualVector) {
-    throw new RuntimeException("not implemented");
   }
 }

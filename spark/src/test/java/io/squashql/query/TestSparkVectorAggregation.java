@@ -11,7 +11,7 @@ import org.junit.jupiter.api.AfterAll;
 /**
  * Do not edit this class, it has been generated automatically by {@link io.squashql.template.SparkClassTemplateGenerator}.
  */
-public class TestSparkVectorAggregation extends ATestSparkVectorAggregation {
+public class TestSparkVectorAggregation extends ATestVectorAggregation {
 
   @AfterAll
   void tearDown() {
