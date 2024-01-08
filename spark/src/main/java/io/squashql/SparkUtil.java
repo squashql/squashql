@@ -1,7 +1,6 @@
 package io.squashql;
 
 import io.squashql.jdbc.JdbcUtil;
-import io.squashql.list.Lists;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.Types;
 import org.apache.spark.sql.types.ArrayType;
@@ -42,15 +41,7 @@ public final class SparkUtil {
       if (type.sql().contains("DECIMAL")) {
         return BigDecimal.class;
       } else if (type.getClass().equals(ArrayType.class)) {
-        DataType elementType = ((ArrayType) type).elementType();
-        Class<?> elementClass = datatypeToClass(elementType);
-        if (elementClass.equals(double.class) || elementClass.equals(float.class)) {
-          return Lists.DoubleList.class;
-        } else if (elementClass.equals(long.class) || elementClass.equals(int.class)) {
-          return Lists.LongList.class;
-        } else {
-          return List.class; // we convert Array to List
-        }
+        return JdbcUtil.getListClassFromElementClass(datatypeToClass(((ArrayType) type).elementType()));
       }
       throw new IllegalArgumentException("Unsupported field type " + type);
     }

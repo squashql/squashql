@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public final class JdbcUtil {
 
@@ -178,16 +179,30 @@ public final class JdbcUtil {
   }
 
   public static List<?> objectArrayToList(Class<?> listClass, Object[] objectArray) {
+    return streamToList(listClass, Arrays.stream(objectArray));
+  }
+
+  public static List<?> streamToList(Class<?> listClass, Stream<Object> objectStream) {
     if (listClass == Lists.LongList.class) {
-      return Arrays.stream(objectArray)
+      return objectStream
               .map(e -> e instanceof BigInteger ? ((BigInteger) e).longValueExact() : (Long) e)
               .collect(Collectors.toCollection(Lists.LongList::new));
     } else if (listClass == Lists.DoubleList.class) {
-      return Arrays.stream(objectArray)
+      return objectStream
               .map(e -> (Double) e)
               .collect(Collectors.toCollection(Lists.DoubleList::new));
     } else {
-      return Arrays.stream(objectArray).toList();
+      return objectStream.toList();
+    }
+  }
+
+  public static Class<?> getListClassFromElementClass(Class<?> elementClass) {
+    if (elementClass.equals(double.class) || elementClass.equals(float.class)) {
+      return Lists.DoubleList.class;
+    } else if (elementClass.equals(long.class) || elementClass.equals(int.class)) {
+      return Lists.LongList.class;
+    } else {
+      return List.class; // we convert Array to List
     }
   }
 }

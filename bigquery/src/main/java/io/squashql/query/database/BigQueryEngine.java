@@ -3,6 +3,8 @@ package io.squashql.query.database;
 import com.google.cloud.bigquery.*;
 import io.squashql.BigQueryDatastore;
 import io.squashql.BigQueryUtil;
+import io.squashql.jdbc.JdbcUtil;
+import io.squashql.list.Lists;
 import io.squashql.query.Header;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
@@ -49,7 +51,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
               query,
               schema.getFields(),
-              (column, name) -> BigQueryUtil.bigQueryTypeToClass(column.getType()),
+              (column, name) -> BigQueryUtil.bigQueryTypeToClass(column),
               tableResult.iterateAll().iterator(),
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i));
       return new ColumnarTable(
@@ -70,7 +72,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       Pair<List<Header>, List<List<Object>>> result = transformToRowFormat(
               schema.getFields(),
               column -> column.getName(),
-              column -> BigQueryUtil.bigQueryTypeToClass(column.getType()),
+              column -> BigQueryUtil.bigQueryTypeToClass(column),
               tableResult.iterateAll().iterator(),
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i));
       return new RowTable(result.getOne(), result.getTwo());
@@ -89,7 +91,19 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       return null;
     }
     com.google.cloud.bigquery.Field field = schema.getFields().get(index);
-    if (field.getMode() != Field.Mode.REPEATED) {
+    if (field.getMode() == Field.Mode.REPEATED) {
+      // It is an array
+      Class<?> listClass = BigQueryUtil.bigQueryTypeToClass(field);
+      return JdbcUtil.streamToList(listClass, fieldValue.getRepeatedValue().stream().map(o -> {
+        if (listClass.equals(Lists.DoubleList.class)) {
+          return o.getDoubleValue();
+        } else if (listClass.equals(Lists.LongList.class)) {
+          return o.getLongValue();
+        } else {
+          return o.getValue(); // it will be a string
+        }
+      }));
+    } else {
       return switch (field.getType().getStandardType()) {
         case BOOL -> fieldValue.getBooleanValue();
         case INT64 -> fieldValue.getLongValue();
@@ -98,8 +112,6 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
         case DATE -> LocalDate.parse(fieldValue.getStringValue());
         default -> fieldValue.getValue();
       };
-    } else {
-      return fieldValue.getValue(); // FieldValueList
     }
   }
 
