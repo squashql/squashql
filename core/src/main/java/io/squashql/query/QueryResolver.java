@@ -46,8 +46,24 @@ public class QueryResolver {
     this.compiledColumnSets = compiledColumnSets(query.columnSets);
   }
 
-  public TypedField getTypedField(Field field) {
+  /**
+   * Retrieves or resolves the {@link TypedField} corresponding to the given Field.
+   *
+   * @param field The {@link Field} to retrieve or resolve.
+   * @return The resolved {@link TypedField} corresponding to the given {@link Field}.
+   */
+  public TypedField getOrResolveTypedField(Field field) {
     return resolveField(field);
+  }
+
+  /**
+   * Retrieves or returns null the {@link TypedField} corresponding to the given {@link Field}.
+   *
+   * @param field The {@link Field} to retrieve.
+   * @return The resolved {@link TypedField} corresponding to the given {@link Field}, or null if it is not found.
+   */
+  public TypedField getTypedFieldOrNull(Field field) {
+    return this.cache.getCompiledFields().get(field);
   }
 
   /**

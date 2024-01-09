@@ -41,7 +41,7 @@ public class SQLTranslator {
       statement.append(translate(query.subQuery, queryRewriter));
       statement.append(")");
     } else {
-      statement.append(query.table.sqlExpression(queryRewriter, query.virtualTableDto));
+      statement.append(query.table.sqlExpression(queryRewriter));
     }
     addWhereConditions(statement, query, queryRewriter);
     if (!query.groupingSets.isEmpty()) {
@@ -84,7 +84,7 @@ public class SQLTranslator {
             .append(" as (").append(sb).append(") ");
   }
 
-  private static void addLimit(int limit, StringBuilder statement) {
+  public static void addLimit(int limit, StringBuilder statement) {
     if (limit > 0) {
       statement.append(" limit " + limit);
     }

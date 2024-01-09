@@ -9,18 +9,19 @@ import java.util.function.Function;
 
 public record CompiledTable(String name, List<CompiledJoin> joins) {
 
-  public String sqlExpression(final QueryRewriter queryRewriter, final VirtualTableDto virtualTable) {
-    final StringBuilder statement = new StringBuilder();
+  public String sqlExpression(QueryRewriter queryRewriter) {
+    StringBuilder statement = new StringBuilder();
+    VirtualTableDto virtualTable = queryRewriter.query() != null ? queryRewriter.query().virtualTableDto : null;
     statement.append(queryRewriter.tableName(this.name));
-    final Function<String, String> tableNameFunc = tableName -> virtualTable != null && virtualTable.name.equals(tableName)
+    Function<String, String> tableNameFunc = tableName -> virtualTable != null && virtualTable.name.equals(tableName)
             ? queryRewriter.cteName(tableName) : queryRewriter.tableName(tableName);
     this.joins.forEach(j -> statement.append(j.sqlExpression(queryRewriter, tableNameFunc)));
     return statement.toString();
   }
 
   public record CompiledJoin(CompiledTable table, JoinType type, CompiledCriteria joinCriteria) {
-    String sqlExpression(final QueryRewriter queryRewriter, final Function<String, String> tableNameFunc) {
-      final StringBuilder statement = new StringBuilder();
+    String sqlExpression(QueryRewriter queryRewriter, Function<String, String> tableNameFunc) {
+      StringBuilder statement = new StringBuilder();
       statement.append(" ")
               .append(this.type.name().toLowerCase())
               .append(" join ")

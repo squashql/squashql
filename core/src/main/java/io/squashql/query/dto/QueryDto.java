@@ -45,7 +45,7 @@ public class QueryDto {
 
   public CriteriaDto havingCriteriaDto = null;
 
-  public Map<Field, OrderDto> orders = new HashMap<>();
+  public Map<Field, OrderDto> orders = new LinkedHashMap<>();
 
   public Map<String, Parameter> parameters = new HashMap<>();
 
