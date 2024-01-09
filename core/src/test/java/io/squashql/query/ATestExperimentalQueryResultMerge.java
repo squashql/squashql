@@ -78,6 +78,7 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             queryL, queryR, JoinType.LEFT,
             Functions.criterion(this.idB, this.idA, ConditionType.EQ),
             orders,
+            -1,
             null);
     Assertions.assertThat(result.headers().stream().map(header -> header.name()).toList())
             .containsExactly("category", "idA", "priceA", "idB", "priceB");
@@ -105,6 +106,7 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             queryL, queryR, JoinType.LEFT,
             Functions.criterion(this.idB, this.idA, ConditionType.EQ),
             Map.of(this.idA, asc),
+            -1,
             null);
     Assertions.assertThat(result.headers().stream().map(header -> header.name()).toList())
             .containsExactly("idA", "priceA", "idB", "priceB");
