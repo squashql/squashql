@@ -134,6 +134,7 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             criterion(this.idStoreB, this.idStoreA, ConditionType.EQ),
             Map.of(this.idStoreA, asc),
             -1);
+    result.show();
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly("id", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
@@ -167,6 +168,7 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly("id", "id_aliased", "priceA", "priceB");
+    // FIXME spark put null first
     Assertions.assertThat(result).containsExactly(
             List.of("0", "0", 4d, 10d),
             List.of("1", "1", 2d, 20d),

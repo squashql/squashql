@@ -38,7 +38,6 @@ public class ExperimentalQueryMergeExecutor {
                        int limit) {
     int queryLimit = limit < 0 ? LIMIT_DEFAULT_VALUE : limit;
 
-    // TODO check that limit and order are not set. They will be ignored.
     List<String> originalTableNames = new ArrayList<>();
     List<QueryResolver> queryResolvers = new ArrayList<>();
     List<QueryRewriter> queryRewriters = new ArrayList<>();
@@ -85,7 +84,8 @@ public class ExperimentalQueryMergeExecutor {
         if (typedField == null) {
           throw new RuntimeException("Cannot resolve " + e.getKey());
         }
-        orderList.add(queryRewriters.get(index).aliasOrFullExpression(typedField).replace(originalTableNames.get(index), cteTableNames.get(index)));
+        String orderByField = queryRewriters.get(index).aliasOrFullExpression(typedField).replace(originalTableNames.get(index), cteTableNames.get(index));
+        orderList.add(orderByField + " nulls last");
       }
       sb.append(String.join(", ", orderList));
     }
