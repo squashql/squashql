@@ -14,6 +14,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.squashql.query.Functions.criterion;
+
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
@@ -34,11 +36,11 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
     TableTypedField category = new TableTypedField(this.storeA, "category", String.class);
     TableTypedField idA = new TableTypedField(this.storeA, "idA", String.class);
-    TableTypedField idStoreA = new TableTypedField(this.storeA, "idStoreA", String.class);
+    TableTypedField idStoreA = new TableTypedField(this.storeA, "id", String.class);
     TableTypedField priceA = new TableTypedField(this.storeA, "priceA", double.class);
 
     TableTypedField idB = new TableTypedField(this.storeB, "idB", String.class);
-    TableTypedField idStoreB = new TableTypedField(this.storeB, "idStoreB", String.class);
+    TableTypedField idStoreB = new TableTypedField(this.storeB, "id", String.class);
     TableTypedField priceB = new TableTypedField(this.storeB, "priceB", double.class);
     return Map.of(this.storeA, List.of(category, idA, idStoreA, priceA), this.storeB, List.of(idB, idStoreB, priceB));
   }
@@ -76,21 +78,20 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
     orders.put(this.idA, asc);
     Table result = this.executor.executeExperimentalQueryMerge(
             queryL, queryR, JoinType.LEFT,
-            Functions.criterion(this.idB, this.idA, ConditionType.EQ),
+            criterion(this.idB, this.idA, ConditionType.EQ),
             orders,
-            -1,
-            null);
-    Assertions.assertThat(result.headers().stream().map(header -> header.name()).toList())
-            .containsExactly("category", "idA", "priceA", "idB", "priceB");
+            -1);
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
+            .containsExactly("category", "idA", "idB", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
-            List.of("A", "0", 1d, "0", 10d),
-            List.of("A", "1", 2d, "1", 20d),
-            List.of("B", "0", 3d, "0", 10d),
-            Arrays.asList("B", "3", 4d, null, getDoubleNullJoinValue()));
+            List.of("A", "0", "0", 1d, 10d),
+            List.of("A", "1", "1", 2d, 20d),
+            List.of("B", "0", "0", 3d, 10d),
+            Arrays.asList("B", "3", null, 4d, getDoubleNullJoinValue()));
   }
 
   @Test
-  void testLeftJoinWithCommonColumns() {
+  void testLeftJoinWithCommonColumnsDifferentNames() {
     QueryDto queryL = Query
             .from(this.storeA)
             .select(List.of(this.idA), List.of(this.priceASum))
@@ -104,16 +105,72 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
     SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
     Table result = this.executor.executeExperimentalQueryMerge(
             queryL, queryR, JoinType.LEFT,
-            Functions.criterion(this.idB, this.idA, ConditionType.EQ),
+            criterion(this.idB, this.idA, ConditionType.EQ),
             Map.of(this.idA, asc),
-            -1,
-            null);
-    Assertions.assertThat(result.headers().stream().map(header -> header.name()).toList())
-            .containsExactly("idA", "priceA", "idB", "priceB");
+            -1);
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
+            .containsExactly("idA", "idB", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
-            List.of("0", 4d, "0", 10d),
-            List.of("1", 2d, "1", 20d),
-            Arrays.asList("3", 4d, null, getDoubleNullJoinValue()));
+            List.of("0", "0", 4d, 10d),
+            List.of("1", "1", 2d, 20d),
+            Arrays.asList("3", null, 4d, getDoubleNullJoinValue()));
+  }
+
+  @Test
+  void testLeftJoinWithCommonColumnsAndSameNames() {
+    QueryDto queryL = Query
+            .from(this.storeA)
+            .select(List.of(this.idStoreA), List.of(this.priceASum))
+            .build();
+
+    QueryDto queryR = Query
+            .from(this.storeB)
+            .select(List.of(this.idStoreB), List.of(this.priceBSum))
+            .build();
+
+    SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
+    Table result = this.executor.executeExperimentalQueryMerge(
+            queryL, queryR, JoinType.LEFT,
+            criterion(this.idStoreB, this.idStoreA, ConditionType.EQ),
+            Map.of(this.idStoreA, asc),
+            -1);
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
+            .containsExactly("id", "priceA", "priceB");
+    Assertions.assertThat(result).containsExactly(
+            List.of("0", 4d, 10d),
+            List.of("1", 2d, 20d),
+            Arrays.asList("3", 4d, getDoubleNullJoinValue()));
+  }
+
+  /**
+   * Tests that when a field that is aliased, the corresponding is kept in the result. See {@link #testLeftJoinWithCommonColumnsAndSameNames()}
+   * where the names are the same.
+   */
+  @Test
+  void testLeftJoinWithCommonColumnsAndSameNamesWithAliases() {
+    QueryDto queryL = Query
+            .from(this.storeA)
+            .select(List.of(this.idStoreA), List.of(this.priceASum))
+            .build();
+
+    Field idStoreBAliased = this.idStoreB.as("id_aliased");
+    QueryDto queryR = Query
+            .from(this.storeB)
+            .select(List.of(idStoreBAliased), List.of(this.priceBSum))
+            .build();
+
+    SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
+    Table result = this.executor.executeExperimentalQueryMerge(
+            queryL, queryR, JoinType.LEFT,
+            criterion(idStoreBAliased, this.idStoreA, ConditionType.EQ),
+            Map.of(idStoreBAliased, asc),
+            -1);
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
+            .containsExactly("id", "id_aliased", "priceA", "priceB");
+    Assertions.assertThat(result).containsExactly(
+            List.of("0", "0", 4d, 10d),
+            List.of("1", "1", 2d, 20d),
+            Arrays.asList("3", null, 4d, getDoubleNullJoinValue()));
   }
 
   /**
@@ -126,10 +183,7 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
     } else if (qesn.toLowerCase().contains(TestClass.Type.DUCKDB.name().toLowerCase())) {
       return Double.NaN;
     } else {
-
       return null;
     }
   }
-
-  // TODO test with colonnes with same names => if same name, SquashQL can remove those columns to keep only 1
 }

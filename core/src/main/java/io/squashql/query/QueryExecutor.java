@@ -335,10 +335,9 @@ public class QueryExecutor {
                                              JoinType joinType,
                                              CriteriaDto joinCondition,
                                              Map<Field, OrderDto> orders,
-                                             int limit,
-                                             SquashQLUser user) {
+                                             int limit) {
     return new ExperimentalQueryMergeExecutor(this.queryEngine)
-            .execute(first, second, joinType, joinCondition, orders, limit, user);
+            .execute(first, second, joinType, joinCondition, orders, limit);
   }
 
   /**
