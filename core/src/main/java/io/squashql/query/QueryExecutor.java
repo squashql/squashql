@@ -384,7 +384,7 @@ public class QueryExecutor {
         }
         orderList.add(queryRewriters.get(index).select(typedField).replace(originalTableNames.get(index), cteTableNames.get(index)));
       }
-      sb.append(String.join(",", orderList));
+      sb.append(String.join(", ", orderList));
     }
 
     SQLTranslator.addLimit(queryLimit, sb);
