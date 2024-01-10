@@ -88,6 +88,13 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             List.of("A", "1", 2d, 20d),
             List.of("B", "0", 3d, 10d),
             Arrays.asList("B", "3", 4d, getDoubleNullJoinValue()));
+
+    result = this.executor.executeExperimentalQueryMerge(
+            queryL, queryR, JoinType.LEFT,
+            criterion(this.idB, this.idA, ConditionType.EQ),
+            orders,
+            1); // with limit
+    Assertions.assertThat(result).containsExactly(List.of("A", "0", 1d, 10d));
   }
 
   @Test
