@@ -135,7 +135,6 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
                 topQueryMeasures.add(new CompiledAggregatedMeasure(SqlUtils.groupingAlias(alias), new AliasedTypedField(groupingAlias), MAX, null, false));
               });
 
-
       String vectorAxisAlias = safeColumnAlias(SqlUtils.squashqlExpression(vectorAxis));
       List<TypedField> subQueryRollupColumns = new ArrayList<>();
       List<List<TypedField>> subQueryGroupingSets = new ArrayList<>();

@@ -49,7 +49,7 @@ public class SQLTranslator {
     } else {
       addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
     }
-    addHavingConditions(statement, query.havingCriteriaDto, queryRewriter);
+    addHavingConditions(statement, query.havingCriteria, queryRewriter);
     addLimit(query.limit, statement);
     return statement.toString();
   }
@@ -161,8 +161,8 @@ public class SQLTranslator {
   }
 
   protected static void addWhereConditions(StringBuilder statement, DatabaseQuery query, QueryRewriter queryRewriter) {
-    if (query.whereCriteriaDto != null) {
-      String whereClause = query.whereCriteriaDto.sqlExpression(queryRewriter);
+    if (query.whereCriteria != null) {
+      String whereClause = query.whereCriteria.sqlExpression(queryRewriter);
       if (whereClause != null) {
         statement
                 .append(" where ")

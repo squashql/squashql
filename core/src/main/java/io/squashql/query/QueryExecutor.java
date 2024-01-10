@@ -163,7 +163,7 @@ public class QueryExecutor {
       DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
       Set<CompiledMeasure> measures = measuresByQueryScope.get(scope);
       QueryCache.QueryCacheKey queryCacheKey = new QueryCache.QueryCacheKey(scope, user);
-      QueryCache queryCache = getQueryCache((QueryCacheParameter) query.parameters.getOrDefault(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.USE)), user);
+      QueryCache queryCache = EmptyQueryCache.INSTANCE;
 
       Set<CompiledMeasure> cached = new HashSet<>();
       Set<CompiledMeasure> notCached = new HashSet<>();
@@ -274,6 +274,38 @@ public class QueryExecutor {
                            List<List<TypedField>> groupingSets,
                            VirtualTableDto virtualTable,
                            int limit) {
+
+    @Override
+    public String toString() {
+      final StringBuilder sb = new StringBuilder("QueryScope{");
+      sb.append("table=").append(table);
+      if (subQuery != null) {
+        sb.append(", subQuery=").append(subQuery);
+      }
+      if (columns != null && !columns.isEmpty()) {
+        sb.append(", columns=").append(columns);
+      }
+      if (whereCriteria != null) {
+        sb.append(", whereCriteria=").append(whereCriteria);
+      }
+      if (havingCriteria != null) {
+        sb.append(", havingCriteria=").append(havingCriteria);
+      }
+      if (rollupColumns != null && !rollupColumns.isEmpty()) {
+        sb.append(", rollupColumns=").append(rollupColumns);
+      }
+      if (groupingSets != null && !groupingSets.isEmpty()) {
+        sb.append(", groupingSets=").append(groupingSets);
+      }
+      if (virtualTable != null) {
+        sb.append(", virtualTable=").append(virtualTable);
+      }
+      if (limit > 0) {
+        sb.append(", limit=").append(limit);
+      }
+      sb.append('}');
+      return sb.toString();
+    }
   }
 
   public record QueryPlanNodeKey(QueryScope queryScope, CompiledMeasure measure) {
