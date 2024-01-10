@@ -29,8 +29,8 @@ public abstract class ATestVectorAggregationDataType extends ABaseTestQuery {
   static final String longType = "Long";
   static final String floatType = "Float";
   static final String doubleType = "Double";
-  static final String mmm = "MMM";
-  static final String vblax = "VBLAX";
+  static final String productA = "A";
+  static final String productB = "B";
   static final LocalDate d1 = LocalDate.of(2023, 1, 1);
   static final LocalDate d2 = LocalDate.of(2023, 1, 2);
   static final LocalDate d3 = LocalDate.of(2023, 1, 3);
@@ -39,26 +39,26 @@ public abstract class ATestVectorAggregationDataType extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
-    TableTypedField ticker = new TableTypedField(this.storeName, "ticker", String.class);
+    TableTypedField ean = new TableTypedField(this.storeName, "ean", String.class);
     TableTypedField date = new TableTypedField(this.storeName, "date", LocalDate.class);
     TableTypedField vD = new TableTypedField(this.storeName, "valueDouble", double.class);
     TableTypedField vF = new TableTypedField(this.storeName, "valueFloat", float.class);
     TableTypedField vL = new TableTypedField(this.storeName, "valueLong", long.class);
     TableTypedField vI = new TableTypedField(this.storeName, "valueInt", int.class);
-    return Map.of(this.storeName, List.of(ticker, date, vD, vF, vL, vI));
+    return Map.of(this.storeName, List.of(ean, date, vD, vF, vL, vI));
   }
 
   @Override
   protected void loadData() {
     this.tm.load(this.storeName, List.of(
-            new Object[]{mmm, d1, 1d, 1f, 1L, 1},
-            new Object[]{mmm, d2, 1.5d, 1.5f, 5L, 5},
-            new Object[]{mmm, d3, 1.6d, 1.6f, 6L, 6},
-            new Object[]{mmm, d4, 1.7d, 1.7f, 7L, 7},
+            new Object[]{productA, d1, 1d, 1f, 1L, 1},
+            new Object[]{productA, d2, 1.5d, 1.5f, 5L, 5},
+            new Object[]{productA, d3, 1.6d, 1.6f, 6L, 6},
+            new Object[]{productA, d4, 1.7d, 1.7f, 7L, 7},
 
-            new Object[]{vblax, d1, 2d, 2f, 2L, 2},
-            new Object[]{vblax, d2, 1.8d, 1.8f, 8L, 8},
-            new Object[]{vblax, d3, 1.9d, 1.9f, 9L, 9}
+            new Object[]{productB, d1, 2d, 2f, 2L, 2},
+            new Object[]{productB, d2, 1.8d, 1.8f, 8L, 8},
+            new Object[]{productB, d3, 1.9d, 1.9f, 9L, 9}
     ));
   }
 
@@ -69,17 +69,17 @@ public abstract class ATestVectorAggregationDataType extends ABaseTestQuery {
   }
 
   void assertVectorType(String type) {
-    Field ticker = new TableField(this.storeName, "ticker");
+    Field ean = new TableField(this.storeName, "ean");
     Field valueType = new TableField(this.storeName, "value" + type);
     Field date = new TableField(this.storeName, "date");
 
     Measure vector = new VectorAggMeasure("vector", valueType, SUM, date);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ticker), List.of(vector))
+            .select(List.of(ean), List.of(vector))
             .build();
     Table result = this.executor.executeQuery(query);
-    List<List<Object>> points = List.of(List.of(mmm), List.of(vblax));
+    List<List<Object>> points = List.of(List.of(productA), List.of(productB));
     assertVectorValues((ColumnarTable) result, vector, points, (List<List<Number>>) getExpectedVectorValues(type), type);
   }
 

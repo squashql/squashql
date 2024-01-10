@@ -27,11 +27,11 @@ import static io.squashql.query.database.QueryEngine.TOTAL;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
-  static final String mmm = "MMM";
-  static final String vblax = "VBLAX";
-  static final String volatilityReturn = "VolatilityReturn";
-  static final String fxReturn = "FXReturn";
-  static final String equityReturn = "EquityReturn";
+  static final String productA = "A";
+  static final String productB = "B";
+  static final String competitorX = "X";
+  static final String competitorY = "Y";
+  static final String competitorZ = "Z";
   static final LocalDate d1 = LocalDate.of(2023, 1, 1);
   static final LocalDate d2 = LocalDate.of(2023, 1, 2);
   static final LocalDate d3 = LocalDate.of(2023, 1, 3);
@@ -45,55 +45,54 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
-    TableTypedField ticker = new TableTypedField(this.storeName, "ticker", String.class);
+    TableTypedField ean = new TableTypedField(this.storeName, "ean", String.class);
     TableTypedField date = new TableTypedField(this.storeName, "date", LocalDate.class);
-    TableTypedField riskType = new TableTypedField(this.storeName, "riskType", String.class);
-    TableTypedField value = new TableTypedField(this.storeName, "value", double.class);
-    TableTypedField valueInt = new TableTypedField(this.storeName, "valueInt", int.class); // same but type is different
-    return Map.of(this.storeName, List.of(ticker, date, riskType, value, valueInt));
+    TableTypedField competitor = new TableTypedField(this.storeName, "competitor", String.class);
+    TableTypedField price = new TableTypedField(this.storeName, "price", double.class);
+    return Map.of(this.storeName, List.of(ean, date, competitor, price));
   }
 
   @Override
   protected void loadData() {
     this.tm.load(this.storeName, List.of(
-            new Object[]{mmm, d1, volatilityReturn, 1d, 1},
-            new Object[]{mmm, d1, fxReturn, 2d, 2},
-            new Object[]{mmm, d1, equityReturn, 3d, 3},
-            new Object[]{mmm, d2, volatilityReturn, 10d, 10},
-            new Object[]{mmm, d2, fxReturn, 11d, 11},
-            new Object[]{mmm, d2, equityReturn, 12d, 12},
-            new Object[]{mmm, d3, volatilityReturn, 100d, 100},
-            new Object[]{mmm, d3, fxReturn, 101d, 101},
-            new Object[]{mmm, d3, equityReturn, 102d, 102},
+            new Object[]{productA, d1, competitorX, 1d},
+            new Object[]{productA, d1, competitorY, 2d},
+            new Object[]{productA, d1, competitorZ, 3d},
+            new Object[]{productA, d2, competitorX, 10d},
+            new Object[]{productA, d2, competitorY, 11d},
+            new Object[]{productA, d2, competitorZ, 12d},
+            new Object[]{productA, d3, competitorX, 100d},
+            new Object[]{productA, d3, competitorY, 101d},
+            new Object[]{productA, d3, competitorZ, 102d},
 
-            new Object[]{vblax, d1, volatilityReturn, 1000d, 1000},
-            new Object[]{vblax, d1, fxReturn, 2000d, 2000},
-            new Object[]{vblax, d1, equityReturn, 3000d, 3000},
-            new Object[]{vblax, d2, volatilityReturn, 10000d, 10000},
-            new Object[]{vblax, d2, fxReturn, 11000d, 11000},
-            new Object[]{vblax, d2, equityReturn, 12000d, 12000},
-            new Object[]{vblax, d3, volatilityReturn, 100000d, 100000},
-            new Object[]{vblax, d3, fxReturn, 101000d, 101000},
-            new Object[]{vblax, d3, equityReturn, 102000d, 102000}
+            new Object[]{productB, d1, competitorX, 1000d},
+            new Object[]{productB, d1, competitorY, 2000d},
+            new Object[]{productB, d1, competitorZ, 3000d},
+            new Object[]{productB, d2, competitorX, 10000d},
+            new Object[]{productB, d2, competitorY, 11000d},
+            new Object[]{productB, d2, competitorZ, 12000d},
+            new Object[]{productB, d3, competitorX, 100000d},
+            new Object[]{productB, d3, competitorY, 101000d},
+            new Object[]{productB, d3, competitorZ, 102000d}
     ));
   }
 
   @Test
   void testCrossjoinOneWithTotals() {
-    Field ticker = new TableField(this.storeName, "ticker");
-    Field value = new TableField(this.storeName, "value");
+    Field ean = new TableField(this.storeName, "ean");
+    Field value = new TableField(this.storeName, "price");
     Field date = new TableField(this.storeName, "date");
 
     Measure vector = new VectorAggMeasure("vector", value, SUM, date);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ticker), List.of(vector))
-            .rollup(List.of(ticker))
+            .select(List.of(ean), List.of(vector))
+            .rollup(List.of(ean))
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(ticker.name(), vector.alias());
-    List<List<Object>> points = List.of(List.of(GRAND_TOTAL), List.of(mmm), List.of(vblax));
+            .containsExactly(ean.name(), vector.alias());
+    List<List<Object>> points = List.of(List.of(GRAND_TOTAL), List.of(productA), List.of(productB));
     List<List<Number>> expectedVectors = List.of(
             List.of(6006d, 33033d, 303303d),
             List.of(6d, 33d, 303d),
@@ -103,19 +102,19 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
   @Test
   void testCrossjoinOneWithoutTotals() {
-    Field ticker = new TableField(this.storeName, "ticker");
-    Field value = new TableField(this.storeName, "value");
+    Field ean = new TableField(this.storeName, "ean");
+    Field value = new TableField(this.storeName, "price");
     Field date = new TableField(this.storeName, "date");
 
     Measure vector = new VectorAggMeasure("vector", value, SUM, date);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ticker), List.of(vector, CountMeasure.INSTANCE))
+            .select(List.of(ean), List.of(vector, CountMeasure.INSTANCE))
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(ticker.name(), vector.alias(), CountMeasure.ALIAS);
-    List<List<Object>> points = List.of(List.of(mmm), List.of(vblax));
+            .containsExactly(ean.name(), vector.alias(), CountMeasure.ALIAS);
+    List<List<Object>> points = List.of(List.of(productA), List.of(productB));
     List<List<Number>> expectedVectors = List.of(
             List.of(6d, 33d, 303d),
             List.of(6000d, 33000d, 303000d));
@@ -125,31 +124,31 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
   @Test
   void testCrossjoinTwoWithTotals() {
-    Field ticker = new TableField(this.storeName, "ticker");
-    Field riskType = new TableField(this.storeName, "riskType");
-    Field value = new TableField(this.storeName, "value");
+    Field ean = new TableField(this.storeName, "ean");
+    Field competitor = new TableField(this.storeName, "competitor");
+    Field value = new TableField(this.storeName, "price");
     Field date = new TableField(this.storeName, "date");
 
     Measure vector = new VectorAggMeasure("vector", value, SUM, date);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ticker, riskType), List.of(vector))
-            .rollup(List.of(ticker, riskType))
+            .select(List.of(ean, competitor), List.of(vector))
+            .rollup(List.of(ean, competitor))
             .build();
     Table result = this.executor.executeQuery(query);
     result.show();
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(ticker.name(), riskType.name(), vector.alias());
+            .containsExactly(ean.name(), competitor.name(), vector.alias());
     List<List<Object>> points = List.of(
             List.of(GRAND_TOTAL, GRAND_TOTAL),
-            List.of(mmm, TOTAL),
-            List.of(mmm, equityReturn),
-            List.of(mmm, fxReturn),
-            List.of(mmm, volatilityReturn),
-            List.of(vblax, TOTAL),
-            List.of(vblax, equityReturn),
-            List.of(vblax, fxReturn),
-            List.of(vblax, volatilityReturn));
+            List.of(productA, TOTAL),
+            List.of(productA, competitorZ),
+            List.of(productA, competitorY),
+            List.of(productA, competitorX),
+            List.of(productB, TOTAL),
+            List.of(productB, competitorZ),
+            List.of(productB, competitorY),
+            List.of(productB, competitorX));
     List<List<Number>> expectedVectors = List.of(
             List.of(6006d, 33033d, 303303d),
             List.of(6d, 33d, 303d),
@@ -165,26 +164,26 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
   @Test
   void testCrossjoinTwoWithoutTotals() {
-    Field ticker = new TableField(this.storeName, "ticker");
-    Field riskType = new TableField(this.storeName, "riskType");
-    Field value = new TableField(this.storeName, "value");
+    Field ean = new TableField(this.storeName, "ean");
+    Field competitor = new TableField(this.storeName, "competitor");
+    Field value = new TableField(this.storeName, "price");
     Field date = new TableField(this.storeName, "date");
 
     Measure vector = new VectorAggMeasure("vector", value, SUM, date);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ticker, riskType), List.of(vector, CountMeasure.INSTANCE))
+            .select(List.of(ean, competitor), List.of(vector, CountMeasure.INSTANCE))
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(ticker.name(), riskType.name(), vector.alias(), CountMeasure.ALIAS);
+            .containsExactly(ean.name(), competitor.name(), vector.alias(), CountMeasure.ALIAS);
     List<List<Object>> points = List.of(
-            List.of(mmm, equityReturn),
-            List.of(mmm, fxReturn),
-            List.of(mmm, volatilityReturn),
-            List.of(vblax, equityReturn),
-            List.of(vblax, fxReturn),
-            List.of(vblax, volatilityReturn));
+            List.of(productA, competitorZ),
+            List.of(productA, competitorY),
+            List.of(productA, competitorX),
+            List.of(productB, competitorZ),
+            List.of(productB, competitorY),
+            List.of(productB, competitorX));
     List<List<Number>> expectedVectors = List.of(
             List.of(3.0, 12.0, 102.0),
             List.of(2.0, 11.0, 101.0),
@@ -200,58 +199,58 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
    */
   @Test
   void testSimpleWithVectorAxisInSelect() {
-    Field ticker = new TableField(this.storeName, "ticker");
-    Field value = new TableField(this.storeName, "value");
+    Field ean = new TableField(this.storeName, "ean");
+    Field value = new TableField(this.storeName, "price");
     Field date = new TableField(this.storeName, "date");
 
     Measure vector = new VectorAggMeasure("vector", value, SUM, date);
     Measure vectorSum = new AggregatedMeasure("vectorSum", value, SUM, false);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ticker, date), List.of(vector, vectorSum))
-            .rollup(List.of(ticker, date))
+            .select(List.of(ean, date), List.of(vector, vectorSum))
+            .rollup(List.of(ean, date))
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(ticker.name(), date.name(), vector.alias(), vectorSum.alias());
+            .containsExactly(ean.name(), date.name(), vector.alias(), vectorSum.alias());
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, GRAND_TOTAL, 342342d, 342342d),
-            List.of(mmm, TOTAL, 342d, 342d),
-            List.of(mmm, d1, 6d, 6d),
-            List.of(mmm, d2, 33d, 33d),
-            List.of(mmm, d3, 303d, 303d),
-            List.of(vblax, TOTAL, 342000d, 342000d),
-            List.of(vblax, d1, 6000d, 6000d),
-            List.of(vblax, d2, 33000d, 33000d),
-            List.of(vblax, d3, 303000d, 303000d));
+            List.of(productA, TOTAL, 342d, 342d),
+            List.of(productA, d1, 6d, 6d),
+            List.of(productA, d2, 33d, 33d),
+            List.of(productA, d3, 303d, 303d),
+            List.of(productB, TOTAL, 342000d, 342000d),
+            List.of(productB, d1, 6000d, 6000d),
+            List.of(productB, d2, 33000d, 33000d),
+            List.of(productB, d3, 303000d, 303000d));
   }
 
   @Test
   void testSimpleWithOtherMeasure() {
-    Field ticker = new TableField(this.storeName, "ticker");
-    Field riskType = new TableField(this.storeName, "riskType");
-    Field value = new TableField(this.storeName, "value");
+    Field ean = new TableField(this.storeName, "ean");
+    Field competitor = new TableField(this.storeName, "competitor");
+    Field value = new TableField(this.storeName, "price");
     Field date = new TableField(this.storeName, "date");
 
     Measure vector = new VectorAggMeasure("vector", value, SUM, date);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ticker, riskType), List.of(vector, CountMeasure.INSTANCE))
-            .rollup(List.of(ticker, riskType))
+            .select(List.of(ean, competitor), List.of(vector, CountMeasure.INSTANCE))
+            .rollup(List.of(ean, competitor))
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(ticker.name(), riskType.name(), vector.alias(), CountMeasure.ALIAS);
+            .containsExactly(ean.name(), competitor.name(), vector.alias(), CountMeasure.ALIAS);
     List<List<Object>> points = List.of(
             List.of(GRAND_TOTAL, GRAND_TOTAL),
-            List.of(mmm, TOTAL),
-            List.of(mmm, equityReturn),
-            List.of(mmm, fxReturn),
-            List.of(mmm, volatilityReturn),
-            List.of(vblax, TOTAL),
-            List.of(vblax, equityReturn),
-            List.of(vblax, fxReturn),
-            List.of(vblax, volatilityReturn));
+            List.of(productA, TOTAL),
+            List.of(productA, competitorZ),
+            List.of(productA, competitorY),
+            List.of(productA, competitorX),
+            List.of(productB, TOTAL),
+            List.of(productB, competitorZ),
+            List.of(productB, competitorY),
+            List.of(productB, competitorX));
     List<List<Number>> expectedVectors = List.of(
             List.of(6006d, 33033d, 303303d),
             List.of(6d, 33d, 303d),
@@ -269,32 +268,32 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
   @Test
   void testCache() {
-    Field ticker = new TableField(this.storeName, "ticker");
-    Field riskType = new TableField(this.storeName, "riskType");
-    Field value = new TableField(this.storeName, "value");
+    Field ean = new TableField(this.storeName, "ean");
+    Field competitor = new TableField(this.storeName, "competitor");
+    Field value = new TableField(this.storeName, "price");
     Field date = new TableField(this.storeName, "date");
 
     Measure vector = new VectorAggMeasure("vector", value, SUM, date);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ticker, riskType), List.of(vector))
-            .rollup(List.of(ticker, riskType))
+            .select(List.of(ean, competitor), List.of(vector))
+            .rollup(List.of(ean, competitor))
             .build();
 
     Runnable r = () -> {
       Table result = this.executor.executeQuery(query);
       Assertions.assertThat(result.headers().stream().map(Header::name))
-              .containsExactly(ticker.name(), riskType.name(), vector.alias());
+              .containsExactly(ean.name(), competitor.name(), vector.alias());
       List<List<Object>> points = List.of(
               List.of(GRAND_TOTAL, GRAND_TOTAL),
-              List.of(mmm, TOTAL),
-              List.of(mmm, equityReturn),
-              List.of(mmm, fxReturn),
-              List.of(mmm, volatilityReturn),
-              List.of(vblax, TOTAL),
-              List.of(vblax, equityReturn),
-              List.of(vblax, fxReturn),
-              List.of(vblax, volatilityReturn));
+              List.of(productA, TOTAL),
+              List.of(productA, competitorZ),
+              List.of(productA, competitorY),
+              List.of(productA, competitorX),
+              List.of(productB, TOTAL),
+              List.of(productB, competitorZ),
+              List.of(productB, competitorY),
+              List.of(productB, competitorX));
       List<List<Number>> expectedVectors = List.of(
               List.of(6006d, 33033d, 303303d),
               List.of(6d, 33d, 303d),
@@ -319,33 +318,33 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
   @Test
   void testPivotTable() {
-    Field ticker = new TableField(this.storeName, "ticker");
-    Field riskType = new TableField(this.storeName, "riskType");
-    Field value = new TableField(this.storeName, "value");
+    Field ean = new TableField(this.storeName, "ean");
+    Field competitor = new TableField(this.storeName, "competitor");
+    Field value = new TableField(this.storeName, "price");
     Field date = new TableField(this.storeName, "date");
 
     Measure vector = new VectorAggMeasure("vector", value, SUM, date);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ticker, riskType), List.of(vector))
+            .select(List.of(ean, competitor), List.of(vector))
             .build();
 
-    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, List.of(riskType), List.of(ticker)));
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, List.of(competitor), List.of(ean)));
     Assertions.assertThat(result.table.headers().stream().map(Header::name))
-            .containsExactly(ticker.name(), riskType.name(), vector.alias());
+            .containsExactly(ean.name(), competitor.name(), vector.alias());
     List<List<Object>> points = List.of(
             List.of(GRAND_TOTAL, GRAND_TOTAL),
-            List.of(GRAND_TOTAL, equityReturn),
-            List.of(GRAND_TOTAL, fxReturn),
-            List.of(GRAND_TOTAL, volatilityReturn),
-            List.of(mmm, GRAND_TOTAL),
-            List.of(mmm, equityReturn),
-            List.of(mmm, fxReturn),
-            List.of(mmm, volatilityReturn),
-            List.of(vblax, GRAND_TOTAL),
-            List.of(vblax, equityReturn),
-            List.of(vblax, fxReturn),
-            List.of(vblax, volatilityReturn));
+            List.of(GRAND_TOTAL, competitorZ),
+            List.of(GRAND_TOTAL, competitorY),
+            List.of(GRAND_TOTAL, competitorX),
+            List.of(productA, GRAND_TOTAL),
+            List.of(productA, competitorZ),
+            List.of(productA, competitorY),
+            List.of(productA, competitorX),
+            List.of(productB, GRAND_TOTAL),
+            List.of(productB, competitorZ),
+            List.of(productB, competitorY),
+            List.of(productB, competitorX));
     List<List<Number>> expectedVectors = List.of(
             List.of(6006d, 33033d, 303303d),
             List.of(102102d, 12012d, 3003d),
