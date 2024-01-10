@@ -51,7 +51,6 @@ public class ExperimentalQueryMergeExecutor {
     }
   }
 
-
   public ExperimentalQueryMergeExecutor(QueryEngine<?> queryEngine) {
     this.queryEngine = queryEngine;
   }

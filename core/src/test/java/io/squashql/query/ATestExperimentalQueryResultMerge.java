@@ -82,7 +82,7 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             orders,
             -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
-            .containsExactly("StoreA.category", "StoreA.idA", "priceA", "priceB");
+            .containsExactly(this.storeA + ".category", this.storeA + ".idA", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
             List.of("A", "0", 1d, 10d),
             List.of("A", "1", 2d, 20d),
@@ -109,7 +109,7 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             Map.of(this.idA, asc),
             -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
-            .containsExactly("StoreA.idA", "priceA", "priceB");
+            .containsExactly(this.storeA + ".idA", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
             List.of("0", 4d, 10d),
             List.of("1", 2d, 20d),
@@ -135,7 +135,7 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             Map.of(this.idStoreA, asc),
             -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
-            .containsExactly("StoreA.id", "priceA", "priceB");
+            .containsExactly(this.storeA + ".id", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
             List.of("0", 4d, 10d),
             List.of("1", 2d, 20d),
@@ -170,7 +170,7 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             orders,  // use the aliased in the order by condition
             -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
-            .containsExactly("category_aliased", "StoreA.id", "priceA", "priceB");
+            .containsExactly("category_aliased", this.storeA + ".id", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
             List.of("A", "0", 1d, 10d),
             List.of("A", "1", 2d, 20d),
@@ -198,7 +198,7 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             -1);
     result.show();
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
-            .containsExactly("StoreA.idA", "StoreA.id", "priceA", "priceB");
+            .containsExactly(this.storeA + ".idA", this.storeA + ".id", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
             List.of("0", "0", 4d, 10d),
             List.of("1", "1", 2d, 20d),
