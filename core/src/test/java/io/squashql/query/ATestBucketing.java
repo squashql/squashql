@@ -55,9 +55,9 @@ public abstract class ATestBucketing extends ABaseTestQuery {
   }
 
   static VirtualTableDto sensitivities = new VirtualTableDto("sensitivities", List.of("bucket", "min", "max"), List.of(
-          List.of("unsensistive", 0d, 50d),
-          List.of("sensistive", 50d, 80d),
-          List.of("hypersensistive", 80d, 101d)
+          List.of("unsensitive", 0d, 50d),
+          List.of("sensitive", 50d, 80d),
+          List.of("hypersensitive", 80d, 101d)
   ));
 
   @ParameterizedTest
@@ -83,12 +83,12 @@ public abstract class ATestBucketing extends ABaseTestQuery {
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(shop.name(), bucket.name(), "sales");
     Assertions.assertThat(result).containsExactly(
-            List.of("0", "hypersensistive", 240d),
-            List.of("0", "sensistive", 150d),
-            List.of("0", "unsensistive", 60d),
-            List.of("1", "hypersensistive", 240d),
-            List.of("1", "sensistive", 150d),
-            List.of("1", "unsensistive", 60d));
+            List.of("0", "hypersensitive", 240d),
+            List.of("0", "sensitive", 150d),
+            List.of("0", "unsensitive", 60d),
+            List.of("1", "hypersensitive", 240d),
+            List.of("1", "sensitive", 150d),
+            List.of("1", "unsensitive", 60d));
 
     query = Query
             .from(this.storeName)
@@ -103,13 +103,13 @@ public abstract class ATestBucketing extends ABaseTestQuery {
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, GRAND_TOTAL, 900d),
             List.of("0", TOTAL, 450d),
-            List.of("0", "hypersensistive", 240d),
-            List.of("0", "sensistive", 150d),
-            List.of("0", "unsensistive", 60d),
+            List.of("0", "hypersensitive", 240d),
+            List.of("0", "sensitive", 150d),
+            List.of("0", "unsensitive", 60d),
             List.of("1", TOTAL, 450d),
-            List.of("1", "hypersensistive", 240d),
-            List.of("1", "sensistive", 150d),
-            List.of("1", "unsensistive", 60d));
+            List.of("1", "hypersensitive", 240d),
+            List.of("1", "sensitive", 150d),
+            List.of("1", "unsensitive", 60d));
   }
 
   @Test
@@ -136,11 +136,11 @@ public abstract class ATestBucketing extends ABaseTestQuery {
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(shop, bucket, "sales");
     Assertions.assertThat(result).containsExactly(
-            List.of("0", "hypersensistive", 240d),
-            List.of("0", "sensistive", 150d),
-            List.of("0", "unsensistive", 60d),
-            List.of("1", "hypersensistive", 240d),
-            List.of("1", "sensistive", 150d),
-            List.of("1", "unsensistive", 60d));
+            List.of("0", "hypersensitive", 240d),
+            List.of("0", "sensitive", 150d),
+            List.of("0", "unsensitive", 60d),
+            List.of("1", "hypersensitive", 240d),
+            List.of("1", "sensitive", 150d),
+            List.of("1", "unsensitive", 60d));
   }
 }
