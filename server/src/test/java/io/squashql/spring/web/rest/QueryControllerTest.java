@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.*;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
@@ -301,5 +301,32 @@ public class QueryControllerTest {
             .andExpect(status().isInternalServerError())
             .andExpect(result -> Assertions.assertThat(result.getResolvedException()).isInstanceOf(LimitExceedException.class))
             .andExpect(result -> Assertions.assertThat(result.getResponse().getContentAsString()).contains("query limit exceeded"));
+  }
+
+  @Test
+  void testExperimentalQueryJoin() throws Exception {
+    Field ean = new TableField("our_prices", "ean");
+    Field competitorEan = new TableField("their_prices", "competitor_ean");
+    var query1 = Query
+            .from("our_prices")
+            .select(List.of(ean), List.of(sum("price_sum", "price")))
+            .build();
+    var query2 = Query
+            .from("their_prices")
+            .select(List.of(competitorEan), List.of(sum("competitor_sum", "competitor_price")))
+            .build();
+
+    QueryJoinDto queryJoinDto = new QueryJoinDto(query1, query2, JoinType.FULL, criterion(ean, competitorEan, ConditionType.EQ), Map.of(ean, new SimpleOrderDto(OrderKeywordDto.ASC)), -1);
+    this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_JOIN_EXPERIMENTAL)
+                    .content(JacksonUtil.serialize(queryJoinDto))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(result -> {
+              String contentAsString = result.getResponse().getContentAsString();
+              QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
+              Assertions.assertThat(queryResult.table.rows).containsExactlyInAnyOrder(
+                      List.of("ITMella 250g", 102d, 29d),
+                      List.of("Nutella 250g", 102d, 40d));
+              Assertions.assertThat(queryResult.table.columns).containsExactly("our_prices.ean", "price_sum", "competitor_sum");
+            });
   }
 }

@@ -30,6 +30,7 @@ public class QueryController {
   public static final String MAPPING_QUERY_STRINGIFY = "/query-stringify";
   public static final String MAPPING_QUERY_MERGE = "/query-merge";
   public static final String MAPPING_QUERY_MERGE_STRINGIFY = "/query-merge-stringify";
+  public static final String MAPPING_QUERY_JOIN_EXPERIMENTAL = "/experimental/query-join";
   public static final String MAPPING_QUERY_PIVOT = "/query-pivot";
   public static final String MAPPING_QUERY_PIVOT_STRINGIFY = "/query-pivot-stringify";
   public static final String MAPPING_QUERY_MERGE_PIVOT = "/query-merge-pivot";
@@ -95,18 +96,8 @@ public class QueryController {
             queryMergeDto.second,
             queryMergeDto.joinType,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get());
-    List<String> fields = table.headers().stream().map(Header::name).collect(Collectors.toList());
-    SimpleTableDto simpleTable = SimpleTableDto.builder()
-            .rows(ImmutableList.copyOf(table.iterator()))
-            .columns(fields)
-            .build();
-    QueryResultDto result = QueryResultDto.builder()
-            .table(simpleTable)
-            .metadata(TableUtils.buildTableMetadata(table))
-            .build();
-    return ResponseEntity.ok(result);
+    return ResponseEntity.ok(createQueryResultDto(table));
   }
-
 
   @PostMapping(MAPPING_QUERY_MERGE_PIVOT)
   public ResponseEntity<PivotTableQueryResultDto> executeQueryMergePivot(@RequestBody PivotTableQueryMergeDto pivotTableQueryMergeDto) {
@@ -118,16 +109,33 @@ public class QueryController {
             pivotTableQueryMergeDto.query.joinType,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get()
     );
-    List<String> fields = pt.table.headers().stream().map(Header::name).collect(Collectors.toList());
+    QueryResultDto result = createQueryResultDto(pt.table);
+    return ResponseEntity.ok(new PivotTableQueryResultDto(result, pt.rows, pt.columns, pt.values));
+  }
+
+  @PostMapping(MAPPING_QUERY_JOIN_EXPERIMENTAL)
+  public ResponseEntity<QueryResultDto> executeQueryJoin(@RequestBody QueryJoinDto queryJoinDto) {
+    Table table = this.queryExecutor.executeExperimentalQueryMerge(
+            queryJoinDto.first,
+            queryJoinDto.second,
+            queryJoinDto.joinType,
+            queryJoinDto.joinCondition,
+            queryJoinDto.orders,
+            queryJoinDto.limit);
+    return ResponseEntity.ok(createQueryResultDto(table));
+  }
+
+  private static QueryResultDto createQueryResultDto(Table table) {
+    List<String> fields = table.headers().stream().map(Header::name).collect(Collectors.toList());
     SimpleTableDto simpleTable = SimpleTableDto.builder()
-            .rows(ImmutableList.copyOf(pt.table.iterator()))
+            .rows(ImmutableList.copyOf(table.iterator()))
             .columns(fields)
             .build();
     QueryResultDto result = QueryResultDto.builder()
             .table(simpleTable)
-            .metadata(TableUtils.buildTableMetadata(pt.table))
+            .metadata(TableUtils.buildTableMetadata(table))
             .build();
-    return ResponseEntity.ok(new PivotTableQueryResultDto(result, pt.rows, pt.columns, pt.values));
+    return result;
   }
 
   @PostMapping(MAPPING_QUERY_STRINGIFY)

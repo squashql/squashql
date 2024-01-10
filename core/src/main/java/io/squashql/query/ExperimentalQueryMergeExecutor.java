@@ -61,7 +61,7 @@ public class ExperimentalQueryMergeExecutor {
                        CriteriaDto joinCondition,
                        Map<Field, OrderDto> orders,
                        int limit) {
-    int queryLimit = limit < 0 ? LIMIT_DEFAULT_VALUE : limit;
+    int queryLimit = limit <= 0 ? LIMIT_DEFAULT_VALUE : limit;
 
     Holder left = new Holder("__cteL__", first);
     Holder right = new Holder("__cteR__", second);
@@ -139,7 +139,7 @@ public class ExperimentalQueryMergeExecutor {
   }
 
   private static void addOrderBy(Map<Field, OrderDto> orders, StringBuilder sb, Holder left, Holder right) {
-    if (!orders.isEmpty()) {
+    if (orders != null && !orders.isEmpty()) {
       sb.append(" order by ");
       List<String> orderList = new ArrayList<>();
       for (Map.Entry<Field, OrderDto> e : orders.entrySet()) {
