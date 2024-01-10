@@ -1,7 +1,5 @@
 package io.squashql.remote;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
 import com.github.dockerjava.api.command.LogContainerCmd;
 import io.squashql.SparkDatastore;
 import io.squashql.query.AggregatedMeasure;
@@ -17,7 +15,6 @@ import org.apache.spark.sql.SparkSession;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.slf4j.LoggerFactory;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.ContainerLaunchException;
 import org.testcontainers.containers.GenericContainer;
@@ -47,10 +44,10 @@ import static org.testcontainers.containers.output.OutputFrame.OutputType.STDOUT
 @Disabled(value = "issue with this test. Investigate later why it suddenly never ends")
 public class TestQueryRemote {
 
-  static {
-    Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-    root.setLevel(Level.INFO);
-  }
+//  static {
+//    Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+//    root.setLevel(Level.INFO);
+//  }
 
   public Network network = Network.newNetwork();
 
