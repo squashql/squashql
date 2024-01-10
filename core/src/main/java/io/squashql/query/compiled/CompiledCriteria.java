@@ -46,7 +46,7 @@ public record CompiledCriteria(ConditionDto condition, ConditionType conditionTy
   }
 
   public static String toSql(TypedField field, ConditionDto dto, QueryRewriter queryRewriter) {
-    String expression = field.sqlExpression(queryRewriter);
+    String expression = field.sqlExpression(queryRewriter); // FIXME should be queryRewriter.where(field) because some db supports using the alias, others not.
     if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
       Function<Object, String> sqlMapper = field instanceof TableTypedField ? SQLTranslator.getQuoteFn(field, queryRewriter) : String::valueOf; // FIXME dirty workaround
       return switch (dto.type()) {

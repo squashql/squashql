@@ -17,11 +17,11 @@ public record TableTypedField(String store, String name, Class<?> type, String a
   }
 
   @Override
-  public String sqlExpression(QueryRewriter queryRewriter) {
+  public String sqlExpression(QueryRewriter qr) {
     if (CountMeasure.FIELD_NAME.equals(this.name)) {
       return CountMeasure.FIELD_NAME;
     } else {
-      return queryRewriter.getFieldFullName(this);
+      return qr.getFieldFullName(this);
     }
   }
 

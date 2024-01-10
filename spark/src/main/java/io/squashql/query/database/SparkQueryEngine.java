@@ -45,7 +45,8 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
   protected Table retrieveAggregates(DatabaseQuery query, String sql) {
     Dataset<Row> ds = this.datastore.spark.sql(sql);
     Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
-            query,
+            query.select,
+            query.measures,
             Arrays.stream(ds.schema().fields()).toList(),
             (column, name) -> datatypeToClass(column.dataType()),
             ds.toLocalIterator(),

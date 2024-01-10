@@ -30,7 +30,8 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
       List<Class<?>> columnTypes = getColumnTypes(tableResult.getMetaData());
       ResultSetReader reader = createResultSetReader();
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
-              query,
+              query.select,
+              query.measures,
               columnTypes,
               (columnType, name) -> columnType,
               new ResultSetIterator(columnTypes, tableResult, reader),

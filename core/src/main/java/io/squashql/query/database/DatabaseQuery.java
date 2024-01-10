@@ -33,5 +33,4 @@ public class DatabaseQuery {
     this.measures.add(m);
     return this;
   }
-
 }

@@ -144,9 +144,9 @@ public class TableUtils {
     queryDto.columnSets.values()
             .forEach(cs -> finalFields.addAll(cs.getNewColumns()
                     .stream()
-                    .map(queryResolver::getTypedField)
+                    .map(queryResolver::getOrResolveTypedField)
                     .toList()));
-    finalFields.addAll(queryDto.columns.stream().map(queryResolver::getTypedField).toList());
+    finalFields.addAll(queryDto.columns.stream().map(queryResolver::getOrResolveTypedField).toList());
 
     // ... and then get their string representation.
     List<String> finalColumns = finalFields.stream().map(SqlUtils::squashqlExpression).toList();

@@ -330,11 +330,20 @@ public class QueryExecutor {
     return QueryMergeExecutor.executeQueryMerge(this, first, second, joinType, user);
   }
 
+  public Table executeExperimentalQueryMerge(QueryDto first,
+                                             QueryDto second,
+                                             JoinType joinType,
+                                             CriteriaDto joinCondition,
+                                             Map<Field, OrderDto> orders,
+                                             int limit) {
+    return new ExperimentalQueryMergeExecutor(this.queryEngine)
+            .execute(first, second, joinType, joinCondition, orders, limit);
+  }
+
   /**
    * Generates grouping measures based on the provided query scope.
    *
    * @param queryScope The query scope containing rollup columns and grouping sets.
-   *
    * @return A map of compiled measures, where the key is the squashql expression of the fields used in the rollup and
    * the value is the compiled measure.
    */

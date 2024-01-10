@@ -1,5 +1,5 @@
 export {
-  Query, Table, JoinType, QueryMerge,
+  Query, Table, JoinType, QueryMerge, QueryJoin,
 } from './query'
 
 export {

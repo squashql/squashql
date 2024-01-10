@@ -1,5 +1,5 @@
 import axios, {AxiosInstance} from "axios"
-import {Query, QueryMerge} from "./query"
+import {Query, QueryJoin, QueryMerge} from "./query"
 import {CreateAxiosDefaults} from "axios/index"
 import {PivotConfig, PivotTableQuery, PivotTableQueryMerge} from "./pivotTableQuery"
 import {Measure} from "./measure"
@@ -58,6 +58,11 @@ export class Querier {
         throw new Error("Unexpected query type " + query)
     }
     return promise.then(r => r.data)
+  }
+
+  async executeQueryJoin(query: QueryJoin): Promise<QueryResult> {
+    return this.axiosInstance.post("/experimental/query-join", query)
+            .then(r => r.data)
   }
 }
 

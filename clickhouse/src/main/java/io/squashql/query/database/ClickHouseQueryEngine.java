@@ -57,7 +57,8 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
                  .execute()
                  .get()) {
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
-              query,
+              query.select,
+              query.measures,
               response.getColumns(),
               (column, name) -> ClickHouseUtil.clickHouseTypeToClass(column),
               response.records().iterator(),

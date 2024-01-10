@@ -382,6 +382,18 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     Assertions.assertThat(table).containsExactly(List.of("cookie"), List.of("starbuck's coffee"));
   }
 
+  @Test
+  void testConditionAliasedField() {
+    Field scenario = tableField(SCENARIO_FIELD_NAME).as("scenario_aliased");
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(criterion(scenario, eq("s1")))
+            .select(List.of(scenario), List.of(CountMeasure.INSTANCE))
+            .build();
+    Table table = this.executor.executeQuery(query);
+    Assertions.assertThat(table).containsExactly(List.of("s1", 3L));
+  }
+
   /**
    * Without measure, we can use it to do a discovery.
    */
