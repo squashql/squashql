@@ -49,7 +49,8 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
       Schema schema = tableResult.getSchema();
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
-              query,
+              query.select,
+              query.measures,
               schema.getFields(),
               (column, name) -> BigQueryUtil.bigQueryTypeToClass(column),
               tableResult.iterateAll().iterator(),

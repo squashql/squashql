@@ -1,14 +1,17 @@
 package io.squashql.query.database;
 
 import io.squashql.query.Header;
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.store.Datastore;
 import io.squashql.store.Store;
 import io.squashql.table.Table;
+import io.squashql.type.TypedField;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -51,21 +54,22 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   protected abstract Table retrieveAggregates(DatabaseQuery query, String sql);
 
-  public <Column, Record> Pair<List<Header>, List<List<Object>>> transformToColumnFormat(
-          DatabaseQuery query,
+  public static <Column, Record> Pair<List<Header>, List<List<Object>>> transformToColumnFormat(
+          Collection<TypedField> typedFields,
+          Collection<CompiledMeasure> measures,
           List<Column> columns,
           BiFunction<Column, String, Class<?>> columnTypeProvider,
           Iterator<Record> recordIterator,
           BiFunction<Integer, Record, Object> recordToFieldValue) {
     List<Header> headers = new ArrayList<>();
-    List<String> fieldNames = new ArrayList<>(query.select.stream().map(SqlUtils::squashqlExpression).toList());
-    query.measures.forEach(m -> fieldNames.add(m.alias()));
+    List<String> fieldNames = new ArrayList<>(typedFields.stream().map(SqlUtils::squashqlExpression).toList());
+    measures.forEach(m -> fieldNames.add(m.alias()));
     List<List<Object>> values = new ArrayList<>(columns.size());
     for (int i = 0; i < columns.size(); i++) {
       headers.add(new Header(
               fieldNames.get(i),
               columnTypeProvider.apply(columns.get(i), fieldNames.get(i)),
-              i >= query.select.size()));
+              i >= typedFields.size()));
       values.add(new ArrayList<>());
     }
     recordIterator.forEachRemaining(r -> {

@@ -82,12 +82,12 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             orders,
             -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
-            .containsExactly("category", "idA", "idB", "priceA", "priceB");
+            .containsExactly("StoreA.category", "StoreA.idA", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
-            List.of("A", "0", "0", 1d, 10d),
-            List.of("A", "1", "1", 2d, 20d),
-            List.of("B", "0", "0", 3d, 10d),
-            Arrays.asList("B", "3", null, 4d, getDoubleNullJoinValue()));
+            List.of("A", "0", 1d, 10d),
+            List.of("A", "1", 2d, 20d),
+            List.of("B", "0", 3d, 10d),
+            Arrays.asList("B", "3", 4d, getDoubleNullJoinValue()));
   }
 
   @Test
@@ -109,11 +109,11 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             Map.of(this.idA, asc),
             -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
-            .containsExactly("idA", "idB", "priceA", "priceB");
+            .containsExactly("StoreA.idA", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
-            List.of("0", "0", 4d, 10d),
-            List.of("1", "1", 2d, 20d),
-            Arrays.asList("3", null, 4d, getDoubleNullJoinValue()));
+            List.of("0", 4d, 10d),
+            List.of("1", 2d, 20d),
+            Arrays.asList("3", 4d, getDoubleNullJoinValue()));
   }
 
   @Test
@@ -134,9 +134,8 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             criterion(this.idStoreB, this.idStoreA, ConditionType.EQ),
             Map.of(this.idStoreA, asc),
             -1);
-    result.show();
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
-            .containsExactly("id", "priceA", "priceB");
+            .containsExactly("StoreA.id", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
             List.of("0", 4d, 10d),
             List.of("1", 2d, 20d),
@@ -167,12 +166,38 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             Map.of(idStoreBAliased, asc),
             -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
-            .containsExactly("id", "id_aliased", "priceA", "priceB");
-    // FIXME spark put null first
+            .containsExactly("StoreA.id", "priceA", "priceB");
+    Assertions.assertThat(result).containsExactly(
+            List.of("0", 4d, 10d),
+            List.of("1", 2d, 20d),
+            Arrays.asList("3", 4d, getDoubleNullJoinValue()));
+  }
+
+  @Test
+  void testLeftJoinWithMultipleConditions() {
+    QueryDto queryL = Query
+            .from(this.storeA)
+            .select(List.of(this.idA, this.idStoreA), List.of(this.priceASum))
+            .build();
+
+    QueryDto queryR = Query
+            .from(this.storeB)
+            .select(List.of(this.idB, this.idStoreB), List.of(this.priceBSum))
+            .build();
+
+    SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
+    Table result = this.executor.executeExperimentalQueryMerge(
+            queryL, queryR, JoinType.LEFT,
+            Functions.all(criterion(this.idB, this.idA, ConditionType.EQ), criterion(this.idStoreB, this.idStoreA, ConditionType.EQ)),
+            Map.of(this.idA, asc),
+            -1);
+    result.show();
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
+            .containsExactly("StoreA.idA", "StoreA.id", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
             List.of("0", "0", 4d, 10d),
             List.of("1", "1", 2d, 20d),
-            Arrays.asList("3", null, 4d, getDoubleNullJoinValue()));
+            Arrays.asList("3", "3", 4d, getDoubleNullJoinValue()));
   }
 
   /**

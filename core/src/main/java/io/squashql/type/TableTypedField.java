@@ -21,7 +21,7 @@ public record TableTypedField(String store, String name, Class<?> type, String a
     if (CountMeasure.FIELD_NAME.equals(this.name)) {
       return CountMeasure.FIELD_NAME;
     } else {
-      return this.alias != null ? qr.escapeAlias(this.alias) : qr.getFieldFullName(this);
+      return qr.getFieldFullName(this);
     }
   }
 
