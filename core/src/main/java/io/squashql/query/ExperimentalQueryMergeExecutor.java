@@ -11,6 +11,7 @@ import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.*;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
+import io.squashql.type.AliasedTypedField;
 import io.squashql.type.TypedField;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
@@ -71,7 +72,9 @@ public class ExperimentalQueryMergeExecutor {
     sb.append(right.cteTableName).append(" as (").append(right.sql).append(") ");
 
     QueryDto firstCopy = JacksonUtil.deserialize(JacksonUtil.serialize(first), QueryDto.class);
-    firstCopy.table.join(new TableDto(second.table.name), joinType, joinCondition);
+    CriteriaDto joinConditionCopy = JacksonUtil.deserialize(JacksonUtil.serialize(joinCondition), CriteriaDto.class);
+    CriteriaDto rewrittenJoinCondition = rewriteJoinCondition(joinConditionCopy);
+    firstCopy.table.join(new TableDto(second.table.name), joinType, rewrittenJoinCondition);
     QueryResolver queryResolver = new QueryResolver(firstCopy, new HashMap<>(this.queryEngine.datastore().storesByName()));
     CompiledTable joinTable = queryResolver.getScope().table();
 
@@ -116,6 +119,26 @@ public class ExperimentalQueryMergeExecutor {
             result.getTwo());
   }
 
+  private static CriteriaDto rewriteJoinCondition(CriteriaDto joinCondition) {
+    List<CriteriaDto> children = joinCondition.children;
+    if (children != null && !children.isEmpty()) {
+      for (CriteriaDto child : children) {
+        rewriteJoinCondition(child);
+      }
+    } else {
+      String alias = joinCondition.field.alias();
+      if (alias != null) {
+        joinCondition.field = new AliasedField(alias); // replace with aliased field
+      }
+
+      String otherAlias = joinCondition.fieldOther.alias();
+      if (otherAlias != null) {
+        joinCondition.fieldOther = new AliasedField(otherAlias); // replace with aliased field
+      }
+    }
+    return joinCondition;
+  }
+
   private static void addOrderBy(Map<Field, OrderDto> orders, StringBuilder sb, Holder left, Holder right) {
     if (!orders.isEmpty()) {
       sb.append(" order by ");
@@ -152,18 +175,18 @@ public class ExperimentalQueryMergeExecutor {
     CompiledTable.CompiledJoin join = joinTable.joins().get(0);
     List<TypedField> leftColumns = new ArrayList<>();
     List<TypedField> rightColumns = new ArrayList<>();
-    List<Measure> measures = new ArrayList<>();
     for (Field field : left.query.columns) {
       TypedField typedField = left.queryResolver.resolveField(field);
-      leftColumns.add(typedField);
+      leftColumns.add(typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField); // we have to use the aliased field in the select
     }
 
     Set<TypedField> joinFields = collectJoinFields(join.joinCriteria());
     for (Field field : right.query.columns) {
       TypedField typedField = right.queryResolver.resolveField(field);
+      TypedField tf = typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField;
       // Do not add if it is in the join. We keep only the other field from the left query.
-      if (!joinFields.contains(typedField)) {
-        rightColumns.add(typedField);
+      if (!joinFields.contains(tf)) {
+        rightColumns.add(tf); // we have to use the aliased field in the select
       }
     }
     return Tuples.twin(leftColumns, rightColumns);

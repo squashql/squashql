@@ -20,8 +20,8 @@ import static io.squashql.query.Functions.criterion;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
 
-  String storeA = "StoreA";// + getClass().getSimpleName().toLowerCase();
-  String storeB = "StoreB";// + getClass().getSimpleName().toLowerCase();
+  String storeA = "StoreA" + getClass().getSimpleName().toLowerCase();
+  String storeB = "StoreB" + getClass().getSimpleName().toLowerCase();
   Field category = new TableField(this.storeA, "category");
   Field idA = new TableField(this.storeA, "idA");
   Field idStoreA = new TableField(this.storeA, "id");
@@ -148,9 +148,10 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
    */
   @Test
   void testLeftJoinWithCommonColumnsAndSameNamesWithAliases() {
+    Field categoryAliased = this.category.as("category_aliased");
     QueryDto queryL = Query
             .from(this.storeA)
-            .select(List.of(this.idStoreA), List.of(this.priceASum))
+            .select(List.of(categoryAliased, this.idStoreA), List.of(this.priceASum))
             .build();
 
     Field idStoreBAliased = this.idStoreB.as("id_aliased");
@@ -160,17 +161,21 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             .build();
 
     SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
+    Map<Field, OrderDto> orders = new LinkedHashMap<>(); // order matters
+    orders.put(categoryAliased, asc);
+    orders.put(idStoreBAliased, asc);
     Table result = this.executor.executeExperimentalQueryMerge(
             queryL, queryR, JoinType.LEFT,
-            criterion(idStoreBAliased, this.idStoreA, ConditionType.EQ),
-            Map.of(idStoreBAliased, asc),
+            criterion(idStoreBAliased, this.idStoreA, ConditionType.EQ), // use the aliased in the join condition
+            orders,  // use the aliased in the order by condition
             -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
-            .containsExactly("StoreA.id", "priceA", "priceB");
+            .containsExactly("category_aliased", "StoreA.id", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
-            List.of("0", 4d, 10d),
-            List.of("1", 2d, 20d),
-            Arrays.asList("3", 4d, getDoubleNullJoinValue()));
+            List.of("A", "0", 1d, 10d),
+            List.of("A", "1", 2d, 20d),
+            List.of("B", "0", 3d, 10d),
+            Arrays.asList("B", "3", 4d, getDoubleNullJoinValue()));
   }
 
   @Test
