@@ -8,6 +8,7 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
+import io.squashql.util.ListUtils;
 import io.squashql.util.MultipleColumnsSorter;
 import org.assertj.core.api.Assertions;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -16,12 +17,13 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Function;
 
 import static io.squashql.query.agg.AggregationFunction.ANY_VALUE;
 import static io.squashql.query.agg.AggregationFunction.SUM;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
-import static io.squashql.util.ListUtils.reorder;
+import static io.squashql.util.ListUtils.*;
 import static java.util.Comparator.naturalOrder;
 
 @TestClass
@@ -34,7 +36,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
   static final String competitorZ = "Z";
   static final int day = 5;
   static final int month = 4;
-  final String storeName = "mystore";// + getClass().getSimpleName().toLowerCase();
+  final String storeName = "mystore" + System.currentTimeMillis();// + getClass().getSimpleName().toLowerCase();
   final Field competitor = new TableField(this.storeName, "competitor");
   final Field ean = new TableField(this.storeName, "ean");
   final Field price = new TableField(this.storeName, "price");
@@ -68,7 +70,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
 
   @Test
   void testWithoutTotals() {
-    Measure vector = new VectorTupleAggMeasure("vector", List.of(Tuples.pair(this.price, SUM), Tuples.pair(this.date, ANY_VALUE)), this.date);
+    Measure vector = new VectorTupleAggMeasure("vector", List.of(Tuples.pair(this.price, SUM), Tuples.pair(this.date, ANY_VALUE)), this.date, null);
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(this.competitor, this.ean), List.of(vector))
@@ -81,7 +83,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
 
   @Test
   void testTotals() {
-    Measure vector = new VectorTupleAggMeasure("vector", List.of(Tuples.pair(this.price, SUM), Tuples.pair(this.date, ANY_VALUE)), this.date);
+    Measure vector = new VectorTupleAggMeasure("vector", List.of(Tuples.pair(this.price, SUM), Tuples.pair(this.date, ANY_VALUE)), this.date, null);
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(this.competitor, this.ean), List.of(vector))
@@ -128,6 +130,39 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
             List.of(competitorZ, TOTAL, List.of(2.0, 4.0, 6.0, 8.0, 4.0, 8.0, 12.0, 16.0, 6.0, 12.0, 18.0, 24.0), expectedLocalDates),
             List.of(competitorZ, productA, List.of(1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 6.0, 8.0, 3.0, 6.0, 9.0, 12.0), expectedLocalDates),
             List.of(competitorZ, productB, List.of(1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 6.0, 8.0, 3.0, 6.0, 9.0, 12.0), expectedLocalDates));
+  }
+
+  @Test
+  void name() {
+    List<Double> l = new ArrayList<>(List.of(6.0, 12.0, 18.0, 24.0, 12.0, 24.0, 36.0, 48.0, 18.0, 36.0, 54.0, 72.0));
+    Collections.sort(l);
+    int i = percentileIndex(l.size(), 0.75);
+    System.out.println(i);
+    System.out.println(l.get(i));
+  }
+
+  @Test
+  void testTransformerWithoutTotals() {
+    Function<List<Object>, Object> transformer = (list) -> {
+      Lists.DoubleList prices = (Lists.DoubleList) list.get(0);
+      List<LocalDate> dates = (List<LocalDate>) list.get(1);
+      int index = ListUtils.percentileIndex(prices.size(), 0.75);
+
+      int[] sort = MultipleColumnsSorter.sort(List.of(prices), List.of(naturalOrder()), new int[0]);
+      List<Double> orderedPrices = reorder_(prices, sort);
+      List<LocalDate> orderedDates = reorder_(dates, sort);
+      return List.of(orderedPrices.get(index), orderedDates.get(index));
+    };
+    Measure vector = new VectorTupleAggMeasure("price_and_date", List.of(Tuples.pair(this.price, SUM), Tuples.pair(this.date, ANY_VALUE)), this.date, transformer);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(this.competitor, this.ean), List.of(vector))
+            .rollup(List.of(this.competitor, this.ean))
+            .build();
+    Table result = this.executor.executeQuery(query);
+    Assertions.assertThat(result.headers().stream().map(Header::name))
+            .containsExactly(this.competitor.name(), this.ean.name(), vector.alias());
+    result.show();
   }
 
   private void assertVectorTuples(Table result, Measure vector) {

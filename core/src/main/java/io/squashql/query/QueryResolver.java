@@ -262,7 +262,7 @@ public class QueryResolver {
         compiledMeasure = compileComparisonMeasure((ComparisonMeasureReferencePosition) m, topMeasure);
       } else if (m instanceof VectorAggMeasure v) {
         compiledMeasure = compileVectorAggMeasure(v);
-      }else if (m instanceof VectorTupleAggMeasure v) {
+      } else if (m instanceof VectorTupleAggMeasure v) {
         compiledMeasure = compileVectorTupleAggMeasure(v);
       } else {
         throw new IllegalArgumentException("Unknown type of measure " + m.getClass().getSimpleName());
@@ -335,9 +335,11 @@ public class QueryResolver {
   }
 
   private CompiledMeasure compileVectorTupleAggMeasure(VectorTupleAggMeasure m) {
-    return new CompiledVectorTupleAggMeasure(m.alias,
+    return new CompiledVectorTupleAggMeasure(
+            m.alias,
             m.fieldToAggregateAndAggFunc.stream().map(p -> Tuples.pair(resolveField(p.getOne()), p.getTwo())).toList(),
-            resolveField(m.vectorAxis));
+            resolveField(m.vectorAxis),
+            m.transformer);
   }
 
   private Map<ColumnSetKey, CompiledColumnSet> compiledColumnSets(Map<ColumnSetKey, ColumnSet> columnSets) {

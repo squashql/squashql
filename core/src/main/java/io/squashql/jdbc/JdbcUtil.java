@@ -9,6 +9,7 @@ import io.squashql.type.TableTypedField;
 
 import java.math.BigInteger;
 import java.sql.*;
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -191,6 +192,11 @@ public final class JdbcUtil {
       return stream
               .map(e -> (Double) e)
               .collect(Collectors.toCollection(Lists.DoubleList::new));
+    } else if (listClass == Lists.LocalDateList.class) {
+      return stream
+              // Clickhouse does not return a java.sql.Date but a LocalDate directly but not Spark
+              .map(e -> e instanceof LocalDate ? (LocalDate) e : ((Date) e).toLocalDate())
+              .collect(Collectors.toCollection(Lists.LocalDateList::new));
     } else {
       return stream.toList();
     }
@@ -201,6 +207,8 @@ public final class JdbcUtil {
       return Lists.DoubleList.class;
     } else if (elementClass.equals(long.class) || elementClass.equals(int.class)) {
       return Lists.LongList.class;
+    } else if (elementClass.equals(LocalDate.class)) {
+      return Lists.LocalDateList.class;
     } else {
       return List.class; // we convert Array to List
     }

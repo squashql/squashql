@@ -166,7 +166,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
         for (int field = 0; field < measure.fieldToAggregateAndAggFunc().size(); field++) {
           v.add(columnValues.get(field).get(position));
         }
-        vectorValues.set(index, v);
+        vectorValues.set(index, measure.transformer() != null ? measure.transformer().apply(v) : v);
       }
     });
 

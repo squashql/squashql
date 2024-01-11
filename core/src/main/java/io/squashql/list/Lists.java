@@ -1,5 +1,6 @@
 package io.squashql.list;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 public final class Lists {
@@ -23,6 +24,16 @@ public final class Lists {
     }
 
     public LongList(int initialCapacity) {
+      super(initialCapacity);
+    }
+  }
+
+  public static class LocalDateList extends ArrayList<LocalDate> {
+
+    public LocalDateList() {
+    }
+
+    public LocalDateList(int initialCapacity) {
       super(initialCapacity);
     }
   }
