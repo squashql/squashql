@@ -136,7 +136,6 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
             .rollup(List.of(ean, competitor))
             .build();
     Table result = this.executor.executeQuery(query);
-    result.show();
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(ean.name(), competitor.name(), vector.alias());
     List<List<Object>> points = List.of(
