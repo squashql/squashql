@@ -35,7 +35,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
   static final LocalDate d1 = LocalDate.of(2023, 1, 1);
   static final LocalDate d2 = LocalDate.of(2023, 1, 2);
   static final LocalDate d3 = LocalDate.of(2023, 1, 3);
-  String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  final String storeName = "store" + getClass().getSimpleName().toLowerCase();
   GlobalCache queryCache;
 
   @Override

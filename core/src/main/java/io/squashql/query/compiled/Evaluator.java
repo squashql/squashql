@@ -139,4 +139,37 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     writeToTable.transferAggregates(readTable, measure);
     return null;
   }
+
+  @Override
+  public Void visit(CompiledVectorTupleAggMeasure measure) {
+    // Retrieve the query scope use for the prefetch, the logic should be the same to retrieve the result.
+    QueryExecutor.QueryScope prefetchQueryScope = new PrefetchVisitor(this.executionContext.columns(), this.executionContext.bucketColumns(), this.executionContext.queryScope())
+            .visit(measure)
+            .keySet()
+            .iterator()
+            .next();
+    Table readTable = this.executionContext.tableByScope().get(prefetchQueryScope);
+    Table writeToTable = this.executionContext.getWriteToTable();
+
+    List<List<Object>> l = new ArrayList<>();
+    for (int i = 0; i < measure.fieldToAggregateAndAggFunc().size(); i++) {
+      List<Object> columnValues = readTable.getColumnValues(measure.alias() + "_" + i);
+      l.add(columnValues);
+    }
+    long count = readTable.count();
+    List<Object> vectorValues = new ArrayList<>();
+    for (int i = 0; i < count; i++) {
+      List<Object> v = new ArrayList<>(measure.fieldToAggregateAndAggFunc().size());
+      for (int j = 0;j < measure.fieldToAggregateAndAggFunc().size();j++) {
+        v.add(l.get(j).get(i));
+      }
+      vectorValues.add(v);
+    }
+    writeToTable.addAggregates(
+            new Header(measure.alias(), Object.class, true),
+            measure,
+            vectorValues
+    );
+    return null;
+  }
 }
