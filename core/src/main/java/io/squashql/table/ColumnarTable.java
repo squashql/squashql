@@ -51,7 +51,6 @@ public class ColumnarTable implements Table {
     this.values.add(values);
   }
 
-
   /**
    * BE CAREFUL !! This method assumes this table and the table from passed in arguments have the same headers
    * {@code Header#isMeasure == false} in the same order.

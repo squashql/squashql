@@ -157,14 +157,22 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
       l.add(columnValues);
     }
     long count = readTable.count();
-    List<Object> vectorValues = new ArrayList<>();
+    List<Object> vectorValues = new ArrayList<>((int) count);
     for (int i = 0; i < count; i++) {
-      List<Object> v = new ArrayList<>(measure.fieldToAggregateAndAggFunc().size());
-      for (int j = 0;j < measure.fieldToAggregateAndAggFunc().size();j++) {
-        v.add(l.get(j).get(i));
-      }
-      vectorValues.add(v);
+      vectorValues.add(null);
     }
+
+    writeToTable.pointDictionary().forEach((point, index) -> {
+      int position = readTable.pointDictionary().getPosition(point);
+      if (position >= 0) {
+        List<Object> v = new ArrayList<>(measure.fieldToAggregateAndAggFunc().size());
+        for (int j = 0; j < measure.fieldToAggregateAndAggFunc().size(); j++) {
+          v.add(l.get(j).get(position));
+        }
+        vectorValues.set(index, v);
+      }
+    });
+
     writeToTable.addAggregates(
             new Header(measure.alias(), Object.class, true),
             measure,

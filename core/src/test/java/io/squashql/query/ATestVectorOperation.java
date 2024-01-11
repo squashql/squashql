@@ -16,12 +16,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-import static io.squashql.query.agg.AggregationFunction.*;
+import static io.squashql.query.agg.AggregationFunction.ANY_VALUE;
+import static io.squashql.query.agg.AggregationFunction.SUM;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import static io.squashql.query.database.QueryEngine.TOTAL;
 import static java.util.Comparator.naturalOrder;
 
 @TestClass
@@ -32,6 +32,8 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
   static final String competitorX = "X";
   static final String competitorY = "Y";
   static final String competitorZ = "Z";
+  static final int day = 5;
+  static final int month = 4;
   final String storeName = "mystore";// + getClass().getSimpleName().toLowerCase();
   final Field competitor = new TableField(this.storeName, "competitor");
   final Field ean = new TableField(this.storeName, "ean");
@@ -49,17 +51,12 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
 
   @Override
   protected void loadData() {
-    int day = 5;
-//    int day = 29;
-    int month = 4;
-//    int month = 3;
     // Simulate historical prices
     List<Object[]> l = new ArrayList<>();
     for (String product : List.of(productA, productB)) {
       for (String competitor : List.of(competitorX, competitorY, competitorZ)) {
         for (int d = 1; d < day; d++) {
           for (int m = 1; m < month; m++) {
-//            System.out.println(d * m);
             l.add(new Object[]{product, LocalDate.of(2023, m, d), competitor, (double) d * m});
           }
         }
@@ -77,7 +74,6 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
             .select(List.of(this.competitor, this.ean), List.of(vector))
             .build();
     Table result = this.executor.executeQuery(query);
-    result.show();
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(this.competitor.name(), this.ean.name(), vector.alias());
     assertVectorTuples(result, vector);
@@ -101,20 +97,37 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
       Assertions.assertThat(tuple.size()).isEqualTo(2);
       Lists.DoubleList prices = (Lists.DoubleList) tuple.get(0);
       List<LocalDate> dates = (List<LocalDate>) tuple.get(1);
-//      for (int i = 0; i < dates.size(); i++) {
-//        Assertions.assertThat(prices.get(i).intValue()).isEqualTo(dates.get(i).getMonth().getValue() * dates.get(i).getDayOfMonth());
-//      }
       int[] sort = MultipleColumnsSorter.sort(List.of(dates), List.of(naturalOrder()), new int[0]);
       orderedPricesList.add(TableUtils.reorder(prices, sort));
       orderedDatesList.add(TableUtils.reorder(dates, sort));
     }
+
     // Create a new table with "fake" measures to be able to check the result
-    ColumnarTable lists = new ColumnarTable(
+    ColumnarTable orderedTable = new ColumnarTable(
             List.of(result.getHeader(this.competitor.name()), result.getHeader(this.ean.name()), new Header("orderedPrices", Lists.DoubleList.class, true), new Header("orderedDates", List.class, true)),
             Set.of(new CompiledExpressionMeasure("orderedPrices", ""), new CompiledExpressionMeasure("orderedDates", "")),
             List.of(result.getColumnValues(this.competitor.name()), result.getColumnValues(this.ean.name()), orderedPricesList, orderedDatesList));
-    result.show();
-    lists.show();
+
+    Assertions.assertThat(orderedTable.headers().stream().map(Header::name))
+            .containsExactly(this.competitor.name(), this.ean.name(), "orderedPrices", "orderedDates");
+    List<LocalDate> expectedLocalDates = new ArrayList<>();
+    for (int d = 1; d < day; d++) {
+      for (int m = 1; m < month; m++) {
+        expectedLocalDates.add(LocalDate.of(2023, m, d));
+      }
+    }
+    Collections.sort(expectedLocalDates);
+    Assertions.assertThat(orderedTable).containsExactly(
+            List.of(GRAND_TOTAL, GRAND_TOTAL, List.of(6.0, 12.0, 18.0, 24.0, 12.0, 24.0, 36.0, 48.0, 18.0, 36.0, 54.0, 72.0), expectedLocalDates),
+            List.of(competitorX, TOTAL, List.of(2.0, 4.0, 6.0, 8.0, 4.0, 8.0, 12.0, 16.0, 6.0, 12.0, 18.0, 24.0), expectedLocalDates),
+            List.of(competitorX, productA, List.of(1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 6.0, 8.0, 3.0, 6.0, 9.0, 12.0), expectedLocalDates),
+            List.of(competitorX, productB, List.of(1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 6.0, 8.0, 3.0, 6.0, 9.0, 12.0), expectedLocalDates),
+            List.of(competitorY, TOTAL, List.of(2.0, 4.0, 6.0, 8.0, 4.0, 8.0, 12.0, 16.0, 6.0, 12.0, 18.0, 24.0), expectedLocalDates),
+            List.of(competitorY, productA, List.of(1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 6.0, 8.0, 3.0, 6.0, 9.0, 12.0), expectedLocalDates),
+            List.of(competitorY, productB, List.of(1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 6.0, 8.0, 3.0, 6.0, 9.0, 12.0), expectedLocalDates),
+            List.of(competitorZ, TOTAL, List.of(2.0, 4.0, 6.0, 8.0, 4.0, 8.0, 12.0, 16.0, 6.0, 12.0, 18.0, 24.0), expectedLocalDates),
+            List.of(competitorZ, productA, List.of(1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 6.0, 8.0, 3.0, 6.0, 9.0, 12.0), expectedLocalDates),
+            List.of(competitorZ, productB, List.of(1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 6.0, 8.0, 3.0, 6.0, 9.0, 12.0), expectedLocalDates));
   }
 
   private void assertVectorTuples(Table result, Measure vector) {
