@@ -163,7 +163,7 @@ public class QueryExecutor {
       DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
       Set<CompiledMeasure> measures = measuresByQueryScope.get(scope);
       QueryCache.QueryCacheKey queryCacheKey = new QueryCache.QueryCacheKey(scope, user);
-      QueryCache queryCache = EmptyQueryCache.INSTANCE;
+      QueryCache queryCache = getQueryCache((QueryCacheParameter) query.parameters.getOrDefault(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.USE)), user);
 
       Set<CompiledMeasure> cached = new HashSet<>();
       Set<CompiledMeasure> notCached = new HashSet<>();

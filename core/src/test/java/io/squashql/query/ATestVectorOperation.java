@@ -7,7 +7,6 @@ import io.squashql.query.compiled.CompiledExpressionMeasure;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
-import io.squashql.table.TableUtils;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.MultipleColumnsSorter;
 import org.assertj.core.api.Assertions;
@@ -22,6 +21,7 @@ import static io.squashql.query.agg.AggregationFunction.ANY_VALUE;
 import static io.squashql.query.agg.AggregationFunction.SUM;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
+import static io.squashql.util.ListUtils.reorder;
 import static java.util.Comparator.naturalOrder;
 
 @TestClass
@@ -98,8 +98,8 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
       Lists.DoubleList prices = (Lists.DoubleList) tuple.get(0);
       List<LocalDate> dates = (List<LocalDate>) tuple.get(1);
       int[] sort = MultipleColumnsSorter.sort(List.of(dates), List.of(naturalOrder()), new int[0]);
-      orderedPricesList.add(TableUtils.reorder(prices, sort));
-      orderedDatesList.add(TableUtils.reorder(dates, sort));
+      orderedPricesList.add(reorder(prices, sort));
+      orderedDatesList.add(reorder(dates, sort));
     }
 
     // Create a new table with "fake" measures to be able to check the result

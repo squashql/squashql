@@ -20,6 +20,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static io.squashql.util.ListUtils.reorder;
+
 public class TableUtils {
 
   public static String toString(Iterable<List<Object>> rows,
@@ -232,14 +234,6 @@ public class TableUtils {
     }
 
     return new ColumnarTable(headers, table.measures, values);
-  }
-
-  public static List<Object> reorder(List<?> list, int[] order) {
-    List<Object> ordered = new ArrayList<>(list);
-    for (int i = 0; i < list.size(); i++) {
-      ordered.set(i, list.get(order[i]));
-    }
-    return ordered;
   }
 
   /**

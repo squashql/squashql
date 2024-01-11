@@ -6,6 +6,7 @@ import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import io.squashql.query.comp.BinaryOperations;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;
+import io.squashql.util.ListUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -151,23 +152,19 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     Table readTable = this.executionContext.tableByScope().get(prefetchQueryScope);
     Table writeToTable = this.executionContext.getWriteToTable();
 
-    List<List<Object>> l = new ArrayList<>();
+    List<List<Object>> columnValues = new ArrayList<>();
     for (int i = 0; i < measure.fieldToAggregateAndAggFunc().size(); i++) {
-      List<Object> columnValues = readTable.getColumnValues(measure.alias() + "_" + i);
-      l.add(columnValues);
-    }
-    long count = readTable.count();
-    List<Object> vectorValues = new ArrayList<>((int) count);
-    for (int i = 0; i < count; i++) {
-      vectorValues.add(null);
+      // We use the same logic for the measure names as the PrefetchVisitor to retrieve the values
+      columnValues.add(readTable.getColumnValues(measure.alias() + "_" + i));
     }
 
+    List<Object> vectorValues = ListUtils.createListWithNulls((int) readTable.count());
     writeToTable.pointDictionary().forEach((point, index) -> {
       int position = readTable.pointDictionary().getPosition(point);
       if (position >= 0) {
         List<Object> v = new ArrayList<>(measure.fieldToAggregateAndAggFunc().size());
-        for (int j = 0; j < measure.fieldToAggregateAndAggFunc().size(); j++) {
-          v.add(l.get(j).get(position));
+        for (int field = 0; field < measure.fieldToAggregateAndAggFunc().size(); field++) {
+          v.add(columnValues.get(field).get(position));
         }
         vectorValues.set(index, v);
       }

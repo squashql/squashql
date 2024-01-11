@@ -1,5 +1,7 @@
 package io.squashql.table;
 
+import io.squashql.util.ListUtils;
+
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -20,11 +22,7 @@ public final class PivotTableUtils {
     int size = columnHeaderValues.size() * values.size();
     // Prepare the lists
     columns.forEach(__ -> {
-      List<Object> r = new ArrayList<>(size);
-      for (int i = 0; i < size; i++) {
-        r.add(null);
-      }
-      headerColumns.add(r);
+      headerColumns.add(ListUtils.createListWithNulls(size));
     });
 
     // Fill the lists
