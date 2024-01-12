@@ -20,7 +20,7 @@ public record CompiledTable(String name, List<CompiledJoin> joins) {
   }
 
   public record CompiledJoin(CompiledTable table, JoinType type, CompiledCriteria joinCriteria) {
-    String sqlExpression(QueryRewriter queryRewriter, Function<String, String> tableNameFunc) {
+    public String sqlExpression(QueryRewriter queryRewriter, Function<String, String> tableNameFunc) {
       StringBuilder statement = new StringBuilder();
       statement.append(" ")
               .append(this.type.name().toLowerCase())
