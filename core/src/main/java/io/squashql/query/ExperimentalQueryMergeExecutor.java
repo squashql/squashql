@@ -20,6 +20,7 @@ import org.eclipse.collections.impl.list.mutable.MutableListFactoryImpl;
 import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
+import java.util.function.Function;
 
 import static io.squashql.query.QueryExecutor.LIMIT_DEFAULT_VALUE;
 import static io.squashql.query.database.AQueryEngine.transformToColumnFormat;
@@ -89,9 +90,13 @@ public class ExperimentalQueryMergeExecutor {
             .append(String.join(", ", selectSt))
             .append(" from ");
 
-    String tableExpression = joinTable.sqlExpression(this.queryEngine.queryRewriter(null));
+    CompiledTable.CompiledJoin compiledJoin = new CompiledTable.CompiledJoin(new CompiledTable(right.cteTableName, List.of()), joinType, joinTable.joins().get(0).joinCriteria());
+    // Build the sql expression to use Function.identity() and simply return the name of the cte and not using queryRewriter.tableName()
+    // which causes problem when using BQ for instance (datasetid.__cteR__). That's why we are not using joinTable.sqlExpression directly
+    String tableExpression = compiledJoin.sqlExpression(left.queryRewriter, Function.identity());
     tableExpression = replaceTableNameByCteNameIfNotNull(left, tableExpression);
     tableExpression = replaceTableNameByCteNameIfNotNull(right, tableExpression);
+    sb.append(left.cteTableName);
     sb.append(tableExpression);
 
     addOrderBy(orders, sb, left, right);
