@@ -40,14 +40,15 @@ public class QueryExecutor {
   }
 
   private QueryCache getQueryCache(QueryCacheParameter queryCacheParameter, SquashQLUser user) {
-    return switch (queryCacheParameter.action) {
-      case USE -> this.queryCache;
-      case NOT_USE -> EmptyQueryCache.INSTANCE;
-      case INVALIDATE -> {
-        this.queryCache.clear(user);
-        yield this.queryCache;
-      }
-    };
+//    return switch (queryCacheParameter.action) {
+//      case USE -> this.queryCache;
+//      case NOT_USE -> EmptyQueryCache.INSTANCE;
+//      case INVALIDATE -> {
+//        this.queryCache.clear(user);
+//        yield this.queryCache;
+//      }
+//    };
+    return EmptyQueryCache.INSTANCE;
   }
 
   public PivotTable executePivotQuery(PivotTableQueryDto pivotTableQueryDto) {
