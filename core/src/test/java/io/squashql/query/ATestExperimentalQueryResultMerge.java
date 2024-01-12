@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.sum;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -203,13 +204,51 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             Functions.all(criterion(this.idB, this.idA, ConditionType.EQ), criterion(this.idStoreB, this.idStoreA, ConditionType.EQ)),
             Map.of(this.idA, asc),
             -1);
-    result.show();
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly(this.storeA + ".idA", this.storeA + ".id", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
             List.of("0", "0", 4d, 10d),
             List.of("1", "1", 2d, 20d),
             Arrays.asList("3", "3", 4d, getDoubleNullJoinValue()));
+  }
+
+  @Test
+  void testWithSubQueries() {
+    Field idAliasedA = this.idStoreA.as("id_aliased_a");
+    QueryDto queryL = Query
+            .from(this.storeA)
+            .select(List.of(this.idA, idAliasedA), List.of(this.priceASum))
+            .build();
+
+    // This query does not make sense, but it is to make sure there is no issue when using sub-query.
+    queryL = Query.from(queryL)
+            .select(List.of(new AliasedField(idAliasedA.alias())), List.of(sum("priceA2", new AliasedField(this.priceASum.alias()))))
+            .build();
+
+    Field idAliasedB = this.idStoreB.as("id_aliased_b");
+    QueryDto queryR = Query
+            .from(this.storeB)
+            .select(List.of(this.idB, idAliasedB), List.of(this.priceBSum))
+            .build();
+
+    queryR = Query
+            .from(queryR)
+            .select(List.of(new AliasedField(idAliasedB.alias())), List.of(sum("priceB2", new AliasedField(this.priceBSum.alias()))))
+            .build();
+
+    // In case of sub-queries, aliases must be used everywhere.
+    SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
+    Table result = this.executor.executeExperimentalQueryMerge(
+            queryL, queryR, JoinType.LEFT,
+            criterion(idAliasedB, idAliasedA, ConditionType.EQ),
+            Map.of(idAliasedA, asc),
+            -1);
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
+            .containsExactly(idAliasedA.alias(), "priceA2", "priceB2");
+    Assertions.assertThat(result).containsExactly(
+            List.of("0", 4d, 10d),
+            List.of("1", 2d, 20d),
+            Arrays.asList("3", 4d, getDoubleNullJoinValue()));
   }
 
   /**
