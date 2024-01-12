@@ -144,6 +144,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
       List<LocalDate> orderedDates = reorder_(dates, sort);
       return List.of(orderedPrices.get(index), orderedDates.get(index));
     };
+
     Measure vector = new VectorTupleAggMeasure("price_and_date", List.of(Tuples.pair(this.price, SUM), Tuples.pair(this.date, ANY_VALUE)), this.date, transformer);
     QueryDto query = Query
             .from(this.storeName)
@@ -153,7 +154,18 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(this.competitor.name(), this.ean.name(), vector.alias());
-    result.show();
+    LocalDate d = LocalDate.of(2023, 02, 04);
+    Assertions.assertThat(result).containsExactly(
+            List.of(GRAND_TOTAL, GRAND_TOTAL, List.of(48d, d)),
+            List.of(competitorX, TOTAL,  List.of(16d, d)),
+            List.of(competitorX, productA,  List.of(8d, d)),
+            List.of(competitorX, productB,  List.of(8d, d)),
+            List.of(competitorY, TOTAL,  List.of(16d, d)),
+            List.of(competitorY, productA,  List.of(8d, d)),
+            List.of(competitorY, productB,  List.of(8d, d)),
+            List.of(competitorZ, TOTAL,  List.of(16d, d)),
+            List.of(competitorZ, productA,  List.of(8d, d)),
+            List.of(competitorZ, productB,  List.of(8d, d)));
   }
 
   private void assertVectorTuples(Table result, Measure vector) {
@@ -168,4 +180,6 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
       }
     }
   }
+
+  // Var: confidence level 95%, index = length(1-0.95)
 }
