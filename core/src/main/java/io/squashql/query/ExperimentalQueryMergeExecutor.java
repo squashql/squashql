@@ -35,7 +35,7 @@ public class ExperimentalQueryMergeExecutor {
     final QueryResolver queryResolver;
     final DatabaseQuery dbQuery;
     final QueryRewriter queryRewriter;
-    final String originalTableName;
+    final String originalTableName; // Can be null if using a sub-query
     final String cteTableName;
     final String sql;
 
@@ -46,7 +46,7 @@ public class ExperimentalQueryMergeExecutor {
       this.dbQuery = this.queryResolver.toDatabaseQuery(this.queryResolver.getScope(), -1);
       this.queryResolver.getMeasures().values().forEach(this.dbQuery::withMeasure);
       this.queryRewriter = ExperimentalQueryMergeExecutor.this.queryEngine.queryRewriter(this.dbQuery);
-      this.originalTableName = this.queryRewriter.tableName(query.table.name);
+      this.originalTableName = query.table != null ? this.queryRewriter.tableName(query.table.name) : null;
       this.sql = SQLTranslator.translate(this.dbQuery, this.queryRewriter);
     }
   }
@@ -70,27 +70,44 @@ public class ExperimentalQueryMergeExecutor {
     sb.append(left.cteTableName).append(" as (").append(left.sql).append("), ");
     sb.append(right.cteTableName).append(" as (").append(right.sql).append(") ");
 
-    QueryDto firstCopy = JacksonUtil.deserialize(JacksonUtil.serialize(first), QueryDto.class);
+    QueryDto firstCopy = new QueryDto().table(left.cteTableName);
+    QueryDto secondCopy = new QueryDto().table(right.cteTableName);
     CriteriaDto joinConditionCopy = JacksonUtil.deserialize(JacksonUtil.serialize(joinCondition), CriteriaDto.class);
     CriteriaDto rewrittenJoinCondition = rewriteJoinCondition(joinConditionCopy);
-    firstCopy.table.join(new TableDto(second.table.name), joinType, rewrittenJoinCondition);
+    firstCopy.table.join(new TableDto(secondCopy.table.name), joinType, rewrittenJoinCondition);
     QueryResolver queryResolver = new QueryResolver(firstCopy, new HashMap<>(this.queryEngine.datastore().storesByName()));
     CompiledTable joinTable = queryResolver.getScope().table();
 
     Twin<List<TypedField>> selectColumns = getSelectElements(joinTable, left, right);
-    List<String> select = new ArrayList<>();
-    selectColumns.getOne().forEach(typedField -> select.add(left.queryRewriter.select(typedField).replace(left.originalTableName, left.cteTableName)));
-    selectColumns.getTwo().forEach(typedField -> select.add(right.queryRewriter.select(typedField).replace(right.originalTableName, right.cteTableName)));
-    left.query.measures.forEach(m -> select.add(left.queryRewriter.escapeAlias(m.alias())));
-    right.query.measures.forEach(m -> select.add(right.queryRewriter.escapeAlias(m.alias())));
+    List<String> selectSt = new ArrayList<>();
+    selectColumns.getOne().forEach(typedField -> {
+      String select = left.queryRewriter.select(typedField);
+      if (left.originalTableName != null) {
+        select = select.replace(left.originalTableName, left.cteTableName);
+      }
+      selectSt.add(select);
+    });
+    selectColumns.getTwo().forEach(typedField -> {
+      String select = right.queryRewriter.select(typedField);
+      if (right.originalTableName != null) {
+        select = select.replace(right.originalTableName, right.cteTableName);
+      }
+      selectSt.add(select);
+    });
+    left.query.measures.forEach(m -> selectSt.add(left.queryRewriter.escapeAlias(m.alias())));
+    right.query.measures.forEach(m -> selectSt.add(right.queryRewriter.escapeAlias(m.alias())));
     sb
             .append("select ")
-            .append(String.join(", ", select))
+            .append(String.join(", ", selectSt))
             .append(" from ");
 
     String tableExpression = joinTable.sqlExpression(this.queryEngine.queryRewriter(null));
-    tableExpression = tableExpression.replace(left.originalTableName, left.cteTableName);
-    tableExpression = tableExpression.replace(right.originalTableName, right.cteTableName);
+    if (left.originalTableName != null) {
+      tableExpression = tableExpression.replace(left.originalTableName, left.cteTableName);
+    }
+    if (right.originalTableName != null) {
+      tableExpression = tableExpression.replace(right.originalTableName, right.cteTableName);
+    }
     sb.append(tableExpression);
 
     addOrderBy(orders, sb, left, right);
@@ -153,7 +170,10 @@ public class ExperimentalQueryMergeExecutor {
         if (typedField == null) {
           throw new RuntimeException("Cannot resolve " + e.getKey());
         }
-        String orderByField = holder.queryRewriter.aliasOrFullExpression(typedField).replace(holder.originalTableName, holder.cteTableName);
+        String orderByField = holder.queryRewriter.aliasOrFullExpression(typedField);
+        if (holder.originalTableName != null) {
+          orderByField = orderByField.replace(holder.originalTableName, holder.cteTableName);
+        }
         orderList.add(orderByField + " nulls last");
       }
       sb.append(String.join(", ", orderList));
