@@ -76,6 +76,8 @@ public class ColumnarTable implements Table {
         int position = ct.pointDictionary.get().getPosition(point);
         if (position >= 0) {
           values.set(index, aggregateValues.get(position));
+        } else {
+          System.out.println();
         }
       });
       Header header = from.getHeader(measure);

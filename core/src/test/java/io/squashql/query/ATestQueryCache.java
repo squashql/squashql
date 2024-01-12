@@ -24,7 +24,6 @@ import java.util.function.Supplier;
 import static io.squashql.query.Functions.*;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
 @TestClass(ignore = {TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE, TestClass.Type.CLICKHOUSE, TestClass.Type.SPARK})
@@ -33,6 +32,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
 
   protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
   protected String competitorStoreName = "competitor" + getClass().getSimpleName().toLowerCase();
+  protected String other = "other" + getClass().getSimpleName().toLowerCase();
   protected GlobalCache queryCache;
 
   @Override
@@ -53,25 +53,33 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
 
     return Map.of(
             this.storeName, List.of(ean, category, price, qty),
-            this.competitorStoreName, List.of(comp_ean, comp_name, comp_price)
+            this.competitorStoreName, List.of(comp_ean, comp_name, comp_price),
+            this.other, List.of(ean, category, price)
     );
   }
 
   @Override
   protected void loadData() {
-    this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
+    this.tm.load(this.storeName, List.of(
             new Object[]{"bottle", "drink", 2d, 10},
             new Object[]{"cookie", "food", 3d, 20},
             new Object[]{"shirt", "cloth", 10d, 3}
     ));
 
-    this.tm.load(MAIN_SCENARIO_NAME, this.competitorStoreName, List.of(
+    this.tm.load(this.competitorStoreName, List.of(
             new Object[]{"bottle", "A", 2d},
             new Object[]{"bottle", "B", 1d},
             new Object[]{"cookie", "A", 3d},
             new Object[]{"cookie", "B", 2d},
             new Object[]{"shirt", "A", 10d},
             new Object[]{"shirt", "B", 9d}
+    ));
+
+    this.tm.load(this.other, List.of(
+            new Object[]{"bottle", "drink", 2d},
+            new Object[]{"cookie", "food", 3d},
+            new Object[]{"shirt", "cloth", 10d},
+            new Object[]{"other", null, 5d} // use null
     ));
   }
 
@@ -506,6 +514,21 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     // Same as the first query
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category), List.of(ean)));
     assertCacheStats(8, base);
+  }
+
+  @Test
+  void testWithNullValueAndRollup() {
+    List<Field> columns = tableFields(List.of("category", "ean"));
+    QueryDto q = Query
+            .from(this.other)
+            .select(columns, List.of(sum("ca", "price")))
+            .rollup(columns)
+            .build();
+
+    Table result = this.executor.executeQuery(q);
+    result.show();
+
+    this.executor.executeQuery(q).show();
   }
 
   private void assertCacheStats(int hitCount, int missCount) {

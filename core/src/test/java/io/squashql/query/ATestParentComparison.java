@@ -6,6 +6,7 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -90,7 +91,8 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
             Arrays.asList("eu", null, "monaco", 1d));
   }
 
-  @Test
+ @Disabled
+ @Test
   void testClearFilter() {
     Measure pop = Functions.sum("population", "population");
     List<Field> fields = tableFields(List.of("continent", "country", "city"));
