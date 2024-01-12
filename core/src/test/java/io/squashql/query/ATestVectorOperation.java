@@ -168,6 +168,18 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
             List.of(competitorZ, productB,  List.of(8d, d)));
   }
 
+  @Test
+  void testParentComparison() {
+    Measure vector = new VectorTupleAggMeasure("vector", List.of(Tuples.pair(this.price, SUM), Tuples.pair(this.date, ANY_VALUE)), this.date, null);
+    // TODO 
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(this.competitor, this.ean), List.of(vector))
+            .rollup(List.of(this.competitor, this.ean))
+            .build();
+    Table result = this.executor.executeQuery(query);
+  }
+
   private void assertVectorTuples(Table result, Measure vector) {
     List<Object> columnValues = result.getColumnValues(vector.alias());
     for (Object columnValue : columnValues) {
@@ -180,6 +192,4 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
       }
     }
   }
-
-  // Var: confidence level 95%, index = length(1-0.95)
 }

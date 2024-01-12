@@ -75,15 +75,13 @@ public abstract class ATestVectorAggregationDataType extends ABaseTestQuery {
     Field date = new TableField(this.storeName, "date");
 
     Measure vector = new VectorAggMeasure("vector", valueType, SUM, date);
-    Measure vectorInt = new VectorAggMeasure("vectorInt", valueInt, SUM, date);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ean), List.of(vector, vectorInt))
+            .select(List.of(ean), List.of(vector))
             .build();
     Table result = this.executor.executeQuery(query);
-    result.show();
-//    List<List<Object>> points = List.of(List.of(productA), List.of(productB));
-//    assertVectorValues((ColumnarTable) result, vector, points, (List<List<Number>>) getExpectedVectorValues(type), type);
+    List<List<Object>> points = List.of(List.of(productA), List.of(productB));
+    assertVectorValues((ColumnarTable) result, vector, points, (List<List<Number>>) getExpectedVectorValues(type), type);
   }
 
   private void assertVectorValues(ColumnarTable result, Measure vectorMeasure, List<List<Object>> points, List<List<Number>> expectedVectors, String type) {
