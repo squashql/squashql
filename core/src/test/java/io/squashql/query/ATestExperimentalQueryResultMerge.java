@@ -21,8 +21,8 @@ import static io.squashql.query.Functions.sum;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
 
-  String storeA = "StoreA";// + getClass().getSimpleName().toLowerCase();
-  String storeB = "StoreB";// + getClass().getSimpleName().toLowerCase();
+  String storeA = "StoreA" + getClass().getSimpleName().toLowerCase();
+  String storeB = "StoreB" + getClass().getSimpleName().toLowerCase();
   Field category = new TableField(this.storeA, "category");
   Field idA = new TableField(this.storeA, "idA");
   Field idStoreA = new TableField(this.storeA, "id");
