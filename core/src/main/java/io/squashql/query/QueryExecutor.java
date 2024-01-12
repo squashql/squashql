@@ -168,9 +168,11 @@ public class QueryExecutor {
 
       Set<CompiledMeasure> cached = new HashSet<>();
       Set<CompiledMeasure> notCached = new HashSet<>();
+      Collection<CompiledMeasure> groupingMeasures = generateGroupingMeasures(scope).values();
       for (CompiledMeasure measure : measures) {
         if (MeasureUtils.isPrimitive(measure)) {
-          if (queryCache.contains(measure, queryCacheKey)) {
+          // Make sure to never cache the grouping measures. It could cause issue in some cases.
+          if (queryCache.contains(measure, queryCacheKey) && !groupingMeasures.contains(measure)) {
             cached.add(measure);
           } else {
             notCached.add(measure);
@@ -179,24 +181,22 @@ public class QueryExecutor {
       }
 
       Table result;
-      boolean fromCache = false;
       if (!notCached.isEmpty()) {
         notCached.add(COMPILED_COUNT);
         notCached.forEach(prefetchQuery::withMeasure);
         result = this.queryEngine.execute(prefetchQuery);
+        result = TableUtils.replaceNullCellsByTotal(result, scope);
       } else {
         // Create an empty result that will be populated by the query cache
         result = queryCache.createRawResult(queryCacheKey);
-        fromCache = true;
       }
 
       queryCache.contributeToResult(result, cached, queryCacheKey);
-      result = TableUtils.replaceNullCellsByTotal(result, scope);
-      queryCache.contributeToCache(result, notCached, queryCacheKey);
+      Set<CompiledMeasure> measuresToCache = notCached.stream().filter(m -> !groupingMeasures.contains(m)).collect(Collectors.toSet());
+      queryCache.contributeToCache(result, measuresToCache, queryCacheKey);
 
       // The table in the cache contains null values for totals but in this map, we need to replace the nulls with totals
       tableByScope.put(scope, result);
-      System.out.println();
     }
 
     if (query.columnSets.containsKey(BUCKET)) {

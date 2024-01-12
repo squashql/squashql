@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -24,6 +25,8 @@ import java.util.function.Supplier;
 import static io.squashql.query.Functions.*;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import static io.squashql.query.database.QueryEngine.TOTAL;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
 @TestClass(ignore = {TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE, TestClass.Type.CLICKHOUSE, TestClass.Type.SPARK})
@@ -504,31 +507,60 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .build();
     int base = 0;
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category), List.of(ean)));
-    assertCacheStats(0, (base = base + 4));
+    assertCacheStats(0, (base = base + 2));
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category, ean), List.of()));
-    assertCacheStats(0, (base = base + 4));
+    assertCacheStats(0, (base = base + 2));
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(), List.of(category, ean)));
-    assertCacheStats(4, base); // same as the previous
+    assertCacheStats(2, base); // same as the previous
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(ean), List.of(category)));
-    assertCacheStats(4, (base = base + 4));
+    assertCacheStats(2, (base = base + 2));
     // Same as the first query
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category), List.of(ean)));
-    assertCacheStats(8, base);
+    assertCacheStats(4, base);
   }
 
   @Test
   void testWithNullValueAndRollup() {
     List<Field> columns = tableFields(List.of("category", "ean"));
-    QueryDto q = Query
+    QueryDto q1 = Query
+            .from(this.other)
+            .select(columns, List.of(CountMeasure.INSTANCE))
+            .rollup(columns)
+            .build();
+
+    // The first query will put in cache count for the given scope.
+    Table result = this.executor.executeQuery(q1);
+    Assertions.assertThat(result).containsExactly(
+            List.of(GRAND_TOTAL, GRAND_TOTAL, 4L),
+            List.of("cloth", TOTAL, 1L),
+            List.of("cloth", "shirt", 1L),
+            List.of("drink", TOTAL, 1L),
+            List.of("drink", "bottle", 1L),
+            List.of("food", TOTAL, 1L),
+            List.of("food", "cookie", 1L),
+            Arrays.asList(null, TOTAL, 1L),
+            Arrays.asList(null, "other", 1L));
+    assertCacheStats(0, 1);
+
+    // The second query has the same scope as the previous, but we do not want to use the cached values for grouping measures.
+    QueryDto q2 = Query
             .from(this.other)
             .select(columns, List.of(sum("ca", "price")))
             .rollup(columns)
             .build();
 
-    Table result = this.executor.executeQuery(q);
-    result.show();
-
-    this.executor.executeQuery(q).show();
+    Table table = this.executor.executeQuery(q2);
+    Assertions.assertThat(table).containsExactly(
+            List.of(GRAND_TOTAL, GRAND_TOTAL, 20d),
+            List.of("cloth", TOTAL, 10d),
+            List.of("cloth", "shirt", 10d),
+            List.of("drink", TOTAL, 2d),
+            List.of("drink", "bottle", 2d),
+            List.of("food", TOTAL, 3d),
+            List.of("food", "cookie", 3d),
+            Arrays.asList(null, TOTAL, 5d),
+            Arrays.asList(null, "other", 5d));
+    assertCacheStats(1, 2);
   }
 
   private void assertCacheStats(int hitCount, int missCount) {
