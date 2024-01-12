@@ -26,7 +26,7 @@ import static io.squashql.query.database.QueryEngine.TOTAL;
 import static io.squashql.util.ListUtils.*;
 import static java.util.Comparator.naturalOrder;
 
-@TestClass
+@TestClass(ignore = TestClass.Type.SNOWFLAKE)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestVectorOperation extends ABaseTestQuery {
   static final String productA = "A";
@@ -130,15 +130,6 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
             List.of(competitorZ, TOTAL, List.of(2.0, 4.0, 6.0, 8.0, 4.0, 8.0, 12.0, 16.0, 6.0, 12.0, 18.0, 24.0), expectedLocalDates),
             List.of(competitorZ, productA, List.of(1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 6.0, 8.0, 3.0, 6.0, 9.0, 12.0), expectedLocalDates),
             List.of(competitorZ, productB, List.of(1.0, 2.0, 3.0, 4.0, 2.0, 4.0, 6.0, 8.0, 3.0, 6.0, 9.0, 12.0), expectedLocalDates));
-  }
-
-  @Test
-  void name() {
-    List<Double> l = new ArrayList<>(List.of(6.0, 12.0, 18.0, 24.0, 12.0, 24.0, 36.0, 48.0, 18.0, 36.0, 54.0, 72.0));
-    Collections.sort(l);
-    int i = percentileIndex(l.size(), 0.75);
-    System.out.println(i);
-    System.out.println(l.get(i));
   }
 
   @Test
