@@ -70,30 +70,18 @@ public class ExperimentalQueryMergeExecutor {
     sb.append(left.cteTableName).append(" as (").append(left.sql).append("), ");
     sb.append(right.cteTableName).append(" as (").append(right.sql).append(") ");
 
-    QueryDto firstCopy = new QueryDto().table(left.cteTableName);
-    QueryDto secondCopy = new QueryDto().table(right.cteTableName);
+    QueryDto leftCteQuery = new QueryDto().table(left.cteTableName);
+    QueryDto rightCteQuery = new QueryDto().table(right.cteTableName);
     CriteriaDto joinConditionCopy = JacksonUtil.deserialize(JacksonUtil.serialize(joinCondition), CriteriaDto.class);
     CriteriaDto rewrittenJoinCondition = rewriteJoinCondition(joinConditionCopy);
-    firstCopy.table.join(new TableDto(secondCopy.table.name), joinType, rewrittenJoinCondition);
-    QueryResolver queryResolver = new QueryResolver(firstCopy, new HashMap<>(this.queryEngine.datastore().storesByName()));
+    leftCteQuery.table.join(new TableDto(rightCteQuery.table.name), joinType, rewrittenJoinCondition);
+    QueryResolver queryResolver = new QueryResolver(leftCteQuery, new HashMap<>(this.queryEngine.datastore().storesByName()));
     CompiledTable joinTable = queryResolver.getScope().table();
 
     Twin<List<TypedField>> selectColumns = getSelectElements(joinTable, left, right);
     List<String> selectSt = new ArrayList<>();
-    selectColumns.getOne().forEach(typedField -> {
-      String select = left.queryRewriter.select(typedField);
-      if (left.originalTableName != null) {
-        select = select.replace(left.originalTableName, left.cteTableName);
-      }
-      selectSt.add(select);
-    });
-    selectColumns.getTwo().forEach(typedField -> {
-      String select = right.queryRewriter.select(typedField);
-      if (right.originalTableName != null) {
-        select = select.replace(right.originalTableName, right.cteTableName);
-      }
-      selectSt.add(select);
-    });
+    selectColumns.getOne().forEach(typedField -> selectSt.add(replaceTableNameByCteNameIfNotNull(left, left.queryRewriter.select(typedField))));
+    selectColumns.getTwo().forEach(typedField -> selectSt.add(replaceTableNameByCteNameIfNotNull(right, right.queryRewriter.select(typedField))));
     left.query.measures.forEach(m -> selectSt.add(left.queryRewriter.escapeAlias(m.alias())));
     right.query.measures.forEach(m -> selectSt.add(right.queryRewriter.escapeAlias(m.alias())));
     sb
@@ -102,12 +90,8 @@ public class ExperimentalQueryMergeExecutor {
             .append(" from ");
 
     String tableExpression = joinTable.sqlExpression(this.queryEngine.queryRewriter(null));
-    if (left.originalTableName != null) {
-      tableExpression = tableExpression.replace(left.originalTableName, left.cteTableName);
-    }
-    if (right.originalTableName != null) {
-      tableExpression = tableExpression.replace(right.originalTableName, right.cteTableName);
-    }
+    tableExpression = replaceTableNameByCteNameIfNotNull(left, tableExpression);
+    tableExpression = replaceTableNameByCteNameIfNotNull(right, tableExpression);
     sb.append(tableExpression);
 
     addOrderBy(orders, sb, left, right);
@@ -171,9 +155,7 @@ public class ExperimentalQueryMergeExecutor {
           throw new RuntimeException("Cannot resolve " + e.getKey());
         }
         String orderByField = holder.queryRewriter.aliasOrFullExpression(typedField);
-        if (holder.originalTableName != null) {
-          orderByField = orderByField.replace(holder.originalTableName, holder.cteTableName);
-        }
+        orderByField = replaceTableNameByCteNameIfNotNull(holder, orderByField);
         orderList.add(orderByField + " nulls last");
       }
       sb.append(String.join(", ", orderList));
@@ -223,5 +205,12 @@ public class ExperimentalQueryMergeExecutor {
       collected.add(joinCriteria.fieldOther());
     }
     return collected;
+  }
+
+  private static String replaceTableNameByCteNameIfNotNull(Holder holder, String s) {
+    if (holder.originalTableName != null) {
+      s = s.replace(holder.originalTableName, holder.cteTableName);
+    }
+    return s;
   }
 }
