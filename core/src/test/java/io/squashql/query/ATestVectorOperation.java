@@ -1,7 +1,8 @@
 package io.squashql.query;
 
 import io.squashql.TestClass;
-import io.squashql.list.Lists;
+import io.squashql.list.Lists.DoubleList;
+import io.squashql.list.Lists.LocalDateList;
 import io.squashql.query.builder.Query;
 import io.squashql.query.compiled.CompiledExpressionMeasure;
 import io.squashql.query.dto.QueryDto;
@@ -16,14 +17,15 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static io.squashql.query.ComparisonMethod.DIVIDE;
 import static io.squashql.query.agg.AggregationFunction.ANY_VALUE;
 import static io.squashql.query.agg.AggregationFunction.SUM;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
 import static io.squashql.util.ListUtils.reorder;
+import static io.squashql.util.ListUtils.reorder_;
 import static java.util.Comparator.naturalOrder;
 
 @TestClass(ignore = TestClass.Type.SNOWFLAKE)
@@ -97,8 +99,8 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
     for (Object columnValue : columnValues) {
       List<Object> tuple = (List<Object>) columnValue;// expected size 2
       Assertions.assertThat(tuple.size()).isEqualTo(2);
-      Lists.DoubleList prices = (Lists.DoubleList) tuple.get(0);
-      List<LocalDate> dates = (List<LocalDate>) tuple.get(1);
+      DoubleList prices = (DoubleList) tuple.get(0);
+      LocalDateList dates = (LocalDateList) tuple.get(1);
       int[] sort = MultipleColumnsSorter.sort(List.of(dates), List.of(naturalOrder()), new int[0]);
       orderedPricesList.add(reorder(prices, sort));
       orderedDatesList.add(reorder(dates, sort));
@@ -106,7 +108,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
 
     // Create a new table with "fake" measures to be able to check the result
     ColumnarTable orderedTable = new ColumnarTable(
-            List.of(result.getHeader(this.competitor.name()), result.getHeader(this.ean.name()), new Header("orderedPrices", Lists.DoubleList.class, true), new Header("orderedDates", List.class, true)),
+            List.of(result.getHeader(this.competitor.name()), result.getHeader(this.ean.name()), new Header("orderedPrices", DoubleList.class, true), new Header("orderedDates", List.class, true)),
             Set.of(new CompiledExpressionMeasure("orderedPrices", ""), new CompiledExpressionMeasure("orderedDates", "")),
             List.of(result.getColumnValues(this.competitor.name()), result.getColumnValues(this.ean.name()), orderedPricesList, orderedDatesList));
 
@@ -137,7 +139,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
     // Dummy transformer. Find an index from the date array and use this index to pick a single price. It is to show
     // we can perform any operation with two vectors
     Function<List<Object>, Object> transformer = (list) -> {
-      Lists.DoubleList prices = (Lists.DoubleList) list.get(0);
+      DoubleList prices = (DoubleList) list.get(0);
       List<LocalDate> dates = (List<LocalDate>) list.get(1);
       int index = -1;
       for (int i = 0; i < dates.size(); i++) {
@@ -179,15 +181,38 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
   void testParentComparison() {
     Measure vector = new VectorTupleAggMeasure("vector", List.of(Tuples.pair(this.price, SUM), Tuples.pair(this.date, ANY_VALUE)), this.date, null);
     List<Field> fields = List.of(this.competitor, this.ean);
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, vector, fields);
+    BiFunction<Object, Object, Object> operator = (a, b) -> {
+      DoubleList currentValue = (DoubleList) ((List) a).get(0);
+      DoubleList parentValue = (DoubleList) ((List) b).get(0);
+      // We have to reorder both arrays and use their associated date array because they are not in the same order!
+      // Order by date to get a deterministic order
+      List<Double> currentValueOrdered = reorder_(currentValue, MultipleColumnsSorter.sort(List.of((LocalDateList) ((List) a).get(1)), List.of(naturalOrder()), new int[0]));
+      List<Double> parentValueOrdered = reorder_(parentValue, MultipleColumnsSorter.sort(List.of((LocalDateList) ((List) b).get(1)), List.of(naturalOrder()), new int[0]));
+      DoubleList ratio = new DoubleList(currentValue.size());
+      for (int i = 0; i < currentValue.size(); i++) {
+        ratio.add(currentValueOrdered.get(i) - parentValueOrdered.get(i));
+      }
+      return ratio;
+    };
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", operator, vector, fields);
 
     QueryDto query = Query
             .from(this.storeName)
-            .select(fields, List.of(vector, pOp))
+            .select(fields, List.of(pOp))
             .rollup(fields)
             .build();
     Table result = this.executor.executeQuery(query);
-    result.show();
+    Assertions.assertThat(result).containsExactly(
+            List.of(GRAND_TOTAL, GRAND_TOTAL, List.of(.0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0, .0)),
+            List.of(competitorX, TOTAL, List.of(-4., -8., -12., -16., -8., -16., -24., -32., -12., -24., -36., -48.)),
+            List.of(competitorX, productA, List.of(-1.0, -2.0, -3.0, -4.0, -2.0, -4.0, -6.0, -8.0, -3.0, -6.0, -9.0, -12.0)),
+            List.of(competitorX, productB, List.of(-1.0, -2.0, -3.0, -4.0, -2.0, -4.0, -6.0, -8.0, -3.0, -6.0, -9.0, -12.0)),
+            List.of(competitorY, TOTAL, List.of(-4., -8., -12., -16., -8., -16., -24., -32., -12., -24., -36., -48.)),
+            List.of(competitorY, productA, List.of(-1.0, -2.0, -3.0, -4.0, -2.0, -4.0, -6.0, -8.0, -3.0, -6.0, -9.0, -12.0)),
+            List.of(competitorY, productB, List.of(-1.0, -2.0, -3.0, -4.0, -2.0, -4.0, -6.0, -8.0, -3.0, -6.0, -9.0, -12.0)),
+            List.of(competitorZ, TOTAL, List.of(-4., -8., -12., -16., -8., -16., -24., -32., -12., -24., -36., -48.)),
+            List.of(competitorZ, productA, List.of(-1.0, -2.0, -3.0, -4.0, -2.0, -4.0, -6.0, -8.0, -3.0, -6.0, -9.0, -12.0)),
+            List.of(competitorZ, productB, List.of(-1.0, -2.0, -3.0, -4.0, -2.0, -4.0, -6.0, -8.0, -3.0, -6.0, -9.0, -12.0)));
   }
 
   private void assertVectorTuples(Table result, Measure vector) {
@@ -195,7 +220,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
     for (Object columnValue : columnValues) {
       List<Object> tuple = (List<Object>) columnValue;// expected size 2
       Assertions.assertThat(tuple.size()).isEqualTo(2);
-      Lists.DoubleList prices = (Lists.DoubleList) tuple.get(0);
+      DoubleList prices = (DoubleList) tuple.get(0);
       List<LocalDate> dates = (List<LocalDate>) tuple.get(1);
       for (int i = 0; i < dates.size(); i++) {
         Assertions.assertThat(prices.get(i).intValue()).isEqualTo(dates.get(i).getMonth().getValue() * dates.get(i).getDayOfMonth());

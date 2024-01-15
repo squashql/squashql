@@ -44,8 +44,9 @@ public abstract class AComparisonExecutor {
     List<Object> result = new ArrayList<>((int) writeToTable.count());
     List<Object> readAggregateValues = readFromTable.getAggregateValues(cm.measure());
     List<Object> writeAggregateValues = writeToTable.getAggregateValues(cm.measure());
-    BiFunction<Number, Number, Number> comparisonBiFunction = BinaryOperations.createComparisonBiFunction(
-            cm.comparisonMethod(), readFromTable.getHeader(cm.measure()).type());
+    BiFunction<Object, Object, Object> comparisonBiFunction = cm.comparisonMethod() != null
+            ? (a, b) -> BinaryOperations.createComparisonBiFunction(cm.comparisonMethod(), readFromTable.getHeader(cm.measure()).type()).apply((Number) a, (Number) b)
+            : cm.comparisonOperator();
     int[] rowIndex = new int[1];
     IntIntMap mapping = buildMapping(writeToTable, readFromTable); // columns might be in a different order
     writeToTable.forEach(row -> {
@@ -63,7 +64,7 @@ public abstract class AComparisonExecutor {
       if (success && readPosition != -1) {
         Object currentValue = writeAggregateValues.get(rowIndex[0]);
         Object referenceValue = readAggregateValues.get(readPosition);
-        Object diff = comparisonBiFunction.apply((Number) currentValue, (Number) referenceValue);
+        Object diff = comparisonBiFunction.apply(currentValue, referenceValue);
         result.add(diff);
       } else {
         result.add(null); // nothing to compare with

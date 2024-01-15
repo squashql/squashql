@@ -7,9 +7,11 @@ import io.squashql.type.TypedField;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 public record CompiledComparisonMeasure(String alias,
                                         ComparisonMethod comparisonMethod,
+                                        BiFunction<Object, Object, Object> comparisonOperator,
                                         CompiledMeasure measure,
                                         Map<TypedField, String> referencePosition,
                                         CompiledPeriod period,

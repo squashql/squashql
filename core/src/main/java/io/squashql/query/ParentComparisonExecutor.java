@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.query.compiled.CompiledComparisonMeasure;
 import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.type.TypedField;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
 
@@ -39,7 +40,7 @@ public class ParentComparisonExecutor extends AComparisonExecutor {
     public boolean test(Object[] row, Header[] headers) {
       for (TypedField ancestor : this.ancestors) {
         // Is it expressed ?
-        String name = ancestor.name();
+        String name = SqlUtils.squashqlExpression(ancestor);
         if (this.indexByColumn.containsKey(name)) {
           int index = this.indexByColumn.get(name);
           if (!SQLTranslator.TOTAL_CELL.equals(row[index])) {

@@ -4,6 +4,7 @@ import io.squashql.query.*;
 import io.squashql.query.QueryExecutor.ExecutionContext;
 import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import io.squashql.query.comp.BinaryOperations;
+import io.squashql.store.UnknownType;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;
 import io.squashql.util.ListUtils;
@@ -82,7 +83,8 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
 
   private static void executeComparator(CompiledComparisonMeasure cm, Table writeToTable, Table readFromTable, AComparisonExecutor executor) {
     List<Object> agg = executor.compare(cm, writeToTable, readFromTable);
-    Header header = new Header(cm.alias(), BinaryOperations.getComparisonOutputType(cm.comparisonMethod(), writeToTable.getHeader(cm.measure()).type()), true);
+    Class<?> outputType = cm.comparisonOperator() != null ? UnknownType.class : BinaryOperations.getComparisonOutputType(cm.comparisonMethod(), writeToTable.getHeader(cm.measure()).type());
+    Header header = new Header(cm.alias(), outputType, true);
     writeToTable.addAggregates(header, cm, agg);
   }
 

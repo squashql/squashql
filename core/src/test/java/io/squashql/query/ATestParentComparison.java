@@ -24,7 +24,11 @@ import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestParentComparison extends ABaseTestQuery {
 
-  protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  private String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  private TableField city = new TableField(this.storeName, "city");
+  private TableField country = new TableField(this.storeName, "country");
+  private TableField continent = new TableField(this.storeName, "continent");
+  private TableField population = new TableField(this.storeName, "population");
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
@@ -53,7 +57,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   @Test
   void testSimple() {
     Measure pop = Functions.sum("population", "population");
-    final List<Field> fields = tableFields(List.of("continent", "country", "city"));
+    final List<Field> fields = List.of(this.continent, this.country, this.city);
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, fields);
     QueryDto query = Query
             .from(this.storeName)
@@ -74,7 +78,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
 
     query = Query
             .from(this.storeName)
-            .select(tableFields(List.of("continent", "country", "city")), List.of(pOp))
+            .select(List.of(this.continent, this.country, this.city), List.of(pOp))
             .build(); // query only parent
 
     result = this.executor.executeQuery(query);
@@ -93,11 +97,11 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   @Test
   void testClearFilter() {
     Measure pop = Functions.sum("population", "population");
-    List<Field> fields = tableFields(List.of("continent", "country", "city"));
+    List<Field> fields = List.of(this.continent, this.country, this.city);
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, fields);
     QueryDto query = Query
             .from(this.storeName)
-            .where(criterion("city", in("montreal", "toronto")))
+            .where(criterion(this.city, in("montreal", "toronto")))
             .select(fields, List.of(pOp))
             .build(); // query only parent
 
@@ -108,8 +112,8 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
 
     query = Query
             .from(this.storeName)
-            .where(criterion("country", eq("canada")))
-            .select(tableFields(List.of("continent", "country", "city")), List.of(pOp))
+            .where(criterion(this.country, eq("canada")))
+            .select(List.of(this.continent, this.country, this.city), List.of(pOp))
             .build(); // query only parent
 
     result = this.executor.executeQuery(query);
@@ -121,7 +125,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
     query = Query
             .from(this.storeName)
             .where(criterion("continent", eq("eu")))
-            .select(tableFields(List.of("continent", "country", "city")), List.of(pOp))
+            .select(List.of(this.continent, this.country, this.city), List.of(pOp))
             .build(); // query only parent
     result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
@@ -137,7 +141,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, tableFields(List.of("country", "continent")));
     QueryDto query = Query
             .from(this.storeName)
-            .select(tableFields(List.of("continent", "country", "city")), List.of(pop, pOp))
+            .select(List.of(this.continent, this.country, this.city), List.of(pop, pOp))
             .build(); // query only parent
 
     Table result = this.executor.executeQuery(query);
@@ -160,7 +164,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
     // parent with a measure computed by SquashQL.
     Measure pop = Functions.sum("populationsum", "population");
     Measure pop2 = Functions.plus("pop2", pop, Functions.integer(2));
-    List<Field> select = tableFields(List.of("continent", "country", "city"));
+    List<Field> select = List.of(this.continent, this.country, this.city);
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, select);
     ComparisonMeasureReferencePosition pOp2 = new ComparisonMeasureReferencePosition("percentOfParent2", DIVIDE, pop2, select);
     QueryDto query = Query
@@ -180,7 +184,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   @Test
   void testSimpleWithTotals() {
     Measure pop = Functions.sum("population", "population");
-    List<Field> fields = tableFields(List.of("continent", "country", "city"));
+    List<Field> fields = List.of(this.continent, this.country, this.city);
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, fields);
     QueryDto query = Query
             .from(this.storeName)
