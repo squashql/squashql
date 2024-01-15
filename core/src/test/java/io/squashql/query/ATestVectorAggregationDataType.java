@@ -71,7 +71,6 @@ public abstract class ATestVectorAggregationDataType extends ABaseTestQuery {
   void assertVectorType(String type) {
     Field ean = new TableField(this.storeName, "ean");
     Field valueType = new TableField(this.storeName, "value" + type);
-    Field valueInt = new TableField(this.storeName, "valueInt");
     Field date = new TableField(this.storeName, "date");
 
     Measure vector = new VectorAggMeasure("vector", valueType, SUM, date);

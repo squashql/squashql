@@ -8,7 +8,6 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
-import io.squashql.util.ListUtils;
 import io.squashql.util.MultipleColumnsSorter;
 import org.assertj.core.api.Assertions;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -19,11 +18,12 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Function;
 
+import static io.squashql.query.ComparisonMethod.DIVIDE;
 import static io.squashql.query.agg.AggregationFunction.ANY_VALUE;
 import static io.squashql.query.agg.AggregationFunction.SUM;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
-import static io.squashql.util.ListUtils.*;
+import static io.squashql.util.ListUtils.reorder;
 import static java.util.Comparator.naturalOrder;
 
 @TestClass(ignore = TestClass.Type.SNOWFLAKE)
@@ -134,18 +134,26 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
 
   @Test
   void testTransformerWithoutTotals() {
+    // Dummy transformer. Find an index from the date array and use this index to pick a single price. It is to show
+    // we can perform any operation with two vectors
     Function<List<Object>, Object> transformer = (list) -> {
       Lists.DoubleList prices = (Lists.DoubleList) list.get(0);
       List<LocalDate> dates = (List<LocalDate>) list.get(1);
-      int index = ListUtils.percentileIndex(prices.size(), 0.75);
-
-      int[] sort = MultipleColumnsSorter.sort(List.of(prices), List.of(naturalOrder()), new int[0]);
-      List<Double> orderedPrices = reorder_(prices, sort);
-      List<LocalDate> orderedDates = reorder_(dates, sort);
-      return List.of(orderedPrices.get(index), orderedDates.get(index));
+      int index = -1;
+      for (int i = 0; i < dates.size(); i++) {
+        if (dates.get(i).equals(LocalDate.of(2023, 3, 3))) {
+          index = i;
+          break;
+        }
+      }
+      return prices.get(index);
     };
 
-    Measure vector = new VectorTupleAggMeasure("price_and_date", List.of(Tuples.pair(this.price, SUM), Tuples.pair(this.date, ANY_VALUE)), this.date, transformer);
+    Measure vector = new VectorTupleAggMeasure(
+            "price_at_2023_3_3",
+            List.of(Tuples.pair(this.price, SUM), Tuples.pair(this.date, ANY_VALUE)),
+            this.date,
+            transformer);
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(this.competitor, this.ean), List.of(vector))
@@ -154,30 +162,32 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(this.competitor.name(), this.ean.name(), vector.alias());
-    LocalDate d = LocalDate.of(2023, 02, 04);
     Assertions.assertThat(result).containsExactly(
-            List.of(GRAND_TOTAL, GRAND_TOTAL, List.of(48d, d)),
-            List.of(competitorX, TOTAL,  List.of(16d, d)),
-            List.of(competitorX, productA,  List.of(8d, d)),
-            List.of(competitorX, productB,  List.of(8d, d)),
-            List.of(competitorY, TOTAL,  List.of(16d, d)),
-            List.of(competitorY, productA,  List.of(8d, d)),
-            List.of(competitorY, productB,  List.of(8d, d)),
-            List.of(competitorZ, TOTAL,  List.of(16d, d)),
-            List.of(competitorZ, productA,  List.of(8d, d)),
-            List.of(competitorZ, productB,  List.of(8d, d)));
+            List.of(GRAND_TOTAL, GRAND_TOTAL, 54d),
+            List.of(competitorX, TOTAL, 18d),
+            List.of(competitorX, productA, 9d),
+            List.of(competitorX, productB, 9d),
+            List.of(competitorY, TOTAL, 18d),
+            List.of(competitorY, productA, 9d),
+            List.of(competitorY, productB, 9d),
+            List.of(competitorZ, TOTAL, 18d),
+            List.of(competitorZ, productA, 9d),
+            List.of(competitorZ, productB, 9d));
   }
 
   @Test
   void testParentComparison() {
     Measure vector = new VectorTupleAggMeasure("vector", List.of(Tuples.pair(this.price, SUM), Tuples.pair(this.date, ANY_VALUE)), this.date, null);
-    // TODO 
+    List<Field> fields = List.of(this.competitor, this.ean);
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, vector, fields);
+
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(this.competitor, this.ean), List.of(vector))
-            .rollup(List.of(this.competitor, this.ean))
+            .select(fields, List.of(vector, pOp))
+            .rollup(fields)
             .build();
     Table result = this.executor.executeQuery(query);
+    result.show();
   }
 
   private void assertVectorTuples(Table result, Measure vector) {

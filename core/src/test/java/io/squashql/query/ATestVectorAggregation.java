@@ -309,7 +309,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
     int hitCount = (int) this.queryCache.stats(null).hitCount;
     int missCount = (int) this.queryCache.stats(null).missCount;
     r.run();
-    TestUtil.assertCacheStats(this.queryCache, hitCount + 0, missCount + 5);
+    TestUtil.assertCacheStats(this.queryCache, hitCount, missCount + 5);
 
     r.run();
     TestUtil.assertCacheStats(this.queryCache, hitCount + 4, missCount + 5);
