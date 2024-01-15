@@ -42,7 +42,7 @@ public class ParentComparisonExecutor extends AComparisonExecutor {
         String name = ancestor.name();
         if (this.indexByColumn.containsKey(name)) {
           int index = this.indexByColumn.get(name);
-          if (!row[index].equals(SQLTranslator.TOTAL_CELL)) {
+          if (!SQLTranslator.TOTAL_CELL.equals(row[index])) {
             row[index] = SQLTranslator.TOTAL_CELL;
             break;
           }

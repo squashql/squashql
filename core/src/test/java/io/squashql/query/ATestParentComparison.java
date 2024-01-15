@@ -6,7 +6,6 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -40,13 +39,14 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   protected void loadData() {
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
             new Object[]{"paris", "france", "eu", 2d},
-            new Object[]{"lyon", "france", "eu", 0.5},
-            new Object[]{"london", "uk", "eu", 9d},
+            new Object[]{"lyon", "france", "eu", 1d},
+            new Object[]{"monaco", null, "eu", 1d}, // to have a null value as a parent
+            new Object[]{"london", "uk", "eu", 8d},
             new Object[]{"nyc", "usa", "am", 8d},
-            new Object[]{"chicago", "usa", "am", 3d},
+            new Object[]{"chicago", "usa", "am", 4d},
             new Object[]{"toronto", "canada", "am", 3d},
-            new Object[]{"montreal", "canada", "am", 2d},
-            new Object[]{"otawa", "canada", "am", 1d}
+            new Object[]{"montreal", "canada", "am", 7d},
+            new Object[]{"otawa", "canada", "am", 2d}
     ));
   }
 
@@ -62,14 +62,15 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
 
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList("am", "canada", "montreal", 2d, .3333333333333333),
-            Arrays.asList("am", "canada", "otawa", 1d, .16666666666666666),
-            Arrays.asList("am", "canada", "toronto", 3d, 0.5),
-            Arrays.asList("am", "usa", "chicago", 3d, .2727272727272727),
-            Arrays.asList("am", "usa", "nyc", 8d, .7272727272727273),
-            Arrays.asList("eu", "france", "lyon", 0.5, 0.2),
-            Arrays.asList("eu", "france", "paris", 2d, 0.8),
-            Arrays.asList("eu", "uk", "london", 9d, 1d));
+            Arrays.asList("am", "canada", "montreal", 7d, .5833333333333334),
+            Arrays.asList("am", "canada", "otawa", 2d, .16666666666666666),
+            Arrays.asList("am", "canada", "toronto", 3d, 0.25),
+            Arrays.asList("am", "usa", "chicago", 4d, .3333333333333333),
+            Arrays.asList("am", "usa", "nyc", 8d, .6666666666666666),
+            Arrays.asList("eu", "france", "lyon", 1d, .3333333333333333),
+            Arrays.asList("eu", "france", "paris", 2d, .6666666666666666),
+            Arrays.asList("eu", "uk", "london", 8d, 1d),
+            Arrays.asList("eu", null, "monaco", 1d, 1d));
 
     query = Query
             .from(this.storeName)
@@ -78,14 +79,15 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
 
     result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList("am", "canada", "montreal", .3333333333333333),
+            Arrays.asList("am", "canada", "montreal", .5833333333333334),
             Arrays.asList("am", "canada", "otawa", .16666666666666666),
-            Arrays.asList("am", "canada", "toronto", 0.5),
-            Arrays.asList("am", "usa", "chicago", .2727272727272727),
-            Arrays.asList("am", "usa", "nyc", .7272727272727273),
-            Arrays.asList("eu", "france", "lyon", 0.2),
-            Arrays.asList("eu", "france", "paris", 0.8),
-            Arrays.asList("eu", "uk", "london", 1d));
+            Arrays.asList("am", "canada", "toronto", 0.25),
+            Arrays.asList("am", "usa", "chicago", .3333333333333333),
+            Arrays.asList("am", "usa", "nyc", .6666666666666666),
+            Arrays.asList("eu", "france", "lyon", .3333333333333333),
+            Arrays.asList("eu", "france", "paris", .6666666666666666),
+            Arrays.asList("eu", "uk", "london", 1d),
+            Arrays.asList("eu", null, "monaco", 1d));
   }
 
   @Test
@@ -101,8 +103,8 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
 
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList("am", "canada", "montreal", .3333333333333333),
-            Arrays.asList("am", "canada", "toronto", 0.5));
+            Arrays.asList("am", "canada", "montreal", .5833333333333334),
+            Arrays.asList("am", "canada", "toronto", 0.25));
 
     query = Query
             .from(this.storeName)
@@ -112,9 +114,9 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
 
     result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList("am", "canada", "montreal", .3333333333333333),
+            Arrays.asList("am", "canada", "montreal", .5833333333333334),
             Arrays.asList("am", "canada", "otawa", .16666666666666666),
-            Arrays.asList("am", "canada", "toronto", 0.5));
+            Arrays.asList("am", "canada", "toronto", 0.25));
 
     query = Query
             .from(this.storeName)
@@ -123,9 +125,10 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
             .build(); // query only parent
     result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList("eu", "france", "lyon", 0.2),
-            Arrays.asList("eu", "france", "paris", 0.8),
-            Arrays.asList("eu", "uk", "london", 1d));
+            Arrays.asList("eu", "france", "lyon", .3333333333333333),
+            Arrays.asList("eu", "france", "paris", .6666666666666666),
+            Arrays.asList("eu", "uk", "london", 1d),
+            Arrays.asList("eu", null, "monaco", 1d));
   }
 
   @Test
@@ -140,14 +143,15 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
     Table result = this.executor.executeQuery(query);
     // Always 1 because the parent scope will be [city, continent] so each cell value is compared to itself.
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList("am", "canada", "montreal", 2d, 1d),
-            Arrays.asList("am", "canada", "otawa", 1d, 1d),
+            Arrays.asList("am", "canada", "montreal", 7d, 1d),
+            Arrays.asList("am", "canada", "otawa", 2d, 1d),
             Arrays.asList("am", "canada", "toronto", 3d, 1d),
-            Arrays.asList("am", "usa", "chicago", 3d, 1d),
+            Arrays.asList("am", "usa", "chicago", 4d, 1d),
             Arrays.asList("am", "usa", "nyc", 8d, 1d),
-            Arrays.asList("eu", "france", "lyon", 0.5, 1d),
+            Arrays.asList("eu", "france", "lyon", 1d, 1d),
             Arrays.asList("eu", "france", "paris", 2d, 1d),
-            Arrays.asList("eu", "uk", "london", 9d, 1d));
+            Arrays.asList("eu", "uk", "london", 8d, 1d),
+            Arrays.asList("eu", null, "monaco", 1d, 1d));
   }
 
   @Test
@@ -166,11 +170,11 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
             .build(); // query only parent
 
     Table table = this.executor.executeQuery(query);
-    double canadaTotalPlus2 = 2d + 1d + 3d + 2;
+    double canadaTotalPlus2 = 7d + 2d + 3d + 2;
     Assertions.assertThat(table).containsExactly(
-            Arrays.asList("am", "canada", "montreal", 2d, .3333333333333333, 2d + 2, (2d + 2) / canadaTotalPlus2),
-            Arrays.asList("am", "canada", "otawa", 1d, .16666666666666666, 1d + 2, (1d + 2) / canadaTotalPlus2),
-            Arrays.asList("am", "canada", "toronto", 3d, 0.5, 3d + 2, (3d + 2) / canadaTotalPlus2));
+            Arrays.asList("am", "canada", "montreal", 7d, .5833333333333334, 7d + 2, (7d + 2) / canadaTotalPlus2),
+            Arrays.asList("am", "canada", "otawa", 2d, .16666666666666666, 2d + 2, (2d + 2) / canadaTotalPlus2),
+            Arrays.asList("am", "canada", "toronto", 3d, 0.25, 3d + 2, (3d + 2) / canadaTotalPlus2));
   }
 
   @Test
@@ -186,20 +190,22 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
 
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, GRAND_TOTAL, 28.5d, 1d),
-            Arrays.asList("am", TOTAL, TOTAL, 17d, 0.5964912280701754d),
-            Arrays.asList("am", "canada", TOTAL, 6d, 0.35294117647058826d),
-            Arrays.asList("am", "canada", "montreal", 2d, .3333333333333333),
-            Arrays.asList("am", "canada", "otawa", 1d, .16666666666666666),
-            Arrays.asList("am", "canada", "toronto", 3d, 0.5),
-            Arrays.asList("am", "usa", TOTAL, 11d, 0.6470588235294118d),
-            Arrays.asList("am", "usa", "chicago", 3d, .2727272727272727),
-            Arrays.asList("am", "usa", "nyc", 8d, .7272727272727273),
-            Arrays.asList("eu", TOTAL, TOTAL, 11.5d, 0.40350877192982454d),
-            Arrays.asList("eu", "france", TOTAL, 2.5, 0.21739130434782608),
-            Arrays.asList("eu", "france", "lyon", 0.5, 0.2),
-            Arrays.asList("eu", "france", "paris", 2d, 0.8),
-            Arrays.asList("eu", "uk", TOTAL, 9d, 0.782608695652174),
-            Arrays.asList("eu", "uk", "london", 9d, 1d));
+            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, GRAND_TOTAL, 36d, 1d),
+            Arrays.asList("am", TOTAL, TOTAL, 24d, .6666666666666666),
+            Arrays.asList("am", "canada", TOTAL, 12d, .5),
+            Arrays.asList("am", "canada", "montreal", 7d, .5833333333333334),
+            Arrays.asList("am", "canada", "otawa", 2d, .16666666666666666),
+            Arrays.asList("am", "canada", "toronto", 3d, 0.25),
+            Arrays.asList("am", "usa", TOTAL, 12d, .5),
+            Arrays.asList("am", "usa", "chicago", 4d, .3333333333333333),
+            Arrays.asList("am", "usa", "nyc", 8d, .6666666666666666),
+            Arrays.asList("eu", TOTAL, TOTAL, 12d, .3333333333333333),
+            Arrays.asList("eu", "france", TOTAL, 3d, .25),
+            Arrays.asList("eu", "france", "lyon", 1d, .3333333333333333),
+            Arrays.asList("eu", "france", "paris", 2d, .6666666666666666),
+            Arrays.asList("eu", "uk", TOTAL, 8d, .6666666666666666),
+            Arrays.asList("eu", "uk", "london", 8d, 1d),
+            Arrays.asList("eu", null, TOTAL, 1d, .08333333333333333),
+            Arrays.asList("eu", null, "monaco", 1d, 1d));
   }
 }
