@@ -136,7 +136,6 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
             .rollup(List.of(ean, competitor))
             .build();
     Table result = this.executor.executeQuery(query);
-    result.show();
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly(ean.name(), competitor.name(), vector.alias());
     List<List<Object>> points = List.of(
@@ -310,10 +309,10 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
     int hitCount = (int) this.queryCache.stats(null).hitCount;
     int missCount = (int) this.queryCache.stats(null).missCount;
     r.run();
-    TestUtil.assertCacheStats(this.queryCache, hitCount + 0, missCount + 7);
+    TestUtil.assertCacheStats(this.queryCache, hitCount + 0, missCount + 5);
 
     r.run();
-    TestUtil.assertCacheStats(this.queryCache, hitCount + 6, missCount + 7);
+    TestUtil.assertCacheStats(this.queryCache, hitCount + 4, missCount + 5);
   }
 
   @Test

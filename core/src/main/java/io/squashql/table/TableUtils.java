@@ -343,7 +343,8 @@ public class TableUtils {
           String baseName = groupingHeaders.get(header.name());
           List<Object> baseColumnValues = copy.getColumnValues(baseName);
           for (int rowIndex = 0; rowIndex < columnValues.size(); rowIndex++) {
-            if (((Number) columnValues.get(rowIndex)).longValue() == 1) {
+            Object o = columnValues.get(rowIndex);
+            if (o != null && ((Number) o).longValue() == 1) {
               // It is a total if == 1. It is cast as Number because the type is Byte with Spark, Long with
               // ClickHouse...
               baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);

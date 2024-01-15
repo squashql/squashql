@@ -1,6 +1,7 @@
 package io.squashql.spring.web.rest;
 
 import io.squashql.query.exception.LimitExceedException;
+import jakarta.servlet.ServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
@@ -10,7 +11,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.servlet.ServletRequest;
 
 @ControllerAdvice
 @Order(1)
