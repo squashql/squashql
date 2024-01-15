@@ -48,7 +48,6 @@ public class QueryExecutor {
         yield this.queryCache;
       }
     };
-//    return EmptyQueryCache.INSTANCE;
   }
 
   public PivotTable executePivotQuery(PivotTableQueryDto pivotTableQueryDto) {
