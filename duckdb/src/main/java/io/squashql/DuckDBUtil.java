@@ -35,6 +35,8 @@ public final class DuckDBUtil {
           return Lists.DoubleList.class;
         } else if (typeName.equals("LONG[]") || typeName.equals("HUGEINT[]") || typeName.equals("INT[]")) {
           return Lists.LongList.class;
+        } else if (typeName.equals("DATE[]")) {
+          return Lists.LocalDateList.class;
         } else {
           return List.class; // we convert Array to List
         }

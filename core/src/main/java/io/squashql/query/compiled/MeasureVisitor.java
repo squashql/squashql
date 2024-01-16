@@ -15,4 +15,6 @@ public interface MeasureVisitor<R> {
   R visit(CompiledLongConstantMeasure measure);
 
   R visit(CompiledVectorAggMeasure measure);
+
+  R visit(CompiledVectorTupleAggMeasure compiledVectorTupleAggMeasure);
 }

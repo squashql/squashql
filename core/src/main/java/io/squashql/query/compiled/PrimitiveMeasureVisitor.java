@@ -34,7 +34,13 @@ public class PrimitiveMeasureVisitor implements MeasureVisitor<Boolean> {
 
   @Override
   public Boolean visit(CompiledVectorAggMeasure measure) {
-    // This measure is "indirectly" computed by the underlying DB but it is not a primitive. See PrefetchVisitor.
+    // This measure is "indirectly" computed by the underlying DB, but it is not a primitive. See PrefetchVisitor.
+    return false;
+  }
+
+  @Override
+  public Boolean visit(CompiledVectorTupleAggMeasure compiledVectorTupleAggMeasure) {
+    // This measure is "indirectly" computed by the underlying DB, but it is not a primitive. See PrefetchVisitor.
     return false;
   }
 }

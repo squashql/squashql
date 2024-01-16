@@ -4,8 +4,10 @@ import io.squashql.query.*;
 import io.squashql.query.QueryExecutor.ExecutionContext;
 import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import io.squashql.query.comp.BinaryOperations;
+import io.squashql.store.UnknownType;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;
+import io.squashql.util.ListUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -81,7 +83,8 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
 
   private static void executeComparator(CompiledComparisonMeasure cm, Table writeToTable, Table readFromTable, AComparisonExecutor executor) {
     List<Object> agg = executor.compare(cm, writeToTable, readFromTable);
-    Header header = new Header(cm.alias(), BinaryOperations.getComparisonOutputType(cm.comparisonMethod(), writeToTable.getHeader(cm.measure()).type()), true);
+    Class<?> outputType = cm.comparisonOperator() != null ? UnknownType.class : BinaryOperations.getComparisonOutputType(cm.comparisonMethod(), writeToTable.getHeader(cm.measure()).type());
+    Header header = new Header(cm.alias(), outputType, true);
     writeToTable.addAggregates(header, cm, agg);
   }
 
@@ -137,6 +140,42 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     Table readTable = this.executionContext.tableByScope().get(prefetchQueryScope);
     Table writeToTable = this.executionContext.getWriteToTable();
     writeToTable.transferAggregates(readTable, measure);
+    return null;
+  }
+
+  @Override
+  public Void visit(CompiledVectorTupleAggMeasure measure) {
+    // Retrieve the query scope use for the prefetch, the logic should be the same to retrieve the result.
+    QueryExecutor.QueryScope prefetchQueryScope = new PrefetchVisitor(this.executionContext.columns(), this.executionContext.bucketColumns(), this.executionContext.queryScope())
+            .visit(measure)
+            .keySet()
+            .iterator()
+            .next();
+    Table readTable = this.executionContext.tableByScope().get(prefetchQueryScope);
+    Table writeToTable = this.executionContext.getWriteToTable();
+
+    List<List<Object>> columnValues = new ArrayList<>();
+    // We use the same logic for the measure names as the PrefetchVisitor to retrieve the values
+    int size = measure.fieldToAggregateAndAggFunc().size();
+    for (int i = 0; i < size; i++) {
+      String alias = size > 1 ? measure.alias() + "_" + i : measure.alias();
+      columnValues.add(readTable.getColumnValues(alias));
+    }
+
+    List<Object> vectorValues = ListUtils.createListWithNulls((int) readTable.count());
+    writeToTable.pointDictionary().forEach((point, index) -> {
+      int position = readTable.pointDictionary().getPosition(point);
+      if (position >= 0) {
+        List<Object> v = new ArrayList<>(size);
+        for (int field = 0; field < size; field++) {
+          v.add(columnValues.get(field).get(position));
+        }
+        vectorValues.set(index, measure.transformer() != null ? measure.transformer().apply(v) : v);
+      }
+    });
+
+    Header header = new Header(measure.alias(), Object.class, true);
+    writeToTable.addAggregates(header, measure, vectorValues);
     return null;
   }
 }

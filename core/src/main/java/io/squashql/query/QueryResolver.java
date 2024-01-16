@@ -8,6 +8,7 @@ import io.squashql.store.Store;
 import io.squashql.type.*;
 import lombok.Data;
 import lombok.Value;
+import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -261,6 +262,8 @@ public class QueryResolver {
         compiledMeasure = compileComparisonMeasure((ComparisonMeasureReferencePosition) m, topMeasure);
       } else if (m instanceof VectorAggMeasure v) {
         compiledMeasure = compileVectorAggMeasure(v);
+      } else if (m instanceof VectorTupleAggMeasure v) {
+        compiledMeasure = compileVectorTupleAggMeasure(v);
       } else {
         throw new IllegalArgumentException("Unknown type of measure " + m.getClass().getSimpleName());
       }
@@ -303,6 +306,7 @@ public class QueryResolver {
     return new CompiledComparisonMeasure(
             m.alias,
             m.comparisonMethod,
+            m.comparisonOperator,
             compileMeasure(m.measure, topMeasure),
             m.referencePosition == null ? null : m.referencePosition.entrySet().stream().collect(Collectors.toMap(e -> resolveField(e.getKey()), Map.Entry::getValue)),
             compilePeriod(m.period),
@@ -329,6 +333,14 @@ public class QueryResolver {
 
   private CompiledMeasure compileVectorAggMeasure(VectorAggMeasure m) {
     return new CompiledVectorAggMeasure(m.alias, resolveField(m.fieldToAggregate), m.aggregationFunction, resolveField(m.vectorAxis));
+  }
+
+  private CompiledMeasure compileVectorTupleAggMeasure(VectorTupleAggMeasure m) {
+    return new CompiledVectorTupleAggMeasure(
+            m.alias,
+            m.fieldToAggregateAndAggFunc.stream().map(p -> Tuples.pair(resolveField(p.getOne()), p.getTwo())).toList(),
+            resolveField(m.vectorAxis),
+            m.transformer);
   }
 
   private Map<ColumnSetKey, CompiledColumnSet> compiledColumnSets(Map<ColumnSetKey, ColumnSet> columnSets) {

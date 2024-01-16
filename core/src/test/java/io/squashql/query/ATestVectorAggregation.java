@@ -11,6 +11,7 @@ import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
+import org.eclipse.collections.impl.tuple.Tuples;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -18,6 +19,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import static io.squashql.query.agg.AggregationFunction.SUM;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
@@ -35,7 +37,11 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
   static final LocalDate d1 = LocalDate.of(2023, 1, 1);
   static final LocalDate d2 = LocalDate.of(2023, 1, 2);
   static final LocalDate d3 = LocalDate.of(2023, 1, 3);
-  String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  final String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  final Field ean = new TableField(this.storeName, "ean");
+  final Field competitor = new TableField(this.storeName, "competitor");
+  final Field value = new TableField(this.storeName, "price");
+  final Field date = new TableField(this.storeName, "date");
   GlobalCache queryCache;
 
   @Override
@@ -79,19 +85,15 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
   @Test
   void testCrossjoinOneWithTotals() {
-    Field ean = new TableField(this.storeName, "ean");
-    Field value = new TableField(this.storeName, "price");
-    Field date = new TableField(this.storeName, "date");
-
-    Measure vector = new VectorAggMeasure("vector", value, SUM, date);
+    Measure vector = new VectorAggMeasure("vector", this.value, SUM, this.date);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ean), List.of(vector))
-            .rollup(List.of(ean))
+            .select(List.of(this.ean), List.of(vector))
+            .rollup(List.of(this.ean))
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(ean.name(), vector.alias());
+            .containsExactly(this.ean.name(), vector.alias());
     List<List<Object>> points = List.of(List.of(GRAND_TOTAL), List.of(productA), List.of(productB));
     List<List<Number>> expectedVectors = List.of(
             List.of(6006d, 33033d, 303303d),
@@ -102,18 +104,14 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
   @Test
   void testCrossjoinOneWithoutTotals() {
-    Field ean = new TableField(this.storeName, "ean");
-    Field value = new TableField(this.storeName, "price");
-    Field date = new TableField(this.storeName, "date");
-
-    Measure vector = new VectorAggMeasure("vector", value, SUM, date);
+    Measure vector = new VectorAggMeasure("vector", this.value, SUM, this.date);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ean), List.of(vector, CountMeasure.INSTANCE))
+            .select(List.of(this.ean), List.of(vector, CountMeasure.INSTANCE))
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(ean.name(), vector.alias(), CountMeasure.ALIAS);
+            .containsExactly(this.ean.name(), vector.alias(), CountMeasure.ALIAS);
     List<List<Object>> points = List.of(List.of(productA), List.of(productB));
     List<List<Number>> expectedVectors = List.of(
             List.of(6d, 33d, 303d),
@@ -124,20 +122,15 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
   @Test
   void testCrossjoinTwoWithTotals() {
-    Field ean = new TableField(this.storeName, "ean");
-    Field competitor = new TableField(this.storeName, "competitor");
-    Field value = new TableField(this.storeName, "price");
-    Field date = new TableField(this.storeName, "date");
-
-    Measure vector = new VectorAggMeasure("vector", value, SUM, date);
+    Measure vector = new VectorAggMeasure("vector", this.value, SUM, this.date);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ean, competitor), List.of(vector))
-            .rollup(List.of(ean, competitor))
+            .select(List.of(this.ean, this.competitor), List.of(vector))
+            .rollup(List.of(this.ean, this.competitor))
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(ean.name(), competitor.name(), vector.alias());
+            .containsExactly(this.ean.name(), this.competitor.name(), vector.alias());
     List<List<Object>> points = List.of(
             List.of(GRAND_TOTAL, GRAND_TOTAL),
             List.of(productA, TOTAL),
@@ -163,19 +156,14 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
   @Test
   void testCrossjoinTwoWithoutTotals() {
-    Field ean = new TableField(this.storeName, "ean");
-    Field competitor = new TableField(this.storeName, "competitor");
-    Field value = new TableField(this.storeName, "price");
-    Field date = new TableField(this.storeName, "date");
-
-    Measure vector = new VectorAggMeasure("vector", value, SUM, date);
+    Measure vector = new VectorAggMeasure("vector", this.value, SUM, this.date);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ean, competitor), List.of(vector, CountMeasure.INSTANCE))
+            .select(List.of(this.ean, this.competitor), List.of(vector, CountMeasure.INSTANCE))
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(ean.name(), competitor.name(), vector.alias(), CountMeasure.ALIAS);
+            .containsExactly(this.ean.name(), this.competitor.name(), vector.alias(), CountMeasure.ALIAS);
     List<List<Object>> points = List.of(
             List.of(productA, competitorZ),
             List.of(productA, competitorY),
@@ -198,20 +186,16 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
    */
   @Test
   void testSimpleWithVectorAxisInSelect() {
-    Field ean = new TableField(this.storeName, "ean");
-    Field value = new TableField(this.storeName, "price");
-    Field date = new TableField(this.storeName, "date");
-
-    Measure vector = new VectorAggMeasure("vector", value, SUM, date);
-    Measure vectorSum = new AggregatedMeasure("vectorSum", value, SUM, false);
+    Measure vector = new VectorAggMeasure("vector", this.value, SUM, this.date);
+    Measure vectorSum = new AggregatedMeasure("vectorSum", this.value, SUM, false);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ean, date), List.of(vector, vectorSum))
-            .rollup(List.of(ean, date))
+            .select(List.of(this.ean, this.date), List.of(vector, vectorSum))
+            .rollup(List.of(this.ean, this.date))
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(ean.name(), date.name(), vector.alias(), vectorSum.alias());
+            .containsExactly(this.ean.name(), this.date.name(), vector.alias(), vectorSum.alias());
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, GRAND_TOTAL, 342342d, 342342d),
             List.of(productA, TOTAL, 342d, 342d),
@@ -226,20 +210,15 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
   @Test
   void testSimpleWithOtherMeasure() {
-    Field ean = new TableField(this.storeName, "ean");
-    Field competitor = new TableField(this.storeName, "competitor");
-    Field value = new TableField(this.storeName, "price");
-    Field date = new TableField(this.storeName, "date");
-
-    Measure vector = new VectorAggMeasure("vector", value, SUM, date);
+    Measure vector = new VectorAggMeasure("vector", this.value, SUM, this.date);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ean, competitor), List.of(vector, CountMeasure.INSTANCE))
-            .rollup(List.of(ean, competitor))
+            .select(List.of(this.ean, this.competitor), List.of(vector, CountMeasure.INSTANCE))
+            .rollup(List.of(this.ean, this.competitor))
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(ean.name(), competitor.name(), vector.alias(), CountMeasure.ALIAS);
+            .containsExactly(this.ean.name(), this.competitor.name(), vector.alias(), CountMeasure.ALIAS);
     List<List<Object>> points = List.of(
             List.of(GRAND_TOTAL, GRAND_TOTAL),
             List.of(productA, TOTAL),
@@ -267,22 +246,19 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
   @Test
   void testCache() {
-    Field ean = new TableField(this.storeName, "ean");
-    Field competitor = new TableField(this.storeName, "competitor");
-    Field value = new TableField(this.storeName, "price");
-    Field date = new TableField(this.storeName, "date");
+    this.queryCache.clear();
 
-    Measure vector = new VectorAggMeasure("vector", value, SUM, date);
+    Measure vector = new VectorAggMeasure("vector", this.value, SUM, this.date);
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(ean, competitor), List.of(vector))
-            .rollup(List.of(ean, competitor))
+            .select(List.of(this.ean, this.competitor), List.of(vector))
+            .rollup(List.of(this.ean, this.competitor))
             .build();
 
     Runnable r = () -> {
       Table result = this.executor.executeQuery(query);
       Assertions.assertThat(result.headers().stream().map(Header::name))
-              .containsExactly(ean.name(), competitor.name(), vector.alias());
+              .containsExactly(this.ean.name(), this.competitor.name(), vector.alias());
       List<List<Object>> points = List.of(
               List.of(GRAND_TOTAL, GRAND_TOTAL),
               List.of(productA, TOTAL),
@@ -309,10 +285,73 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
     int hitCount = (int) this.queryCache.stats(null).hitCount;
     int missCount = (int) this.queryCache.stats(null).missCount;
     r.run();
-    TestUtil.assertCacheStats(this.queryCache, hitCount + 0, missCount + 5);
+    TestUtil.assertCacheStats(this.queryCache, hitCount, missCount + 3);
 
     r.run();
-    TestUtil.assertCacheStats(this.queryCache, hitCount + 4, missCount + 5);
+    TestUtil.assertCacheStats(this.queryCache, hitCount + 2, missCount + 3);
+  }
+
+  @Test
+  void testGroupingMeasuresAreNotCached() {
+    this.queryCache.clear();
+
+    // Do not use the same alia and the same transformer instance. We want the measure not to be equal.
+    Measure vectorWoTransformer = new VectorTupleAggMeasure("vectorWoTransformer", List.of(Tuples.pair(this.value, SUM)), this.date, a -> a.get(0));
+    Measure vectorWithTransformer = new VectorTupleAggMeasure("vectorWithTransformer", List.of(Tuples.pair(this.value, SUM)), this.date, a -> a.get(0));
+    QueryDto q1 = Query
+            .from(this.storeName)
+            .select(List.of(this.ean, this.competitor), List.of(vectorWoTransformer))
+            .rollup(List.of(this.ean, this.competitor))
+            .build();
+
+    int hitCount = (int) this.queryCache.stats(null).hitCount;
+    int missCount = (int) this.queryCache.stats(null).missCount;
+    // Make sure to not cache the grouping measures, see testWithNullValueAndRollup. Similar issue.
+    Table result = this.executor.executeQuery(q1);
+    TestUtil.assertCacheStats(this.queryCache, hitCount, missCount + 3);
+    Assertions.assertThat(result.headers().stream().map(Header::name))
+            .containsExactly(this.ean.name(), this.competitor.name(), vectorWoTransformer.alias());
+
+    BiConsumer<Table, Measure> resultChecker = (table, vector) -> {
+      List<List<Object>> points = List.of(
+              List.of(GRAND_TOTAL, GRAND_TOTAL),
+              List.of(productA, TOTAL),
+              List.of(productA, competitorZ),
+              List.of(productA, competitorY),
+              List.of(productA, competitorX),
+              List.of(productB, TOTAL),
+              List.of(productB, competitorZ),
+              List.of(productB, competitorY),
+              List.of(productB, competitorX));
+      List<List<Number>> expectedVectors = List.of(
+              List.of(6006d, 33033d, 303303d),
+              List.of(6d, 33d, 303d),
+              List.of(3.0, 12.0, 102.0),
+              List.of(2.0, 11.0, 101.0),
+              List.of(1.0, 10.0, 100.0),
+              List.of(6000d, 33000d, 303000d),
+              List.of(3000.0, 12000.0, 102000.0),
+              List.of(2000.0, 11000.0, 101000.0),
+              List.of(1000.0, 10000.0, 100000.0));
+      assertVectorValues((ColumnarTable) table, vector, points, expectedVectors);
+    };
+
+    resultChecker.accept(result, vectorWoTransformer);
+
+    // We use the vector with transformer here to have the same scope as the previous measure.
+    QueryDto q2 = Query
+            .from(this.storeName)
+            .select(List.of(this.ean, this.competitor), List.of(vectorWithTransformer))
+            .rollup(List.of(this.ean, this.competitor))
+            .build();
+    hitCount = (int) this.queryCache.stats(null).hitCount;
+    missCount = (int) this.queryCache.stats(null).missCount;
+    Table table = this.executor.executeQuery(q2);
+    Assertions.assertThat(table.headers().stream().map(Header::name))
+            .containsExactly(this.ean.name(), this.competitor.name(), vectorWithTransformer.alias());
+    resultChecker.accept(table, vectorWithTransformer);
+    // hit -> count; miss -> vectorWithTransformer
+    TestUtil.assertCacheStats(this.queryCache, hitCount + 1, missCount + 1);
   }
 
   @Test

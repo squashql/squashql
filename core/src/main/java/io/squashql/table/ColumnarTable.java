@@ -4,6 +4,7 @@ import com.google.common.base.Suppliers;
 import io.squashql.query.Header;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
+import io.squashql.util.ListUtils;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -51,7 +52,6 @@ public class ColumnarTable implements Table {
     this.values.add(values);
   }
 
-
   /**
    * BE CAREFUL !! This method assumes this table and the table from passed in arguments have the same headers
    * {@code Header#isMeasure == false} in the same order.
@@ -67,10 +67,7 @@ public class ColumnarTable implements Table {
     }
 
     if (from instanceof ColumnarTable ct) {
-      List<Object> values = new ArrayList<>((int) count());
-      for (int i = 0; i < (int) count(); i++) {
-        values.add(null);
-      }
+      List<Object> values = ListUtils.createListWithNulls((int) count());
       List<Object> aggregateValues = from.getAggregateValues(measure);
       this.pointDictionary.get().forEach((point, index) -> {
         int position = ct.pointDictionary.get().getPosition(point);

@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 @ToString
 @EqualsAndHashCode
@@ -17,6 +18,7 @@ public class ComparisonMeasureReferencePosition implements Measure {
   public String expression;
   @Getter
   public ComparisonMethod comparisonMethod;
+  public BiFunction<Object, Object, Object> comparisonOperator;
   @Getter
   public Measure measure;
   public ColumnSetKey columnSetKey;
@@ -29,7 +31,7 @@ public class ComparisonMeasureReferencePosition implements Measure {
                                             @NonNull Measure measure,
                                             @NonNull Map<Field, String> referencePosition,
                                             @NonNull Period period) {
-    this(alias, comparisonMethod, measure, referencePosition, period, null, null);
+    this(alias, comparisonMethod, null, measure, referencePosition, period, null, null);
   }
 
   public ComparisonMeasureReferencePosition(@NonNull String alias,
@@ -37,25 +39,37 @@ public class ComparisonMeasureReferencePosition implements Measure {
                                             @NonNull Measure measure,
                                             @NonNull Map<Field, String> referencePosition,
                                             @NonNull ColumnSetKey columnSetKey) {
-    this(alias, comparisonMethod, measure, referencePosition, null, columnSetKey, null);
+    this(alias, comparisonMethod, null, measure, referencePosition, null, columnSetKey, null);
   }
 
   public ComparisonMeasureReferencePosition(@NonNull String alias,
                                             @NonNull ComparisonMethod comparisonMethod,
                                             @NonNull Measure measure,
                                             @NonNull List<Field> ancestors) {
-    this(alias, comparisonMethod, measure, null, null, null, ancestors);
+    this(alias, comparisonMethod, null, measure, null, null, null, ancestors);
   }
 
-  private ComparisonMeasureReferencePosition(@NonNull String alias,
-                                             @NonNull ComparisonMethod comparisonMethod,
-                                             @NonNull Measure measure,
+  /**
+   * For internal use.
+   */
+  public ComparisonMeasureReferencePosition(@NonNull String alias,
+                                            @NonNull BiFunction<Object, Object, Object> comparisonOperator,
+                                            @NonNull Measure measure,
+                                            @NonNull List<Field> ancestors) {
+    this(alias, null, comparisonOperator, measure, null, null, null, ancestors);
+  }
+
+  private ComparisonMeasureReferencePosition(String alias,
+                                             ComparisonMethod comparisonMethod,
+                                             BiFunction<Object, Object, Object> comparisonOperator,
+                                             Measure measure,
                                              Map<Field, String> referencePosition,
                                              Period period,
                                              ColumnSetKey columnSetKey,
                                              List<Field> ancestors) {
     this.alias = alias;
     this.comparisonMethod = comparisonMethod;
+    this.comparisonOperator = comparisonOperator;
     this.measure = measure;
     this.referencePosition = referencePosition;
     this.period = period;
@@ -72,5 +86,4 @@ public class ComparisonMeasureReferencePosition implements Measure {
   public String expression() {
     return this.expression;
   }
-
 }

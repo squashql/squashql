@@ -5,6 +5,7 @@ import io.squashql.query.compiled.CompiledAggregatedMeasure;
 import io.squashql.query.dto.JoinType;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
+import io.squashql.util.ListUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -438,14 +439,10 @@ abstract class ATestMergeTables {
   abstract Table getMergeTablesWithoutCommonColumns();
 
   private static Table reorderColumns(ColumnarTable table, List<String> order) {
-    List<List<Object>> newValues = new ArrayList<>(table.getColumns().size());
-    List<Header> newHeaders = new ArrayList<>(table.getColumns().size());
-    for (int i = 0; i < table.getColumns().size(); i++) {
-      newValues.add(null);
-      newHeaders.add(null);
-    }
+    List<List<Object>> newValues = ListUtils.createListWithNulls(table.getColumns().size());
+    List<Header> newHeaders = ListUtils.createListWithNulls(table.getColumns().size());
     for (int i = 0; i < order.size(); i++) {
-      int newIndex = table.headers().stream().map(h -> h.name()).toList().indexOf(order.get(i));
+      int newIndex = table.headers().stream().map(Header::name).toList().indexOf(order.get(i));
       newValues.set(i, table.getColumns().get(newIndex));
       newHeaders.set(i, table.headers().get(newIndex));
     }

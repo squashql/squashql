@@ -35,4 +35,15 @@ public record CompiledTable(String name, List<CompiledJoin> joins) {
       return statement.toString();
     }
   }
+
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("CompiledTable{");
+    sb.append("name='").append(this.name).append('\'');
+    if (this.joins != null && !joins().isEmpty()) {
+      sb.append(", joins=").append(this.joins);
+    }
+    sb.append('}');
+    return sb.toString();
+  }
 }
