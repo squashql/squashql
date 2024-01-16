@@ -5,6 +5,9 @@ on:
     inputs:
       tags:
         description: 'Launch manually'
+  pull_request:
+    branches:
+      - main
 
 jobs:
 
