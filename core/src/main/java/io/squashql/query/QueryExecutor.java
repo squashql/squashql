@@ -170,8 +170,7 @@ public class QueryExecutor {
       Set<CompiledMeasure> notCached = new HashSet<>();
       for (CompiledMeasure measure : measures) {
         if (MeasureUtils.isPrimitive(measure)) {
-          boolean canBeCached = canBeCached(measure, scope);
-          if (!canBeCached) {
+          if (!canBeCached(measure, scope)) {
             measuresToExcludeFromCache.add(measure);
           } else if (queryCache.contains(measure, queryCacheKey)) {
             cached.add(measure);
