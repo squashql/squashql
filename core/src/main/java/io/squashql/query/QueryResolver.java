@@ -8,7 +8,6 @@ import io.squashql.store.Store;
 import io.squashql.type.*;
 import lombok.Data;
 import lombok.Value;
-import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -338,7 +337,7 @@ public class QueryResolver {
   private CompiledMeasure compileVectorTupleAggMeasure(VectorTupleAggMeasure m) {
     return new CompiledVectorTupleAggMeasure(
             m.alias,
-            m.fieldToAggregateAndAggFunc.stream().map(p -> Tuples.pair(resolveField(p.getOne()), p.getTwo())).toList(),
+            m.fieldToAggregateAndAggFunc.stream().map(p -> new CompiledFieldAndAggFunc(resolveField(p.field), p.aggFunc)).toList(),
             resolveField(m.vectorAxis),
             m.transformer);
   }

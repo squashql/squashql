@@ -7,9 +7,7 @@ import io.squashql.query.database.SqlUtils;
 import io.squashql.type.AliasedTypedField;
 import io.squashql.type.TypedField;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.set.mutable.MutableSetFactoryImpl;
-import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -112,7 +110,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
      */
     return visit(new CompiledVectorTupleAggMeasure(
             vectorAggMeasure.alias(),
-            List.of(Tuples.pair(vectorAggMeasure.fieldToAggregate(), vectorAggMeasure.aggregationFunction())),
+            List.of(new CompiledFieldAndAggFunc(vectorAggMeasure.fieldToAggregate(), vectorAggMeasure.aggregationFunction())),
             vectorAggMeasure.vectorAxis(),
             null));
   }
@@ -120,8 +118,8 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
   @Override
   public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledVectorTupleAggMeasure vecMeasure) {
     TypedField vectorAxis = vecMeasure.vectorAxis();
-    List<TypedField> fieldToAggregates = vecMeasure.fieldToAggregateAndAggFunc().stream().map(Pair::getOne).toList();
-    List<String> vectorAggFuncs = vecMeasure.fieldToAggregateAndAggFunc().stream().map(Pair::getTwo).toList();
+    List<TypedField> fieldToAggregates = vecMeasure.fieldToAggregateAndAggFunc().stream().map(CompiledFieldAndAggFunc::field).toList();
+    List<String> vectorAggFuncs = vecMeasure.fieldToAggregateAndAggFunc().stream().map(CompiledFieldAndAggFunc::aggFunc).toList();
     if (this.originalQueryScope.columns().contains(vectorAxis)) {
       Set<CompiledMeasure> m = new HashSet<>();
       for (int i = 0; i < fieldToAggregates.size(); i++) {
