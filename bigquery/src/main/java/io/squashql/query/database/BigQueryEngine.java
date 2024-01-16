@@ -100,7 +100,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
           return o.getDoubleValue();
         } else if (listClass.equals(Lists.LongList.class)) {
           return o.getLongValue();
-        } else if (listClass.equals(LocalDate.class)) {
+        } else if (listClass.equals(Lists.LocalDateList.class)) {
           return LocalDate.parse(o.getStringValue());
         } else {
           return o.getValue(); // it will be a string
