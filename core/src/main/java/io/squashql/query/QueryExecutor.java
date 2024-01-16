@@ -165,19 +165,22 @@ public class QueryExecutor {
       QueryCache.QueryCacheKey queryCacheKey = new QueryCache.QueryCacheKey(scope, user);
       QueryCache queryCache = getQueryCache((QueryCacheParameter) query.parameters.getOrDefault(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.USE)), user);
 
+      Set<CompiledMeasure> measuresToExcludeFromCache = new HashSet<>(); // the measures not to put in cache
       Set<CompiledMeasure> cached = new HashSet<>();
       Set<CompiledMeasure> notCached = new HashSet<>();
-      Collection<CompiledMeasure> groupingMeasures = generateGroupingMeasures(scope).values();
       for (CompiledMeasure measure : measures) {
         if (MeasureUtils.isPrimitive(measure)) {
-          // Make sure to never cache the grouping measures. It could cause issue in some cases.
-          if (queryCache.contains(measure, queryCacheKey) && !groupingMeasures.contains(measure)) {
+          boolean canBeCached = canBeCached(measure, scope);
+          if (!canBeCached) {
+            measuresToExcludeFromCache.add(measure);
+          } else if (queryCache.contains(measure, queryCacheKey)) {
             cached.add(measure);
           } else {
             notCached.add(measure);
           }
         }
       }
+      notCached.addAll(measuresToExcludeFromCache);
 
       Table result;
       if (!notCached.isEmpty()) {
@@ -191,7 +194,7 @@ public class QueryExecutor {
       }
 
       queryCache.contributeToResult(result, cached, queryCacheKey);
-      Set<CompiledMeasure> measuresToCache = notCached.stream().filter(m -> !groupingMeasures.contains(m)).collect(Collectors.toSet());
+      Set<CompiledMeasure> measuresToCache = notCached.stream().filter(m -> !measuresToExcludeFromCache.contains(m)).collect(Collectors.toSet());
       queryCache.contributeToCache(result, measuresToCache, queryCacheKey);
 
       // The table in the cache contains null values for totals but in this map, we need to replace the nulls with totals
@@ -240,6 +243,15 @@ public class QueryExecutor {
             .evictionCount(stats.evictionCount)
             .missCount(stats.missCount);
     return result;
+  }
+
+  private static boolean canBeCached(CompiledMeasure measure, QueryScope scope) {
+    // Make sure to never cache the grouping measures. It could cause issue in some cases.
+    if(generateGroupingMeasures(scope).values().contains(measure)) {
+      return false;
+    }
+    // In case of vectors, we can rely only on the alias of the measure.
+    return SqlUtils.extractFieldFromGroupingAlias(measure.alias()) == null;
   }
 
   private static DependencyGraph<QueryPlanNodeKey> computeDependencyGraph(

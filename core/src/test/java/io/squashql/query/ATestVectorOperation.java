@@ -25,7 +25,6 @@ import static io.squashql.query.agg.AggregationFunction.SUM;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
 import static io.squashql.util.ListUtils.reorder;
-import static io.squashql.util.ListUtils.reorder_;
 import static java.util.Comparator.naturalOrder;
 
 @TestClass(ignore = TestClass.Type.SNOWFLAKE)
@@ -186,8 +185,8 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
       DoubleList parentValue = (DoubleList) ((List) b).get(0);
       // We have to reorder both arrays and use their associated date array because they are not in the same order!
       // Order by date to get a deterministic order
-      List<Double> currentValueOrdered = reorder_(currentValue, MultipleColumnsSorter.sort(List.of((LocalDateList) ((List) a).get(1)), List.of(naturalOrder()), new int[0]));
-      List<Double> parentValueOrdered = reorder_(parentValue, MultipleColumnsSorter.sort(List.of((LocalDateList) ((List) b).get(1)), List.of(naturalOrder()), new int[0]));
+      List<Double> currentValueOrdered = reorder(currentValue, MultipleColumnsSorter.sort(List.of((LocalDateList) ((List) a).get(1)), List.of(naturalOrder()), new int[0]));
+      List<Double> parentValueOrdered = reorder(parentValue, MultipleColumnsSorter.sort(List.of((LocalDateList) ((List) b).get(1)), List.of(naturalOrder()), new int[0]));
       DoubleList ratio = new DoubleList(currentValue.size());
       for (int i = 0; i < currentValue.size(); i++) {
         ratio.add(currentValueOrdered.get(i) - parentValueOrdered.get(i));
