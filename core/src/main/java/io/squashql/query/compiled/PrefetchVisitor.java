@@ -194,7 +194,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
               this.originalQueryScope.table(),
               subQuery,
               topQuerySelectColumns,
-              this.originalQueryScope.whereCriteria(),
+              null, // the filter applied to the sub-query is enough
               this.originalQueryScope.havingCriteria(),
               Collections.emptyList(), // remove rollup, it has been computed in the subquery
               Collections.emptyList(),
