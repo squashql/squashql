@@ -11,7 +11,6 @@ import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.MultipleColumnsSorter;
 import org.assertj.core.api.Assertions;
-import org.eclipse.collections.impl.tuple.Tuples;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -71,7 +70,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
 
   @Test
   void testWithoutTotals() {
-    Measure vector = new VectorTupleAggMeasure("vector", List.of(Tuples.pair(this.price, SUM), Tuples.pair(this.date, ANY_VALUE)), this.date, null);
+    Measure vector = new VectorTupleAggMeasure("vector", List.of(new FieldAndAggFunc(this.price, SUM), new FieldAndAggFunc(this.date, ANY_VALUE)), this.date, null);
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(this.competitor, this.ean), List.of(vector))
@@ -84,7 +83,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
 
   @Test
   void testTotals() {
-    Measure vector = new VectorTupleAggMeasure("vector", List.of(Tuples.pair(this.price, SUM), Tuples.pair(this.date, ANY_VALUE)), this.date, null);
+    Measure vector = new VectorTupleAggMeasure("vector", List.of(new FieldAndAggFunc(this.price, SUM), new FieldAndAggFunc(this.date, ANY_VALUE)), this.date, null);
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(this.competitor, this.ean), List.of(vector))
@@ -152,7 +151,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
 
     Measure vector = new VectorTupleAggMeasure(
             "price_at_2023_3_3",
-            List.of(Tuples.pair(this.price, SUM), Tuples.pair(this.date, ANY_VALUE)),
+            List.of(new FieldAndAggFunc(this.price, SUM), new FieldAndAggFunc(this.date, ANY_VALUE)),
             this.date,
             transformer);
     QueryDto query = Query
@@ -178,7 +177,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
 
   @Test
   void testParentComparison() {
-    Measure vector = new VectorTupleAggMeasure("vector", List.of(Tuples.pair(this.price, SUM), Tuples.pair(this.date, ANY_VALUE)), this.date, null);
+    Measure vector = new VectorTupleAggMeasure("vector", List.of(new FieldAndAggFunc(this.price, SUM), new FieldAndAggFunc(this.date, ANY_VALUE)), this.date, null);
     List<Field> fields = List.of(this.competitor, this.ean);
     BiFunction<Object, Object, Object> operator = (a, b) -> {
       DoubleList currentValue = (DoubleList) ((List) a).get(0);

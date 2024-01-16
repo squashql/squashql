@@ -1,7 +1,6 @@
 package io.squashql.query;
 
 import lombok.*;
-import org.eclipse.collections.api.tuple.Pair;
 
 import java.util.List;
 import java.util.function.Function;
@@ -16,14 +15,14 @@ import java.util.function.Function;
 public class VectorTupleAggMeasure implements Measure {
 
   public String alias;
-  public List<Pair<Field, String>> fieldToAggregateAndAggFunc;
+  public List<FieldAndAggFunc> fieldToAggregateAndAggFunc;
   public Field vectorAxis;
   public Function<List<Object>, Object> transformer;
   @With
   public String expression;
 
   public VectorTupleAggMeasure(String alias,
-                               List<Pair<Field, String>> fieldToAggregateAndAggFunc,
+                               List<FieldAndAggFunc> fieldToAggregateAndAggFunc,
                                Field vectorAxis,
                                Function<List<Object>, Object> transformer) {
     this.alias = alias;

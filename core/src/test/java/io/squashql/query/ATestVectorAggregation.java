@@ -11,7 +11,6 @@ import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
-import org.eclipse.collections.impl.tuple.Tuples;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
@@ -296,8 +295,8 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
     this.queryCache.clear();
 
     // Do not use the same alia and the same transformer instance. We want the measure not to be equal.
-    Measure vectorWoTransformer = new VectorTupleAggMeasure("vectorWoTransformer", List.of(Tuples.pair(this.value, SUM)), this.date, a -> a.get(0));
-    Measure vectorWithTransformer = new VectorTupleAggMeasure("vectorWithTransformer", List.of(Tuples.pair(this.value, SUM)), this.date, a -> a.get(0));
+    Measure vectorWoTransformer = new VectorTupleAggMeasure("vectorWoTransformer", List.of(new FieldAndAggFunc(this.value, SUM)), this.date, a -> a.get(0));
+    Measure vectorWithTransformer = new VectorTupleAggMeasure("vectorWithTransformer", List.of(new FieldAndAggFunc(this.value, SUM)), this.date, a -> a.get(0));
     QueryDto q1 = Query
             .from(this.storeName)
             .select(List.of(this.ean, this.competitor), List.of(vectorWoTransformer))

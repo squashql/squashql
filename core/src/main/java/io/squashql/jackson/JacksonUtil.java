@@ -3,6 +3,7 @@ package io.squashql.jackson;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import io.squashql.query.Field;
 import io.squashql.query.dto.QueryDto;
 
@@ -16,6 +17,7 @@ public class JacksonUtil {
     simpleModule.addKeyDeserializer(Field.class, new QueryDto.KeyFieldDeserializer());
     simpleModule.addKeySerializer(Field.class, new QueryDto.KeyFieldSerializer());
     OBJECT_MAPPER.registerModule(simpleModule);
+    OBJECT_MAPPER.registerModule(new JSR310Module());
   }
 
   public static String serialize(Object any) {
