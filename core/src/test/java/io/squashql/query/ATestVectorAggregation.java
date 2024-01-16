@@ -268,7 +268,6 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
   @Test
   void testCache() {
     this.queryCache.clear();
-
     Measure vector = new VectorAggMeasure("vector", this.value, SUM, this.date);
     QueryDto query = Query
             .from(this.storeName)
@@ -315,7 +314,6 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
   @Test
   void testGroupingMeasuresAreNotCached() {
     this.queryCache.clear();
-
     // Do not use the same alia and the same transformer instance. We want the measure not to be equal.
     Measure vectorWoTransformer = new VectorTupleAggMeasure("vectorWoTransformer", List.of(new FieldAndAggFunc(this.value, SUM)), this.date, a -> a.get(0));
     Measure vectorWithTransformer = new VectorTupleAggMeasure("vectorWithTransformer", List.of(new FieldAndAggFunc(this.value, SUM)), this.date, a -> a.get(0));
