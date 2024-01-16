@@ -155,28 +155,27 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     Table writeToTable = this.executionContext.getWriteToTable();
 
     List<List<Object>> columnValues = new ArrayList<>();
-    for (int i = 0; i < measure.fieldToAggregateAndAggFunc().size(); i++) {
-      // We use the same logic for the measure names as the PrefetchVisitor to retrieve the values
-      columnValues.add(readTable.getColumnValues(measure.alias() + "_" + i));
+    // We use the same logic for the measure names as the PrefetchVisitor to retrieve the values
+    int size = measure.fieldToAggregateAndAggFunc().size();
+    for (int i = 0; i < size; i++) {
+      String alias = size > 1 ? measure.alias() + "_" + i : measure.alias();
+      columnValues.add(readTable.getColumnValues(alias));
     }
 
     List<Object> vectorValues = ListUtils.createListWithNulls((int) readTable.count());
     writeToTable.pointDictionary().forEach((point, index) -> {
       int position = readTable.pointDictionary().getPosition(point);
       if (position >= 0) {
-        List<Object> v = new ArrayList<>(measure.fieldToAggregateAndAggFunc().size());
-        for (int field = 0; field < measure.fieldToAggregateAndAggFunc().size(); field++) {
+        List<Object> v = new ArrayList<>(size);
+        for (int field = 0; field < size; field++) {
           v.add(columnValues.get(field).get(position));
         }
         vectorValues.set(index, measure.transformer() != null ? measure.transformer().apply(v) : v);
       }
     });
 
-    writeToTable.addAggregates(
-            new Header(measure.alias(), Object.class, true),
-            measure,
-            vectorValues
-    );
+    Header header = new Header(measure.alias(), Object.class, true);
+    writeToTable.addAggregates(header, measure, vectorValues);
     return null;
   }
 }
