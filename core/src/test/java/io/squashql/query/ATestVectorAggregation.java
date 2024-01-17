@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.in;
 import static io.squashql.query.agg.AggregationFunction.SUM;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
@@ -98,6 +100,26 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
             List.of(6006d, 33033d, 303303d),
             List.of(6d, 33d, 303d),
             List.of(6000d, 33000d, 303000d));
+    assertVectorValues((ColumnarTable) result, vector, points, expectedVectors);
+  }
+
+  @Test
+  void testCrossjoinOneWithTotalsWithFilter() {
+    Measure vector = new VectorAggMeasure("vector", this.value, SUM, this.date);
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(criterion(this.competitor, in(competitorX, competitorY)))
+            .select(List.of(this.competitor), List.of(vector))
+            .rollup(List.of(this.competitor))
+            .build();
+    Table result = this.executor.executeQuery(query);
+    Assertions.assertThat(result.headers().stream().map(Header::name))
+            .containsExactly(this.competitor.name(), vector.alias());
+    List<List<Object>> points = List.of(List.of(GRAND_TOTAL), List.of(competitorX), List.of(competitorY));
+    List<List<Number>> expectedVectors = List.of(
+            List.of(3003d, 21021d, 201201d),
+            List.of(1001d, 10010d, 100100d),
+            List.of(2002d, 11011d, 101101d));
     assertVectorValues((ColumnarTable) result, vector, points, expectedVectors);
   }
 
@@ -246,7 +268,6 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
   @Test
   void testCache() {
     this.queryCache.clear();
-
     Measure vector = new VectorAggMeasure("vector", this.value, SUM, this.date);
     QueryDto query = Query
             .from(this.storeName)
@@ -293,7 +314,6 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
   @Test
   void testGroupingMeasuresAreNotCached() {
     this.queryCache.clear();
-
     // Do not use the same alia and the same transformer instance. We want the measure not to be equal.
     Measure vectorWoTransformer = new VectorTupleAggMeasure("vectorWoTransformer", List.of(new FieldAndAggFunc(this.value, SUM)), this.date, a -> a.get(0));
     Measure vectorWithTransformer = new VectorTupleAggMeasure("vectorWithTransformer", List.of(new FieldAndAggFunc(this.value, SUM)), this.date, a -> a.get(0));
