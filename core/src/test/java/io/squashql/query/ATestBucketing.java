@@ -2,8 +2,6 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
-import io.squashql.query.database.QueryRewriter;
-import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.CriteriaDto;
 import io.squashql.query.dto.JoinType;
@@ -13,17 +11,12 @@ import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
 
 import static io.squashql.query.Functions.*;
-import static io.squashql.query.TableField.tableField;
-import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
 
@@ -31,7 +24,38 @@ import static io.squashql.query.database.QueryEngine.TOTAL;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestBucketing extends ABaseTestQuery {
 
-  protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  private final String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  private final TableField ean = new TableField(this.storeName, "ean");
+  private final TableField shop = new TableField(this.storeName, "shop");
+  private final TableField unitPrice = new TableField(this.storeName, "unitPrice");
+  private final TableField qtySold = new TableField(this.storeName, "qtySold");
+  private final TableField kvi = new TableField(this.storeName, "kvi");
+
+  private final String sensitivitiesStoreName = "sensitivities";
+  private final TableField bucket = new TableField(this.sensitivitiesStoreName, "bucket");
+  private final TableField min = new TableField(this.sensitivitiesStoreName, "min");
+  private final TableField max = new TableField(this.sensitivitiesStoreName, "max");
+
+  private final String expensivenessStoreName = "expensiveness";
+  private final TableField category = new TableField(this.expensivenessStoreName, "category");
+  private final TableField minPrice = new TableField(this.expensivenessStoreName, "minPrice");
+  private final TableField maxPrice = new TableField(this.expensivenessStoreName, "maxPrice");
+  private final Measure sales = Functions.sum("sales", Functions.multiply(this.qtySold, this.unitPrice));
+  private final VirtualTableDto sensitivities = new VirtualTableDto(
+          this.sensitivitiesStoreName,
+          List.of(this.bucket.fieldName, this.min.fieldName, this.max.fieldName),
+          List.of(
+                  List.of("unsensitive", 0d, 50d),
+                  List.of("sensitive", 50d, 80d),
+                  List.of("hypersensitive", 80d, 101d)
+          ));
+  private final VirtualTableDto expensiveness = new VirtualTableDto(
+          this.expensivenessStoreName,
+          List.of(this.category.fieldName, this.minPrice.fieldName, this.maxPrice.fieldName),
+          List.of(
+                  List.of("cheap", 0d, 7d),
+                  List.of("expensive", 7d, 11d)
+          ));
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
@@ -54,34 +78,21 @@ public abstract class ATestBucketing extends ABaseTestQuery {
     this.tm.load(this.storeName, tuples);
   }
 
-  static VirtualTableDto sensitivities = new VirtualTableDto("sensitivities", List.of("bucket", "min", "max"), List.of(
-          List.of("unsensitive", 0d, 50d),
-          List.of("sensitive", 50d, 80d),
-          List.of("hypersensitive", 80d, 101d)
-  ));
-
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void test(boolean useFullName) {
-    QueryRewriter qr = this.executor.queryEngine.queryRewriter(null);
-    String expression = String.format("sum(%s * %s)", qr.fieldName("unitPrice"), qr.fieldName("qtySold"));
-    ExpressionMeasure sales = new ExpressionMeasure("sales", expression);
-    BiFunction<String, String, String> fieldNameGenerator = (table, field) -> useFullName ? SqlUtils.getFieldFullName(table, field) : field;
+  @Test
+  void testSingleVirtualTable() {
     CriteriaDto criteria = all(
-            criterion(fieldNameGenerator.apply(this.storeName, "kvi"), fieldNameGenerator.apply(sensitivities.name, "min"), ConditionType.GE),
-            criterion(fieldNameGenerator.apply(this.storeName, "kvi"), fieldNameGenerator.apply(sensitivities.name, "max"), ConditionType.LT));
-    Field bucket = tableField(fieldNameGenerator.apply(sensitivities.name, "bucket"));
-    Field shop = tableField(fieldNameGenerator.apply(this.storeName, "shop"));
+            criterion(this.kvi, this.min, ConditionType.GE),
+            criterion(this.kvi, this.max, ConditionType.LT));
     var query = Query
             .from(this.storeName)
-            .join(sensitivities, JoinType.INNER)
+            .join(this.sensitivities, JoinType.INNER)
             .on(criteria)
-            .select(List.of(shop, bucket), List.of(sales))
+            .select(List.of(this.shop, this.bucket), List.of(this.sales))
             .build();
 
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(shop.name(), bucket.name(), "sales");
+            .containsExactly(this.shop.name(), this.bucket.name(), this.sales.alias());
     Assertions.assertThat(result).containsExactly(
             List.of("0", "hypersensitive", 240d),
             List.of("0", "sensitive", 150d),
@@ -92,14 +103,14 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 
     query = Query
             .from(this.storeName)
-            .join(sensitivities, JoinType.INNER)
+            .join(this.sensitivities, JoinType.INNER)
             .on(criteria)
-            .select(List.of(shop, bucket), List.of(sales))
-            .rollup(shop, bucket)
+            .select(List.of(this.shop, this.bucket), List.of(this.sales))
+            .rollup(this.shop, this.bucket)
             .build();
     result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(shop.name(), bucket.name(), "sales");
+            .containsExactly(this.shop.name(), this.bucket.name(), this.sales.alias());
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, GRAND_TOTAL, 900d),
             List.of("0", TOTAL, 450d),
@@ -114,27 +125,19 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 
   @Test
   void testConditionFieldCombined() {
-    QueryRewriter qr = this.executor.queryEngine.queryRewriter(null);
-    String expression = String.format("sum(%s * %s)", qr.fieldName("unitPrice"), qr.fieldName("qtySold"));
-    ExpressionMeasure sales = new ExpressionMeasure("sales", expression);
-    TableField kvi = new TableField(this.storeName, "kvi");
-    TableField min = new TableField(sensitivities.name, "min");
-    TableField max = new TableField(sensitivities.name, "max");
     CriteriaDto criteria = all(
-            criterion(minus(kvi, min), ge(0)),
-            criterion(minus(kvi, max), lt(0)));
-    String bucket = SqlUtils.getFieldFullName(sensitivities.name, "bucket");
-    String shop = SqlUtils.getFieldFullName(this.storeName, "shop");
+            criterion(minus(this.kvi, this.min), ge(0)),
+            criterion(minus(this.kvi, this.max), lt(0)));
     var query = Query
             .from(this.storeName)
-            .join(sensitivities, JoinType.INNER)
+            .join(this.sensitivities, JoinType.INNER)
             .on(criteria)
-            .select(tableFields(List.of(shop, bucket)), List.of(sales))
+            .select(List.of(this.shop, this.bucket), List.of(this.sales))
             .build();
 
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(shop, bucket, "sales");
+            .containsExactly(this.shop.name(), this.bucket.name(), this.sales.alias());
     Assertions.assertThat(result).containsExactly(
             List.of("0", "hypersensitive", 240d),
             List.of("0", "sensitive", 150d),
@@ -142,5 +145,36 @@ public abstract class ATestBucketing extends ABaseTestQuery {
             List.of("1", "hypersensitive", 240d),
             List.of("1", "sensitive", 150d),
             List.of("1", "unsensitive", 60d));
+  }
+
+  @Test
+  void testMultipleVirtualTables() {
+    CriteriaDto criteriaSensi = all(
+            criterion(this.kvi, this.min, ConditionType.GE),
+            criterion(this.kvi, this.max, ConditionType.LT));
+    CriteriaDto criteriaExp = all(
+            criterion(this.unitPrice, this.minPrice, ConditionType.GE),
+            criterion(this.unitPrice, this.maxPrice, ConditionType.LT));
+    var query = Query
+            .from(this.storeName)
+            .join(this.sensitivities, JoinType.INNER)
+            .on(criteriaSensi)
+            .join(this.expensiveness, JoinType.INNER)
+            .on(criteriaExp)
+            .select(List.of(this.bucket, this.category), List.of(CountMeasure.INSTANCE))
+            .build();
+
+    Table result = this.executor.executeQuery(query);
+    Assertions.assertThat(result.headers().stream().map(Header::name))
+            .containsExactly(this.bucket.name(), this.category.name(), CountMeasure.INSTANCE.alias());
+    Assertions.assertThat(result).containsExactly(
+            List.of("hypersensitive", "expensive", 6L),
+            List.of("sensitive", "cheap", 6L),
+            List.of("unsensitive", "cheap", 8L));
+  }
+
+  @Test
+  void testJoinVirtualTableOnSubQuery() {
+    // FIXME
   }
 }

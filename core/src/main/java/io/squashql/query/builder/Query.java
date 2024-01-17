@@ -3,15 +3,9 @@ package io.squashql.query.builder;
 import io.squashql.query.ColumnSet;
 import io.squashql.query.Field;
 import io.squashql.query.Measure;
-import io.squashql.query.dto.ConditionDto;
-import io.squashql.query.dto.CriteriaDto;
-import io.squashql.query.dto.JoinType;
-import io.squashql.query.dto.OrderKeywordDto;
-import io.squashql.query.dto.QueryDto;
-import io.squashql.query.dto.TableDto;
-import io.squashql.query.dto.VirtualTableDto;
+import io.squashql.query.dto.*;
+
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildingTable, HasOrderBy, CanAddRollup {
@@ -42,7 +36,7 @@ public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
   @Override
   public HasStartedBuildingJoin join(VirtualTableDto virtualTableDto, JoinType joinType) {
     addJoinToQueryDto();
-    this.queryDto.virtualTableDto = virtualTableDto;
+    this.queryDto.virtualTableDtos.add(virtualTableDto);
     this.currentJoinTableBuilder = new JoinTableBuilder(this, virtualTableDto.name, JoinType.INNER);
     return this.currentJoinTableBuilder;
   }

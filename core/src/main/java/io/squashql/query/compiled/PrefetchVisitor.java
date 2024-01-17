@@ -179,7 +179,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
         subQueryMeasures.add(new CompiledAggregatedMeasure(subQueryMeasureAlias, fieldToAggregate, vectorAggFunc, null, false));
       }
 
-      DatabaseQuery subQuery = new DatabaseQuery(this.originalQueryScope.virtualTable(),
+      DatabaseQuery subQuery = new DatabaseQuery(this.originalQueryScope.virtualTables(),
               this.originalQueryScope.table(),
               this.originalQueryScope.subQuery(),
               new HashSet<>(subQuerySelectColumns),
@@ -198,7 +198,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
               this.originalQueryScope.havingCriteria(),
               Collections.emptyList(), // remove rollup, it has been computed in the subquery
               Collections.emptyList(),
-              this.originalQueryScope.virtualTable(),
+              this.originalQueryScope.virtualTables(),
               this.originalQueryScope.limit());
 
       int size = subQueryMeasureAliases.size();

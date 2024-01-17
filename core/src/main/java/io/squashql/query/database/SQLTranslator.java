@@ -32,7 +32,7 @@ public class SQLTranslator {
     selects.addAll(aggregates);
 
     StringBuilder statement = new StringBuilder();
-    addCte(query.virtualTableDto, statement, queryRewriter);
+    addCtes(query.virtualTableDtos, statement, queryRewriter);
     statement.append("select ");
     statement.append(String.join(", ", selects));
     statement.append(" from ");
@@ -54,34 +54,45 @@ public class SQLTranslator {
     return statement.toString();
   }
 
-  private static void addCte(VirtualTableDto virtualTableDto, StringBuilder statement, QueryRewriter qr) {
-    if (virtualTableDto == null) {
+  private static void addCtes(List<VirtualTableDto> virtualTableDtos, StringBuilder statement, QueryRewriter qr) {
+    if (virtualTableDtos == null) {
       return;
     }
 
-    StringBuilder sb = new StringBuilder();
-    Iterator<List<Object>> it = virtualTableDto.records.iterator();
-    while (it.hasNext()) {
-      sb.append("select ");
-      List<Object> row = it.next();
-      for (int i = 0; i < row.size(); i++) {
-        Object obj = row.get(i);
-        sb.append(obj instanceof String ? "'" : "");
-        sb.append(obj);
-        sb.append(obj instanceof String ? "'" : "");
-        sb.append(" as ").append(qr.fieldName(virtualTableDto.fields.get(i)));
-        if (i < row.size() - 1) {
-          sb.append(", ");
+    List<String> cteExpressions = new ArrayList<>(virtualTableDtos.size());
+    for (VirtualTableDto virtualTableDto : virtualTableDtos) {
+      StringBuilder sb = new StringBuilder();
+      Iterator<List<Object>> it = virtualTableDto.records.iterator();
+      while (it.hasNext()) {
+        sb.append("select ");
+        List<Object> row = it.next();
+        for (int i = 0; i < row.size(); i++) {
+          Object obj = row.get(i);
+          sb.append(obj instanceof String ? "'" : "");
+          sb.append(obj);
+          sb.append(obj instanceof String ? "'" : "");
+          sb.append(" as ").append(qr.fieldName(virtualTableDto.fields.get(i)));
+          if (i < row.size() - 1) {
+            sb.append(", ");
+          }
+        }
+        if (it.hasNext()) {
+          sb.append(" union all ");
         }
       }
-      if (it.hasNext()) {
-        sb.append(" union all ");
-      }
+      cteExpressions.add(sb.toString());
     }
 
-    statement
-            .append("with ").append(qr.cteName(virtualTableDto.name))
-            .append(" as (").append(sb).append(") ");
+    statement.append("with ");
+    for (int i = 0; i < cteExpressions.size(); i++) {
+      String exp = cteExpressions.get(i);
+      statement.append(qr.cteName(virtualTableDtos.get(i).name)).append(" as (").append(exp).append(")");
+      if (i < cteExpressions.size() - 1) {
+        statement.append(", ");
+      } else {
+        statement.append(" ");
+      }
+    }
   }
 
   public static void addLimit(int limit, StringBuilder statement) {

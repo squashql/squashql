@@ -26,7 +26,7 @@ public class QueryDto {
 
   public QueryDto subQuery;
 
-  public VirtualTableDto virtualTableDto; // Only support 1 single virtual for now
+  public List<VirtualTableDto> virtualTableDtos = new ArrayList<>();
 
   public List<Field> columns = new ArrayList<>();
 

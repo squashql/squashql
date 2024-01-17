@@ -110,7 +110,7 @@ public final class MeasureUtils {
             queryScope.havingCriteria(),
             new ArrayList<>(rollupColumns),
             new ArrayList<>(queryScope.groupingSets()), // FIXME should handle groupingSets
-            queryScope.virtualTable(),
+            queryScope.virtualTables(),
             queryScope.limit());
   }
 

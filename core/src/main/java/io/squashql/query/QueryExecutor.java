@@ -246,7 +246,7 @@ public class QueryExecutor {
 
   private static boolean canBeCached(CompiledMeasure measure, QueryScope scope) {
     // Make sure to never cache the grouping measures. It could cause issue in some cases.
-    if(generateGroupingMeasures(scope).values().contains(measure)) {
+    if (generateGroupingMeasures(scope).values().contains(measure)) {
       return false;
     }
     // In case of vectors, we can rely only on the alias of the measure.
@@ -287,7 +287,7 @@ public class QueryExecutor {
                            CompiledCriteria havingCriteria,
                            List<TypedField> rollupColumns,
                            List<List<TypedField>> groupingSets,
-                           VirtualTableDto virtualTable,
+                           List<VirtualTableDto> virtualTables,
                            int limit) {
 
     @Override
@@ -312,8 +312,8 @@ public class QueryExecutor {
       if (groupingSets != null && !groupingSets.isEmpty()) {
         sb.append(", groupingSets=").append(groupingSets);
       }
-      if (virtualTable != null) {
-        sb.append(", virtualTable=").append(virtualTable);
+      if (virtualTables != null && !virtualTables.isEmpty()) {
+        sb.append(", virtualTables=").append(virtualTables);
       }
       if (limit > 0) {
         sb.append(", limit=").append(limit);

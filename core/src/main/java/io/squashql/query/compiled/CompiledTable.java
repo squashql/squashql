@@ -11,10 +11,18 @@ public record CompiledTable(String name, List<CompiledJoin> joins) {
 
   public String sqlExpression(QueryRewriter queryRewriter) {
     StringBuilder statement = new StringBuilder();
-    VirtualTableDto virtualTable = queryRewriter.query() != null ? queryRewriter.query().virtualTableDto : null;
+    List<VirtualTableDto> virtualTables = queryRewriter.query() != null ? queryRewriter.query().virtualTableDtos : null;
     statement.append(queryRewriter.tableName(this.name));
-    Function<String, String> tableNameFunc = tableName -> virtualTable != null && virtualTable.name.equals(tableName)
-            ? queryRewriter.cteName(tableName) : queryRewriter.tableName(tableName);
+    Function<String, String> tableNameFunc = tableName -> {
+      if (virtualTables != null) {
+        for (VirtualTableDto virtualTable : virtualTables) {
+          if (virtualTable.name.equals(tableName)) {
+            return queryRewriter.cteName(tableName);
+          }
+        }
+      }
+      return queryRewriter.tableName(tableName);
+    };
     this.joins.forEach(j -> statement.append(j.sqlExpression(queryRewriter, tableNameFunc)));
     return statement.toString();
   }

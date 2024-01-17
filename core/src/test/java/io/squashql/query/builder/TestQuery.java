@@ -201,7 +201,7 @@ public class TestQuery {
             .withColumn(tableField("col1"))
             .withColumn(tableField("col2"))
             .withMeasure(sum);
-    q.virtualTableDto = vt;
+    q.virtualTableDtos = List.of(vt);
 
     Assertions.assertThat(build).isEqualTo(q);
   }

@@ -34,8 +34,10 @@ public class QueryResolver {
   public QueryResolver(QueryDto query, Map<String, Store> storesByName) {
     this.query = query;
     this.storesByName = storesByName;
-    if (query.virtualTableDto != null) {
-      this.storesByName.put(query.virtualTableDto.name, VirtualTableDto.toStore(query.virtualTableDto));
+    if (query.virtualTableDtos != null) {
+      for (VirtualTableDto virtualTableDto : query.virtualTableDtos) {
+        this.storesByName.put(virtualTableDto.name, VirtualTableDto.toStore(virtualTableDto));
+      }
     }
     this.columns = query.columns.stream().map(this::resolveField).toList();
     this.bucketColumns = Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
@@ -154,7 +156,7 @@ public class QueryResolver {
             compileCriteria(query.havingCriteriaDto),
             rollupColumns,
             groupingSets,
-            query.virtualTableDto,
+            query.virtualTableDtos,
             query.limit);
   }
 
@@ -190,8 +192,8 @@ public class QueryResolver {
     if (subQuery.subQuery != null) {
       throw new IllegalArgumentException("sub-query in a sub-query is not supported");
     }
-    if (subQuery.virtualTableDto != null) {
-      throw new IllegalArgumentException("virtualTable in a sub-query is not supported");
+    if (subQuery.virtualTableDtos != null) {
+      throw new IllegalArgumentException("virtualTables in a sub-query is not supported");
     }
     if (subQuery.columnSets != null && !subQuery.columnSets.isEmpty()) {
       throw new IllegalArgumentException("column sets are not expected in sub query: " + subQuery);
@@ -202,7 +204,7 @@ public class QueryResolver {
   }
 
   public DatabaseQuery toDatabaseQuery(final QueryExecutor.QueryScope query, final int limit) {
-    return new DatabaseQuery(query.virtualTable(),
+    return new DatabaseQuery(query.virtualTables(),
             query.table(),
             query.subQuery(),
             new LinkedHashSet<>(query.columns()),
