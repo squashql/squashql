@@ -55,7 +55,7 @@ public class SQLTranslator {
   }
 
   private static void addCtes(List<VirtualTableDto> virtualTableDtos, StringBuilder statement, QueryRewriter qr) {
-    if (virtualTableDtos == null) {
+    if (virtualTableDtos == null || virtualTableDtos.isEmpty()) {
       return;
     }
 

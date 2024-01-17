@@ -192,7 +192,7 @@ public class QueryResolver {
     if (subQuery.subQuery != null) {
       throw new IllegalArgumentException("sub-query in a sub-query is not supported");
     }
-    if (subQuery.virtualTableDtos != null) {
+    if (subQuery.virtualTableDtos != null && !subQuery.virtualTableDtos.isEmpty()) {
       throw new IllegalArgumentException("virtualTables in a sub-query is not supported");
     }
     if (subQuery.columnSets != null && !subQuery.columnSets.isEmpty()) {

@@ -119,7 +119,8 @@ public class TestJavascriptLibrary {
   void testReadJsonBuildFromQuery() {
     var table = new TableDto("myTable");
     var refTable = new TableDto("refTable");
-    var cte = new VirtualTableDto("myCte", List.of("id", "min", "max", "other"), List.of(List.of(0, 0, 1, "x"), List.of(1, 2, 3, "y")));
+    var cte1 = new VirtualTableDto("myCte1", List.of("id", "min", "max", "other"), List.of(List.of(0, 0, 1, "x"), List.of(1, 2, 3, "y")));
+    var cte2 = new VirtualTableDto("myCte2", List.of("id", "min", "max", "other"), List.of(List.of(0, 4, 12, "a"), List.of(1, 12, 25, "b")));
 
     BucketColumnSetDto bucketColumnSet = new BucketColumnSetDto("group", tableField("scenario"))
             .withNewBucket("a", List.of("a1", "a2"))
@@ -131,8 +132,10 @@ public class TestJavascriptLibrary {
             .join(refTable.name, JoinType.INNER)
             .on(all(criterion("myTable" + ".id", "refTable" + ".id", ConditionType.EQ),
                     criterion("myTable" + ".a", "refTable" + ".a", ConditionType.EQ)))
-            .join(cte, JoinType.INNER)
-            .on(all(criterion("myTable.value", "myCte.min", ConditionType.GE), criterion("myTable.value", "myCte.max", ConditionType.LT)))
+            .join(cte1, JoinType.INNER)
+            .on(all(criterion("myTable.value", "myCte1.min", ConditionType.GE), criterion("myTable.value", "myCte1.max", ConditionType.LT)))
+            .join(cte2, JoinType.INNER)
+            .on(all(criterion("myTable.value", "myCte2.min", ConditionType.GE), criterion("myTable.value", "myCte2.max", ConditionType.LT)))
             .where(tableField("f2"), gt(659))
             .where(tableField("f3"), eq(123))
             .select(tableFields(List.of("a", "b")),
@@ -158,7 +161,7 @@ public class TestJavascriptLibrary {
     Assertions.assertThat(q.table).isEqualTo(qjs.table);
     Assertions.assertThat(q.subQuery).isEqualTo(qjs.subQuery);
     Assertions.assertThat(q.limit).isEqualTo(qjs.limit);
-    Assertions.assertThat(q.virtualTableDto).isEqualTo(qjs.virtualTableDto);
+    Assertions.assertThat(q.virtualTableDtos).isEqualTo(qjs.virtualTableDtos);
     Assertions.assertThat(q).isEqualTo(qjs);
   }
 

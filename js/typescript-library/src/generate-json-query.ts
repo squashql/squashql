@@ -14,7 +14,8 @@ export function generateFromQuery() {
     "a": ["a1", "a2"],
     "b": ["b1", "b2"]
   }))
-  const cte = new VirtualTable("myCte", ["id", "min", "max", "other"], [[0, 0, 1, "x"], [1, 2, 3, "y"]])
+  const cte1 = new VirtualTable("myCte1", ["id", "min", "max", "other"], [[0, 0, 1, "x"], [1, 2, 3, "y"]])
+  const cte2 = new VirtualTable("myCte2", ["id", "min", "max", "other"], [[0, 4, 12, "a"], [1, 12, 25, "b"]])
   const bucketColumnSet = new BucketColumnSet(tableField("group"), tableField("scenario"), values)
   const measure = sum("sum", new TableField("f1"))
   const measureExpr = new ExpressionMeasure("sum_expr", "sum(f1)")
@@ -25,10 +26,15 @@ export function generateFromQuery() {
             criterion_(new TableField("myTable.id"), new TableField("refTable.id"), ConditionType.EQ),
             criterion_(new TableField("myTable.a"), new TableField("refTable.a"), ConditionType.EQ)
           ]))
-          .joinVirtual(cte, JoinType.INNER)
+          .joinVirtual(cte1, JoinType.INNER)
           .on(all([
-            criterion_(new TableField("myTable.value"), new TableField("myCte.min"), ConditionType.GE),
-            criterion_(new TableField("myTable.value"), new TableField("myCte.max"), ConditionType.LT)
+            criterion_(new TableField("myTable.value"), new TableField("myCte1.min"), ConditionType.GE),
+            criterion_(new TableField("myTable.value"), new TableField("myCte1.max"), ConditionType.LT)
+          ]))
+          .joinVirtual(cte2, JoinType.INNER)
+          .on(all([
+            criterion_(new TableField("myTable.value"), new TableField("myCte2.min"), ConditionType.GE),
+            criterion_(new TableField("myTable.value"), new TableField("myCte2.max"), ConditionType.LT)
           ]))
           .where(all([
             criterion(new TableField("f2"), gt(659)),

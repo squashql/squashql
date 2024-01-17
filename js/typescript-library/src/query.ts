@@ -35,7 +35,7 @@ export class Query {
   parameters: Map<string, Parameter>
   measures: Array<Measure>
   table: Table
-  virtualTable: VirtualTable
+  virtualTables: Array<VirtualTable>
   whereCriteria: Criteria
   havingCriteriaDto: Criteria
   orders: Map<Field, Order>
@@ -45,6 +45,7 @@ export class Query {
   constructor() {
     this.columns = []
     this.rollupColumns = []
+    this.virtualTables = []
     this.measures = []
     this.whereCriteria = undefined
     this.havingCriteriaDto = undefined
@@ -112,7 +113,7 @@ export class Query {
     return {
       "table": this.table,
       "subQuery": this.subQuery,
-      "virtualTableDto": this.virtualTable,
+      "virtualTableDtos": this.virtualTables,
       "columns": this.columns,
       "rollupColumns": this.rollupColumns,
       "columnSets": Object.fromEntries(this.columnSets),
