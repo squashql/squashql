@@ -2,10 +2,7 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
-import io.squashql.query.dto.ConditionType;
-import io.squashql.query.dto.CriteriaDto;
-import io.squashql.query.dto.JoinType;
-import io.squashql.query.dto.VirtualTableDto;
+import io.squashql.query.dto.*;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
@@ -171,10 +168,5 @@ public abstract class ATestBucketing extends ABaseTestQuery {
             List.of("hypersensitive", "expensive", 6L),
             List.of("sensitive", "cheap", 6L),
             List.of("unsensitive", "cheap", 8L));
-  }
-
-  @Test
-  void testJoinVirtualTableOnSubQuery() {
-    // FIXME
   }
 }
