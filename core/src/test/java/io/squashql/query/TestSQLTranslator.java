@@ -372,18 +372,18 @@ public class TestSQLTranslator {
 
   @Test
   void testVirtualTable() {
-    final TableDto main = new TableDto(BASE_STORE_NAME);
-    final VirtualTableDto virtualTable = new VirtualTableDto(
+    TableDto main = new TableDto(BASE_STORE_NAME);
+    VirtualTableDto virtualTable = new VirtualTableDto(
             "virtual",
             List.of("a", "b"),
             List.of(List.of(0, "0"), List.of(1, "1")));
     main.join(new TableDto(virtualTable.name), INNER, criterion("id", "a", ConditionType.EQ));
-    final QueryDto query = new QueryDto()
+    QueryDto query = new QueryDto()
             .table(main)
             .withMeasure(sum("pnl.sum", "pnl"))
             .withColumn(tableField("id"))
             .withColumn(tableField("b"));
-    query.virtualTableDto = virtualTable;
+    query.virtualTableDtos = List.of(virtualTable);
     String expected = String.format("with %2$s as (select 0 as `a`, '0' as `b` union all select 1 as `a`, '1' as `b`) " +
                     "select `id`, `b`, sum(`pnl`) as `pnl.sum` from `%1$s` " +
                     "inner join %2$s on `id` = `a` group by `id`, `b`",
@@ -405,7 +405,7 @@ public class TestSQLTranslator {
             .withMeasure(sum("pnl.sum", "pnl"))
             .withColumn(tableField("id"))
             .withColumn(tableField("b"));
-    query.virtualTableDto = virtualTable;
+    query.virtualTableDtos = List.of(virtualTable);
 
     String expected = String.format("with %2$s as (select 0 as `a`, '0' as `b` union all select 1 as `a`, '1' as `b`) " +
                     "select `id`, `b`, sum(`pnl`) as `pnl.sum` from `%1$s` " +

@@ -6,19 +6,22 @@ import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 
+import java.util.List;
+
 public interface QueryRewriter {
 
   DatabaseQuery query();
 
   default String getFieldFullName(TableTypedField f) {
-    VirtualTableDto vt = query() != null ? query().virtualTableDto : null;
-    if (vt != null
-            && vt.name.equals(f.store())
-            && vt.fields.contains(f.name())) {
-      return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
-    } else {
-      return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
+    List<VirtualTableDto> vts = query() != null ? query().virtualTableDtos : null;
+    if (vts != null) {
+      for (VirtualTableDto virtualTable : vts) {
+        if (virtualTable.name.equals(f.store()) && virtualTable.fields.contains(f.name())) {
+          return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
+        }
+      }
     }
+    return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
   }
 
   default String fieldName(String field) {

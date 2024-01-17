@@ -55,4 +55,8 @@ export {
   default as Criteria
 } from "./criteria"
 
+export {
+  VirtualTable
+} from "./virtualtable"
+
 export * from "./dependencies"

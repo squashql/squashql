@@ -16,7 +16,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class DatabaseQuery {
 
-  public final VirtualTableDto virtualTableDto; // CTE
+  public final List<VirtualTableDto> virtualTableDtos; // CTEs
   public final CompiledTable table;
   public final DatabaseQuery subQuery;
   public final Set<TypedField> select;
@@ -54,8 +54,8 @@ public class DatabaseQuery {
     if (groupingSets != null && !groupingSets.isEmpty()) {
       sb.append(", groupingSets=").append(groupingSets);
     }
-    if (virtualTableDto != null) {
-      sb.append(", virtualTable=").append(virtualTableDto);
+    if (virtualTableDtos != null && !virtualTableDtos.isEmpty()) {
+      sb.append(", virtualTable=").append(virtualTableDtos);
     }
     if (limit > 0) {
       sb.append(", limit=").append(limit);
