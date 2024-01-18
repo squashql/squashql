@@ -104,13 +104,12 @@ public final class MeasureUtils {
               rollupColumns.addAll(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage reverse order".
             });
     return new QueryExecutor.QueryScope(queryScope.table(),
-            queryScope.subQuery(),
             queryScope.columns(),
             copy.get(),
             queryScope.havingCriteria(),
             new ArrayList<>(rollupColumns),
             new ArrayList<>(queryScope.groupingSets()), // FIXME should handle groupingSets
-            queryScope.virtualTables(),
+            queryScope.cteRecordTables(),
             queryScope.limit());
   }
 

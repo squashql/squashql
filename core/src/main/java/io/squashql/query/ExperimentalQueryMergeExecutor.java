@@ -1,9 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.compiled.CompiledCriteria;
-import io.squashql.query.compiled.CompiledMeasure;
-import io.squashql.query.compiled.CompiledTable;
+import io.squashql.query.compiled.*;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.QueryRewriter;
@@ -79,7 +77,7 @@ public class ExperimentalQueryMergeExecutor {
     QueryResolver queryResolver = new QueryResolver(leftCteQuery, new HashMap<>(this.queryEngine.datastore().storesByName()));
     CompiledTable joinTable = queryResolver.getScope().table();
 
-    Twin<List<TypedField>> selectColumns = getSelectElements(joinTable, left, right);
+    Twin<List<TypedField>> selectColumns = null;//getSelectElements(joinTable, left, right); FIXME
     List<String> selectSt = new ArrayList<>();
     selectColumns.getOne().forEach(typedField -> selectSt.add(replaceTableNameByCteNameIfNotNull(left, left.queryRewriter.select(typedField))));
     selectColumns.getTwo().forEach(typedField -> selectSt.add(replaceTableNameByCteNameIfNotNull(right, right.queryRewriter.select(typedField))));
@@ -90,7 +88,7 @@ public class ExperimentalQueryMergeExecutor {
             .append(String.join(", ", selectSt))
             .append(" from ");
 
-    CompiledTable.CompiledJoin compiledJoin = new CompiledTable.CompiledJoin(new CompiledTable(right.cteTableName, List.of()), joinType, joinTable.joins().get(0).joinCriteria());
+    CompiledJoin compiledJoin = null; // FIXME// new CompiledTable.CompiledJoin(new CompiledTable(right.cteTableName, List.of()), joinType, joinTable.joins().get(0).joinCriteria());
     // Build the sql expression to use Function.identity() and simply return the name of the cte and not using queryRewriter.tableName()
     // which causes problem when using BQ for instance (datasetid.__cteR__). That's why we are not using joinTable.sqlExpression directly
     String tableExpression = compiledJoin.sqlExpression(left.queryRewriter, Function.identity());
@@ -178,7 +176,7 @@ public class ExperimentalQueryMergeExecutor {
    */
   private static Twin<List<TypedField>> getSelectElements(CompiledTable joinTable, Holder left, Holder right) {
     // Try to guess from the conditions which field to keep.
-    CompiledTable.CompiledJoin join = joinTable.joins().get(0);
+    CompiledJoin join = joinTable.joins().get(0);
     List<TypedField> leftColumns = new ArrayList<>();
     List<TypedField> rightColumns = new ArrayList<>();
     for (Field field : left.query.columns) {

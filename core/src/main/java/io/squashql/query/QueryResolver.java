@@ -142,21 +142,21 @@ public class QueryResolver {
   /**
    * Queries
    */
-  private QueryExecutor.QueryScope toQueryScope(final QueryDto query) {
+  private QueryExecutor.QueryScope toQueryScope(QueryDto query) {
     checkQuery(query);
     final List<TypedField> columnSets = query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
     final List<TypedField> combinedColumns = Stream.concat(this.columns.stream(), columnSets.stream()).toList();
 
     List<TypedField> rollupColumns = query.rollupColumns.stream().map(this::resolveField).toList();
     List<List<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(this::resolveField).toList()).toList();
-    return new QueryExecutor.QueryScope(compileTable(query.table),
-            query.subQuery == null ? null : toSubQuery(query.subQuery),
+    return new QueryExecutor.QueryScope(
+            compileTable(query.table, query.subQuery),
             combinedColumns,
             compileCriteria(query.whereCriteriaDto),
             compileCriteria(query.havingCriteriaDto),
             rollupColumns,
             groupingSets,
-            query.virtualTableDtos,
+            compileVirtualTables(query.virtualTableDtos),
             query.limit);
   }
 
@@ -170,14 +170,13 @@ public class QueryResolver {
 
   private DatabaseQuery toSubQuery(final QueryDto subQuery) {
     checkSubQuery(subQuery);
-    final CompiledTable table = compileTable(subQuery.table);
+    final CompiledTable table = compileTable(subQuery.table, subQuery.subQuery);
     final List<TypedField> select = subQuery.columns.stream().map(this::resolveField).toList();
     final CompiledCriteria whereCriteria = compileCriteria(subQuery.whereCriteriaDto);
     final CompiledCriteria havingCriteria = compileCriteria(subQuery.havingCriteriaDto);
     // should we check groupingSet and rollup as well are empty ?
     DatabaseQuery query = new DatabaseQuery(null,
             table,
-            null,
             new HashSet<>(select),
             whereCriteria,
             havingCriteria,
@@ -204,9 +203,9 @@ public class QueryResolver {
   }
 
   public DatabaseQuery toDatabaseQuery(final QueryExecutor.QueryScope query, final int limit) {
-    return new DatabaseQuery(query.virtualTables(),
+    return new DatabaseQuery(
+            query.cteRecordTables(),
             query.table(),
-            query.subQuery(),
             new LinkedHashSet<>(query.columns()),
             query.whereCriteria(),
             query.havingCriteria(),
@@ -218,14 +217,34 @@ public class QueryResolver {
   /**
    * Table
    */
-  private CompiledTable compileTable(final TableDto table) {
-    return table == null
-            ? null
-            : new CompiledTable(table.name, table.joins.stream().map(this::compileJoin).collect(Collectors.toList()));
+  private CompiledTable compileTable(TableDto table, QueryDto subQuery) {
+    if (table != null) {
+      return new MaterializedTable(table.name, compileJoins(table.joins));
+    } else if (subQuery != null) {
+      return new NestedQueryTable(toSubQuery(subQuery));
+    } else {
+      throw new IllegalStateException();
+    }
   }
 
-  private CompiledTable.CompiledJoin compileJoin(JoinDto join) {
-    return new CompiledTable.CompiledJoin(compileTable(join.table), join.type, compileCriteria(join.joinCriteria));
+  private List<CteRecordTable> compileVirtualTables(List<VirtualTableDto> virtualTableDtos) {
+    return virtualTableDtos.stream().map(v -> new CteRecordTable(v.name, v.fields, v.records)).toList();
+  }
+
+  /**
+   * Joins
+   */
+  private List<CompiledJoin> compileJoins(List<JoinDto> joins) {
+    return joins.stream().map(this::compileJoin).collect(Collectors.toList());
+  }
+
+  private CompiledJoin compileJoin(JoinDto join) {
+    CompiledTable table = compileTable(join.table, null);
+    if (table instanceof NamedTable nt) {
+      return new CompiledJoin(nt, join.type, compileCriteria(join.joinCriteria));
+    } else {
+      throw new IllegalArgumentException("expected table of type " + NamedTable.class + " but received table of type " + table.getClass());
+    }
   }
 
   /**

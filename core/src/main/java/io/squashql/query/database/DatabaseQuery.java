@@ -1,9 +1,6 @@
 package io.squashql.query.database;
 
-import io.squashql.query.compiled.CompiledCriteria;
-import io.squashql.query.compiled.CompiledMeasure;
-import io.squashql.query.compiled.CompiledTable;
-import io.squashql.query.dto.VirtualTableDto;
+import io.squashql.query.compiled.*;
 import io.squashql.type.TypedField;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +13,8 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class DatabaseQuery {
 
-  public final List<VirtualTableDto> virtualTableDtos; // CTEs
+  public final List<CteRecordTable> cteRecordTables; // CTEs
   public final CompiledTable table;
-  public final DatabaseQuery subQuery;
   public final Set<TypedField> select;
   public final CompiledCriteria whereCriteria;
   public final CompiledCriteria havingCriteria;
@@ -35,32 +31,29 @@ public class DatabaseQuery {
   @Override
   public String toString() {
     final StringBuilder sb = new StringBuilder("DatabaseQuery{");
-    sb.append("table=").append(table);
-    if (subQuery != null) {
-      sb.append(", subQuery=").append(subQuery);
+    sb.append("table=").append(this.table);
+    if (this.select != null && !this.select.isEmpty()) {
+      sb.append(", columns=").append(this.select);
     }
-    if (select != null && !select.isEmpty()) {
-      sb.append(", columns=").append(select);
+    if (this.whereCriteria != null) {
+      sb.append(", whereCriteria=").append(this.whereCriteria);
     }
-    if (whereCriteria != null) {
-      sb.append(", whereCriteria=").append(whereCriteria);
+    if (this.havingCriteria != null) {
+      sb.append(", havingCriteria=").append(this.havingCriteria);
     }
-    if (havingCriteria != null) {
-      sb.append(", havingCriteria=").append(havingCriteria);
+    if (this.rollup != null && !this.rollup.isEmpty()) {
+      sb.append(", rollupColumns=").append(this.rollup);
     }
-    if (rollup != null && !rollup.isEmpty()) {
-      sb.append(", rollupColumns=").append(rollup);
+    if (this.groupingSets != null && !this.groupingSets.isEmpty()) {
+      sb.append(", groupingSets=").append(this.groupingSets);
     }
-    if (groupingSets != null && !groupingSets.isEmpty()) {
-      sb.append(", groupingSets=").append(groupingSets);
+    if (this.cteRecordTables != null && !this.cteRecordTables.isEmpty()) {
+      sb.append(", cteRecordTables=").append(this.cteRecordTables);
     }
-    if (virtualTableDtos != null && !virtualTableDtos.isEmpty()) {
-      sb.append(", virtualTable=").append(virtualTableDtos);
+    if (this.limit > 0) {
+      sb.append(", limit=").append(this.limit);
     }
-    if (limit > 0) {
-      sb.append(", limit=").append(limit);
-    }
-    sb.append(", measures=").append(measures);
+    sb.append(", measures=").append(this.measures);
     sb.append('}');
     return sb.toString();
   }
