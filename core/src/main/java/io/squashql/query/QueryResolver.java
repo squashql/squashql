@@ -33,7 +33,7 @@ public class QueryResolver {
 
   public QueryResolver(QueryDto query, Map<String, Store> storesByName) {
     this.query = query;
-    this.storesByName = storesByName;
+    this.storesByName = new HashMap<>(storesByName);
     if (query.virtualTableDtos != null) {
       for (VirtualTableDto virtualTableDto : query.virtualTableDtos) {
         this.storesByName.put(virtualTableDto.name, VirtualTableDto.toStore(virtualTableDto));
@@ -250,7 +250,7 @@ public class QueryResolver {
   /**
    * Criteria
    */
-  private CompiledCriteria compileCriteria(final CriteriaDto criteria) {
+  public CompiledCriteria compileCriteria(final CriteriaDto criteria) {
     return criteria == null
             ? null
             : this.cache.computeIfAbsent(criteria, c -> new CompiledCriteria(c.condition, c.conditionType, c.field == null ? null : resolveWithFallback(c.field), c.fieldOther == null ? null : resolveWithFallback(c.fieldOther),

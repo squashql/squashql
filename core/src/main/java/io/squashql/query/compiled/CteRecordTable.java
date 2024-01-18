@@ -11,6 +11,11 @@ public record CteRecordTable(String name,
                              List<List<Object>> records) implements CompiledTable, NamedTable {
 
   @Override
+  public String sqlExpressionTableName(QueryRewriter queryRewriter) {
+    return queryRewriter.cteName(this.name);
+  }
+
+  @Override
   public List<CompiledJoin> joins() {
     return Collections.emptyList(); // FIXME not sure about this one. Might be chained with other cte??
   }

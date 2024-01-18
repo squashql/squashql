@@ -10,7 +10,7 @@ import io.squashql.type.*;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -31,7 +31,7 @@ public class TestSQLTranslator {
     private final int limit;
 
     public TestResolver(QueryDto query) {
-      super(query, new HashMap<>());
+      super(query, Collections.emptyMap());
       this.limit = query.limit;
     }
 

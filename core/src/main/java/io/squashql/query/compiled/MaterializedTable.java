@@ -3,27 +3,17 @@ package io.squashql.query.compiled;
 import io.squashql.query.database.QueryRewriter;
 
 import java.util.List;
-import java.util.function.Function;
 
 public record MaterializedTable(String name, List<CompiledJoin> joins) implements CompiledTable, NamedTable {
 
   @Override
   public String sqlExpression(QueryRewriter queryRewriter) {
-    StringBuilder statement = new StringBuilder();
-    List<CteRecordTable> virtualTables = queryRewriter.query() != null ? queryRewriter.query().cteRecordTables : null;
-    statement.append(queryRewriter.tableName(this.name));
-    Function<String, String> tableNameFunc = tableName -> {
-      if (virtualTables != null) {
-        for (CteRecordTable virtualTable : virtualTables) {
-          if (virtualTable.name().equals(tableName)) {
-            return queryRewriter.cteName(tableName);
-          }
-        }
-      }
-      return queryRewriter.tableName(tableName);
-    };
-    this.joins.forEach(j -> statement.append(j.sqlExpression(queryRewriter, tableNameFunc)));
-    return statement.toString();
+    return CompiledTable.sqlExpression(queryRewriter, this);
+  }
+
+  @Override
+  public String sqlExpressionTableName(QueryRewriter queryRewriter) {
+    return queryRewriter.tableName(this.name);
   }
 
   @Override
