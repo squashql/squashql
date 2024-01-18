@@ -39,14 +39,7 @@ public class SQLTranslator {
     statement.append("select ");
     statement.append(String.join(", ", selects));
     statement.append(" from ");
-//    if (query.subQuery != null) {
-//      statement.append("(");
-//      statement.append(translate(query.subQuery, queryRewriter));
-//      statement.append(")");
-//    } else {
     statement.append(query.table.sqlExpression(queryRewriter));
-    // TODO add join here
-//    }
     addWhereConditions(statement, query, queryRewriter);
     if (!query.groupingSets.isEmpty()) {
       addGroupingSets(query.groupingSets.stream().map(g -> g.stream().map(queryRewriter::rollup).toList()).toList(), statement);
@@ -63,7 +56,7 @@ public class SQLTranslator {
       return;
     }
     statement.append("with ");
-    statement.append(String.join(", ", cteRecordTables.stream().map(t -> t.sqlExpression(qr)).toList()));
+    statement.append(String.join(", ", cteRecordTables.stream().map(t -> t.sqlExpression(qr)).toList())).append(" ");
   }
 
   public static void addLimit(int limit, StringBuilder statement) {

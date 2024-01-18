@@ -77,7 +77,7 @@ public class ExperimentalQueryMergeExecutor {
     QueryResolver queryResolver = new QueryResolver(leftCteQuery, new HashMap<>(this.queryEngine.datastore().storesByName()));
     CompiledTable joinTable = queryResolver.getScope().table();
 
-    Twin<List<TypedField>> selectColumns = null;//getSelectElements(joinTable, left, right); FIXME
+    Twin<List<TypedField>> selectColumns = getSelectElements(joinTable, left, right);
     List<String> selectSt = new ArrayList<>();
     selectColumns.getOne().forEach(typedField -> selectSt.add(replaceTableNameByCteNameIfNotNull(left, left.queryRewriter.select(typedField))));
     selectColumns.getTwo().forEach(typedField -> selectSt.add(replaceTableNameByCteNameIfNotNull(right, right.queryRewriter.select(typedField))));
@@ -88,7 +88,7 @@ public class ExperimentalQueryMergeExecutor {
             .append(String.join(", ", selectSt))
             .append(" from ");
 
-    CompiledJoin compiledJoin = null; // FIXME// new CompiledTable.CompiledJoin(new CompiledTable(right.cteTableName, List.of()), joinType, joinTable.joins().get(0).joinCriteria());
+    CompiledJoin compiledJoin = new CompiledJoin(new MaterializedTable(right.cteTableName, List.of()), joinType, joinTable.joins().get(0).joinCriteria());
     // Build the sql expression to use Function.identity() and simply return the name of the cte and not using queryRewriter.tableName()
     // which causes problem when using BQ for instance (datasetid.__cteR__). That's why we are not using joinTable.sqlExpression directly
     String tableExpression = compiledJoin.sqlExpression(left.queryRewriter, Function.identity());

@@ -59,7 +59,7 @@ public final class MeasureUtils {
   private static class ExpressionResolver extends QueryResolver {
 
     public ExpressionResolver(Measure m) {
-      super(new QueryDto().withMeasure(m), Collections.emptyMap());
+      super(new QueryDto().table("fake").withMeasure(m), Collections.emptyMap());
     }
 
     @Override

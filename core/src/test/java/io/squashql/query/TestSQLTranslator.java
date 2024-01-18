@@ -82,11 +82,11 @@ public class TestSQLTranslator {
   }
 
   private CompiledMeasure compiledMeasure(Measure m) {
-    return new TestResolver(new QueryDto()).compileMeasure(m, true);
+    return new TestResolver(new QueryDto().table("fake")).compileMeasure(m, true);
   }
 
   private TypedField compileField(Field field) {
-    return new TestResolver(new QueryDto()).resolveField(field);
+    return new TestResolver(new QueryDto().table("fake")).resolveField(field);
   }
 
   private DatabaseQuery compileQuery(QueryDto query, Map<String, Store> stores) {
