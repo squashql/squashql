@@ -226,7 +226,7 @@ public class ExperimentalQueryMergeExecutor {
 
   private static String replaceTableNameByCteNameIfNotNull(Holder holder, String s) {
     if (holder.originalTableName != null) {
-      s = s.replace(holder.originalTableName, holder.cteTableName);
+      s = s.replace(holder.queryRewriter.tableName(holder.originalTableName), holder.queryRewriter.cteName(holder.cteTableName));
     }
     return s;
   }
