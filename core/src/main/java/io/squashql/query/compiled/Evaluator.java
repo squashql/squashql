@@ -61,7 +61,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     } else if (cm.period() != null) {
       for (TypedField field : cm.period().getTypedFields()) {
         if (!this.executionContext.columns().contains(field)) {
-          throw new IllegalArgumentException(String.format("%s is not specified in the query but is used in a comparison measure: %s", field.name(), cm));
+          throw new IllegalArgumentException(String.format("%s is not specified in the query but is used in a comparison measure: %s", field, cm));
         }
       }
       executor = new PeriodComparisonExecutor(cm);

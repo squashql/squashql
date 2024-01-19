@@ -11,6 +11,7 @@ import io.squashql.store.UnknownType;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.type.AliasedTypedField;
+import io.squashql.type.NamedTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
@@ -151,8 +152,8 @@ public class ExperimentalQueryMergeExecutor {
       if (!leftColumns.isEmpty()) {
         List<CompiledCriteria> children = new ArrayList<>(leftColumns.size());
         for (TypedField leftColumn : leftColumns) {
-          TableTypedField l = new TableTypedField(left.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias());
-          TableTypedField r = new TableTypedField(right.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias());
+          TableTypedField l = new TableTypedField(left.originalTableName, ((NamedTypedField) leftColumn).name(), UnknownType.class, leftColumn.alias());
+          TableTypedField r = new TableTypedField(right.originalTableName, ((NamedTypedField) leftColumn).name(), UnknownType.class, leftColumn.alias());
           children.add(new CompiledCriteria(null, ConditionType.EQ, l, r, null, null));
 
         }
@@ -244,7 +245,7 @@ public class ExperimentalQueryMergeExecutor {
     List<TypedField> newLeft = new ArrayList<>();
     for (TypedField leftColumn : leftColumns) {
       if (inter.contains(leftColumn)) {
-        newLeft.add(new TableTypedField(left.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias()));
+        newLeft.add(new TableTypedField(left.originalTableName, ((NamedTypedField) leftColumn).name(), UnknownType.class, leftColumn.alias()));
       } else {
         newLeft.add(leftColumn);
       }

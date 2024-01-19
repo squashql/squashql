@@ -362,13 +362,13 @@ public class QueryResolver {
   }
 
   private CompiledMeasure compileVectorAggMeasure(VectorAggMeasure m) {
-    return new CompiledVectorAggMeasure(m.alias, resolveField(m.fieldToAggregate), m.aggregationFunction, resolveField(m.vectorAxis));
+    return new CompiledVectorAggMeasure(m.alias, (NamedTypedField) resolveField(m.fieldToAggregate), m.aggregationFunction, resolveField(m.vectorAxis));
   }
 
   private CompiledMeasure compileVectorTupleAggMeasure(VectorTupleAggMeasure m) {
     return new CompiledVectorTupleAggMeasure(
             m.alias,
-            m.fieldToAggregateAndAggFunc.stream().map(p -> new CompiledFieldAndAggFunc(resolveField(p.field), p.aggFunc)).toList(),
+            m.fieldToAggregateAndAggFunc.stream().map(p -> new CompiledFieldAndAggFunc((NamedTypedField) resolveField(p.field), p.aggFunc)).toList(),
             resolveField(m.vectorAxis),
             m.transformer);
   }

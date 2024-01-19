@@ -5,7 +5,7 @@ import io.squashql.query.database.QueryRewriter;
 
 import java.util.Objects;
 
-public record TableTypedField(String store, String name, Class<?> type, String alias) implements TypedField {
+public record TableTypedField(String store, String name, Class<?> type, String alias) implements NamedTypedField {
 
   public TableTypedField {
     Objects.requireNonNull(name);
@@ -26,7 +26,7 @@ public record TableTypedField(String store, String name, Class<?> type, String a
   }
 
   @Override
-  public TypedField as(String alias) {
+  public NamedTypedField as(String alias) {
     return new TableTypedField(this.store, this.name, this.type, alias);
   }
 }

@@ -10,8 +10,6 @@ public interface TypedField {
 
   Class<?> type();
 
-  String name();
-
   String alias();
 
   TypedField as(String alias);

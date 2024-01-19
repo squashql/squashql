@@ -3,6 +3,7 @@ package io.squashql.query;
 import io.squashql.query.compiled.CompiledComparisonMeasure;
 import io.squashql.query.compiled.CompiledPeriod;
 import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.type.TypedField;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
@@ -47,12 +48,12 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     for (Map.Entry<TypedField, String> entry : cm.referencePosition().entrySet()) {
       PeriodUnit pu = mapping.get(entry.getKey());
       referencePosition.put(pu, entry.getValue());
-      indexByPeriodUnit.put(pu, indexByColumn.getIfAbsent(entry.getKey().name(), -1));
+      indexByPeriodUnit.put(pu, indexByColumn.getIfAbsent(SqlUtils.squashqlExpression(entry.getKey()), -1));
     }
     for (Map.Entry<TypedField, PeriodUnit> entry : mapping.entrySet()) {
       PeriodUnit pu = mapping.get(entry.getKey());
       referencePosition.putIfAbsent(pu, "c"); // constant for missing ref.
-      indexByPeriodUnit.getIfAbsentPut(pu, indexByColumn.getIfAbsent(entry.getKey().name(), -1));
+      indexByPeriodUnit.getIfAbsentPut(pu, indexByColumn.getIfAbsent(SqlUtils.squashqlExpression(entry.getKey()), -1));
     }
     return new ShiftProcedure(period, referencePosition, indexByPeriodUnit);
   }

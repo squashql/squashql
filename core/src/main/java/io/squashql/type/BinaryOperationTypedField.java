@@ -23,11 +23,6 @@ public record BinaryOperationTypedField(BinaryOperator operator, TypedField left
   }
 
   @Override
-  public String name() {
-    throw new IllegalStateException("Incorrect path of execution");
-  }
-
-  @Override
   public TypedField as(String alias) {
     return new BinaryOperationTypedField(this.operator, this.leftOperand, this.rightOperand, alias);
   }

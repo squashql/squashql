@@ -22,11 +22,6 @@ public record FunctionTypedField(TableTypedField field, String function, String 
   }
 
   @Override
-  public String name() {
-    throw new IllegalStateException("Incorrect path of execution");
-  }
-
-  @Override
   public TypedField as(String alias) {
     return new FunctionTypedField(this.field, this.function, alias);
   }

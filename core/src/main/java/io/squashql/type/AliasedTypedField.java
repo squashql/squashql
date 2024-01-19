@@ -3,7 +3,7 @@ package io.squashql.type;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.store.UnknownType;
 
-public record AliasedTypedField(String alias) implements TypedField {
+public record AliasedTypedField(String alias) implements NamedTypedField {
 
   @Override
   public String sqlExpression(QueryRewriter queryRewriter) {
@@ -21,7 +21,7 @@ public record AliasedTypedField(String alias) implements TypedField {
   }
 
   @Override
-  public TypedField as(String alias) {
+  public NamedTypedField as(String alias) {
     return new AliasedTypedField(alias); // does not make sense...
   }
 }
