@@ -59,7 +59,7 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
 
   @Test
   void testSubQueryWithAlias() {
-    Field tableField = new TableField("name").as("student_name");
+    NamedField tableField = new TableField("name").as("student_name");
     QueryDto subQuery = Query.from("student")
             .select(List.of(tableField), List.of(sum("score_sum", "score")))
             .build();

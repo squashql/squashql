@@ -2,7 +2,7 @@ package io.squashql.query.dto;
 
 import io.squashql.query.ColumnSet;
 import io.squashql.query.ColumnSetKey;
-import io.squashql.query.Field;
+import io.squashql.query.NamedField;
 import io.squashql.query.TableField;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -18,13 +18,13 @@ import java.util.Map;
 @NoArgsConstructor // For Jackson
 public class BucketColumnSetDto implements ColumnSet {
 
-  public Field newField;
+  public NamedField newField;
 
-  public Field field;
+  public NamedField field;
 
   public Map<String, List<String>> values = new LinkedHashMap<>();
 
-  public BucketColumnSetDto(String name, Field field) {
+  public BucketColumnSetDto(String name, NamedField field) {
     this.newField = new TableField(name);
     this.field = field;
   }
@@ -35,12 +35,12 @@ public class BucketColumnSetDto implements ColumnSet {
   }
 
   @Override
-  public List<Field> getColumnsForPrefetching() {
+  public List<NamedField> getColumnsForPrefetching() {
     return List.of(this.field);
   }
 
   @Override
-  public List<Field> getNewColumns() {
+  public List<NamedField> getNewColumns() {
     return List.of(this.newField, this.field);
   }
 

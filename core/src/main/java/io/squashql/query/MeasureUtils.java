@@ -4,6 +4,7 @@ import io.squashql.query.compiled.*;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.type.NamedTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.NoArgsConstructor;
@@ -42,7 +43,7 @@ public final class MeasureUtils {
       String alias = cm.getMeasure().alias();
       if (cm.ancestors != null) {
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
-        return formula + ", ancestors = " + cm.ancestors.stream().map(Field::name).toList();
+        return formula + ", ancestors = " + cm.ancestors.stream().map(NamedField::name).toList();
       } else {
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current)", alias + "(reference)");
         return formula + ", reference = " + cm.referencePosition.entrySet().stream().map(e -> String.join("=", e.getKey().name(), e.getValue())).toList();
@@ -63,8 +64,8 @@ public final class MeasureUtils {
     }
 
     @Override
-    protected TypedField resolveField(Field field) {
-      return new TableTypedField(null, field.name(), String.class);
+    protected TypedField resolveAsTypedField(Field field) {
+      return new TableTypedField(null, ((NamedField) field).name(), String.class);
     }
 
     @Override
@@ -87,8 +88,8 @@ public final class MeasureUtils {
   }
 
   public static QueryExecutor.QueryScope getReadScopeComparisonMeasureReferencePosition(
-          List<TypedField> columns,
-          List<TypedField> bucketColumns,
+          List<NamedTypedField> columns,
+          List<NamedTypedField> bucketColumns,
           CompiledComparisonMeasure cm,
           QueryExecutor.QueryScope queryScope) {
     AtomicReference<CompiledCriteria> copy = new AtomicReference<>(queryScope.whereCriteria() == null ? null : CompiledCriteria.deepCopy(queryScope.whereCriteria()));

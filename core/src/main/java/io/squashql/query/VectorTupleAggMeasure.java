@@ -16,14 +16,14 @@ public class VectorTupleAggMeasure implements Measure {
 
   public String alias;
   public List<FieldAndAggFunc> fieldToAggregateAndAggFunc;
-  public Field vectorAxis;
+  public NamedField vectorAxis;
   public Function<List<Object>, Object> transformer;
   @With
   public String expression;
 
   public VectorTupleAggMeasure(String alias,
                                List<FieldAndAggFunc> fieldToAggregateAndAggFunc,
-                               Field vectorAxis,
+                               NamedField vectorAxis,
                                Function<List<Object>, Object> transformer) {
     this.alias = alias;
     this.fieldToAggregateAndAggFunc = fieldToAggregateAndAggFunc;

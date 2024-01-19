@@ -3,7 +3,7 @@ package io.squashql.query;
 import io.squashql.query.compiled.CompiledBucketColumnSet;
 import io.squashql.query.compiled.CompiledComparisonMeasure;
 import io.squashql.query.database.SqlUtils;
-import io.squashql.type.TypedField;
+import io.squashql.type.NamedTypedField;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -33,7 +33,7 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
     final ObjectIntMap<String> indexByColumn;
     final Map<String, List<String>> valuesByBucket = new LinkedHashMap<>();
 
-    ShiftProcedure(CompiledBucketColumnSet cSet, Map<TypedField, String> referencePosition, ObjectIntMap<String> indexByColumn) {
+    ShiftProcedure(CompiledBucketColumnSet cSet, Map<NamedTypedField, String> referencePosition, ObjectIntMap<String> indexByColumn) {
       this.valuesByBucket.putAll(cSet.values());
       this.indexByColumn = indexByColumn;
       this.transformationByColumn = new ArrayList<>();

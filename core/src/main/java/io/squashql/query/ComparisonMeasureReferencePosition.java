@@ -22,14 +22,14 @@ public class ComparisonMeasureReferencePosition implements Measure {
   @Getter
   public Measure measure;
   public ColumnSetKey columnSetKey;
-  public Map<Field, String> referencePosition;
+  public Map<NamedField, String> referencePosition;
   public Period period;
-  public List<Field> ancestors;
+  public List<NamedField> ancestors;
 
   public ComparisonMeasureReferencePosition(@NonNull String alias,
                                             @NonNull ComparisonMethod comparisonMethod,
                                             @NonNull Measure measure,
-                                            @NonNull Map<Field, String> referencePosition,
+                                            @NonNull Map<NamedField, String> referencePosition,
                                             @NonNull Period period) {
     this(alias, comparisonMethod, null, measure, referencePosition, period, null, null);
   }
@@ -37,7 +37,7 @@ public class ComparisonMeasureReferencePosition implements Measure {
   public ComparisonMeasureReferencePosition(@NonNull String alias,
                                             @NonNull ComparisonMethod comparisonMethod,
                                             @NonNull Measure measure,
-                                            @NonNull Map<Field, String> referencePosition,
+                                            @NonNull Map<NamedField, String> referencePosition,
                                             @NonNull ColumnSetKey columnSetKey) {
     this(alias, comparisonMethod, null, measure, referencePosition, null, columnSetKey, null);
   }
@@ -45,7 +45,7 @@ public class ComparisonMeasureReferencePosition implements Measure {
   public ComparisonMeasureReferencePosition(@NonNull String alias,
                                             @NonNull ComparisonMethod comparisonMethod,
                                             @NonNull Measure measure,
-                                            @NonNull List<Field> ancestors) {
+                                            @NonNull List<NamedField> ancestors) {
     this(alias, comparisonMethod, null, measure, null, null, null, ancestors);
   }
 
@@ -55,7 +55,7 @@ public class ComparisonMeasureReferencePosition implements Measure {
   public ComparisonMeasureReferencePosition(@NonNull String alias,
                                             @NonNull BiFunction<Object, Object, Object> comparisonOperator,
                                             @NonNull Measure measure,
-                                            @NonNull List<Field> ancestors) {
+                                            @NonNull List<NamedField> ancestors) {
     this(alias, null, comparisonOperator, measure, null, null, null, ancestors);
   }
 
@@ -63,10 +63,10 @@ public class ComparisonMeasureReferencePosition implements Measure {
                                              ComparisonMethod comparisonMethod,
                                              BiFunction<Object, Object, Object> comparisonOperator,
                                              Measure measure,
-                                             Map<Field, String> referencePosition,
+                                             Map<NamedField, String> referencePosition,
                                              Period period,
                                              ColumnSetKey columnSetKey,
-                                             List<Field> ancestors) {
+                                             List<NamedField> ancestors) {
     this.alias = alias;
     this.comparisonMethod = comparisonMethod;
     this.comparisonOperator = comparisonOperator;

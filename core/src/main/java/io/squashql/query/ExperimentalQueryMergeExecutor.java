@@ -11,6 +11,7 @@ import io.squashql.store.UnknownType;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.type.AliasedTypedField;
+import io.squashql.type.NamedTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
@@ -85,7 +86,7 @@ public class ExperimentalQueryMergeExecutor {
     CompiledJoin compiledJoin = new CompiledJoin(new CteTable(right.cteTableName, List.of()), joinType, compiledCriteria);
     CteTable cteLeftTable = new CteTable(left.cteTableName, List.of(compiledJoin));
 
-    Twin<List<TypedField>> selectColumns = getSelectElements(cteLeftTable, left, right);
+    Twin<List<NamedTypedField>> selectColumns = getSelectElements(cteLeftTable, left, right);
     List<String> selectSt = new ArrayList<>();
     selectColumns.getOne().forEach(typedField -> selectSt.add(replaceTableNameByCteNameIfNotNull(left, left.queryRewriter.select(typedField))));
     selectColumns.getTwo().forEach(typedField -> selectSt.add(replaceTableNameByCteNameIfNotNull(right, right.queryRewriter.select(typedField))));
@@ -137,20 +138,20 @@ public class ExperimentalQueryMergeExecutor {
       return queryResolver.compileCriteria(rewrittenJoinCondition);
     } else {
       // Try to guess the condition
-      List<TypedField> leftColumns = new ArrayList<>();
-      List<TypedField> rightColumns = new ArrayList<>();
-      for (Field field : left.query.columns) {
-        TypedField typedField = left.queryResolver.resolveField(field);
+      List<NamedTypedField> leftColumns = new ArrayList<>();
+      List<NamedTypedField> rightColumns = new ArrayList<>();
+      for (NamedField field : left.query.columns) {
+        NamedTypedField typedField = left.queryResolver.resolveField(field);
         leftColumns.add(typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField); // we have to use the aliased field in the select
       }
-      for (Field field : right.query.columns) {
-        TypedField typedField = right.queryResolver.resolveField(field);
+      for (NamedField field : right.query.columns) {
+        NamedTypedField typedField = right.queryResolver.resolveField(field);
         rightColumns.add(typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField); // we have to use the aliased field in the select
       }
       leftColumns.retainAll(rightColumns);
       if (!leftColumns.isEmpty()) {
         List<CompiledCriteria> children = new ArrayList<>(leftColumns.size());
-        for (TypedField leftColumn : leftColumns) {
+        for (NamedTypedField leftColumn : leftColumns) {
           TableTypedField l = new TableTypedField(left.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias());
           TableTypedField r = new TableTypedField(right.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias());
           children.add(new CompiledCriteria(null, ConditionType.EQ, l, r, null, null));
@@ -217,20 +218,20 @@ public class ExperimentalQueryMergeExecutor {
    * @param right     the right holder
    * @return a list of select elements
    */
-  private static Twin<List<TypedField>> getSelectElements(CompiledTable joinTable, Holder left, Holder right) {
-    List<TypedField> leftColumns = new ArrayList<>();
-    List<TypedField> rightColumns = new ArrayList<>();
-    for (Field field : left.query.columns) {
-      TypedField typedField = left.queryResolver.resolveField(field);
+  private static Twin<List<NamedTypedField>> getSelectElements(CompiledTable joinTable, Holder left, Holder right) {
+    List<NamedTypedField> leftColumns = new ArrayList<>();
+    List<NamedTypedField> rightColumns = new ArrayList<>();
+    for (NamedField field : left.query.columns) {
+      NamedTypedField typedField = left.queryResolver.resolveField(field);
       leftColumns.add(typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField); // we have to use the aliased field in the select
     }
 
     // Try to guess from the conditions which field to keep.
     CompiledCriteria jc = joinTable.joins().get(0).joinCriteria();
     Set<TypedField> joinFields = jc != null ? collectJoinFields(jc) : null;
-    for (Field field : right.query.columns) {
-      TypedField typedField = right.queryResolver.resolveField(field);
-      TypedField tf = typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField;
+    for (NamedField field : right.query.columns) {
+      NamedTypedField typedField = right.queryResolver.resolveField(field);
+      NamedTypedField tf = typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField;
       // Do not add if it is in the join. We keep only the other field from the left query.
       if (joinFields == null || !joinFields.contains(tf)) {
         rightColumns.add(tf); // we have to use the aliased field in the select
@@ -241,8 +242,8 @@ public class ExperimentalQueryMergeExecutor {
     Set<TypedField> inter = new HashSet<>(leftColumns);
     inter.retainAll(rightColumns);
     rightColumns.removeAll(leftColumns);
-    List<TypedField> newLeft = new ArrayList<>();
-    for (TypedField leftColumn : leftColumns) {
+    List<NamedTypedField> newLeft = new ArrayList<>();
+    for (NamedTypedField leftColumn : leftColumns) {
       if (inter.contains(leftColumn)) {
         newLeft.add(new TableTypedField(left.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias()));
       } else {

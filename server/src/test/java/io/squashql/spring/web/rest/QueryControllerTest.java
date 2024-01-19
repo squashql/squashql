@@ -23,7 +23,8 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static io.squashql.query.Functions.*;
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.sum;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
@@ -305,8 +306,8 @@ public class QueryControllerTest {
 
   @Test
   void testExperimentalQueryJoin() throws Exception {
-    Field ean = new TableField("our_prices", "ean");
-    Field competitorEan = new TableField("their_prices", "competitor_ean");
+    NamedField ean = new TableField("our_prices", "ean");
+    NamedField competitorEan = new TableField("their_prices", "competitor_ean");
     var query1 = Query
             .from("our_prices")
             .select(List.of(ean), List.of(sum("price_sum", "price")))

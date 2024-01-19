@@ -230,15 +230,15 @@ public class Functions {
     return new DoubleConstantMeasure(value);
   }
 
-  public static Field year(String field) {
+  public static NamedField year(String field) {
     return new FunctionField("YEAR", new TableField(field));
   }
 
-  public static Field quarter(String field) {
+  public static NamedField quarter(String field) {
     return new FunctionField("QUARTER", new TableField(field));
   }
 
-  public static Field month(String field) {
+  public static NamedField month(String field) {
     return new FunctionField("MONTH", new TableField(field));
   }
 }

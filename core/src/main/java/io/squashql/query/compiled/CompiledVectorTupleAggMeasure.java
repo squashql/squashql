@@ -1,14 +1,14 @@
 package io.squashql.query.compiled;
 
 import io.squashql.query.database.QueryRewriter;
-import io.squashql.type.TypedField;
+import io.squashql.type.NamedTypedField;
 
 import java.util.List;
 import java.util.function.Function;
 
 public record CompiledVectorTupleAggMeasure(String alias,
                                             List<CompiledFieldAndAggFunc> fieldToAggregateAndAggFunc,
-                                            TypedField vectorAxis,
+                                            NamedTypedField vectorAxis,
                                             Function<List<Object>, Object> transformer) implements CompiledMeasure {
 
   @Override

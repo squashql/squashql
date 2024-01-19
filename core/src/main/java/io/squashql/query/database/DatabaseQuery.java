@@ -1,6 +1,10 @@
 package io.squashql.query.database;
 
-import io.squashql.query.compiled.*;
+import io.squashql.query.compiled.CompiledCriteria;
+import io.squashql.query.compiled.CompiledMeasure;
+import io.squashql.query.compiled.CompiledTable;
+import io.squashql.query.compiled.CteRecordTable;
+import io.squashql.type.NamedTypedField;
 import io.squashql.type.TypedField;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +19,7 @@ public class DatabaseQuery {
 
   public final List<CteRecordTable> cteRecordTables; // CTEs
   public final CompiledTable table;
-  public final Set<TypedField> select;
+  public final Set<NamedTypedField> select;
   public final CompiledCriteria whereCriteria;
   public final CompiledCriteria havingCriteria;
   public final List<TypedField> rollup;

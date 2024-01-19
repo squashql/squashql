@@ -6,7 +6,7 @@ import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import io.squashql.query.comp.BinaryOperations;
 import io.squashql.store.UnknownType;
 import io.squashql.table.Table;
-import io.squashql.type.TypedField;
+import io.squashql.type.NamedTypedField;
 import io.squashql.util.ListUtils;
 
 import java.util.ArrayList;
@@ -59,9 +59,9 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
       }
       executor = new BucketComparisonExecutor((CompiledBucketColumnSet) cs);
     } else if (cm.period() != null) {
-      for (TypedField field : cm.period().getTypedFields()) {
+      for (NamedTypedField field : cm.period().getTypedFields()) {
         if (!this.executionContext.columns().contains(field)) {
-          throw new IllegalArgumentException(String.format("%s is not specified in the query but is used in a comparison measure: %s", field.name(), cm));
+          throw new IllegalArgumentException(String.format("%s is not specified in the query but is used in a comparison measure: %s", field, cm));
         }
       }
       executor = new PeriodComparisonExecutor(cm);

@@ -33,20 +33,20 @@ public class TestSQLTranslator {
     }
 
     @Override
-    protected TypedField resolveField(Field field) {
+    protected TypedField resolveAsTypedField(Field field) {
       Function<String, Class<?>> type = f -> switch (f) {
         case "pnl", BASE_STORE_NAME + "." + "pnl" -> double.class;
         case "delta", BASE_STORE_NAME + "." + "delta" -> Double.class;
         default -> String.class;
       };
       if (field instanceof BinaryOperationField bf) {
-        return new BinaryOperationTypedField(bf.operator, resolveField(bf.leftOperand), resolveField(bf.rightOperand), field.alias());
+        return new BinaryOperationTypedField(bf.operator, resolveAsTypedField(bf.leftOperand), resolveAsTypedField(bf.rightOperand), field.alias());
       } else if (field instanceof ConstantField cf) {
         return new ConstantTypedField(cf.value);
       } else if (field instanceof AliasedField) {
         return new AliasedTypedField(field.alias());
       }
-      String[] split = field.name().split("\\.");
+      String[] split = ((NamedField) field).name().split("\\.");
       if (split.length > 1) {
         String tableName = split[0];
         String fieldNameInTable = split[1];
@@ -124,7 +124,7 @@ public class TestSQLTranslator {
   }
 
   private TypedField compileField(Field field) {
-    return new TestResolver(new QueryDto().table("fake")).resolveField(field);
+    return new TestResolver(new QueryDto().table("fake")).resolveAsTypedField(field);
   }
 
   private DatabaseQuery compileQuery(QueryDto query, Map<String, Store> stores) {
@@ -202,8 +202,8 @@ public class TestSQLTranslator {
 
   @Test
   void testWithFullRollup() {
-    final Field scenario = tableField(SCENARIO_FIELD_NAME);
-    final Field type = tableField("type");
+    final NamedField scenario = tableField(SCENARIO_FIELD_NAME);
+    final NamedField type = tableField("type");
     final QueryDto query = new QueryDto()
             .withColumn(scenario)
             .withColumn(type)
@@ -222,8 +222,8 @@ public class TestSQLTranslator {
 
   @Test
   void testWithFullRollupWithFullName() {
-    final Field scenario = tableField(SqlUtils.getFieldFullName(BASE_STORE_NAME, SCENARIO_FIELD_NAME));
-    final Field type = tableField(SqlUtils.getFieldFullName(BASE_STORE_NAME, "type"));
+    final NamedField scenario = tableField(SqlUtils.getFieldFullName(BASE_STORE_NAME, SCENARIO_FIELD_NAME));
+    final NamedField type = tableField(SqlUtils.getFieldFullName(BASE_STORE_NAME, "type"));
     final QueryDto query = new QueryDto()
             .withColumn(scenario)
             .withColumn(type)
@@ -482,8 +482,8 @@ public class TestSQLTranslator {
 
   @Test
   void testGroupingSets() {
-    final Field a = tableField("a");
-    final Field b = tableField("b");
+    final NamedField a = tableField("a");
+    final NamedField b = tableField("b");
     final QueryDto query = new QueryDto()
             .withColumn(a)
             .withColumn(b)

@@ -81,7 +81,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Test
   void testQueryWildcardWithAliases() {
-    Field scenario = tableField(SCENARIO_FIELD_NAME).as("scenario_alias");
+    NamedField scenario = tableField(SCENARIO_FIELD_NAME).as("scenario_alias");
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(scenario), List.of(sum("p", "price"), sum("q", "quantity")))
@@ -114,8 +114,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Test
   void testQueryWildcardWithFullRollupWithAliases() {
-    Field scenario = tableField(SCENARIO_FIELD_NAME).as("scenario_alias");
-    Field category = tableField("category").as("category_alias");
+    NamedField scenario = tableField(SCENARIO_FIELD_NAME).as("scenario_alias");
+    NamedField category = tableField("category").as("category_alias");
     QueryDto query = Query
             .from(this.storeName)
             .where(scenario, eq(MAIN_SCENARIO_NAME)) // use a filter to have a small output table
@@ -384,7 +384,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Test
   void testConditionAliasedField() {
-    Field scenario = tableField(SCENARIO_FIELD_NAME).as("scenario_aliased");
+    NamedField scenario = tableField(SCENARIO_FIELD_NAME).as("scenario_aliased");
     QueryDto query = Query
             .from(this.storeName)
             .where(criterion(scenario, eq("s1")))

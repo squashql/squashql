@@ -28,14 +28,14 @@ public class QueryDto {
 
   public List<VirtualTableDto> virtualTableDtos = new ArrayList<>();
 
-  public List<Field> columns = new ArrayList<>();
+  public List<NamedField> columns = new ArrayList<>();
 
   public List<Field> rollupColumns = new ArrayList<>();
 
   /**
    * Internal ONLY! This field is not supposed to be set by the external API and is incompatible with {@link #rollupColumns}
    */
-  public List<List<Field>> groupingSets = new ArrayList<>();
+  public List<List<NamedField>> groupingSets = new ArrayList<>();
 
   public Map<ColumnSetKey, ColumnSet> columnSets = new LinkedHashMap<>();
 
@@ -45,13 +45,13 @@ public class QueryDto {
 
   public CriteriaDto havingCriteriaDto = null;
 
-  public Map<Field, OrderDto> orders = new LinkedHashMap<>();
+  public Map<NamedField, OrderDto> orders = new LinkedHashMap<>();
 
   public Map<String, Parameter> parameters = new HashMap<>();
 
   public int limit = -1;
 
-  public QueryDto withColumn(Field column) {
+  public QueryDto withColumn(NamedField column) {
     this.columns.add(column);
     return this;
   }
@@ -109,12 +109,12 @@ public class QueryDto {
     return this;
   }
 
-  public QueryDto orderBy(Field column, OrderKeywordDto orderKeywordDto) {
+  public QueryDto orderBy(NamedField column, OrderKeywordDto orderKeywordDto) {
     this.orders.put(column, new SimpleOrderDto(orderKeywordDto));
     return this;
   }
 
-  public QueryDto orderBy(Field column, List<?> firstElements) {
+  public QueryDto orderBy(NamedField column, List<?> firstElements) {
     this.orders.put(column, new ExplicitOrderDto(firstElements));
     return this;
   }

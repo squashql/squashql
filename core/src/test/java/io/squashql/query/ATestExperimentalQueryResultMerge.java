@@ -22,13 +22,13 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
 
   String storeA = "StoreA" + getClass().getSimpleName().toLowerCase();
   String storeB = "StoreB" + getClass().getSimpleName().toLowerCase();
-  Field category = new TableField(this.storeA, "category");
-  Field idA = new TableField(this.storeA, "idA");
-  Field idStoreA = new TableField(this.storeA, "id");
-  Field priceA = new TableField(this.storeA, "priceA");
-  Field idB = new TableField(this.storeB, "idB");
-  Field idStoreB = new TableField(this.storeB, "id");
-  Field priceB = new TableField(this.storeB, "priceB");
+  NamedField category = new TableField(this.storeA, "category");
+  NamedField idA = new TableField(this.storeA, "idA");
+  NamedField idStoreA = new TableField(this.storeA, "id");
+  NamedField priceA = new TableField(this.storeA, "priceA");
+  NamedField idB = new TableField(this.storeB, "idB");
+  NamedField idStoreB = new TableField(this.storeB, "id");
+  NamedField priceB = new TableField(this.storeB, "priceB");
   Measure priceASum = Functions.sum("priceA", this.priceA);
   Measure priceBSum = Functions.sum("priceB", this.priceB);
 
@@ -155,13 +155,13 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
    */
   @Test
   void testLeftJoinWithCommonColumnsAndSameNamesWithAliases() {
-    Field categoryAliased = this.category.as("category_aliased");
+    NamedField categoryAliased = this.category.as("category_aliased");
     QueryDto queryL = Query
             .from(this.storeA)
             .select(List.of(categoryAliased, this.idStoreA), List.of(this.priceASum))
             .build();
 
-    Field idStoreBAliased = this.idStoreB.as("id_aliased");
+    NamedField idStoreBAliased = this.idStoreB.as("id_aliased");
     QueryDto queryR = Query
             .from(this.storeB)
             .select(List.of(idStoreBAliased), List.of(this.priceBSum))
@@ -215,8 +215,8 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
   void testLeftJoinWithoutCriteriaWithColumnsInCommon() {
     String firstKey = "first_key";
     String secondKey = "second_key";
-    Field idA = this.idA.as(firstKey);
-    Field idStoreA = this.idStoreA.as(secondKey);
+    NamedField idA = this.idA.as(firstKey);
+    NamedField idStoreA = this.idStoreA.as(secondKey);
     QueryDto queryL = Query
             .from(this.storeA)
             .select(List.of(idA, idStoreA), List.of(this.priceASum))
@@ -266,7 +266,7 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
 
   @Test
   void testWithSubQueries() {
-    Field idAliasedA = this.idStoreA.as("id_aliased_a");
+    NamedField idAliasedA = this.idStoreA.as("id_aliased_a");
     QueryDto queryL = Query
             .from(this.storeA)
             .select(List.of(this.idA, idAliasedA), List.of(this.priceASum))
@@ -277,7 +277,7 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             .select(List.of(new AliasedField(idAliasedA.alias())), List.of(sum("priceA2", new AliasedField(this.priceASum.alias()))))
             .build();
 
-    Field idAliasedB = this.idStoreB.as("id_aliased_b");
+    NamedField idAliasedB = this.idStoreB.as("id_aliased_b");
     QueryDto queryR = Query
             .from(this.storeB)
             .select(List.of(this.idB, idAliasedB), List.of(this.priceBSum))

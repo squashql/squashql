@@ -9,7 +9,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
 @AllArgsConstructor
-public class AliasedField implements Field {
+public class AliasedField implements NamedField {
 
   public String alias;
 
@@ -19,7 +19,7 @@ public class AliasedField implements Field {
   }
 
   @Override
-  public Field as(String alias) {
+  public NamedField as(String alias) {
     return new AliasedField(alias); // does not make sense...
   }
 

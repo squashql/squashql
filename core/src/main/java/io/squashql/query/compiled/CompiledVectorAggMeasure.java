@@ -1,12 +1,12 @@
 package io.squashql.query.compiled;
 
 import io.squashql.query.database.QueryRewriter;
-import io.squashql.type.TypedField;
+import io.squashql.type.NamedTypedField;
 
 public record CompiledVectorAggMeasure(String alias,
-                                       TypedField fieldToAggregate,
+                                       NamedTypedField fieldToAggregate,
                                        String aggregationFunction,
-                                       TypedField vectorAxis) implements CompiledMeasure {
+                                       NamedTypedField vectorAxis) implements CompiledMeasure {
 
   @Override
   public String sqlExpression(QueryRewriter queryRewriter, boolean withAlias) {

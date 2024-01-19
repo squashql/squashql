@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -9,14 +10,9 @@ import lombok.ToString;
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
 @AllArgsConstructor
-public class ConstantField implements Field {
+public class ConstantField implements CompilationType<TypedField> {
 
   public Object value;
-
-  @Override
-  public String name() {
-    throw new IllegalStateException("Incorrect path of execution");
-  }
 
   @Override
   public Field as(String alias) {

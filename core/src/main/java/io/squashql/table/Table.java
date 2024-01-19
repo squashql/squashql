@@ -1,7 +1,7 @@
 package io.squashql.table;
 
-import io.squashql.query.Field;
 import io.squashql.query.Header;
+import io.squashql.query.NamedField;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.QueryDto;
@@ -77,7 +77,7 @@ public interface Table extends Iterable<List<Object>> {
     return index;
   }
 
-  default IntList columnIndices(Field column) {
+  default IntList columnIndices(NamedField column) {
     int i = 0;
     MutableIntList list = MutableIntListFactoryImpl.INSTANCE.empty();
     for (Header header : headers()) {

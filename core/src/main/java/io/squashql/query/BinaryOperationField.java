@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -9,7 +10,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
 @AllArgsConstructor
-public class BinaryOperationField implements Field {
+public class BinaryOperationField implements CompilationType<TypedField> {
 
   public BinaryOperator operator;
   public Field leftOperand;
@@ -20,11 +21,6 @@ public class BinaryOperationField implements Field {
     this.operator = operator;
     this.leftOperand = leftOperand;
     this.rightOperand = rightOperand;
-  }
-
-  @Override
-  public String name() {
-    throw new IllegalStateException("Incorrect path of execution");
   }
 
   @Override

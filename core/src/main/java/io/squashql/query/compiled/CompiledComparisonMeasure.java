@@ -3,6 +3,7 @@ package io.squashql.query.compiled;
 import io.squashql.query.ColumnSetKey;
 import io.squashql.query.ComparisonMethod;
 import io.squashql.query.database.QueryRewriter;
+import io.squashql.type.NamedTypedField;
 import io.squashql.type.TypedField;
 
 import java.util.List;
@@ -13,7 +14,7 @@ public record CompiledComparisonMeasure(String alias,
                                         ComparisonMethod comparisonMethod,
                                         BiFunction<Object, Object, Object> comparisonOperator,
                                         CompiledMeasure measure,
-                                        Map<TypedField, String> referencePosition,
+                                        Map<NamedTypedField, String> referencePosition,
                                         CompiledPeriod period,
                                         ColumnSetKey columnSetKey,
                                         List<TypedField> ancestors) implements CompiledMeasure {

@@ -24,8 +24,8 @@ public class QueryResolver {
   private final QueryDto query;
   private final Map<String, Store> storesByName;
   private final QueryExecutor.QueryScope scope;
-  private final List<TypedField> bucketColumns;
-  private final List<TypedField> columns;
+  private final List<NamedTypedField> bucketColumns;
+  private final List<NamedTypedField> columns;
   private final CompilationCache cache = new CompilationCache();
   private final Map<Measure, CompiledMeasure> subQueryMeasures;
   private final Map<Measure, CompiledMeasure> measures;
@@ -55,7 +55,7 @@ public class QueryResolver {
    * @return The resolved {@link TypedField} corresponding to the given {@link Field}.
    */
   public TypedField getOrResolveTypedField(Field field) {
-    return resolveField(field);
+    return resolveAsTypedField(field);
   }
 
   /**
@@ -71,12 +71,17 @@ public class QueryResolver {
   /**
    * Field resolver
    */
-  protected TypedField resolveField(final Field field) {
+  //  todo-mde use this for columns and the rest no need for a cast
+  protected <V, T extends CompilationType<V>> V resolveField(final T field) {
+    return (V) resolveAsTypedField(field);
+  }
+
+  protected TypedField resolveAsTypedField(final Field field) {
     return this.cache.computeIfAbsent(field, f -> {
       // Special case for the column that is created due to the column set.
       ColumnSet columnSet = this.query.columnSets.get(BUCKET);
       if (columnSet != null) {
-        Field newField = ((BucketColumnSetDto) columnSet).newField;
+        NamedField newField = ((BucketColumnSetDto) columnSet).newField;
         if (field.equals(newField)) {
           return new TableTypedField(null, newField.name(), String.class, null);
         }
@@ -87,7 +92,7 @@ public class QueryResolver {
       } else if (f instanceof FunctionField ff) {
         return new FunctionTypedField(getTableTypedField(ff.field.name(), ff.field.alias()), ff.function, ff.alias);
       } else if (f instanceof BinaryOperationField ff) {
-        return new BinaryOperationTypedField(ff.operator, resolveField(ff.leftOperand), resolveField(ff.rightOperand), ff.alias);
+        return new BinaryOperationTypedField(ff.operator, resolveAsTypedField(ff.leftOperand), resolveAsTypedField(ff.rightOperand), ff.alias);
       } else if (f instanceof ConstantField ff) {
         return new ConstantTypedField(ff.value);
       } else if (f instanceof AliasedField af) {
@@ -100,11 +105,11 @@ public class QueryResolver {
 
   private TypedField resolveWithFallback(Field field) {
     try {
-      return resolveField(field);
+      return resolveAsTypedField(field);
     } catch (FieldNotFoundException e) {
       // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
       // contains only "raw" fields, it will throw an exception.
-      return new TableTypedField(null, field.name(), Number.class, field.alias());
+      return new TableTypedField(null, ((NamedField) field).name(), Number.class, field.alias());
     }
   }
 
@@ -144,11 +149,11 @@ public class QueryResolver {
    */
   private QueryExecutor.QueryScope toQueryScope(QueryDto query) {
     checkQuery(query);
-    final List<TypedField> columnSets = query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
-    final List<TypedField> combinedColumns = Stream.concat(this.columns.stream(), columnSets.stream()).toList();
+    final List<NamedTypedField> columnSets = query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
+    final List<NamedTypedField> combinedColumns = Stream.concat(this.columns.stream(), columnSets.stream()).toList();
 
-    List<TypedField> rollupColumns = query.rollupColumns.stream().map(this::resolveField).toList();
-    List<List<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(this::resolveField).toList()).toList();
+    List<TypedField> rollupColumns = query.rollupColumns.stream().map(this::resolveAsTypedField).toList();
+    List<List<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(this::resolveAsTypedField).toList()).toList();
     return new QueryExecutor.QueryScope(
             compileTable(query.table, query.subQuery),
             combinedColumns,
@@ -171,7 +176,7 @@ public class QueryResolver {
   private DatabaseQuery toSubQuery(final QueryDto subQuery) {
     checkSubQuery(subQuery);
     final CompiledTable table = compileTable(subQuery.table, subQuery.subQuery);
-    final List<TypedField> select = subQuery.columns.stream().map(this::resolveField).toList();
+    final List<NamedTypedField> select = subQuery.columns.stream().map(this::resolveField).toList();
     final CompiledCriteria whereCriteria = compileCriteria(subQuery.whereCriteriaDto);
     final CompiledCriteria havingCriteria = compileCriteria(subQuery.havingCriteriaDto);
     // should we check groupingSet and rollup as well are empty ?
@@ -341,7 +346,7 @@ public class QueryResolver {
             m.referencePosition == null ? null : m.referencePosition.entrySet().stream().collect(Collectors.toMap(e -> resolveField(e.getKey()), Map.Entry::getValue)),
             compilePeriod(m.period),
             m.columnSetKey,
-            m.ancestors == null ? null : m.ancestors.stream().map(this::resolveField).collect(Collectors.toList()));
+            m.ancestors == null ? null : m.ancestors.stream().map(this::resolveAsTypedField).collect(Collectors.toList()));
   }
 
   private CompiledPeriod compilePeriod(Period period) {
@@ -381,8 +386,8 @@ public class QueryResolver {
       }
       BucketColumnSetDto bucket = (BucketColumnSetDto) entry.getValue();
       m.put(entry.getKey(), new CompiledBucketColumnSet(
-              bucket.getColumnsForPrefetching().stream().map(this::resolveField).toList(),
-              bucket.getNewColumns().stream().map(this::resolveField).toList(),
+              bucket.getColumnsForPrefetching().stream().map(this::resolveAsTypedField).toList(),
+              bucket.getNewColumns().stream().map(this::resolveAsTypedField ).toList(),
               entry.getKey(),
               bucket.values));
     }

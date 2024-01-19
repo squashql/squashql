@@ -17,11 +17,6 @@ public record ConstantTypedField(Object value) implements TypedField {
   }
 
   @Override
-  public String name() {
-    throw new IllegalStateException("Incorrect path of execution");
-  }
-
-  @Override
   public String alias() {
     throw new IllegalStateException("Incorrect path of execution");
   }

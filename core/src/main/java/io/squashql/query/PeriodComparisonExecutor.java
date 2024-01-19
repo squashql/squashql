@@ -3,7 +3,7 @@ package io.squashql.query;
 import io.squashql.query.compiled.CompiledComparisonMeasure;
 import io.squashql.query.compiled.CompiledPeriod;
 import io.squashql.query.database.SQLTranslator;
-import io.squashql.type.TypedField;
+import io.squashql.type.NamedTypedField;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
@@ -24,7 +24,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
     this.cmrp = cmrp;
   }
 
-  public Map<TypedField, PeriodUnit> mapping(CompiledPeriod period) {
+  public Map<NamedTypedField, PeriodUnit> mapping(CompiledPeriod period) {
     if (period instanceof CompiledPeriod.Quarter q) {
       return Map.of(q.quarter(), QUARTER, q.year(), YEAR);
     } else if (period instanceof CompiledPeriod.Year y) {
@@ -42,14 +42,14 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
   protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasure cm, ObjectIntMap<String> indexByColumn) {
     Map<PeriodUnit, String> referencePosition = new HashMap<>();
     CompiledPeriod period = this.cmrp.period();
-    Map<TypedField, PeriodUnit> mapping = mapping(period);
+    Map<NamedTypedField, PeriodUnit> mapping = mapping(period);
     MutableObjectIntMap<PeriodUnit> indexByPeriodUnit = new ObjectIntHashMap<>();
-    for (Map.Entry<TypedField, String> entry : cm.referencePosition().entrySet()) {
+    for (Map.Entry<NamedTypedField, String> entry : cm.referencePosition().entrySet()) {
       PeriodUnit pu = mapping.get(entry.getKey());
       referencePosition.put(pu, entry.getValue());
       indexByPeriodUnit.put(pu, indexByColumn.getIfAbsent(entry.getKey().name(), -1));
     }
-    for (Map.Entry<TypedField, PeriodUnit> entry : mapping.entrySet()) {
+    for (Map.Entry<NamedTypedField, PeriodUnit> entry : mapping.entrySet()) {
       PeriodUnit pu = mapping.get(entry.getKey());
       referencePosition.putIfAbsent(pu, "c"); // constant for missing ref.
       indexByPeriodUnit.getIfAbsentPut(pu, indexByColumn.getIfAbsent(entry.getKey().name(), -1));

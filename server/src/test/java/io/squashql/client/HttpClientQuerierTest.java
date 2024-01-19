@@ -187,8 +187,8 @@ public class HttpClientQuerierTest {
     PivotTableQueryDto pivotTableQuery = new PivotTableQueryDto(query, tableFields(List.of("pdv")), tableFields(List.of("ean")));
     PivotTableQueryResultDto response = this.querier.run(pivotTableQuery);
 
-    Assertions.assertThat(response.rows).containsExactlyElementsOf(pivotTableQuery.rows.stream().map(Field::name).toList());
-    Assertions.assertThat(response.columns).containsExactlyElementsOf(pivotTableQuery.columns.stream().map(Field::name).toList());
+    Assertions.assertThat(response.rows).containsExactlyElementsOf(pivotTableQuery.rows.stream().map(NamedField::name).toList());
+    Assertions.assertThat(response.columns).containsExactlyElementsOf(pivotTableQuery.columns.stream().map(NamedField::name).toList());
     Assertions.assertThat(response.values).containsExactlyElementsOf(List.of(CountMeasure.INSTANCE.alias));
     Assertions.assertThat(response.queryResult.table.rows)
             .containsExactly(

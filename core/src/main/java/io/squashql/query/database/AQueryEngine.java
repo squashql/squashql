@@ -4,7 +4,7 @@ import io.squashql.query.Header;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.store.Datastore;
 import io.squashql.table.Table;
-import io.squashql.type.TypedField;
+import io.squashql.type.NamedTypedField;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -45,7 +45,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   protected abstract Table retrieveAggregates(DatabaseQuery query, String sql);
 
   public static <Column, Record> Pair<List<Header>, List<List<Object>>> transformToColumnFormat(
-          Collection<TypedField> typedFields,
+          Collection<NamedTypedField> typedFields,
           Collection<CompiledMeasure> measures,
           List<Column> columns,
           BiFunction<Column, String, Class<?>> columnTypeProvider,

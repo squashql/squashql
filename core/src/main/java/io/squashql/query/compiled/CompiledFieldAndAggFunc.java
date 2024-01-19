@@ -1,6 +1,6 @@
 package io.squashql.query.compiled;
 
-import io.squashql.type.TypedField;
+import io.squashql.type.NamedTypedField;
 
-public record CompiledFieldAndAggFunc(TypedField field, String aggFunc) {
+public record CompiledFieldAndAggFunc(NamedTypedField field, String aggFunc) {
 }
