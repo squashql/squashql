@@ -24,6 +24,11 @@ public class DefaultQueryRewriter implements QueryRewriter {
   }
 
   @Override
+  public String cteName(String cteName) {
+    return SqlUtils.backtickEscape(cteName);
+  }
+
+  @Override
   public String escapeAlias(String alias) {
     return SqlUtils.backtickEscape(alias);
   }

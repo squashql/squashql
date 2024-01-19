@@ -384,9 +384,9 @@ public class TestSQLTranslator {
             .withColumn(tableField("id"))
             .withColumn(tableField("b"));
     query.virtualTableDtos = List.of(virtualTable);
-    String expected = String.format("with %2$s as (select 0 as `a`, '0' as `b` union all select 1 as `a`, '1' as `b`) " +
+    String expected = String.format("with `%2$s` as (select 0 as `a`, '0' as `b` union all select 1 as `a`, '1' as `b`) " +
                     "select `id`, `b`, sum(`pnl`) as `pnl.sum` from `%1$s` " +
-                    "inner join %2$s on `id` = `a` group by `id`, `b`",
+                    "inner join `%2$s` on `id` = `a` group by `id`, `b`",
             BASE_STORE_NAME, virtualTable.name);
     Assertions.assertThat(translate(compileQuery(query)))
             .isEqualTo(expected);
@@ -407,9 +407,9 @@ public class TestSQLTranslator {
             .withColumn(tableField("b"));
     query.virtualTableDtos = List.of(virtualTable);
 
-    String expected = String.format("with %2$s as (select 0 as `a`, '0' as `b` union all select 1 as `a`, '1' as `b`) " +
+    String expected = String.format("with `%2$s` as (select 0 as `a`, '0' as `b` union all select 1 as `a`, '1' as `b`) " +
                     "select `id`, `b`, sum(`pnl`) as `pnl.sum` from `%1$s` " +
-                    "inner join %2$s on `%1$s`.`id` = %2$s.`a` group by `id`, `b`",
+                    "inner join `%2$s` on `%1$s`.`id` = `%2$s`.`a` group by `id`, `b`",
             BASE_STORE_NAME, virtualTable.name);
     // IMPORTANT: No backtick in the join condition for the field belonging to the virtual table.
     Assertions.assertThat(translate(compileQuery(query)))
