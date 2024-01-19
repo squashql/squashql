@@ -11,6 +11,7 @@ import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.type.AliasedTypedField;
 import io.squashql.type.TypedField;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.Twin;
@@ -24,6 +25,7 @@ import static io.squashql.query.database.AQueryEngine.transformToColumnFormat;
 import static io.squashql.query.database.SQLTranslator.addLimit;
 
 @Slf4j
+@AllArgsConstructor
 public class ExperimentalQueryMergeExecutor {
 
   private final QueryEngine<?> queryEngine;
@@ -60,10 +62,6 @@ public class ExperimentalQueryMergeExecutor {
     public String sqlExpression(QueryRewriter queryRewriter) {
       return CompiledTable.sqlExpression(queryRewriter, this);
     }
-  }
-
-  public ExperimentalQueryMergeExecutor(QueryEngine<?> queryEngine) {
-    this.queryEngine = queryEngine;
   }
 
   public Table execute(QueryDto first,
