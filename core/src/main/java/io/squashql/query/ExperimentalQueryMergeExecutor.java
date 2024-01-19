@@ -44,7 +44,7 @@ public class ExperimentalQueryMergeExecutor {
       this.dbQuery = this.queryResolver.toDatabaseQuery(this.queryResolver.getScope(), -1);
       this.queryResolver.getMeasures().values().forEach(this.dbQuery::withMeasure);
       this.queryRewriter = ExperimentalQueryMergeExecutor.this.queryEngine.queryRewriter(this.dbQuery);
-      this.originalTableName = query.table != null ? this.queryRewriter.tableName(query.table.name) : null;
+      this.originalTableName = query.table != null ? query.table.name : null;
       this.sql = SQLTranslator.translate(this.dbQuery, this.queryRewriter);
     }
   }
@@ -78,8 +78,8 @@ public class ExperimentalQueryMergeExecutor {
     Holder right = new Holder("__cteR__", second);
 
     StringBuilder sb = new StringBuilder("with ");
-    sb.append(left.cteTableName).append(" as (").append(left.sql).append("), ");
-    sb.append(right.cteTableName).append(" as (").append(right.sql).append(") ");
+    sb.append(left.queryRewriter.cteName(left.cteTableName)).append(" as (").append(left.sql).append("), ");
+    sb.append(right.queryRewriter.cteName(right.cteTableName)).append(" as (").append(right.sql).append(") ");
 
     CompiledCriteria compiledCriteria = compiledCriteria(joinType, joinCondition, left, right);
     CompiledJoin compiledJoin = new CompiledJoin(new CteTable(right.cteTableName, List.of()), joinType, compiledCriteria);

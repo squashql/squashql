@@ -219,6 +219,16 @@ public class QueryResolver {
    */
   private CompiledTable compileTable(TableDto table, QueryDto subQuery) {
     if (table != null) {
+      // Can be a cte.
+      List<VirtualTableDto> vts = this.query.virtualTableDtos;
+      if (vts != null) {
+        List<CteRecordTable> cteRecordTables = compileVirtualTables(vts);
+        for (CteRecordTable cteRecordTable : cteRecordTables) {
+          if (cteRecordTable.name().equals(table.name)) {
+            return cteRecordTable;
+          }
+        }
+      }
       return new MaterializedTable(table.name, compileJoins(table.joins));
     } else if (subQuery != null) {
       return new NestedQueryTable(toSubQuery(subQuery));
