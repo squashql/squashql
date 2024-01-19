@@ -14,8 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.Functions.sum;
+import static io.squashql.query.Functions.*;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -201,7 +200,7 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
     SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
     Table result = this.executor.executeExperimentalQueryMerge(
             queryL, queryR, JoinType.LEFT,
-            Functions.all(criterion(this.idB, this.idA, ConditionType.EQ), criterion(this.idStoreB, this.idStoreA, ConditionType.EQ)),
+            all(criterion(this.idB, this.idA, ConditionType.EQ), criterion(this.idStoreB, this.idStoreA, ConditionType.EQ)),
             Map.of(this.idA, asc),
             -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
@@ -210,6 +209,59 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             List.of("0", "0", 4d, 10d),
             List.of("1", "1", 2d, 20d),
             Arrays.asList("3", "3", 4d, getDoubleNullJoinValue()));
+  }
+
+  @Test
+  void testLeftJoinWithoutCriteriaWithColumnsInCommon() {
+    String firstKey = "first_key";
+    String secondKey = "second_key";
+    Field idA = this.idA.as(firstKey);
+    Field idStoreA = this.idStoreA.as(secondKey);
+    QueryDto queryL = Query
+            .from(this.storeA)
+            .select(List.of(idA, idStoreA), List.of(this.priceASum))
+            .build();
+
+    QueryDto queryR = Query
+            .from(this.storeB)
+            .select(List.of(this.idB.as(firstKey), this.idStoreB.as(secondKey)), List.of(this.priceBSum))
+            .build();
+
+    SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
+    Table result = this.executor.executeExperimentalQueryMerge(
+            queryL, queryR, JoinType.LEFT,
+            null,
+            Map.of(idA, asc),
+            -1);
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
+            .containsExactly(firstKey, secondKey, "priceA", "priceB");
+    Assertions.assertThat(result).containsExactly(
+            List.of("0", "0", 4d, 10d),
+            List.of("1", "1", 2d, 20d),
+            Arrays.asList("3", "3", 4d, getDoubleNullJoinValue()));
+  }
+
+  @Test
+  void testLeftJoinWithoutCriteriaAndNoColumnInCommon() {
+    QueryDto queryL = Query
+            .from(this.storeA)
+            .select(List.of(), List.of(this.priceASum))
+            .build();
+
+    QueryDto queryR = Query
+            .from(this.storeB)
+            .select(List.of(), List.of(this.priceBSum))
+            .build();
+
+    SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
+    Table result = this.executor.executeExperimentalQueryMerge(
+            queryL, queryR, JoinType.CROSS,
+            null,
+            null,
+            -1);
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
+            .containsExactly("priceA", "priceB");
+    Assertions.assertThat(result).containsExactly(List.of(10d, 60d));
   }
 
   @Test

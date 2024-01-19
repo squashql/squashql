@@ -7,9 +7,11 @@ import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.*;
+import io.squashql.store.UnknownType;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.type.AliasedTypedField;
+import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -125,13 +127,42 @@ public class ExperimentalQueryMergeExecutor {
   }
 
   private CompiledCriteria compiledCriteria(JoinType joinType, CriteriaDto joinCondition, Holder left, Holder right) {
-    QueryDto leftCteQuery = new QueryDto().table(left.cteTableName);
-    QueryDto rightCteQuery = new QueryDto().table(right.cteTableName);
-    CriteriaDto joinConditionCopy = JacksonUtil.deserialize(JacksonUtil.serialize(joinCondition), CriteriaDto.class);
-    CriteriaDto rewrittenJoinCondition = rewriteJoinCondition(joinConditionCopy);
-    leftCteQuery.table.join(new TableDto(rightCteQuery.table.name), joinType, rewrittenJoinCondition);
-    QueryResolver queryResolver = new QueryResolver(leftCteQuery, this.queryEngine.datastore().storesByName());
-    return queryResolver.compileCriteria(rewrittenJoinCondition);
+    if (joinCondition != null) {
+      QueryDto leftCteQuery = new QueryDto().table(left.cteTableName);
+      QueryDto rightCteQuery = new QueryDto().table(right.cteTableName);
+      CriteriaDto joinConditionCopy = JacksonUtil.deserialize(JacksonUtil.serialize(joinCondition), CriteriaDto.class);
+      CriteriaDto rewrittenJoinCondition = rewriteJoinCondition(joinConditionCopy);
+      leftCteQuery.table.join(new TableDto(rightCteQuery.table.name), joinType, rewrittenJoinCondition);
+      QueryResolver queryResolver = new QueryResolver(leftCteQuery, this.queryEngine.datastore().storesByName());
+      return queryResolver.compileCriteria(rewrittenJoinCondition);
+    } else {
+      // Try to guess the condition
+      List<TypedField> leftColumns = new ArrayList<>();
+      List<TypedField> rightColumns = new ArrayList<>();
+      for (Field field : left.query.columns) {
+        TypedField typedField = left.queryResolver.resolveField(field);
+        leftColumns.add(typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField); // we have to use the aliased field in the select
+      }
+      for (Field field : right.query.columns) {
+        TypedField typedField = right.queryResolver.resolveField(field);
+        rightColumns.add(typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField); // we have to use the aliased field in the select
+      }
+      leftColumns.retainAll(rightColumns);
+      if (!leftColumns.isEmpty()) {
+        List<CompiledCriteria> children = new ArrayList<>(leftColumns.size());
+        for (TypedField leftColumn : leftColumns) {
+          TableTypedField l = new TableTypedField(left.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias());
+          TableTypedField r = new TableTypedField(right.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias());
+          children.add(new CompiledCriteria(null, ConditionType.EQ, l, r, null, null));
+
+        }
+        return children.size() > 1
+                ? new CompiledCriteria(null, ConditionType.AND, null, null, null, children)
+                : children.get(0);
+      } else {
+        return null; // no condition
+      }
+    }
   }
 
   private static CriteriaDto rewriteJoinCondition(CriteriaDto joinCondition) {
@@ -165,9 +196,9 @@ public class ExperimentalQueryMergeExecutor {
         TypedField typedField = left.queryResolver.getTypedFieldOrNull(key);
         if (typedField == null) {
           typedField = (holder = right).queryResolver.getTypedFieldOrNull(key);
-        }
-        if (typedField == null) {
-          throw new RuntimeException("Cannot resolve " + e.getKey());
+          if (typedField == null) {
+            throw new RuntimeException("Cannot resolve " + e.getKey());
+          }
         }
         String orderByField = holder.queryRewriter.aliasOrFullExpression(typedField);
         orderByField = replaceTableNameByCteNameIfNotNull(holder, orderByField);
@@ -187,8 +218,6 @@ public class ExperimentalQueryMergeExecutor {
    * @return a list of select elements
    */
   private static Twin<List<TypedField>> getSelectElements(CompiledTable joinTable, Holder left, Holder right) {
-    // Try to guess from the conditions which field to keep.
-    CompiledJoin join = joinTable.joins().get(0);
     List<TypedField> leftColumns = new ArrayList<>();
     List<TypedField> rightColumns = new ArrayList<>();
     for (Field field : left.query.columns) {
@@ -196,16 +225,31 @@ public class ExperimentalQueryMergeExecutor {
       leftColumns.add(typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField); // we have to use the aliased field in the select
     }
 
-    Set<TypedField> joinFields = collectJoinFields(join.joinCriteria());
+    // Try to guess from the conditions which field to keep.
+    CompiledCriteria jc = joinTable.joins().get(0).joinCriteria();
+    Set<TypedField> joinFields = jc != null ? collectJoinFields(jc) : null;
     for (Field field : right.query.columns) {
       TypedField typedField = right.queryResolver.resolveField(field);
       TypedField tf = typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField;
       // Do not add if it is in the join. We keep only the other field from the left query.
-      if (!joinFields.contains(tf)) {
+      if (joinFields == null || !joinFields.contains(tf)) {
         rightColumns.add(tf); // we have to use the aliased field in the select
       }
     }
-    return Tuples.twin(leftColumns, rightColumns);
+
+    // Remove any ambiguity and keep left columns if right columns are contained in the left columns
+    Set<TypedField> inter = new HashSet<>(leftColumns);
+    inter.retainAll(rightColumns);
+    rightColumns.removeAll(leftColumns);
+    List<TypedField> newLeft = new ArrayList<>();
+    for (TypedField leftColumn : leftColumns) {
+      if (inter.contains(leftColumn)) {
+        newLeft.add(new TableTypedField(left.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias()));
+      } else {
+        newLeft.add(leftColumn);
+      }
+    }
+    return Tuples.twin(newLeft, rightColumns);
   }
 
   private static Set<TypedField> collectJoinFields(CompiledCriteria joinCriteria) {
