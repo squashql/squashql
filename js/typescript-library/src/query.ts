@@ -142,6 +142,7 @@ export enum JoinType {
   INNER = "INNER",
   LEFT = "LEFT",
   FULL = "FULL",
+  CROSS = "CROSS",
 }
 
 class Join {

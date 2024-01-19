@@ -4,4 +4,5 @@ public enum JoinType {
   INNER,
   LEFT,
   FULL,
+  CROSS,
 }
