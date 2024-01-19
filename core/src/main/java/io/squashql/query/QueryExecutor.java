@@ -144,7 +144,7 @@ public class QueryExecutor {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
     query.limit = queryLimit;
 
-    final QueryResolver queryResolver = new QueryResolver(query, new HashMap<>(this.queryEngine.datastore().storesByName()));
+    QueryResolver queryResolver = new QueryResolver(query, this.queryEngine.datastore().storesByName());
     DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
             queryResolver.getColumns(), queryResolver.getBucketColumns(), queryResolver.getMeasures().values(), queryResolver.getScope());
     // Compute what needs to be prefetched
@@ -281,42 +281,38 @@ public class QueryExecutor {
   }
 
   public record QueryScope(CompiledTable table,
-                           DatabaseQuery subQuery,
                            List<TypedField> columns,
                            CompiledCriteria whereCriteria,
                            CompiledCriteria havingCriteria,
                            List<TypedField> rollupColumns,
                            List<List<TypedField>> groupingSets,
-                           List<VirtualTableDto> virtualTables,
+                           List<CteRecordTable> cteRecordTables,
                            int limit) {
 
     @Override
     public String toString() {
       final StringBuilder sb = new StringBuilder("QueryScope{");
-      sb.append("table=").append(table);
-      if (subQuery != null) {
-        sb.append(", subQuery=").append(subQuery);
+      sb.append("table=").append(this.table);
+      if (this.columns != null && !this.columns.isEmpty()) {
+        sb.append(", columns=").append(this.columns);
       }
-      if (columns != null && !columns.isEmpty()) {
-        sb.append(", columns=").append(columns);
+      if (this.whereCriteria != null) {
+        sb.append(", whereCriteria=").append(this.whereCriteria);
       }
-      if (whereCriteria != null) {
-        sb.append(", whereCriteria=").append(whereCriteria);
+      if (this.havingCriteria != null) {
+        sb.append(", havingCriteria=").append(this.havingCriteria);
       }
-      if (havingCriteria != null) {
-        sb.append(", havingCriteria=").append(havingCriteria);
+      if (this.rollupColumns != null && !this.rollupColumns.isEmpty()) {
+        sb.append(", rollupColumns=").append(this.rollupColumns);
       }
-      if (rollupColumns != null && !rollupColumns.isEmpty()) {
-        sb.append(", rollupColumns=").append(rollupColumns);
+      if (this.groupingSets != null && !this.groupingSets.isEmpty()) {
+        sb.append(", groupingSets=").append(this.groupingSets);
       }
-      if (groupingSets != null && !groupingSets.isEmpty()) {
-        sb.append(", groupingSets=").append(groupingSets);
+      if (this.cteRecordTables != null && !this.cteRecordTables.isEmpty()) {
+        sb.append(", cteRecordTables=").append(this.cteRecordTables);
       }
-      if (virtualTables != null && !virtualTables.isEmpty()) {
-        sb.append(", virtualTables=").append(virtualTables);
-      }
-      if (limit > 0) {
-        sb.append(", limit=").append(limit);
+      if (this.limit > 0) {
+        sb.append(", limit=").append(this.limit);
       }
       sb.append('}');
       return sb.toString();

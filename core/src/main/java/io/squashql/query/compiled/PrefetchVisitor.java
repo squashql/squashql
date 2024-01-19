@@ -179,9 +179,8 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
         subQueryMeasures.add(new CompiledAggregatedMeasure(subQueryMeasureAlias, fieldToAggregate, vectorAggFunc, null, false));
       }
 
-      DatabaseQuery subQuery = new DatabaseQuery(this.originalQueryScope.virtualTables(),
+      DatabaseQuery subQuery = new DatabaseQuery(this.originalQueryScope.cteRecordTables(),
               this.originalQueryScope.table(),
-              this.originalQueryScope.subQuery(),
               new HashSet<>(subQuerySelectColumns),
               this.originalQueryScope.whereCriteria(),
               this.originalQueryScope.havingCriteria(),
@@ -191,14 +190,13 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
       subQueryMeasures.forEach(subQuery::withMeasure);
 
       QueryScope topQueryScope = new QueryScope(
-              this.originalQueryScope.table(),
-              subQuery,
+              new NestedQueryTable(subQuery),
               topQuerySelectColumns,
               null, // the filter applied to the sub-query is enough
               this.originalQueryScope.havingCriteria(),
               Collections.emptyList(), // remove rollup, it has been computed in the subquery
               Collections.emptyList(),
-              this.originalQueryScope.virtualTables(),
+              this.originalQueryScope.cteRecordTables(),
               this.originalQueryScope.limit());
 
       int size = subQueryMeasureAliases.size();

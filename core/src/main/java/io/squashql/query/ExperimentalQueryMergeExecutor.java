@@ -1,9 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.compiled.CompiledCriteria;
-import io.squashql.query.compiled.CompiledMeasure;
-import io.squashql.query.compiled.CompiledTable;
+import io.squashql.query.compiled.*;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.QueryRewriter;
@@ -13,6 +11,7 @@ import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.type.AliasedTypedField;
 import io.squashql.type.TypedField;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.Twin;
@@ -20,13 +19,13 @@ import org.eclipse.collections.impl.list.mutable.MutableListFactoryImpl;
 import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
-import java.util.function.Function;
 
 import static io.squashql.query.QueryExecutor.LIMIT_DEFAULT_VALUE;
 import static io.squashql.query.database.AQueryEngine.transformToColumnFormat;
 import static io.squashql.query.database.SQLTranslator.addLimit;
 
 @Slf4j
+@AllArgsConstructor
 public class ExperimentalQueryMergeExecutor {
 
   private final QueryEngine<?> queryEngine;
@@ -43,17 +42,26 @@ public class ExperimentalQueryMergeExecutor {
     Holder(String cteTableName, QueryDto query) {
       this.query = query;
       this.cteTableName = cteTableName;
-      this.queryResolver = new QueryResolver(query, new HashMap<>(ExperimentalQueryMergeExecutor.this.queryEngine.datastore().storesByName()));
+      this.queryResolver = new QueryResolver(query, ExperimentalQueryMergeExecutor.this.queryEngine.datastore().storesByName());
       this.dbQuery = this.queryResolver.toDatabaseQuery(this.queryResolver.getScope(), -1);
       this.queryResolver.getMeasures().values().forEach(this.dbQuery::withMeasure);
       this.queryRewriter = ExperimentalQueryMergeExecutor.this.queryEngine.queryRewriter(this.dbQuery);
-      this.originalTableName = query.table != null ? this.queryRewriter.tableName(query.table.name) : null;
+      this.originalTableName = query.table != null ? query.table.name : null;
       this.sql = SQLTranslator.translate(this.dbQuery, this.queryRewriter);
     }
   }
 
-  public ExperimentalQueryMergeExecutor(QueryEngine<?> queryEngine) {
-    this.queryEngine = queryEngine;
+  record CteTable(String name, List<CompiledJoin> joins) implements CompiledTable, NamedTable {
+
+    @Override
+    public String sqlExpressionTableName(QueryRewriter queryRewriter) {
+      return queryRewriter.cteName(this.name);
+    }
+
+    @Override
+    public String sqlExpression(QueryRewriter queryRewriter) {
+      return CompiledTable.sqlExpression(queryRewriter, this);
+    }
   }
 
   public Table execute(QueryDto first,
@@ -68,18 +76,14 @@ public class ExperimentalQueryMergeExecutor {
     Holder right = new Holder("__cteR__", second);
 
     StringBuilder sb = new StringBuilder("with ");
-    sb.append(left.cteTableName).append(" as (").append(left.sql).append("), ");
-    sb.append(right.cteTableName).append(" as (").append(right.sql).append(") ");
+    sb.append(left.queryRewriter.cteName(left.cteTableName)).append(" as (").append(left.sql).append("), ");
+    sb.append(right.queryRewriter.cteName(right.cteTableName)).append(" as (").append(right.sql).append(") ");
 
-    QueryDto leftCteQuery = new QueryDto().table(left.cteTableName);
-    QueryDto rightCteQuery = new QueryDto().table(right.cteTableName);
-    CriteriaDto joinConditionCopy = JacksonUtil.deserialize(JacksonUtil.serialize(joinCondition), CriteriaDto.class);
-    CriteriaDto rewrittenJoinCondition = rewriteJoinCondition(joinConditionCopy);
-    leftCteQuery.table.join(new TableDto(rightCteQuery.table.name), joinType, rewrittenJoinCondition);
-    QueryResolver queryResolver = new QueryResolver(leftCteQuery, new HashMap<>(this.queryEngine.datastore().storesByName()));
-    CompiledTable joinTable = queryResolver.getScope().table();
+    CompiledCriteria compiledCriteria = compiledCriteria(joinType, joinCondition, left, right);
+    CompiledJoin compiledJoin = new CompiledJoin(new CteTable(right.cteTableName, List.of()), joinType, compiledCriteria);
+    CteTable cteLeftTable = new CteTable(left.cteTableName, List.of(compiledJoin));
 
-    Twin<List<TypedField>> selectColumns = getSelectElements(joinTable, left, right);
+    Twin<List<TypedField>> selectColumns = getSelectElements(cteLeftTable, left, right);
     List<String> selectSt = new ArrayList<>();
     selectColumns.getOne().forEach(typedField -> selectSt.add(replaceTableNameByCteNameIfNotNull(left, left.queryRewriter.select(typedField))));
     selectColumns.getTwo().forEach(typedField -> selectSt.add(replaceTableNameByCteNameIfNotNull(right, right.queryRewriter.select(typedField))));
@@ -90,13 +94,9 @@ public class ExperimentalQueryMergeExecutor {
             .append(String.join(", ", selectSt))
             .append(" from ");
 
-    CompiledTable.CompiledJoin compiledJoin = new CompiledTable.CompiledJoin(new CompiledTable(right.cteTableName, List.of()), joinType, joinTable.joins().get(0).joinCriteria());
-    // Build the sql expression to use Function.identity() and simply return the name of the cte and not using queryRewriter.tableName()
-    // which causes problem when using BQ for instance (datasetid.__cteR__). That's why we are not using joinTable.sqlExpression directly
-    String tableExpression = compiledJoin.sqlExpression(left.queryRewriter, Function.identity());
+    String tableExpression = cteLeftTable.sqlExpression(left.queryRewriter);
     tableExpression = replaceTableNameByCteNameIfNotNull(left, tableExpression);
     tableExpression = replaceTableNameByCteNameIfNotNull(right, tableExpression);
-    sb.append(left.cteTableName);
     sb.append(tableExpression);
 
     addOrderBy(orders, sb, left, right);
@@ -122,6 +122,16 @@ public class ExperimentalQueryMergeExecutor {
             result.getOne(),
             new HashSet<>(measures),
             result.getTwo());
+  }
+
+  private CompiledCriteria compiledCriteria(JoinType joinType, CriteriaDto joinCondition, Holder left, Holder right) {
+    QueryDto leftCteQuery = new QueryDto().table(left.cteTableName);
+    QueryDto rightCteQuery = new QueryDto().table(right.cteTableName);
+    CriteriaDto joinConditionCopy = JacksonUtil.deserialize(JacksonUtil.serialize(joinCondition), CriteriaDto.class);
+    CriteriaDto rewrittenJoinCondition = rewriteJoinCondition(joinConditionCopy);
+    leftCteQuery.table.join(new TableDto(rightCteQuery.table.name), joinType, rewrittenJoinCondition);
+    QueryResolver queryResolver = new QueryResolver(leftCteQuery, this.queryEngine.datastore().storesByName());
+    return queryResolver.compileCriteria(rewrittenJoinCondition);
   }
 
   private static CriteriaDto rewriteJoinCondition(CriteriaDto joinCondition) {
@@ -178,7 +188,7 @@ public class ExperimentalQueryMergeExecutor {
    */
   private static Twin<List<TypedField>> getSelectElements(CompiledTable joinTable, Holder left, Holder right) {
     // Try to guess from the conditions which field to keep.
-    CompiledTable.CompiledJoin join = joinTable.joins().get(0);
+    CompiledJoin join = joinTable.joins().get(0);
     List<TypedField> leftColumns = new ArrayList<>();
     List<TypedField> rightColumns = new ArrayList<>();
     for (Field field : left.query.columns) {
@@ -214,7 +224,7 @@ public class ExperimentalQueryMergeExecutor {
 
   private static String replaceTableNameByCteNameIfNotNull(Holder holder, String s) {
     if (holder.originalTableName != null) {
-      s = s.replace(holder.originalTableName, holder.cteTableName);
+      s = s.replace(holder.queryRewriter.tableName(holder.originalTableName), holder.queryRewriter.cteName(holder.cteTableName));
     }
     return s;
   }

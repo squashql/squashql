@@ -3,7 +3,6 @@ package io.squashql.query.database;
 import io.squashql.query.Header;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.store.Datastore;
-import io.squashql.store.Store;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;
 import lombok.extern.slf4j.Slf4j;
@@ -34,15 +33,6 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
 
   @Override
   public Table execute(DatabaseQuery query) {
-    if (query.table != null) {
-      String tableName = query.table.name();
-      // Can be null if sub-query
-      Store store = this.datastore.storesByName().get(tableName);
-      if (store == null) {
-        throw new IllegalArgumentException(String.format("Cannot find table with name %s. Available tables: %s",
-                tableName, this.datastore.storesByName().values().stream().map(Store::name).toList()));
-      }
-    }
     String sql = createSqlStatement(query);
     log.info(query + " translated into " + System.lineSeparator() + "sql=" + sql);
     return retrieveAggregates(query, sql);

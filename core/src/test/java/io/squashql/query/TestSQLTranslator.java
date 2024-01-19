@@ -1,23 +1,21 @@
 package io.squashql.query;
 
 import io.squashql.query.compiled.CompiledMeasure;
-import io.squashql.query.database.DatabaseQuery;
-import io.squashql.query.database.DefaultQueryRewriter;
-import io.squashql.query.database.SqlUtils;
+import io.squashql.query.database.*;
 import io.squashql.query.dto.*;
 import io.squashql.store.Store;
 import io.squashql.type.*;
+import lombok.AllArgsConstructor;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
 import static io.squashql.query.Functions.*;
 import static io.squashql.query.TableField.tableField;
-import static io.squashql.query.database.SQLTranslator.translate;
 import static io.squashql.query.dto.JoinType.INNER;
 import static io.squashql.query.dto.JoinType.LEFT;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
@@ -25,13 +23,12 @@ import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 public class TestSQLTranslator {
 
   private static final String BASE_STORE_NAME = "baseStore";
-  private static final String BASE_STORE_NAME_ESCAPED = SqlUtils.backtickEscape(BASE_STORE_NAME);
 
   private static class TestResolver extends QueryResolver {
     private final int limit;
 
     public TestResolver(QueryDto query) {
-      super(query, new HashMap<>());
+      super(query, Collections.emptyMap());
       this.limit = query.limit;
     }
 
@@ -77,16 +74,57 @@ public class TestSQLTranslator {
     }
   }
 
+  @AllArgsConstructor
+  static class SQLTranslatorQueryRewriter implements QueryRewriter {
+
+    final DatabaseQuery query;
+
+    @Override
+    public DatabaseQuery query() {
+      return this.query;
+    }
+
+    @Override
+    public String escapeAlias(String alias) {
+      return SqlUtils.backtickEscape(alias);
+    }
+
+    @Override
+    public String fieldName(String field) {
+      return SqlUtils.backtickEscape(field);
+    }
+
+    @Override
+    public String tableName(String table) {
+      // Should be different then cteName() to make sure tableName and cteName are correctly differentiated and used properly
+      return SqlUtils.backtickEscape("dataset." + table);
+    }
+
+    @Override
+    public String cteName(String cteName) {
+      return SqlUtils.backtickEscape(cteName);
+    }
+
+    @Override
+    public boolean usePartialRollupSyntax() {
+      return true;
+    }
+  }
+
+  public static String translate(DatabaseQuery query) {
+    return SQLTranslator.translate(query, new SQLTranslatorQueryRewriter(query));
+  }
+
   private DatabaseQuery compileQuery(QueryDto query) {
     return new TestResolver(query).toDatabaseQuery();
   }
 
   private CompiledMeasure compiledMeasure(Measure m) {
-    return new TestResolver(new QueryDto()).compileMeasure(m, true);
+    return new TestResolver(new QueryDto().table("fake")).compileMeasure(m, true);
   }
 
   private TypedField compileField(Field field) {
-    return new TestResolver(new QueryDto()).resolveField(field);
+    return new TestResolver(new QueryDto().table("fake")).resolveField(field);
   }
 
   private DatabaseQuery compileQuery(QueryDto query, Map<String, Store> stores) {
@@ -108,7 +146,7 @@ public class TestSQLTranslator {
             .withMeasure(new AggregatedMeasure("mean pnl", "pnl", "avg"))
             .table(BASE_STORE_NAME);
     Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg`, avg(`pnl`) as `mean pnl` from " + BASE_STORE_NAME_ESCAPED);
+            .isEqualTo("select sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg`, avg(`pnl`) as `mean pnl` from `dataset.baseStore`");
   }
 
   @Test
@@ -119,7 +157,7 @@ public class TestSQLTranslator {
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select sum(`pnl`) as `pnl.sum` from `" + BASE_STORE_NAME + "` limit 8");
+            .isEqualTo("select sum(`pnl`) as `pnl.sum` from `dataset.baseStore` limit 8");
   }
 
   @Test
@@ -133,7 +171,7 @@ public class TestSQLTranslator {
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg` from " + BASE_STORE_NAME_ESCAPED + " group by " +
+            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg` from `dataset.baseStore` group by " +
                     "`scenario`, `type`");
   }
 
@@ -147,8 +185,8 @@ public class TestSQLTranslator {
             .table(BASE_STORE_NAME);
 
     Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select `baseStore`.`scenario`, `baseStore`.`type`, sum(`baseStore`.`pnl`) as `pnl.sum`, sum(`baseStore`.`delta`) as `delta.sum` from " + BASE_STORE_NAME_ESCAPED + " group by " +
-                    "`baseStore`.`scenario`, `baseStore`.`type`");
+            .isEqualTo("select `dataset.baseStore`.`scenario`, `dataset.baseStore`.`type`, sum(`dataset.baseStore`.`pnl`) as `pnl.sum`, sum(`dataset.baseStore`.`delta`) as `delta.sum` from `dataset.baseStore` group by " +
+                    "`dataset.baseStore`.`scenario`, `dataset.baseStore`.`type`");
   }
 
   @Test
@@ -159,7 +197,7 @@ public class TestSQLTranslator {
             .withMeasure(new ExpressionMeasure("indice", "100 * sum(`delta`) / sum(`pnl`)"));
 
     Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select sum(`pnl`) as `pnl.sum`, 100 * sum(`delta`) / sum(`pnl`) as `indice` from " + BASE_STORE_NAME_ESCAPED);
+            .isEqualTo("select sum(`pnl`) as `pnl.sum`, 100 * sum(`delta`) / sum(`pnl`) as `indice` from `dataset.baseStore`");
   }
 
   @Test
@@ -178,7 +216,7 @@ public class TestSQLTranslator {
             .isEqualTo("""
                     select `scenario`, `type`,
                      sum(`price`) as `pnl.sum`
-                     from `baseStore` group by rollup(`scenario`, `type`)
+                     from `dataset.baseStore` group by rollup(`scenario`, `type`)
                     """.replaceAll(System.lineSeparator(), ""));
   }
 
@@ -196,9 +234,9 @@ public class TestSQLTranslator {
 
     Assertions.assertThat(translate(compileQuery(query)))
             .isEqualTo("""
-                    select `baseStore`.`scenario`, `baseStore`.`type`,
+                    select `dataset.baseStore`.`scenario`, `dataset.baseStore`.`type`,
                      sum(`price`) as `pnl.sum`
-                     from `baseStore` group by rollup(`baseStore`.`scenario`, `baseStore`.`type`)
+                     from `dataset.baseStore` group by rollup(`dataset.baseStore`.`scenario`, `dataset.baseStore`.`type`)
                     """.replaceAll(System.lineSeparator(), ""));
   }
 
@@ -214,7 +252,7 @@ public class TestSQLTranslator {
     Assertions.assertThat(translate(compileQuery(query)))
             .isEqualTo("select `scenario`, `type`," +
                     " sum(`price`) as `pnl.sum`" +
-                    " from `baseStore` group by `type`, rollup(`scenario`)");
+                    " from `dataset.baseStore` group by `type`, rollup(`scenario`)");
   }
 
   @Test
@@ -239,11 +277,11 @@ public class TestSQLTranslator {
             .withMeasure(new AggregatedMeasure("pnl.avg", "pnl", "avg"));
 
     Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select avg(`pnl`) as `pnl.avg` from " + BASE_STORE_NAME_ESCAPED
-                    + " inner join `table1` on " + BASE_STORE_NAME_ESCAPED + ".`id` = `table1`.`table1_id`"
-                    + " inner join `table4` on (`table1`.`table1_field_2` = `table4`.`table4_id_1` and `table1`.`table1_field_3` = `table4`.`table4_id_2`)"
-                    + " left join `table2` on " + BASE_STORE_NAME_ESCAPED + ".`id` = `table2`.`table2_id`"
-                    + " inner join `table3` on `table2`.`table2_field_1` = `table3`.`table3_id`"
+            .isEqualTo("select avg(`pnl`) as `pnl.avg` from `dataset.baseStore`"
+                    + " inner join `dataset.table1` on `dataset.baseStore`.`id` = `dataset.table1`.`table1_id`"
+                    + " inner join `dataset.table4` on (`dataset.table1`.`table1_field_2` = `dataset.table4`.`table4_id_1` and `dataset.table1`.`table1_field_3` = `dataset.table4`.`table4_id_2`)"
+                    + " left join `dataset.table2` on `dataset.baseStore`.`id` = `dataset.table2`.`table2_id`"
+                    + " inner join `dataset.table3` on `dataset.table2`.`table2_field_1` = `dataset.table3`.`table3_id`"
             );
   }
 
@@ -269,10 +307,10 @@ public class TestSQLTranslator {
     final QueryDto query = new QueryDto().table(a).withColumn(tableField("A.y"));
 
     Assertions.assertThat(translate(compileQuery(query, stores)))
-            .isEqualTo("select `A`.`y` from `A` " +
-                    "inner join `B` on `A`.`a_id` = `B`.`b_id` " +
-                    "left join `C` on (`C`.`c_other_id` = `B`.`b_other_id` and `C`.`c_f` = `A`.`a_f`) " +
-                    "group by `A`.`y`");
+            .isEqualTo("select `dataset.A`.`y` from `dataset.A` " +
+                    "inner join `dataset.B` on `dataset.A`.`a_id` = `dataset.B`.`b_id` " +
+                    "left join `dataset.C` on (`dataset.C`.`c_other_id` = `dataset.B`.`b_other_id` and `dataset.C`.`c_f` = `dataset.A`.`a_f`) " +
+                    "group by `dataset.A`.`y`");
   }
 
   @Test
@@ -290,7 +328,7 @@ public class TestSQLTranslator {
             )
             .table(BASE_STORE_NAME);
     Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum` from " + BASE_STORE_NAME_ESCAPED
+            .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum` from `dataset.baseStore`"
                     + " where (((`scenario` = 'base' or `scenario` = 's1') or `scenario` = 's2')"
                     + " and `delta` >= 123.0 and (`type` = 'A''' or `type` = 'B') and `pnl` < 10.0 and (`pnl`-1) < 11.0)"
                     + " group by `scenario`, `type`"
@@ -310,9 +348,9 @@ public class TestSQLTranslator {
                     isNull())))
             .table(BASE_STORE_NAME);
     Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select `baseStore`.`scenario`, sum(`pnl`) as `pnl.sum` from " + BASE_STORE_NAME_ESCAPED
-                    + " where ((`baseStore`.`scenario` = 'base' or `baseStore`.`scenario` = 's2') or `baseStore`.`scenario` is null)"
-                    + " group by `baseStore`.`scenario`"
+            .isEqualTo("select `dataset.baseStore`.`scenario`, sum(`pnl`) as `pnl.sum` from `dataset.baseStore`"
+                    + " where ((`dataset.baseStore`.`scenario` = 'base' or `dataset.baseStore`.`scenario` = 's2') or `dataset.baseStore`.`scenario` is null)"
+                    + " group by `dataset.baseStore`.`scenario`"
             );
   }
 
@@ -333,7 +371,7 @@ public class TestSQLTranslator {
             .withMeasure(sum("sum GT", "mean"))
             .withWhereCriteria(criterion("type", eq("myType")));
     Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select `c3`, sum(`alias_c1`) as `sum c1`, sum(`mean`) as `sum GT` from (select `c3`, `c1` AS `alias_c1`, avg(`c2`) as `mean` from `a` group by `c3`, `alias_c1`) where `type` = 'myType' group by `c3`");
+            .isEqualTo("select `c3`, sum(`alias_c1`) as `sum c1`, sum(`mean`) as `sum GT` from (select `c3`, `c1` AS `alias_c1`, avg(`c2`) as `mean` from `dataset.a` group by `c3`, `alias_c1`) where `type` = 'myType' group by `c3`");
   }
 
   @Test
@@ -346,7 +384,7 @@ public class TestSQLTranslator {
             .withMeasure(plus)
             .withMeasure(divide);
     Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select (sum(`pnl`)+avg(`delta`)) as `plus`, ((sum(`pnl`)+avg(`delta`))/100.0) as `divide` from `a`");
+            .isEqualTo("select (sum(`pnl`)+avg(`delta`)) as `plus`, ((sum(`pnl`)+avg(`delta`))/100.0) as `divide` from `dataset.a`");
   }
 
   @Test
@@ -357,7 +395,7 @@ public class TestSQLTranslator {
             .withMeasure(sum("pnlSum", "pnl"))
             .withMeasure(sumIf("pnlSumFiltered", "pnl", criterion("country", eq("france"))));
     Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select sum(`pnl`) as `pnlSum`, sum(case when `country` = 'france' then `pnl` end) as `pnlSumFiltered` from `" + BASE_STORE_NAME + "`");
+            .isEqualTo("select sum(`pnl`) as `pnlSum`, sum(case when `country` = 'france' then `pnl` end) as `pnlSumFiltered` from `dataset.baseStore`");
 
     // With full path
     query = new QueryDto()
@@ -365,9 +403,7 @@ public class TestSQLTranslator {
             .withMeasure(sum("pnlSum", a.name + ".pnl"))
             .withMeasure(sumIf("pnlSumFiltered", a.name + ".pnl", criterion(a.name + ".country", eq("france"))));
     String format = "select sum(`%1$s`.`pnl`) as `pnlSum`, sum(case when `%1$s`.`country` = 'france' then `%1$s`.`pnl` end) as `pnlSumFiltered` from `%1$s`";
-    Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo(String.format(
-                    format, BASE_STORE_NAME));
+    Assertions.assertThat(translate(compileQuery(query))).isEqualTo(String.format(format, "dataset.baseStore"));
   }
 
   @Test
@@ -384,12 +420,42 @@ public class TestSQLTranslator {
             .withColumn(tableField("id"))
             .withColumn(tableField("b"));
     query.virtualTableDtos = List.of(virtualTable);
-    String expected = String.format("with %2$s as (select 0 as `a`, '0' as `b` union all select 1 as `a`, '1' as `b`) " +
+    String expected = String.format("with `%2$s` as (select 0 as `a`, '0' as `b` union all select 1 as `a`, '1' as `b`) " +
                     "select `id`, `b`, sum(`pnl`) as `pnl.sum` from `%1$s` " +
-                    "inner join %2$s on `id` = `a` group by `id`, `b`",
-            BASE_STORE_NAME, virtualTable.name);
-    Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo(expected);
+                    "inner join `%2$s` on `id` = `a` group by `id`, `b`",
+            "dataset.baseStore", virtualTable.name);
+    Assertions.assertThat(translate(compileQuery(query))).isEqualTo(expected);
+  }
+
+  @Test
+  void testVirtualTables() {
+    TableDto main = new TableDto(BASE_STORE_NAME);
+    VirtualTableDto virtualTable1 = new VirtualTableDto(
+            "virtual1",
+            List.of("a1", "b1"),
+            List.of(List.of(0, "0"), List.of(1, "1")));
+    VirtualTableDto virtualTable2 = new VirtualTableDto(
+            "virtual2",
+            List.of("a2", "b2"),
+            List.of(List.of(0, "0"), List.of(1, "1")));
+    main.join(new TableDto(virtualTable1.name), INNER, criterion(BASE_STORE_NAME + ".id", virtualTable1.name + ".a1", ConditionType.EQ));
+    main.join(new TableDto(virtualTable2.name), INNER, criterion(BASE_STORE_NAME + ".id", virtualTable2.name + ".a2", ConditionType.EQ));
+    QueryDto query = new QueryDto()
+            .table(main)
+            .withMeasure(sum("pnl.sum", "pnl"))
+            .withColumn(tableField("id"))
+            .withColumn(tableField(virtualTable1.name + ".b1"))
+            .withColumn(tableField(virtualTable2.name + ".b2"));
+    query.virtualTableDtos = List.of(virtualTable1, virtualTable2);
+    String expected = "with " +
+            "`virtual1` as (select 0 as `a1`, '0' as `b1` union all select 1 as `a1`, '1' as `b1`), " +
+            "`virtual2` as (select 0 as `a2`, '0' as `b2` union all select 1 as `a2`, '1' as `b2`) " +
+            "select `id`, `virtual1`.`b1`, `virtual2`.`b2`, sum(`pnl`) as `pnl.sum` " +
+            "from `dataset.baseStore` " +
+            "inner join `virtual1` on `dataset.baseStore`.`id` = `virtual1`.`a1` " +
+            "inner join `virtual2` on `dataset.baseStore`.`id` = `virtual2`.`a2` " +
+            "group by `id`, `virtual1`.`b1`, `virtual2`.`b2`";
+    Assertions.assertThat(translate(compileQuery(query))).isEqualTo(expected);
   }
 
   @Test
@@ -407,13 +473,11 @@ public class TestSQLTranslator {
             .withColumn(tableField("b"));
     query.virtualTableDtos = List.of(virtualTable);
 
-    String expected = String.format("with %2$s as (select 0 as `a`, '0' as `b` union all select 1 as `a`, '1' as `b`) " +
+    String expected = String.format("with `%2$s` as (select 0 as `a`, '0' as `b` union all select 1 as `a`, '1' as `b`) " +
                     "select `id`, `b`, sum(`pnl`) as `pnl.sum` from `%1$s` " +
-                    "inner join %2$s on `%1$s`.`id` = %2$s.`a` group by `id`, `b`",
-            BASE_STORE_NAME, virtualTable.name);
-    // IMPORTANT: No backtick in the join condition for the field belonging to the virtual table.
-    Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo(expected);
+                    "inner join `%2$s` on `%1$s`.`id` = `%2$s`.`a` group by `id`, `b`",
+            "dataset.baseStore", virtualTable.name);
+    Assertions.assertThat(translate(compileQuery(query))).isEqualTo(expected);
   }
 
   @Test
@@ -430,7 +494,7 @@ public class TestSQLTranslator {
             List.of(a), // total a
             List.of(a, b));
     Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select `a`, `b`, sum(`pnl`) as `pnl.sum` from `baseStore` group by grouping sets((), (`a`), (`a`,`b`))");
+            .isEqualTo("select `a`, `b`, sum(`pnl`) as `pnl.sum` from `dataset.baseStore` group by grouping sets((), (`a`), (`a`,`b`))");
   }
 
   @Test

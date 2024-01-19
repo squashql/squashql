@@ -59,7 +59,7 @@ public final class MeasureUtils {
   private static class ExpressionResolver extends QueryResolver {
 
     public ExpressionResolver(Measure m) {
-      super(new QueryDto().withMeasure(m), Collections.emptyMap());
+      super(new QueryDto().table("fake").withMeasure(m), Collections.emptyMap());
     }
 
     @Override
@@ -104,13 +104,12 @@ public final class MeasureUtils {
               rollupColumns.addAll(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage reverse order".
             });
     return new QueryExecutor.QueryScope(queryScope.table(),
-            queryScope.subQuery(),
             queryScope.columns(),
             copy.get(),
             queryScope.havingCriteria(),
             new ArrayList<>(rollupColumns),
             new ArrayList<>(queryScope.groupingSets()), // FIXME should handle groupingSets
-            queryScope.virtualTables(),
+            queryScope.cteRecordTables(),
             queryScope.limit());
   }
 

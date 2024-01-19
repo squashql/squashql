@@ -1,6 +1,6 @@
 package io.squashql.query.database;
 
-import io.squashql.query.dto.VirtualTableDto;
+import io.squashql.query.compiled.CteRecordTable;
 import io.squashql.type.AliasedTypedField;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
@@ -13,10 +13,10 @@ public interface QueryRewriter {
   DatabaseQuery query();
 
   default String getFieldFullName(TableTypedField f) {
-    List<VirtualTableDto> vts = query() != null ? query().virtualTableDtos : null;
+    List<CteRecordTable> vts = query() != null ? query().cteRecordTables : null;
     if (vts != null) {
-      for (VirtualTableDto virtualTable : vts) {
-        if (virtualTable.name.equals(f.store()) && virtualTable.fields.contains(f.name())) {
+      for (CteRecordTable virtualTable : vts) {
+        if (virtualTable.name().equals(f.store()) && virtualTable.fields().contains(f.name())) {
           return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
         }
       }
