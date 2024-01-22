@@ -33,7 +33,7 @@ public class TestSQLTranslator {
     }
 
     @Override
-    protected TypedField resolveField(Field field) {
+    public TypedField resolveField(Field field) {
       Function<String, Class<?>> type = f -> switch (f) {
         case "pnl", BASE_STORE_NAME + "." + "pnl" -> double.class;
         case "delta", BASE_STORE_NAME + "." + "delta" -> Double.class;

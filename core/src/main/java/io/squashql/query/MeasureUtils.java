@@ -63,7 +63,7 @@ public final class MeasureUtils {
     }
 
     @Override
-    protected TypedField resolveField(Field field) {
+    public TypedField resolveField(Field field) {
       return new TableTypedField(null, field.name(), String.class);
     }
 

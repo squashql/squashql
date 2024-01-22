@@ -45,6 +45,16 @@ public class DuckDBQueryEngine extends JdbcQueryEngine<DuckDBDatastore> {
 
   @Override
   public QueryRewriter queryRewriter(DatabaseQuery query) {
-    return new DuckDBQueryRewriter(query);
+    return new DuckDBQueryRewriter(query){
+//      @Override
+//      public String tableName(String table) {
+//        return super.tableName(table + "_table_");
+//      }
+
+      @Override
+      public String cteName(String cteName) {
+        return super.cteName(cteName + "_cte_");
+      }
+    };
   }
 }

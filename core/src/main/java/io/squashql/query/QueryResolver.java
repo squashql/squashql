@@ -71,7 +71,7 @@ public class QueryResolver {
   /**
    * Field resolver
    */
-  protected TypedField resolveField(final Field field) {
+  public TypedField resolveField(final Field field) {
     return this.cache.computeIfAbsent(field, f -> {
       // Special case for the column that is created due to the column set.
       ColumnSet columnSet = this.query.columnSets.get(BUCKET);
@@ -217,7 +217,7 @@ public class QueryResolver {
   /**
    * Table
    */
-  private CompiledTable compileTable(TableDto table, QueryDto subQuery) {
+  public CompiledTable compileTable(TableDto table, QueryDto subQuery) {
     if (table != null) {
       // Can be a cte.
       List<VirtualTableDto> vts = this.query.virtualTableDtos;
@@ -229,7 +229,8 @@ public class QueryResolver {
           }
         }
       }
-      return new MaterializedTable(table.name, compileJoins(table.joins));
+      List<CompiledJoin> joins = compileJoins(table.joins);
+      return !table.isCte ? new MaterializedTable(table.name, joins) : new CteTable(table.name, joins);
     } else if (subQuery != null) {
       return new NestedQueryTable(toSubQuery(subQuery));
     } else {
@@ -244,11 +245,11 @@ public class QueryResolver {
   /**
    * Joins
    */
-  private List<CompiledJoin> compileJoins(List<JoinDto> joins) {
+  public List<CompiledJoin> compileJoins(List<JoinDto> joins) {
     return joins.stream().map(this::compileJoin).collect(Collectors.toList());
   }
 
-  private CompiledJoin compileJoin(JoinDto join) {
+  public CompiledJoin compileJoin(JoinDto join) {
     CompiledTable table = compileTable(join.table, null);
     if (table instanceof NamedTable nt) {
       return new CompiledJoin(nt, join.type, compileCriteria(join.joinCriteria));

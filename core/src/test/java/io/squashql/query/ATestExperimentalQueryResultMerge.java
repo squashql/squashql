@@ -9,10 +9,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static io.squashql.query.Functions.*;
 
@@ -20,8 +17,9 @@ import static io.squashql.query.Functions.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
 
-  String storeA = "StoreA" + getClass().getSimpleName().toLowerCase();
-  String storeB = "StoreB" + getClass().getSimpleName().toLowerCase();
+  String storeA = "StoreA"; // + getClass().getSimpleName().toLowerCase();
+  String storeB = "StoreB"; // + getClass().getSimpleName().toLowerCase();
+  String storeC = "StoreC"; // + getClass().getSimpleName().toLowerCase();
   Field category = new TableField(this.storeA, "category");
   Field idA = new TableField(this.storeA, "idA");
   Field idStoreA = new TableField(this.storeA, "id");
@@ -29,8 +27,12 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
   Field idB = new TableField(this.storeB, "idB");
   Field idStoreB = new TableField(this.storeB, "id");
   Field priceB = new TableField(this.storeB, "priceB");
+  Field idC = new TableField(this.storeC, "idC");
+  Field idStoreC = new TableField(this.storeC, "id");
+  Field priceC = new TableField(this.storeC, "priceC");
   Measure priceASum = Functions.sum("priceA", this.priceA);
   Measure priceBSum = Functions.sum("priceB", this.priceB);
+  Measure priceCSum = Functions.sum("priceC", this.priceC);
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
@@ -42,7 +44,14 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
     TableTypedField idB = new TableTypedField(this.storeB, "idB", String.class);
     TableTypedField idStoreB = new TableTypedField(this.storeB, "id", String.class);
     TableTypedField priceB = new TableTypedField(this.storeB, "priceB", double.class);
-    return Map.of(this.storeA, List.of(category, idA, idStoreA, priceA), this.storeB, List.of(idB, idStoreB, priceB));
+
+    TableTypedField idC = new TableTypedField(this.storeC, "idC", String.class);
+    TableTypedField idStoreC = new TableTypedField(this.storeC, "id", String.class);
+    TableTypedField priceC = new TableTypedField(this.storeC, "priceC", double.class);
+    return Map.of(
+            this.storeA, List.of(category, idA, idStoreA, priceA),
+            this.storeB, List.of(idB, idStoreB, priceB),
+            this.storeC, List.of(idC, idStoreC, priceC));
   }
 
   @Override
@@ -57,6 +66,11 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             new Object[]{"0", "0", 10d},
             new Object[]{"1", "1", 20d},
             new Object[]{"2", "2", 30d}
+    ));
+    this.tm.load(this.storeC, List.of(
+            new Object[]{"0", "0", 123d},
+            new Object[]{"1", "1", 42d},
+            new Object[]{"2", "2", 321d}
     ));
   }
 
@@ -301,6 +315,58 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             List.of("0", 4d, 10d),
             List.of("1", 2d, 20d),
             Arrays.asList("3", 4d, getDoubleNullJoinValue()));
+  }
+
+  @Test
+  void testJoinWithMultipleQueries() {
+    QueryDto queryA = Query
+            .from(this.storeA)
+            .select(List.of(this.category, this.idA), List.of(this.priceASum))
+            .build();
+
+    QueryDto queryB = Query
+            .from(this.storeB)
+            .select(List.of(this.idB), List.of(this.priceBSum))
+            .build();
+
+    QueryDto queryC = Query
+            .from(this.storeC)
+            .select(List.of(this.idC), List.of(this.priceCSum))
+            .build();
+
+    JoinStatement join = JoinStatement.start(queryA)
+            .join(queryB, JoinType.INNER, criterion(this.idB, this.idA, ConditionType.EQ))
+            .join(queryC, JoinType.LEFT, criterion(this.idB, this.idC, ConditionType.EQ));
+
+    Table result = this.executor.executeExperimentalQueryMerge(
+            queryA, queryB, JoinType.LEFT,
+            criterion(this.idB, this.idA, ConditionType.EQ),
+            Map.of(),
+            -1);
+    result.show();
+  }
+
+  public static class JoinStatement {
+
+    List<QueryDto> queries = new ArrayList<>();
+    TableDto tableDto;
+
+    int current = 0;
+
+    private JoinStatement(QueryDto q1) {
+      this.queries.add(q1);
+      this.tableDto = new TableDto(String.format("__cte%d__", this.current++));
+    }
+
+    public static JoinStatement start(QueryDto q) {
+      return new JoinStatement(q);
+    }
+
+    public JoinStatement join(QueryDto q, JoinType joinType, CriteriaDto criteriaDto) {
+      this.queries.add(q);
+      this.tableDto.join(new TableDto(String.format("__cte%d__", this.current++)), joinType, criteriaDto);
+      return this;
+    }
   }
 
   /**

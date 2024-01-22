@@ -1,7 +1,14 @@
-package io.squashql.query;
+package io.squashql.query.join;
 
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.compiled.*;
+import io.squashql.query.AliasedField;
+import io.squashql.query.Field;
+import io.squashql.query.Header;
+import io.squashql.query.QueryResolver;
+import io.squashql.query.compiled.CompiledCriteria;
+import io.squashql.query.compiled.CompiledJoin;
+import io.squashql.query.compiled.CompiledMeasure;
+import io.squashql.query.compiled.CompiledTable;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.QueryRewriter;
@@ -16,9 +23,6 @@ import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.api.tuple.Twin;
-import org.eclipse.collections.impl.list.mutable.MutableListFactoryImpl;
-import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
 
@@ -53,77 +57,94 @@ public class ExperimentalQueryMergeExecutor {
     }
   }
 
-  record CteTable(String name, List<CompiledJoin> joins) implements CompiledTable, NamedTable {
-
-    @Override
-    public String sqlExpressionTableName(QueryRewriter queryRewriter) {
-      return queryRewriter.cteName(this.name);
-    }
-
-    @Override
-    public String sqlExpression(QueryRewriter queryRewriter) {
-      return CompiledTable.sqlExpression(queryRewriter, this);
-    }
-  }
-
-  public Table execute(QueryDto first,
-                       QueryDto second,
-                       JoinType joinType,
-                       CriteriaDto joinCondition,
+  public Table execute(JoinStatement statement,
                        Map<Field, OrderDto> orders,
                        int limit) {
     int queryLimit = limit <= 0 ? LIMIT_DEFAULT_VALUE : limit;
 
-    Holder left = new Holder("__cteL__", first);
-    Holder right = new Holder("__cteR__", second);
+    List<Holder> holders = new ArrayList<>(statement.queries.size());
+    for (int i = 0; i < statement.queries.size(); i++) {
+      if (i == 0) {
+        holders.add(new Holder(statement.tableDto.name, statement.queries.get(i)));
+      } else {
+        holders.add(new Holder(statement.tableDto.joins.get(i - 1).table.name, statement.queries.get(i)));
+      }
+    }
 
     StringBuilder sb = new StringBuilder("with ");
-    sb.append(left.queryRewriter.cteName(left.cteTableName)).append(" as (").append(left.sql).append("), ");
-    sb.append(right.queryRewriter.cteName(right.cteTableName)).append(" as (").append(right.sql).append(") ");
+    for (int i = 0; i < holders.size(); i++) {
+      Holder holder = holders.get(i);
+      sb.append(holder.queryRewriter.cteName(holder.cteTableName)).append(" as (").append(holder.sql);
+      sb.append(i < holders.size() - 1 ? "), " : ") ");
+    }
 
-    CompiledCriteria compiledCriteria = compiledCriteria(joinType, joinCondition, left, right);
-    CompiledJoin compiledJoin = new CompiledJoin(new CteTable(right.cteTableName, List.of()), joinType, compiledCriteria);
-    CteTable cteLeftTable = new CteTable(left.cteTableName, List.of(compiledJoin));
+    CompiledTable table = getCompiledTable(statement);
+    String tableExpression = table.sqlExpression(ExperimentalQueryMergeExecutor.this.queryEngine.queryRewriter(null));
+    for (int i = 0; i < holders.size(); i++) {
+      tableExpression = replaceTableNameByCteNameIfNotNull(holders.get(i), tableExpression);
+    }
 
-    Twin<List<TypedField>> selectColumns = getSelectElements(cteLeftTable, left, right);
+    List<List<TypedField>> selectColumns = getSelectElements(table, holders);
     List<String> selectSt = new ArrayList<>();
-    selectColumns.getOne().forEach(typedField -> selectSt.add(replaceTableNameByCteNameIfNotNull(left, left.queryRewriter.select(typedField))));
-    selectColumns.getTwo().forEach(typedField -> selectSt.add(replaceTableNameByCteNameIfNotNull(right, right.queryRewriter.select(typedField))));
-    left.query.measures.forEach(m -> selectSt.add(left.queryRewriter.escapeAlias(m.alias())));
-    right.query.measures.forEach(m -> selectSt.add(right.queryRewriter.escapeAlias(m.alias())));
+    // The columns
+    for (int i = 0; i < selectColumns.size(); i++) {
+      Holder holder = holders.get(i);
+      selectColumns.get(i).forEach(typedField -> selectSt.add(replaceTableNameByCteNameIfNotNull(holder, holder.queryRewriter.select(typedField))));
+    }
+    // The measures
+    for (int i = 0; i < holders.size(); i++) {
+      Holder holder = holders.get(i);
+      holder.query.measures.forEach(m -> selectSt.add(holder.queryRewriter.escapeAlias(m.alias())));
+    }
+
     sb
             .append("select ")
             .append(String.join(", ", selectSt))
-            .append(" from ");
+            .append(" from ")
+            .append(tableExpression);
 
-    String tableExpression = cteLeftTable.sqlExpression(left.queryRewriter);
-    tableExpression = replaceTableNameByCteNameIfNotNull(left, tableExpression);
-    tableExpression = replaceTableNameByCteNameIfNotNull(right, tableExpression);
-    sb.append(tableExpression);
 
-    addOrderBy(orders, sb, left, right);
+    addOrderBy(orders, sb, holders);
     addLimit(queryLimit, sb);
 
     String sql = sb.toString();
     log.info("sql=" + sql);
-    Table table = this.queryEngine.executeRawSql(sql);
+    Table result = this.queryEngine.executeRawSql(sql);
 
-    List<? extends Class<?>> columnTypes = table.headers().stream().map(Header::type).toList();
+    List<? extends Class<?>> columnTypes = result.headers().stream().map(Header::type).toList();
     List<CompiledMeasure> measures = new ArrayList<>();
-    left.query.measures.forEach(m -> measures.add(left.queryResolver.getMeasures().get(m)));
-    right.query.measures.forEach(m -> measures.add(right.queryResolver.getMeasures().get(m)));
+    for (int i = 0; i < holders.size(); i++) {
+      Holder holder = holders.get(i);
+      holder.query.measures.forEach(m -> measures.add(holder.queryResolver.getMeasures().get(m)));
+    }
 
-    Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
-            MutableListFactoryImpl.INSTANCE.withAll(selectColumns.getOne()).withAll(selectColumns.getTwo()),
+    Pair<List<Header>, List<List<Object>>> transform = transformToColumnFormat(
+            selectColumns.stream().flatMap(Collection::stream).toList(),
             measures,
             columnTypes,
             (columnType, name) -> columnType,
-            table.iterator(),
+            result.iterator(),
             (i, row) -> row.get(i));
     return new ColumnarTable(
-            result.getOne(),
+            transform.getOne(),
             new HashSet<>(measures),
-            result.getTwo());
+            transform.getTwo());
+  }
+
+  private CompiledTable getCompiledTable(JoinStatement statement) {
+    TableDto tableDto = new TableDto(statement.tableDto.name);
+    List<JoinDto> newJoins = new ArrayList<>();
+    // Iterate over the joins to rewrite the condition when necessary (to use aliases)
+    for (JoinDto join : statement.tableDto.joins) {
+      CriteriaDto joinConditionCopy = JacksonUtil.deserialize(JacksonUtil.serialize(join.joinCriteria), CriteriaDto.class);
+      CriteriaDto rewrittenJoinCondition = rewriteJoinCondition(joinConditionCopy);
+      newJoins.add(new JoinDto(join.table, join.type, rewrittenJoinCondition));
+    }
+    tableDto.joins = newJoins;
+    tableDto.isCte = true;
+
+    QueryResolver queryResolver = new QueryResolver(new QueryDto().table(tableDto), ExperimentalQueryMergeExecutor.this.queryEngine.datastore().storesByName());
+    return queryResolver.getScope().table();
   }
 
   private CompiledCriteria compiledCriteria(JoinType joinType, CriteriaDto joinCondition, Holder left, Holder right) {
@@ -185,20 +206,27 @@ public class ExperimentalQueryMergeExecutor {
     return joinCondition;
   }
 
-  private static void addOrderBy(Map<Field, OrderDto> orders, StringBuilder sb, Holder left, Holder right) {
+  private static void addOrderBy(Map<Field, OrderDto> orders, StringBuilder sb, List<Holder> holders) {
     if (orders != null && !orders.isEmpty()) {
       sb.append(" order by ");
       List<String> orderList = new ArrayList<>();
       for (Map.Entry<Field, OrderDto> e : orders.entrySet()) {
         Field key = e.getKey();
-        Holder holder = left;
-        // Where does it come from ? Left or right?
-        TypedField typedField = left.queryResolver.getTypedFieldOrNull(key);
-        if (typedField == null) {
-          typedField = (holder = right).queryResolver.getTypedFieldOrNull(key);
-          if (typedField == null) {
-            throw new RuntimeException("Cannot resolve " + e.getKey());
+
+
+        TypedField typedField = null;
+        Holder holder = null;
+        for (Holder h : holders) {
+          // Where does it come from ?
+          if ((typedField = h.queryResolver.getTypedFieldOrNull(key)) != null) {
+            holder = h;
+            break;
           }
+
+        }
+
+        if (typedField == null) {
+          throw new RuntimeException("Cannot resolve " + e.getKey());
         }
         String orderByField = holder.queryRewriter.aliasOrFullExpression(typedField);
         orderByField = replaceTableNameByCteNameIfNotNull(holder, orderByField);
@@ -211,45 +239,56 @@ public class ExperimentalQueryMergeExecutor {
   /**
    * Returns a list of elements that will end up in the select statement based on the given join table, left holder,
    * and right holder. Columns first then measures.
-   *
-   * @param joinTable the compiled table containing join information
-   * @param left      the left holder
-   * @param right     the right holder
-   * @return a list of select elements
    */
-  private static Twin<List<TypedField>> getSelectElements(CompiledTable joinTable, Holder left, Holder right) {
-    List<TypedField> leftColumns = new ArrayList<>();
-    List<TypedField> rightColumns = new ArrayList<>();
-    for (Field field : left.query.columns) {
-      TypedField typedField = left.queryResolver.resolveField(field);
-      leftColumns.add(typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField); // we have to use the aliased field in the select
+  private static List<List<TypedField>> getSelectElements(CompiledTable joinTable, List<Holder> holders) {
+    List<List<TypedField>> allColumns = new ArrayList<>();
+    List<TypedField> firstColumns = new ArrayList<>();
+
+    Set<TypedField> joinFields = new HashSet<>();
+    for (CompiledJoin join : joinTable.joins()) {
+      CompiledCriteria jc = join.joinCriteria();
+      joinFields.addAll(collectJoinFields(jc));
     }
 
-    // Try to guess from the conditions which field to keep.
-    CompiledCriteria jc = joinTable.joins().get(0).joinCriteria();
-    Set<TypedField> joinFields = jc != null ? collectJoinFields(jc) : null;
-    for (Field field : right.query.columns) {
-      TypedField typedField = right.queryResolver.resolveField(field);
-      TypedField tf = typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField;
-      // Do not add if it is in the join. We keep only the other field from the left query.
-      if (joinFields == null || !joinFields.contains(tf)) {
-        rightColumns.add(tf); // we have to use the aliased field in the select
+    for (int i = 0; i < holders.size(); i++) {
+      Holder h = holders.get(i);
+      List<TypedField> columns = new ArrayList<>();
+      for (Field field : h.query.columns) {
+        TypedField typedField = h.queryResolver.resolveField(field);
+        TypedField tf = typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField; // we have to use the aliased field in the select
+        if (i == 0 || !joinFields.contains(tf)) {
+          columns.add(tf);
+        }
       }
+      allColumns.add(columns); // we have to use the aliased field in the select
     }
 
-    // Remove any ambiguity and keep left columns if right columns are contained in the left columns
-    Set<TypedField> inter = new HashSet<>(leftColumns);
-    inter.retainAll(rightColumns);
-    rightColumns.removeAll(leftColumns);
-    List<TypedField> newLeft = new ArrayList<>();
-    for (TypedField leftColumn : leftColumns) {
-      if (inter.contains(leftColumn)) {
-        newLeft.add(new TableTypedField(left.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias()));
-      } else {
-        newLeft.add(leftColumn);
-      }
-    }
-    return Tuples.twin(newLeft, rightColumns);
+//    // Try to guess from the conditions which field to keep.
+//    CompiledCriteria jc = joinTable.joins().get(0).joinCriteria();
+//    Set<TypedField> joinFields = jc != null ? collectJoinFields(jc) : null;
+//    for (Field field : right.query.columns) {
+//      TypedField typedField = right.queryResolver.resolveField(field);
+//      TypedField tf = typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField;
+//      // Do not add if it is in the join. We keep only the other field from the left query.
+//      if (joinFields == null || !joinFields.contains(tf)) {
+//        firstColumns.add(tf); // we have to use the aliased field in the select
+//      }
+//    }
+//
+//    // Remove any ambiguity and keep left columns if right columns are contained in the left columns
+//    Set<TypedField> inter = new HashSet<>(leftColumns);
+//    inter.retainAll(rightColumns);
+//    rightColumns.removeAll(leftColumns);
+//    List<TypedField> newLeft = new ArrayList<>();
+//    for (TypedField leftColumn : leftColumns) {
+//      if (inter.contains(leftColumn)) {
+//        newLeft.add(new TableTypedField(left.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias()));
+//      } else {
+//        newLeft.add(leftColumn);
+//      }
+//    }
+//    return Tuples.twin(newLeft, rightColumns);
+    return allColumns;
   }
 
   private static Set<TypedField> collectJoinFields(CompiledCriteria joinCriteria) {
