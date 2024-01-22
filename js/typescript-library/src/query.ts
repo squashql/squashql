@@ -13,7 +13,7 @@ export class QueryMerge {
 }
 
 export class QueryJoin {
-  constructor(readonly first: Query, readonly second: Query, readonly joinType: JoinType, readonly joinCondition: Criteria, readonly orders: Map<Field, Order>, readonly limit: number = -1) {
+  constructor(readonly first: Query, readonly second: Query, readonly joinType: JoinType | null, readonly joinCondition: Criteria | null, readonly orders: Map<Field, Order> | null, readonly limit: number = -1) {
   }
 
   toJSON() {
