@@ -175,7 +175,6 @@ public class ExperimentalQueryMergeExecutor {
           TableTypedField l = new TableTypedField(left.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias());
           TableTypedField r = new TableTypedField(right.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias());
           children.add(new CompiledCriteria(null, ConditionType.EQ, l, r, null, null));
-
         }
         return children.size() > 1
                 ? new CompiledCriteria(null, ConditionType.AND, null, null, null, children)
@@ -187,23 +186,27 @@ public class ExperimentalQueryMergeExecutor {
   }
 
   private static CriteriaDto rewriteJoinCondition(CriteriaDto joinCondition) {
-    List<CriteriaDto> children = joinCondition.children;
-    if (children != null && !children.isEmpty()) {
-      for (CriteriaDto child : children) {
-        rewriteJoinCondition(child);
-      }
-    } else {
-      String alias = joinCondition.field.alias();
-      if (alias != null) {
-        joinCondition.field = new AliasedField(alias); // replace with aliased field
-      }
+    if (joinCondition != null) {
+      List<CriteriaDto> children = joinCondition.children;
+      if (children != null && !children.isEmpty()) {
+        for (CriteriaDto child : children) {
+          rewriteJoinCondition(child);
+        }
+      } else {
+        String alias = joinCondition.field.alias();
+        if (alias != null) {
+          joinCondition.field = new AliasedField(alias); // replace with aliased field
+        }
 
-      String otherAlias = joinCondition.fieldOther.alias();
-      if (otherAlias != null) {
-        joinCondition.fieldOther = new AliasedField(otherAlias); // replace with aliased field
+        String otherAlias = joinCondition.fieldOther.alias();
+        if (otherAlias != null) {
+          joinCondition.fieldOther = new AliasedField(otherAlias); // replace with aliased field
+        }
       }
+      return joinCondition;
+    } else {
+      return null;
     }
-    return joinCondition;
   }
 
   private static void addOrderBy(Map<Field, OrderDto> orders, StringBuilder sb, List<Holder> holders) {
@@ -242,8 +245,6 @@ public class ExperimentalQueryMergeExecutor {
    */
   private static List<List<TypedField>> getSelectElements(CompiledTable joinTable, List<Holder> holders) {
     List<List<TypedField>> allColumns = new ArrayList<>();
-    List<TypedField> firstColumns = new ArrayList<>();
-
     Set<TypedField> joinFields = new HashSet<>();
     for (CompiledJoin join : joinTable.joins()) {
       CompiledCriteria jc = join.joinCriteria();
@@ -262,32 +263,6 @@ public class ExperimentalQueryMergeExecutor {
       }
       allColumns.add(columns); // we have to use the aliased field in the select
     }
-
-//    // Try to guess from the conditions which field to keep.
-//    CompiledCriteria jc = joinTable.joins().get(0).joinCriteria();
-//    Set<TypedField> joinFields = jc != null ? collectJoinFields(jc) : null;
-//    for (Field field : right.query.columns) {
-//      TypedField typedField = right.queryResolver.resolveField(field);
-//      TypedField tf = typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField;
-//      // Do not add if it is in the join. We keep only the other field from the left query.
-//      if (joinFields == null || !joinFields.contains(tf)) {
-//        firstColumns.add(tf); // we have to use the aliased field in the select
-//      }
-//    }
-//
-//    // Remove any ambiguity and keep left columns if right columns are contained in the left columns
-//    Set<TypedField> inter = new HashSet<>(leftColumns);
-//    inter.retainAll(rightColumns);
-//    rightColumns.removeAll(leftColumns);
-//    List<TypedField> newLeft = new ArrayList<>();
-//    for (TypedField leftColumn : leftColumns) {
-//      if (inter.contains(leftColumn)) {
-//        newLeft.add(new TableTypedField(left.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias()));
-//      } else {
-//        newLeft.add(leftColumn);
-//      }
-//    }
-//    return Tuples.twin(newLeft, rightColumns);
     return allColumns;
   }
 

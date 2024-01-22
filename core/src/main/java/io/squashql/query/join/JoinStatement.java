@@ -10,25 +10,33 @@ import java.util.List;
 
 public class JoinStatement {
 
-    List<QueryDto> queries = new ArrayList<>();
-    TableDto tableDto;
-    int current = 0;
+  List<QueryDto> queries = new ArrayList<>();
+  TableDto tableDto;
+  int current = 0;
 
-    private JoinStatement(QueryDto q1) {
-      this.queries.add(q1);
-      this.tableDto = new TableDto(String.format("__cte%d__", this.current++));
-      this.tableDto.isCte = true;
-    }
-
-    public static JoinStatement start(QueryDto q) {
-      return new JoinStatement(q);
-    }
-
-    public JoinStatement join(QueryDto q, JoinType joinType, CriteriaDto criteriaDto) {
-      this.queries.add(q);
-      TableDto other = new TableDto(String.format("__cte%d__", this.current++));
-      other.isCte = true;
-      this.tableDto.join(other, joinType, criteriaDto);
-      return this;
-    }
+  private JoinStatement(QueryDto q1) {
+    this.queries.add(q1);
+    this.tableDto = new TableDto(String.format("__cte%d__", this.current++));
+    this.tableDto.isCte = true;
   }
+
+  public static JoinStatement start(QueryDto q) {
+    return new JoinStatement(q);
+  }
+
+  public JoinStatement join(QueryDto q, JoinType joinType, CriteriaDto criteriaDto) {
+    this.queries.add(q);
+    TableDto other = new TableDto(String.format("__cte%d__", this.current++));
+    other.isCte = true;
+    this.tableDto.join(other, joinType, criteriaDto);
+    return this;
+  }
+
+  public JoinStatement join(QueryDto q) {
+    this.queries.add(q);
+    TableDto other = new TableDto(String.format("__cte%d__", this.current++));
+    other.isCte = true;
+    this.tableDto.join(other, JoinType.INNER, null);
+    return this;
+  }
+}
