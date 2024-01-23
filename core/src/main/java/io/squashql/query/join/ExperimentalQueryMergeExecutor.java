@@ -78,7 +78,7 @@ public class ExperimentalQueryMergeExecutor {
       sb.append(i < holders.size() - 1 ? "), " : ") ");
     }
 
-    CompiledTable table = getCompiledTable(statement);
+    CompiledTable table = getCompiledTable(statement, holders);
     String tableExpression = table.sqlExpression(ExperimentalQueryMergeExecutor.this.queryEngine.queryRewriter(null));
     for (int i = 0; i < holders.size(); i++) {
       tableExpression = replaceTableNameByCteNameIfNotNull(holders.get(i), tableExpression);
@@ -131,14 +131,45 @@ public class ExperimentalQueryMergeExecutor {
             transform.getTwo());
   }
 
-  private CompiledTable getCompiledTable(JoinStatement statement) {
+  private CompiledTable getCompiledTable(JoinStatement statement, List<Holder> holders) {
     TableDto tableDto = new TableDto(statement.tableDto.name);
     List<JoinDto> newJoins = new ArrayList<>();
     // Iterate over the joins to rewrite the condition when necessary (to use aliases)
+    List<TypedField> leftColumns = new ArrayList<>();
+    for (Field field : statement.queries.get(0).columns) {
+      TypedField typedField = holders.get(0).queryResolver.resolveField(field);
+      leftColumns.add(typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField); // we have to use the aliased field in the select
+    }
+
+    int index = 1;
     for (JoinDto join : statement.tableDto.joins) {
       CriteriaDto joinConditionCopy = JacksonUtil.deserialize(JacksonUtil.serialize(join.joinCriteria), CriteriaDto.class);
-      CriteriaDto rewrittenJoinCondition = rewriteJoinCondition(joinConditionCopy);
-      newJoins.add(new JoinDto(join.table, join.type, rewrittenJoinCondition));
+      if (joinConditionCopy == null) {
+        // Guess the condition
+//        List<TypedField> rightColumns = new ArrayList<>();
+//        for (Field field : holders.get(index).query.columns) {
+//          TypedField typedField = holders.get(index).queryResolver.resolveField(field);
+//          rightColumns.add(typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField); // we have to use the aliased field in the select
+//        }
+//        leftColumns.retainAll(rightColumns);
+//        if (!leftColumns.isEmpty()) {
+//          List<CompiledCriteria> children = new ArrayList<>(leftColumns.size());
+//          for (TypedField leftColumn : leftColumns) {
+//            TableTypedField l = new TableTypedField(left.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias());
+//            TableTypedField r = new TableTypedField(right.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias());
+//            children.add(new CompiledCriteria(null, ConditionType.EQ, l, r, null, null));
+//          }
+//          CompiledCriteria compiledCriteria = children.size() > 1
+//                  ? new CompiledCriteria(null, ConditionType.AND, null, null, null, children)
+//                  : children.get(0);
+//        } else {
+//          return null; // no condition
+//        }
+      } else {
+        CriteriaDto rewrittenJoinCondition = rewriteJoinCondition(joinConditionCopy);
+        newJoins.add(new JoinDto(join.table, join.type, rewrittenJoinCondition));
+      }
+      index++;
     }
     tableDto.joins = newJoins;
     tableDto.isCte = true;
