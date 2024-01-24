@@ -219,6 +219,11 @@ public class NewExperimentalQueryMergeExecutor {
             transform.getTwo());
   }
 
+  /**
+   * Generates the sql expression corresponding to the {@link CriteriaDto}. In addition, the set is here to collect the
+   * columns from the {@link CriteriaDto} that should be removed from the select: e.g A.id = B.id, the set should contain
+   * B.id (or __cte1__.id) assuming A comes before B in the {@link Holder} list.
+   */
   public String sqlExpression(CriteriaDto jc, QueryRewriter queryRewriter, List<Holder> holders, Set<String> toRemoveFromSelectSet) {
     if (jc.field != null && jc.fieldOther != null && jc.conditionType != null) {
       Holder leftHolder = getHolderOrigin(holders, jc.field);

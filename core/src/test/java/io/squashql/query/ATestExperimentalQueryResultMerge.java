@@ -309,18 +309,20 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             .select(List.of(this.idC), List.of(this.priceCSum))
             .build();
 
-    JoinQuery join = JoinQuery.from(queryA)
+    JoinQuery jq = JoinQuery.from(queryA)
             .join(queryB, JoinType.INNER, criterion(this.idB, this.idA, ConditionType.EQ))
             .join(queryC, JoinType.LEFT, criterion(this.idB, this.idC, ConditionType.EQ));
-
-//    JoinQuery jq = JoinQuery.from(queryL).join(queryR, JoinType.LEFT, criterion(idAliasedB, idAliasedA, ConditionType.EQ));
-//    Table result = this.executor.executeExperimentalQueryMerge(
-//            queryA, queryB, JoinType.LEFT,
-//            criterion(this.idB, this.idA, ConditionType.EQ),
-//            Map.of(),
-//            -1);
-//    result.show();
-    Assertions.fail("");
+    SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
+    Map<Field, OrderDto> orders = new LinkedHashMap<>(); // order matters
+    orders.put(this.category, asc);
+    orders.put(this.idA, asc);
+    Table result = this.executor.executeExperimentalQueryMerge(jq, orders, -1);
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
+            .containsExactly(this.storeA + ".category", this.storeA + ".idA", "priceA", "priceB", "priceC");
+    Assertions.assertThat(result).containsExactly(
+            List.of("A", "0", 1d, 10d, 123d),
+            List.of("A", "1", 2d, 20d, 42d),
+            Arrays.asList("B", "0", 3d, 10d, 123d));
   }
 
   @Test

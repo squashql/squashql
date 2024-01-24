@@ -86,7 +86,7 @@ public interface QueryRewriter {
     }
     String alias = f.alias();
     if (withAlias && alias != null) {
-      sb.append(" AS ").append(escapeAlias(alias));
+      sb.append(" as ").append(escapeAlias(alias));
     }
     return sb.toString();
   }
