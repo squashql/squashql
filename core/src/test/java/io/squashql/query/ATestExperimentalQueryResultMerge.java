@@ -3,13 +3,17 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.*;
+import io.squashql.query.join.JoinQuery;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static io.squashql.query.Functions.*;
 
@@ -90,11 +94,8 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
     Map<Field, OrderDto> orders = new LinkedHashMap<>(); // order matters
     orders.put(this.category, asc);
     orders.put(this.idA, asc);
-    Table result = this.executor.executeExperimentalQueryMerge(
-            queryL, queryR, JoinType.LEFT,
-            criterion(this.idB, this.idA, ConditionType.EQ),
-            orders,
-            -1);
+    JoinQuery jq = JoinQuery.from(queryL).join(queryR, JoinType.LEFT, criterion(this.idB, this.idA, ConditionType.EQ));
+    Table result = this.executor.executeExperimentalQueryMerge(jq, orders, -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly(this.storeA + ".category", this.storeA + ".idA", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
@@ -103,11 +104,7 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             List.of("B", "0", 3d, 10d),
             Arrays.asList("B", "3", 4d, getDoubleNullJoinValue()));
 
-    result = this.executor.executeExperimentalQueryMerge(
-            queryL, queryR, JoinType.LEFT,
-            criterion(this.idB, this.idA, ConditionType.EQ),
-            orders,
-            1); // with limit
+    result = this.executor.executeExperimentalQueryMerge(jq, orders, 1); // with limit
     Assertions.assertThat(result).containsExactly(List.of("A", "0", 1d, 10d));
   }
 
@@ -124,11 +121,8 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             .build();
 
     SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
-    Table result = this.executor.executeExperimentalQueryMerge(
-            queryL, queryR, JoinType.LEFT,
-            criterion(this.idB, this.idA, ConditionType.EQ),
-            Map.of(this.idA, asc),
-            -1);
+    JoinQuery jq = JoinQuery.from(queryL).join(queryR, JoinType.LEFT, criterion(this.idB, this.idA, ConditionType.EQ));
+    Table result = this.executor.executeExperimentalQueryMerge(jq, Map.of(this.idA, asc), -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly(this.storeA + ".idA", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
@@ -150,11 +144,8 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             .build();
 
     SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
-    Table result = this.executor.executeExperimentalQueryMerge(
-            queryL, queryR, JoinType.LEFT,
-            criterion(this.idStoreB, this.idStoreA, ConditionType.EQ),
-            Map.of(this.idStoreA, asc),
-            -1);
+    JoinQuery jq = JoinQuery.from(queryL).join(queryR, JoinType.LEFT, criterion(this.idStoreB, this.idStoreA, ConditionType.EQ));
+    Table result = this.executor.executeExperimentalQueryMerge(jq, Map.of(this.idStoreA, asc), -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly(this.storeA + ".id", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
@@ -185,11 +176,8 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
     Map<Field, OrderDto> orders = new LinkedHashMap<>(); // order matters
     orders.put(categoryAliased, asc);
     orders.put(idStoreBAliased, asc);
-    Table result = this.executor.executeExperimentalQueryMerge(
-            queryL, queryR, JoinType.LEFT,
-            criterion(idStoreBAliased, this.idStoreA, ConditionType.EQ), // use the aliased in the join condition
-            orders,  // use the aliased in the order by condition
-            -1);
+    JoinQuery jq = JoinQuery.from(queryL).join(queryR, JoinType.LEFT, criterion(idStoreBAliased, this.idStoreA, ConditionType.EQ)); // use the aliased in the join condition
+    Table result = this.executor.executeExperimentalQueryMerge(jq, orders, -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly("category_aliased", this.storeA + ".id", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
@@ -212,11 +200,8 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             .build();
 
     SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
-    Table result = this.executor.executeExperimentalQueryMerge(
-            queryL, queryR, JoinType.LEFT,
-            all(criterion(this.idB, this.idA, ConditionType.EQ), criterion(this.idStoreB, this.idStoreA, ConditionType.EQ)),
-            Map.of(this.idA, asc),
-            -1);
+    JoinQuery jq = JoinQuery.from(queryL).join(queryR, JoinType.LEFT, all(criterion(this.idB, this.idA, ConditionType.EQ), criterion(this.idStoreB, this.idStoreA, ConditionType.EQ)));
+    Table result = this.executor.executeExperimentalQueryMerge(jq, Map.of(this.idA, asc), -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly(this.storeA + ".idA", this.storeA + ".id", "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
@@ -242,11 +227,8 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             .build();
 
     SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
-    Table result = this.executor.executeExperimentalQueryMerge(
-            queryL, queryR, JoinType.LEFT,
-            null,
-            Map.of(idA, asc),
-            -1);
+    JoinQuery jq = JoinQuery.from(queryL).join(queryR, JoinType.LEFT);
+    Table result = this.executor.executeExperimentalQueryMerge(jq, Map.of(idA, asc), -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly(firstKey, secondKey, "priceA", "priceB");
     Assertions.assertThat(result).containsExactly(
@@ -267,11 +249,8 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             .select(List.of(), List.of(this.priceBSum))
             .build();
 
-    Table result = this.executor.executeExperimentalQueryMerge(
-            queryL, queryR, JoinType.CROSS,
-            null,
-            null,
-            -1);
+    JoinQuery jq = JoinQuery.from(queryL).join(queryR, JoinType.CROSS);
+    Table result = this.executor.executeExperimentalQueryMerge(jq, null, -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly("priceA", "priceB");
     Assertions.assertThat(result).containsExactly(List.of(10d, 60d));
@@ -303,11 +282,8 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
 
     // In case of sub-queries, aliases must be used everywhere.
     SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
-    Table result = this.executor.executeExperimentalQueryMerge(
-            queryL, queryR, JoinType.LEFT,
-            criterion(idAliasedB, idAliasedA, ConditionType.EQ),
-            Map.of(idAliasedA, asc),
-            -1);
+    JoinQuery jq = JoinQuery.from(queryL).join(queryR, JoinType.LEFT, criterion(idAliasedB, idAliasedA, ConditionType.EQ));
+    Table result = this.executor.executeExperimentalQueryMerge(jq, Map.of(idAliasedA, asc), -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly(idAliasedA.alias(), "priceA2", "priceB2");
     Assertions.assertThat(result).containsExactly(
@@ -333,16 +309,17 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             .select(List.of(this.idC), List.of(this.priceCSum))
             .build();
 
-    JoinStatement join = JoinStatement.start(queryA)
+    JoinQuery join = JoinQuery.from(queryA)
             .join(queryB, JoinType.INNER, criterion(this.idB, this.idA, ConditionType.EQ))
             .join(queryC, JoinType.LEFT, criterion(this.idB, this.idC, ConditionType.EQ));
 
-    Table result = this.executor.executeExperimentalQueryMerge(
-            queryA, queryB, JoinType.LEFT,
-            criterion(this.idB, this.idA, ConditionType.EQ),
-            Map.of(),
-            -1);
-    result.show();
+//    JoinQuery jq = JoinQuery.from(queryL).join(queryR, JoinType.LEFT, criterion(idAliasedB, idAliasedA, ConditionType.EQ));
+//    Table result = this.executor.executeExperimentalQueryMerge(
+//            queryA, queryB, JoinType.LEFT,
+//            criterion(this.idB, this.idA, ConditionType.EQ),
+//            Map.of(),
+//            -1);
+//    result.show();
     Assertions.fail("");
   }
 
@@ -369,40 +346,14 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             .build();
 
     // In case of sub-queries, aliases must be used everywhere.
-    Table result = this.executor.executeExperimentalQueryMerge(
-            queryL, queryR, JoinType.LEFT,
-            null,
-            null,
-            -1);
+    JoinQuery jq = JoinQuery.from(queryL).join(queryR, JoinType.LEFT);
+    Table result = this.executor.executeExperimentalQueryMerge(jq, null, -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly("id", "priceA2", "priceB2");
     Assertions.assertThat(result).containsExactly(
             List.of("0", 4d, 10d),
             List.of("1", 2d, 20d),
             Arrays.asList("3", 4d, getDoubleNullJoinValue()));
-  }
-
-  public static class JoinStatement {
-
-    List<QueryDto> queries = new ArrayList<>();
-    TableDto tableDto;
-
-    int current = 0;
-
-    private JoinStatement(QueryDto q1) {
-      this.queries.add(q1);
-      this.tableDto = new TableDto(String.format("__cte%d__", this.current++));
-    }
-
-    public static JoinStatement start(QueryDto q) {
-      return new JoinStatement(q);
-    }
-
-    public JoinStatement join(QueryDto q, JoinType joinType, CriteriaDto criteriaDto) {
-      this.queries.add(q);
-      this.tableDto.join(new TableDto(String.format("__cte%d__", this.current++)), joinType, criteriaDto);
-      return this;
-    }
   }
 
   /**

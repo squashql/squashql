@@ -6,7 +6,7 @@ import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
-import io.squashql.query.join.JoinStatement;
+import io.squashql.query.join.JoinQuery;
 import io.squashql.query.join.NewExperimentalQueryMergeExecutor;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.table.ColumnarTable;
@@ -375,14 +375,10 @@ public class QueryExecutor {
     return QueryMergeExecutor.executeQueryMerge(this, first, second, joinType, user);
   }
 
-  public Table executeExperimentalQueryMerge(QueryDto first,
-                                             QueryDto second,
-                                             JoinType joinType,
-                                             CriteriaDto joinCondition,
+  public Table executeExperimentalQueryMerge(JoinQuery joinQuery,
                                              Map<Field, OrderDto> orders,
                                              int limit) {
-    JoinStatement join = JoinStatement.start(first).join(second, joinType, joinCondition);
-    return new NewExperimentalQueryMergeExecutor(this.queryEngine).execute(join, orders, limit);
+    return new NewExperimentalQueryMergeExecutor(this.queryEngine).execute(joinQuery, orders, limit);
   }
 
   /**

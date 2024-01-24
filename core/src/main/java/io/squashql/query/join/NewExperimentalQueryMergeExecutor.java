@@ -7,10 +7,12 @@ import io.squashql.query.database.*;
 import io.squashql.query.dto.*;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
+import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.api.tuple.Triple;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.tuple.Tuples;
 
@@ -19,7 +21,6 @@ import java.util.*;
 import static io.squashql.query.QueryExecutor.LIMIT_DEFAULT_VALUE;
 import static io.squashql.query.database.AQueryEngine.transformToColumnFormat;
 import static io.squashql.query.database.SQLTranslator.addLimit;
-import static io.squashql.query.join.ExperimentalQueryMergeExecutor.getFieldName;
 
 @Slf4j
 @AllArgsConstructor
@@ -48,17 +49,17 @@ public class NewExperimentalQueryMergeExecutor {
     }
   }
 
-  public Table execute(JoinStatement statement,
-                       Map<Field, OrderDto> orders,
-                       int limit) {
+  public Triple<String, List<TypedField>, List<CompiledMeasure>> generateSql(JoinQuery joinQuery,
+                                                                             Map<Field, OrderDto> orders,
+                                                                             int limit) {
     int queryLimit = limit <= 0 ? LIMIT_DEFAULT_VALUE : limit;
 
-    List<Holder> holders = new ArrayList<>(statement.queries.size());
-    for (int i = 0; i < statement.queries.size(); i++) {
+    List<Holder> holders = new ArrayList<>(joinQuery.queries.size());
+    for (int i = 0; i < joinQuery.queries.size(); i++) {
       if (i == 0) {
-        holders.add(new Holder(statement.tableDto.name, statement.queries.get(i)));
+        holders.add(new Holder(joinQuery.tableDto.name, joinQuery.queries.get(i)));
       } else {
-        holders.add(new Holder(statement.tableDto.joins.get(i - 1).table.name, statement.queries.get(i)));
+        holders.add(new Holder(joinQuery.tableDto.joins.get(i - 1).table.name, joinQuery.queries.get(i)));
       }
     }
 
@@ -90,13 +91,13 @@ public class NewExperimentalQueryMergeExecutor {
     List<JoinDto> newJoins = new ArrayList<>();
     // Iterate over the joins to rewrite the condition when necessary (to use aliases)
     Map<Integer, Map<String, Field>> fieldBySquashQLExpression = new TreeMap<>();
-    for (Field field : statement.queries.get(0).columns) {
+    for (Field field : joinQuery.queries.get(0).columns) {
       TypedField typedField = holders.get(0).queryResolver.resolveField(field);
       fieldBySquashQLExpression.computeIfAbsent(0, k -> new HashMap<>()).put(SqlUtils.squashqlExpression(typedField), field);
     }
 
     int index = 1;
-    for (JoinDto join : statement.tableDto.joins) {
+    for (JoinDto join : joinQuery.tableDto.joins) {
       CriteriaDto joinConditionCopy = JacksonUtil.deserialize(JacksonUtil.serialize(join.joinCriteria), CriteriaDto.class);
       if (joinConditionCopy == null) {
         // Guess the condition
@@ -128,7 +129,7 @@ public class NewExperimentalQueryMergeExecutor {
           CriteriaDto criteriaDto = children.size() > 1
                   ? new CriteriaDto(null, null, null, null, ConditionType.AND, children)
                   : children.get(0);
-          newJoins.add(new JoinDto(join.table, JoinType.LEFT, criteriaDto));
+          newJoins.add(new JoinDto(join.table, join.type, criteriaDto));
         } else {
           newJoins.add(new JoinDto(join.table, JoinType.CROSS, null));
         }
@@ -147,6 +148,7 @@ public class NewExperimentalQueryMergeExecutor {
       Holder holder = holders.get(i + 1);
       JoinDto jc = newJoins.get(i);
       joinSb
+              .append(" ")
               .append(jc.type.name().toLowerCase())
               .append(" join ")
               .append(queryRewriter.cteName(holder.cteTableName));
@@ -187,27 +189,33 @@ public class NewExperimentalQueryMergeExecutor {
     addOrderBy(orders, sb, holders);
     addLimit(queryLimit, sb);
 
-    String sql = sb.toString();
-    log.info("sql=" + sql);
-    Table result = this.queryEngine.executeRawSql(sql);
-
-    List<? extends Class<?>> columnTypes = result.headers().stream().map(Header::type).toList();
     List<CompiledMeasure> measures = new ArrayList<>();
     for (int i = 0; i < holders.size(); i++) {
       Holder holder = holders.get(i);
       holder.query.measures.forEach(measure -> measures.add(holder.queryResolver.getMeasures().get(measure)));
     }
 
+    return Tuples.triple(sb.toString(), selectedColumns, measures);
+  }
+
+  public Table execute(JoinQuery joinQuery,
+                       Map<Field, OrderDto> orders,
+                       int limit) {
+    Triple<String, List<TypedField>, List<CompiledMeasure>> sqlGenerationResult = generateSql(joinQuery, orders, limit);
+    log.info("sql=" + sqlGenerationResult.getOne());
+    Table result = this.queryEngine.executeRawSql(sqlGenerationResult.getOne());
+
+    List<? extends Class<?>> columnTypes = result.headers().stream().map(Header::type).toList();
     Pair<List<Header>, List<List<Object>>> transform = transformToColumnFormat(
-            selectedColumns,
-            measures,
+            sqlGenerationResult.getTwo(),
+            sqlGenerationResult.getThree(),
             columnTypes,
             (columnType, name) -> columnType,
             result.iterator(),
             (i, row) -> row.get(i));
     return new ColumnarTable(
             transform.getOne(),
-            new HashSet<>(measures),
+            new HashSet<>(sqlGenerationResult.getThree()),
             transform.getTwo());
   }
 
@@ -368,5 +376,27 @@ public class NewExperimentalQueryMergeExecutor {
       }
     }
     return null;
+  }
+
+  static String getFieldName(Field field) {
+    String alias = field.alias();
+    if (alias != null) {
+      return alias;
+    } else if (field instanceof TableField tf) {
+      return tf.fieldName;
+    } else {
+      throw new IllegalArgumentException("The field " + field + " need to have an alias");
+    }
+  }
+
+  static String getFieldName(TypedField field) {
+    String alias = field.alias();
+    if (alias != null) {
+      return alias;
+    } else if (field instanceof TableTypedField tf) {
+      return tf.name();
+    } else {
+      throw new IllegalArgumentException("The field " + field + " need to have an alias");
+    }
   }
 }
