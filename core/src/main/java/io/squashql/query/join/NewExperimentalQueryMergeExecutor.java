@@ -139,8 +139,6 @@ public class NewExperimentalQueryMergeExecutor {
       index++;
     }
 
-    // TODO remove from select what is in the join
-
     QueryRewriter queryRewriter = holders.get(0).queryRewriter;
     StringBuilder joinSb = new StringBuilder();
     joinSb.append(" from ").append(queryRewriter.cteName(holders.get(0).cteTableName));
@@ -152,7 +150,7 @@ public class NewExperimentalQueryMergeExecutor {
               .append(jc.type.name().toLowerCase())
               .append(" join ")
               .append(queryRewriter.cteName(holder.cteTableName));
-      if (jc != null) {
+      if (jc.joinCriteria != null) {
         joinSb
                 .append(" on ")
                 .append(sqlExpression(jc.joinCriteria, queryRewriter, holders, toRemoveFromSelectSet));
@@ -215,30 +213,34 @@ public class NewExperimentalQueryMergeExecutor {
 
   public String sqlExpression(CriteriaDto jc, QueryRewriter queryRewriter, List<Holder> holders, Set<String> toRemoveFromSelectSet) {
     if (jc.field != null && jc.fieldOther != null && jc.conditionType != null) {
+      Holder leftHolder = getHolderOrigin(holders, jc.field);
+      Holder rightHolder = getHolderOrigin(holders, jc.fieldOther);
+
       String left;
-      String leftStore = null;
+      String leftFieldName = getFieldName(jc.field);
       if (jc.field instanceof TableField tf) {
-        leftStore = tf.tableName;
-        left = SqlUtils.getFieldFullName(queryRewriter.cteName(leftStore), queryRewriter.fieldName(getFieldName(tf)));
+        left = SqlUtils.getFieldFullName(queryRewriter.cteName(tf.tableName), queryRewriter.fieldName(leftFieldName));
       } else {
-        left = queryRewriter.fieldName(getFieldName(jc.field));
+        // could be an aliased field? Need find where it comes from
+        left = SqlUtils.getFieldFullName(leftHolder == null ? null : queryRewriter.cteName(leftHolder.cteTableName), queryRewriter.fieldName(leftFieldName));
       }
+
       String right;
-      String rightStore = null;
+      String rightFieldName = getFieldName(jc.fieldOther);
       if (jc.fieldOther instanceof TableField tf) {
-        rightStore = tf.tableName;
-        right = SqlUtils.getFieldFullName(queryRewriter.cteName(rightStore), queryRewriter.fieldName(getFieldName(tf)));
+        right = SqlUtils.getFieldFullName(queryRewriter.cteName(tf.tableName), queryRewriter.fieldName(rightFieldName));
       } else {
-        right = queryRewriter.fieldName(getFieldName(jc.fieldOther));
+        // could be an aliased field? Need find where it comes from
+        right = SqlUtils.getFieldFullName(rightHolder == null ? null : queryRewriter.cteName(rightHolder.cteTableName), queryRewriter.fieldName(rightFieldName));
       }
 
       String toRemoveFromSelect = null;
       for (Holder holder : holders) {
-        if (holder.cteTableName.equals(leftStore)) {
-          toRemoveFromSelect = left;
+        if (holder.equals(leftHolder)) {
+          toRemoveFromSelect = left; // Same logic than the select i.e __cte0__.fieldName
         }
-        if (holder.cteTableName.equals(rightStore)) {
-          toRemoveFromSelect = right;
+        if (holder.equals(rightHolder)) {
+          toRemoveFromSelect = right; // Same logic than the select i.e __cte0__.fieldName
         }
       }
 
@@ -349,5 +351,22 @@ public class NewExperimentalQueryMergeExecutor {
       s = s.replace(holder.queryRewriter.tableName(holder.originalTableName), holder.queryRewriter.cteName(holder.cteTableName));
     }
     return s;
+  }
+
+  private static Holder getHolderOrigin(List<Holder> holders, Field field) {
+    for (Holder holder : holders) {
+      if (field instanceof TableField tf) {
+        if (holder.cteTableName.equals(tf.tableName)) {
+          return holder;
+        }
+      } else if (field instanceof AliasedField af) {
+        for (Field column : holder.query.columns) {
+          if (af.alias().equals(column.alias())) {
+            return holder;
+          }
+        }
+      }
+    }
+    return null;
   }
 }

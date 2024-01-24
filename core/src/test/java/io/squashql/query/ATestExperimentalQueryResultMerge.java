@@ -267,7 +267,6 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             .select(List.of(), List.of(this.priceBSum))
             .build();
 
-    SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
     Table result = this.executor.executeExperimentalQueryMerge(
             queryL, queryR, JoinType.CROSS,
             null,
@@ -373,7 +372,7 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
     Table result = this.executor.executeExperimentalQueryMerge(
             queryL, queryR, JoinType.LEFT,
             null,
-            Map.of(),
+            null,
             -1);
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly("id", "priceA2", "priceB2");
