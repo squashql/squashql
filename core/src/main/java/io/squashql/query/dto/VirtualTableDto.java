@@ -28,7 +28,7 @@ public class VirtualTableDto {
     List<TableTypedField> fields = new ArrayList<>();
     for (int i = 0; i < virtualTableDto.fields.size(); i++) {
       Class<?> klazz = virtualTableDto.records.get(0).get(i).getClass(); // take the first row to determine the type
-      fields.add(new TableTypedField(virtualTableDto.name, virtualTableDto.fields.get(i), klazz));
+      fields.add(new TableTypedField(virtualTableDto.name, virtualTableDto.fields.get(i), klazz, true));
     }
     return new Store(virtualTableDto.name, fields);
   }

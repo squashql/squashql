@@ -50,9 +50,9 @@ public class TestSQLTranslator {
       if (split.length > 1) {
         String tableName = split[0];
         String fieldNameInTable = split[1];
-        return new TableTypedField(tableName, fieldNameInTable, type.apply(fieldNameInTable), field.alias());
+        return new TableTypedField(tableName, fieldNameInTable, type.apply(fieldNameInTable), field.alias(), false);
       } else {
-        return new TableTypedField(null, split[0], type.apply(split[0]), field.alias());
+        return new TableTypedField(null, split[0], type.apply(split[0]), field.alias(), false);
       }
     }
 
@@ -76,13 +76,6 @@ public class TestSQLTranslator {
 
   @AllArgsConstructor
   static class SQLTranslatorQueryRewriter implements QueryRewriter {
-
-    final DatabaseQuery query;
-
-    @Override
-    public DatabaseQuery query() {
-      return this.query;
-    }
 
     @Override
     public String escapeAlias(String alias) {
@@ -112,7 +105,7 @@ public class TestSQLTranslator {
   }
 
   public static String translate(DatabaseQuery query) {
-    return SQLTranslator.translate(query, new SQLTranslatorQueryRewriter(query));
+    return SQLTranslator.translate(query, new SQLTranslatorQueryRewriter());
   }
 
   private DatabaseQuery compileQuery(QueryDto query) {

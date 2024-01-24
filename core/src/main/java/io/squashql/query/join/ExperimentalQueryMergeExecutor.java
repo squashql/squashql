@@ -1,28 +1,21 @@
 package io.squashql.query.join;
 
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.AliasedField;
-import io.squashql.query.Field;
-import io.squashql.query.Header;
-import io.squashql.query.QueryResolver;
+import io.squashql.query.*;
 import io.squashql.query.compiled.CompiledCriteria;
 import io.squashql.query.compiled.CompiledJoin;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.compiled.CompiledTable;
-import io.squashql.query.database.DatabaseQuery;
-import io.squashql.query.database.QueryEngine;
-import io.squashql.query.database.QueryRewriter;
-import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.database.*;
 import io.squashql.query.dto.*;
-import io.squashql.store.UnknownType;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
-import io.squashql.type.AliasedTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
 
@@ -71,6 +64,7 @@ public class ExperimentalQueryMergeExecutor {
       }
     }
 
+    // Start by setting all CTEs
     StringBuilder sb = new StringBuilder("with ");
     for (int i = 0; i < holders.size(); i++) {
       Holder holder = holders.get(i);
@@ -135,10 +129,10 @@ public class ExperimentalQueryMergeExecutor {
     TableDto tableDto = new TableDto(statement.tableDto.name);
     List<JoinDto> newJoins = new ArrayList<>();
     // Iterate over the joins to rewrite the condition when necessary (to use aliases)
-    List<TypedField> leftColumns = new ArrayList<>();
+    Map<Integer, Map<String, Field>> fieldBySquashQLExpression = new TreeMap<>();
     for (Field field : statement.queries.get(0).columns) {
       TypedField typedField = holders.get(0).queryResolver.resolveField(field);
-      leftColumns.add(typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField); // we have to use the aliased field in the select
+      fieldBySquashQLExpression.computeIfAbsent(0, k -> new HashMap<>()).put(SqlUtils.squashqlExpression(typedField), field);
     }
 
     int index = 1;
@@ -146,25 +140,38 @@ public class ExperimentalQueryMergeExecutor {
       CriteriaDto joinConditionCopy = JacksonUtil.deserialize(JacksonUtil.serialize(join.joinCriteria), CriteriaDto.class);
       if (joinConditionCopy == null) {
         // Guess the condition
-//        List<TypedField> rightColumns = new ArrayList<>();
-//        for (Field field : holders.get(index).query.columns) {
-//          TypedField typedField = holders.get(index).queryResolver.resolveField(field);
-//          rightColumns.add(typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField); // we have to use the aliased field in the select
-//        }
-//        leftColumns.retainAll(rightColumns);
-//        if (!leftColumns.isEmpty()) {
-//          List<CompiledCriteria> children = new ArrayList<>(leftColumns.size());
-//          for (TypedField leftColumn : leftColumns) {
-//            TableTypedField l = new TableTypedField(left.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias());
-//            TableTypedField r = new TableTypedField(right.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias());
-//            children.add(new CompiledCriteria(null, ConditionType.EQ, l, r, null, null));
-//          }
-//          CompiledCriteria compiledCriteria = children.size() > 1
-//                  ? new CompiledCriteria(null, ConditionType.AND, null, null, null, children)
-//                  : children.get(0);
-//        } else {
-//          return null; // no condition
-//        }
+        for (Field field : holders.get(index).query.columns) {
+          TypedField typedField = holders.get(index).queryResolver.resolveField(field);
+          fieldBySquashQLExpression.computeIfAbsent(index, k -> new HashMap<>()).put(SqlUtils.squashqlExpression(typedField), field);
+        }
+
+        List<Pair<Pair<Field, Integer>, Pair<Field, Integer>>> common = new ArrayList<>();
+        for (Map.Entry<Integer, Map<String, Field>> entry : fieldBySquashQLExpression.entrySet()) {
+          if (entry.getKey() == index) {
+            break;
+          }
+
+          for (Map.Entry<String, Field> fieldEntry : entry.getValue().entrySet()) {
+            if (fieldBySquashQLExpression.get(index).containsKey(fieldEntry.getKey())) {
+              common.add(Tuples.pair(Tuples.pair(fieldEntry.getValue(), entry.getKey()), Tuples.pair(fieldBySquashQLExpression.get(index).get(fieldEntry.getKey()), index)));
+            }
+          }
+        }
+
+        if (!common.isEmpty()) {
+          List<CriteriaDto> children = new ArrayList<>(common.size());
+          for (Pair<Pair<Field, Integer>, Pair<Field, Integer>> c : common) {
+            Field l = new TableField(holders.get(c.getOne().getTwo()).cteTableName, getFieldName(c.getOne().getOne()));
+            Field r = new TableField(holders.get(c.getTwo().getTwo()).cteTableName, getFieldName(c.getTwo().getOne()));
+            children.add(new CriteriaDto(l, r, null, null, ConditionType.EQ, Collections.emptyList()));
+          }
+          CriteriaDto criteriaDto = children.size() > 1
+                  ? new CriteriaDto(null, null, null, null, ConditionType.AND, children)
+                  : children.get(0);
+          newJoins.add(new JoinDto(join.table, JoinType.LEFT, criteriaDto));
+        } else {
+          newJoins.add(new JoinDto(join.table, JoinType.CROSS, null));
+        }
       } else {
         CriteriaDto rewrittenJoinCondition = rewriteJoinCondition(joinConditionCopy);
         newJoins.add(new JoinDto(join.table, join.type, rewrittenJoinCondition));
@@ -174,49 +181,43 @@ public class ExperimentalQueryMergeExecutor {
     tableDto.joins = newJoins;
     tableDto.isCte = true;
 
-    QueryResolver queryResolver = new QueryResolver(new QueryDto().table(tableDto), ExperimentalQueryMergeExecutor.this.queryEngine.datastore().storesByName());
+    List<VirtualTableDto> vts = new ArrayList<>(holders.size());
+    for (Holder h : holders) {
+      vts.add(new VirtualTableDto(
+              h.cteTableName,
+              h.query.columns.stream().map(ExperimentalQueryMergeExecutor::getFieldName).toList(),
+              List.of(h.query.columns.stream().map(__ -> new Object()).toList()))); // we don't care about the records
+    }
+
+    QueryDto queryDto = new QueryDto().table(tableDto);
+    queryDto.virtualTableDtos = vts;
+    QueryResolver queryResolver = new QueryResolver(queryDto, ExperimentalQueryMergeExecutor.this.queryEngine.datastore().storesByName());
     return queryResolver.getScope().table();
   }
 
-  private CompiledCriteria compiledCriteria(JoinType joinType, CriteriaDto joinCondition, Holder left, Holder right) {
-    if (joinCondition != null) {
-      QueryDto leftCteQuery = new QueryDto().table(left.cteTableName);
-      QueryDto rightCteQuery = new QueryDto().table(right.cteTableName);
-      CriteriaDto joinConditionCopy = JacksonUtil.deserialize(JacksonUtil.serialize(joinCondition), CriteriaDto.class);
-      CriteriaDto rewrittenJoinCondition = rewriteJoinCondition(joinConditionCopy);
-      leftCteQuery.table.join(new TableDto(rightCteQuery.table.name), joinType, rewrittenJoinCondition);
-      QueryResolver queryResolver = new QueryResolver(leftCteQuery, this.queryEngine.datastore().storesByName());
-      return queryResolver.compileCriteria(rewrittenJoinCondition);
+  static String getFieldName(Field field) {
+    String alias = field.alias();
+    if (alias != null) {
+      return alias;
+    } else if (field instanceof TableField tf) {
+      return tf.fieldName;
     } else {
-      // Try to guess the condition
-      List<TypedField> leftColumns = new ArrayList<>();
-      List<TypedField> rightColumns = new ArrayList<>();
-      for (Field field : left.query.columns) {
-        TypedField typedField = left.queryResolver.resolveField(field);
-        leftColumns.add(typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField); // we have to use the aliased field in the select
-      }
-      for (Field field : right.query.columns) {
-        TypedField typedField = right.queryResolver.resolveField(field);
-        rightColumns.add(typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField); // we have to use the aliased field in the select
-      }
-      leftColumns.retainAll(rightColumns);
-      if (!leftColumns.isEmpty()) {
-        List<CompiledCriteria> children = new ArrayList<>(leftColumns.size());
-        for (TypedField leftColumn : leftColumns) {
-          TableTypedField l = new TableTypedField(left.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias());
-          TableTypedField r = new TableTypedField(right.originalTableName, leftColumn.name(), UnknownType.class, leftColumn.alias());
-          children.add(new CompiledCriteria(null, ConditionType.EQ, l, r, null, null));
-        }
-        return children.size() > 1
-                ? new CompiledCriteria(null, ConditionType.AND, null, null, null, children)
-                : children.get(0);
-      } else {
-        return null; // no condition
-      }
+      throw new IllegalArgumentException("The field " + field + " need to have an alias");
     }
   }
 
-  private static CriteriaDto rewriteJoinCondition(CriteriaDto joinCondition) {
+  static String getFieldName(TypedField field) {
+    String alias = field.alias();
+    if (alias != null) {
+      return alias;
+    } else if (field instanceof TableTypedField tf) {
+      return tf.name();
+    } else {
+      throw new IllegalArgumentException("The field " + field + " need to have an alias");
+    }
+  }
+
+  static CriteriaDto rewriteJoinCondition(CriteriaDto joinCondition) {
     if (joinCondition != null) {
       List<CriteriaDto> children = joinCondition.children;
       if (children != null && !children.isEmpty()) {
@@ -240,7 +241,7 @@ public class ExperimentalQueryMergeExecutor {
     }
   }
 
-  private static void addOrderBy(Map<Field, OrderDto> orders, StringBuilder sb, List<Holder> holders) {
+  public static void addOrderBy(Map<Field, OrderDto> orders, StringBuilder sb, List<Holder> holders) {
     if (orders != null && !orders.isEmpty()) {
       sb.append(" order by ");
       List<String> orderList = new ArrayList<>();
@@ -282,14 +283,19 @@ public class ExperimentalQueryMergeExecutor {
       joinFields.addAll(collectJoinFields(jc));
     }
 
+    Map<String, TypedField> added = new HashMap<>();
+    List<String> joinFieldsSt = joinFields.stream().map(SqlUtils::squashqlExpression).toList();
+
     for (int i = 0; i < holders.size(); i++) {
       Holder h = holders.get(i);
       List<TypedField> columns = new ArrayList<>();
       for (Field field : h.query.columns) {
         TypedField typedField = h.queryResolver.resolveField(field);
-        TypedField tf = typedField.alias() != null ? new AliasedTypedField(typedField.alias()) : typedField; // we have to use the aliased field in the select
-        if (i == 0 || !joinFields.contains(tf)) {
-          columns.add(tf);
+        String name = getFieldName(typedField);
+        String fullName = SqlUtils.getFieldFullName(h.cteTableName, name);
+        if (i == 0 || !joinFieldsSt.contains(fullName)) {
+//          added.put(fullName, typedField);
+          columns.add(typedField);
         }
       }
       allColumns.add(columns); // we have to use the aliased field in the select

@@ -1,0 +1,353 @@
+package io.squashql.query.join;
+
+import io.squashql.jackson.JacksonUtil;
+import io.squashql.query.*;
+import io.squashql.query.compiled.CompiledMeasure;
+import io.squashql.query.database.*;
+import io.squashql.query.dto.*;
+import io.squashql.table.ColumnarTable;
+import io.squashql.table.Table;
+import io.squashql.type.TypedField;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.api.tuple.Twin;
+import org.eclipse.collections.impl.tuple.Tuples;
+
+import java.util.*;
+
+import static io.squashql.query.QueryExecutor.LIMIT_DEFAULT_VALUE;
+import static io.squashql.query.database.AQueryEngine.transformToColumnFormat;
+import static io.squashql.query.database.SQLTranslator.addLimit;
+import static io.squashql.query.join.ExperimentalQueryMergeExecutor.getFieldName;
+
+@Slf4j
+@AllArgsConstructor
+public class NewExperimentalQueryMergeExecutor {
+
+  private final QueryEngine<?> queryEngine;
+
+  class Holder {
+    final QueryDto query;
+    final QueryResolver queryResolver;
+    final DatabaseQuery dbQuery;
+    final QueryRewriter queryRewriter;
+    final String originalTableName; // Can be null if using a sub-query
+    final String cteTableName;
+    final String sql;
+
+    Holder(String cteTableName, QueryDto query) {
+      this.query = query;
+      this.cteTableName = cteTableName;
+      this.queryResolver = new QueryResolver(query, NewExperimentalQueryMergeExecutor.this.queryEngine.datastore().storesByName());
+      this.dbQuery = this.queryResolver.toDatabaseQuery(this.queryResolver.getScope(), -1);
+      this.queryResolver.getMeasures().values().forEach(this.dbQuery::withMeasure);
+      this.queryRewriter = NewExperimentalQueryMergeExecutor.this.queryEngine.queryRewriter(this.dbQuery);
+      this.originalTableName = query.table != null ? query.table.name : null;
+      this.sql = SQLTranslator.translate(this.dbQuery, this.queryRewriter);
+    }
+  }
+
+  public Table execute(JoinStatement statement,
+                       Map<Field, OrderDto> orders,
+                       int limit) {
+    int queryLimit = limit <= 0 ? LIMIT_DEFAULT_VALUE : limit;
+
+    List<Holder> holders = new ArrayList<>(statement.queries.size());
+    for (int i = 0; i < statement.queries.size(); i++) {
+      if (i == 0) {
+        holders.add(new Holder(statement.tableDto.name, statement.queries.get(i)));
+      } else {
+        holders.add(new Holder(statement.tableDto.joins.get(i - 1).table.name, statement.queries.get(i)));
+      }
+    }
+
+    // Start by setting all CTEs
+    StringBuilder sb = new StringBuilder("with ");
+    List<List<Twin<String>>> columnNamesAndNamesOrAliases = new ArrayList<>();
+    Map<String, TypedField> typedFieldByFullName = new HashMap<>();
+    for (int i = 0; i < holders.size(); i++) {
+      Holder holder = holders.get(i);
+      sb.append(holder.queryRewriter.cteName(holder.cteTableName)).append(" as (").append(holder.sql);
+      sb.append(i < holders.size() - 1 ? "), " : ") ");
+
+      columnNamesAndNamesOrAliases.add(
+              holder.queryResolver.getColumns().stream().map(f -> {
+                String fieldFullName = SqlUtils.getFieldFullName(holder.queryRewriter.cteName(holder.cteTableName), holder.queryRewriter.fieldName(getFieldName(f)));
+                typedFieldByFullName.put(fieldFullName, f);
+                return Tuples.twin(fieldFullName, f.alias() != null ? holder.queryRewriter.escapeAlias(f.alias()) : fieldFullName);
+              }).toList());
+    }
+
+    // Order is important here (hence LinkedHashMap). The columns from first queries will take precedence over the last queries
+    Map<String, String> fullNameByAlias = new LinkedHashMap<>();
+    for (List<Twin<String>> columnNamesOrAliases : columnNamesAndNamesOrAliases) {
+      for (Twin<String> nameOrAlias : columnNamesOrAliases) {
+        fullNameByAlias.putIfAbsent(nameOrAlias.getTwo(), nameOrAlias.getOne());
+      }
+    }
+
+    List<JoinDto> newJoins = new ArrayList<>();
+    // Iterate over the joins to rewrite the condition when necessary (to use aliases)
+    Map<Integer, Map<String, Field>> fieldBySquashQLExpression = new TreeMap<>();
+    for (Field field : statement.queries.get(0).columns) {
+      TypedField typedField = holders.get(0).queryResolver.resolveField(field);
+      fieldBySquashQLExpression.computeIfAbsent(0, k -> new HashMap<>()).put(SqlUtils.squashqlExpression(typedField), field);
+    }
+
+    int index = 1;
+    for (JoinDto join : statement.tableDto.joins) {
+      CriteriaDto joinConditionCopy = JacksonUtil.deserialize(JacksonUtil.serialize(join.joinCriteria), CriteriaDto.class);
+      if (joinConditionCopy == null) {
+        // Guess the condition
+        for (Field field : holders.get(index).query.columns) {
+          TypedField typedField = holders.get(index).queryResolver.resolveField(field);
+          fieldBySquashQLExpression.computeIfAbsent(index, k -> new HashMap<>()).put(SqlUtils.squashqlExpression(typedField), field);
+        }
+
+        List<Pair<Pair<Field, Integer>, Pair<Field, Integer>>> common = new ArrayList<>();
+        for (Map.Entry<Integer, Map<String, Field>> entry : fieldBySquashQLExpression.entrySet()) {
+          if (entry.getKey() == index) {
+            break;
+          }
+
+          for (Map.Entry<String, Field> fieldEntry : entry.getValue().entrySet()) {
+            if (fieldBySquashQLExpression.get(index).containsKey(fieldEntry.getKey())) {
+              common.add(Tuples.pair(Tuples.pair(fieldEntry.getValue(), entry.getKey()), Tuples.pair(fieldBySquashQLExpression.get(index).get(fieldEntry.getKey()), index)));
+            }
+          }
+        }
+
+        if (!common.isEmpty()) {
+          List<CriteriaDto> children = new ArrayList<>(common.size());
+          for (Pair<Pair<Field, Integer>, Pair<Field, Integer>> c : common) {
+            Field l = new TableField(holders.get(c.getOne().getTwo()).cteTableName, getFieldName(c.getOne().getOne()));
+            Field r = new TableField(holders.get(c.getTwo().getTwo()).cteTableName, getFieldName(c.getTwo().getOne()));
+            children.add(new CriteriaDto(l, r, null, null, ConditionType.EQ, Collections.emptyList()));
+          }
+          CriteriaDto criteriaDto = children.size() > 1
+                  ? new CriteriaDto(null, null, null, null, ConditionType.AND, children)
+                  : children.get(0);
+          newJoins.add(new JoinDto(join.table, JoinType.LEFT, criteriaDto));
+        } else {
+          newJoins.add(new JoinDto(join.table, JoinType.CROSS, null));
+        }
+      } else {
+        CriteriaDto rewrittenJoinCondition = rewriteJoinCondition(joinConditionCopy, holders);
+        newJoins.add(new JoinDto(join.table, join.type, rewrittenJoinCondition));
+      }
+      index++;
+    }
+
+    // TODO remove from select what is in the join
+
+    QueryRewriter queryRewriter = holders.get(0).queryRewriter;
+    StringBuilder joinSb = new StringBuilder();
+    joinSb.append(" from ").append(queryRewriter.cteName(holders.get(0).cteTableName));
+    Set<String> toRemoveFromSelectSet = new HashSet<>();
+    for (int i = 0; i < newJoins.size(); i++) {
+      Holder holder = holders.get(i + 1);
+      JoinDto jc = newJoins.get(i);
+      joinSb
+              .append(jc.type.name().toLowerCase())
+              .append(" join ")
+              .append(queryRewriter.cteName(holder.cteTableName));
+      if (jc != null) {
+        joinSb
+                .append(" on ")
+                .append(sqlExpression(jc.joinCriteria, queryRewriter, holders, toRemoveFromSelectSet));
+      }
+    }
+
+    sb.append("select ");
+
+    List<TypedField> selectedColumns = new ArrayList<>();
+    List<String> selectSt = new ArrayList<>();
+    for (Map.Entry<String, String> e : fullNameByAlias.entrySet()) {
+      String alias = e.getKey();
+      String fullName = e.getValue();
+      if (!toRemoveFromSelectSet.contains(fullName)) {
+        if (alias.equals(fullName)) { // no alias
+          selectSt.add(alias);
+        } else {
+          selectSt.add(fullName + " as " + alias); // with alias
+        }
+        selectedColumns.add(typedFieldByFullName.get(fullName));
+      }
+    }
+
+    // The measures
+    for (int i = 0; i < holders.size(); i++) {
+      Holder holder = holders.get(i);
+      holder.query.measures.forEach(m -> selectSt.add(holder.queryRewriter.escapeAlias(m.alias())));
+    }
+
+    sb.append(String.join(", ", selectSt));
+
+    sb.append(joinSb);
+
+    addOrderBy(orders, sb, holders);
+    addLimit(queryLimit, sb);
+
+    String sql = sb.toString();
+    log.info("sql=" + sql);
+    Table result = this.queryEngine.executeRawSql(sql);
+
+    List<? extends Class<?>> columnTypes = result.headers().stream().map(Header::type).toList();
+    List<CompiledMeasure> measures = new ArrayList<>();
+    for (int i = 0; i < holders.size(); i++) {
+      Holder holder = holders.get(i);
+      holder.query.measures.forEach(measure -> measures.add(holder.queryResolver.getMeasures().get(measure)));
+    }
+
+    Pair<List<Header>, List<List<Object>>> transform = transformToColumnFormat(
+            selectedColumns,
+            measures,
+            columnTypes,
+            (columnType, name) -> columnType,
+            result.iterator(),
+            (i, row) -> row.get(i));
+    return new ColumnarTable(
+            transform.getOne(),
+            new HashSet<>(measures),
+            transform.getTwo());
+  }
+
+  public String sqlExpression(CriteriaDto jc, QueryRewriter queryRewriter, List<Holder> holders, Set<String> toRemoveFromSelectSet) {
+    if (jc.field != null && jc.fieldOther != null && jc.conditionType != null) {
+      String left;
+      String leftStore = null;
+      if (jc.field instanceof TableField tf) {
+        leftStore = tf.tableName;
+        left = SqlUtils.getFieldFullName(queryRewriter.cteName(leftStore), queryRewriter.fieldName(getFieldName(tf)));
+      } else {
+        left = queryRewriter.fieldName(getFieldName(jc.field));
+      }
+      String right;
+      String rightStore = null;
+      if (jc.fieldOther instanceof TableField tf) {
+        rightStore = tf.tableName;
+        right = SqlUtils.getFieldFullName(queryRewriter.cteName(rightStore), queryRewriter.fieldName(getFieldName(tf)));
+      } else {
+        right = queryRewriter.fieldName(getFieldName(jc.fieldOther));
+      }
+
+      String toRemoveFromSelect = null;
+      for (Holder holder : holders) {
+        if (holder.cteTableName.equals(leftStore)) {
+          toRemoveFromSelect = left;
+        }
+        if (holder.cteTableName.equals(rightStore)) {
+          toRemoveFromSelect = right;
+        }
+      }
+
+      if (toRemoveFromSelect != null) {
+        toRemoveFromSelectSet.add(toRemoveFromSelect);
+      }
+
+      return String.join(" ", left, jc.conditionType.sqlInfix, right);
+    } else if (!jc.children.isEmpty()) {
+      String sep = switch (jc.conditionType) {
+        case AND -> " and ";
+        default -> throw new IllegalStateException("Unexpected value: " + jc.conditionType);
+      };
+      Iterator<CriteriaDto> iterator = jc.children.iterator();
+      List<String> conditions = new ArrayList<>();
+      while (iterator.hasNext()) {
+        String c = sqlExpression(iterator.next(), queryRewriter, holders, toRemoveFromSelectSet);
+        if (c != null) {
+          conditions.add(c);
+        }
+      }
+      return conditions.isEmpty() ? null : ("(" + String.join(sep, conditions) + ")");
+    } else {
+      return null;
+    }
+  }
+
+  public static void addOrderBy(Map<Field, OrderDto> orders, StringBuilder sb, List<Holder> holders) {
+    if (orders != null && !orders.isEmpty()) {
+      sb.append(" order by ");
+      List<String> orderList = new ArrayList<>();
+      for (Map.Entry<Field, OrderDto> e : orders.entrySet()) {
+        Field key = e.getKey();
+
+
+        TypedField typedField = null;
+        Holder holder = null;
+        for (Holder h : holders) {
+          // Where does it come from ?
+          if ((typedField = h.queryResolver.getTypedFieldOrNull(key)) != null) {
+            holder = h;
+            break;
+          }
+
+        }
+
+        if (typedField == null) {
+          throw new RuntimeException("Cannot resolve " + e.getKey());
+        }
+        String orderByField = holder.queryRewriter.aliasOrFullExpression(typedField);
+        orderByField = replaceTableNameByCteNameIfNotNull(holder, orderByField);
+        orderList.add(orderByField + " nulls last");
+      }
+      sb.append(String.join(", ", orderList));
+    }
+  }
+
+  static CriteriaDto rewriteJoinCondition(CriteriaDto joinCondition, List<Holder> holders) {
+    Map<String, String> cteByOriginalTableName = new HashMap<>();
+    for (Holder holder : holders) {
+      cteByOriginalTableName.put(holder.originalTableName, holder.cteTableName);
+    }
+
+    if (joinCondition != null) {
+      List<CriteriaDto> children = joinCondition.children;
+      if (children != null && !children.isEmpty()) {
+        for (CriteriaDto child : children) {
+          rewriteJoinCondition(child, holders);
+        }
+      } else {
+        String alias = joinCondition.field.alias();
+        if (alias != null) {
+          joinCondition.field = new AliasedField(alias); // replace with aliased field
+        } else if (joinCondition.field instanceof TableField tf) {
+          joinCondition.field = new TableField(cteByOriginalTableName.get(tf.tableName), tf.fieldName);
+        }
+
+        String otherAlias = joinCondition.fieldOther.alias();
+        if (otherAlias != null) {
+          joinCondition.fieldOther = new AliasedField(otherAlias); // replace with aliased field
+        } else if (joinCondition.fieldOther instanceof TableField tf) {
+          joinCondition.fieldOther = new TableField(cteByOriginalTableName.get(tf.tableName), tf.fieldName);
+        }
+      }
+      return joinCondition;
+    } else {
+      return null;
+    }
+  }
+
+//  private static Set<String> collectJoinFields(CriteriaDto joinCriteria, Holder holder) {
+//    Set<String> collected = new HashSet<>();
+//    List<CriteriaDto> children = joinCriteria.children;
+//    if (children != null && !children.isEmpty()) {
+//      for (CriteriaDto child : children) {
+//        collected.addAll(collectJoinFields(child));
+//      }
+//    } else {
+//      SqlUtils.getFieldFullName(holder.queryRewriter.cteName(joinCriteria.field.), getFieldName(f));
+//      collected.add(joinCriteria.field);
+//      collected.add(joinCriteria.fieldOther);
+//    }
+//    return collected;
+//  }
+
+  private static String replaceTableNameByCteNameIfNotNull(Holder holder, String s) {
+    if (holder.originalTableName != null) {
+      s = s.replace(holder.queryRewriter.tableName(holder.originalTableName), holder.queryRewriter.cteName(holder.cteTableName));
+    }
+    return s;
+  }
+}

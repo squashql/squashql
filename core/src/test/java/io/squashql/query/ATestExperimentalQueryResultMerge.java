@@ -344,6 +344,43 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             Map.of(),
             -1);
     result.show();
+    Assertions.fail("");
+  }
+
+  @Test
+  void testLeftJoinWithoutCriteriaWithColumnsInCommonUsingSubquery() {
+    QueryDto queryL = Query
+            .from(this.storeA)
+            .select(List.of(this.idStoreA), List.of(this.priceASum))
+            .build();
+
+    // This query does not make sense, but it is to make sure there is no issue when using sub-query.
+    queryL = Query.from(queryL)
+            .select(List.of(new TableField("id")) /* We can also use AliasedField */, List.of(sum("priceA2", new AliasedField(this.priceASum.alias()))))
+            .build();
+
+    QueryDto queryR = Query
+            .from(this.storeB)
+            .select(List.of(this.idStoreB), List.of(this.priceBSum))
+            .build();
+
+    queryR = Query
+            .from(queryR)
+            .select(List.of(new TableField("id")), List.of(sum("priceB2", new AliasedField(this.priceBSum.alias()))))
+            .build();
+
+    // In case of sub-queries, aliases must be used everywhere.
+    Table result = this.executor.executeExperimentalQueryMerge(
+            queryL, queryR, JoinType.LEFT,
+            null,
+            Map.of(),
+            -1);
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
+            .containsExactly("id", "priceA2", "priceB2");
+    Assertions.assertThat(result).containsExactly(
+            List.of("0", 4d, 10d),
+            List.of("1", 2d, 20d),
+            Arrays.asList("3", 4d, getDoubleNullJoinValue()));
   }
 
   public static class JoinStatement {

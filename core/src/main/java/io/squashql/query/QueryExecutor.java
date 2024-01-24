@@ -6,8 +6,8 @@ import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
-import io.squashql.query.join.ExperimentalQueryMergeExecutor;
 import io.squashql.query.join.JoinStatement;
+import io.squashql.query.join.NewExperimentalQueryMergeExecutor;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.PivotTable;
@@ -382,7 +382,7 @@ public class QueryExecutor {
                                              Map<Field, OrderDto> orders,
                                              int limit) {
     JoinStatement join = JoinStatement.start(first).join(second, joinType, joinCondition);
-    return new ExperimentalQueryMergeExecutor(this.queryEngine).execute(join, orders, limit);
+    return new NewExperimentalQueryMergeExecutor(this.queryEngine).execute(join, orders, limit);
   }
 
   /**

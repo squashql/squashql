@@ -9,11 +9,6 @@ class DuckDBQueryRewriter implements QueryRewriter {
   }
 
   @Override
-  public DatabaseQuery query() {
-    return this.query;
-  }
-
-  @Override
   public String tableName(String table) {
     return SqlUtils.doubleQuoteEscape(table);
   }

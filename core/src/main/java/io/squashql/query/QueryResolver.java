@@ -23,6 +23,7 @@ public class QueryResolver {
 
   private final QueryDto query;
   private final Map<String, Store> storesByName;
+  private final Set<String> cteTableNames = new HashSet<>();
   private final QueryExecutor.QueryScope scope;
   private final List<TypedField> bucketColumns;
   private final List<TypedField> columns;
@@ -37,6 +38,7 @@ public class QueryResolver {
     if (query.virtualTableDtos != null) {
       for (VirtualTableDto virtualTableDto : query.virtualTableDtos) {
         this.storesByName.put(virtualTableDto.name, VirtualTableDto.toStore(virtualTableDto));
+        this.cteTableNames.add(virtualTableDto.name);
       }
     }
     this.columns = query.columns.stream().map(this::resolveField).toList();
@@ -78,7 +80,7 @@ public class QueryResolver {
       if (columnSet != null) {
         Field newField = ((BucketColumnSetDto) columnSet).newField;
         if (field.equals(newField)) {
-          return new TableTypedField(null, newField.name(), String.class, null);
+          return new TableTypedField(null, newField.name(), String.class, null, false);
         }
       }
 
@@ -104,7 +106,7 @@ public class QueryResolver {
     } catch (FieldNotFoundException e) {
       // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
       // contains only "raw" fields, it will throw an exception.
-      return new TableTypedField(null, field.name(), Number.class, field.alias());
+      return new TableTypedField(null, field.name(), Number.class, field.alias(), false);
     }
   }
 
@@ -117,7 +119,7 @@ public class QueryResolver {
       if (store != null) {
         for (TableTypedField field : store.fields()) {
           if (field.name().equals(fieldNameInTable)) {
-            return alias == null ? field : new TableTypedField(field.store(), field.name(), field.type(), alias);
+            return alias == null ? field : new TableTypedField(field.store(), field.name(), field.type(), alias, this.cteTableNames.contains(store.name()));
           }
         }
       }
@@ -127,14 +129,14 @@ public class QueryResolver {
           if (field.name().equals(fieldName)) {
             // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
             // if any ambiguity, the DB will raise an exception.
-            return new TableTypedField(null, fieldName, field.type(), alias);
+            return new TableTypedField(null, fieldName, field.type(), alias, this.cteTableNames.contains(store));
           }
         }
       }
     }
 
     if (fieldName.equals(CountMeasure.INSTANCE.alias())) {
-      return new TableTypedField(null, CountMeasure.INSTANCE.alias(), long.class, alias);
+      return new TableTypedField(null, CountMeasure.INSTANCE.alias(), long.class, alias, false);
     }
     throw new FieldNotFoundException("Cannot find field with name " + fieldName);
   }
@@ -219,18 +221,22 @@ public class QueryResolver {
    */
   public CompiledTable compileTable(TableDto table, QueryDto subQuery) {
     if (table != null) {
-      // Can be a cte.
-      List<VirtualTableDto> vts = this.query.virtualTableDtos;
-      if (vts != null) {
-        List<CteRecordTable> cteRecordTables = compileVirtualTables(vts);
-        for (CteRecordTable cteRecordTable : cteRecordTables) {
-          if (cteRecordTable.name().equals(table.name)) {
-            return cteRecordTable;
+      List<CompiledJoin> joins = compileJoins(table.joins);
+      if (table.isCte) {
+        return new CteTable(table.name, joins);
+      } else {
+        // Can be a cte.
+        List<VirtualTableDto> vts = this.query.virtualTableDtos;
+        if (vts != null) {
+          List<CteRecordTable> cteRecordTables = compileVirtualTables(vts);
+          for (CteRecordTable cteRecordTable : cteRecordTables) {
+            if (cteRecordTable.name().equals(table.name)) {
+              return cteRecordTable;
+            }
           }
         }
       }
-      List<CompiledJoin> joins = compileJoins(table.joins);
-      return !table.isCte ? new MaterializedTable(table.name, joins) : new CteTable(table.name, joins);
+      return new MaterializedTable(table.name, joins);
     } else if (subQuery != null) {
       return new NestedQueryTable(toSubQuery(subQuery));
     } else {
