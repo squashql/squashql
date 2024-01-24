@@ -1,6 +1,7 @@
 package io.squashql.query.dto;
 
 import io.squashql.query.Field;
+import io.squashql.query.join.QueryJoin;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -14,10 +15,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class QueryJoinDto {
 
-  public QueryDto first;
-  public QueryDto second;
-  public JoinType joinType;
-  public CriteriaDto joinCondition;
+  public QueryJoin queryJoin;
   public Map<Field, OrderDto> orders;
   public int limit = -1;
 }

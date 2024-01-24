@@ -7,18 +7,6 @@ import io.squashql.type.TypedField;
 
 public interface QueryRewriter {
 
-//  default String getFieldFullName(TableTypedField f) {
-//    List<CteRecordTable> vts = query() != null ? query().cteRecordTables : null;
-//    if (vts != null) {
-//      for (CteRecordTable virtualTable : vts) {
-//        if (virtualTable.name().equals(f.store()) && virtualTable.fields().contains(f.name())) {
-//          return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
-//        }
-//      }
-//    }
-//    return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
-//  }
-
   default String fieldName(String field) {
     return field;
   }

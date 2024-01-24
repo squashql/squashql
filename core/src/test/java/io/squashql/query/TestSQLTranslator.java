@@ -4,15 +4,15 @@ import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.*;
 import io.squashql.query.dto.*;
 import io.squashql.store.Store;
-import io.squashql.type.*;
+import io.squashql.type.TableTypedField;
+import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import static io.squashql.query.Functions.*;
 import static io.squashql.query.TableField.tableField;
@@ -25,35 +25,51 @@ public class TestSQLTranslator {
   private static final String BASE_STORE_NAME = "baseStore";
 
   private static class TestResolver extends QueryResolver {
+    private static final Map<String, Store> stores = new HashMap<>();
+
+    static {
+      stores.put(BASE_STORE_NAME, new Store(BASE_STORE_NAME, List.of(
+              new TableTypedField(BASE_STORE_NAME, "id", String.class),
+              new TableTypedField(BASE_STORE_NAME, "type", String.class),
+              new TableTypedField(BASE_STORE_NAME, "delta", double.class),
+              new TableTypedField(BASE_STORE_NAME, "pnl", double.class),
+              new TableTypedField(BASE_STORE_NAME, "country", String.class),
+              new TableTypedField(BASE_STORE_NAME, "a", String.class),
+              new TableTypedField(BASE_STORE_NAME, "b", String.class),
+              new TableTypedField(BASE_STORE_NAME, "c", String.class),
+              new TableTypedField(BASE_STORE_NAME, "c1", String.class),
+              new TableTypedField(BASE_STORE_NAME, "c2", String.class),
+              new TableTypedField(BASE_STORE_NAME, "c3", String.class),
+              new TableTypedField(BASE_STORE_NAME, "scenario", String.class))));
+
+      String recommendation = "recommendation";
+      stores.put(recommendation, new Store(recommendation, List.of(
+              new TableTypedField(recommendation, "finalprice", double.class),
+              new TableTypedField(recommendation, "recoprice", double.class),
+              new TableTypedField(recommendation, "initial_price", double.class))));
+      String product = "product";
+      stores.put(product, new Store(product, List.of(
+              new TableTypedField(product, "tva_rate", double.class))));
+
+      stores.put("table1", new Store("table1", List.of(
+              new TableTypedField("table1", "table1_id", String.class),
+              new TableTypedField("table1", "table1_field_2", String.class),
+              new TableTypedField("table1", "table1_field_3", String.class))));
+      stores.put("table2", new Store("table2", List.of(
+              new TableTypedField("table2", "table2_id", String.class),
+              new TableTypedField("table2", "table2_field_1", String.class))));
+      stores.put("table3", new Store("table3", List.of(
+              new TableTypedField("table3", "table3_id", String.class))));
+      stores.put("table4", new Store("table4", List.of(
+              new TableTypedField("table4", "table4_id_1", String.class),
+              new TableTypedField("table4", "table4_id_2", String.class))));
+    }
+
     private final int limit;
 
     public TestResolver(QueryDto query) {
-      super(query, Collections.emptyMap());
+      super(query, stores);
       this.limit = query.limit;
-    }
-
-    @Override
-    public TypedField resolveField(Field field) {
-      Function<String, Class<?>> type = f -> switch (f) {
-        case "pnl", BASE_STORE_NAME + "." + "pnl" -> double.class;
-        case "delta", BASE_STORE_NAME + "." + "delta" -> Double.class;
-        default -> String.class;
-      };
-      if (field instanceof BinaryOperationField bf) {
-        return new BinaryOperationTypedField(bf.operator, resolveField(bf.leftOperand), resolveField(bf.rightOperand), field.alias());
-      } else if (field instanceof ConstantField cf) {
-        return new ConstantTypedField(cf.value);
-      } else if (field instanceof AliasedField) {
-        return new AliasedTypedField(field.alias());
-      }
-      String[] split = field.name().split("\\.");
-      if (split.length > 1) {
-        String tableName = split[0];
-        String fieldNameInTable = split[1];
-        return new TableTypedField(tableName, fieldNameInTable, type.apply(fieldNameInTable), field.alias(), false);
-      } else {
-        return new TableTypedField(null, split[0], type.apply(split[0]), field.alias(), false);
-      }
     }
 
     DatabaseQuery toDatabaseQuery() {
@@ -364,7 +380,7 @@ public class TestSQLTranslator {
             .withMeasure(sum("sum GT", "mean"))
             .withWhereCriteria(criterion("type", eq("myType")));
     Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select `c3`, sum(`alias_c1`) as `sum c1`, sum(`mean`) as `sum GT` from (select `c3`, `c1` AS `alias_c1`, avg(`c2`) as `mean` from `dataset.a` group by `c3`, `alias_c1`) where `type` = 'myType' group by `c3`");
+            .isEqualTo("select `c3`, sum(`alias_c1`) as `sum c1`, sum(`mean`) as `sum GT` from (select `c3`, `c1` as `alias_c1`, avg(`c2`) as `mean` from `dataset.a` group by `c3`, `alias_c1`) where `type` = 'myType' group by `c3`");
   }
 
   @Test
@@ -502,7 +518,7 @@ public class TestSQLTranslator {
     DefaultQueryRewriter qr = new DefaultQueryRewriter(null);
     String expression = compiledMeasure(measure).sqlExpression(qr, true);
     Assertions.assertThat(expression)
-            .isEqualTo("sum(case when (`recommendation`.`finalprice` > `recommendation`.`recoprice` and `recommendation`.`recoprice` > '0')" +
+            .isEqualTo("sum(case when (`recommendation`.`finalprice` > `recommendation`.`recoprice` and `recommendation`.`recoprice` > 0)" +
                     " then (`recommendation`.`finalprice`-`recommendation`.`recoprice`) end)" +
                     " as `increase_sum`");
 
@@ -517,15 +533,15 @@ public class TestSQLTranslator {
   @Test
   void testComplexFieldCalculation() {
     DefaultQueryRewriter qr = new DefaultQueryRewriter(null);
-    Field f1 = new TableField("f1");
-    Field f2 = new TableField("f2");
-    Field f3 = new TableField("f3");
+    Field a = new TableField("a");
+    Field b = new TableField("b");
+    Field c = new TableField("c");
 
-    BinaryOperationField f1_minus_f2 = new BinaryOperationField(BinaryOperator.MINUS, f1, f2);
-    BinaryOperationField divide = new BinaryOperationField(BinaryOperator.DIVIDE, f1_minus_f2, f1);
-    BinaryOperationField multiply = new BinaryOperationField(BinaryOperator.MULTIPLY, divide, f3);
+    BinaryOperationField f1_minus_f2 = new BinaryOperationField(BinaryOperator.MINUS, a, b);
+    BinaryOperationField divide = new BinaryOperationField(BinaryOperator.DIVIDE, f1_minus_f2, a);
+    BinaryOperationField multiply = new BinaryOperationField(BinaryOperator.MULTIPLY, divide, c);
     BinaryOperationField plus = new BinaryOperationField(BinaryOperator.PLUS, multiply, new ConstantField(2));
     Assertions.assertThat(compileField(plus).sqlExpression(qr))
-            .isEqualTo("((((`f1`-`f2`)/`f1`)*`f3`)+2)");
+            .isEqualTo("((((`a`-`b`)/`a`)*`c`)+2)");
   }
 }

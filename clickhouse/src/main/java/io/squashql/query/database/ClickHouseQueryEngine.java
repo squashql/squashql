@@ -125,21 +125,10 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
 
   @Override
   public QueryRewriter queryRewriter(DatabaseQuery query) {
-    return new ClickHouseQueryRewriter(query);
+    return new ClickHouseQueryRewriter();
   }
 
   static class ClickHouseQueryRewriter implements QueryRewriter {
-
-    private final DatabaseQuery query;
-
-    ClickHouseQueryRewriter(DatabaseQuery query) {
-      this.query = query;
-    }
-
-    @Override
-    public DatabaseQuery query() {
-      return this.query;
-    }
 
     @Override
     public String fieldName(String field) {

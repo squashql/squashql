@@ -116,10 +116,7 @@ public class QueryController {
   @PostMapping(MAPPING_QUERY_JOIN_EXPERIMENTAL)
   public ResponseEntity<QueryResultDto> executeQueryJoin(@RequestBody QueryJoinDto queryJoinDto) {
     Table table = this.queryExecutor.executeExperimentalQueryMerge(
-            queryJoinDto.first,
-            queryJoinDto.second,
-            queryJoinDto.joinType,
-            queryJoinDto.joinCondition,
+            queryJoinDto.queryJoin,
             queryJoinDto.orders,
             queryJoinDto.limit);
     return ResponseEntity.ok(createQueryResultDto(table));
