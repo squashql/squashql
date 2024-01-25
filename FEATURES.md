@@ -1,4 +1,64 @@
+<p align="center">
+  <img width="512" src="./documentation/assets/logo_horizontal.svg">
+</p>
+
+<p align="center">
+  <a href="https://github.com/squashql/squashql/actions">
+    <img src="https://github.com/squashql/squashql/actions/workflows/ci.yml/badge.svg?branch=main" alt="Github Actions Badge">
+  </a>
+  <a>
+    <img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/squashql/squashql">
+  </a>
+  <a>
+    <img alt="Discord chat" src="https://img.shields.io/discord/1051535068637700196?label=discord">
+  </a> 
+</p>
+
+<h4 align="center">
+  <a href="https://quickwit.io/docs/get-started/quickstart">Quickstart</a> |
+  <a href="https://quickwit.io/docs/">Docs</a> |
+  <a href="https://quickwit.io/tutorials">Tutorials</a> |
+  <a href="https://discord.quickwit.io">Chat</a> |
+  <a href="https://quickwit.io/docs/get-started/installation">Download</a>
+</h4>
+<br/>
+
+---
+
+SquashQL is an open-source SQL query engine designed to streamline the process of building multi-dimensional queries.
+At its core, it acts as a middleware layer that stands between SQL databases and multiple clients or front-end
+applications.
+The primary objective is twofold: to empower back-end developers in optimizing SQL database usage and to provide
+front-end
+developers with an intuitive API for configuring metrics in the UI.
+
+It follows a "write once, run everywhere" philosophy, making it an excellent solution for scenarios where data needs to 
+be efficiently queried from multiple databases. Currently, SquashQL supports compatibility with databases such as Apache Spark, ClickHouse, BigQuery, Snowflake, and DuckDB.
+
 ## 💡Key features
+
+### Simple API
+
+TypeScript SQL-like query builder available on npm. This empowers developers to construct and execute SQL queries directly
+from their applications, utilizing a syntax that feels familiar and expressive.
+
+```typescript
+import {
+  from, avg, TableField
+} from "@squashql/squashql-js"
+
+class Orders {
+  readonly _name: string = "Orders"
+  readonly customer_id: TableField = new TableField("Orders.customer_id")
+  readonly amount: TableField = new TableField("Orders.amount")
+}
+
+const orders = new Orders()
+
+const q = from(orders._name)
+        .select([orders.customer_id], [], [avg("average_spends", orders.amount)])
+        .build()
+```
 
 ### Pivot Table
 
@@ -18,12 +78,14 @@ querier.executePivotQuery(query, pivotConfig)
 ![pivot-table-sales.png](documentation%2Fassets%2Fpivot-table-sales.png)
 👉 https://jsfiddle.net/azeq/c6f9ox4u/
 
-Try the [tutorial](https://github.com/squashql/squashql-showcase/blob/main/TUTORIAL.md#pivot-table) to build your own pivot table.
+Try the [tutorial](https://github.com/squashql/squashql-showcase/blob/main/TUTORIAL.md#pivot-table) to build your own
+pivot table.
 
 ### Bucketing
 
-Bucketing, also known as binning or discretization, is a technique used in data analysis to group continuous or numerical 
-data into discrete intervals or "buckets." 
+Bucketing, also known as binning or discretization, is a technique used in data analysis to group continuous or
+numerical
+data into discrete intervals or "buckets."
 
 <details><summary>SQL</summary>
 
@@ -65,8 +127,9 @@ VALUES (1, 'John Doe', 50000.00, 50),
 +-------------+-----------------+---------+-----+
 ```
 
-Easy to bucket on one or several attributes. 
-Result can be displayed in a [pivot table](https://github.com/squashql/squashql-showcase/blob/main/TUTORIAL.md#pivot-table)
+Easy to bucket on one or several attributes.
+Result can be displayed in
+a [pivot table](https://github.com/squashql/squashql-showcase/blob/main/TUTORIAL.md#pivot-table)
 to enhance data visualization and help analysis.
 
 ![bucketing-age-salary.png](documentation/assets/bucketing-age-salary.png)
@@ -76,13 +139,13 @@ to enhance data visualization and help analysis.
 
 ### Comparison measures
 
-Make calculations that are not possible or cumbersome in SQL easy to perform.
+Make calculations that are cumbersome or challenging in SQL easy to perform.
 
 [More](documentation/QUERY.md#complex-comparison)
 
 ### Drilling across
 
-Query two or more fact tables and stitch together the results on shared columns. 
+Query two or more fact tables and stitch together the results on shared columns.
 
 ```
 Result query 1
@@ -130,3 +193,7 @@ Caching can be customized or deactivated.
 - [Typescript API](documentation/QUERY.md)
 - [Drilling across](documentation/DRILLING-ACROSS.md)
 - [Cache](documentation/CACHE.md)
+
+## 📚 Resources
+
+- [TypeScript library](https://www.npmjs.com/package/@squashql/squashql-js) 
