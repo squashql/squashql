@@ -2,12 +2,6 @@ package io.squashql.query.database;
 
 class DuckDBQueryRewriter implements QueryRewriter {
 
-  private final DatabaseQuery query;
-
-  DuckDBQueryRewriter(DatabaseQuery query) {
-    this.query = query;
-  }
-
   @Override
   public String tableName(String table) {
     return SqlUtils.doubleQuoteEscape(table);

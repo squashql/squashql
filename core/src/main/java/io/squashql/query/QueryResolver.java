@@ -129,7 +129,7 @@ public class QueryResolver {
           if (field.name().equals(fieldName)) {
             // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
             // if any ambiguity, the DB will raise an exception.
-            return new TableTypedField(null, fieldName, field.type(), alias, this.cteTableNames.contains(store));
+            return new TableTypedField(null, fieldName, field.type(), alias, this.cteTableNames.contains(store.name()));
           }
         }
       }

@@ -7,7 +7,7 @@ import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.query.dto.QueryJoinDto;
-import io.squashql.query.join.NewExperimentalQueryMergeExecutor;
+import io.squashql.query.join.ExperimentalQueryMergeExecutor;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.PivotTable;
@@ -376,7 +376,7 @@ public class QueryExecutor {
   }
 
   public Table executeExperimentalQueryMerge(QueryJoinDto queryJoin) {
-    return new NewExperimentalQueryMergeExecutor(this.queryEngine).execute(queryJoin);
+    return new ExperimentalQueryMergeExecutor(this.queryEngine).execute(queryJoin);
   }
 
   /**

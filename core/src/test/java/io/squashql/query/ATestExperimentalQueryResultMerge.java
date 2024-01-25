@@ -21,9 +21,9 @@ import static io.squashql.query.Functions.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
 
-  String storeA = "StoreA"; // + getClass().getSimpleName().toLowerCase();
-  String storeB = "StoreB"; // + getClass().getSimpleName().toLowerCase();
-  String storeC = "StoreC"; // + getClass().getSimpleName().toLowerCase();
+  String storeA = "StoreA" + getClass().getSimpleName().toLowerCase();
+  String storeB = "StoreB" + getClass().getSimpleName().toLowerCase();
+  String storeC = "StoreC" + getClass().getSimpleName().toLowerCase();
   Field category = new TableField(this.storeA, "category");
   Field idA = new TableField(this.storeA, "idA");
   Field idStoreA = new TableField(this.storeA, "id");
@@ -356,7 +356,6 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
     SimpleOrderDto asc = new SimpleOrderDto(OrderKeywordDto.ASC);
     Map<Field, OrderDto> orders = new LinkedHashMap<>(); // order matters
     orders.put(new TableField("id"), asc);
-//    orders.put(new TableField("id"), asc);
 
     // In case of sub-queries, aliases must be used everywhere.
     QueryJoinDto jq = QueryJoinDto.from(queryL).join(queryR, JoinType.LEFT);

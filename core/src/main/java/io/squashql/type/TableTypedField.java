@@ -26,10 +26,10 @@ public record TableTypedField(String store, String name, Class<?> type, String a
   public String sqlExpression(QueryRewriter qr) {
     if (CountMeasure.FIELD_NAME.equals(this.name)) {
       return CountMeasure.FIELD_NAME;
-    } else if (this.cte) {
-      return SqlUtils.getFieldFullName(qr.cteName(this.store), qr.fieldName(this.name));
     } else {
-      return SqlUtils.getFieldFullName(this.store == null ? null : qr.tableName(this.store), qr.fieldName(this.name));
+      return SqlUtils.getFieldFullName(
+              this.store == null ? null : (this.cte ? qr.cteName(this.store) : qr.tableName(this.store)),
+              qr.fieldName(this.name));
     }
   }
 
