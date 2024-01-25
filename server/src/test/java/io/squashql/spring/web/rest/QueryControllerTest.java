@@ -7,7 +7,7 @@ import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.LimitExceedException;
-import io.squashql.query.join.QueryJoin;
+import io.squashql.query.dto.QueryJoinDto;
 import io.squashql.spring.dataset.DatasetTestConfig;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -317,9 +317,9 @@ public class QueryControllerTest {
             .select(List.of(competitorEan), List.of(sum("competitor_sum", "competitor_price")))
             .build();
 
-    QueryJoin join = QueryJoin.from(query1)
-            .join(query2, JoinType.FULL, criterion(ean, competitorEan, ConditionType.EQ));
-    QueryJoinDto queryJoinDto = new QueryJoinDto(join, Map.of(ean, new SimpleOrderDto(OrderKeywordDto.ASC)), -1);
+    QueryJoinDto queryJoinDto = QueryJoinDto.from(query1)
+            .join(query2, JoinType.FULL, criterion(ean, competitorEan, ConditionType.EQ))
+            .orderBy(Map.of(ean, new SimpleOrderDto(OrderKeywordDto.ASC)));
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_JOIN_EXPERIMENTAL)
                     .content(JacksonUtil.serialize(queryJoinDto))
                     .contentType(MediaType.APPLICATION_JSON))
