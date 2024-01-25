@@ -17,7 +17,7 @@ public record CteRecordTable(String name,
 
   @Override
   public List<CompiledJoin> joins() {
-    return Collections.emptyList(); // FIXME not sure about this one. Might be chained with other cte??
+    return Collections.emptyList();
   }
 
   @Override

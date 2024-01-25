@@ -1,6 +1,10 @@
 export {
-  Query, Table, JoinType, QueryMerge, QueryJoin,
+  Query, Table, JoinType, QueryMerge,
 } from './query'
+
+export {
+  QueryJoin,
+} from './queryJoin'
 
 export {
   Order, OrderKeyword, SimpleOrder,

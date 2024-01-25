@@ -11,7 +11,8 @@ import java.util.function.BiFunction;
 public class DuckDBQueryEngine extends JdbcQueryEngine<DuckDBDatastore> {
 
   /**
-   * https://duckdb.org/docs/sql/aggregates. NOTE there is more but only a subset is proposed here.
+   * <a href="https://duckdb.org/docs/sql/aggregates">https://duckdb.org/docs/sql/aggregates</a>.
+   * NOTE there is more but only a subset is proposed here.
    */
   public static final List<String> SUPPORTED_AGGREGATION_FUNCTIONS = List.of(
           "ANY_VALUE",
@@ -45,6 +46,6 @@ public class DuckDBQueryEngine extends JdbcQueryEngine<DuckDBDatastore> {
 
   @Override
   public QueryRewriter queryRewriter(DatabaseQuery query) {
-    return new DuckDBQueryRewriter(query);
+    return new DuckDBQueryRewriter();
   }
 }

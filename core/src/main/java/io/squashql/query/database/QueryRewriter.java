@@ -1,28 +1,11 @@
 package io.squashql.query.database;
 
-import io.squashql.query.compiled.CteRecordTable;
 import io.squashql.type.AliasedTypedField;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 
-import java.util.List;
-
 public interface QueryRewriter {
-
-  DatabaseQuery query();
-
-  default String getFieldFullName(TableTypedField f) {
-    List<CteRecordTable> vts = query() != null ? query().cteRecordTables : null;
-    if (vts != null) {
-      for (CteRecordTable virtualTable : vts) {
-        if (virtualTable.name().equals(f.store()) && virtualTable.fields().contains(f.name())) {
-          return SqlUtils.getFieldFullName(cteName(f.store()), fieldName(f.name()));
-        }
-      }
-    }
-    return SqlUtils.getFieldFullName(f.store() == null ? null : tableName(f.store()), fieldName(f.name()));
-  }
 
   default String fieldName(String field) {
     return field;
@@ -43,7 +26,7 @@ public interface QueryRewriter {
   }
 
   default String functionExpression(FunctionTypedField ftf) {
-    return ftf.function() + "(" + getFieldFullName(ftf.field()) + ")";
+    return ftf.function() + "(" + ftf.field().sqlExpression(this) + ")";
   }
 
   /**
@@ -81,7 +64,7 @@ public interface QueryRewriter {
   default String _select(TypedField f, boolean withAlias) {
     StringBuilder sb = new StringBuilder();
     if (f instanceof TableTypedField ttf) {
-      sb.append(getFieldFullName(ttf));
+      sb.append(ttf.sqlExpression(this));
     } else if (f instanceof FunctionTypedField ftf) {
       sb.append(functionExpression(ftf));
     } else if (f instanceof AliasedTypedField atf) {
@@ -91,7 +74,7 @@ public interface QueryRewriter {
     }
     String alias = f.alias();
     if (withAlias && alias != null) {
-      sb.append(" AS ").append(escapeAlias(alias));
+      sb.append(" as ").append(escapeAlias(alias));
     }
     return sb.toString();
   }

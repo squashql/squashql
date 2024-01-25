@@ -11,10 +11,11 @@ public record CompiledJoin(NamedTable table, JoinType type, CompiledCriteria joi
             .append(this.type.name().toLowerCase())
             .append(" join ")
             .append(this.table.sqlExpressionTableName(queryRewriter));
-    if (joinCriteria() != null) {
+    CompiledCriteria jc = joinCriteria();
+    if (jc != null) {
       statement
               .append(" on ")
-              .append(joinCriteria().sqlExpression(queryRewriter));
+              .append(jc.sqlExpression(queryRewriter));
     }
 
     if (!this.table.joins().isEmpty()) {

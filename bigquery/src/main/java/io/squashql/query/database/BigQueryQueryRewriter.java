@@ -3,29 +3,19 @@ package io.squashql.query.database;
 import io.squashql.query.date.DateFunctions;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TypedField;
+import lombok.AllArgsConstructor;
 
+@AllArgsConstructor
 public class BigQueryQueryRewriter implements QueryRewriter {
 
   private final String projectId;
   private final String datasetName;
-  private final DatabaseQuery query;
-
-  BigQueryQueryRewriter(String projectId, String datasetName, DatabaseQuery query) {
-    this.projectId = projectId;
-    this.datasetName = datasetName;
-    this.query = query;
-  }
-
-  @Override
-  public DatabaseQuery query() {
-    return this.query;
-  }
 
   @Override
   public String functionExpression(FunctionTypedField ftf) {
     if (DateFunctions.SUPPORTED_DATE_FUNCTIONS.contains(ftf.function())) {
       // https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#extract
-      return String.format("EXTRACT(%s FROM %s)", ftf.function(), getFieldFullName(ftf.field()));
+      return String.format("EXTRACT(%s FROM %s)", ftf.function(), ftf.field().sqlExpression(this));
     } else {
       throw new IllegalArgumentException("Unsupported function " + ftf);
     }

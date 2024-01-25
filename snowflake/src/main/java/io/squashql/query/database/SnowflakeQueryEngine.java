@@ -106,6 +106,6 @@ public class SnowflakeQueryEngine extends JdbcQueryEngine<SnowflakeDatastore> {
 
   @Override
   public QueryRewriter queryRewriter(DatabaseQuery query) {
-    return new SnowflakeQueryRewriter(query);
+    return new SnowflakeQueryRewriter();
   }
 }
