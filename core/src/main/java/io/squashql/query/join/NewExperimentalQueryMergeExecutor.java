@@ -50,17 +50,15 @@ public class NewExperimentalQueryMergeExecutor {
     }
   }
 
-  public Triple<String, List<TypedField>, List<CompiledMeasure>> generateSql(QueryJoin queryJoin,
-                                                                             Map<Field, OrderDto> orders,
-                                                                             int limit) {
-    int queryLimit = limit <= 0 ? LIMIT_DEFAULT_VALUE : limit;
+  public Triple<String, List<TypedField>, List<CompiledMeasure>> generateSql(QueryJoinDto queryJoin) {
+    int queryLimit = queryJoin.limit <= 0 ? LIMIT_DEFAULT_VALUE : queryJoin.limit;
 
     List<Holder> holders = new ArrayList<>(queryJoin.queries.size());
     for (int i = 0; i < queryJoin.queries.size(); i++) {
       if (i == 0) {
-        holders.add(new Holder(queryJoin.tableDto.name, queryJoin.queries.get(i)));
+        holders.add(new Holder(queryJoin.table.name, queryJoin.queries.get(i)));
       } else {
-        holders.add(new Holder(queryJoin.tableDto.joins.get(i - 1).table.name, queryJoin.queries.get(i)));
+        holders.add(new Holder(queryJoin.table.joins.get(i - 1).table.name, queryJoin.queries.get(i)));
       }
     }
 
@@ -98,7 +96,7 @@ public class NewExperimentalQueryMergeExecutor {
     }
 
     int index = 1;
-    for (JoinDto join : queryJoin.tableDto.joins) {
+    for (JoinDto join : queryJoin.table.joins) {
       CriteriaDto joinConditionCopy = JacksonUtil.deserialize(JacksonUtil.serialize(join.joinCriteria), CriteriaDto.class);
       if (joinConditionCopy == null) {
         // Guess the condition
@@ -187,7 +185,7 @@ public class NewExperimentalQueryMergeExecutor {
 
     sb.append(joinSb);
 
-    addOrderBy(orders, sb, queryRewriter, selectedColumns, holders);
+    addOrderBy(queryJoin.orders, sb, queryRewriter, selectedColumns, holders);
     addLimit(queryLimit, sb);
 
     List<CompiledMeasure> measures = new ArrayList<>();
@@ -199,10 +197,8 @@ public class NewExperimentalQueryMergeExecutor {
     return Tuples.triple(sb.toString(), selectedColumns, measures);
   }
 
-  public Table execute(QueryJoin queryJoin,
-                       Map<Field, OrderDto> orders,
-                       int limit) {
-    Triple<String, List<TypedField>, List<CompiledMeasure>> sqlGenerationResult = generateSql(queryJoin, orders, limit);
+  public Table execute(QueryJoinDto queryJoin) {
+    Triple<String, List<TypedField>, List<CompiledMeasure>> sqlGenerationResult = generateSql(queryJoin);
     log.info("sql=" + sqlGenerationResult.getOne());
     Table result = this.queryEngine.executeRawSql(sqlGenerationResult.getOne());
 

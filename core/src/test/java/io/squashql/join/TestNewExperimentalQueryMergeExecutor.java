@@ -6,7 +6,7 @@ import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.*;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.query.join.QueryJoin;
+import io.squashql.query.dto.QueryJoinDto;
 import io.squashql.query.join.NewExperimentalQueryMergeExecutor;
 import io.squashql.store.Datastore;
 import io.squashql.store.Store;
@@ -128,15 +128,16 @@ public class TestNewExperimentalQueryMergeExecutor {
             .select(List.of(C_b, C_c, C_d, C_g), List.of())
             .build();
 
-    QueryJoin queryJoin = QueryJoin.from(queryA)
+    QueryJoinDto queryJoin = QueryJoinDto.from(queryA)
             .join(queryB, JoinType.LEFT, criterion(A_b, B_b, EQ))
             .join(queryC, JoinType.LEFT, all(
                     criterion(A_b, C_b, EQ),
                     criterion(A_c, C_c, EQ),
                     criterion(B_d, C_d, EQ)
-            ));
+            ))
+            .limit(12);
 
-    Triple<String, List<TypedField>, List<CompiledMeasure>> result = ex.generateSql(queryJoin, null, 12);
+    Triple<String, List<TypedField>, List<CompiledMeasure>> result = ex.generateSql(queryJoin);
     String expectedSql = "with `CTE0` as (" +
             "select `A`.`a`, `A`.`b`, `A`.`c` from `A` group by `A`.`a`, `A`.`b`, `A`.`c`), " +
             "`CTE1` as (" +
@@ -164,10 +165,11 @@ public class TestNewExperimentalQueryMergeExecutor {
             .select(List.of(B_b, B_d, B_e, B_f), List.of())
             .build();
 
-    QueryJoin queryJoin = QueryJoin.from(queryA)
-            .join(queryB, JoinType.CROSS);
+    QueryJoinDto queryJoin = QueryJoinDto.from(queryA)
+            .join(queryB, JoinType.CROSS)
+            .limit(12);
 
-    Triple<String, List<TypedField>, List<CompiledMeasure>> result = ex.generateSql(queryJoin, null, 12);
+    Triple<String, List<TypedField>, List<CompiledMeasure>> result = ex.generateSql(queryJoin);
     String expectedSql = "with `CTE0` as (" +
             "select `A`.`a`, `A`.`b`, `A`.`c` from `A` group by `A`.`a`, `A`.`b`, `A`.`c`), " +
             "`CTE1` as (" +
@@ -193,10 +195,11 @@ public class TestNewExperimentalQueryMergeExecutor {
             .build();
 
     // Should be a condition on "alias_b"
-    QueryJoin queryJoin = QueryJoin.from(queryA)
-            .join(queryB, JoinType.LEFT);
+    QueryJoinDto queryJoin = QueryJoinDto.from(queryA)
+            .join(queryB, JoinType.LEFT)
+            .limit(12);
 
-    Triple<String, List<TypedField>, List<CompiledMeasure>> result = ex.generateSql(queryJoin, null, 12);
+    Triple<String, List<TypedField>, List<CompiledMeasure>> result = ex.generateSql(queryJoin);
     String expectedSql = "with `CTE0` as (" +
             "select `A`.`a`, `A`.`b` as `alias_b`, `A`.`c` from `A` group by `A`.`a`, `alias_b`, `A`.`c`), " +
             "`CTE1` as (" +
@@ -222,10 +225,11 @@ public class TestNewExperimentalQueryMergeExecutor {
             .build();
 
     // Should be a condition on "alias_b"
-    QueryJoin queryJoin = QueryJoin.from(queryA)
-            .join(queryB, JoinType.LEFT);
+    QueryJoinDto queryJoin = QueryJoinDto.from(queryA)
+            .join(queryB, JoinType.LEFT)
+            .limit(12);
 
-    Triple<String, List<TypedField>, List<CompiledMeasure>> result = ex.generateSql(queryJoin, null, 12);
+    Triple<String, List<TypedField>, List<CompiledMeasure>> result = ex.generateSql(queryJoin);
     String expectedSql = "with `CTE0` as (" +
             "select `A`.`a`, `A`.`b`, `A`.`c` from `A` group by `A`.`a`, `A`.`b`, `A`.`c`), " +
             "`CTE1` as (" +
@@ -255,15 +259,16 @@ public class TestNewExperimentalQueryMergeExecutor {
             .select(List.of(C_b, C_c, C_d, C_g), List.of())
             .build();
 
-    QueryJoin queryJoin = QueryJoin.from(queryA)
+    QueryJoinDto queryJoin = QueryJoinDto.from(queryA)
             .join(queryB, JoinType.LEFT) // No condition on query, it should guess the condition on "alias_b"
             .join(queryC, JoinType.LEFT, all(
                     criterion(A_b, C_b, EQ),
                     criterion(A_c, C_c, EQ),
                     criterion(B_d, C_d, EQ)
-            ));
+            ))
+            .limit(12);
 
-    Triple<String, List<TypedField>, List<CompiledMeasure>> result = ex.generateSql(queryJoin, null, 12);
+    Triple<String, List<TypedField>, List<CompiledMeasure>> result = ex.generateSql(queryJoin);
     String expectedSql = "with `CTE0` as (" +
             "select `A`.`a`, `A`.`b` as `alias_b`, `A`.`c` from `A` group by `A`.`a`, `alias_b`, `A`.`c`), " +
             "`CTE1` as (" +

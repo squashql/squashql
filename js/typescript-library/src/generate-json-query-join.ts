@@ -1,10 +1,11 @@
 import * as fs from "fs"
 import {TableField} from "./field"
 import {avg, sum} from "./measure"
-import {JoinType, QueryJoin} from "./query"
+import {JoinType} from "./query"
 import {from} from "./queryBuilder"
-import {all, ConditionType, criterion_} from "./conditions"
 import {OrderKeyword, SimpleOrder} from "./order"
+import {QueryJoin} from "./queryJoin"
+import {all, ConditionType, criterion_} from "./conditions"
 
 export function generateFromQueryJoin() {
   const a = new TableField("myTable1.a")
@@ -20,13 +21,21 @@ export function generateFromQueryJoin() {
           .select([b2, c2], [], [avg("sum", new TableField("f2"))])
           .build()
 
-  const q = new QueryJoin(query1, query2, JoinType.LEFT,
-          all([
-            criterion_(b1, b2, ConditionType.EQ),
-            criterion_(c1, c2, ConditionType.EQ)
-          ]),
-          new Map([[a, new SimpleOrder(OrderKeyword.ASC)]]),
-          10)
+  const c3 = new TableField("myTable3.c3")
+  const query3 = from("myTable3")
+          .select([c3], [], [avg("max", new TableField("f3"))])
+          .build()
+
+  const orders = new Map([[a, new SimpleOrder(OrderKeyword.ASC)], [c3, new SimpleOrder(OrderKeyword.DESC)]])
+  const q = new QueryJoin(query1)
+          .join(query2, JoinType.LEFT,
+                  all([
+                    criterion_(b1, b2, ConditionType.EQ),
+                    criterion_(c1, c2, ConditionType.EQ)
+                  ]))
+          .join(query3, JoinType.INNER)
+          .orderBy(orders)
+          .limit(12)
   const data = JSON.stringify(q)
   fs.writeFileSync('build-from-query-join.json', data)
 }
