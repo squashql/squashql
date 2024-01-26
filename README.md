@@ -145,6 +145,23 @@ to enhance data visualization and help analysis.
 
 Make calculations that are cumbersome or challenging in SQL easy to perform.
 
+#### Hierarchical / Parent-Child comparison
+
+💡 Compare aggregates and sub-aggregates computed at different levels of the lineage. The lineage is defined on-the-fly 
+at query time. In below example, it is defined as `continent_name -> country_name -> city_name`.
+
+<img src="documentation/assets/parent-child-comp.png" width="500">
+
+👉 https://jsfiddle.net/azeq/31qs2jyt/
+
+#### Time-series comparison
+
+💡 Compare aggregates between time period like year, semester, quarter, month.
+
+<img src="documentation/assets/time-period-comp.png" width="500">
+
+👉 https://jsfiddle.net/azeq/dqebkp2x/
+
 [More](documentation/QUERY.md#complex-comparison)
 
 ### Drilling across

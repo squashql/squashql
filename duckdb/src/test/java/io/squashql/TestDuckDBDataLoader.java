@@ -2,10 +2,7 @@ package io.squashql;
 
 import com.google.common.collect.ImmutableList;
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.CountMeasure;
-import io.squashql.query.Header;
-import io.squashql.query.QueryExecutor;
-import io.squashql.query.TableField;
+import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.compiled.CompiledAggregatedMeasure;
 import io.squashql.query.database.DuckDBQueryEngine;
@@ -19,13 +16,13 @@ import io.squashql.type.AliasedTypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
+import static io.squashql.query.ComparisonMethod.DIVIDE;
 import static io.squashql.query.Functions.*;
+import static io.squashql.query.TableField.tableField;
 
 public class TestDuckDBDataLoader {
 
@@ -214,4 +211,147 @@ public class TestDuckDBDataLoader {
     pt.show();
     jsonpt(pt);
   }
+
+  @Test
+  void parentChild() {
+    String sql = """
+            -- Create Continents Table
+            CREATE TABLE continents (
+                continent_id INT PRIMARY KEY,
+                continent_name VARCHAR(50)
+            );
+
+            -- Insert data into Continents Table
+            INSERT INTO continents (continent_id, continent_name) VALUES
+            (2, 'Europe'),
+            (3, 'Asia'),
+            (5, 'Africa');
+
+            -- Create Countries Table
+            CREATE TABLE countries (
+                country_id INT PRIMARY KEY,
+                country_name VARCHAR(50),
+                continent_id INT
+            );
+
+            -- Insert data into Countries Table
+            INSERT INTO countries (country_id, country_name, continent_id) VALUES
+            (101, 'USA', 1),
+            (102, 'Canada', 1),
+            (103, 'Germany', 2),
+            (104, 'France', 2),
+            (105, 'China', 3),
+            (106, 'India', 3),
+            (107, 'Brazil', 4),
+            (108, 'Argentina', 4),
+            (109, 'Nigeria', 5),
+            (110, 'South Africa', 5);
+
+            -- Create Cities Table
+            CREATE TABLE cities (
+                city_id INT PRIMARY KEY,
+                city_name VARCHAR(50),
+                country_id INT,
+                sales_amount DECIMAL(10, 2)
+            );
+
+            -- Insert data into Cities Table
+            INSERT INTO cities (city_id, city_name, country_id, sales_amount) VALUES
+            (1001, 'New York', 101, 15000.00),
+            (1002, 'Los Angeles', 101, 12000.50),
+            (1003, 'Toronto', 102, 10000.75),
+            (1004, 'Berlin', 103, 8000.25),
+            (1005, 'Paris', 104, 9500.50),
+            (1006, 'Beijing', 105, 12000.00),
+            (1007, 'Mumbai', 106, 11000.75),
+            (1008, 'Sao Paulo', 107, 13000.25),
+            (1009, 'Buenos Aires', 108, 11500.50),
+            (1010, 'Lagos', 109, 9000.00),
+            (1011, 'Johannesburg', 110, 8500.75),
+            (1012, 'Chicago', 101, 12500.00),
+            (1013, 'Hamburg', 103, 8500.50),
+            (1014, 'Shanghai', 105, 11000.25),
+            (1015, 'Delhi', 106, 10500.75),
+            (1016, 'Rio de Janeiro', 107, 12000.00),
+            (1017, 'Cape Town', 110, 9500.50),
+            (1018, 'Toronto', 102, 9800.25),
+            (1019, 'Munich', 103, 8800.50),
+            (1020, 'Lyon', 104, 9200.25);
+
+                        """;
+
+    DuckDBDatastore ds = new DuckDBDatastore();
+    DuckDBQueryEngine engine = new DuckDBQueryEngine(ds);
+    engine.executeSql(sql);
+    QueryExecutor queryExecutor = new QueryExecutor(engine);
+    queryExecutor.executeRaw("select * from cities").show();
+    queryExecutor.executeRaw("select * from cities inner join countries on cities.country_id = countries.country_id inner join continents on countries.continent_id = continents.continent_id").show();
+
+    List<Field> fields = List.of(new TableField("continent_name"), new TableField("country_name"), new TableField("city_name"));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, sum("sales", "sales_amount"), fields);
+
+    QueryDto query = Query.from("cities")
+            .join("countries", JoinType.INNER)
+            .on(criterion(new TableField("cities.country_id"), new TableField("countries.country_id"), ConditionType.EQ))
+            .join("continents", JoinType.INNER)
+            .on(criterion(new TableField("countries.continent_id"), new TableField("continents.continent_id"), ConditionType.EQ))
+            .select(fields, List.of(sum("sales", "sales_amount"), Functions.multiply("sales ratio %", pOp, Functions.integer(100))))
+            .build();
+    PivotTable pt = queryExecutor.executePivotQuery(new PivotTableQueryDto(
+            query,
+            fields,
+            List.of()));
+    pt.show();
+    jsonpt(pt);
+  }
+
+  @Test
+  void time() {
+    String sql = """
+CREATE TABLE sales (
+    sale_id INT PRIMARY KEY,
+    year INT,
+    month INT,
+    amount DECIMAL(10, 2)
+);
+
+INSERT INTO sales (sale_id, year, month, amount) VALUES
+(8, 2022, 8, 3200.25),
+(9, 2022, 9, 3500.50),
+(10, 2022, 10, 3800.75),
+(11, 2022, 11, 4000.00),
+(12, 2022, 12, 4200.25),
+(13, 2023, 1, 4500.50),
+(14, 2023, 2, 4800.75),
+(15, 2023, 3, 5000.00),
+            """;
+
+    DuckDBDatastore ds = new DuckDBDatastore();
+    DuckDBQueryEngine engine = new DuckDBQueryEngine(ds);
+    engine.executeSql(sql);
+    QueryExecutor queryExecutor = new QueryExecutor(engine);
+    queryExecutor.executeRaw("select * from sales").show();
+
+    List<Field> fields = List.of(new TableField("year"), new TableField("month"));
+
+    Period.Month period = new Period.Month(tableField("month"), tableField("year"));
+    AggregatedMeasure sales = new AggregatedMeasure("sales", "amount", "sum");
+    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
+            "Month-over-Month (MoM) Growth",
+            ABSOLUTE_DIFFERENCE,
+            sales,
+            Map.of(period.month(), "m-1", period.year(), "y"),
+            period);
+
+    QueryDto query = Query.from("sales")
+            .select(fields, List.of(sales, m))
+            .build();
+    PivotTable pt = queryExecutor.executePivotQuery(new PivotTableQueryDto(
+            query,
+            fields,
+            List.of()));
+    pt.show();
+    jsonpt(pt);
+  }
 }
+
