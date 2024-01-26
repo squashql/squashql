@@ -15,11 +15,11 @@
 </p>
 
 <h4 align="center">
-  <a href="https://quickwit.io/docs/get-started/quickstart">Quickstart</a> |
-  <a href="https://quickwit.io/docs/">Docs</a> |
-  <a href="https://quickwit.io/tutorials">Tutorials</a> |
-  <a href="https://discord.quickwit.io">Chat</a> |
-  <a href="https://quickwit.io/docs/get-started/installation">Download</a>
+  <a href="https://github.com/squashql/squashql#key-features">Key features</a> |
+  <a href="https://github.com/squashql/squashql-showcase">Tutorial</a> |
+  <a href="https://github.com/squashql/squashql#documentation">Docs</a> |
+  <a href="https://github.com/squashql/squashql#resources">Resources</a> |
+  <a href="https://discord.gg/p7dg2wEwFs">Chat</a>
 </h4>
 <br/>
 
@@ -39,7 +39,7 @@ be efficiently queried from multiple databases. Currently, SquashQL supports com
 
 ### Simple API
 
-TypeScript SQL-like query builder available on npm. This empowers developers to construct and execute SQL queries directly
+Typescript SQL-like query builder available on npm. This empowers developers to construct and execute SQL queries directly
 from their applications, utilizing a syntax that feels familiar and expressive.
 
 ```typescript
@@ -59,6 +59,8 @@ const q = from(orders._name)
         .select([orders.customer_id], [], [avg("average_spends", orders.amount)])
         .build()
 ```
+
+[Full API documentation](documentation/QUERY.md)
 
 ### Pivot Table
 
@@ -148,25 +150,15 @@ Make calculations that are cumbersome or challenging in SQL easy to perform.
 Query two or more fact tables and stitch together the results on shared columns.
 
 ```
-Result query 1
-+-------------+---------------+
-|     product | quantity sold |
-+-------------+---------------+
-| Grand Total |            54 |
-|           A |            15 |
-|           B |            23 |
-|           C |            16 |
-+-------------+---------------+
-
-Result query 2
-+-------------+-------------------+
-|     product | quantity returned |
-+-------------+-------------------+
-| Grand Total |                 5 |
-|           A |                 1 |
-|           C |                 3 |
-|           D |                 1 |
-+-------------+-------------------+
+Result query 1                        Result query 2
++-------------+---------------+       +-------------+-------------------+
+|     product | quantity sold |       |     product | quantity returned |
++-------------+---------------+       +-------------+-------------------+
+| Grand Total |            54 |       | Grand Total |                 5 |
+|           A |            15 |       |           A |                 1 |
+|           B |            23 |       |           C |                 3 |
+|           C |            16 |       |           D |                 1 |
++-------------+---------------+       +-------------+-------------------+
 
 Drilling across result (with left join)
 +-------------+---------------+-------------------+
@@ -179,6 +171,8 @@ Drilling across result (with left join)
 +-------------+---------------+-------------------+
 ```
 
+N query results can be merged, `N >= 2`.
+
 [More](documentation/DRILLING-ACROSS.md)
 
 ### Query cache
@@ -190,10 +184,55 @@ Caching can be customized or deactivated.
 
 ## 📕 Documentation
 
+- [Configuration](documentation/CONFIGURATION.md)
 - [Typescript API](documentation/QUERY.md)
 - [Drilling across](documentation/DRILLING-ACROSS.md)
 - [Cache](documentation/CACHE.md)
 
 ## 📚 Resources
 
-- [TypeScript library](https://www.npmjs.com/package/@squashql/squashql-js) 
+- [Typescript library](https://www.npmjs.com/package/@squashql/squashql-js) 
+- [Tutorial](https://github.com/squashql/squashql-showcase/blob/main/TUTORIAL.md)
+
+## 🤝 Contributing
+
+We are always thrilled to receive contributions: code, documentation, issues, or feedback.
+
+- Start by checking out the GitHub issues. These are a great place for newcomers to contribute.
+- Read our [Code of Conduct](CODE-OF-CONDUCT.md) to understand our community standards.
+- Read our [contributing guidelines](CONTRIBUTING.md) to understand how to contribute.
+- Create a fork to have your own copy of the repository where you can make changes. 
+- Once you've made your changes and tested them, you can contribute by submitting a pull request.
+
+If you can't find something you'd want to use or want to share your ideas, please open an issue or join our [discord server](https://discord.gg/p7dg2wEwFs).
+
+### Prerequisites
+
+#### Java
+
+You need to have Java 17:
+
+- [JDK 17](https://openjdk.java.net/projects/jdk/17/)
+
+#### Node.js and NPM
+
+If you need to build the Typescript library locally, you need to have Node installed.
+
+- [Node.js](https://nodejs.org/)
+
+### Testing
+
+To run the tests you will need:
+
+- [Docker](https://www.docker.com/). The `docker` service should be running when launching the tests with maven.
+
+Run:
+
+```
+mvn test
+```
+
+## 💬 Join Our Community
+
+We welcome everyone to our community! Whether you're contributing code or just saying hello, we'd love to hear from you. 
+Join our [discord server](https://discord.gg/p7dg2wEwFs)!
