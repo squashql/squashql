@@ -87,8 +87,7 @@ pivot table.
 ### Bucketing
 
 Bucketing, also known as binning or discretization, is a technique used in data analysis to group continuous or
-numerical
-data into discrete intervals or "buckets."
+numerical data into discrete intervals or "buckets."
 
 <details><summary>SQL</summary>
 
@@ -115,6 +114,7 @@ VALUES (1, 'John Doe', 50000.00, 50),
 
 </details>
 
+Data:
 ```
 +-------------+-----------------+---------+-----+
 | employee_id |   employee_name |  salary | age |
