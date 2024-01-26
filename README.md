@@ -29,11 +29,11 @@ SquashQL is an open-source SQL query engine designed to streamline the process o
 At its core, it acts as a middleware layer that stands between SQL databases and multiple clients or front-end
 applications.
 The primary objective is twofold: to empower back-end developers in optimizing SQL database usage and to provide
-front-end
-developers with an intuitive API for configuring metrics in the UI.
+front-end developers with an intuitive API for configuring metrics in the UI.
 
 It follows a "write once, run everywhere" philosophy, making it an excellent solution for scenarios where data needs to 
-be efficiently queried from multiple databases. Currently, SquashQL supports compatibility with databases such as Apache Spark, ClickHouse, BigQuery, Snowflake, and DuckDB.
+be efficiently queried from multiple databases. Currently, SquashQL supports compatibility with databases such as Apache Spark,
+ClickHouse, BigQuery, Snowflake, and DuckDB.
 
 ## 💡 Key features
 
@@ -141,13 +141,17 @@ to enhance data visualization and help analysis.
 
 [More](https://github.com/squashql/squashql/blob/main/documentation/QUERY.md#joining-on-virtual-created-on-the-fly-at-query-time)
 
-### Comparison measures
+### Comparison or hierarchical measures
 
 Make calculations that are cumbersome or challenging in SQL easy to perform.
 
+Hierarchical measures are multidimensional measures that are calculated based on the relationships between values in 
+different levels of a hierarchy. This allows for the calculation of percentages, ratios, and other comparisons that 
+provide insights into the distribution and change of data over time or across different levels of a hierarchy.
+
 #### Hierarchical / Parent-Child comparison
 
-💡 Compare aggregates and sub-aggregates computed at different levels of the lineage. The lineage is defined on-the-fly 
+💡 Compare aggregates and sub-aggregates computed at different levels of a lineage. A lineage is defined on-the-fly 
 at query time. In below example, it is defined as `continent_name -> country_name -> city_name`.
 
 <img src="documentation/assets/parent-child-comp.png" width="500">
