@@ -230,32 +230,6 @@ We are always thrilled to receive contributions: code, documentation, issues, or
 
 If you can't find something you'd want to use or want to share your ideas, please open an issue or join our [discord server](https://discord.gg/p7dg2wEwFs).
 
-### Prerequisites
-
-#### Java
-
-You need to have Java 17:
-
-- [JDK 17](https://openjdk.java.net/projects/jdk/17/)
-
-#### Node.js and NPM
-
-If you need to build the Typescript library locally, you need to have Node installed.
-
-- [Node.js](https://nodejs.org/)
-
-### Testing
-
-To run the tests you will need:
-
-- [Docker](https://www.docker.com/). The `docker` service should be running when launching the tests with maven.
-
-Run:
-
-```
-mvn test
-```
-
 ## 💬 Join Our Community
 
 We welcome everyone to our community! Whether you're contributing code or just saying hello, we'd love to hear from you. 

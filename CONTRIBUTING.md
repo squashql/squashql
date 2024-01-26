@@ -78,3 +78,30 @@ We encourage inclusive and professional interactions on our project. We welcome 
 documentation, report bug or submit a pull request. By participating in this project, you agree to abide by
 the [SquashQL Code of Conduct](./CODE-OF-CONDUCT.md). If you feel there is a conduct issue related to this project, please
 raise it per the Code of Conduct process, and we will address it.
+
+## Setup & run tests
+
+### Java
+
+You need to have Java 17:
+
+- [JDK 17](https://openjdk.java.net/projects/jdk/17/)
+
+### Node.js and NPM
+
+If you need to build the Typescript library locally, you need to have Node installed.
+
+- [Node.js](https://nodejs.org/)
+
+### Testing
+
+To run the tests you will need:
+
+- [Docker](https://www.docker.com/). The `docker` service should be running when launching the tests with maven.
+
+Run:
+
+```
+mvn test
+```
+
