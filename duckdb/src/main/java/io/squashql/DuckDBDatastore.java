@@ -22,9 +22,17 @@ public class DuckDBDatastore implements JdbcDatastore {
       Class.forName("org.duckdb.DuckDBDriver");
       // Create an in-memory db.
       this.connection = (DuckDBConnection) DriverManager.getConnection("jdbc:duckdb:");
+      this.stores = Suppliers.memoize(this::fetchStoresByName);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public Map<String, Store> fetchStoresByName() {
+    try {
       String schema = this.connection.getSchema();
       String catalog = this.connection.getCatalog();
-      this.stores = Suppliers.memoize(() -> JdbcUtil.getStores(catalog, schema, getConnection(), JdbcUtil::sqlTypeToClass));
+      return JdbcUtil.getStores(catalog, schema, getConnection(), JdbcUtil::sqlTypeToClass);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
