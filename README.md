@@ -15,10 +15,10 @@
 </p>
 
 <h4 align="center">
-  <a href="https://github.com/squashql/squashql#key-features">Key features</a> |
+  <a href="https://github.com/squashql/squashql#-key-features">Key features</a> |
   <a href="https://github.com/squashql/squashql-showcase">Tutorial</a> |
-  <a href="https://github.com/squashql/squashql#documentation">Docs</a> |
-  <a href="https://github.com/squashql/squashql#resources">Resources</a> |
+  <a href="https://github.com/squashql/squashql#-documentation">Docs</a> |
+  <a href="https://github.com/squashql/squashql#-resources">Resources</a> |
   <a href="https://discord.gg/p7dg2wEwFs">Chat</a>
 </h4>
 <br/>
@@ -35,7 +35,7 @@ developers with an intuitive API for configuring metrics in the UI.
 It follows a "write once, run everywhere" philosophy, making it an excellent solution for scenarios where data needs to 
 be efficiently queried from multiple databases. Currently, SquashQL supports compatibility with databases such as Apache Spark, ClickHouse, BigQuery, Snowflake, and DuckDB.
 
-## 💡Key features
+## 💡 Key features
 
 ### Simple API
 
