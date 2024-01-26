@@ -39,7 +39,7 @@ be efficiently queried from multiple databases. Currently, SquashQL supports com
 
 ### Simple API
 
-Typescript SQL-like query builder available on npm. This empowers developers to construct and execute SQL queries directly
+Typescript SQL-like query builder available on [npm](https://www.npmjs.com/package/@squashql/squashql-js). This empowers developers to construct and execute SQL queries directly
 from their applications, utilizing a syntax that feels familiar and expressive.
 
 ```typescript
@@ -77,7 +77,8 @@ const query = from(sales._name)
 querier.executePivotQuery(query, pivotConfig)
 ```
 
-![pivot-table-sales.png](documentation%2Fassets%2Fpivot-table-sales.png)
+<img src="documentation/assets/pivot-table-sales.png" width="500">
+
 👉 https://jsfiddle.net/azeq/c6f9ox4u/
 
 Try the [tutorial](https://github.com/squashql/squashql-showcase/blob/main/TUTORIAL.md#pivot-table) to build your own
@@ -134,7 +135,8 @@ Result can be displayed in
 a [pivot table](https://github.com/squashql/squashql-showcase/blob/main/TUTORIAL.md#pivot-table)
 to enhance data visualization and help analysis.
 
-![bucketing-age-salary.png](documentation/assets/bucketing-age-salary.png)
+<img src="documentation/assets/bucketing-age-salary.png" width="500">
+
 👉 https://jsfiddle.net/azeq/r1xfqt89/
 
 [More](https://github.com/squashql/squashql/blob/main/documentation/QUERY.md#joining-on-virtual-created-on-the-fly-at-query-time)
