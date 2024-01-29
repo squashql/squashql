@@ -71,7 +71,7 @@ public class QueryExecutor {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result,
               pivotTableQueryDto.rows.stream().map(Field::name).toList(),
               pivotTableQueryDto.columns.stream().map(Field::name).toList());
-      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
+//      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
     }
 
     List<String> values = pivotTableQueryDto.query.measures.stream().map(Measure::alias).toList();
@@ -234,7 +234,7 @@ public class QueryExecutor {
     result = TableUtils.selectAndOrderColumns(queryResolver, (ColumnarTable) result, query);
     if (replaceTotalCellsAndOrderRows) {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result, !query.rollupColumns.isEmpty());
-      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
+//      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
     }
 
     CacheStatsDto stats = this.queryCache.stats(user);
