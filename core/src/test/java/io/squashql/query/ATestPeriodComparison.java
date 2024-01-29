@@ -276,7 +276,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             .build();
     Assertions.assertThatThrownBy(() -> this.executor.executeQuery(query))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("year_sales is not specified in the query but is used in a comparison measure");
+            .hasMessageContaining("TableTypedField[store=null, name=year_sales, type=long, alias=null, cte=false] is not specified in the query but is used in a comparison measure");
   }
 
   /**
