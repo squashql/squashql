@@ -6,6 +6,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor // For Jackson
 @AllArgsConstructor
 public class FieldAndAggFunc {
-  public Field field;
+  public NamedField field;
   public String aggFunc;
 }

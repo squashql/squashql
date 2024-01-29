@@ -68,6 +68,10 @@ public class QueryResolver {
     return this.cache.getCompiledFields().get(field);
   }
 
+  protected NamedTypedField resolveNamedFiled(final NamedField field) {
+    return (NamedTypedField) resolveField(field);
+  }
+
   /**
    * Field resolver
    */
@@ -362,13 +366,13 @@ public class QueryResolver {
   }
 
   private CompiledMeasure compileVectorAggMeasure(VectorAggMeasure m) {
-    return new CompiledVectorAggMeasure(m.alias, (NamedTypedField) resolveField(m.fieldToAggregate), m.aggregationFunction, resolveField(m.vectorAxis));
+    return new CompiledVectorAggMeasure(m.alias, resolveNamedFiled(m.fieldToAggregate), m.aggregationFunction, resolveField(m.vectorAxis));
   }
 
   private CompiledMeasure compileVectorTupleAggMeasure(VectorTupleAggMeasure m) {
     return new CompiledVectorTupleAggMeasure(
             m.alias,
-            m.fieldToAggregateAndAggFunc.stream().map(p -> new CompiledFieldAndAggFunc((NamedTypedField) resolveField(p.field), p.aggFunc)).toList(),
+            m.fieldToAggregateAndAggFunc.stream().map(p -> new CompiledFieldAndAggFunc(resolveNamedFiled(p.field), p.aggFunc)).toList(),
             resolveField(m.vectorAxis),
             m.transformer);
   }

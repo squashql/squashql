@@ -152,8 +152,8 @@ public class ExperimentalQueryMergeExecutor {
       if (!leftColumns.isEmpty()) {
         List<CompiledCriteria> children = new ArrayList<>(leftColumns.size());
         for (TypedField leftColumn : leftColumns) {
-          TableTypedField l = new TableTypedField(left.originalTableName, ((NamedTypedField) leftColumn).name(), UnknownType.class, leftColumn.alias());
-          TableTypedField r = new TableTypedField(right.originalTableName, ((NamedTypedField) leftColumn).name(), UnknownType.class, leftColumn.alias());
+          TableTypedField l = new TableTypedField(left.originalTableName, getName(leftColumn), UnknownType.class, leftColumn.alias());
+          TableTypedField r = new TableTypedField(right.originalTableName, getName(leftColumn), UnknownType.class, leftColumn.alias());
           children.add(new CompiledCriteria(null, ConditionType.EQ, l, r, null, null));
 
         }
@@ -164,6 +164,13 @@ public class ExperimentalQueryMergeExecutor {
         return null; // no condition
       }
     }
+  }
+
+  private static String getName(TypedField column) {
+    if (column instanceof NamedTypedField) {
+      return ((NamedTypedField) column).name();
+    }
+    throw new IllegalArgumentException("Field " + column + " cannot be used to resolve join!");
   }
 
   private static CriteriaDto rewriteJoinCondition(CriteriaDto joinCondition) {
@@ -245,7 +252,7 @@ public class ExperimentalQueryMergeExecutor {
     List<TypedField> newLeft = new ArrayList<>();
     for (TypedField leftColumn : leftColumns) {
       if (inter.contains(leftColumn)) {
-        newLeft.add(new TableTypedField(left.originalTableName, ((NamedTypedField) leftColumn).name(), UnknownType.class, leftColumn.alias()));
+        newLeft.add(new TableTypedField(left.originalTableName, getName(leftColumn), UnknownType.class, leftColumn.alias()));
       } else {
         newLeft.add(leftColumn);
       }
