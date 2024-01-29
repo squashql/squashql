@@ -283,7 +283,7 @@ public class QueryResolver {
    * Compiles orderBy
    */
   private List<CompiledOrderBy> compileOrderBy(Map<Field, OrderDto> orders) {
-    return orders.entrySet().stream().map(e -> new CompiledOrderBy(resolveField(e.getKey()), e.getValue())).collect(Collectors.toList());
+    return orders.entrySet().stream().map(e -> new CompiledOrderBy(resolveWithFallback(e.getKey()), e.getValue())).collect(Collectors.toList());
   }
 
   /**
