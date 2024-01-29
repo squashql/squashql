@@ -20,7 +20,7 @@ public class DatabaseQuery {
   public final CompiledCriteria havingCriteria;
   public final List<TypedField> rollup;
   public final List<List<TypedField>> groupingSets;
-  public final List<CompiledOrderBy> orders;
+  public final List<CompiledOrderBy> orderBy;
 
   public final int limit;
   public List<CompiledMeasure> measures = new ArrayList<>();
