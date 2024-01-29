@@ -1,6 +1,7 @@
 package io.squashql;
 
-import io.squashql.query.*;
+import io.squashql.query.Header;
+import io.squashql.query.QueryExecutor;
 import io.squashql.query.compiled.CompiledAggregatedMeasure;
 import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.table.ColumnarTable;
@@ -42,3 +43,4 @@ public class TestDuckDBDataLoader {
             List.of("MDD", "C", 5));
   }
 }
+

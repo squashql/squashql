@@ -19,7 +19,7 @@ import static io.squashql.query.agg.AggregationFunction.SUM;
 
 abstract class ATestMergeTables {
 
-  static TypedField price = new TableTypedField(null, "price", double.class, null);
+  static TypedField price = new TableTypedField(null, "price", double.class);
   static CompiledAggregatedMeasure priceSum = new CompiledAggregatedMeasure("price.sum", price, SUM, null, false);
   static CompiledAggregatedMeasure priceAvg = new CompiledAggregatedMeasure("price.avg", price, AVG, null, false);
 

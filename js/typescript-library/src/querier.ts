@@ -1,8 +1,9 @@
 import axios, {AxiosInstance} from "axios"
-import {Query, QueryJoin, QueryMerge} from "./query"
+import {Query, QueryMerge} from "./query"
 import {CreateAxiosDefaults} from "axios/index"
 import {PivotConfig, PivotTableQuery, PivotTableQueryMerge} from "./pivotTableQuery"
 import {Measure} from "./measure"
+import {QueryJoin} from "./queryJoin"
 
 export class Querier {
 

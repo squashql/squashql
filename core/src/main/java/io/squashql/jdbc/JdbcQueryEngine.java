@@ -57,6 +57,10 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
     });
   }
 
+  public boolean executeSql(String sql) {
+    return execute(sql, this.datastore.getConnection());
+  }
+
   protected List<Header> createHeaderList(ResultSet tableResult, Set<String> measureNames) throws SQLException {
     List<Header> headers = new ArrayList<>();
     ResultSetMetaData metadata = tableResult.getMetaData();
@@ -155,6 +159,14 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
     try (Statement statement = connection.createStatement()) {
       ResultSet tableResult = statement.executeQuery(sql);
       return consumer.apply(tableResult);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  protected boolean execute(String sql, Connection connection) {
+    try (Statement statement = connection.createStatement()) {
+      return statement.execute(sql);
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }

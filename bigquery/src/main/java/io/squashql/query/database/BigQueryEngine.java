@@ -125,6 +125,6 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
 
   @Override
   public QueryRewriter queryRewriter(DatabaseQuery query) {
-    return new BigQueryQueryRewriter(this.datastore.getProjectId(), this.datastore.getDatasetName(), query);
+    return new BigQueryQueryRewriter(this.datastore.getProjectId(), this.datastore.getDatasetName());
   }
 }

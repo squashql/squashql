@@ -39,7 +39,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
   final String storeName = "mystore" + getClass().getSimpleName().toLowerCase();
   final NamedField competitor = new TableField(this.storeName, "competitor");
   final NamedField ean = new TableField(this.storeName, "ean");
-  final Field price = new TableField(this.storeName, "price");
+  final NamedField price = new TableField(this.storeName, "price");
   final NamedField date = new TableField(this.storeName, "date");
 
   @Override

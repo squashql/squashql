@@ -12,22 +12,6 @@ export class QueryMerge {
   }
 }
 
-export class QueryJoin {
-  constructor(readonly first: Query, readonly second: Query, readonly joinType: JoinType, readonly joinCondition: Criteria, readonly orders: Map<Field, Order>, readonly limit: number = -1) {
-  }
-
-  toJSON() {
-    return {
-      "first": this.first,
-      "second": this.second,
-      "joinType": this.joinType,
-      "joinCondition": this.joinCondition,
-      "orders": Object.fromEntries(serializeMap(this.orders)),
-      "limit": this.limit
-    }
-  }
-}
-
 export class Query {
   columns: Array<Field>
   rollupColumns: Array<Field>

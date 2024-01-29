@@ -9,11 +9,6 @@ public class DefaultQueryRewriter implements QueryRewriter {
   }
 
   @Override
-  public DatabaseQuery query() {
-    return this.query;
-  }
-
-  @Override
   public String fieldName(String field) {
     return SqlUtils.backtickEscape(field);
   }
