@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import io.squashql.query.Field;
+import io.squashql.query.NamedField;
 import io.squashql.query.dto.QueryDto;
 
 public class JacksonUtil {
@@ -15,7 +16,9 @@ public class JacksonUtil {
     OBJECT_MAPPER = new ObjectMapper();
     var simpleModule = new SimpleModule();
     simpleModule.addKeyDeserializer(Field.class, new QueryDto.KeyFieldDeserializer());
+    simpleModule.addKeyDeserializer(NamedField.class, new QueryDto.KeyNamedFieldDeserializer());
     simpleModule.addKeySerializer(Field.class, new QueryDto.KeyFieldSerializer());
+    simpleModule.addKeySerializer(NamedField.class, new QueryDto.KeyNamedFieldSerializer());
     OBJECT_MAPPER.registerModule(simpleModule);
     OBJECT_MAPPER.registerModule(new JSR310Module());
   }

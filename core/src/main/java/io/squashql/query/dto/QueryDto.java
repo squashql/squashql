@@ -135,6 +135,13 @@ public class QueryDto {
     }
   }
 
+  public static class KeyNamedFieldSerializer extends JsonSerializer<NamedField> {
+    @Override
+    public void serialize(NamedField field, JsonGenerator gen, SerializerProvider provider) throws IOException {
+      gen.writeFieldName(JacksonUtil.serialize(field));
+    }
+  }
+
   public static class KeyFieldDeserializer extends KeyDeserializer {
 
     @Override
@@ -142,6 +149,16 @@ public class QueryDto {
             String key,
             DeserializationContext context) {
       return JacksonUtil.deserialize(key, Field.class);
+    }
+  }
+
+  public static class KeyNamedFieldDeserializer extends KeyDeserializer {
+
+    @Override
+    public NamedField deserializeKey(
+            String key,
+            DeserializationContext context) {
+      return JacksonUtil.deserialize(key, NamedField.class);
     }
   }
 }

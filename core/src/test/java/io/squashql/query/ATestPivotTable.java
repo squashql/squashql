@@ -301,13 +301,13 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     List<NamedField> columns = tableFields(List.of("spending category", "spending subcategory"));
     // continent is missing despite the fact it is in the select
     Assertions.assertThatThrownBy(() -> this.executor.executePivotQuery(new PivotTableQueryDto(query, rowsWithoutContinent, columns)))
-            .hasMessage("[continent] in select but not on rows or columns. Please add those fields on one axis");
+            .hasMessage("[TableField(tableName=null, fieldName=continent, fullName=continent, alias=null)] in select but not on rows or columns. Please add those fields on one axis");
 
     List<NamedField> rows = tableFields(List.of("continent", "country", "city"));
     List<NamedField> columnsWithoutContinent = tableFields(List.of("spending category"));
     // spending subcategory is missing despite the fact it is in the select
     Assertions.assertThatThrownBy(() -> this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columnsWithoutContinent)))
-            .hasMessage("[spending subcategory] in select but not on rows or columns. Please add those fields on one axis");
+            .hasMessage("[TableField(tableName=null, fieldName=spending subcategory, fullName=spending subcategory, alias=null)] in select but not on rows or columns. Please add those fields on one axis");
   }
 
   @Test
