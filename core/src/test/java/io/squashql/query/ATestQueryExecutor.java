@@ -623,6 +623,10 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of("drink", 7.5d),
             List.of("food", 9d));
 
+    // todo-mde should we change order by to support measures ?
+    // how about measure not computed by the db
+    // we could split in the resolver to sql orderby and custom order by for
+    // measure computed in squashql
     query.orderBy(tableField("p"), OrderKeywordDto.DESC);
     result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
