@@ -158,6 +158,7 @@ public class QueryResolver {
             compileCriteria(query.havingCriteriaDto),
             rollupColumns,
             groupingSets,
+            compileOrderBy(query.orders),
             compileVirtualTables(query.virtualTableDtos),
             query.limit);
   }
@@ -176,6 +177,7 @@ public class QueryResolver {
     final List<TypedField> select = subQuery.columns.stream().map(this::resolveField).toList();
     final CompiledCriteria whereCriteria = compileCriteria(subQuery.whereCriteriaDto);
     final CompiledCriteria havingCriteria = compileCriteria(subQuery.havingCriteriaDto);
+    final List<CompiledOrderBy> orderBy = compileOrderBy(subQuery.orders);
     // should we check groupingSet and rollup as well are empty ?
     DatabaseQuery query = new DatabaseQuery(null,
             table,
@@ -184,6 +186,7 @@ public class QueryResolver {
             havingCriteria,
             Collections.emptyList(),
             Collections.emptyList(),
+            orderBy,
             subQuery.limit);
     this.subQueryMeasures.values().forEach(query::withMeasure);
     return query;
@@ -213,6 +216,7 @@ public class QueryResolver {
             query.havingCriteria(),
             query.rollupColumns(),
             query.groupingSets(),
+            query.orderBy(),
             limit);
   }
 
@@ -273,6 +277,13 @@ public class QueryResolver {
             : this.cache.computeIfAbsent(criteria, c -> new CompiledCriteria(c.condition, c.conditionType, c.field == null ? null : resolveWithFallback(c.field), c.fieldOther == null ? null : resolveWithFallback(c.fieldOther),
             c.measure == null ? null : compileMeasure(c.measure, true),
             c.children.stream().map(this::compileCriteria).collect(Collectors.toList())));
+  }
+
+  /**
+   * Compiles orderBy
+   */
+  private List<CompiledOrderBy> compileOrderBy(Map<Field, OrderDto> orders) {
+    return orders.entrySet().stream().map(e -> new CompiledOrderBy(resolveField(e.getKey()), e.getValue())).collect(Collectors.toList());
   }
 
   /**

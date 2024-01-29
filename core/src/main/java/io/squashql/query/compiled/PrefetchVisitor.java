@@ -186,6 +186,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
               this.originalQueryScope.havingCriteria(),
               subQueryRollupColumns,
               subQueryGroupingSets,
+              this.originalQueryScope.orderBy(),
               -1);
       subQueryMeasures.forEach(subQuery::withMeasure);
 
@@ -196,6 +197,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
               this.originalQueryScope.havingCriteria(),
               Collections.emptyList(), // remove rollup, it has been computed in the subquery
               Collections.emptyList(),
+              Collections.emptyList(), //todo-mde should we use the order by ?
               this.originalQueryScope.cteRecordTables(),
               this.originalQueryScope.limit());
 

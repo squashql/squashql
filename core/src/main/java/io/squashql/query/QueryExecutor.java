@@ -6,7 +6,6 @@ import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
-import io.squashql.query.dto.QueryJoinDto;
 import io.squashql.query.join.ExperimentalQueryMergeExecutor;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.table.ColumnarTable;
@@ -288,6 +287,7 @@ public class QueryExecutor {
                            CompiledCriteria havingCriteria,
                            List<TypedField> rollupColumns,
                            List<List<TypedField>> groupingSets,
+                           List<CompiledOrderBy> orderBy,
                            List<CteRecordTable> cteRecordTables,
                            int limit) {
 
