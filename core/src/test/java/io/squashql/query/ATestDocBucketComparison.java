@@ -44,7 +44,7 @@ public abstract class ATestDocBucketComparison extends ABaseTestQuery {
   @Test
   void test() {
     Measure revenue = new ExpressionMeasure("revenue", "sum(saleprice * loavessold)");
-    final Field scenario = tableField(SCENARIO_FIELD_NAME);
+    final NamedField scenario = tableField(SCENARIO_FIELD_NAME);
     BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", scenario)
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "s2"))

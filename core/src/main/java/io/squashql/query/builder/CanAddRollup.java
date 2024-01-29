@@ -7,7 +7,7 @@ public interface CanAddRollup extends HasOrderBy, CanAddOrderBy, CanAddHaving {
 
   CanAddHaving rollup(Field... columns);
 
-  default CanAddHaving rollup(List<Field> columns) {
+  default CanAddHaving rollup(List<? extends Field> columns) {
     return rollup(columns.toArray(new Field[0]));
   }
 }

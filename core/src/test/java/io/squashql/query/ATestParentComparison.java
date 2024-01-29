@@ -57,7 +57,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   @Test
   void testSimple() {
     Measure pop = Functions.sum("population", this.population);
-    final List<Field> fields = List.of(this.continent, this.country, this.city);
+    final List<NamedField> fields = List.of(this.continent, this.country, this.city);
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, fields);
     QueryDto query = Query
             .from(this.storeName)
@@ -97,7 +97,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   @Test
   void testClearFilter() {
     Measure pop = Functions.sum("population", this.population);
-    List<Field> fields = List.of(this.continent, this.country, this.city);
+    List<NamedField> fields = List.of(this.continent, this.country, this.city);
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, fields);
     QueryDto query = Query
             .from(this.storeName)
@@ -164,7 +164,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
     // parent with a measure computed by SquashQL.
     Measure pop = Functions.sum("populationsum", this.population);
     Measure pop2 = Functions.plus("pop2", pop, Functions.integer(2));
-    List<Field> select = List.of(this.continent, this.country, this.city);
+    List<NamedField> select = List.of(this.continent, this.country, this.city);
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, select);
     ComparisonMeasureReferencePosition pOp2 = new ComparisonMeasureReferencePosition("percentOfParent2", DIVIDE, pop2, select);
     QueryDto query = Query
@@ -184,7 +184,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   @Test
   void testSimpleWithTotals() {
     Measure pop = Functions.sum("population", this.population);
-    List<Field> fields = List.of(this.continent, this.country, this.city);
+    List<NamedField> fields = List.of(this.continent, this.country, this.city);
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, fields);
     QueryDto query = Query
             .from(this.storeName)

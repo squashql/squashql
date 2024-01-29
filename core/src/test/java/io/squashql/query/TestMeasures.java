@@ -56,7 +56,7 @@ public class TestMeasures {
             period);
     Measure kpi = plus("KPI", ebidtaRatio, growth);
 
-    Map<Field, String> referencePosition = new LinkedHashMap<>();
+    Map<NamedField, String> referencePosition = new LinkedHashMap<>();
     referencePosition.put(tableField("scenario encrypted"), "s-1");
     referencePosition.put(tableField("group"), "g");
     ComparisonMeasureReferencePosition kpiComp = new ComparisonMeasureReferencePosition(

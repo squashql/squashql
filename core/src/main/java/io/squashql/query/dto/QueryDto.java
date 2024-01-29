@@ -45,7 +45,7 @@ public class QueryDto {
 
   public CriteriaDto havingCriteriaDto = null;
 
-  public Map<Field, OrderDto> orders = new LinkedHashMap<>();
+  public Map<NamedField, OrderDto> orders = new LinkedHashMap<>();
 
   public Map<String, Parameter> parameters = new HashMap<>();
 
@@ -109,12 +109,12 @@ public class QueryDto {
     return this;
   }
 
-  public QueryDto orderBy(Field column, OrderKeywordDto orderKeywordDto) {
+  public QueryDto orderBy(NamedField column, OrderKeywordDto orderKeywordDto) {
     this.orders.put(column, new SimpleOrderDto(orderKeywordDto));
     return this;
   }
 
-  public QueryDto orderBy(Field column, List<?> firstElements) {
+  public QueryDto orderBy(NamedField column, List<?> firstElements) {
     this.orders.put(column, new ExplicitOrderDto(firstElements));
     return this;
   }

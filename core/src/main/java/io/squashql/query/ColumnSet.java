@@ -11,10 +11,10 @@ import java.util.List;
 public interface ColumnSet {
 
   @JsonIgnore
-  List<Field> getColumnsForPrefetching();
+  List<NamedField> getColumnsForPrefetching();
 
   @JsonIgnore
-  List<Field> getNewColumns();
+  List<NamedField> getNewColumns();
 
   @JsonIgnore
   ColumnSetKey getColumnSetKey();

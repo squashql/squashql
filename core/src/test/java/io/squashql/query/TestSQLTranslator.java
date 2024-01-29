@@ -46,7 +46,7 @@ public class TestSQLTranslator {
       } else if (field instanceof AliasedField) {
         return new AliasedTypedField(field.alias());
       }
-      String[] split = field.name().split("\\.");
+      String[] split = ((NamedField) field).name().split("\\.");
       if (split.length > 1) {
         String tableName = split[0];
         String fieldNameInTable = split[1];
