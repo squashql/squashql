@@ -245,7 +245,7 @@ public class QueryControllerTest {
             .build();
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_MERGE)
-                    .content(JacksonUtil.serialize(new QueryMergeDto(query1, query2, JoinType.FULL)))
+                    .content(JacksonUtil.serialize(QueryMergeDto.from(query1).join(query2, JoinType.FULL)))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
@@ -268,9 +268,8 @@ public class QueryControllerTest {
             .select(tableFields(List.of("ean")), List.of(Functions.avg("capdv-avg", "capdv")))
             .build();
 
-    QueryMergeDto queryMergeDto = new QueryMergeDto(query1, query2, JoinType.FULL);
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_MERGE_PIVOT)
-                    .content(JacksonUtil.serialize(new PivotTableQueryMergeDto(queryMergeDto, tableFields(List.of("ean")), List.of())))
+                    .content(JacksonUtil.serialize(new PivotTableQueryMergeDto(QueryMergeDto.from(query1).join(query2, JoinType.FULL), tableFields(List.of("ean")), List.of())))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
@@ -297,7 +296,7 @@ public class QueryControllerTest {
             .build();
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_MERGE)
-                    .content(JacksonUtil.serialize(new QueryMergeDto(query1, query2, JoinType.FULL)))
+                    .content(JacksonUtil.serialize(QueryMergeDto.from(query1).join(query2, JoinType.FULL)))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isInternalServerError())
             .andExpect(result -> Assertions.assertThat(result.getResolvedException()).isInstanceOf(LimitExceedException.class))

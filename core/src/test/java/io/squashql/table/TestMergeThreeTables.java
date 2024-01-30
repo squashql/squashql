@@ -116,7 +116,7 @@ class TestMergeThreeTables {
                     new ArrayList<>(Arrays.asList(450, null, null, null, 220, null, 180, null, null, 50)),
                     new ArrayList<>(Arrays.asList(0.09, null, null, null, 0.15, 0.15, -0.01, 0.02, -0.05, null)),
                     new ArrayList<>(Arrays.asList(101.5, 99.27, 105.1, 101, null, null, null, null, null, null))));
-    Table mergedTable = MergeTables.mergeTables(List.of(table1, table2, table3), JoinType.FULL);
+    Table mergedTable = MergeTables.mergeTables(List.of(table1, table2, table3), List.of(JoinType.FULL, JoinType.FULL));
     Assertions.assertThat(orderRows(mergedTable)).isEqualTo(orderRows(expectedTable));
   }
 
@@ -212,7 +212,7 @@ class TestMergeThreeTables {
                     new ArrayList<>(Arrays.asList(450, null, null, null, 220, null, 180, null, null, 50)),
                     new ArrayList<>(Arrays.asList(0.09, null, null, null, 0.15, 0.15, -0.01, 0.02, -0.05, null)),
                     new ArrayList<>(Arrays.asList(101.5, 99.27, 105.1, 101, null, null, null, null, null, null))));
-    Table mergedTable = MergeTables.mergeTables(List.of(table1, table2, table3), JoinType.FULL);
+    Table mergedTable = MergeTables.mergeTables(List.of(table1, table2, table3), List.of(JoinType.FULL, JoinType.FULL));
     Assertions.assertThat(orderRows(mergedTable)).isEqualTo(orderRows(expectedTable));
   }
 }

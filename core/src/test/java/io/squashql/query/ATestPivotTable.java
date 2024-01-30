@@ -3,10 +3,7 @@ package io.squashql.query;
 import com.google.common.collect.ImmutableList;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
-import io.squashql.query.dto.BucketColumnSetDto;
-import io.squashql.query.dto.JoinType;
-import io.squashql.query.dto.PivotTableQueryDto;
-import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.*;
 import io.squashql.table.PivotTable;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
@@ -408,7 +405,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
   private void verifyResults(TestInfo testInfo, QueryDto query1, QueryDto query2, JoinType joinType, List<String> rows, List<String> columns) {
     PivotTable pt = query2 == null
             ? this.executor.executePivotQuery(new PivotTableQueryDto(query1, tableFields(rows), tableFields(columns)))
-            : this.executor.executePivotQueryMerge(query1, query2, tableFields(rows), tableFields(columns), joinType, null);
+            : this.executor.executePivotQueryMerge(QueryMergeDto.from(query1).join(query2, joinType), tableFields(rows), tableFields(columns), null);
     Table expectedTabular = tableFromFile(testInfo);
 
     Assertions.assertThat(pt.table).containsExactlyElementsOf(ImmutableList.copyOf(expectedTabular.iterator()));

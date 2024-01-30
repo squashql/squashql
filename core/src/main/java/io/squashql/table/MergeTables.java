@@ -22,10 +22,10 @@ public class MergeTables {
   private MergeTables() {
   }
 
-  public static Table mergeTables(List<Table> tables, JoinType joinType) {
-    Table result = null;
-    for (Table table : tables) {
-      result = result == null ? table : mergeTables(result, table, joinType);
+  public static Table mergeTables(List<Table> tables, List<JoinType> joinTypes) {
+    Table result = tables.get(0);
+    for (int i = 0; i < joinTypes.size(); i++) {
+      result = mergeTables(result, tables.get(i + 1), joinTypes.get(i));
     }
     return result;
   }
