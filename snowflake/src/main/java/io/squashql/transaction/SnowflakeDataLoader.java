@@ -2,7 +2,6 @@ package io.squashql.transaction;
 
 import io.squashql.SnowflakeDatastore;
 import io.squashql.jdbc.JdbcUtil;
-import io.squashql.query.database.SqlUtils;
 import io.squashql.type.TableTypedField;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
@@ -49,7 +48,7 @@ public class SnowflakeDataLoader implements DataLoader {
       int size = list.size();
       for (int i = 0; i < size; i++) {
         TableTypedField field = list.get(i);
-        sb.append("\"").append(SqlUtils.squashqlExpression(field)).append("\" ").append(JdbcUtil.classToSqlType(field.type()));
+        sb.append("\"").append(field.name()).append("\" ").append(JdbcUtil.classToSqlType(field.type()));
         if (i < size - 1) {
           sb.append(", ");
         }
@@ -88,7 +87,7 @@ public class SnowflakeDataLoader implements DataLoader {
 
   private void ensureScenarioColumnIsPresent(String store) {
     List<TableTypedField> fields = this.snowflakeDatastore.storesByName().get(store).fields();
-    boolean found = fields.stream().anyMatch(f -> SqlUtils.squashqlExpression(f).equals(SCENARIO_FIELD_NAME));
+    boolean found = fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
     if (!found) {
       throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));
     }

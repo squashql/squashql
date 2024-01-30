@@ -128,8 +128,8 @@ public class QueryResolver {
     } else {
       for (Store store : this.storesByName.values()) {
         for (TableTypedField field : store.fields()) {
-          final String sqlName = SqlUtils.squashqlExpression(field);
-          if (sqlName.equals(fieldName)) {
+          final String name = field.name();
+          if (name.equals(fieldName)) {
             // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
             // if any ambiguity, the DB will raise an exception.
             return new TableTypedField(null, fieldName, field.type(), alias, this.cteTableNames.contains(store.name()));

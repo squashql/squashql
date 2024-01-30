@@ -52,7 +52,7 @@ public class DuckDBDataLoader implements DataLoader {
       int size = list.size();
       for (int i = 0; i < size; i++) {
         TableTypedField field = list.get(i);
-        sb.append("\"").append(SqlUtils.squashqlExpression(field)).append("\" ").append(JdbcUtil.classToSqlType(field.type()));
+        sb.append("\"").append(field.name()).append("\" ").append(JdbcUtil.classToSqlType(field.type()));
         if (i < size - 1) {
           sb.append(", ");
         }
@@ -113,16 +113,14 @@ public class DuckDBDataLoader implements DataLoader {
   }
 
   private void ensureScenarioColumnIsPresent(String store) {
-    List<TableTypedField> fields = this.datastore.storesByName().get(store).fields();
-    boolean found = fields.stream().anyMatch(f -> SqlUtils.squashqlExpression(f).equals(SCENARIO_FIELD_NAME));
-    if (!found) {
+    if (!scenarioColumnIsPresent(store)) {
       throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));
     }
   }
 
   private boolean scenarioColumnIsPresent(String store) {
     List<TableTypedField> fields = this.datastore.storesByName().get(store).fields();
-    return fields.stream().anyMatch(f -> SqlUtils.squashqlExpression(f).equals(SCENARIO_FIELD_NAME));
+    return fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
   }
 
   @Override
