@@ -111,11 +111,3 @@ export function generateFromQueryDto() {
   const data = JSON.stringify(q)
   fs.writeFileSync('build-from-querydto.json', data)
 }
-
-Query query1 = Query.from("table1").select(...)
-Query query2 = Query.from("table2").select(...)
-Query query3 = Query.from("table3").select(...)
-
-new QueryMerge(query1)
-        .join(query2, JoinType.FULL)
-        .join(query3, JoinType.FULL)
