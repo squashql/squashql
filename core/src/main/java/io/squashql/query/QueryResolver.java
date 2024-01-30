@@ -158,7 +158,7 @@ public class QueryResolver {
             compileCriteria(query.havingCriteriaDto),
             rollupColumns,
             groupingSets,
-            compileOrderBy(query.orders),
+            compileOrderBy(query.orders, this.query.columns, query.columnSets.get(BUCKET)),
             compileVirtualTables(query.virtualTableDtos),
             query.limit);
   }
@@ -177,7 +177,7 @@ public class QueryResolver {
     final List<TypedField> select = subQuery.columns.stream().map(this::resolveField).toList();
     final CompiledCriteria whereCriteria = compileCriteria(subQuery.whereCriteriaDto);
     final CompiledCriteria havingCriteria = compileCriteria(subQuery.havingCriteriaDto);
-    final List<CompiledOrderBy> orderBy = compileOrderBy(subQuery.orders);
+    final List<CompiledOrderBy> orderBy = compileOrderBy(subQuery.orders, subQuery.columns, subQuery.columnSets.get(BUCKET));
     // should we check groupingSet and rollup as well are empty ?
     DatabaseQuery query = new DatabaseQuery(null,
             table,
@@ -282,8 +282,18 @@ public class QueryResolver {
   /**
    * Compiles orderBy
    */
-  private List<CompiledOrderBy> compileOrderBy(Map<Field, OrderDto> orders) {
-    return orders.entrySet().stream().map(e -> new CompiledOrderBy(resolveWithFallback(e.getKey()), e.getValue())).collect(Collectors.toList());
+  private List<CompiledOrderBy> compileOrderBy(Map<Field, OrderDto> orders, List<Field> select, ColumnSet bucket) {
+    final Map<Field, OrderDto> queryOrders = new LinkedHashMap<>(orders);
+    select.stream().filter(s -> !queryOrders.containsKey(s)).forEach(s -> queryOrders.put(s, new SimpleOrderDto(OrderKeywordDto.ASC)));
+    if (bucket != null) {
+      BucketColumnSetDto cs = (BucketColumnSetDto) bucket;
+      queryOrders.put(cs.newField, new ExplicitOrderDto(new ArrayList<>(cs.values.keySet())));
+      cs.values.forEach((k, v) -> {
+        List<Object> l = new ArrayList<>(v);
+        queryOrders.put(cs.field, new ExplicitOrderDto(l));
+      });
+    }
+    return queryOrders.entrySet().stream().map(e -> new CompiledOrderBy(resolveWithFallback(e.getKey()), e.getValue())).collect(Collectors.toList());
   }
 
   /**

@@ -3,6 +3,7 @@ package io.squashql.table;
 import com.google.common.base.Suppliers;
 import io.squashql.query.*;
 import io.squashql.query.compiled.CompiledMeasure;
+import io.squashql.query.compiled.CompiledOrderBy;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
@@ -180,15 +181,16 @@ public class TableUtils {
    * Naturally order the rows from left to right.
    */
   public static Table orderRows(ColumnarTable table) {
-    return orderRows(table, Collections.emptyMap(), Collections.emptySet());
+    return orderRows(table, Collections.emptyMap(), Collections.emptySet(), Collections.emptyList());
   }
 
   public static Table orderRows(ColumnarTable table,
                                 Map<String, Comparator<?>> comparatorByColumnName,
-                                Collection<ColumnSet> columnSets) {
+                                Collection<ColumnSet> columnSets,
+                                List<CompiledOrderBy> orderBy) {
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
-    Map<String, Comparator<?>> copy = new HashMap<>(comparatorByColumnName);
+    Set<CompiledOrderBy> copy = new HashSet<>(orderBy);
 
     columnSets.forEach(columnSet -> {
       if (columnSet.getColumnSetKey() != ColumnSetKey.BUCKET) {
@@ -196,8 +198,7 @@ public class TableUtils {
       }
       BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
       // Remove from the map of comparators to use default one when only none is defined for regular column
-      copy.remove(cs.newField.name());
-      copy.remove(cs.field.name());
+      copy.removeIf(o -> o.field().name().equals(cs.newField.name()) || o.field().name().equals(cs.field.name()));
     });
 
     List<Header> headers = table.headers;

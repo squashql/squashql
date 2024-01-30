@@ -6,6 +6,7 @@ import io.squashql.query.dto.JoinType;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import io.squashql.util.ListUtils;
+import io.squashql.util.Queries;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 

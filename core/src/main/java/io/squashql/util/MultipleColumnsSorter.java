@@ -28,6 +28,7 @@ public class MultipleColumnsSorter {
       this.contextIndexReaders = contextIndexReaders;
     }
 
+    @Override
     public int compare(Integer x, Integer y) {
       for (int i = 0; i < this.argsList.size(); i++) {
         Comparator<Object> comp = (Comparator<Object>) this.comparators.get(i);
@@ -40,7 +41,7 @@ public class MultipleColumnsSorter {
           // we can use x or y independently because this comparator is used when the values in the context are equals
           // to determine in which order the current column values should be ordered.
         }
-        int compare = comp.compare(this.argsList.get(i).get(x.intValue()), this.argsList.get(i).get(y.intValue()));
+        int compare = comp.compare(this.argsList.get(i).get(x), this.argsList.get(i).get(y));
         if (compare != 0) {
           return compare;
         }
@@ -48,8 +49,5 @@ public class MultipleColumnsSorter {
       return 0;
     }
 
-    public boolean equals(Integer x, Integer y) {
-      return compare(x, y) == 0;
-    }
   }
 }

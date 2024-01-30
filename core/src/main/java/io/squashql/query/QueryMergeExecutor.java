@@ -6,8 +6,11 @@ import io.squashql.query.dto.PivotTableQueryDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.exception.LimitExceedException;
 import io.squashql.table.*;
+import io.squashql.util.Queries;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -58,9 +61,9 @@ public class QueryMergeExecutor {
                                        JoinType joinType,
                                        Function<Table, ColumnarTable> replaceTotalCellValuesFunction,
                                        Function<QueryDto, Table> executor) {
-//    Map<String, Comparator<?>> firstComparators = Queries.getComparators(first);
-//    Map<String, Comparator<?>> secondComparators = Queries.getComparators(second);
-//    secondComparators.putAll(firstComparators); // the comparators of the first query take precedence over the second's
+    Map<String, Comparator<?>> firstComparators = Queries.getComparators(first);
+    Map<String, Comparator<?>> secondComparators = Queries.getComparators(second);
+    secondComparators.putAll(firstComparators); // the comparators of the first query take precedence over the second's
 
     Set<ColumnSet> columnSets = Stream
             .concat(first.columnSets.values().stream(), second.columnSets.values().stream())
