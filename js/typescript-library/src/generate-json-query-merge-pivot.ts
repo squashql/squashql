@@ -15,7 +15,7 @@ export function generateFromQueryMergePivot() {
       .select(fields, [], [avg("sum", new TableField("f1"))])
       .build()
 
-  const q = new QueryMerge(query1, query2, JoinType.LEFT)
+  const q = new QueryMerge(query1).join(query2, JoinType.LEFT)
 
   const pivotQuery = createPivotTableQueryMerge(q, {rows: [tableField("a")], columns: [tableField("b")]})
   const data = JSON.stringify(pivotQuery)

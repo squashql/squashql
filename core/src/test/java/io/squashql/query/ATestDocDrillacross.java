@@ -1,19 +1,21 @@
 package io.squashql.query;
 
-import static io.squashql.query.Functions.sum;
-import static io.squashql.query.TableField.tableFields;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
-
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.QueryMergeDto;
 import io.squashql.type.TableTypedField;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+
+import static io.squashql.query.Functions.sum;
+import static io.squashql.query.TableField.tableFields;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestClass(ignore = {TestClass.Type.SPARK, TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE, TestClass.Type.CLICKHOUSE})
@@ -60,7 +62,7 @@ public abstract class ATestDocDrillacross extends ABaseTestQuery {
             .rollup(tableFields(List.of("product", "reason")))
             .build();
 
-    BiConsumer<QueryDto, QueryDto> runnable = (q1, q2) -> this.executor.executeQueryMerge(q1, q2, JoinType.FULL, null).show();
+    BiConsumer<QueryDto, QueryDto> runnable = (q1, q2) -> this.executor.executeQueryMerge(QueryMergeDto.from(q1).join(q2, JoinType.FULL), null).show();
     runnable.accept(query1, query2);
   }
 }

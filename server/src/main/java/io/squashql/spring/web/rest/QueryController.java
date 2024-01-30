@@ -92,9 +92,7 @@ public class QueryController {
   @PostMapping(MAPPING_QUERY_MERGE)
   public ResponseEntity<QueryResultDto> executeAndMerge(@RequestBody QueryMergeDto queryMergeDto) {
     Table table = this.queryExecutor.executeQueryMerge(
-            queryMergeDto.first,
-            queryMergeDto.second,
-            queryMergeDto.joinType,
+            queryMergeDto,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get());
     return ResponseEntity.ok(createQueryResultDto(table));
   }
@@ -102,11 +100,9 @@ public class QueryController {
   @PostMapping(MAPPING_QUERY_MERGE_PIVOT)
   public ResponseEntity<PivotTableQueryResultDto> executeQueryMergePivot(@RequestBody PivotTableQueryMergeDto pivotTableQueryMergeDto) {
     PivotTable pt = this.queryExecutor.executePivotQueryMerge(
-            pivotTableQueryMergeDto.query.first,
-            pivotTableQueryMergeDto.query.second,
+            pivotTableQueryMergeDto.query,
             pivotTableQueryMergeDto.rows,
             pivotTableQueryMergeDto.columns,
-            pivotTableQueryMergeDto.query.joinType,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get()
     );
     QueryResultDto result = createQueryResultDto(pt.table);
@@ -141,9 +137,7 @@ public class QueryController {
   @PostMapping(MAPPING_QUERY_MERGE_STRINGIFY)
   public ResponseEntity<String> executeAndMergeStringify(@RequestBody QueryMergeDto queryMergeDto) {
     Table table = this.queryExecutor.executeQueryMerge(
-            queryMergeDto.first,
-            queryMergeDto.second,
-            queryMergeDto.joinType,
+            queryMergeDto,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get());
     return ResponseEntity.ok(table.toString());
   }
@@ -157,11 +151,9 @@ public class QueryController {
   @PostMapping(MAPPING_QUERY_MERGE_PIVOT_STRINGIFY)
   public ResponseEntity<String> executeAndMergePivotStringify(@RequestBody PivotTableQueryMergeDto pivotTableQueryMergeDto) {
     PivotTable pt = this.queryExecutor.executePivotQueryMerge(
-            pivotTableQueryMergeDto.query.first,
-            pivotTableQueryMergeDto.query.second,
+            pivotTableQueryMergeDto.query,
             pivotTableQueryMergeDto.rows,
             pivotTableQueryMergeDto.columns,
-            pivotTableQueryMergeDto.query.joinType,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get()
     );
     return ResponseEntity.ok(pt.toString());

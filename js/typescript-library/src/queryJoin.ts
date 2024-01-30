@@ -5,8 +5,8 @@ import {serializeMap} from "./util"
 export class QueryJoin {
 
   private readonly _table: Table
+  private readonly _queries: Array<Query>
   private current: number = 0
-  private _queries: Array<Query>
   private _orders: Map<Field, Order>
   private _limit: number = -1
 
