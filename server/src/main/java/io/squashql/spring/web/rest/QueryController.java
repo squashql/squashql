@@ -3,6 +3,7 @@ package io.squashql.spring.web.rest;
 import com.google.common.collect.ImmutableList;
 import io.squashql.query.*;
 import io.squashql.query.database.QueryEngine;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.store.Store;
 import io.squashql.table.PivotTable;
@@ -171,7 +172,10 @@ public class QueryController {
   public ResponseEntity<MetadataResultDto> getMetadata() {
     List<MetadataResultDto.StoreMetadata> stores = new ArrayList<>();
     for (Store store : this.queryEngine.datastore().storesByName().values()) {
-      List<MetadataItem> items = store.fields().stream().map(f -> new MetadataItem(f.name(), f.name(), f.type())).toList();
+      List<MetadataItem> items = store.fields().stream().map(f -> {
+        final String fieldName = SqlUtils.squashqlExpression(f);
+        return new MetadataItem(fieldName, fieldName, f.type());
+      }).toList();
       stores.add(new MetadataResultDto.StoreMetadata(store.name(), items));
     }
     return ResponseEntity.ok(new MetadataResultDto(stores, this.queryEngine.supportedAggregationFunctions(), Collections.emptyList()));

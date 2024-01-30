@@ -7,7 +7,7 @@ import io.squashql.query.database.SqlUtils;
 import java.util.Objects;
 
 public record TableTypedField(String store, String name, Class<?> type, String alias,
-                              boolean cte) implements NamedTypedField {
+                              boolean cte) implements TypedField {
 
   public TableTypedField {
     Objects.requireNonNull(name);
@@ -34,7 +34,7 @@ public record TableTypedField(String store, String name, Class<?> type, String a
   }
 
   @Override
-  public NamedTypedField as(String alias) {
+  public TypedField as(String alias) {
     return new TableTypedField(this.store, this.name, this.type, alias, this.cte);
   }
 }

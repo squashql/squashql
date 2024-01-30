@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.query.compiled.*;
 import io.squashql.query.database.DatabaseQuery;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.store.Store;
@@ -70,10 +71,6 @@ public class QueryResolver {
     return this.cache.getCompiledFields().get(field);
   }
 
-  protected NamedTypedField resolveNamedFiled(final NamedField field) {
-    return (NamedTypedField) resolveField(field);
-  }
-
   /**
    * Field resolver
    */
@@ -122,15 +119,17 @@ public class QueryResolver {
       Store store = this.storesByName.get(tableName);
       if (store != null) {
         for (TableTypedField field : store.fields()) {
-          if (field.name().equals(fieldNameInTable)) {
-            return alias == null ? field : new TableTypedField(field.store(), field.name(), field.type(), alias, this.cteTableNames.contains(store.name()));
+          final String sqlName = SqlUtils.squashqlExpression(field);
+          if (sqlName.equals(fieldNameInTable)) {
+            return alias == null ? field : new TableTypedField(field.store(), sqlName, field.type(), alias, this.cteTableNames.contains(store.name()));
           }
         }
       }
     } else {
       for (Store store : this.storesByName.values()) {
         for (TableTypedField field : store.fields()) {
-          if (field.name().equals(fieldName)) {
+          final String sqlName = SqlUtils.squashqlExpression(field);
+          if (sqlName.equals(fieldName)) {
             // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
             // if any ambiguity, the DB will raise an exception.
             return new TableTypedField(null, fieldName, field.type(), alias, this.cteTableNames.contains(store.name()));
@@ -373,13 +372,13 @@ public class QueryResolver {
   }
 
   private CompiledMeasure compileVectorAggMeasure(VectorAggMeasure m) {
-    return new CompiledVectorAggMeasure(m.alias, resolveNamedFiled(m.fieldToAggregate), m.aggregationFunction, resolveField(m.vectorAxis));
+    return new CompiledVectorAggMeasure(m.alias, resolveField(m.fieldToAggregate), m.aggregationFunction, resolveField(m.vectorAxis));
   }
 
   private CompiledMeasure compileVectorTupleAggMeasure(VectorTupleAggMeasure m) {
     return new CompiledVectorTupleAggMeasure(
             m.alias,
-            m.fieldToAggregateAndAggFunc.stream().map(p -> new CompiledFieldAndAggFunc(resolveNamedFiled(p.field), p.aggFunc)).toList(),
+            m.fieldToAggregateAndAggFunc.stream().map(p -> new CompiledFieldAndAggFunc(resolveField(p.field), p.aggFunc)).toList(),
             resolveField(m.vectorAxis),
             m.transformer);
   }

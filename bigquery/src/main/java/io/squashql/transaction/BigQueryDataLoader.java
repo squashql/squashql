@@ -3,6 +3,7 @@ package io.squashql.transaction;
 import com.google.cloud.bigquery.*;
 import io.squashql.BigQueryServiceAccountDatastore;
 import io.squashql.BigQueryUtil;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.type.TableTypedField;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
@@ -41,7 +42,7 @@ public class BigQueryDataLoader implements DataLoader {
     TableId tableId = TableId.of(this.datasetName, tableName);
 
     List<com.google.cloud.bigquery.Field> fieldList = list.stream()
-            .map(f -> com.google.cloud.bigquery.Field.of(f.name(), BigQueryUtil.classToBigQueryType(f.type())))
+            .map(f -> com.google.cloud.bigquery.Field.of(SqlUtils.squashqlExpression(f), BigQueryUtil.classToBigQueryType(f.type())))
             .toList();
     // Table schema definition
     Schema schema = Schema.of(fieldList);
@@ -70,7 +71,7 @@ public class BigQueryDataLoader implements DataLoader {
     for (Object[] tuple : tuples) {
       Map<String, Object> m = new HashMap<>();
       for (int i = 0; i < fields.size(); i++) {
-        String name = fields.get(i).name();
+        String name = SqlUtils.squashqlExpression(fields.get(i));
         if (!name.equals(SCENARIO_FIELD_NAME)) {
           Object o = tuple[i];
           if (o != null && (o.getClass().equals(LocalDate.class) || o.getClass().equals(LocalDateTime.class))) {
@@ -130,7 +131,7 @@ public class BigQueryDataLoader implements DataLoader {
 
   private void ensureScenarioColumnIsPresent(String store) {
     List<TableTypedField> fields = BigQueryServiceAccountDatastore.getFieldsOrNull(this.bigquery, this.datasetName, store);
-    boolean found = fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
+    boolean found = fields.stream().anyMatch(f -> SqlUtils.squashqlExpression(f).equals(SCENARIO_FIELD_NAME));
     if (!found) {
       throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));
     }

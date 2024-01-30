@@ -5,7 +5,6 @@ import io.squashql.query.QueryExecutor.QueryScope;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.type.AliasedTypedField;
-import io.squashql.type.NamedTypedField;
 import io.squashql.type.TypedField;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.collections.impl.set.mutable.MutableSetFactoryImpl;
@@ -119,7 +118,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
   @Override
   public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledVectorTupleAggMeasure vecMeasure) {
     TypedField vectorAxis = vecMeasure.vectorAxis();
-    List<NamedTypedField> fieldToAggregates = vecMeasure.fieldToAggregateAndAggFunc().stream().map(CompiledFieldAndAggFunc::field).toList();
+    List<TypedField> fieldToAggregates = vecMeasure.fieldToAggregateAndAggFunc().stream().map(CompiledFieldAndAggFunc::field).toList();
     List<String> vectorAggFuncs = vecMeasure.fieldToAggregateAndAggFunc().stream().map(CompiledFieldAndAggFunc::aggFunc).toList();
     if (this.originalQueryScope.columns().contains(vectorAxis)) {
       Set<CompiledMeasure> m = new HashSet<>();
@@ -173,9 +172,9 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
 
       List<String> subQueryMeasureAliases = new ArrayList<>();
       for (int i = 0; i < fieldToAggregates.size(); i++) {
-        NamedTypedField fieldToAggregate = fieldToAggregates.get(i);
+        TypedField fieldToAggregate = fieldToAggregates.get(i);
         String vectorAggFunc = vectorAggFuncs.get(i);
-        String subQueryMeasureAlias = safeColumnAlias(fieldToAggregate.name() + "_" + vectorAggFunc);
+        String subQueryMeasureAlias = safeColumnAlias(SqlUtils.squashqlExpression(fieldToAggregate) + "_" + vectorAggFunc);
         subQueryMeasureAliases.add(subQueryMeasureAlias);
         subQueryMeasures.add(new CompiledAggregatedMeasure(subQueryMeasureAlias, fieldToAggregate, vectorAggFunc, null, false));
       }

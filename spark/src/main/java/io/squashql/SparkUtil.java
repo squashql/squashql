@@ -1,6 +1,7 @@
 package io.squashql;
 
 import io.squashql.jdbc.JdbcUtil;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.Types;
 import org.apache.spark.sql.types.ArrayType;
@@ -90,7 +91,7 @@ public final class SparkUtil {
   public static StructType createSchema(List<TableTypedField> fields) {
     StructType schema = new StructType();
     for (TableTypedField field : fields) {
-      schema = schema.add(field.name(), classToDatatype(field.type()));
+      schema = schema.add(SqlUtils.squashqlExpression(field), classToDatatype(field.type()));
     }
     return schema;
   }

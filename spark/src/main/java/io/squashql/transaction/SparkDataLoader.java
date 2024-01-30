@@ -2,6 +2,7 @@ package io.squashql.transaction;
 
 import io.squashql.SparkDatastore;
 import io.squashql.SparkUtil;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.type.TableTypedField;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.catalog.Table;
@@ -81,7 +82,7 @@ public class SparkDataLoader implements DataLoader {
 
   private boolean scenarioColumnIsPresent(String store) {
     List<TableTypedField> fields = SparkDatastore.getFields(this.spark, store);
-    return fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
+    return fields.stream().anyMatch(f -> SqlUtils.squashqlExpression(f).equals(SCENARIO_FIELD_NAME));
   }
 
   @Override

@@ -1,5 +1,6 @@
 package io.squashql.util;
 
+import io.squashql.query.database.SqlUtils;
 import io.squashql.store.Datastore;
 import io.squashql.store.Store;
 import io.squashql.type.TableTypedField;
@@ -47,7 +48,8 @@ public class SchemaTypeScriptCodeGenerator {
       sb.append("export class ").append(transformName(storeName, true)).append("Table {").append(System.lineSeparator());
       addAttribute(sb, "tableName", storeName);
       for (TableTypedField field : store.fields()) {
-        addAttribute(sb, transformName(field.name(), false), field.name());
+        final String fieldName = SqlUtils.squashqlExpression(field);
+        addAttribute(sb, transformName(fieldName, false), fieldName);
       }
       sb.append('}').append(System.lineSeparator());
     });
