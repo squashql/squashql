@@ -704,6 +704,35 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   }
 
   @Test
+  void testMergeThreeTables() {
+    QueryDto query1 = Query
+            .from(this.storeName)
+            .select(tableFields(List.of("category")), List.of(sum("p_sum", "price")))
+            .build();
+
+    QueryDto query2 = Query
+            .from(this.storeName)
+            .select(tableFields(List.of("category")), List.of(min("p_min", "price")))
+            .build();
+
+    QueryDto query3 = Query
+            .from(this.storeName)
+            .select(tableFields(List.of("category")), List.of(max("p_max", "price")))
+            .build();
+
+    QueryMergeDto queryMerge = QueryMergeDto.from(query1)
+            .join(query2, JoinType.INNER)
+            .join(query3, JoinType.INNER);
+    Table result = this.executor.executeQueryMerge(queryMerge, null);
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
+            .containsExactly("category", "p_sum", "p_min", "p_max");
+    Assertions.assertThat(result).containsExactly(
+            List.of("cloth", 30d, 10d, 10d),
+            List.of("drink", 7.5d, 1.5d, 4d),
+            List.of("food", 9d, 3d, 3d));
+  }
+
+  @Test
   void testMergeWithComparators() {
     QueryDto query1 = Query
             .from(this.storeName)
