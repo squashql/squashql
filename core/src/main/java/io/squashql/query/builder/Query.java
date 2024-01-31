@@ -64,7 +64,7 @@ public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
   }
 
   @Override
-  public CanAddRollup select(List<? extends Field> columns, List<ColumnSet> columnSets, List<Measure> measures) {
+  public CanAddRollup select(List<Field> columns, List<ColumnSet> columnSets, List<Measure> measures) {
     addJoinToQueryDto();
     columns.forEach(this.queryDto::withColumn);
     columnSets.forEach(cs -> this.queryDto.withColumnSet(cs.getColumnSetKey(), cs));

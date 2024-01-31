@@ -1,21 +1,20 @@
 package io.squashql.query;
 
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
+import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
+
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-
-import java.util.List;
-import java.util.Map;
-
-import static io.squashql.query.TableField.tableField;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
-import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
 /**
  * This test class is used to verify and print tables for the documentation. Nothing is asserted in those tests this is

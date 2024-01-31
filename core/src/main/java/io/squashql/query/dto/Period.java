@@ -3,7 +3,6 @@ package io.squashql.query.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.squashql.query.Field;
-
 import java.util.Set;
 
 /**

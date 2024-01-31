@@ -53,7 +53,7 @@ public final class MeasureUtils {
 
     @Override
     public TypedField resolveField(Field field) {
-      return new TableTypedField(null, ((Field) field).name(), String.class);
+      return new TableTypedField(null, field.name(), String.class);
     }
 
     @Override
