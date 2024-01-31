@@ -46,7 +46,14 @@ public class QueryDto {
   public CriteriaDto havingCriteriaDto = null;
 
   public Map<Field, OrderDto> orders = new LinkedHashMap<>();
-
+  /*
+   * - Order by measure
+   * - tests
+   *  # multiple switch case
+   *  # mix switch case and simple order at different position
+   *  # test sql translator
+   *  # test order by on squashql computed measure
+   */
   public Map<String, Parameter> parameters = new HashMap<>();
 
   public int limit = -1;
