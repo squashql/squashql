@@ -102,12 +102,12 @@ public class QueryExecutor {
     groupingSets.add(List.of());
     // Rows
     for (int i = rows.size(); i >= 1; i--) {
-      groupingSets.add(new ArrayList<>(rows.subList(0, i)));
+      groupingSets.add(rows.subList(0, i));
     }
 
     // Cols
     for (int i = columns.size(); i >= 1; i--) {
-      groupingSets.add(new ArrayList<>(columns.subList(0, i)));
+      groupingSets.add(columns.subList(0, i));
     }
 
     // all combinations

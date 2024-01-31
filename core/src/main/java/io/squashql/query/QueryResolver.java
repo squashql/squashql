@@ -107,7 +107,7 @@ public class QueryResolver {
     } catch (FieldNotFoundException e) {
       // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
       // contains only "raw" fields, it will throw an exception.
-      return new TableTypedField(null, ((Field) field).name(), Number.class, field.alias(), false);
+      return new TableTypedField(null, field.name(), Number.class, field.alias(), false);
     }
   }
 
@@ -128,8 +128,7 @@ public class QueryResolver {
     } else {
       for (Store store : this.storesByName.values()) {
         for (TableTypedField field : store.fields()) {
-          final String name = field.name();
-          if (name.equals(fieldName)) {
+          if (field.name().equals(fieldName)) {
             // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
             // if any ambiguity, the DB will raise an exception.
             return new TableTypedField(null, fieldName, field.type(), alias, this.cteTableNames.contains(store.name()));

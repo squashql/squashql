@@ -3,11 +3,14 @@ package io.squashql.query;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
-
-import java.util.*;
-import java.util.function.Function;
 
 public class BucketerExecutor {
 
