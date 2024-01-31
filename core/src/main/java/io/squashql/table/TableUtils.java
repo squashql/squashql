@@ -2,6 +2,8 @@ package io.squashql.table;
 
 import com.google.common.base.Suppliers;
 import io.squashql.query.*;
+import io.squashql.query.compiled.CompiledBucketColumnSet;
+import io.squashql.query.compiled.CompiledColumnSet;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
@@ -185,19 +187,19 @@ public class TableUtils {
 
   public static Table orderRows(ColumnarTable table,
                                 Map<String, Comparator<?>> comparatorByColumnName,
-                                Collection<ColumnSet> columnSets) {
+                                Collection<CompiledColumnSet> columnSets) {
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
     Map<String, Comparator<?>> copy = new HashMap<>(comparatorByColumnName);
 
     columnSets.forEach(columnSet -> {
-      if (columnSet.getColumnSetKey() != ColumnSetKey.BUCKET) {
+      if (columnSet.columnSetKey() != ColumnSetKey.BUCKET) {
         throw new IllegalArgumentException("Unexpected column set type " + columnSet);
       }
-      BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
+      CompiledBucketColumnSet cs = (CompiledBucketColumnSet) columnSet;
       // Remove from the map of comparators to use default one when only none is defined for regular column
-      copy.remove(cs.newField.name());
-      copy.remove(cs.field.name());
+      copy.remove(SqlUtils.squashqlExpression(cs.newField()));
+      copy.remove(SqlUtils.squashqlExpression(cs.field()));
     });
 
     List<Header> headers = table.headers;
@@ -220,10 +222,10 @@ public class TableUtils {
     // Special case for the CS comparators.
     int[] contextIndices = new int[args.size()];
     Arrays.fill(contextIndices, -1);
-    for (ColumnSet columnSet : new HashSet<>(columnSets)) {
-      BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
+    for (CompiledColumnSet columnSet : new HashSet<>(columnSets)) {
+      CompiledBucketColumnSet cs = (CompiledBucketColumnSet) columnSet;
       // cs.field can appear multiple times in the table.
-      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(cs.newField.name()));
+      table.columnIndices(cs.field()).forEach(i -> contextIndices[i] = table.columnIndex(SqlUtils.squashqlExpression(cs.newField())));
     }
 
     int[] finalIndices = MultipleColumnsSorter.sort(args, comparators, contextIndices);

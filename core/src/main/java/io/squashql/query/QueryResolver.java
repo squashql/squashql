@@ -81,6 +81,7 @@ public class QueryResolver {
       if (columnSet != null) {
         Field newField = ((BucketColumnSetDto) columnSet).newField;
         if (field.equals(newField)) {
+          //todo-mde here
           return new TableTypedField(null, newField.name(), String.class, null, false);
         }
       }

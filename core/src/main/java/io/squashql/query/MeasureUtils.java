@@ -30,6 +30,7 @@ public final class MeasureUtils {
     } else if (m instanceof ComparisonMeasureReferencePosition cm) {
       String alias = cm.getMeasure().alias();
       if (cm.ancestors != null) {
+        // todo-mde here
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
         return formula + ", ancestors = " + cm.ancestors.stream().map(Field::name).toList();
       } else {

@@ -15,6 +15,8 @@ import io.squashql.table.TableUtils;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
 import java.util.function.IntConsumer;
@@ -54,8 +56,15 @@ public class QueryExecutor {
   public PivotTable executePivotQuery(PivotTableQueryDto pivotTableQueryDto) {
     return executePivotQuery(pivotTableQueryDto, CacheStatsDto.builder(), null, true, null);
   }
-
   public PivotTable executePivotQuery(PivotTableQueryDto pivotTableQueryDto,
+                                      CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
+                                      SquashQLUser user,
+                                      boolean replaceTotalCellsAndOrderRows,
+                                      IntConsumer limitNotifier) {
+    return executePivotQueryInternal(pivotTableQueryDto, cacheStatsDtoBuilder, user, replaceTotalCellsAndOrderRows, limitNotifier).getOne();
+  }
+
+  Pair<PivotTable, QueryResolver> executePivotQueryInternal(PivotTableQueryDto pivotTableQueryDto,
                                       CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
                                       SquashQLUser user,
                                       boolean replaceTotalCellsAndOrderRows,
@@ -66,16 +75,18 @@ public class QueryExecutor {
 
     PivotTableContext pivotTableContext = new PivotTableContext(pivotTableQueryDto);
     QueryDto preparedQuery = prepareQuery(pivotTableQueryDto.query, pivotTableContext);
-    Table result = executeQuery(preparedQuery, cacheStatsDtoBuilder, user, false, limitNotifier);
+    Pair<Table, QueryResolver> result = executeQueryInternal(preparedQuery, cacheStatsDtoBuilder, user, false, limitNotifier);
+    Table table = result.getOne();
+    final QueryResolver resolver = result.getTwo();
+    final List<String> rowExpressions = pivotTableQueryDto.rows.stream().map(f -> SqlUtils.squashqlExpression(resolver.resolveField(f))).toList();
+    final List<String> columnExpressions = pivotTableQueryDto.columns.stream().map(f -> SqlUtils.squashqlExpression(resolver.resolveField(f))).toList();
     if (replaceTotalCellsAndOrderRows) {
-      result = TableUtils.replaceTotalCellValues((ColumnarTable) result,
-              pivotTableQueryDto.rows.stream().map(Field::name).toList(),
-              pivotTableQueryDto.columns.stream().map(Field::name).toList());
-      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
+      table = TableUtils.replaceTotalCellValues((ColumnarTable) table, rowExpressions, columnExpressions);
+      table = TableUtils.orderRows((ColumnarTable) table, Queries.getComparators(preparedQuery), resolver.getCompiledColumnSets().values());
     }
 
     List<String> values = pivotTableQueryDto.query.measures.stream().map(Measure::alias).toList();
-    return new PivotTable(result, pivotTableQueryDto.rows.stream().map(Field::name).toList(), pivotTableQueryDto.columns.stream().map(Field::name).toList(), values);
+    return Tuples.pair(new PivotTable(table, rowExpressions, columnExpressions, values), resolver);
   }
 
   private static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
@@ -86,7 +97,7 @@ public class QueryExecutor {
     axes.removeAll(select);
 
     if (!axes.isEmpty()) {
-      throw new IllegalArgumentException(axes.stream().map(Field::name).toList() + " on rows or columns by not in select. Please add those fields in select");
+      throw new IllegalArgumentException(axes + " on rows or columns by not in select. Please add those fields in select");
     }
     axes = new HashSet<>(context.rows);
     axes.addAll(context.columns);
@@ -142,6 +153,14 @@ public class QueryExecutor {
                             SquashQLUser user,
                             boolean replaceTotalCellsAndOrderRows,
                             IntConsumer limitNotifier) {
+    return executeQueryInternal(query, cacheStatsDtoBuilder, user, replaceTotalCellsAndOrderRows, limitNotifier).getOne();
+  }
+
+  Pair<Table, QueryResolver> executeQueryInternal(QueryDto query,
+                                                  CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
+                                                  SquashQLUser user,
+                                                  boolean replaceTotalCellsAndOrderRows,
+                                                  IntConsumer limitNotifier) {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
     query.limit = queryLimit;
 
@@ -203,7 +222,7 @@ public class QueryExecutor {
 
     if (query.columnSets.containsKey(BUCKET)) {
       // Apply this as it modifies the "shape" of the result
-      BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(BUCKET);
+      CompiledBucketColumnSet columnSet = (CompiledBucketColumnSet) queryResolver.getCompiledColumnSets().get(BUCKET);
       // Reshape all results
       tableByScope.replaceAll((scope, table) -> BucketerExecutor.bucket(table, columnSet));
     }
@@ -234,7 +253,7 @@ public class QueryExecutor {
     result = TableUtils.selectAndOrderColumns(queryResolver, (ColumnarTable) result, query);
     if (replaceTotalCellsAndOrderRows) {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result, !query.rollupColumns.isEmpty());
-      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
+      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), queryResolver.getCompiledColumnSets().values());
     }
 
     CacheStatsDto stats = this.queryCache.stats(user);
@@ -242,7 +261,7 @@ public class QueryExecutor {
             .hitCount(stats.hitCount)
             .evictionCount(stats.evictionCount)
             .missCount(stats.missCount);
-    return result;
+    return Tuples.pair(result, queryResolver);
   }
 
   private static boolean canBeCached(CompiledMeasure measure, QueryScope scope) {

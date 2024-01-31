@@ -1,36 +1,35 @@
 package io.squashql.query;
 
-import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.compiled.CompiledBucketColumnSet;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
+import io.squashql.type.TypedField;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 
+import java.util.*;
+import java.util.function.Function;
+
 public class BucketerExecutor {
 
-  public static Table bucket(Table table, BucketColumnSetDto bucketColumnSetDto) {
-    Function<Object[], List<Object[]>> bucketer = createBucketer(bucketColumnSetDto);
+  public static Table bucket(Table table, CompiledBucketColumnSet bucketColumnSet) {
+    Function<Object[], List<Object[]>> bucketer = createBucketer(bucketColumnSet);
 
-    int[] indexColumnsToRead = new int[bucketColumnSetDto.getColumnsForPrefetching().size()];
-    for (int i = 0; i < bucketColumnSetDto.getColumnsForPrefetching().size(); i++) {
-      indexColumnsToRead[i] = table.columnIndex(bucketColumnSetDto.getColumnsForPrefetching().get(i).name());
+    int[] indexColumnsToRead = new int[bucketColumnSet.columnsForPrefetching().size()];
+    for (int i = 0; i < bucketColumnSet.columnsForPrefetching().size(); i++) {
+      indexColumnsToRead[i] = table.columnIndex(SqlUtils.squashqlExpression(bucketColumnSet.columnsForPrefetching().get(i)));
     }
 
     MutableIntSet indexColsInPrefetch = new IntHashSet();
-    List<Field> newColumns = bucketColumnSetDto.getNewColumns();
+    List<TypedField> newColumns = bucketColumnSet.newColumns();
     List<Header> finalHeaders = new ArrayList<>(table.headers());
     for (int i = 0; i < newColumns.size(); i++) {
-      Field field = newColumns.get(i);
-      if (!bucketColumnSetDto.getColumnsForPrefetching().contains(field)) {
+      TypedField field = newColumns.get(i);
+      if (!bucketColumnSet.columnsForPrefetching().contains(field)) {
         indexColsInPrefetch.add(i);
       }
-      Header header = new Header(field.name(), String.class, false);
+      Header header = new Header(SqlUtils.squashqlExpression(field), String.class, false);
       if (!table.headers().contains(header)) {
         finalHeaders.add(header); // append to the end
       }
@@ -65,9 +64,9 @@ public class BucketerExecutor {
             newColumnValues);
   }
 
-  private static Function<Object[], List<Object[]>> createBucketer(BucketColumnSetDto bucketColumnSetDto) {
+  private static Function<Object[], List<Object[]>> createBucketer(CompiledBucketColumnSet bucketColumnSet) {
     Map<String, List<String>> bucketsByValue = new HashMap<>();
-    for (Map.Entry<String, List<String>> value : bucketColumnSetDto.values.entrySet()) {
+    for (Map.Entry<String, List<String>> value : bucketColumnSet.values().entrySet()) {
       for (String v : value.getValue()) {
         bucketsByValue
                 .computeIfAbsent(v, k -> new ArrayList<>())

@@ -20,6 +20,7 @@ public final class Queries {
     Map<String, Comparator<?>> res = new HashMap<>();
     orders.forEach((c, order) -> {
       if (order instanceof SimpleOrderDto so) {
+        //todo-mde and here
         res.put(c.name(), NullAndTotalComparator.nullsLastAndTotalsFirst(so.order == DESC ? Comparator.naturalOrder().reversed() : Comparator.naturalOrder()));
       } else if (order instanceof ExplicitOrderDto eo) {
         res.put(c.name(), NullAndTotalComparator.nullsLastAndTotalsFirst(new CustomExplicitOrdering(eo.explicit)));
