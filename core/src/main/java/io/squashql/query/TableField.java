@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
 @AllArgsConstructor
-public class TableField implements NamedField {
+public class TableField implements Field {
 
   public String tableName;
 
@@ -58,7 +58,7 @@ public class TableField implements NamedField {
   }
 
   @Override
-  public NamedField as(String alias) {
+  public Field as(String alias) {
     return new TableField(this.tableName, this.fieldName, this.fullName, alias);
   }
 
@@ -71,19 +71,19 @@ public class TableField implements NamedField {
    * Syntactic sugar helpers.
    */
 
-  public static NamedField tableField(final String tableName, final String name) {
+  public static Field tableField(final String tableName, final String name) {
     return new TableField(tableName, name);
   }
 
-  public static NamedField tableField(final String name) {
+  public static Field tableField(final String name) {
     return new TableField(name);
   }
 
-  public static List<NamedField> tableFields(String tableName, List<String> fields) {
+  public static List<Field> tableFields(String tableName, List<String> fields) {
     return fields.stream().map(f -> new TableField(tableName, f)).collect(Collectors.toList());
   }
 
-  public static List<NamedField> tableFields(List<String> fields) {
+  public static List<Field> tableFields(List<String> fields) {
     return fields.stream().map(TableField::new).collect(Collectors.toList());
   }
 }

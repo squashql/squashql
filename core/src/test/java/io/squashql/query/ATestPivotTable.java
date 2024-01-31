@@ -90,7 +90,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
   @Test
   void testRollupEquivalent() {
     Measure amount = Functions.sum("amount", "amount");
-    final List<NamedField> fields = tableFields(List.of("continent", "country", "city"));
+    final List<Field> fields = tableFields(List.of("continent", "country", "city"));
     QueryDto queryWithoutRollup = Query
             .from(this.storeSpending)
             .select(fields, List.of(amount))
@@ -126,8 +126,8 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .where(criterion("city", in("la", "london"))) // to reduce size of the output
             .select(tableFields(List.of("spending category", "city")), List.of(amount))
             .build();
-    List<NamedField> rows = tableFields(List.of("city"));
-    List<NamedField> columns = tableFields(List.of("spending category"));
+    List<Field> rows = tableFields(List.of("city"));
+    List<Field> columns = tableFields(List.of("spending category"));
     PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns));
 
     Assertions.assertThat(result.table).containsExactly(
@@ -188,8 +188,8 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
   @Test
   void testGroupingOneColumnEachAxis() {
-    final NamedField group = tableField("group");
-    final NamedField country = tableField("country");
+    final Field group = tableField("group");
+    final Field country = tableField("country");
     BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", country)
             .withNewBucket("european", List.of("uk", "france"))
             .withNewBucket("anglophone", List.of("usa", "uk"))
@@ -230,8 +230,8 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
   @Test
   void testGroupingMultipleColumns(TestInfo testInfo) {
-    final NamedField group = tableField("group");
-    final NamedField country = tableField("country");
+    final Field group = tableField("group");
+    final Field country = tableField("country");
     BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", country)
             .withNewBucket("european", List.of("uk", "france"))
             .withNewBucket("anglophone", List.of("usa", "uk"))
@@ -283,8 +283,8 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .select(tableFields(List.of("spending category", "spending subcategory", "continent", "country", "city")), measures)
             .rollup(tableField("spending category")) // rollup is not supported with the pivot table API
             .build();
-    List<NamedField> rows = tableFields(List.of("continent", "country", "city"));
-    List<NamedField> columns = tableFields(List.of("spending category", "spending subcategory"));
+    List<Field> rows = tableFields(List.of("continent", "country", "city"));
+    List<Field> columns = tableFields(List.of("spending category", "spending subcategory"));
     Assertions.assertThatThrownBy(() -> this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns)))
             .hasMessage("Rollup is not supported by this API");
   }
@@ -297,14 +297,14 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .from(this.storeSpending)
             .select(tableFields(List.of("spending category", "spending subcategory", "continent", "country", "city")), measures)
             .build();
-    List<NamedField> rowsWithoutContinent = tableFields(List.of("country", "city"));
-    List<NamedField> columns = tableFields(List.of("spending category", "spending subcategory"));
+    List<Field> rowsWithoutContinent = tableFields(List.of("country", "city"));
+    List<Field> columns = tableFields(List.of("spending category", "spending subcategory"));
     // continent is missing despite the fact it is in the select
     Assertions.assertThatThrownBy(() -> this.executor.executePivotQuery(new PivotTableQueryDto(query, rowsWithoutContinent, columns)))
             .hasMessage("[TableField(tableName=null, fieldName=continent, fullName=continent, alias=null)] in select but not on rows or columns. Please add those fields on one axis");
 
-    List<NamedField> rows = tableFields(List.of("continent", "country", "city"));
-    List<NamedField> columnsWithoutContinent = tableFields(List.of("spending category"));
+    List<Field> rows = tableFields(List.of("continent", "country", "city"));
+    List<Field> columnsWithoutContinent = tableFields(List.of("spending category"));
     // spending subcategory is missing despite the fact it is in the select
     Assertions.assertThatThrownBy(() -> this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columnsWithoutContinent)))
             .hasMessage("[TableField(tableName=null, fieldName=spending subcategory, fullName=spending subcategory, alias=null)] in select but not on rows or columns. Please add those fields on one axis");
@@ -318,8 +318,8 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .from(this.storeSpending)
             .select(tableFields(List.of("spending category", "spending subcategory", "continent", "country", "city")), measures)
             .build();
-    List<NamedField> rows = tableFields(List.of("unknown", "continent", "country", "city"));
-    List<NamedField> columns = tableFields(List.of("spending category", "spending subcategory"));
+    List<Field> rows = tableFields(List.of("unknown", "continent", "country", "city"));
+    List<Field> columns = tableFields(List.of("spending category", "spending subcategory"));
     // continent is missing despite the fact it is in the select
     Assertions.assertThatThrownBy(() -> this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns)))
             .hasMessage("[unknown] on rows or columns by not in select. Please add those fields in select");

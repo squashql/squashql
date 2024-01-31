@@ -2,7 +2,7 @@ package io.squashql.query.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.squashql.query.NamedField;
+import io.squashql.query.Field;
 
 import java.util.Set;
 
@@ -18,36 +18,36 @@ import java.util.Set;
 public interface Period {
 
   @JsonIgnore
-  Set<NamedField> getFields();
+  Set<Field> getFields();
 
-  record Month(NamedField month, NamedField year) implements Period {
+  record Month(Field month, Field year) implements Period {
 
     @Override
-    public Set<NamedField> getFields() {
+    public Set<Field> getFields() {
       return Set.of(this.month, this.year);
     }
   }
 
-  record Quarter(NamedField quarter, NamedField year) implements Period {
+  record Quarter(Field quarter, Field year) implements Period {
 
     @Override
-    public Set<NamedField> getFields() {
+    public Set<Field> getFields() {
       return Set.of(this.quarter, this.year);
     }
   }
 
-  record Semester(NamedField semester, NamedField year) implements Period {
+  record Semester(Field semester, Field year) implements Period {
 
     @Override
-    public Set<NamedField> getFields() {
+    public Set<Field> getFields() {
       return Set.of(this.semester, this.year);
     }
   }
 
-  record Year(NamedField year) implements Period {
+  record Year(Field year) implements Period {
 
     @Override
-    public Set<NamedField> getFields() {
+    public Set<Field> getFields() {
       return Set.of(this.year);
     }
   }

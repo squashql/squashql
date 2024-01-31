@@ -50,7 +50,7 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
   @Test
   void testSimple() {
     Measure amount = Functions.sum("amount", "amount");
-    final List<NamedField> fields = tableFields(List.of("continent", "country", "city"));
+    final List<Field> fields = tableFields(List.of("continent", "country", "city"));
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, fields);
     QueryDto query = Query
             .from(this.storeName)

@@ -9,13 +9,13 @@ import lombok.*;
 public class VectorAggMeasure implements Measure {
 
   public String alias;
-  public NamedField fieldToAggregate;
+  public Field fieldToAggregate;
   public String aggregationFunction;
   public Field vectorAxis;
   @With
   public String expression;
 
-  public VectorAggMeasure(String alias, NamedField fieldToAggregate, String aggregationFunction, Field vectorAxis) {
+  public VectorAggMeasure(String alias, Field fieldToAggregate, String aggregationFunction, Field vectorAxis) {
     this.alias = alias;
     this.fieldToAggregate = fieldToAggregate;
     this.aggregationFunction = aggregationFunction;

@@ -193,8 +193,8 @@ public class TestQueryS13n {
 
   @Test
   void testPivotTableDto() {
-    NamedField f1 = tableField("f1");
-    NamedField f2 = tableField("f2");
+    Field f1 = tableField("f1");
+    Field f2 = tableField("f2");
     QueryDto query = Query.from("table")
             .select(List.of(f1, f2), List.of(), List.of())
             .build();

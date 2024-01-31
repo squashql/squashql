@@ -11,13 +11,13 @@ import static io.squashql.query.database.SqlUtils.singleOperandFunctionName;
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
 @AllArgsConstructor
-public class FunctionField implements NamedField {
+public class FunctionField implements Field {
 
   public String function;
-  public NamedField field;
+  public Field field;
   public String alias;
 
-  public FunctionField(String function, NamedField field) {
+  public FunctionField(String function, Field field) {
     this.function = function;
     this.field = field;
   }
@@ -28,7 +28,7 @@ public class FunctionField implements NamedField {
   }
 
   @Override
-  public NamedField as(String alias) {
+  public Field as(String alias) {
     return new FunctionField(this.function, this.field, alias);
   }
 

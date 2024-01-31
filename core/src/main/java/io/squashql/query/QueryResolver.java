@@ -79,7 +79,7 @@ public class QueryResolver {
       // Special case for the column that is created due to the column set.
       ColumnSet columnSet = this.query.columnSets.get(BUCKET);
       if (columnSet != null) {
-        NamedField newField = ((BucketColumnSetDto) columnSet).newField;
+        Field newField = ((BucketColumnSetDto) columnSet).newField;
         if (field.equals(newField)) {
           return new TableTypedField(null, newField.name(), String.class, null, false);
         }
@@ -107,7 +107,7 @@ public class QueryResolver {
     } catch (FieldNotFoundException e) {
       // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
       // contains only "raw" fields, it will throw an exception.
-      return new TableTypedField(null, ((NamedField) field).name(), Number.class, field.alias(), false);
+      return new TableTypedField(null, ((Field) field).name(), Number.class, field.alias(), false);
     }
   }
 

@@ -30,8 +30,8 @@ public class TestJavascriptLibrary {
     table.join(refTable, JoinType.INNER, criterion("fromField", "toField", ConditionType.EQ));
     table.join(new TableDto("a"), JoinType.LEFT, criterion("a" + ".a_id", "myTable" + ".id", ConditionType.EQ));
 
-    NamedField a = tableField("a");
-    NamedField b = tableField("b").as("b_alias");
+    Field a = tableField("a");
+    Field b = tableField("b").as("b_alias");
     QueryDto q = new QueryDto()
             .table(table)
             .withColumn(a)

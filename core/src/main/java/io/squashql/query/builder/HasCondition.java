@@ -3,9 +3,7 @@ package io.squashql.query.builder;
 import io.squashql.query.ColumnSet;
 import io.squashql.query.Field;
 import io.squashql.query.Measure;
-import io.squashql.query.NamedField;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 

@@ -3,7 +3,6 @@ package io.squashql.query.builder;
 import io.squashql.query.ColumnSet;
 import io.squashql.query.Field;
 import io.squashql.query.Measure;
-import io.squashql.query.NamedField;
 import io.squashql.query.dto.*;
 
 import java.util.Arrays;
@@ -80,13 +79,13 @@ public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
   }
 
   @Override
-  public HasHaving orderBy(NamedField column, OrderKeywordDto orderKeywordDto) {
+  public HasHaving orderBy(Field column, OrderKeywordDto orderKeywordDto) {
     this.queryDto.orderBy(column, orderKeywordDto);
     return this;
   }
 
   @Override
-  public HasHaving orderBy(NamedField column, List<?> firstElements) {
+  public HasHaving orderBy(Field column, List<?> firstElements) {
     this.queryDto.orderBy(column, firstElements);
     return this;
   }

@@ -6,7 +6,6 @@ import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
-import io.squashql.query.dto.QueryJoinDto;
 import io.squashql.query.join.ExperimentalQueryMergeExecutor;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.table.ColumnarTable;
@@ -70,24 +69,24 @@ public class QueryExecutor {
     Table result = executeQuery(preparedQuery, cacheStatsDtoBuilder, user, false, limitNotifier);
     if (replaceTotalCellsAndOrderRows) {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result,
-              pivotTableQueryDto.rows.stream().map(NamedField::name).toList(),
-              pivotTableQueryDto.columns.stream().map(NamedField::name).toList());
+              pivotTableQueryDto.rows.stream().map(Field::name).toList(),
+              pivotTableQueryDto.columns.stream().map(Field::name).toList());
       result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
     }
 
     List<String> values = pivotTableQueryDto.query.measures.stream().map(Measure::alias).toList();
-    return new PivotTable(result, pivotTableQueryDto.rows.stream().map(NamedField::name).toList(), pivotTableQueryDto.columns.stream().map(NamedField::name).toList(), values);
+    return new PivotTable(result, pivotTableQueryDto.rows.stream().map(Field::name).toList(), pivotTableQueryDto.columns.stream().map(Field::name).toList(), values);
   }
 
   private static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
-    Set<NamedField> axes = new HashSet<>(context.rows);
+    Set<Field> axes = new HashSet<>(context.rows);
     axes.addAll(context.columns);
     Set<Field> select = new HashSet<>(query.columns);
     select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream()).collect(Collectors.toSet()));
     axes.removeAll(select);
 
     if (!axes.isEmpty()) {
-      throw new IllegalArgumentException(axes.stream().map(NamedField::name).toList() + " on rows or columns by not in select. Please add those fields in select");
+      throw new IllegalArgumentException(axes.stream().map(Field::name).toList() + " on rows or columns by not in select. Please add those fields in select");
     }
     axes = new HashSet<>(context.rows);
     axes.addAll(context.columns);
@@ -96,8 +95,8 @@ public class QueryExecutor {
       throw new IllegalArgumentException(select + " in select but not on rows or columns. Please add those fields on one axis");
     }
 
-    List<NamedField> rows = context.cleansedRows;
-    List<NamedField> columns = context.cleansedColumns;
+    List<Field> rows = context.cleansedRows;
+    List<Field> columns = context.cleansedColumns;
     List<List<Field>> groupingSets = new ArrayList<>();
     // GT use an empty list instead of list of size 1 with an empty string because could cause issue later on with FieldSupplier
     groupingSets.add(List.of());
@@ -339,10 +338,10 @@ public class QueryExecutor {
    * This object is temporary until BigQuery supports the grouping sets. See <a href="https://issuetracker.google.com/issues/35905909">issue</a>
    */
   private static class PivotTableContext {
-    private final List<NamedField> rows;
-    private final List<NamedField> cleansedRows;
-    private final List<NamedField> columns;
-    private final List<NamedField> cleansedColumns;
+    private final List<Field> rows;
+    private final List<Field> cleansedRows;
+    private final List<Field> columns;
+    private final List<Field> cleansedColumns;
 
     public PivotTableContext(PivotTableQueryDto pivotTableQueryDto) {
       this.rows = pivotTableQueryDto.rows;
@@ -351,7 +350,7 @@ public class QueryExecutor {
       this.cleansedColumns = cleanse(pivotTableQueryDto.query, pivotTableQueryDto.columns);
     }
 
-    public static List<NamedField> cleanse(QueryDto query, List<NamedField> fields) {
+    public static List<Field> cleanse(QueryDto query, List<Field> fields) {
       // ColumnSet is a special type of column that does not exist in the database but only in SquashQL. Totals can't be
       // computed. This is why it is removed from the axes.
       ColumnSet columnSet = query.columnSets.get(BUCKET);
@@ -367,7 +366,7 @@ public class QueryExecutor {
 
   }
 
-  public PivotTable executePivotQueryMerge(QueryDto first, QueryDto second, List<NamedField> rows, List<NamedField> columns, JoinType joinType, SquashQLUser user) {
+  public PivotTable executePivotQueryMerge(QueryDto first, QueryDto second, List<Field> rows, List<Field> columns, JoinType joinType, SquashQLUser user) {
     return QueryMergeExecutor.executePivotQueryMerge(this, first, second, rows, columns, joinType, user);
   }
 

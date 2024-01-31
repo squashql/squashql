@@ -69,7 +69,7 @@ public abstract class ATestBucketComparison extends ABaseTestQuery {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void testAbsoluteDifferenceWithFirst(boolean fullName) {
-    NamedField scenario = fullName ? new TableField(this.storeName, SCENARIO_FIELD_NAME) : new TableField(SCENARIO_FIELD_NAME);
+    Field scenario = fullName ? new TableField(this.storeName, SCENARIO_FIELD_NAME) : new TableField(SCENARIO_FIELD_NAME);
     BucketColumnSetDto bucket = new BucketColumnSetDto(this.groupOfScenario, scenario)
             .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
             .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "s2"))

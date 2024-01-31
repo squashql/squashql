@@ -499,8 +499,8 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
 
   @Test
   void testQueryPivotTable() {
-    final NamedField category = tableField("category");
-    final NamedField ean = tableField("ean");
+    final Field category = tableField("category");
+    final Field ean = tableField("ean");
     QueryDto q = Query
             .from(this.storeName)
             .select(List.of(category, ean), List.of(sum("ca", "price")))
@@ -521,7 +521,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
 
   @Test
   void testWithNullValueAndRollup() {
-    List<NamedField> columns = tableFields(List.of("category", "ean"));
+    List<Field> columns = tableFields(List.of("category", "ean"));
     QueryDto q1 = Query
             .from(this.other)
             .select(columns, List.of(CountMeasure.INSTANCE))

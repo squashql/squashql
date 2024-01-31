@@ -240,7 +240,7 @@ public class TestDuckDBDoc {
     this.executor.executeRaw("select * from cities").show();
     this.executor.executeRaw("select * from cities inner join countries on cities.country_id = countries.country_id inner join continents on countries.continent_id = continents.continent_id").show();
 
-    List<NamedField> fields = List.of(new TableField("continent_name"), new TableField("country_name"), new TableField("city_name"));
+    List<Field> fields = List.of(new TableField("continent_name"), new TableField("country_name"), new TableField("city_name"));
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, sum("sales", "sales_amount"), fields);
 
     QueryDto query = Query.from("cities")
@@ -282,7 +282,7 @@ public class TestDuckDBDoc {
     this.engine.executeSql(sql);
     this.executor.executeRaw("select * from sales").show();
 
-    List<NamedField> fields = List.of(new TableField("year"), new TableField("month"));
+    List<Field> fields = List.of(new TableField("year"), new TableField("month"));
 
     Period.Month period = new Period.Month(tableField("month"), tableField("year"));
     AggregatedMeasure sales = new AggregatedMeasure("sales", "amount", "sum");

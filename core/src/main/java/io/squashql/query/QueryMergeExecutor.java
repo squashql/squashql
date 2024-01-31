@@ -32,7 +32,7 @@ public class QueryMergeExecutor {
     return execute(first, second, joinType, t -> (ColumnarTable) TableUtils.replaceTotalCellValues((ColumnarTable) t, true), executor);
   }
 
-  public static PivotTable executePivotQueryMerge(QueryExecutor queryExecutor, QueryDto first, QueryDto second, List<NamedField> rows, List<NamedField> columns, JoinType joinType, SquashQLUser user) {
+  public static PivotTable executePivotQueryMerge(QueryExecutor queryExecutor, QueryDto first, QueryDto second, List<Field> rows, List<Field> columns, JoinType joinType, SquashQLUser user) {
     Function<QueryDto, Table> executor = query -> {
       Set<Field> columnsFromColumnSets = query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream()).collect(Collectors.toSet());
       return queryExecutor.executePivotQuery(
@@ -49,11 +49,11 @@ public class QueryMergeExecutor {
     };
 
     Function<Table, ColumnarTable> replaceTotalCellValuesFunction = t -> (ColumnarTable) TableUtils.replaceTotalCellValues((ColumnarTable) t,
-            rows.stream().map(NamedField::name).toList(),
-            columns.stream().map(NamedField::name).toList());
+            rows.stream().map(Field::name).toList(),
+            columns.stream().map(Field::name).toList());
     ColumnarTable table = execute(first, second, joinType, replaceTotalCellValuesFunction, executor);
     List<String> values = table.headers().stream().filter(Header::isMeasure).map(Header::name).toList();
-    return new PivotTable(table, rows.stream().map(NamedField::name).toList(), columns.stream().map(NamedField::name).toList(), values);
+    return new PivotTable(table, rows.stream().map(Field::name).toList(), columns.stream().map(Field::name).toList(), values);
   }
 
   private static ColumnarTable execute(QueryDto first,

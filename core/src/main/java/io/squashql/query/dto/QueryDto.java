@@ -6,7 +6,10 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.*;
+import io.squashql.query.ColumnSet;
+import io.squashql.query.ColumnSetKey;
+import io.squashql.query.Field;
+import io.squashql.query.Measure;
 import io.squashql.query.parameter.Parameter;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -45,7 +48,7 @@ public class QueryDto {
 
   public CriteriaDto havingCriteriaDto = null;
 
-  public Map<NamedField, OrderDto> orders = new LinkedHashMap<>();
+  public Map<Field, OrderDto> orders = new LinkedHashMap<>();
 
   public Map<String, Parameter> parameters = new HashMap<>();
 
@@ -109,12 +112,12 @@ public class QueryDto {
     return this;
   }
 
-  public QueryDto orderBy(NamedField column, OrderKeywordDto orderKeywordDto) {
+  public QueryDto orderBy(Field column, OrderKeywordDto orderKeywordDto) {
     this.orders.put(column, new SimpleOrderDto(orderKeywordDto));
     return this;
   }
 
-  public QueryDto orderBy(NamedField column, List<?> firstElements) {
+  public QueryDto orderBy(Field column, List<?> firstElements) {
     this.orders.put(column, new ExplicitOrderDto(firstElements));
     return this;
   }
@@ -135,13 +138,6 @@ public class QueryDto {
     }
   }
 
-  public static class KeyNamedFieldSerializer extends JsonSerializer<NamedField> {
-    @Override
-    public void serialize(NamedField field, JsonGenerator gen, SerializerProvider provider) throws IOException {
-      gen.writeFieldName(JacksonUtil.serialize(field));
-    }
-  }
-
   public static class KeyFieldDeserializer extends KeyDeserializer {
 
     @Override
@@ -152,13 +148,4 @@ public class QueryDto {
     }
   }
 
-  public static class KeyNamedFieldDeserializer extends KeyDeserializer {
-
-    @Override
-    public NamedField deserializeKey(
-            String key,
-            DeserializationContext context) {
-      return JacksonUtil.deserialize(key, NamedField.class);
-    }
-  }
 }

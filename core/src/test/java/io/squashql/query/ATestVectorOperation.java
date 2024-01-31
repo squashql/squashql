@@ -37,10 +37,10 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
   static final int day = 5;
   static final int month = 4;
   final String storeName = "mystore" + getClass().getSimpleName().toLowerCase();
-  final NamedField competitor = new TableField(this.storeName, "competitor");
-  final NamedField ean = new TableField(this.storeName, "ean");
-  final NamedField price = new TableField(this.storeName, "price");
-  final NamedField date = new TableField(this.storeName, "date");
+  final Field competitor = new TableField(this.storeName, "competitor");
+  final Field ean = new TableField(this.storeName, "ean");
+  final Field price = new TableField(this.storeName, "price");
+  final Field date = new TableField(this.storeName, "date");
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
@@ -178,7 +178,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
   @Test
   void testParentComparison() {
     Measure vector = new VectorTupleAggMeasure("vector", List.of(new FieldAndAggFunc(this.price, SUM), new FieldAndAggFunc(this.date, ANY_VALUE)), this.date, null);
-    List<NamedField> fields = List.of(this.competitor, this.ean);
+    List<Field> fields = List.of(this.competitor, this.ean);
     BiFunction<Object, Object, Object> operator = (a, b) -> {
       DoubleList currentValue = (DoubleList) ((List) a).get(0);
       DoubleList parentValue = (DoubleList) ((List) b).get(0);

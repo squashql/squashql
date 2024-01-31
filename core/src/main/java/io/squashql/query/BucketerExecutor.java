@@ -20,10 +20,10 @@ public class BucketerExecutor {
     }
 
     MutableIntSet indexColsInPrefetch = new IntHashSet();
-    List<NamedField> newColumns = bucketColumnSetDto.getNewColumns();
+    List<Field> newColumns = bucketColumnSetDto.getNewColumns();
     List<Header> finalHeaders = new ArrayList<>(table.headers());
     for (int i = 0; i < newColumns.size(); i++) {
-      NamedField field = newColumns.get(i);
+      Field field = newColumns.get(i);
       if (!bucketColumnSetDto.getColumnsForPrefetching().contains(field)) {
         indexColsInPrefetch.add(i);
       }

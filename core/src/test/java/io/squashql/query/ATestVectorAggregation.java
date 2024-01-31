@@ -39,10 +39,10 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
   static final LocalDate d2 = LocalDate.of(2023, 1, 2);
   static final LocalDate d3 = LocalDate.of(2023, 1, 3);
   final String storeName = "store" + getClass().getSimpleName().toLowerCase();
-  final NamedField ean = new TableField(this.storeName, "ean");
-  final NamedField competitor = new TableField(this.storeName, "competitor");
-  final NamedField value = new TableField(this.storeName, "price");
-  final NamedField date = new TableField(this.storeName, "date");
+  final Field ean = new TableField(this.storeName, "ean");
+  final Field competitor = new TableField(this.storeName, "competitor");
+  final Field value = new TableField(this.storeName, "price");
+  final Field date = new TableField(this.storeName, "date");
   GlobalCache queryCache;
 
   @Override
@@ -375,9 +375,9 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
   @Test
   void testPivotTable() {
-    NamedField ean = new TableField(this.storeName, "ean");
-    NamedField competitor = new TableField(this.storeName, "competitor");
-    NamedField value = new TableField(this.storeName, "price");
+    Field ean = new TableField(this.storeName, "ean");
+    Field competitor = new TableField(this.storeName, "competitor");
+    Field value = new TableField(this.storeName, "price");
     Field date = new TableField(this.storeName, "date");
 
     Measure vector = new VectorAggMeasure("vector", value, SUM, date);

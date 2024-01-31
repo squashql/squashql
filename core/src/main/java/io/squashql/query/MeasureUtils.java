@@ -31,7 +31,7 @@ public final class MeasureUtils {
       String alias = cm.getMeasure().alias();
       if (cm.ancestors != null) {
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
-        return formula + ", ancestors = " + cm.ancestors.stream().map(NamedField::name).toList();
+        return formula + ", ancestors = " + cm.ancestors.stream().map(Field::name).toList();
       } else {
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current)", alias + "(reference)");
         return formula + ", reference = " + cm.referencePosition.entrySet().stream().map(e -> String.join("=", e.getKey().name(), e.getValue())).toList();
@@ -53,7 +53,7 @@ public final class MeasureUtils {
 
     @Override
     public TypedField resolveField(Field field) {
-      return new TableTypedField(null, ((NamedField) field).name(), String.class);
+      return new TableTypedField(null, ((Field) field).name(), String.class);
     }
 
     @Override
