@@ -10,13 +10,9 @@ public record CompiledBinaryOperationMeasure(String alias,
                                              CompiledMeasure rightOperand) implements CompiledMeasure {
   @Override
   public String sqlExpression(QueryRewriter queryRewriter, boolean withAlias) {
-    String sql = new StringBuilder()
-            .append("(")
-            .append(this.leftOperand.sqlExpression(queryRewriter, false))
-            .append(this.operator.infix)
-            .append(this.rightOperand.sqlExpression(queryRewriter, false))
-            .append(")")
-            .toString();
+    String leftOperand = this.leftOperand.sqlExpression(queryRewriter, false);
+    String rightOperand = this.rightOperand.sqlExpression(queryRewriter, false);
+    String sql = queryRewriter.binaryOperation(this.operator, leftOperand, rightOperand);
     return withAlias ? SqlUtils.appendAlias(sql, queryRewriter, this.alias) : sql;
   }
 

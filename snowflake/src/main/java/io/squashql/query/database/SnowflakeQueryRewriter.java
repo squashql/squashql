@@ -1,5 +1,7 @@
 package io.squashql.query.database;
 
+import io.squashql.query.BinaryOperator;
+
 class SnowflakeQueryRewriter implements QueryRewriter {
 
   @Override
@@ -25,5 +27,21 @@ class SnowflakeQueryRewriter implements QueryRewriter {
   @Override
   public boolean usePartialRollupSyntax() {
     return true;
+  }
+
+  @Override
+  public String binaryOperation(BinaryOperator operator, String leftOperand, String rightOperand) {
+    return switch (operator) {
+      case PLUS, MINUS, MULTIPLY -> QueryRewriter.super.binaryOperation(operator, leftOperand, rightOperand);
+      // https://docs.snowflake.com/en/sql-reference/functions/div0null
+      case DIVIDE -> new StringBuilder()
+              .append("DIV0NULL")
+              .append("(")
+              .append(leftOperand)
+              .append(", ")
+              .append(rightOperand)
+              .append(")")
+              .toString();
+    };
   }
 }
