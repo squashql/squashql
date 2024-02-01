@@ -14,6 +14,7 @@ export class QueryJoin {
     this._queries = []
     this._queries.push(query)
     this._table = new Table(`__cte${this.current++}__`)
+    this._orders = new Map()
   }
 
   join(query: Query, joinType: JoinType, criteria?: Criteria): QueryJoin {
