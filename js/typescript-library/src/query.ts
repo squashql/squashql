@@ -24,6 +24,11 @@ export class QueryMerge {
     return this
   }
 
+  withParameter(parameter: Parameter): QueryMerge {
+    this._queries.forEach(q => q.withParameter(parameter))
+    return this
+  }
+
   toJSON() {
     return {
       "queries": this._queries,

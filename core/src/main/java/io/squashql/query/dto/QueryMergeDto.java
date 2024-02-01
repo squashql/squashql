@@ -1,5 +1,6 @@
 package io.squashql.query.dto;
 
+import io.squashql.query.parameter.Parameter;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -26,6 +27,11 @@ public class QueryMergeDto {
   public QueryMergeDto join(QueryDto q, JoinType joinType) {
     this.queries.add(q);
     this.joinTypes.add(joinType);
+    return this;
+  }
+
+  public QueryMergeDto withParameter(Parameter parameter) {
+    this.queries.forEach(q -> q.withParameter(parameter.key(), parameter));
     return this;
   }
 }
