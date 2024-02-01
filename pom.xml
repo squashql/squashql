@@ -6,7 +6,7 @@
 
   <groupId>io.squashql</groupId>
   <artifactId>squashql-parent</artifactId>
-  <version>1.7.2-SNAPSHOT</version>
+  <version>1.7.4-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>SquashQL</name>
