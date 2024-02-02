@@ -1,17 +1,15 @@
 package io.squashql.query;
 
-import io.squashql.query.dto.CacheStatsDto;
-import io.squashql.query.dto.JoinType;
-import io.squashql.query.dto.PivotTableQueryDto;
-import io.squashql.query.dto.QueryDto;
+import io.squashql.query.compiled.CompiledColumnSet;
+import io.squashql.query.dto.*;
 import io.squashql.query.exception.LimitExceedException;
 import io.squashql.table.*;
-import io.squashql.util.Queries;
+import io.squashql.util.CustomExplicitOrdering;
+import io.squashql.util.DependentExplicitOrdering;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Function;
@@ -21,7 +19,7 @@ import java.util.stream.Stream;
 public class QueryMergeExecutor {
 
   public static Table executeQueryMerge(QueryExecutor queryExecutor, QueryDto first, QueryDto second, JoinType joinType, SquashQLUser user) {
-    Function<QueryDto, Table> executor = query -> queryExecutor.executeQuery(
+    Function<QueryDto, Pair<Table, QueryResolver>> executor = query -> queryExecutor.executeQueryInternal(
             query,
             CacheStatsDto.builder(),
             user,
@@ -33,9 +31,9 @@ public class QueryMergeExecutor {
   }
 
   public static PivotTable executePivotQueryMerge(QueryExecutor queryExecutor, QueryDto first, QueryDto second, List<Field> rows, List<Field> columns, JoinType joinType, SquashQLUser user) {
-    Function<QueryDto, Table> executor = query -> {
+    Function<QueryDto, Pair<Table, QueryResolver>> executor = query -> {
       Set<Field> columnsFromColumnSets = query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream()).collect(Collectors.toSet());
-      return queryExecutor.executePivotQuery(
+        final Pair<PivotTable, QueryResolver> result = queryExecutor.executePivotQueryInternal(
               new PivotTableQueryDto(query,
                       rows.stream().filter(r -> query.columns.contains(r) || columnsFromColumnSets.contains(r)).toList(),
                       columns.stream().filter(r -> query.columns.contains(r) || columnsFromColumnSets.contains(r)).toList()),
@@ -44,8 +42,8 @@ public class QueryMergeExecutor {
               false,
               limit -> {
                 throw new LimitExceedException("Result of " + query + " is too big (limit=" + limit + ")");
-              })
-              .table;
+              });
+        return Tuples.pair(result.getOne().table, result.getTwo());
     };
 
     Function<Table, ColumnarTable> replaceTotalCellValuesFunction = t -> (ColumnarTable) TableUtils.replaceTotalCellValues((ColumnarTable) t,
@@ -60,23 +58,27 @@ public class QueryMergeExecutor {
                                        QueryDto second,
                                        JoinType joinType,
                                        Function<Table, ColumnarTable> replaceTotalCellValuesFunction,
-                                       Function<QueryDto, Table> executor) {
-    Map<String, Comparator<?>> firstComparators = Queries.getComparators(first);
-    Map<String, Comparator<?>> secondComparators = Queries.getComparators(second);
-    secondComparators.putAll(firstComparators); // the comparators of the first query take precedence over the second's
+                                       Function<QueryDto, Pair<Table, QueryResolver>> executor) {
 
-    Set<ColumnSet> columnSets = Stream
-            .concat(first.columnSets.values().stream(), second.columnSets.values().stream())
-            .collect(Collectors.toSet());
 
-    CompletableFuture<Table> f1 = CompletableFuture.supplyAsync(() -> executor.apply(first));
-    CompletableFuture<Table> f2 = CompletableFuture.supplyAsync(() -> executor.apply(second));
+
+
+    CompletableFuture<Pair<Table, QueryResolver>> f1 = CompletableFuture.supplyAsync(() -> executor.apply(first));
+    CompletableFuture<Pair<Table, QueryResolver>> f2 = CompletableFuture.supplyAsync(() -> executor.apply(second));
     try {
       return CompletableFuture.allOf(f1, f2)
               .thenApply(__ -> {
-                ColumnarTable table = (ColumnarTable) MergeTables.mergeTables(f1.join(), f2.join(), joinType);
-                return replaceTotalCellValuesFunction.apply(table);
-//                return (ColumnarTable) TableUtils.orderRows(table, secondComparators, columnSets);
+                final Pair<Table, QueryResolver> r1 = f1.join();
+                final Pair<Table, QueryResolver> r2 = f2.join();
+                ColumnarTable table = (ColumnarTable) MergeTables.mergeTables(r1.getOne(), r2.getOne(), joinType);
+                table = replaceTotalCellValuesFunction.apply(table);
+                final Map<String, Comparator<?>> firstComparators = r1.getTwo().squashqlComparators();
+                final Map<String, Comparator<?>> secondComparators = r2.getTwo().squashqlComparators();
+                secondComparators.putAll(firstComparators); // the comparators of the first query take precedence over the second's
+                final Set<CompiledColumnSet> columnSets = Stream
+                        .concat(r1.getTwo().getCompiledColumnSets().values().stream(), r2.getTwo().getCompiledColumnSets().values().stream())
+                        .collect(Collectors.toSet());
+                return (ColumnarTable) TableUtils.orderRows(table, secondComparators, columnSets, r1.getTwo().useDefaultComparator() && r2.getTwo().useDefaultComparator());
               })
               .join();
     } catch (Exception e) {

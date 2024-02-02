@@ -2,10 +2,13 @@ package io.squashql.query;
 
 import io.squashql.query.compiled.*;
 import io.squashql.query.database.DatabaseQuery;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.store.Store;
 import io.squashql.type.*;
+import io.squashql.util.CustomExplicitOrdering;
+import io.squashql.util.DependentExplicitOrdering;
 import lombok.Data;
 import lombok.Value;
 
@@ -158,7 +161,7 @@ public class QueryResolver {
             compileCriteria(query.havingCriteriaDto),
             rollupColumns,
             groupingSets,
-            compileOrderBy(query.orders, this.query.columns, query.columnSets.get(BUCKET)),
+            compileOrderBy(query.orders, this.query.columns),
             compileVirtualTables(query.virtualTableDtos),
             query.limit);
   }
@@ -177,7 +180,7 @@ public class QueryResolver {
     final List<TypedField> select = subQuery.columns.stream().map(this::resolveField).toList();
     final CompiledCriteria whereCriteria = compileCriteria(subQuery.whereCriteriaDto);
     final CompiledCriteria havingCriteria = compileCriteria(subQuery.havingCriteriaDto);
-    final List<CompiledOrderBy> orderBy = compileOrderBy(subQuery.orders, subQuery.columns, subQuery.columnSets.get(BUCKET));
+    final List<CompiledOrderBy> orderBy = compileOrderBy(subQuery.orders, subQuery.columns);
     // should we check groupingSet and rollup as well are empty ?
     DatabaseQuery query = new DatabaseQuery(null,
             table,
@@ -282,17 +285,9 @@ public class QueryResolver {
   /**
    * Compiles orderBy
    */
-  private List<CompiledOrderBy> compileOrderBy(Map<Field, OrderDto> orders, List<Field> select, ColumnSet bucket) {
+  private List<CompiledOrderBy> compileOrderBy(Map<Field, OrderDto> orders, List<Field> select) {
     final Map<Field, OrderDto> queryOrders = new LinkedHashMap<>(orders);
     select.stream().filter(s -> !queryOrders.containsKey(s)).forEach(s -> queryOrders.put(s, new SimpleOrderDto(OrderKeywordDto.ASC)));
-    if (bucket != null) {
-      BucketColumnSetDto cs = (BucketColumnSetDto) bucket;
-      queryOrders.put(cs.newField, new ExplicitOrderDto(new ArrayList<>(cs.values.keySet())));
-      cs.values.forEach((k, v) -> {
-        List<Object> l = new ArrayList<>(v);
-        queryOrders.put(cs.field, new ExplicitOrderDto(l));
-      });
-    }
     return queryOrders.entrySet().stream().map(e -> new CompiledOrderBy(resolveWithFallback(e.getKey()), e.getValue())).collect(Collectors.toList());
   }
 
@@ -415,6 +410,27 @@ public class QueryResolver {
               bucket.values));
     }
     return m;
+  }
+
+  Map<String, Comparator<?>> squashqlComparators() {
+    final Map<String, Comparator<?>> res = new HashMap<>();
+    // Special case for Bucket that defines implicitly an order.
+    final CompiledColumnSet bucket = this.compiledColumnSets.get(BUCKET);
+    if (bucket != null) {
+      final CompiledBucketColumnSet cs = (CompiledBucketColumnSet) bucket;
+      Map<Object, List<Object>> m = new LinkedHashMap<>();
+      cs.values().forEach((k, v) -> {
+        m.put(k, new ArrayList<>(v));
+      });
+      res.put(SqlUtils.squashqlExpression(cs.newField()), new CustomExplicitOrdering(new ArrayList<>(m.keySet())));
+      res.put(SqlUtils.squashqlExpression(cs.field()), DependentExplicitOrdering.create(m));
+    }
+
+    return res;
+  }
+
+  boolean useDefaultComparator() {
+    return this.scope.orderBy().isEmpty();
   }
 
   @Value

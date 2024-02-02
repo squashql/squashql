@@ -2,17 +2,19 @@ package io.squashql.table;
 
 import com.google.common.base.Suppliers;
 import io.squashql.query.*;
+import io.squashql.query.compiled.CompiledBucketColumnSet;
+import io.squashql.query.compiled.CompiledColumnSet;
 import io.squashql.query.compiled.CompiledMeasure;
-import io.squashql.query.compiled.CompiledOrderBy;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
-import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.type.TypedField;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.NullAndTotalComparator;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -181,38 +183,15 @@ public class TableUtils {
    * Naturally order the rows from left to right.
    */
   public static Table orderRows(ColumnarTable table) {
-    return orderRows(table, Collections.emptyMap(), Collections.emptySet(), Collections.emptyList());
+    return orderRows(table, Collections.emptyMap(), Collections.emptySet(), true);
   }
 
   public static Table orderRows(ColumnarTable table,
-                                Map<String, Comparator<?>> comparatorByColumnName,
-                                Collection<ColumnSet> columnSets,
-                                List<CompiledOrderBy> orderBy) {
-    List<List<?>> args = new ArrayList<>();
-    List<Comparator<?>> comparators = new ArrayList<>();
-    Set<CompiledOrderBy> copy = new HashSet<>(orderBy);
-
-    columnSets.forEach(columnSet -> {
-      if (columnSet.getColumnSetKey() != ColumnSetKey.BUCKET) {
-        throw new IllegalArgumentException("Unexpected column set type " + columnSet);
-      }
-      BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
-      // Remove from the map of comparators to use default one when only none is defined for regular column
-      copy.removeIf(o -> o.field().name().equals(cs.newField.name()) || o.field().name().equals(cs.field.name()));
-    });
-
-    List<Header> headers = table.headers;
-    for (Header header : headers) {
-      String headerName = header.name();
-      Comparator<?> queryComp = comparatorByColumnName.get(headerName);
-      // Order by default if not explicitly asked in the query. Otherwise, respect the order.
-      if (queryComp != null || copy.isEmpty()) {
-        args.add(table.getColumnValues(headerName));
-        // Always order table. If not defined, use natural order comp.
-        comparators.add(queryComp == null ? NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder())
-                : queryComp);
-      }
-    }
+                                Map<String, Comparator<?>> comparators,
+                                Collection<CompiledColumnSet> columnSets,
+                                boolean useDefaultComparator) {
+    final Pair<List<Comparator<?>>, List<List<?>>> comparisonData = prepareComparisonData(table, comparators, useDefaultComparator);
+    final List<List<?>> args = comparisonData.getTwo();
 
     if (args.isEmpty()) {
       return table;
@@ -221,20 +200,44 @@ public class TableUtils {
     // Special case for the CS comparators.
     int[] contextIndices = new int[args.size()];
     Arrays.fill(contextIndices, -1);
-    for (ColumnSet columnSet : new HashSet<>(columnSets)) {
-      BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
+    for (CompiledColumnSet columnSet : new HashSet<>(columnSets)) {
+      if (columnSet.columnSetKey() != ColumnSetKey.BUCKET) {
+        throw new IllegalArgumentException("Unexpected column set type " + columnSet);
+      }
+      CompiledBucketColumnSet cs = (CompiledBucketColumnSet) columnSet;
       // cs.field can appear multiple times in the table.
-      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(cs.newField.name()));
+      table.columnIndices(cs.field()).forEach(i -> contextIndices[i] = table.columnIndex(SqlUtils.squashqlExpression(cs.newField())));
     }
 
-    int[] finalIndices = MultipleColumnsSorter.sort(args, comparators, contextIndices);
+    int[] finalIndices = MultipleColumnsSorter.sort(args, comparisonData.getOne(), contextIndices);
 
     List<List<Object>> values = new ArrayList<>();
     for (List<Object> value : table.values) {
       values.add(reorder(value, finalIndices));
     }
 
-    return new ColumnarTable(headers, table.measures, values);
+    return new ColumnarTable(table.headers, table.measures, values);
+  }
+
+  private static Pair<List<Comparator<?>>, List<List<?>>> prepareComparisonData(
+          ColumnarTable table,
+          Map<String, Comparator<?>> additionalComparators,
+          boolean useDefaultComparator) {
+    List<List<?>> args = new ArrayList<>();
+    List<Comparator<?>> comparators = new ArrayList<>();
+    List<Header> headers = table.headers;
+    for (Header header : headers) {
+      final String headerName = header.name();
+      final Comparator<?> additionalComparator = additionalComparators.get(headerName);
+      if (additionalComparator != null) {
+        args.add(table.getColumnValues(headerName));
+        comparators.add(additionalComparator);
+      } else if (useDefaultComparator) {
+        args.add(table.getColumnValues(headerName));
+        comparators.add(NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder()));
+      }
+    }
+    return Tuples.pair(comparators, args);
   }
 
   /**

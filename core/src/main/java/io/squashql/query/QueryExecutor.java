@@ -13,8 +13,9 @@ import io.squashql.table.PivotTable;
 import io.squashql.table.Table;
 import io.squashql.table.TableUtils;
 import io.squashql.type.TypedField;
-import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
 import java.util.function.IntConsumer;
@@ -55,28 +56,39 @@ public class QueryExecutor {
     return executePivotQuery(pivotTableQueryDto, CacheStatsDto.builder(), null, true, null);
   }
 
+
   public PivotTable executePivotQuery(PivotTableQueryDto pivotTableQueryDto,
                                       CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
                                       SquashQLUser user,
                                       boolean replaceTotalCellsAndOrderRows,
                                       IntConsumer limitNotifier) {
+    return executePivotQueryInternal(pivotTableQueryDto, cacheStatsDtoBuilder, user, replaceTotalCellsAndOrderRows, limitNotifier).getOne();
+  }
+
+  public Pair<PivotTable, QueryResolver> executePivotQueryInternal(PivotTableQueryDto pivotTableQueryDto,
+                                                                   CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
+                                                                   SquashQLUser user,
+                                                                   boolean replaceTotalCellsAndOrderRows,
+                                                                   IntConsumer limitNotifier) {
     if (!pivotTableQueryDto.query.rollupColumns.isEmpty()) {
       throw new IllegalArgumentException("Rollup is not supported by this API");
     }
 
-    PivotTableContext pivotTableContext = new PivotTableContext(pivotTableQueryDto);
-    QueryDto preparedQuery = prepareQuery(pivotTableQueryDto.query, pivotTableContext);
-    Table result = executeQuery(preparedQuery, cacheStatsDtoBuilder, user, false, limitNotifier);
+    final PivotTableContext pivotTableContext = new PivotTableContext(pivotTableQueryDto);
+    final QueryDto preparedQuery = prepareQuery(pivotTableQueryDto.query, pivotTableContext);
+    final Pair<Table, QueryResolver> result = executeQueryInternal(preparedQuery, cacheStatsDtoBuilder, user, false, limitNotifier);
+    Table table = result.getOne();
+    final QueryResolver resolver = result.getTwo();
     if (replaceTotalCellsAndOrderRows) {
-      result = TableUtils.replaceTotalCellValues((ColumnarTable) result,
+      table = TableUtils.replaceTotalCellValues((ColumnarTable) table,
               pivotTableQueryDto.rows.stream().map(Field::name).toList(),
               pivotTableQueryDto.columns.stream().map(Field::name).toList());
-//      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values(),
-//              preparedQuery.orders.keySet());
+      table = TableUtils.orderRows((ColumnarTable) result, resolver.squashqlComparators(), resolver.getCompiledColumnSets().values(),
+              resolver.useDefaultComparator());
     }
 
     List<String> values = pivotTableQueryDto.query.measures.stream().map(Measure::alias).toList();
-    return new PivotTable(result, pivotTableQueryDto.rows.stream().map(Field::name).toList(), pivotTableQueryDto.columns.stream().map(Field::name).toList(), values);
+    return Tuples.pair(new PivotTable(table, pivotTableQueryDto.rows.stream().map(Field::name).toList(), pivotTableQueryDto.columns.stream().map(Field::name).toList(), values), resolver);
   }
 
   private static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
@@ -143,6 +155,14 @@ public class QueryExecutor {
                             SquashQLUser user,
                             boolean replaceTotalCellsAndOrderRows,
                             IntConsumer limitNotifier) {
+    return executeQueryInternal(query, cacheStatsDtoBuilder, user, replaceTotalCellsAndOrderRows, limitNotifier).getOne();
+  }
+
+  Pair<Table, QueryResolver> executeQueryInternal(QueryDto query,
+                                                  CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
+                                                  SquashQLUser user,
+                                                  boolean replaceTotalCellsAndOrderRows,
+                                                  IntConsumer limitNotifier) {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
     query.limit = queryLimit;
 
@@ -235,8 +255,10 @@ public class QueryExecutor {
     result = TableUtils.selectAndOrderColumns(queryResolver, (ColumnarTable) result, query);
     if (replaceTotalCellsAndOrderRows) {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result, !query.rollupColumns.isEmpty());
-      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values(),
-              queryResolver.getScope().orderBy);
+      result = TableUtils.orderRows((ColumnarTable) result,
+              queryResolver.squashqlComparators(),
+              queryResolver.getCompiledColumnSets().values(),
+              queryResolver.useDefaultComparator());
     }
 
     CacheStatsDto stats = this.queryCache.stats(user);
@@ -244,7 +266,7 @@ public class QueryExecutor {
             .hitCount(stats.hitCount)
             .evictionCount(stats.evictionCount)
             .missCount(stats.missCount);
-    return result;
+    return Tuples.pair(result, queryResolver);
   }
 
   private static boolean canBeCached(CompiledMeasure measure, QueryScope scope) {
