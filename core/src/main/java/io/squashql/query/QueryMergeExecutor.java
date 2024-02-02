@@ -14,6 +14,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class QueryMergeExecutor {
 
@@ -54,22 +55,15 @@ public class QueryMergeExecutor {
     return new PivotTable(table, rows.stream().map(SqlUtils::squashqlExpression).toList(), columns.stream().map(SqlUtils::squashqlExpression).toList(), values);
   }
 
-  private static List<Field> getLocalFields(List<Field> rows, QueryDto query, Set<Field> columnsFromColumnSets) {
-    List<Field> localRows = new ArrayList<>();
-    for (Field row : rows) {
-      // FIXME replace with check on squashQLExpression
-      if (row instanceof AliasedField af) {
-        for (Field column : query.columns) {
-          if (af.alias().equals(column.alias())) {
-            localRows.add(column); // add the column from the select.
-            break;
-          }
-        }
-      } else if (query.columns.contains(row) || columnsFromColumnSets.contains(row)) {
-        localRows.add(row);
-      }
+  private static List<Field> getLocalFields(List<Field> elements, QueryDto query, Set<Field> columnsFromColumnSets) {
+    List<Field> localElements = new ArrayList<>();
+    for (Field element : elements) {
+      Stream.concat(query.columns.stream(), columnsFromColumnSets.stream())
+              .filter(f -> SqlUtils.squashqlExpression(f).equals(SqlUtils.squashqlExpression(element)))
+              .findFirst()
+              .ifPresent(localElements::add); // add the column from the select for the check done later.
     }
-    return localRows;
+    return localElements;
   }
 
   private static ColumnarTable execute(QueryMergeDto queryMerge,

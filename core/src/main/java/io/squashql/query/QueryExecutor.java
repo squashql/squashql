@@ -87,13 +87,13 @@ public class QueryExecutor {
     axes.removeAll(select);
 
     if (!axes.isEmpty()) {
-      throw new IllegalArgumentException(axes.stream().map(Field::name).toList() + " on rows or columns by not in select. Please add those fields in select");
+      throw new IllegalArgumentException(axes.stream().map(SqlUtils::squashqlExpression).toList() + " on rows or columns by not in select. Please add those fields in select");
     }
     axes = new HashSet<>(context.rows);
     axes.addAll(context.columns);
     select.removeAll(axes);
     if (!select.isEmpty()) {
-      throw new IllegalArgumentException(select.stream().map(Field::name).toList() + " in select but not on rows or columns. Please add those fields on one axis");
+      throw new IllegalArgumentException(select.stream().map(SqlUtils::squashqlExpression).toList() + " in select but not on rows or columns. Please add those fields on one axis");
     }
 
     List<Field> rows = context.cleansedRows;
