@@ -8,7 +8,32 @@ import {serializeMap} from "./util"
 import Criteria from "./criteria"
 
 export class QueryMerge {
-  constructor(readonly first: Query, readonly second: Query, readonly joinType: JoinType) {
+
+  private readonly _queries: Array<Query>
+  private readonly _joins: Array<JoinType>
+
+  constructor(query: Query) {
+    this._queries = []
+    this._joins = []
+    this._queries.push(query)
+  }
+
+  join(query: Query, joinType: JoinType): QueryMerge {
+    this._queries.push(query)
+    this._joins.push(joinType)
+    return this
+  }
+
+  withParameter(parameter: Parameter): QueryMerge {
+    this._queries.forEach(q => q.withParameter(parameter))
+    return this
+  }
+
+  toJSON() {
+    return {
+      "queries": this._queries,
+      "joinTypes": this._joins,
+    }
   }
 }
 

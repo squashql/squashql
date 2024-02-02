@@ -4,6 +4,23 @@ Drilling across or Drill across refers to a reporting feature that let you query
 Aggregated results are then stitch together on shared columns. There are several strategies to *stitch*
 the results. Let's see various examples to learn how SquashQL does it.  
 
+### API
+
+The API supports joining N query results. 
+
+```typescript
+const query1 = Query.from("table1").select(...)
+const query2 = Query.from("table2").select(...)
+const query3 = Query.from("table3").select(...)
+
+const queryMerge = new QueryMerge(query1)
+        .join(query2, JoinType.LEFT)
+        .join(query3, JoinType.INNER)
+
+querier.executeQuery(queryMerge)
+        .then(result => console.log(result))
+```
+
 ### Examples
 
 #### Schema
@@ -110,7 +127,7 @@ Missing values will be filled with `null`.
 ##### FULL
 
 ```typescript
-querier.executeQuery(new QueryMerge(queryShipment, queryReturn, JoinType.FULL))
+querier.executeQuery(new QueryMerge(queryShipment).join(queryReturn, JoinType.FULL))
         .then(result => console.log(result))
 ```
 
@@ -133,7 +150,7 @@ entries are kept.
 ##### LEFT
 
 ```typescript
-querier.executeQuery(new QueryMerge(queryShipment, queryReturn, JoinType.LEFT))
+querier.executeQuery(new QueryMerge(queryShipment).join(queryReturn, JoinType.LEFT))
         .then(result => console.log(result))
 ```
 
@@ -154,7 +171,7 @@ table, there is no entry for product `D` but the join type is `LEFT` so this ent
 ##### INNER
 
 ```typescript
-querier.executeQuery(new QueryMerge(queryShipment, queryReturn, JoinType.INNER))
+querier.executeQuery(new QueryMerge(queryShipment).join(queryReturn, JoinType.INNER))
         .then(result => console.log(result))
 ```
 
@@ -238,7 +255,7 @@ values for quantity sold are simply copy from the first result.
 +-------------+-------------+---------------+-------------------+
 ```
 
-## Limit
+### Limit
 
 SquashQL has an implicit limit query result set to 10000. In case of drilling across, this limit is applied to the queries
 used in the `QueryMerge` before combining the result. Since the final result can be wrong if at least one of the results

@@ -6,6 +6,7 @@ import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.QueryMergeDto;
 import io.squashql.query.exception.LimitExceedException;
 import io.squashql.transaction.DuckDBDataLoader;
 import io.squashql.type.TableTypedField;
@@ -90,10 +91,11 @@ public class TestDuckDBQuery {
             .build();
 
     query1.limit = 2;
-    TestUtil.assertThatThrownBy(() -> this.executor.executeQueryMerge(query1, query2, JoinType.INNER, null))
+    QueryMergeDto queryMergeDto = QueryMergeDto.from(query1).join(query2, JoinType.INNER);
+    TestUtil.assertThatThrownBy(() -> this.executor.executeQueryMerge(queryMergeDto, null))
             .isInstanceOf(LimitExceedException.class)
             .hasMessageContaining("too big");
-    TestUtil.assertThatThrownBy(() -> this.executor.executePivotQueryMerge(query1, query2, List.of(tableField("eanId")), List.of(), JoinType.INNER, null))
+    TestUtil.assertThatThrownBy(() -> this.executor.executePivotQueryMerge(queryMergeDto, List.of(tableField("eanId")), List.of(), null))
             .isInstanceOf(LimitExceedException.class)
             .hasMessageContaining("too big");
   }

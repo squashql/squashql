@@ -1,5 +1,6 @@
 package io.squashql.query.database;
 
+import io.squashql.query.BinaryOperator;
 import io.squashql.type.AliasedTypedField;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
@@ -123,5 +124,15 @@ public interface QueryRewriter {
 
   default String escapeSingleQuote(String s) {
     return SqlUtils.escapeSingleQuote(s, "''");
+  }
+
+  default String binaryOperation(BinaryOperator operator, String leftOperand, String rightOperand) {
+    return new StringBuilder()
+            .append("(")
+            .append(leftOperand)
+            .append(operator.infix)
+            .append(rightOperand)
+            .append(")")
+            .toString();
   }
 }

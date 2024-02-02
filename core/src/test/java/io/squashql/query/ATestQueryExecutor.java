@@ -683,7 +683,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .rollup(tableFields(List.of("category", SCENARIO_FIELD_NAME)))
             .build();
 
-    Table result = this.executor.executeQueryMerge(query1, query2, JoinType.FULL, null);
+    Table result = this.executor.executeQueryMerge(QueryMergeDto.from(query1).join(query2, JoinType.FULL), null);
 
     Assertions.assertThat(result.headers().stream().map(Header::name).toList())
             .containsExactly("category", SCENARIO_FIELD_NAME, "p_sum", "p_min");
@@ -704,6 +704,35 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   }
 
   @Test
+  void testMergeThreeTables() {
+    QueryDto query1 = Query
+            .from(this.storeName)
+            .select(tableFields(List.of("category")), List.of(sum("p_sum", "price")))
+            .build();
+
+    QueryDto query2 = Query
+            .from(this.storeName)
+            .select(tableFields(List.of("category")), List.of(min("p_min", "price")))
+            .build();
+
+    QueryDto query3 = Query
+            .from(this.storeName)
+            .select(tableFields(List.of("category")), List.of(max("p_max", "price")))
+            .build();
+
+    QueryMergeDto queryMerge = QueryMergeDto.from(query1)
+            .join(query2, JoinType.INNER)
+            .join(query3, JoinType.INNER);
+    Table result = this.executor.executeQueryMerge(queryMerge, null);
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
+            .containsExactly("category", "p_sum", "p_min", "p_max");
+    Assertions.assertThat(result).containsExactly(
+            List.of("cloth", 30d, 10d, 10d),
+            List.of("drink", 7.5d, 1.5d, 4d),
+            List.of("food", 9d, 3d, 3d));
+  }
+
+  @Test
   void testMergeWithComparators() {
     QueryDto query1 = Query
             .from(this.storeName)
@@ -720,7 +749,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .orderBy(tableField(SCENARIO_FIELD_NAME), List.of("s1", MAIN_SCENARIO_NAME, "s2"))
             .build();
 
-    Table result = this.executor.executeQueryMerge(query1, query2, JoinType.FULL, null);
+    Table result = this.executor.executeQueryMerge(QueryMergeDto.from(query1).join(query2, JoinType.FULL), null);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, 46.5d, 1.5d),
             Arrays.asList("food", TOTAL, 9d, 3d),
@@ -772,7 +801,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .select_(List.of(group2), List.of(avg("p_avg", "price")))
             .build();
 
-    Table result = this.executor.executeQueryMerge(query1, query2, JoinType.FULL, null);
+    Table result = this.executor.executeQueryMerge(QueryMergeDto.from(query1).join(query2, JoinType.FULL), null);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList("Food & Drink", "food", TOTAL, TOTAL, 9d, null),
             Arrays.asList("Food & Drink", "drink", TOTAL, TOTAL, 7.5d, null),
