@@ -70,13 +70,13 @@ public class QueryExecutor {
     Table result = executeQuery(preparedQuery, cacheStatsDtoBuilder, user, false, limitNotifier);
     if (replaceTotalCellsAndOrderRows) {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result,
-              pivotTableQueryDto.rows.stream().map(Field::name).toList(),
-              pivotTableQueryDto.columns.stream().map(Field::name).toList());
+              pivotTableQueryDto.rows.stream().map(Field::name).toList(), // FIXME squashQLExpression??
+              pivotTableQueryDto.columns.stream().map(Field::name).toList()); // FIXME squashQLExpression??
       result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
     }
 
     List<String> values = pivotTableQueryDto.query.measures.stream().map(Measure::alias).toList();
-    return new PivotTable(result, pivotTableQueryDto.rows.stream().map(Field::name).toList(), pivotTableQueryDto.columns.stream().map(Field::name).toList(), values);
+    return new PivotTable(result, pivotTableQueryDto.rows.stream().map(SqlUtils::squashqlExpression).toList(), pivotTableQueryDto.columns.stream().map(SqlUtils::squashqlExpression).toList(), values); // FIXME squashQLExpression??
   }
 
   private static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
@@ -138,6 +138,10 @@ public class QueryExecutor {
             null);
   }
 
+  public QueryResolver createQueryResolver(QueryDto query) {
+    return new QueryResolver(query, this.queryEngine.datastore().storesByName());
+  }
+
   public Table executeQuery(QueryDto query,
                             CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
                             SquashQLUser user,
@@ -146,7 +150,7 @@ public class QueryExecutor {
     int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
     query.limit = queryLimit;
 
-    QueryResolver queryResolver = new QueryResolver(query, this.queryEngine.datastore().storesByName());
+    QueryResolver queryResolver = createQueryResolver(query);
     DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
             queryResolver.getColumns(), queryResolver.getBucketColumns(), queryResolver.getMeasures().values(), queryResolver.getScope());
     // Compute what needs to be prefetched

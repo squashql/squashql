@@ -29,8 +29,17 @@ import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestPivotTable extends ABaseTestQuery {
 
-  protected String storeSpending = "storespending" + getClass().getSimpleName().toLowerCase();
-  protected String storePopulation = "storepopulation" + getClass().getSimpleName().toLowerCase();
+  private final String storeSpending = "storespending" + getClass().getSimpleName().toLowerCase();
+  private final String storePopulation = "storepopulation" + getClass().getSimpleName().toLowerCase();
+  private final TableField city = new TableField(this.storeSpending, "city");
+  private final TableField country = new TableField(this.storeSpending, "country");
+  private final TableField continent = new TableField(this.storeSpending, "continent");
+  private final TableField spendingCategory = new TableField(this.storeSpending, "spending category");
+  private final TableField spendingSubcategory = new TableField(this.storeSpending, "spending subcategory");
+  private final TableField amount = new TableField(this.storeSpending, "amount");
+  private final TableField population = new TableField(this.storePopulation, "population");
+  private final TableField countryPop = new TableField(this.storePopulation, "country");
+  private final TableField continentPop = new TableField(this.storePopulation, "continent");
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
@@ -41,9 +50,11 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     TableTypedField spendingSubcategory = new TableTypedField(this.storeSpending, "spending subcategory", String.class);
     TableTypedField amount = new TableTypedField(this.storeSpending, "amount", double.class);
     TableTypedField population = new TableTypedField(this.storePopulation, "population", double.class);
+    TableTypedField countryPop = new TableTypedField(this.storePopulation, "country", String.class);
+    TableTypedField continentPop = new TableTypedField(this.storePopulation, "continent", String.class);
     return Map.of(
             this.storeSpending, List.of(city, country, continent, spendingCategory, spendingSubcategory, amount),
-            this.storePopulation, List.of(country, continent, population));
+            this.storePopulation, List.of(countryPop, continentPop, population));
   }
 
   @Override
@@ -324,8 +335,8 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
   @Test
   void testDrillingAcross(TestInfo testInfo) {
-    Measure amount = Functions.sum("amount", "amount");
-    Measure pop = Functions.sum("population", "population");
+    Measure amount = Functions.sum("amount", this.amount);
+    Measure pop = Functions.sum("population", this.population);
 
     List<Measure> measuresSpending = List.of(amount);
     QueryDto query1 = Query
@@ -334,12 +345,43 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .build();
 
     List<Measure> measuresPop = List.of(pop);
+    List<String> rows = List.of("continent", "country");
     QueryDto query2 = Query
             .from(this.storePopulation)
-            .select(tableFields(List.of("continent", "country")), measuresPop)
+            .select(tableFields(rows), measuresPop)
             .build();
 
-    verifyResults(testInfo, query1, query2, JoinType.LEFT, List.of("continent", "country"), List.of("spending category"));
+    List<String> columns = List.of("spending category");
+    verifyResults(testInfo, query1, query2, JoinType.LEFT, tableFields(rows), tableFields(columns));
+  }
+
+  /**
+   * This test is using the respective {@link TableField} object. In that case, since the queries are coming from two
+   * different tables, the fields to be used in rows and columns have to be aliased fields.
+   */
+  @Test
+  void testDrillingAcrossFullName(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", this.amount);
+    Measure pop = Functions.sum("population", this.population);
+
+    List<Measure> measuresSpending = List.of(amount);
+    QueryDto query1 = Query
+            .from(this.storeSpending)
+            .select(List.of(this.spendingCategory, this.continent.as("continent"), this.country.as("country")), measuresSpending)
+            .build();
+
+    QueryDto query2 = Query
+            .from(this.storePopulation)
+            .select(List.of(this.continentPop.as("continent"), this.countryPop.as("country")), List.of(pop))
+            .build();
+
+    QueryMergeDto queryMerge = QueryMergeDto.from(query1).join(query2, JoinType.LEFT);
+    List<Field> rows = List.of(new AliasedField("continent"), new AliasedField("country"));
+    List<Field> columns = List.of(this.spendingCategory);
+    // FIXME to delete
+    PivotTable pivotTable = this.executor.executePivotQueryMerge(queryMerge, rows, columns, null);
+    pivotTable.show();
+    verifyResults(testInfo, query1, query2, JoinType.LEFT, rows, columns);
   }
 
   @Test
@@ -391,21 +433,21 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     | Grand Total |         Grand Total |        null |       465.0 |   null |       70.0 |   null |       65.0 |   null |      330.0 |
     +-------------+---------------------+-------------+-------------+--------+------------+--------+------------+--------+------------+
      */
-    verifyResults(testInfo, query1, query2, JoinType.INNER, List.of("group", "spending category"), List.of("country"));
+    verifyResults(testInfo, query1, query2, JoinType.INNER, tableFields(List.of("group", "spending category")), tableFields(List.of("country")));
   }
 
   private void verifyResults(TestInfo testInfo, QueryDto query, List<String> rows, List<String> columns) {
-    verifyResults(testInfo, query, null, null, rows, columns);
+    verifyResults(testInfo, query, null, null, tableFields(rows), tableFields(columns));
   }
 
   /**
    * To save in file '*.tabular.json': System.out.println(TestUtil.tableToJson(pivotTable.table));
    * To save in file '*.pivottable.json': System.out.println(JacksonUtil.serialize(pivotTable.pivotTableCells));
    */
-  private void verifyResults(TestInfo testInfo, QueryDto query1, QueryDto query2, JoinType joinType, List<String> rows, List<String> columns) {
+  private void verifyResults(TestInfo testInfo, QueryDto query1, QueryDto query2, JoinType joinType, List<Field> rows, List<Field> columns) {
     PivotTable pt = query2 == null
-            ? this.executor.executePivotQuery(new PivotTableQueryDto(query1, tableFields(rows), tableFields(columns)))
-            : this.executor.executePivotQueryMerge(QueryMergeDto.from(query1).join(query2, joinType), tableFields(rows), tableFields(columns), null);
+            ? this.executor.executePivotQuery(new PivotTableQueryDto(query1, rows, columns))
+            : this.executor.executePivotQueryMerge(QueryMergeDto.from(query1).join(query2, joinType), rows, columns, null);
     Table expectedTabular = tableFromFile(testInfo);
 
     Assertions.assertThat(pt.table).containsExactlyElementsOf(ImmutableList.copyOf(expectedTabular.iterator()));

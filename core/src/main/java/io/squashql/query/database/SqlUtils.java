@@ -1,5 +1,8 @@
 package io.squashql.query.database;
 
+import io.squashql.query.Field;
+import io.squashql.query.FunctionField;
+import io.squashql.query.TableField;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
@@ -46,6 +49,20 @@ public class SqlUtils {
       return getFieldFullName(ttf);
     } else if (f instanceof FunctionTypedField ftf) {
       return singleOperandFunctionName(ftf.function(), getFieldFullName(ftf.field()));
+    } else {
+      throw new IllegalArgumentException(f.getClass().getName());
+    }
+  }
+
+  public static String squashqlExpression(Field f) {
+    if (f.alias() != null) {
+      return f.alias();
+    }
+
+    if (f instanceof TableField tf) {
+      return getFieldFullName(tf.tableName, tf.fieldName);
+    } else if (f instanceof FunctionField ftf) {
+      return singleOperandFunctionName(ftf.function, squashqlExpression(f));
     } else {
       throw new IllegalArgumentException(f.getClass().getName());
     }
