@@ -29,8 +29,8 @@ import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestPivotTable extends ABaseTestQuery {
 
-  private final String storeSpending = "storespending" + getClass().getSimpleName().toLowerCase();
-  private final String storePopulation = "storepopulation" + getClass().getSimpleName().toLowerCase();
+  private final String storeSpending = "storespending" + ATestPivotTable.class.getSimpleName().toLowerCase();
+  private final String storePopulation = "storepopulation" + ATestPivotTable.class.getSimpleName().toLowerCase();
   private final TableField city = new TableField(this.storeSpending, "city");
   private final TableField country = new TableField(this.storeSpending, "country");
   private final TableField continent = new TableField(this.storeSpending, "continent");

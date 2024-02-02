@@ -129,7 +129,7 @@
   ],
   "headers":[
     {
-      "name":"storespendingtestduckdbpivottable.spending category",
+      "name":"storespendingatestpivottable.spending category",
       "type":"java.lang.String",
       "isMeasure":false
     },
