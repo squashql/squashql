@@ -18,11 +18,15 @@ public class DuckDBDatastore implements JdbcDatastore {
   public final Supplier<Map<String, Store>> stores;
 
   public DuckDBDatastore() {
+    this(true);
+  }
+
+  public DuckDBDatastore(boolean cacheMetadata) {
     try {
       Class.forName("org.duckdb.DuckDBDriver");
       // Create an in-memory db.
       this.connection = (DuckDBConnection) DriverManager.getConnection("jdbc:duckdb:");
-      this.stores = Suppliers.memoize(this::fetchStoresByName);
+      this.stores = cacheMetadata ? Suppliers.memoize(this::fetchStoresByName) : this::fetchStoresByName;
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
