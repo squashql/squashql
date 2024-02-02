@@ -1,5 +1,6 @@
 package io.squashql.query.database;
 
+import io.squashql.query.BinaryOperator;
 import io.squashql.query.date.DateFunctions;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TypedField;
@@ -60,5 +61,21 @@ public class BigQueryQueryRewriter implements QueryRewriter {
   public String grouping(TypedField f) {
     // BQ does not support using the alias
     return _select(f, false);
+  }
+
+  @Override
+  public String binaryOperation(BinaryOperator operator, String leftOperand, String rightOperand) {
+    return switch (operator) {
+      case PLUS, MINUS, MULTIPLY -> QueryRewriter.super.binaryOperation(operator, leftOperand, rightOperand);
+      // https://cloud.google.com/bigquery/docs/reference/standard-sql/functions-and-operators#safe_divide
+      case DIVIDE -> new StringBuilder()
+              .append("SAFE_DIVIDE")
+              .append("(")
+              .append(leftOperand)
+              .append(", ")
+              .append(rightOperand)
+              .append(")")
+              .toString();
+    };
   }
 }

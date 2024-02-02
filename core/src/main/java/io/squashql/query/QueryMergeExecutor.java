@@ -1,11 +1,12 @@
 package io.squashql.query;
 
 import io.squashql.query.compiled.CompiledColumnSet;
-import io.squashql.query.dto.*;
+import io.squashql.query.dto.CacheStatsDto;
+import io.squashql.query.dto.PivotTableQueryDto;
+import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.QueryMergeDto;
 import io.squashql.query.exception.LimitExceedException;
 import io.squashql.table.*;
-import io.squashql.util.CustomExplicitOrdering;
-import io.squashql.util.DependentExplicitOrdering;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 
@@ -14,11 +15,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class QueryMergeExecutor {
 
-  public static Table executeQueryMerge(QueryExecutor queryExecutor, QueryDto first, QueryDto second, JoinType joinType, SquashQLUser user) {
+  public static Table executeQueryMerge(QueryExecutor queryExecutor, QueryMergeDto queryMerge, SquashQLUser user) {
     Function<QueryDto, Pair<Table, QueryResolver>> executor = query -> queryExecutor.executeQueryInternal(
             query,
             CacheStatsDto.builder(),
@@ -27,10 +27,10 @@ public class QueryMergeExecutor {
             limit -> {
               throw new LimitExceedException("Result of " + query + " is too big (limit=" + limit + ")");
             });
-    return execute(first, second, joinType, t -> (ColumnarTable) TableUtils.replaceTotalCellValues((ColumnarTable) t, true), executor);
+    return execute(queryMerge, t -> (ColumnarTable) TableUtils.replaceTotalCellValues((ColumnarTable) t, true), executor);
   }
 
-  public static PivotTable executePivotQueryMerge(QueryExecutor queryExecutor, QueryDto first, QueryDto second, List<Field> rows, List<Field> columns, JoinType joinType, SquashQLUser user) {
+  public static PivotTable executePivotQueryMerge(QueryExecutor queryExecutor, QueryMergeDto queryMerge, List<Field> rows, List<Field> columns, SquashQLUser user) {
     Function<QueryDto, Pair<Table, QueryResolver>> executor = query -> {
       Set<Field> columnsFromColumnSets = query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream()).collect(Collectors.toSet());
         final Pair<PivotTable, QueryResolver> result = queryExecutor.executePivotQueryInternal(
@@ -49,36 +49,38 @@ public class QueryMergeExecutor {
     Function<Table, ColumnarTable> replaceTotalCellValuesFunction = t -> (ColumnarTable) TableUtils.replaceTotalCellValues((ColumnarTable) t,
             rows.stream().map(Field::name).toList(),
             columns.stream().map(Field::name).toList());
-    ColumnarTable table = execute(first, second, joinType, replaceTotalCellValuesFunction, executor);
+    ColumnarTable table = execute(queryMerge, replaceTotalCellValuesFunction, executor);
     List<String> values = table.headers().stream().filter(Header::isMeasure).map(Header::name).toList();
     return new PivotTable(table, rows.stream().map(Field::name).toList(), columns.stream().map(Field::name).toList(), values);
   }
 
-  private static ColumnarTable execute(QueryDto first,
-                                       QueryDto second,
-                                       JoinType joinType,
+  private static ColumnarTable execute(QueryMergeDto queryMerge,
                                        Function<Table, ColumnarTable> replaceTotalCellValuesFunction,
                                        Function<QueryDto, Pair<Table, QueryResolver>> executor) {
 
 
 
 
-    CompletableFuture<Pair<Table, QueryResolver>> f1 = CompletableFuture.supplyAsync(() -> executor.apply(first));
-    CompletableFuture<Pair<Table, QueryResolver>> f2 = CompletableFuture.supplyAsync(() -> executor.apply(second));
+    final List<CompletableFuture<Pair<Table, QueryResolver>>> futures = new ArrayList<>();
+    for (QueryDto q : queryMerge.queries) {
+      futures.add(CompletableFuture.supplyAsync(() -> executor.apply(q)));
+    }
+
     try {
-      return CompletableFuture.allOf(f1, f2)
+      return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
               .thenApply(__ -> {
-                final Pair<Table, QueryResolver> r1 = f1.join();
-                final Pair<Table, QueryResolver> r2 = f2.join();
-                ColumnarTable table = (ColumnarTable) MergeTables.mergeTables(r1.getOne(), r2.getOne(), joinType);
+                final List<Pair<Table, QueryResolver>> results = futures.stream().map(CompletableFuture::join).toList();
+                ColumnarTable table = (ColumnarTable) MergeTables.mergeTables(results.stream().map(Pair::getOne).toList(), queryMerge.joinTypes);
                 table = replaceTotalCellValuesFunction.apply(table);
-                final Map<String, Comparator<?>> firstComparators = r1.getTwo().squashqlComparators();
-                final Map<String, Comparator<?>> secondComparators = r2.getTwo().squashqlComparators();
-                secondComparators.putAll(firstComparators); // the comparators of the first query take precedence over the second's
-                final Set<CompiledColumnSet> columnSets = Stream
-                        .concat(r1.getTwo().getCompiledColumnSets().values().stream(), r2.getTwo().getCompiledColumnSets().values().stream())
-                        .collect(Collectors.toSet());
-                return (ColumnarTable) TableUtils.orderRows(table, secondComparators, columnSets, r1.getTwo().useDefaultComparator() && r2.getTwo().useDefaultComparator());
+                final Map<String, Comparator<?>> comparators = new HashMap<>();
+                final Set<CompiledColumnSet> columnSets = new HashSet<>();
+                boolean useDefaultComparator = true;
+                for (int i = results.size() - 1; i >= 0; i--) {
+                  comparators.putAll(results.get(i).getTwo().squashqlComparators()); // the comparators of the first query take precedence over the second's
+                  columnSets.addAll(results.get(i).getTwo().getCompiledColumnSets().values());
+                  useDefaultComparator &= results.get(i).getTwo().useDefaultComparator();
+                }
+                return (ColumnarTable) TableUtils.orderRows(table, comparators, columnSets, useDefaultComparator);
               })
               .join();
     } catch (Exception e) {

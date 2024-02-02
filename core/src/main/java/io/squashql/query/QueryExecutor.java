@@ -391,12 +391,12 @@ public class QueryExecutor {
 
   }
 
-  public PivotTable executePivotQueryMerge(QueryDto first, QueryDto second, List<Field> rows, List<Field> columns, JoinType joinType, SquashQLUser user) {
-    return QueryMergeExecutor.executePivotQueryMerge(this, first, second, rows, columns, joinType, user);
+  public PivotTable executePivotQueryMerge(QueryMergeDto queryMerge, List<Field> rows, List<Field> columns, SquashQLUser user) {
+    return QueryMergeExecutor.executePivotQueryMerge(this, queryMerge, rows, columns, user);
   }
 
-  public Table executeQueryMerge(QueryDto first, QueryDto second, JoinType joinType, SquashQLUser user) {
-    return QueryMergeExecutor.executeQueryMerge(this, first, second, joinType, user);
+  public Table executeQueryMerge(QueryMergeDto queryMerge, SquashQLUser user) {
+    return QueryMergeExecutor.executeQueryMerge(this, queryMerge, user);
   }
 
   public Table executeExperimentalQueryMerge(QueryJoinDto queryJoin) {
