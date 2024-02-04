@@ -83,7 +83,7 @@ public class QueryExecutor {
       table = TableUtils.replaceTotalCellValues((ColumnarTable) table,
               pivotTableQueryDto.rows.stream().map(Field::name).toList(),
               pivotTableQueryDto.columns.stream().map(Field::name).toList());
-      table = TableUtils.orderRows((ColumnarTable) result, resolver.squashqlComparators(), resolver.getCompiledColumnSets().values(),
+      table = TableUtils.orderRows((ColumnarTable) table, resolver.squashqlComparators(), resolver.getCompiledColumnSets().values(),
               resolver.useDefaultComparator());
     }
 

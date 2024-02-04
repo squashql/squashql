@@ -161,7 +161,9 @@ public class QueryResolver {
             compileCriteria(query.havingCriteriaDto),
             rollupColumns,
             groupingSets,
-            compileOrderBy(query.orders, this.query.columns),
+            compileOrderBy(query.orders, query.columns,
+                    Stream.concat(query.rollupColumns.stream(), query.groupingSets.stream().flatMap(Collection::stream).distinct()).collect(Collectors.toSet()),
+                    query.orders.isEmpty()),
             compileVirtualTables(query.virtualTableDtos),
             query.limit);
   }
@@ -180,7 +182,11 @@ public class QueryResolver {
     final List<TypedField> select = subQuery.columns.stream().map(this::resolveField).toList();
     final CompiledCriteria whereCriteria = compileCriteria(subQuery.whereCriteriaDto);
     final CompiledCriteria havingCriteria = compileCriteria(subQuery.havingCriteriaDto);
-    final List<CompiledOrderBy> orderBy = compileOrderBy(subQuery.orders, subQuery.columns);
+    final List<CompiledOrderBy> orderBy = compileOrderBy(
+            subQuery.orders,
+            subQuery.columns,
+            Stream.concat(subQuery.rollupColumns.stream(), subQuery.groupingSets.stream().flatMap(Collection::stream).distinct()).collect(Collectors.toSet()),
+            subQuery.orders.isEmpty());
     // should we check groupingSet and rollup as well are empty ?
     DatabaseQuery query = new DatabaseQuery(null,
             table,
@@ -285,10 +291,17 @@ public class QueryResolver {
   /**
    * Compiles orderBy
    */
-  private List<CompiledOrderBy> compileOrderBy(Map<Field, OrderDto> orders, List<Field> select) {
+  private List<CompiledOrderBy> compileOrderBy(Map<Field, OrderDto> orders, List<Field> select, Set<Field> rollupColumns, boolean useDefaultOrder) {
     final Map<Field, OrderDto> queryOrders = new LinkedHashMap<>(orders);
-    select.stream().filter(s -> !queryOrders.containsKey(s)).forEach(s -> queryOrders.put(s, new SimpleOrderDto(OrderKeywordDto.ASC)));
-    return queryOrders.entrySet().stream().map(e -> new CompiledOrderBy(resolveWithFallback(e.getKey()), e.getValue())).collect(Collectors.toList());
+    if (useDefaultOrder) {
+      select.forEach(s -> queryOrders.put(s, new SimpleOrderDto(OrderKeywordDto.ASC)));
+    }
+    return queryOrders.entrySet().stream()
+            .map(e -> new CompiledOrderBy(
+                    resolveWithFallback(e.getKey()),
+                    e.getValue(),
+                    rollupColumns.contains(e.getKey())))
+            .collect(Collectors.toList());
   }
 
   /**

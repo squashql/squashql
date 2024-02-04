@@ -213,7 +213,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
   /**
    * Alias should not contain '.' !! because BQ does not support it !
    */
-  private static String safeColumnAlias(String alias) {
+  static String safeColumnAlias(String alias) {
     return SqlUtils.columnAlias(alias).replace(".", "_");
   }
 }

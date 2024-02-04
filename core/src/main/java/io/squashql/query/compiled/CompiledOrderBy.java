@@ -2,6 +2,7 @@ package io.squashql.query.compiled;
 
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.ExplicitOrderDto;
 import io.squashql.query.dto.OrderDto;
 import io.squashql.query.dto.SimpleOrderDto;
@@ -12,11 +13,20 @@ import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
-public record CompiledOrderBy(TypedField field, OrderDto orderDto) {
+import static io.squashql.query.agg.AggregationFunction.GROUPING;
+
+public record CompiledOrderBy(TypedField field, OrderDto orderDto, boolean withTotal) {
 
   public String sqlExpression(final QueryRewriter queryRewriter) {
-    final String expression = field.sqlExpression(queryRewriter); // todo-mde should be queryRewriter.orderBy(field) because some db supports using the alias, others not.
+    final String expression = this.field.sqlExpression(queryRewriter); // todo-mde should be queryRewriter.orderBy(field) because some db supports using the alias, others not.
     final StringJoiner joiner = new StringJoiner(" ");
+    if (withTotal) {
+      //todo maybe cache
+      final CompiledMeasure rollUpMeasure = new CompiledAggregatedMeasure(
+              SqlUtils.groupingAlias(expression.replace(".", "_")),
+              this.field, GROUPING, null, false);
+      joiner.add(rollUpMeasure.sqlExpression(queryRewriter, false)).add("DESC,");
+    }
     if (this.orderDto instanceof SimpleOrderDto simpleOrder) {
       joiner.add(expression).add(simpleOrder.order.name());
       return joiner.toString();
