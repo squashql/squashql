@@ -6,6 +6,7 @@ import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.store.Store;
 import io.squashql.table.PivotTable;
+import io.squashql.table.PivotTableUtils;
 import io.squashql.table.Table;
 import io.squashql.table.TableUtils;
 import org.springframework.context.annotation.Import;
@@ -15,10 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -76,17 +74,8 @@ public class QueryController {
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(),
             true,
             null);
-    List<String> fields = pt.table.headers().stream().map(Header::name).collect(Collectors.toList());
-    SimpleTableDto simpleTable = SimpleTableDto.builder()
-            .rows(ImmutableList.copyOf(pt.table.iterator()))
-            .columns(fields)
-            .build();
-    QueryResultDto result = QueryResultDto.builder()
-            .table(simpleTable)
-            .metadata(TableUtils.buildTableMetadata(pt.table))
-            .debug(DebugInfoDto.builder().cache(csBuilder.build()).build())
-            .build();
-    return ResponseEntity.ok(new PivotTableQueryResultDto(result, pt.rows, pt.columns, pt.values));
+    List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, pivotTableQueryDto.minify);
+    return ResponseEntity.ok(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values));
   }
 
   @PostMapping(MAPPING_QUERY_MERGE)
@@ -100,13 +89,11 @@ public class QueryController {
   @PostMapping(MAPPING_QUERY_MERGE_PIVOT)
   public ResponseEntity<PivotTableQueryResultDto> executeQueryMergePivot(@RequestBody PivotTableQueryMergeDto pivotTableQueryMergeDto) {
     PivotTable pt = this.queryExecutor.executePivotQueryMerge(
-            pivotTableQueryMergeDto.query,
-            pivotTableQueryMergeDto.rows,
-            pivotTableQueryMergeDto.columns,
+            pivotTableQueryMergeDto,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get()
     );
-    QueryResultDto result = createQueryResultDto(pt.table);
-    return ResponseEntity.ok(new PivotTableQueryResultDto(result, pt.rows, pt.columns, pt.values));
+    List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, pivotTableQueryMergeDto.minify);
+    return ResponseEntity.ok(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values));
   }
 
   @PostMapping(MAPPING_QUERY_JOIN_EXPERIMENTAL)
@@ -151,9 +138,7 @@ public class QueryController {
   @PostMapping(MAPPING_QUERY_MERGE_PIVOT_STRINGIFY)
   public ResponseEntity<String> executeAndMergePivotStringify(@RequestBody PivotTableQueryMergeDto pivotTableQueryMergeDto) {
     PivotTable pt = this.queryExecutor.executePivotQueryMerge(
-            pivotTableQueryMergeDto.query,
-            pivotTableQueryMergeDto.rows,
-            pivotTableQueryMergeDto.columns,
+            pivotTableQueryMergeDto,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get()
     );
     return ResponseEntity.ok(pt.toString());

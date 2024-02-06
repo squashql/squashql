@@ -4,10 +4,8 @@ import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
-import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.LimitExceedException;
-import io.squashql.query.dto.QueryJoinDto;
 import io.squashql.spring.dataset.DatasetTestConfig;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -24,7 +22,8 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static io.squashql.query.Functions.*;
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.sum;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
@@ -269,16 +268,16 @@ public class QueryControllerTest {
             .build();
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_MERGE_PIVOT)
-                    .content(JacksonUtil.serialize(new PivotTableQueryMergeDto(QueryMergeDto.from(query1).join(query2, JoinType.FULL), tableFields(List.of("ean")), List.of())))
+                    .content(JacksonUtil.serialize(new PivotTableQueryMergeDto(QueryMergeDto.from(query1).join(query2, JoinType.FULL), tableFields(List.of("ean")), List.of(), false)))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               PivotTableQueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, PivotTableQueryResultDto.class);
-              Assertions.assertThat(queryResult.queryResult.table.rows).containsExactlyInAnyOrder(
-                      List.of(QueryEngine.GRAND_TOTAL, 102000d * 2, 10200d),
-                      List.of("ITMella 250g", 102000d, 10200d),
-                      List.of("Nutella 250g", 102000d, 10200d));
-              Assertions.assertThat(queryResult.queryResult.table.columns).containsExactly("ean", "capdv-sum", "capdv-avg");
+              List<Map<String, Object>> cells = List.of(
+                      Map.of("capdv-avg", 10200d, "capdv-sum", 102000d * 2),
+                      Map.of("ean", "ITMella 250g", "capdv-avg", 10200d, "capdv-sum", 102000d),
+                      Map.of("ean", "Nutella 250g", "capdv-avg", 10200d, "capdv-sum", 102000d));
+              Assertions.assertThat(queryResult.cells).isEqualTo(cells);
             });
   }
 

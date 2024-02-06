@@ -70,13 +70,16 @@ public class QueryExecutor {
     Table result = executeQuery(preparedQuery, cacheStatsDtoBuilder, user, false, limitNotifier);
     if (replaceTotalCellsAndOrderRows) {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result,
-              pivotTableQueryDto.rows.stream().map(Field::name).toList(),
-              pivotTableQueryDto.columns.stream().map(Field::name).toList());
+              pivotTableQueryDto.rows.stream().map(SqlUtils::squashqlExpression).toList(),
+              pivotTableQueryDto.columns.stream().map(SqlUtils::squashqlExpression).toList());
       result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
     }
 
     List<String> values = pivotTableQueryDto.query.measures.stream().map(Measure::alias).toList();
-    return new PivotTable(result, pivotTableQueryDto.rows.stream().map(Field::name).toList(), pivotTableQueryDto.columns.stream().map(Field::name).toList(), values);
+    return new PivotTable(result,
+            pivotTableQueryDto.rows.stream().map(SqlUtils::squashqlExpression).toList(),
+            pivotTableQueryDto.columns.stream().map(SqlUtils::squashqlExpression).toList(),
+            values);
   }
 
   private static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
@@ -87,13 +90,13 @@ public class QueryExecutor {
     axes.removeAll(select);
 
     if (!axes.isEmpty()) {
-      throw new IllegalArgumentException(axes.stream().map(Field::name).toList() + " on rows or columns by not in select. Please add those fields in select");
+      throw new IllegalArgumentException(axes.stream().map(SqlUtils::squashqlExpression).toList() + " on rows or columns by not in select. Please add those fields in select");
     }
     axes = new HashSet<>(context.rows);
     axes.addAll(context.columns);
     select.removeAll(axes);
     if (!select.isEmpty()) {
-      throw new IllegalArgumentException(select.stream().map(Field::name).toList() + " in select but not on rows or columns. Please add those fields on one axis");
+      throw new IllegalArgumentException(select.stream().map(SqlUtils::squashqlExpression).toList() + " in select but not on rows or columns. Please add those fields on one axis");
     }
 
     List<Field> rows = context.cleansedRows;
@@ -367,8 +370,8 @@ public class QueryExecutor {
 
   }
 
-  public PivotTable executePivotQueryMerge(QueryMergeDto queryMerge, List<Field> rows, List<Field> columns, SquashQLUser user) {
-    return QueryMergeExecutor.executePivotQueryMerge(this, queryMerge, rows, columns, user);
+  public PivotTable executePivotQueryMerge(PivotTableQueryMergeDto pivotTableQueryMergeDto, SquashQLUser user) {
+    return QueryMergeExecutor.executePivotQueryMerge(this, pivotTableQueryMergeDto, user);
   }
 
   public Table executeQueryMerge(QueryMergeDto queryMerge, SquashQLUser user) {

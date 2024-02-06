@@ -386,7 +386,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
             .select(List.of(ean, competitor), List.of(vector))
             .build();
 
-    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, List.of(competitor), List.of(ean)));
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, List.of(competitor), List.of(ean), false));
     Assertions.assertThat(result.table.headers().stream().map(Header::name))
             .containsExactly(ean.name(), competitor.name(), vector.alias());
     List<List<Object>> points = List.of(

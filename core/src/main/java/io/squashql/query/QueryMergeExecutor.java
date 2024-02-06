@@ -1,9 +1,7 @@
 package io.squashql.query;
 
-import io.squashql.query.dto.CacheStatsDto;
-import io.squashql.query.dto.PivotTableQueryDto;
-import io.squashql.query.dto.QueryDto;
-import io.squashql.query.dto.QueryMergeDto;
+import io.squashql.query.database.SqlUtils;
+import io.squashql.query.dto.*;
 import io.squashql.query.exception.LimitExceedException;
 import io.squashql.table.*;
 import io.squashql.util.Queries;
@@ -13,6 +11,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class QueryMergeExecutor {
 
@@ -28,13 +27,16 @@ public class QueryMergeExecutor {
     return execute(queryMerge, t -> (ColumnarTable) TableUtils.replaceTotalCellValues((ColumnarTable) t, true), executor);
   }
 
-  public static PivotTable executePivotQueryMerge(QueryExecutor queryExecutor, QueryMergeDto queryMerge, List<Field> rows, List<Field> columns, SquashQLUser user) {
+  public static PivotTable executePivotQueryMerge(QueryExecutor queryExecutor, PivotTableQueryMergeDto pivotTableQueryMergeDto, SquashQLUser user) {
+    List<Field> rows = pivotTableQueryMergeDto.rows;
+    List<Field> columns = pivotTableQueryMergeDto.columns;
     Function<QueryDto, Table> executor = query -> {
       Set<Field> columnsFromColumnSets = query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream()).collect(Collectors.toSet());
+      List<Field> localRows = getLocalFields(rows, query, columnsFromColumnSets);
+      List<Field> localColumns = getLocalFields(columns, query, columnsFromColumnSets);
+
       return queryExecutor.executePivotQuery(
-              new PivotTableQueryDto(query,
-                      rows.stream().filter(r -> query.columns.contains(r) || columnsFromColumnSets.contains(r)).toList(),
-                      columns.stream().filter(r -> query.columns.contains(r) || columnsFromColumnSets.contains(r)).toList()),
+              new PivotTableQueryDto(query, localRows, localColumns, false),
               CacheStatsDto.builder(),
               user,
               false,
@@ -45,11 +47,25 @@ public class QueryMergeExecutor {
     };
 
     Function<Table, ColumnarTable> replaceTotalCellValuesFunction = t -> (ColumnarTable) TableUtils.replaceTotalCellValues((ColumnarTable) t,
-            rows.stream().map(Field::name).toList(),
-            columns.stream().map(Field::name).toList());
-    ColumnarTable table = execute(queryMerge, replaceTotalCellValuesFunction, executor);
+            rows.stream().map(SqlUtils::squashqlExpression).toList(),
+            columns.stream().map(SqlUtils::squashqlExpression).toList());
+    ColumnarTable table = execute(pivotTableQueryMergeDto.query, replaceTotalCellValuesFunction, executor);
     List<String> values = table.headers().stream().filter(Header::isMeasure).map(Header::name).toList();
-    return new PivotTable(table, rows.stream().map(Field::name).toList(), columns.stream().map(Field::name).toList(), values);
+    return new PivotTable(table,
+            rows.stream().map(SqlUtils::squashqlExpression).toList(),
+            columns.stream().map(SqlUtils::squashqlExpression).toList(),
+            values);
+  }
+
+  private static List<Field> getLocalFields(List<Field> elements, QueryDto query, Set<Field> columnsFromColumnSets) {
+    List<Field> localElements = new ArrayList<>();
+    for (Field element : elements) {
+      Stream.concat(query.columns.stream(), columnsFromColumnSets.stream())
+              .filter(f -> SqlUtils.squashqlExpression(f).equals(SqlUtils.squashqlExpression(element)))
+              .findFirst()
+              .ifPresent(localElements::add); // add the column from the select for the check done later.
+    }
+    return localElements;
   }
 
   private static ColumnarTable execute(QueryMergeDto queryMerge,

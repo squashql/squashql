@@ -68,7 +68,7 @@ public class ClassTemplateGenerator {
       }
       writer.flush();
     }
-    System.out.println("Class generated: ");
+    System.out.println("Class generated (" + classGenerated.size() + ")");
     classGenerated.forEach(System.out::println);
   }
 }
