@@ -52,17 +52,20 @@ SquashQL brings the ability to execute any SQL queries and transform their resul
 
 To execute a query whose result will be enriched with totals and subtotals to be able to display the result as a pivot table.
 It accepts a json object built with the Typescript library and returns a JSON object representing the result table of the computation.
-The object returns is of type [PivotTableQueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts#L59).
+The object returns is of type [PivotTableQueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts).
 
 To enable the pivot table feature, a `PivotConfig` parameter needs to be pass to the `execute` method:
 ```typescript
 const pivotConfig: PivotConfig = {
   rows: [budget.category],
-  columns: [budget.year, budget.month]
+  columns: [budget.year, budget.month],
+  minify: true
 }
 ```
 It is used by SquashQL to know which totals and subtotals needs to be computed. The union of the two lists rows and columns
 must be exactly equal to the list of columns provided in the select.
+
+The parameter `minify` is optional (default is `true`). If `true`, columns full of null values are removed the returned result.
 
 ```typescript
 const income = sumIf("Income", budget.amount, criterion(budget.incomeExpenditure, eq("Income")))
@@ -126,6 +129,8 @@ const mySecondQuery = from(otherTable._name)
         .build()
 querier.executeQuery(new QueryMerge(myFirstQuery, mySecondQuery)).then(response => console.log(response))
 ```
+
+Note the result of `QueryMerge` can also be displayed as a pivot table by using `querier.executePivotQuery()`. 
 
 Full documentation of [Drilling across in the dedicated page](./documentation/DRILLING-ACROSS.md).
 

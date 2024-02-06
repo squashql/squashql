@@ -1,19 +1,20 @@
 package io.squashql.query;
 
 import io.squashql.TestClass;
+import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.builder.Query;
-import io.squashql.query.dto.JoinType;
-import io.squashql.query.dto.QueryDto;
-import io.squashql.query.dto.QueryMergeDto;
+import io.squashql.query.dto.*;
+import io.squashql.table.PivotTable;
+import io.squashql.table.PivotTableUtils;
 import io.squashql.type.TableTypedField;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 import static io.squashql.query.Functions.sum;
+import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
@@ -53,16 +54,24 @@ public abstract class ATestDocDrillacross extends ABaseTestQuery {
     QueryDto query1 = Query
             .from("shipment")
             .select(tableFields(List.of("product")), List.of(sum("quantity sold", "quantity")))
-            .rollup(tableFields(List.of("product")))
+//            .rollup(tableFields(List.of("product")))
             .build();
 
     QueryDto query2 = Query
             .from("return")
             .select(tableFields(List.of("product", "reason")), List.of(sum("quantity returned", "quantity")))
-            .rollup(tableFields(List.of("product", "reason")))
+//            .rollup(tableFields(List.of("product", "reason")))
             .build();
 
-    BiConsumer<QueryDto, QueryDto> runnable = (q1, q2) -> this.executor.executeQueryMerge(QueryMergeDto.from(q1).join(q2, JoinType.FULL), null).show();
-    runnable.accept(query1, query2);
+    QueryMergeDto queryMerge = QueryMergeDto.from(query1).join(query2, JoinType.FULL);
+    this.executor.executeQueryMerge(queryMerge, null).show();
+    PivotTable pt = this.executor.executePivotQueryMerge(new PivotTableQueryMergeDto(QueryMergeDto.from(query1).join(query2, JoinType.FULL),
+                    List.of(tableField("product")),
+                    List.of(tableField("reason")),
+                    false),
+            null);
+    pt.show();
+    List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, false);
+    System.out.println(JacksonUtil.serialize(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values)));
   }
 }
