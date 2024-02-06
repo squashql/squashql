@@ -310,7 +310,7 @@ public class TestDuckDBDoc {
    * Json output for jsfiddle. Example: <a href="https://jsfiddle.net/azeq/dqebkp2x/">https://jsfiddle.net/azeq/dqebkp2x/</a>
    */
   private static void toJson(PivotTable pt) {
-    List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt);
+    List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, null);
     System.out.println(JacksonUtil.serialize(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values)));
   }
 }

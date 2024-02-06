@@ -113,8 +113,9 @@ public class TestPivotTable {
     List<Field> columns = List.of(this.spendingCategory.as("category"));
 
     PivotTable pivotTable = this.executor.executePivotQueryMerge(new PivotTableQueryMergeDto(queryMerge, rows, columns, true), null);
-    List<Map<String, Object>> cells = PivotTableUtils.generateCells(pivotTable);
-    String expectedCells = """
+    {
+      List<Map<String, Object>> cells = PivotTableUtils.generateCells(pivotTable, true);
+      String expectedCells = """
             [
                           {
                             "amount": 56.0,
@@ -214,6 +215,124 @@ public class TestPivotTable {
                           }
                         ]
                         """;
-    Assertions.assertThat(cells).isEqualTo(JacksonUtil.deserialize(expectedCells, List.class));
+      Assertions.assertThat(cells).isEqualTo(JacksonUtil.deserialize(expectedCells, List.class));
+    }
+
+    {
+      List<Map<String, Object>> cells = PivotTableUtils.generateCells(pivotTable, false);
+      String expectedCells = """
+            [
+                          {
+                            "amount": 56.0,
+                            "population": 465.0
+                          },
+                          {
+                            "continent": "am",
+                            "amount": 39.0,
+                            "population": 330.0
+                          },
+                          {
+                            "continent": "am",
+                            "country": "usa",
+                            "amount": 39.0,
+                            "population": 330.0
+                          },
+                          {
+                            "continent": "eu",
+                            "amount": 17.0,
+                            "population": 135.0
+                          },
+                          {
+                            "continent": "eu",
+                            "country": "france",
+                            "amount": 8.0,
+                            "population": 70.0
+                          },
+                          {
+                            "continent": "eu",
+                            "country": "uk",
+                            "amount": 9.0,
+                            "population": 65.0
+                          },
+                          {
+                            "amount": 17.0,
+                            "category": "extra",
+                            "population": null
+                          },
+                          {
+                            "continent": "am",
+                            "amount": 10.0,
+                            "category": "extra",
+                            "population": null
+                          },
+                          {
+                            "continent": "am",
+                            "country": "usa",
+                            "amount": 10.0,
+                            "category": "extra",
+                            "population": null
+                          },
+                          {
+                            "continent": "eu",
+                            "amount": 7.0,
+                            "category": "extra",
+                            "population": null
+                          },
+                          {
+                            "continent": "eu",
+                            "country": "france",
+                            "amount": 2.0,
+                            "category": "extra",
+                            "population": null
+                          },
+                          {
+                            "continent": "eu",
+                            "country": "uk",
+                            "amount": 5.0,
+                            "category": "extra",
+                            "population": null
+                          },
+                          {
+                            "amount": 39.0,
+                            "category": "minimum expenditure",
+                            "population": null
+                          },
+                          {
+                            "continent": "am",
+                            "amount": 29.0,
+                            "category": "minimum expenditure",
+                            "population": null
+                          },
+                          {
+                            "continent": "am",
+                            "country": "usa",
+                            "amount": 29.0,
+                            "category": "minimum expenditure",
+                            "population": null
+                          },
+                          {
+                            "continent": "eu",
+                            "amount": 10.0,
+                            "category": "minimum expenditure",
+                            "population": null
+                          },
+                          {
+                            "continent": "eu",
+                            "country": "france",
+                            "amount": 6.0,
+                            "category": "minimum expenditure",
+                            "population": null
+                          },
+                          {
+                            "continent": "eu",
+                            "country": "uk",
+                            "amount": 4.0,
+                            "category": "minimum expenditure",
+                            "population": null
+                          }
+                        ]
+                        """;
+      Assertions.assertThat(cells).isEqualTo(JacksonUtil.deserialize(expectedCells, List.class));
+    }
   }
 }

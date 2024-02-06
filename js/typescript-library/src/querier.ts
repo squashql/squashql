@@ -72,7 +72,7 @@ export function createPivotTableQuery(query: Query, pivotConfig: PivotConfig): P
 }
 
 export function createPivotTableQueryMerge(query: QueryMerge, pivotConfig: PivotConfig): PivotTableQueryMerge {
-  return {query, rows: pivotConfig.rows, columns: pivotConfig.columns}
+  return {query, rows: pivotConfig.rows, columns: pivotConfig.columns, minify: pivotConfig.minify}
 }
 
 export interface QueryResult {
@@ -82,7 +82,7 @@ export interface QueryResult {
 }
 
 export interface PivotTableQueryResult {
-  queryResult: QueryResult,
+  cells: Array<Map<string, any>>,
   rows: Array<string>
   columns: Array<string>
   values: Array<string>

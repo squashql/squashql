@@ -179,8 +179,8 @@ public final class PivotTableUtils {
   }
 
   /**
-   * Generates cells of the pivot table. Entire column of null values are removed. For instance, if the pivot table looks like
-   * this:
+   * Generates cells of the pivot table. Entire column of null values are removed if minify set to true or null (default).
+   * For instance, if the pivot table looks like this:
    * <pre>
    * +-------------+-------------+-------------+-------------+--------+------------+---------------------+---------------------+
    * |    category |    category | Grand Total | Grand Total |  extra |      extra | minimum expenditure | minimum expenditure |
@@ -196,8 +196,16 @@ public final class PivotTableUtils {
    * </pre>
    * The two columns for extra/population and minimum expenditure/population are removed.
    */
-  public static List<Map<String, Object>> generateCells(PivotTable pivotTable) {
-    Map<String, BitSet> zob = PivotTableUtils.findNullValuesOnEntireColumn(pivotTable);
+  public static List<Map<String, Object>> generateCells(PivotTable pivotTable, Boolean minify) {
+    Map<String, BitSet> empty = new HashMap<>();
+    for (String value : pivotTable.values) {
+      empty.put(value, null);
+    }
+
+    Map<String, BitSet> bitSetByValue = minify == null || minify
+            ? PivotTableUtils.findNullValuesOnEntireColumn(pivotTable)
+            : empty;
+
     List<Map<String, Object>> cells = new ArrayList<>((int) pivotTable.table.count());
     List<String> headerNames = pivotTable.table.headers().stream().map(Header::name).toList();
     int[] line = new int[1];
@@ -206,7 +214,7 @@ public final class PivotTableUtils {
       for (int i = 0; i < row.size(); i++) {
         Object value = row.get(i);
 
-        BitSet bitSet = zob.get(headerNames.get(i));
+        BitSet bitSet = bitSetByValue.get(headerNames.get(i));
         if ((bitSet == null && !NullAndTotalComparator.isTotal(value)) || (bitSet != null && !bitSet.get(line[0]))) {
           cell.put(headerNames.get(i), value);
         }

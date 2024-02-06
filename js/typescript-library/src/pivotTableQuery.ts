@@ -12,6 +12,7 @@ export interface PivotTableQueryMerge {
   query: QueryMerge
   rows: Array<Field>
   columns: Array<Field>
+  minify?: boolean
 }
 
 export interface PivotConfig {
