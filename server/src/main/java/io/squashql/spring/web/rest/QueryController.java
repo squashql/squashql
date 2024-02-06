@@ -74,17 +74,8 @@ public class QueryController {
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(),
             true,
             null);
-    List<String> fields = pt.table.headers().stream().map(Header::name).collect(Collectors.toList());
-    SimpleTableDto simpleTable = SimpleTableDto.builder()
-            .rows(ImmutableList.copyOf(pt.table.iterator()))
-            .columns(fields)
-            .build();
-    QueryResultDto result = QueryResultDto.builder()
-            .table(simpleTable)
-            .metadata(TableUtils.buildTableMetadata(pt.table))
-            .debug(DebugInfoDto.builder().cache(csBuilder.build()).build())
-            .build();
-    return ResponseEntity.ok(new PivotTableQueryResultDto(result, pt.rows, pt.columns, pt.values));
+    List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt);
+    return ResponseEntity.ok(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values));
   }
 
   @PostMapping(MAPPING_QUERY_MERGE)
@@ -102,8 +93,7 @@ public class QueryController {
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get()
     );
     List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt);
-    QueryResultDto result = createQueryResultDto(pt.table);
-    return ResponseEntity.ok(new PivotTableQueryResultDto(result, pt.rows, pt.columns, pt.values));
+    return ResponseEntity.ok(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values));
   }
 
   @PostMapping(MAPPING_QUERY_JOIN_EXPERIMENTAL)

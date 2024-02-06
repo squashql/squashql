@@ -5,6 +5,7 @@ export interface PivotTableQuery {
   query: Query
   rows: Array<Field>
   columns: Array<Field>
+  minify?: boolean
 }
 
 export interface PivotTableQueryMerge {
@@ -16,4 +17,5 @@ export interface PivotTableQueryMerge {
 export interface PivotConfig {
   rows: Array<Field>
   columns: Array<Field>
+  minify?: boolean
 }

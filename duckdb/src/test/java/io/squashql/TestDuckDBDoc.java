@@ -1,18 +1,16 @@
 package io.squashql;
 
-import com.google.common.collect.ImmutableList;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.table.PivotTable;
-import io.squashql.table.TableUtils;
+import io.squashql.table.PivotTableUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.ComparisonMethod.DIVIDE;
@@ -312,15 +310,7 @@ public class TestDuckDBDoc {
    * Json output for jsfiddle. Example: <a href="https://jsfiddle.net/azeq/dqebkp2x/">https://jsfiddle.net/azeq/dqebkp2x/</a>
    */
   private static void toJson(PivotTable pt) {
-    List<String> fields = pt.table.headers().stream().map(Header::name).collect(Collectors.toList());
-    SimpleTableDto simpleTable = SimpleTableDto.builder()
-            .rows(ImmutableList.copyOf(pt.table.iterator()))
-            .columns(fields)
-            .build();
-    QueryResultDto result = QueryResultDto.builder()
-            .table(simpleTable)
-            .metadata(TableUtils.buildTableMetadata(pt.table))
-            .build();
-    System.out.println(JacksonUtil.serialize(new PivotTableQueryResultDto(result, pt.rows, pt.columns, pt.values)));
+    List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt);
+    System.out.println(JacksonUtil.serialize(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values)));
   }
 }

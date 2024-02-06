@@ -128,7 +128,7 @@ public final class PivotTableUtils {
     return mapping;
   }
 
-  private static Map<String, BitSet> zob(PivotTable pivotTable) {
+  private static Map<String, BitSet> findNullValuesOnEntireColumn(PivotTable pivotTable) {
     int[] rowIndices = getHeaderIndices(pivotTable.table, pivotTable.columns);
     int[] measureIndices = getHeaderIndices(pivotTable.table, pivotTable.values);
     int[] line = new int[1];
@@ -197,7 +197,7 @@ public final class PivotTableUtils {
    * The two columns for extra/population and minimum expenditure/population are removed.
    */
   public static List<Map<String, Object>> generateCells(PivotTable pivotTable) {
-    Map<String, BitSet> zob = PivotTableUtils.zob(pivotTable);
+    Map<String, BitSet> zob = PivotTableUtils.findNullValuesOnEntireColumn(pivotTable);
     List<Map<String, Object>> cells = new ArrayList<>((int) pivotTable.table.count());
     List<String> headerNames = pivotTable.table.headers().stream().map(Header::name).toList();
     int[] line = new int[1];

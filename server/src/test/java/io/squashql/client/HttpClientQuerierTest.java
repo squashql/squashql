@@ -23,7 +23,6 @@ import static io.squashql.query.Functions.criterion;
 import static io.squashql.query.Functions.eq;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
-import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
@@ -190,18 +189,17 @@ public class HttpClientQuerierTest {
     Assertions.assertThat(response.rows).containsExactlyElementsOf(pivotTableQuery.rows.stream().map(Field::name).toList());
     Assertions.assertThat(response.columns).containsExactlyElementsOf(pivotTableQuery.columns.stream().map(Field::name).toList());
     Assertions.assertThat(response.values).containsExactlyElementsOf(List.of(CountMeasure.INSTANCE.alias));
-    Assertions.assertThat(response.queryResult.table.rows)
-            .containsExactly(
-                    List.of(GRAND_TOTAL, GRAND_TOTAL, 20),
-                    List.of(GRAND_TOTAL, "ITM Balma", 10),
-                    List.of(GRAND_TOTAL, "ITM Toulouse and Drive", 10),
-                    List.of("ITMella 250g", GRAND_TOTAL, 10),
-                    List.of("ITMella 250g", "ITM Balma", 5),
-                    List.of("ITMella 250g", "ITM Toulouse and Drive", 5),
-
-                    List.of("Nutella 250g", GRAND_TOTAL, 10),
-                    List.of("Nutella 250g", "ITM Balma", 5),
-                    List.of("Nutella 250g", "ITM Toulouse and Drive", 5));
+    List<Map<String, Object>> cells = List.of(
+            Map.of(CountMeasure.ALIAS, 20),
+            Map.of(CountMeasure.ALIAS, 10, "pdv", "ITM Balma"),
+            Map.of(CountMeasure.ALIAS, 10, "pdv", "ITM Toulouse and Drive"),
+            Map.of(CountMeasure.ALIAS, 10, "ean", "ITMella 250g"),
+            Map.of(CountMeasure.ALIAS, 5, "ean", "ITMella 250g", "pdv", "ITM Balma"),
+            Map.of(CountMeasure.ALIAS, 5, "ean", "ITMella 250g", "pdv", "ITM Toulouse and Drive"),
+            Map.of(CountMeasure.ALIAS, 10, "ean", "Nutella 250g"),
+            Map.of(CountMeasure.ALIAS, 5, "ean", "Nutella 250g", "pdv", "ITM Balma"),
+            Map.of(CountMeasure.ALIAS, 5, "ean", "Nutella 250g", "pdv", "ITM Toulouse and Drive"));
+    Assertions.assertThat(response.cells).isEqualTo(cells);
   }
 
   @Test

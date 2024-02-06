@@ -2,8 +2,6 @@ package io.squashql.table;
 
 import com.google.common.base.Suppliers;
 import io.squashql.query.*;
-import io.squashql.query.agg.AggregationFunction;
-import io.squashql.query.compiled.CompiledAggregatedMeasure;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
@@ -11,7 +9,6 @@ import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.type.AliasedTypedField;
 import io.squashql.type.TypedField;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.NullAndTotalComparator;
@@ -21,7 +18,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.squashql.util.ListUtils.reorder;
@@ -393,25 +389,5 @@ public class TableUtils {
       }
     }
     return groupingHeaders;
-  }
-
-  public static ColumnarTable toColumnar(RowTable table) {
-    List<List<Object>> values = new ArrayList<>();
-    for (int i = 0; i < table.headers.size(); i++) {
-      values.add(new ArrayList<>(table.rows.size()));
-    }
-
-    table.forEach(row -> {
-      for (int i = 0; i < row.size(); i++) {
-        values.get(i).add(row.get(i));
-      }
-    });
-
-    return new ColumnarTable(table.headers,
-            table.headers.stream()
-                    .filter(Header::isMeasure)
-                    .map(h -> new CompiledAggregatedMeasure(h.name(), new AliasedTypedField(h.name()), AggregationFunction.SUM, null, false))
-                    .collect(Collectors.toSet()),
-            values);
   }
 }
