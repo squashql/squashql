@@ -161,6 +161,45 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     );
   }
 
+  /**
+   * Simple case.
+   */
+  @Test
+  void testOneColumnEachAxisFullName() {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(criterion(this.city, in("la", "london"))) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.city), List.of(amount))
+            .build();
+    List<Field> rows = List.of(this.city);
+    List<Field> columns = List.of(this.spendingCategory);
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns, false));
+
+    Assertions.assertThat(result.table).containsExactly(
+            List.of(GRAND_TOTAL, GRAND_TOTAL, 22d),
+            List.of(GRAND_TOTAL, "la", 13d),
+            List.of(GRAND_TOTAL, "london", 9d),
+
+            List.of("extra", GRAND_TOTAL, 9d),
+            List.of("extra", "la", 4d),
+            List.of("extra", "london", 5d),
+
+            List.of("minimum expenditure", GRAND_TOTAL, 13d),
+            List.of("minimum expenditure", "la", 9d),
+            List.of("minimum expenditure", "london", 4d)
+    );
+
+    Assertions.assertThat(result.pivotTableCells).containsExactly(
+            List.of(this.storeSpending + ".spending category", GRAND_TOTAL, "extra", "minimum expenditure"),
+            List.of(this.storeSpending + ".city", "amount", "amount", "amount"),
+            List.of(GRAND_TOTAL, 22d, 9d, 13d),
+            List.of("la", 13d, 4d, 9d),
+            List.of("london", 9d, 5d, 4d)
+    );
+  }
+
   @Test
   void testComplexPivotTableSingleMeasure(TestInfo testInfo) {
     Measure amount = Functions.sum("amount", "amount");
