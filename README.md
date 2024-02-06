@@ -188,6 +188,7 @@ Result query 1                        Result query 2
 ```
 
 Drilling across result (with left join)
+
 <img src="documentation/assets/drilling-accross-minify.png" width="500">
 
 👉 https://jsfiddle.net/azeq/702gxqcb/
