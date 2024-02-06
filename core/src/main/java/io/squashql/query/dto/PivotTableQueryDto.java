@@ -17,4 +17,5 @@ public class PivotTableQueryDto {
   public QueryDto query;
   public List<Field> rows;
   public List<Field> columns;
+  public Boolean minify;
 }

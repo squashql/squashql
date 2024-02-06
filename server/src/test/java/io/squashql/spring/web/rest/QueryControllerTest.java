@@ -269,7 +269,7 @@ public class QueryControllerTest {
             .build();
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_MERGE_PIVOT)
-                    .content(JacksonUtil.serialize(new PivotTableQueryMergeDto(QueryMergeDto.from(query1).join(query2, JoinType.FULL), tableFields(List.of("ean")), List.of())))
+                    .content(JacksonUtil.serialize(new PivotTableQueryMergeDto(QueryMergeDto.from(query1).join(query2, JoinType.FULL), tableFields(List.of("ean")), List.of(), false)))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();

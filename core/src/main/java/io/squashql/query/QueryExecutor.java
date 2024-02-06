@@ -76,7 +76,10 @@ public class QueryExecutor {
     }
 
     List<String> values = pivotTableQueryDto.query.measures.stream().map(Measure::alias).toList();
-    return new PivotTable(result, pivotTableQueryDto.rows.stream().map(SqlUtils::squashqlExpression).toList(), pivotTableQueryDto.columns.stream().map(SqlUtils::squashqlExpression).toList(), values); // FIXME squashQLExpression??
+    return new PivotTable(result,
+            pivotTableQueryDto.rows.stream().map(SqlUtils::squashqlExpression).toList(),
+            pivotTableQueryDto.columns.stream().map(SqlUtils::squashqlExpression).toList(),
+            values);
   }
 
   private static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
@@ -371,8 +374,8 @@ public class QueryExecutor {
 
   }
 
-  public PivotTable executePivotQueryMerge(QueryMergeDto queryMerge, List<Field> rows, List<Field> columns, SquashQLUser user) {
-    return QueryMergeExecutor.executePivotQueryMerge(this, queryMerge, rows, columns, user);
+  public PivotTable executePivotQueryMerge(PivotTableQueryMergeDto pivotTableQueryMergeDto, SquashQLUser user) {
+    return QueryMergeExecutor.executePivotQueryMerge(this, pivotTableQueryMergeDto, user);
   }
 
   public Table executeQueryMerge(QueryMergeDto queryMerge, SquashQLUser user) {

@@ -17,4 +17,5 @@ public class PivotTableQueryMergeDto {
   public QueryMergeDto query;
   public List<Field> rows;
   public List<Field> columns;
+  public Boolean minify;
 }

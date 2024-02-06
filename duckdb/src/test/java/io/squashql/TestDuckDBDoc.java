@@ -116,7 +116,8 @@ public class TestDuckDBDoc {
       PivotTable pt = this.executor.executePivotQuery(new PivotTableQueryDto(
               query,
               List.of(new TableField("salaryRange.label")),
-              List.of(new TableField("ageRange.label"))));
+              List.of(new TableField("ageRange.label")),
+              false));
       toJson(pt);
     }
   }
@@ -164,7 +165,8 @@ public class TestDuckDBDoc {
     PivotTable pt = this.executor.executePivotQuery(new PivotTableQueryDto(
             query,
             List.of(new TableField("product"), new TableField("region")),
-            List.of(new TableField("month"))));
+            List.of(new TableField("month")),
+            false));
     pt.show();
     toJson(pt);
   }
@@ -253,7 +255,8 @@ public class TestDuckDBDoc {
     PivotTable pt = this.executor.executePivotQuery(new PivotTableQueryDto(
             query,
             fields,
-            List.of()));
+            List.of(),
+            false));
     pt.show();
     toJson(pt);
   }
@@ -299,7 +302,8 @@ public class TestDuckDBDoc {
     PivotTable pt = this.executor.executePivotQuery(new PivotTableQueryDto(
             query,
             fields,
-            List.of()));
+            List.of(),
+            false));
     pt.show();
     toJson(pt);
   }
