@@ -2,11 +2,9 @@ package io.squashql.query;
 
 import com.google.common.collect.ImmutableList;
 import io.squashql.TestClass;
-import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.*;
 import io.squashql.table.PivotTable;
-import io.squashql.table.PivotTableUtils;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.TestUtil;
@@ -27,7 +25,7 @@ import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 
-@TestClass(ignore = {TestClass.Type.SNOWFLAKE})
+@TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestPivotTable extends ABaseTestQuery {
 
@@ -377,17 +375,10 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             .select(List.of(this.continentPop.as("continent"), this.countryPop.as("country")), List.of(pop))
             .build();
 
-    QueryMergeDto queryMerge = QueryMergeDto.from(query1).join(query2, JoinType.LEFT);
     List<Field> rows = List.of(new AliasedField("continent"), new AliasedField("country"));
     List<Field> columns = List.of(this.spendingCategory);
-    // FIXME to delete
-    PivotTable pivotTable = this.executor.executePivotQueryMerge(new PivotTableQueryMergeDto(queryMerge, rows, columns, true), null);
-    pivotTable.table.show();
-    pivotTable.show();
-//    PivotTableUtils.zob(pivotTable);
-    System.out.println(JacksonUtil.serialize(pivotTable));
 
-//    verifyResults(testInfo, query1, query2, JoinType.LEFT, rows, columns);
+    verifyResults(testInfo, query1, query2, JoinType.LEFT, rows, columns);
   }
 
   @Test
