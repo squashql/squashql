@@ -257,7 +257,7 @@ values for quantity sold are simply copy from the first result.
 
 It can also be displayed as a pivot table:
 
-<img src="assets/drilling-accross-minify.png" width="800">
+<img src="assets/drilling-accross-minify.png" width="600">
 
 👉 https://jsfiddle.net/azeq/702gxqcb/
 
@@ -289,7 +289,7 @@ const pivotConfig: PivotConfig = {
 }
 ```
 
-<img src="assets/drilling-accross-notminify.png" width="800">
+<img src="assets/drilling-accross-notminify.png" width="1000">
 
 ### Limit
 
