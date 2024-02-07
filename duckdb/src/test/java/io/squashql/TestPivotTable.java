@@ -4,10 +4,7 @@ import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
-import io.squashql.query.dto.JoinType;
-import io.squashql.query.dto.PivotTableQueryMergeDto;
-import io.squashql.query.dto.QueryDto;
-import io.squashql.query.dto.QueryMergeDto;
+import io.squashql.query.dto.*;
 import io.squashql.table.PivotTable;
 import io.squashql.table.PivotTableUtils;
 import io.squashql.transaction.DuckDBDataLoader;
@@ -116,223 +113,241 @@ public class TestPivotTable {
     {
       List<Map<String, Object>> cells = PivotTableUtils.generateCells(pivotTable, true);
       String expectedCells = """
-            [
-                          {
-                            "amount": 56.0,
-                            "population": 465.0
-                          },
-                          {
-                            "continent": "am",
-                            "amount": 39.0,
-                            "population": 330.0
-                          },
-                          {
-                            "continent": "am",
-                            "country": "usa",
-                            "amount": 39.0,
-                            "population": 330.0
-                          },
-                          {
-                            "continent": "eu",
-                            "amount": 17.0,
-                            "population": 135.0
-                          },
-                          {
-                            "continent": "eu",
-                            "country": "france",
-                            "amount": 8.0,
-                            "population": 70.0
-                          },
-                          {
-                            "continent": "eu",
-                            "country": "uk",
-                            "amount": 9.0,
-                            "population": 65.0
-                          },
-                          {
-                            "amount": 17.0,
-                            "category": "extra"
-                          },
-                          {
-                            "continent": "am",
-                            "amount": 10.0,
-                            "category": "extra"
-                          },
-                          {
-                            "continent": "am",
-                            "country": "usa",
-                            "amount": 10.0,
-                            "category": "extra"
-                          },
-                          {
-                            "continent": "eu",
-                            "amount": 7.0,
-                            "category": "extra"
-                          },
-                          {
-                            "continent": "eu",
-                            "country": "france",
-                            "amount": 2.0,
-                            "category": "extra"
-                          },
-                          {
-                            "continent": "eu",
-                            "country": "uk",
-                            "amount": 5.0,
-                            "category": "extra"
-                          },
-                          {
-                            "amount": 39.0,
-                            "category": "minimum expenditure"
-                          },
-                          {
-                            "continent": "am",
-                            "amount": 29.0,
-                            "category": "minimum expenditure"
-                          },
-                          {
-                            "continent": "am",
-                            "country": "usa",
-                            "amount": 29.0,
-                            "category": "minimum expenditure"
-                          },
-                          {
-                            "continent": "eu",
-                            "amount": 10.0,
-                            "category": "minimum expenditure"
-                          },
-                          {
-                            "continent": "eu",
-                            "country": "france",
-                            "amount": 6.0,
-                            "category": "minimum expenditure"
-                          },
-                          {
-                            "continent": "eu",
-                            "country": "uk",
-                            "amount": 4.0,
-                            "category": "minimum expenditure"
-                          }
-                        ]
-                        """;
+              [
+                            {
+                              "amount": 56.0,
+                              "population": 465.0
+                            },
+                            {
+                              "continent": "am",
+                              "amount": 39.0,
+                              "population": 330.0
+                            },
+                            {
+                              "continent": "am",
+                              "country": "usa",
+                              "amount": 39.0,
+                              "population": 330.0
+                            },
+                            {
+                              "continent": "eu",
+                              "amount": 17.0,
+                              "population": 135.0
+                            },
+                            {
+                              "continent": "eu",
+                              "country": "france",
+                              "amount": 8.0,
+                              "population": 70.0
+                            },
+                            {
+                              "continent": "eu",
+                              "country": "uk",
+                              "amount": 9.0,
+                              "population": 65.0
+                            },
+                            {
+                              "amount": 17.0,
+                              "category": "extra"
+                            },
+                            {
+                              "continent": "am",
+                              "amount": 10.0,
+                              "category": "extra"
+                            },
+                            {
+                              "continent": "am",
+                              "country": "usa",
+                              "amount": 10.0,
+                              "category": "extra"
+                            },
+                            {
+                              "continent": "eu",
+                              "amount": 7.0,
+                              "category": "extra"
+                            },
+                            {
+                              "continent": "eu",
+                              "country": "france",
+                              "amount": 2.0,
+                              "category": "extra"
+                            },
+                            {
+                              "continent": "eu",
+                              "country": "uk",
+                              "amount": 5.0,
+                              "category": "extra"
+                            },
+                            {
+                              "amount": 39.0,
+                              "category": "minimum expenditure"
+                            },
+                            {
+                              "continent": "am",
+                              "amount": 29.0,
+                              "category": "minimum expenditure"
+                            },
+                            {
+                              "continent": "am",
+                              "country": "usa",
+                              "amount": 29.0,
+                              "category": "minimum expenditure"
+                            },
+                            {
+                              "continent": "eu",
+                              "amount": 10.0,
+                              "category": "minimum expenditure"
+                            },
+                            {
+                              "continent": "eu",
+                              "country": "france",
+                              "amount": 6.0,
+                              "category": "minimum expenditure"
+                            },
+                            {
+                              "continent": "eu",
+                              "country": "uk",
+                              "amount": 4.0,
+                              "category": "minimum expenditure"
+                            }
+                          ]
+                          """;
       Assertions.assertThat(cells).isEqualTo(JacksonUtil.deserialize(expectedCells, List.class));
     }
 
     {
       List<Map<String, Object>> cells = PivotTableUtils.generateCells(pivotTable, false);
       String expectedCells = """
-            [
-                          {
-                            "amount": 56.0,
-                            "population": 465.0
-                          },
-                          {
-                            "continent": "am",
-                            "amount": 39.0,
-                            "population": 330.0
-                          },
-                          {
-                            "continent": "am",
-                            "country": "usa",
-                            "amount": 39.0,
-                            "population": 330.0
-                          },
-                          {
-                            "continent": "eu",
-                            "amount": 17.0,
-                            "population": 135.0
-                          },
-                          {
-                            "continent": "eu",
-                            "country": "france",
-                            "amount": 8.0,
-                            "population": 70.0
-                          },
-                          {
-                            "continent": "eu",
-                            "country": "uk",
-                            "amount": 9.0,
-                            "population": 65.0
-                          },
-                          {
-                            "amount": 17.0,
-                            "category": "extra",
-                            "population": null
-                          },
-                          {
-                            "continent": "am",
-                            "amount": 10.0,
-                            "category": "extra",
-                            "population": null
-                          },
-                          {
-                            "continent": "am",
-                            "country": "usa",
-                            "amount": 10.0,
-                            "category": "extra",
-                            "population": null
-                          },
-                          {
-                            "continent": "eu",
-                            "amount": 7.0,
-                            "category": "extra",
-                            "population": null
-                          },
-                          {
-                            "continent": "eu",
-                            "country": "france",
-                            "amount": 2.0,
-                            "category": "extra",
-                            "population": null
-                          },
-                          {
-                            "continent": "eu",
-                            "country": "uk",
-                            "amount": 5.0,
-                            "category": "extra",
-                            "population": null
-                          },
-                          {
-                            "amount": 39.0,
-                            "category": "minimum expenditure",
-                            "population": null
-                          },
-                          {
-                            "continent": "am",
-                            "amount": 29.0,
-                            "category": "minimum expenditure",
-                            "population": null
-                          },
-                          {
-                            "continent": "am",
-                            "country": "usa",
-                            "amount": 29.0,
-                            "category": "minimum expenditure",
-                            "population": null
-                          },
-                          {
-                            "continent": "eu",
-                            "amount": 10.0,
-                            "category": "minimum expenditure",
-                            "population": null
-                          },
-                          {
-                            "continent": "eu",
-                            "country": "france",
-                            "amount": 6.0,
-                            "category": "minimum expenditure",
-                            "population": null
-                          },
-                          {
-                            "continent": "eu",
-                            "country": "uk",
-                            "amount": 4.0,
-                            "category": "minimum expenditure",
-                            "population": null
-                          }
-                        ]
-                        """;
+              [
+                            {
+                              "amount": 56.0,
+                              "population": 465.0
+                            },
+                            {
+                              "continent": "am",
+                              "amount": 39.0,
+                              "population": 330.0
+                            },
+                            {
+                              "continent": "am",
+                              "country": "usa",
+                              "amount": 39.0,
+                              "population": 330.0
+                            },
+                            {
+                              "continent": "eu",
+                              "amount": 17.0,
+                              "population": 135.0
+                            },
+                            {
+                              "continent": "eu",
+                              "country": "france",
+                              "amount": 8.0,
+                              "population": 70.0
+                            },
+                            {
+                              "continent": "eu",
+                              "country": "uk",
+                              "amount": 9.0,
+                              "population": 65.0
+                            },
+                            {
+                              "amount": 17.0,
+                              "category": "extra",
+                              "population": null
+                            },
+                            {
+                              "continent": "am",
+                              "amount": 10.0,
+                              "category": "extra",
+                              "population": null
+                            },
+                            {
+                              "continent": "am",
+                              "country": "usa",
+                              "amount": 10.0,
+                              "category": "extra",
+                              "population": null
+                            },
+                            {
+                              "continent": "eu",
+                              "amount": 7.0,
+                              "category": "extra",
+                              "population": null
+                            },
+                            {
+                              "continent": "eu",
+                              "country": "france",
+                              "amount": 2.0,
+                              "category": "extra",
+                              "population": null
+                            },
+                            {
+                              "continent": "eu",
+                              "country": "uk",
+                              "amount": 5.0,
+                              "category": "extra",
+                              "population": null
+                            },
+                            {
+                              "amount": 39.0,
+                              "category": "minimum expenditure",
+                              "population": null
+                            },
+                            {
+                              "continent": "am",
+                              "amount": 29.0,
+                              "category": "minimum expenditure",
+                              "population": null
+                            },
+                            {
+                              "continent": "am",
+                              "country": "usa",
+                              "amount": 29.0,
+                              "category": "minimum expenditure",
+                              "population": null
+                            },
+                            {
+                              "continent": "eu",
+                              "amount": 10.0,
+                              "category": "minimum expenditure",
+                              "population": null
+                            },
+                            {
+                              "continent": "eu",
+                              "country": "france",
+                              "amount": 6.0,
+                              "category": "minimum expenditure",
+                              "population": null
+                            },
+                            {
+                              "continent": "eu",
+                              "country": "uk",
+                              "amount": 4.0,
+                              "category": "minimum expenditure",
+                              "population": null
+                            }
+                          ]
+                          """;
       Assertions.assertThat(cells).isEqualTo(JacksonUtil.deserialize(expectedCells, List.class));
     }
+  }
+
+  @Test
+  void testExecutionWithAliasedFields() {
+    setup(getFieldsByStore(), this::loadData);
+
+    // alias the fields in the query
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .select(List.of(this.spendingCategory.as("category"), this.continent.as("continent"), this.country.as("country")), List.of(CountMeasure.INSTANCE))
+            .build();
+
+    // use AliasedField for rows and columns
+    List<Field> rows = List.of(new AliasedField("continent"), new AliasedField("country"));
+    List<Field> columns = List.of(new AliasedField("category"));
+    PivotTable pivotTable = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns, null));
+    // We check it does not throw and it returns a result
+    Assertions.assertThat(pivotTable.table.count()).isEqualTo(18L);
   }
 }
