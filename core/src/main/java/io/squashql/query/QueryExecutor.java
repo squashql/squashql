@@ -83,20 +83,26 @@ public class QueryExecutor {
   }
 
   private static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
-    Set<Field> axes = new HashSet<>(context.rows);
-    axes.addAll(context.columns);
-    Set<Field> select = new HashSet<>(query.columns);
-    select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream()).collect(Collectors.toSet()));
+    Set<String> rowExpressions = context.rows.stream().map(SqlUtils::squashqlExpression).collect(Collectors.toSet());
+    Set<String> columnExpressions = context.columns.stream().map(SqlUtils::squashqlExpression).collect(Collectors.toSet());
+
+    Set<String> queryColumnExpressions = query.columns.stream().map(SqlUtils::squashqlExpression).collect(Collectors.toSet());
+    Set<String> queryColumnSetExpressions = query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream()).map(SqlUtils::squashqlExpression).collect(Collectors.toSet());
+
+    Set<String> axes = new HashSet<>(rowExpressions);
+    axes.addAll(columnExpressions);
+    Set<String> select = new HashSet<>(queryColumnExpressions);
+    select.addAll(queryColumnSetExpressions);
     axes.removeAll(select);
 
     if (!axes.isEmpty()) {
-      throw new IllegalArgumentException(axes.stream().map(SqlUtils::squashqlExpression).toList() + " on rows or columns by not in select. Please add those fields in select");
+      throw new IllegalArgumentException(axes + " on rows or columns by not in select. Please add those fields in select");
     }
-    axes = new HashSet<>(context.rows);
-    axes.addAll(context.columns);
+    axes = new HashSet<>(rowExpressions);
+    axes.addAll(columnExpressions);
     select.removeAll(axes);
     if (!select.isEmpty()) {
-      throw new IllegalArgumentException(select.stream().map(SqlUtils::squashqlExpression).toList() + " in select but not on rows or columns. Please add those fields on one axis");
+      throw new IllegalArgumentException(select + " in select but not on rows or columns. Please add those fields on one axis");
     }
 
     List<Field> rows = context.cleansedRows;
