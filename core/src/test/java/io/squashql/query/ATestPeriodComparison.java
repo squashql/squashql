@@ -24,7 +24,6 @@ import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
 @TestClass
@@ -32,7 +31,16 @@ import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public abstract class ATestPeriodComparison extends ABaseTestQuery {
 
-  protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  private final String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  private final TableField ean = new TableField(this.storeName, "ean");
+  private final TableField category = new TableField(this.storeName, "category");
+  private final TableField sales = new TableField(this.storeName, "sales");
+  private final TableField qty = new TableField(this.storeName, "quantity");
+  private final TableField year = new TableField(this.storeName, "year_sales"); // Use long to make sure we support also long as type
+  private final TableField semester = new TableField(this.storeName, "semester_sales");
+  private final TableField quarter = new TableField(this.storeName, "quarter_sales");
+  private final TableField month = new TableField(this.storeName, "month_sales");
+  private final TableField date = new TableField(this.storeName, "date_sales");
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
@@ -50,7 +58,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
 
   @Override
   protected void loadData() {
-    this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
+    this.tm.load(this.storeName, List.of(
             // 2022
             new Object[]{"bottle", "drink", 20d, 10l, 2022l, 1, 1, 1, LocalDate.of(2022, 1, 1)},
             new Object[]{"bottle", "drink", 10d, 5l, 2022l, 1, 2, 4, LocalDate.of(2022, 4, 1)},
@@ -203,6 +211,29 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
   }
 
   @Test
+  void testCompareYearCurrentWithPreviousFullName() {
+    Period.Year period = new Period.Year(this.year);
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", this.sales, "sum", null);
+    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
+            "myMeasure",
+            ABSOLUTE_DIFFERENCE,
+            sales,
+            Map.of(period.year(), "y-1"),
+            period);
+
+    var query = Query.from(this.storeName)
+            .select(List.of(year), List.of(m, sales))
+            .build();
+    Table finalTable = this.executor.executeQuery(query);
+    Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
+            Arrays.asList(2022l, null, 300d),
+            Arrays.asList(2023l, 0d, 300d));
+    Assertions
+            .assertThat(finalTable.headers().stream().map(Header::name))
+            .containsExactlyInAnyOrder(period.year().name(), "myMeasure", "sum(sales)");
+  }
+
+  @Test
   void testCompareSemesterCurrentWithPrevious() {
     Period.Semester period = new Period.Semester(tableField("semester_sales"), tableField("year_sales"));
     AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", "sum");
@@ -283,7 +314,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
    * FIXME this test does not test what it tested initially due to the fact that multiply measure is not computed in the
    * db directly. We could remove it but I think the query plan execution is not correct after the change PR #193 but I
    * cannot prove it.
-   *
+   * <p>
    * This test is making sure that the following case is supported:
    * 1) Two execution plans are created. One for the scope of the query with filter (Plan1), another one for the scope of the
    * query without the filter (Plan2).
