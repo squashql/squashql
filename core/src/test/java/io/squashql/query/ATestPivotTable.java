@@ -235,8 +235,8 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
   @Test
   void testGroupingOneColumnEachAxis() {
-    final Field group = tableField("group");
-    final Field country = tableField("country");
+    Field group = tableField("group");
+    Field country = tableField("country");
     BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", country)
             .withNewBucket("european", List.of("uk", "france"))
             .withNewBucket("anglophone", List.of("usa", "uk"))
