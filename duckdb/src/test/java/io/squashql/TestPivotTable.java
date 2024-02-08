@@ -15,6 +15,9 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
+import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+
 public class TestPivotTable {
 
   protected DuckDBDatastore datastore;
@@ -337,7 +340,7 @@ public class TestPivotTable {
   void testExecutionWithAliasedFields() {
     setup(getFieldsByStore(), this::loadData);
 
-    // alias the fields in the query
+    // Alias the fields in the query
     QueryDto query = Query
             .from(this.storeSpending)
             .select(List.of(this.spendingCategory.as("category"), this.continent.as("continent"), this.country.as("country")), List.of(CountMeasure.INSTANCE))
@@ -349,5 +352,46 @@ public class TestPivotTable {
     PivotTable pivotTable = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns, null));
     // We check it does not throw and it returns a result
     Assertions.assertThat(pivotTable.table.count()).isEqualTo(18L);
+  }
+
+  @Test
+  void testBucketingComparisonWithAliases() {
+    setup(getFieldsByStore(), this::loadData);
+
+    Field countryAliased = this.country.as("countryAliased"); // ALIAS this column. this is what it is tested here
+    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", countryAliased)
+            .withNewBucket("european", List.of("uk", "france"))
+            .withNewBucket("anglophone", List.of("usa", "uk"));
+    Measure amount = Functions.sum("amount", "amount");
+    ComparisonMeasureReferencePosition amountComp = new ComparisonMeasureReferencePosition(
+            "amountComp",
+            ABSOLUTE_DIFFERENCE,
+            amount,
+            Map.of(bucketCS.field, "c-1", bucketCS.newField, "g"),
+            ColumnSetKey.BUCKET);
+
+    List<Measure> measures = List.of(amountComp, amount);
+
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(Functions.criterion(this.spendingCategory, Functions.eq("extra"))) // to get a small result
+            .select(List.of(this.spendingCategory), List.of(bucketCS), measures)
+            .build();
+    this.executor.executeQuery(query)
+            .show();
+    List<Field> rows = List.of(bucketCS.newField, countryAliased);
+    List<Field> columns = List.of(this.spendingCategory);
+    PivotTable pivotTable = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns, false));
+    Assertions.assertThat(pivotTable.table.headers().stream().map(Header::name))
+            .containsExactly("group", "countryAliased", this.spendingCategory.fullName, "amountComp", "amount");
+    Assertions.assertThat(pivotTable.table).containsExactlyInAnyOrder(
+            List.of("european", "uk", GRAND_TOTAL, 0d, 5d),
+            List.of("european", "uk", "extra", 0d, 5d),
+            List.of("european", "france", GRAND_TOTAL, -3d, 2d),
+            List.of("european", "france", "extra", -3d, 2d),
+            List.of("anglophone", "usa", GRAND_TOTAL, 0d, 10d),
+            List.of("anglophone", "usa", "extra", 0d, 10d),
+            List.of("anglophone", "uk", GRAND_TOTAL, -5d, 5d),
+            List.of("anglophone", "uk", "extra", -5d, 5d));
   }
 }

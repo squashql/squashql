@@ -1,16 +1,14 @@
 package io.squashql.query;
 
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.BucketColumnSetDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
+
+import java.util.*;
+import java.util.function.Function;
 
 public class BucketerExecutor {
 
@@ -19,7 +17,7 @@ public class BucketerExecutor {
 
     int[] indexColumnsToRead = new int[bucketColumnSetDto.getColumnsForPrefetching().size()];
     for (int i = 0; i < bucketColumnSetDto.getColumnsForPrefetching().size(); i++) {
-      indexColumnsToRead[i] = table.columnIndex(bucketColumnSetDto.getColumnsForPrefetching().get(i).name());
+      indexColumnsToRead[i] = table.columnIndex(SqlUtils.squashqlExpression(bucketColumnSetDto.getColumnsForPrefetching().get(i)));
     }
 
     MutableIntSet indexColsInPrefetch = new IntHashSet();
@@ -30,7 +28,7 @@ public class BucketerExecutor {
       if (!bucketColumnSetDto.getColumnsForPrefetching().contains(field)) {
         indexColsInPrefetch.add(i);
       }
-      Header header = new Header(field.name(), String.class, false);
+      Header header = new Header(SqlUtils.squashqlExpression(field), String.class, false);
       if (!table.headers().contains(header)) {
         finalHeaders.add(header); // append to the end
       }
