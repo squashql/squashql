@@ -82,7 +82,7 @@ export interface QueryResult {
 }
 
 export interface PivotTableQueryResult {
-  cells: Array<Map<string, any>>,
+  cells: Array<Record<string, any>>,
   rows: Array<string>
   columns: Array<string>
   values: Array<string>
