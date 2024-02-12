@@ -77,12 +77,12 @@ public final class MeasureUtils {
 
   public static QueryExecutor.QueryScope getReadScopeComparisonMeasureReferencePosition(
           List<TypedField> columns,
-          List<TypedField> bucketColumns,
+          List<TypedField> groupColumns,
           CompiledComparisonMeasure cm,
           QueryExecutor.QueryScope queryScope) {
     AtomicReference<CompiledCriteria> copy = new AtomicReference<>(queryScope.whereCriteria() == null ? null : CompiledCriteria.deepCopy(queryScope.whereCriteria()));
     Consumer<TypedField> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
-    bucketColumns.forEach(criteriaRemover);
+    groupColumns.forEach(criteriaRemover);
     Optional.ofNullable(cm.period())
             .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover));
     Set<TypedField> rollupColumns = new LinkedHashSet<>(queryScope.rollupColumns()); // order does matter

@@ -237,22 +237,22 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
   void testGroupingOneColumnEachAxis() {
     Field group = tableField("group");
     Field country = tableField("country");
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", country)
-            .withNewBucket("european", List.of("uk", "france"))
-            .withNewBucket("anglophone", List.of("usa", "uk"))
-            .withNewBucket("all", List.of("usa", "uk", "france"));
+    GroupColumnSetDto groupCS = new GroupColumnSetDto("group", country)
+            .withNewGroup("european", List.of("uk", "france"))
+            .withNewGroup("anglophone", List.of("usa", "uk"))
+            .withNewGroup("all", List.of("usa", "uk", "france"));
     Measure amount = Functions.sum("amount", "amount");
     ComparisonMeasureReferencePosition amountComp = new ComparisonMeasureReferencePosition(
             "amountComp",
             ABSOLUTE_DIFFERENCE,
             amount,
-            Map.of(bucketCS.field, "c-1", tableField("group"), "g"),
-            ColumnSetKey.BUCKET);
+            Map.of(groupCS.field, "c-1", tableField("group"), "g"),
+            ColumnSetKey.GROUP);
 
     List<Measure> measures = List.of(amountComp);
     QueryDto query = Query
             .from(this.storeSpending)
-            .select(List.of(), List.of(bucketCS), measures)
+            .select(List.of(), List.of(groupCS), measures)
             .build();
     PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, Collections.singletonList(country),
             Collections.singletonList(group), false));
@@ -279,22 +279,22 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
   void testGroupingMultipleColumns(TestInfo testInfo) {
     final Field group = tableField("group");
     final Field country = tableField("country");
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", country)
-            .withNewBucket("european", List.of("uk", "france"))
-            .withNewBucket("anglophone", List.of("usa", "uk"))
-            .withNewBucket("all", List.of("usa", "uk", "france"));
+    GroupColumnSetDto groupCS = new GroupColumnSetDto("group", country)
+            .withNewGroup("european", List.of("uk", "france"))
+            .withNewGroup("anglophone", List.of("usa", "uk"))
+            .withNewGroup("all", List.of("usa", "uk", "france"));
     Measure amount = Functions.sum("amount", "amount");
     ComparisonMeasureReferencePosition amountComp = new ComparisonMeasureReferencePosition(
             "amountComp",
             ABSOLUTE_DIFFERENCE,
             amount,
             Map.of(country, "c-1", group, "g"),
-            ColumnSetKey.BUCKET);
+            ColumnSetKey.GROUP);
 
     List<Measure> measures = List.of(amountComp);
     QueryDto query = Query
             .from(this.storeSpending)
-            .select(tableFields(List.of("spending category")), List.of(bucketCS), measures)
+            .select(tableFields(List.of("spending category")), List.of(groupCS), measures)
             .build();
     verifyResults(testInfo, query, List.of("group", "country"), List.of("spending category"));
   }
@@ -425,14 +425,14 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     Measure amount = Functions.sum("amount", "amount");
     Measure pop = Functions.sum("population", "population");
 
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", tableField("spending category"))
-            .withNewBucket("group1", List.of("extra"))
-            .withNewBucket("group2", List.of("extra", "minimum expenditure"));
+    GroupColumnSetDto groupCS = new GroupColumnSetDto("group", tableField("spending category"))
+            .withNewGroup("group1", List.of("extra"))
+            .withNewGroup("group2", List.of("extra", "minimum expenditure"));
 
     List<Measure> measuresSpending = List.of(amount);
     QueryDto query1 = Query
             .from(this.storeSpending)
-            .select(tableFields(List.of("country")), List.of(bucketCS), measuresSpending)
+            .select(tableFields(List.of("country")), List.of(groupCS), measuresSpending)
             .build();
     /*
     +---------+---------------------+-------------+--------+--------+--------+

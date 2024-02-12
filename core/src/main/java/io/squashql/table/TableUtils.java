@@ -6,7 +6,7 @@ import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
-import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.dto.GroupColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.type.TypedField;
@@ -191,10 +191,10 @@ public class TableUtils {
     Map<String, Comparator<?>> copy = new HashMap<>(comparatorByColumnName);
 
     columnSets.forEach(columnSet -> {
-      if (columnSet.getColumnSetKey() != ColumnSetKey.BUCKET) {
+      if (columnSet.getColumnSetKey() != ColumnSetKey.GROUP) {
         throw new IllegalArgumentException("Unexpected column set type " + columnSet);
       }
-      BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
+      GroupColumnSetDto cs = (GroupColumnSetDto) columnSet;
       // Remove from the map of comparators to use default one when only none is defined for regular column
       copy.remove(cs.newField.name());
       copy.remove(cs.field.name());
@@ -221,7 +221,7 @@ public class TableUtils {
     int[] contextIndices = new int[args.size()];
     Arrays.fill(contextIndices, -1);
     for (ColumnSet columnSet : new HashSet<>(columnSets)) {
-      BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
+      GroupColumnSetDto cs = (GroupColumnSetDto) columnSet;
       // cs.field can appear multiple times in the table.
       table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(cs.newField.name()));
     }

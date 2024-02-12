@@ -15,7 +15,7 @@ export {
   sumIf, minIf, maxIf, avgIf, countIf, countDistinctIf,
   plus, minus, multiply, divide,
   integer, decimal,
-  comparisonMeasureWithPeriod, comparisonMeasureWithBucket, comparisonMeasureWithParent,
+  comparisonMeasureWithPeriod, comparisonMeasureWithinSameGroup, comparisonMeasureWithParent,
   totalCount,
   ComparisonMethod,
 } from './measure'
@@ -28,7 +28,7 @@ export {
 } from './conditions'
 
 export {
-  ColumnSet, BucketColumnSet,
+  ColumnSet, GroupColumnSet,
   Period, Month, Year, Quarter, Semester,
 } from './columnsets'
 

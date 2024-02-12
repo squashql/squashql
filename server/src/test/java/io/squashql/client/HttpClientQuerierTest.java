@@ -101,10 +101,10 @@ public class HttpClientQuerierTest {
 
   @Test
   void testRunGroupingScenarioQuery() {
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", tableField(SCENARIO_FIELD_NAME))
-            .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
-            .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
-            .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
+    GroupColumnSetDto groupCS = new GroupColumnSetDto("group", tableField(SCENARIO_FIELD_NAME))
+            .withNewGroup("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
+            .withNewGroup("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
+            .withNewGroup("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
 
     Measure aggregatedMeasure = Functions.sum("capdv", "capdv");
     ComparisonMeasureReferencePosition capdvDiff = new ComparisonMeasureReferencePosition(
@@ -115,10 +115,10 @@ public class HttpClientQuerierTest {
                     tableField(SCENARIO_FIELD_NAME), "first",
                     tableField("group"), "g"
             ),
-            ColumnSetKey.BUCKET);
+            ColumnSetKey.GROUP);
     var query = Query
             .from("our_prices")
-            .select_(List.of(bucketCS), List.of(capdvDiff, aggregatedMeasure))
+            .select_(List.of(groupCS), List.of(capdvDiff, aggregatedMeasure))
             .build();
 
     QueryResultDto response = this.querier.run(query);

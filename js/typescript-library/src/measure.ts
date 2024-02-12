@@ -251,11 +251,11 @@ export function comparisonMeasureWithPeriod(alias: string,
   return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, undefined, period)
 }
 
-export function comparisonMeasureWithBucket(alias: string,
-                                            comparisonMethod: ComparisonMethod,
-                                            measure: Measure,
-                                            referencePosition: Map<Field, string>): Measure {
-  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, ColumnSetKey.BUCKET)
+export function comparisonMeasureWithinSameGroup(alias: string,
+                                                 comparisonMethod: ComparisonMethod,
+                                                 measure: Measure,
+                                                 referencePosition: Map<Field, string>): Measure {
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, ColumnSetKey.GROUP)
 }
 
 export function comparisonMeasureWithParent(alias: string,

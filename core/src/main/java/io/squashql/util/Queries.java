@@ -28,10 +28,10 @@ public final class Queries {
       }
     });
 
-    // Special case for Bucket that defines implicitly an order.
-    ColumnSet bucket = queryDto.columnSets.get(ColumnSetKey.BUCKET);
-    if (bucket != null) {
-      BucketColumnSetDto cs = (BucketColumnSetDto) bucket;
+    // Special case for group that defines implicitly an order.
+    ColumnSet group = queryDto.columnSets.get(ColumnSetKey.GROUP);
+    if (group != null) {
+      GroupColumnSetDto cs = (GroupColumnSetDto) group;
       Map<Object, List<Object>> m = new LinkedHashMap<>();
       cs.values.forEach((k, v) -> {
         List<Object> l = new ArrayList<>(v);

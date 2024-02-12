@@ -19,7 +19,7 @@ public class TestQuery {
 
   @Test
   void testSimple() {
-    BucketColumnSetDto columnSet = new BucketColumnSetDto();
+    GroupColumnSetDto columnSet = new GroupColumnSetDto();
     Measure sum = sum("sum", "f2");
 
     QueryDto build = Query
@@ -31,7 +31,7 @@ public class TestQuery {
             .table("saas")
             .withColumn(tableField("col1"))
             .withColumn(tableField("col2"))
-            .withColumnSet(ColumnSetKey.BUCKET, columnSet)
+            .withColumnSet(ColumnSetKey.GROUP, columnSet)
             .withMeasure(sum);
 
     Assertions.assertThat(build).isEqualTo(q);
@@ -68,7 +68,7 @@ public class TestQuery {
             .table("saas")
             .withColumn(tableField("col1"))
             .withColumn(tableField("col2"))
-            .withColumnSet(ColumnSetKey.BUCKET, columnSet)
+            .withColumnSet(ColumnSetKey.GROUP, columnSet)
             .withMeasure(sum)
             .withLimit(100);
 

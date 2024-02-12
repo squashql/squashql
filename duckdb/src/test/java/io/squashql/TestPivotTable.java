@@ -355,31 +355,31 @@ public class TestPivotTable {
   }
 
   @Test
-  void testBucketingComparisonWithAliases() {
+  void testGroupComparisonWithAliases() {
     setup(getFieldsByStore(), this::loadData);
 
     Field countryAliased = this.country.as("countryAliased"); // ALIAS this column. this is what it is tested here
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", countryAliased)
-            .withNewBucket("european", List.of("uk", "france"))
-            .withNewBucket("anglophone", List.of("usa", "uk"));
+    GroupColumnSetDto groupCS = new GroupColumnSetDto("group", countryAliased)
+            .withNewGroup("european", List.of("uk", "france"))
+            .withNewGroup("anglophone", List.of("usa", "uk"));
     Measure amount = Functions.sum("amount", "amount");
     ComparisonMeasureReferencePosition amountComp = new ComparisonMeasureReferencePosition(
             "amountComp",
             ABSOLUTE_DIFFERENCE,
             amount,
-            Map.of(bucketCS.field, "c-1", bucketCS.newField, "g"),
-            ColumnSetKey.BUCKET);
+            Map.of(groupCS.field, "c-1", groupCS.newField, "g"),
+            ColumnSetKey.GROUP);
 
     List<Measure> measures = List.of(amountComp, amount);
 
     QueryDto query = Query
             .from(this.storeSpending)
             .where(Functions.criterion(this.spendingCategory, Functions.eq("extra"))) // to get a small result
-            .select(List.of(this.spendingCategory), List.of(bucketCS), measures)
+            .select(List.of(this.spendingCategory), List.of(groupCS), measures)
             .build();
     this.executor.executeQuery(query)
             .show();
-    List<Field> rows = List.of(bucketCS.newField, countryAliased);
+    List<Field> rows = List.of(groupCS.newField, countryAliased);
     List<Field> columns = List.of(this.spendingCategory);
     PivotTable pivotTable = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns, false));
     Assertions.assertThat(pivotTable.table.headers().stream().map(Header::name))

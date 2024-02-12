@@ -15,7 +15,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.squashql.query.ColumnSetKey.BUCKET;
+import static io.squashql.query.ColumnSetKey.GROUP;
 import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUNT;
 
 @Data
@@ -25,7 +25,7 @@ public class QueryResolver {
   private final Map<String, Store> storesByName;
   private final Set<String> cteTableNames = new HashSet<>();
   private final QueryExecutor.QueryScope scope;
-  private final List<TypedField> bucketColumns;
+  private final List<TypedField> groupColumns;
   private final List<TypedField> columns;
   private final CompilationCache cache = new CompilationCache();
   private final Map<Measure, CompiledMeasure> subQueryMeasures;
@@ -42,7 +42,7 @@ public class QueryResolver {
       }
     }
     this.columns = query.columns.stream().map(this::resolveField).toList();
-    this.bucketColumns = Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
+    this.groupColumns = Optional.ofNullable(query.columnSets.get(ColumnSetKey.GROUP))
             .stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
     this.subQueryMeasures = query.subQuery == null ? Collections.emptyMap() : compileMeasures(query.subQuery.measures, false);
     this.scope = toQueryScope(query);
@@ -76,9 +76,9 @@ public class QueryResolver {
   public TypedField resolveField(final Field field) {
     return this.cache.computeIfAbsent(field, f -> {
       // Special case for the column that is created due to the column set.
-      ColumnSet columnSet = this.query.columnSets.get(BUCKET);
+      ColumnSet columnSet = this.query.columnSets.get(GROUP);
       if (columnSet != null) {
-        Field newField = ((BucketColumnSetDto) columnSet).newField;
+        Field newField = ((GroupColumnSetDto) columnSet).newField;
         if (field.equals(newField)) {
           return new TableTypedField(null, newField.name(), String.class, null, false);
         }
@@ -383,15 +383,15 @@ public class QueryResolver {
   private Map<ColumnSetKey, CompiledColumnSet> compiledColumnSets(Map<ColumnSetKey, ColumnSet> columnSets) {
     Map<ColumnSetKey, CompiledColumnSet> m = new HashMap<>();
     for (Map.Entry<ColumnSetKey, ColumnSet> entry : columnSets.entrySet()) {
-      if (entry.getKey() != BUCKET) {
+      if (entry.getKey() != GROUP) {
         throw new IllegalArgumentException("unexpected column set " + entry.getValue());
       }
-      BucketColumnSetDto bucket = (BucketColumnSetDto) entry.getValue();
-      m.put(entry.getKey(), new CompiledBucketColumnSet(
-              bucket.getColumnsForPrefetching().stream().map(this::resolveField).toList(),
-              bucket.getNewColumns().stream().map(this::resolveField).toList(),
+      GroupColumnSetDto group = (GroupColumnSetDto) entry.getValue();
+      m.put(entry.getKey(), new CompiledGroupColumnSet(
+              group.getColumnsForPrefetching().stream().map(this::resolveField).toList(),
+              group.getNewColumns().stream().map(this::resolveField).toList(),
               entry.getKey(),
-              bucket.values));
+              group.values));
     }
     return m;
   }

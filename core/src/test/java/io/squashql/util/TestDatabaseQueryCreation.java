@@ -1,7 +1,7 @@
 package io.squashql.util;
 
 import io.squashql.query.*;
-import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.dto.GroupColumnSetDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.parameter.Parameter;
 import org.assertj.core.api.Assertions;
@@ -35,7 +35,7 @@ public class TestDatabaseQueryCreation {
   @Test
   void testColumnSetInSubQuery() {
     QueryDto subQuery = new QueryDto().table("table")
-            .withColumnSet(ColumnSetKey.BUCKET, new BucketColumnSetDto("a", tableField("b")));
+            .withColumnSet(ColumnSetKey.GROUP, new GroupColumnSetDto("a", tableField("b")));
     QueryDto queryDto = new QueryDto().table(subQuery);
 
     Assertions.assertThatThrownBy(() -> new QueryResolver(queryDto, Collections.emptyMap()))
@@ -57,7 +57,7 @@ public class TestDatabaseQueryCreation {
   @Test
   void testUnsupportedMeasureInSubQuery() {
     QueryDto subQuery = new QueryDto().table("table")
-            .withMeasure(new ComparisonMeasureReferencePosition("alias", ComparisonMethod.DIVIDE, new AggregatedMeasure("p", "price", "sum"), Collections.emptyMap(), ColumnSetKey.BUCKET));
+            .withMeasure(new ComparisonMeasureReferencePosition("alias", ComparisonMethod.DIVIDE, new AggregatedMeasure("p", "price", "sum"), Collections.emptyMap(), ColumnSetKey.GROUP));
     QueryDto queryDto = new QueryDto().table(subQuery);
 
     Assertions.assertThatThrownBy(() -> new QueryResolver(queryDto, Collections.emptyMap()))

@@ -350,7 +350,7 @@ FROM myTable
        LEFT OUTER JOIN otherTable ON myTable.id = otherTable.key1 AND refTable.id = otherTable.key2
 ```
 
-### Joining on virtual created on-the-fly at query time
+### Joining on virtual table created on-the-fly at query time
 
 You can define and use a virtual table in the query by joining it to an existing table. Such table is not materialized
 in the database and only exists during the query execution time. Note the join operation is performed by the underlying
@@ -947,7 +947,7 @@ Result
 +-------------+-------------+-------------+------------+---------------------+
 ```
 
-##### Dynamic comparison - What-if - ColumnSet
+##### Group comparison - ColumnSet
 
 This type of comparison is mainly used for what-if comparison but not limited to it. It involves the creation of a new
 "virtual" column called `ColumnSet` that only exists in SquashQL to create groups among which the comparisons are
@@ -998,7 +998,7 @@ To do that, we start by creating those groups that we put in a dedicated object
 
 ```typescript
 import {
-  BucketColumnSet
+  GroupColumnSet
 } from "@squashql/squashql-js"
 
 const groups = new Map(Object.entries({
@@ -1007,17 +1007,17 @@ const groups = new Map(Object.entries({
   "group3": ["base", "s3"],
   "group4": ["s1", "s2", "s3"],
 }))
-const columnSet = new BucketColumnSet(new TableField("group"), new TableField("myTable.scenario"), groups)
+const columnSet = new GroupColumnSet(new TableField("group"), new TableField("myTable.scenario"), groups)
 ```
 
-The first argument of `BucketColumnSet` is the name of the new (virtual) column that will be created.
+The first argument of `GroupColumnSet` is the name of the new (virtual) column that will be created.
 The second argument is the name of the existing column whose values will be grouped together.
 The third argument is the defined groups to be used for the comparison. The orders of the keys (group1, group2....)
 and in the arrays are important.
 
-We can use the `BucketColumnSet` as follows
+We can use the `GroupColumnSet` as follows
 ```typescript
-import {BucketColumnSet, ExpressionMeasure, from} from "@squashql/squashql-js"
+import {GroupColumnSet, ExpressionMeasure, from} from "@squashql/squashql-js"
 
 const values = new Map(Object.entries({
   "group1": ["base", "s1"],
@@ -1028,7 +1028,7 @@ const values = new Map(Object.entries({
 const saleprice = new TableField("myTable.saleprice")
 const loavessold = new TableField("myTable.loavessold")
 const revenue = sum("revenue", saleprice.multiply(loavessold))
-const columnSet = new BucketColumnSet(new TableField("group"), new TableField("myTable.scenario"), groups)
+const columnSet = new GroupColumnSet(new TableField("group"), new TableField("myTable.scenario"), groups)
 const query = from("myTable")
         .select([], [columnSet], [revenue])
         .build()
@@ -1053,9 +1053,9 @@ Result
 As you can see, adding the column set to the query will add two columns in the result: group and scenario so that we 
 can remove scenario column from the first argument.
 
-Now to perform the comparison, use the built-in measure `comparisonMeasureWithBucket`
+Now to perform the comparison, use the built-in measure `comparisonMeasureWithinSameGroup`
 ```typescript
-import {BucketColumnSet, comparisonMeasureWithBucket, ComparisonMethod, ExpressionMeasure, from} from "@squashql/squashql-js"
+import {GroupColumnSet, comparisonMeasureWithinSameGroup, ComparisonMethod, ExpressionMeasure, from} from "@squashql/squashql-js"
 
 const values = new Map(Object.entries({
   "group1": ["base", "s1"],
@@ -1066,8 +1066,8 @@ const values = new Map(Object.entries({
 const saleprice = new TableField("myTable.saleprice")
 const loavessold = new TableField("myTable.loavessold")
 const revenue = sum("revenue", saleprice.multiply(loavessold))
-const columnSet = new BucketColumnSet(new TableField("group"), new TableField("myTable.scenario"), groups)
-const revenueComparison = comparisonMeasureWithBucket("revenueComparison",
+const columnSet = new GroupColumnSet(new TableField("group"), new TableField("myTable.scenario"), groups)
+const revenueComparison = comparisonMeasureWithinSameGroup("revenueComparison",
         ComparisonMethod.ABSOLUTE_DIFFERENCE,
         revenue,
         new Map([[new TableField("myTable.scenario"), "s-1"]]))

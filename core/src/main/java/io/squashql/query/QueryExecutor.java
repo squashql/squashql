@@ -21,7 +21,7 @@ import java.util.*;
 import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
-import static io.squashql.query.ColumnSetKey.BUCKET;
+import static io.squashql.query.ColumnSetKey.GROUP;
 import static io.squashql.query.agg.AggregationFunction.GROUPING;
 import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUNT;
 
@@ -157,7 +157,7 @@ public class QueryExecutor {
 
     QueryResolver queryResolver = new QueryResolver(query, this.queryEngine.datastore().storesByName());
     DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
-            queryResolver.getColumns(), queryResolver.getBucketColumns(), queryResolver.getMeasures().values(), queryResolver.getScope());
+            queryResolver.getColumns(), queryResolver.getGroupColumns(), queryResolver.getMeasures().values(), queryResolver.getScope());
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
     Map<QueryScope, Set<CompiledMeasure>> measuresByQueryScope = new HashMap<>();
@@ -211,11 +211,11 @@ public class QueryExecutor {
       tableByScope.put(scope, result);
     }
 
-    if (query.columnSets.containsKey(BUCKET)) {
+    if (query.columnSets.containsKey(GROUP)) {
       // Apply this as it modifies the "shape" of the result
-      BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(BUCKET);
+      GroupColumnSetDto columnSet = (GroupColumnSetDto) query.columnSets.get(GROUP);
       // Reshape all results
-      tableByScope.replaceAll((scope, table) -> BucketerExecutor.bucket(table, columnSet));
+      tableByScope.replaceAll((scope, table) -> GrouperExecutor.group(table, columnSet));
     }
 
     // Here we take the global plan and execute the plans for a given scope one by one, in dependency order. The order
@@ -227,7 +227,7 @@ public class QueryExecutor {
         final ExecutionContext executionContext = new ExecutionContext(queryNode.queryScope,
                 tableByScope,
                 queryResolver.getColumns(),
-                queryResolver.getBucketColumns(),
+                queryResolver.getGroupColumns(),
                 queryResolver.getCompiledColumnSets(),
                 queryLimit);
         evaluator.accept(queryNode, executionContext);
@@ -266,11 +266,11 @@ public class QueryExecutor {
 
   private static DependencyGraph<QueryPlanNodeKey> computeDependencyGraph(
           List<TypedField> columns,
-          List<TypedField> bucketColumns,
+          List<TypedField> groupColumns,
           Collection<CompiledMeasure> measures,
           QueryScope queryScope) {
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
-      Map<QueryScope, Set<CompiledMeasure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(columns, bucketColumns, nodeKey.queryScope));
+      Map<QueryScope, Set<CompiledMeasure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(columns, groupColumns, nodeKey.queryScope));
       Set<QueryPlanNodeKey> set = new HashSet<>();
       for (Map.Entry<QueryScope, Set<CompiledMeasure>> entry : dependencies.entrySet()) {
         QueryScope key = entry.getKey();
@@ -336,7 +336,7 @@ public class QueryExecutor {
   public record ExecutionContext(QueryScope queryScope,
                                  Map<QueryScope, Table> tableByScope,
                                  List<TypedField> columns,
-                                 List<TypedField> bucketColumns,
+                                 List<TypedField> groupColumns,
                                  Map<ColumnSetKey, CompiledColumnSet> columnSets,
                                  int queryLimit) {
     public Table getWriteToTable() {
@@ -363,9 +363,9 @@ public class QueryExecutor {
     public static List<Field> cleanse(QueryDto query, List<Field> fields) {
       // ColumnSet is a special type of column that does not exist in the database but only in SquashQL. Totals can't be
       // computed. This is why it is removed from the axes.
-      ColumnSet columnSet = query.columnSets.get(BUCKET);
+      ColumnSet columnSet = query.columnSets.get(GROUP);
       if (columnSet != null) {
-        Field newField = ((BucketColumnSetDto) columnSet).newField;
+        Field newField = ((GroupColumnSetDto) columnSet).newField;
         if (fields.contains(newField)) {
           fields = new ArrayList<>(fields);
           fields.remove(newField);

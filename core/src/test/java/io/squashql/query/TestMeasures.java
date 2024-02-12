@@ -64,7 +64,7 @@ public class TestMeasures {
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             kpi,
             referencePosition,
-            ColumnSetKey.BUCKET);
+            ColumnSetKey.GROUP);
 
     ComparisonMeasureReferencePosition parentComparisonMeasure = new ComparisonMeasureReferencePosition("parent", ComparisonMethod.DIVIDE, amount, tableFields(List.of("city", "country", "continent")));
 
