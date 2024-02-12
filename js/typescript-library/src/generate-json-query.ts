@@ -1,5 +1,5 @@
 import * as fs from "fs"
-import {BucketColumnSet} from "./columnsets"
+import {GroupColumnSet} from "./columnsets"
 import {all, ConditionType, criterion, criterion_, eq, gt, havingCriterion, lt} from "./conditions"
 import {TableField, tableField, tableFields} from "./field"
 import {avg, ExpressionMeasure, sum} from "./measure"
@@ -16,7 +16,7 @@ export function generateFromQuery() {
   }))
   const cte1 = new VirtualTable("myCte1", ["id", "min", "max", "other"], [[0, 0, 1, "x"], [1, 2, 3, "y"]])
   const cte2 = new VirtualTable("myCte2", ["id", "min", "max", "other"], [[0, 4, 12, "a"], [1, 12, 25, "b"]])
-  const bucketColumnSet = new BucketColumnSet(tableField("group"), tableField("scenario"), values)
+  const groupColumnSet = new GroupColumnSet(tableField("group"), tableField("scenario"), values)
   const measure = sum("sum", new TableField("f1"))
   const measureExpr = new ExpressionMeasure("sum_expr", "sum(f1)")
   const fields = tableFields(["a", "b"])
@@ -41,7 +41,7 @@ export function generateFromQuery() {
             criterion(new TableField("f3"), eq(123))
           ]))
           .select(fields,
-                  [bucketColumnSet],
+                  [groupColumnSet],
                   [measure, avg("sum", new TableField("f1")), measureExpr])
           .rollup(fields)
           .having(all([

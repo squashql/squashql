@@ -56,11 +56,11 @@ public class TestJavascriptLibrary {
     var one = new ConstantField(1);
     q.withMeasure(avgIf("whatever", divide(f1, plus(one, rate)), criterion(plus(f1, f2).as("f1+f2"), one, ConditionType.GT)));
 
-    q.withMeasure(new ComparisonMeasureReferencePosition("comp bucket",
+    q.withMeasure(new ComparisonMeasureReferencePosition("comp group",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
             Map.of(tableField("scenario"), "s-1", tableField("group"), "g"),
-            ColumnSetKey.BUCKET));
+            ColumnSetKey.GROUP));
 
     Period.Month month = new Period.Month(tableField("Month"), tableField("Year"));
     q.withMeasure(new ComparisonMeasureReferencePosition("growth",
@@ -86,10 +86,10 @@ public class TestJavascriptLibrary {
     q.orderBy(a, OrderKeywordDto.ASC);
     q.orderBy(b, List.of("1", "l", "p"));
 
-    BucketColumnSetDto columnSet = new BucketColumnSetDto("group", tableField("scenario"))
-            .withNewBucket("a", List.of("a1", "a2"))
-            .withNewBucket("b", List.of("b1", "b2"));
-    q.withColumnSet(ColumnSetKey.BUCKET, columnSet);
+    GroupColumnSetDto columnSet = new GroupColumnSetDto("group", tableField("scenario"))
+            .withNewGroup("a", List.of("a1", "a2"))
+            .withNewGroup("b", List.of("b1", "b2"));
+    q.withColumnSet(ColumnSetKey.GROUP, columnSet);
 
     QueryDto subQuery = new QueryDto()
             .table(table)
@@ -123,9 +123,9 @@ public class TestJavascriptLibrary {
     var cte1 = new VirtualTableDto("myCte1", List.of("id", "min", "max", "other"), List.of(List.of(0, 0, 1, "x"), List.of(1, 2, 3, "y")));
     var cte2 = new VirtualTableDto("myCte2", List.of("id", "min", "max", "other"), List.of(List.of(0, 4, 12, "a"), List.of(1, 12, 25, "b")));
 
-    BucketColumnSetDto bucketColumnSet = new BucketColumnSetDto("group", tableField("scenario"))
-            .withNewBucket("a", List.of("a1", "a2"))
-            .withNewBucket("b", List.of("b1", "b2"));
+    GroupColumnSetDto groupColumnSet = new GroupColumnSetDto("group", tableField("scenario"))
+            .withNewGroup("a", List.of("a1", "a2"))
+            .withNewGroup("b", List.of("b1", "b2"));
 
     Measure measure = sum("sum", "f1");
     Measure measureExpr = new ExpressionMeasure("sum_expr", "sum(f1)");
@@ -140,7 +140,7 @@ public class TestJavascriptLibrary {
             .where(tableField("f2"), gt(659))
             .where(tableField("f3"), eq(123))
             .select(tableFields(List.of("a", "b")),
-                    List.of(bucketColumnSet),
+                    List.of(groupColumnSet),
                     List.of(measure, avg("sum", "f1"), measureExpr))
             .rollup(tableField("a"), tableField("b"))
             .having(all(criterion((BasicMeasure) measure, gt(0)), criterion((BasicMeasure) measureExpr, lt(10))))

@@ -137,10 +137,10 @@ public class QueryControllerTest {
 
   @Test
   void testScenarioGroupingQuery() throws Exception {
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", tableField(SCENARIO_FIELD_NAME))
-            .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
-            .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
-            .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
+    GroupColumnSetDto groupCS = new GroupColumnSetDto("group", tableField(SCENARIO_FIELD_NAME))
+            .withNewGroup("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
+            .withNewGroup("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
+            .withNewGroup("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
 
     Measure aggregatedMeasure = Functions.sum("capdv", "capdv");
     Measure indicePrix = new ExpressionMeasure(
@@ -151,13 +151,13 @@ public class QueryControllerTest {
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             aggregatedMeasure,
             Map.of(tableField(SCENARIO_FIELD_NAME), "s-1", tableField("group"), "g"),
-            ColumnSetKey.BUCKET);
+            ColumnSetKey.GROUP);
     ComparisonMeasureReferencePosition indicePrixDiff = new ComparisonMeasureReferencePosition(
             "indicePrixDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             indicePrix,
             Map.of(tableField(SCENARIO_FIELD_NAME), "s-1", tableField("group"), "g"),
-            ColumnSetKey.BUCKET);
+            ColumnSetKey.GROUP);
 
     var query = Query
             .from("our_prices")
@@ -165,7 +165,7 @@ public class QueryControllerTest {
             .on(criterion("our_prices" + ".pdv", "our_stores_their_stores" + ".our_store", ConditionType.EQ))
             .join("their_prices", JoinType.INNER)
             .on(criterion("their_prices" + ".competitor_concurrent_pdv", "our_stores_their_stores" + ".their_store", ConditionType.EQ))
-            .select_(List.of(bucketCS), List.of(aggregatedMeasureDiff, indicePrixDiff))
+            .select_(List.of(groupCS), List.of(aggregatedMeasureDiff, indicePrixDiff))
             .build();
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY)

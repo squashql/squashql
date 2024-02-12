@@ -9,7 +9,7 @@ import {
 import {Condition, ConstantCondition, InCondition, LogicalCondition, SingleValueCondition} from "./conditions"
 import Criteria from "./criteria"
 import {BinaryOperationField, ConstantField, Field, TableField} from "./field"
-import {BucketColumnSet, ColumnSet, Month, Period, Quarter, Semester, Year} from "./columnsets"
+import {GroupColumnSet, ColumnSet, Month, Period, Quarter, Semester, Year} from "./columnsets"
 
 export const computeFieldDependencies = (field: Field, resultArray: TableField[] = []): TableField[] => {
   switch (field.constructor) {
@@ -33,8 +33,8 @@ export const computeFieldDependencies = (field: Field, resultArray: TableField[]
 
 export const computeColumnSetDependencies = (columnSet: ColumnSet, resultArray: TableField[] = []): TableField[] => {
   switch (columnSet.constructor) {
-    case BucketColumnSet:
-      computeFieldDependencies((columnSet as BucketColumnSet)["field"], resultArray)
+    case GroupColumnSet:
+      computeFieldDependencies((columnSet as GroupColumnSet)["field"], resultArray)
       break
     default:
       throw new Error("ColumnSet with unknown type: " + columnSet.constructor)

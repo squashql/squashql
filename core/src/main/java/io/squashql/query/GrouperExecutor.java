@@ -1,7 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.database.SqlUtils;
-import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.dto.GroupColumnSetDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
@@ -10,22 +10,22 @@ import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 import java.util.*;
 import java.util.function.Function;
 
-public class BucketerExecutor {
+public class GrouperExecutor {
 
-  public static Table bucket(Table table, BucketColumnSetDto bucketColumnSetDto) {
-    Function<Object[], List<Object[]>> bucketer = createBucketer(bucketColumnSetDto);
+  public static Table group(Table table, GroupColumnSetDto groupColumnSetDto) {
+    Function<Object[], List<Object[]>> grouper = createGrouper(groupColumnSetDto);
 
-    int[] indexColumnsToRead = new int[bucketColumnSetDto.getColumnsForPrefetching().size()];
-    for (int i = 0; i < bucketColumnSetDto.getColumnsForPrefetching().size(); i++) {
-      indexColumnsToRead[i] = table.columnIndex(SqlUtils.squashqlExpression(bucketColumnSetDto.getColumnsForPrefetching().get(i)));
+    int[] indexColumnsToRead = new int[groupColumnSetDto.getColumnsForPrefetching().size()];
+    for (int i = 0; i < groupColumnSetDto.getColumnsForPrefetching().size(); i++) {
+      indexColumnsToRead[i] = table.columnIndex(SqlUtils.squashqlExpression(groupColumnSetDto.getColumnsForPrefetching().get(i)));
     }
 
     MutableIntSet indexColsInPrefetch = new IntHashSet();
-    List<Field> newColumns = bucketColumnSetDto.getNewColumns();
+    List<Field> newColumns = groupColumnSetDto.getNewColumns();
     List<Header> finalHeaders = new ArrayList<>(table.headers());
     for (int i = 0; i < newColumns.size(); i++) {
       Field field = newColumns.get(i);
-      if (!bucketColumnSetDto.getColumnsForPrefetching().contains(field)) {
+      if (!groupColumnSetDto.getColumnsForPrefetching().contains(field)) {
         indexColsInPrefetch.add(i);
       }
       Header header = new Header(SqlUtils.squashqlExpression(field), String.class, false);
@@ -43,15 +43,15 @@ public class BucketerExecutor {
     Object[] buffer = new Object[indexColumnsToRead.length];
     for (List<Object> row : table) {
       transferValues(indexColumnsToRead, buffer, row);
-      List<Object[]> bucketValuesList = bucketer.apply(buffer);
-      for (Object[] bucketValues : bucketValuesList) {
+      List<Object[]> groupValuesList = grouper.apply(buffer);
+      for (Object[] groupValues : groupValuesList) {
         // Pure copy for everything before
         for (int i = 0; i < originalHeadersSize; i++) {
           newColumnValues.get(i).add(row.get(i));
         }
-        for (int i = 0; i < bucketValues.length; i++) {
+        for (int i = 0; i < groupValues.length; i++) {
           if (indexColsInPrefetch.contains(i)) {
-            newColumnValues.get(i + originalHeadersSize).add(bucketValues[i]);
+            newColumnValues.get(i + originalHeadersSize).add(groupValues[i]);
           }
         }
       }
@@ -63,21 +63,21 @@ public class BucketerExecutor {
             newColumnValues);
   }
 
-  private static Function<Object[], List<Object[]>> createBucketer(BucketColumnSetDto bucketColumnSetDto) {
-    Map<String, List<String>> bucketsByValue = new HashMap<>();
-    for (Map.Entry<String, List<String>> value : bucketColumnSetDto.values.entrySet()) {
+  private static Function<Object[], List<Object[]>> createGrouper(GroupColumnSetDto groupColumnSetDto) {
+    Map<String, List<String>> groupsByValue = new HashMap<>();
+    for (Map.Entry<String, List<String>> value : groupColumnSetDto.values.entrySet()) {
       for (String v : value.getValue()) {
-        bucketsByValue
+        groupsByValue
                 .computeIfAbsent(v, k -> new ArrayList<>())
                 .add(value.getKey());
       }
     }
-    Function<Object[], List<Object[]>> bucketer = toBucketColumnValues -> {
-      List<String> buckets = bucketsByValue.get(toBucketColumnValues[0]);
-      return buckets == null ? Collections.emptyList()
-              : buckets.stream().map(b -> new Object[] {b, toBucketColumnValues[0]}).toList();
+    Function<Object[], List<Object[]>> grouper = toGroupColumnValues -> {
+      List<String> groups = groupsByValue.get(toGroupColumnValues[0]);
+      return groups == null ? Collections.emptyList()
+              : groups.stream().map(b -> new Object[] {b, toGroupColumnValues[0]}).toList();
     };
-    return bucketer;
+    return grouper;
   }
 
   public static <T> void transferValues(int[] indices, Object[] buffer, List<T> list) {

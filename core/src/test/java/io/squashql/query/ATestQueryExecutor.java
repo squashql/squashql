@@ -768,9 +768,9 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Test
   void testMergeWithColumnSetsPreserveOrder() {
-    BucketColumnSetDto group1 = new BucketColumnSetDto("group1", tableField("category"))
-            .withNewBucket("Food & Drink", List.of("food", "drink"))
-            .withNewBucket("Other", List.of("cloth"));
+    GroupColumnSetDto group1 = new GroupColumnSetDto("group1", tableField("category"))
+            .withNewGroup("Food & Drink", List.of("food", "drink"))
+            .withNewGroup("Other", List.of("cloth"));
     /*
       +--------------+----------+----------+-------+
       |       group1 | category | category | p_sum |
@@ -785,9 +785,9 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .select_(List.of(group1), List.of(sum("p_sum", "price")))
             .build();
 
-    BucketColumnSetDto group2 = new BucketColumnSetDto("group2", tableField("subcategory"))
-            .withNewBucket("Categorized", List.of("biscuit"))
-            .withNewBucket("Not categorized", Arrays.asList(null, "other"));
+    GroupColumnSetDto group2 = new GroupColumnSetDto("group2", tableField("subcategory"))
+            .withNewGroup("Categorized", List.of("biscuit"))
+            .withNewGroup("Not categorized", Arrays.asList(null, "other"));
     /*
       +-----------------+-------------+-------+
       |          group2 | subcategory | p_avg |

@@ -64,7 +64,7 @@ describe('computeMeasureDependencies', () => {
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             mockMeasure1,
             referencePosition,
-            ColumnSetKey.BUCKET,
+            ColumnSetKey.GROUP,
             mockPeriod,
             ancestors
     )

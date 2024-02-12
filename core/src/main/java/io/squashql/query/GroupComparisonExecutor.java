@@ -1,6 +1,6 @@
 package io.squashql.query;
 
-import io.squashql.query.compiled.CompiledBucketColumnSet;
+import io.squashql.query.compiled.CompiledGroupColumnSet;
 import io.squashql.query.compiled.CompiledComparisonMeasure;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.type.TypedField;
@@ -14,11 +14,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
 
-public class BucketComparisonExecutor extends AComparisonExecutor {
+public class GroupComparisonExecutor extends AComparisonExecutor {
 
-  final CompiledBucketColumnSet cSet;
+  final CompiledGroupColumnSet cSet;
 
-  public BucketComparisonExecutor(CompiledBucketColumnSet cSet) {
+  public GroupComparisonExecutor(CompiledGroupColumnSet cSet) {
     this.cSet = cSet;
   }
 
@@ -31,10 +31,10 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
 
     final List<Pair<String, Object>> transformationByColumn;
     final ObjectIntMap<String> indexByColumn;
-    final Map<String, List<String>> valuesByBucket = new LinkedHashMap<>();
+    final Map<String, List<String>> valuesByGroup = new LinkedHashMap<>();
 
-    ShiftProcedure(CompiledBucketColumnSet cSet, Map<TypedField, String> referencePosition, ObjectIntMap<String> indexByColumn) {
-      this.valuesByBucket.putAll(cSet.values());
+    ShiftProcedure(CompiledGroupColumnSet cSet, Map<TypedField, String> referencePosition, ObjectIntMap<String> indexByColumn) {
+      this.valuesByGroup.putAll(cSet.values());
       this.indexByColumn = indexByColumn;
       this.transformationByColumn = new ArrayList<>();
       // Order does matter here
@@ -44,17 +44,17 @@ public class BucketComparisonExecutor extends AComparisonExecutor {
 
     @Override
     public boolean test(Object[] row, Header[] headers) {
-      Object bucketTransformation = this.transformationByColumn.get(0).getTwo();
-      int bucketIndex = this.indexByColumn.getIfAbsent(this.transformationByColumn.get(0).getOne(), -1);
-      if (bucketTransformation != null) {
-        throw new RuntimeException("comparison with a different bucket value is not yet supported");
+      Object groupTransformation = this.transformationByColumn.get(0).getTwo();
+      int groupIndex = this.indexByColumn.getIfAbsent(this.transformationByColumn.get(0).getOne(), -1);
+      if (groupTransformation != null) {
+        throw new RuntimeException("comparison with a different group value is not yet supported");
       }
 
       Object fieldTransformation = this.transformationByColumn.get(1).getTwo();
       if (fieldTransformation != null) {
         int fieldIndex = this.indexByColumn.getIfAbsent(this.transformationByColumn.get(1).getOne(), -1);
-        String b = (String) row[bucketIndex];
-        List<String> values = this.valuesByBucket.get(b);
+        String b = (String) row[groupIndex];
+        List<String> values = this.valuesByGroup.get(b);
         if (fieldTransformation instanceof Integer) {
           String fieldValue = (String) row[fieldIndex];
           int index = values.indexOf(fieldValue);

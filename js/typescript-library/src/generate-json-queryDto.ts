@@ -3,7 +3,7 @@ import {
   AggregatedMeasure,
   avgIf,
   BinaryOperationMeasure, BinaryOperator,
-  comparisonMeasureWithBucket,
+  comparisonMeasureWithinSameGroup,
   comparisonMeasureWithParent,
   comparisonMeasureWithPeriod,
   ComparisonMethod,
@@ -31,7 +31,7 @@ import {
 } from "./conditions"
 import * as fs from "fs"
 import {OrderKeyword} from "./order"
-import {BucketColumnSet, Month} from "./columnsets"
+import {GroupColumnSet, Month} from "./columnsets"
 import {AliasedField, ConstantField, countRows, TableField, tableField} from "./field"
 
 export function generateFromQueryDto() {
@@ -65,7 +65,7 @@ export function generateFromQueryDto() {
   const one = new ConstantField(1)
   q.withMeasure(avgIf("whatever", f1.divide(one.plus(rate)), criterion_(f1.plus(f2).as("f1+f2"), one, ConditionType.GT)))
 
-  q.withMeasure(comparisonMeasureWithBucket("comp bucket", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, new Map([
+  q.withMeasure(comparisonMeasureWithinSameGroup("comp group", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, new Map([
     [tableField("group"), "g"],
     [tableField("scenario"), "s-1"]
   ])))
@@ -96,7 +96,7 @@ export function generateFromQueryDto() {
     "a": ["a1", "a2"],
     "b": ["b1", "b2"]
   }))
-  q.withBucketColumnSet(new BucketColumnSet(tableField("group"), tableField("scenario"), values))
+  q.withGroupColumnSet(new GroupColumnSet(tableField("group"), tableField("scenario"), values))
 
   // SubQuery - Note this is not valid because a table has been set above, but we are just testing
   // the json here.

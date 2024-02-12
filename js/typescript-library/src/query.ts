@@ -1,4 +1,4 @@
-import {BucketColumnSet, ColumnSet, ColumnSetKey} from "./columnsets"
+import {GroupColumnSet, ColumnSet, ColumnSetKey} from "./columnsets"
 import {Field} from "./field"
 import {Measure} from "./measure"
 import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order"
@@ -93,8 +93,8 @@ export class Query {
     return this
   }
 
-  withBucketColumnSet(columSet: BucketColumnSet): Query {
-    this.columnSets.set(ColumnSetKey.BUCKET, columSet)
+  withGroupColumnSet(columSet: GroupColumnSet): Query {
+    this.columnSets.set(ColumnSetKey.GROUP, columSet)
     return this
   }
 
