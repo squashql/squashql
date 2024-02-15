@@ -911,9 +911,10 @@ const populationTable = new PopulationTable()
 
 const pop = sum("pop", populationTable.population)
 const ancestors = [populationTable.continent, populationTable.country, populationTable.city]
-const ratio = comparisonMeasureWithParent("ratio", ComparisonMethod.DIVIDE, pop, ancestors)
+const parentRatio = comparisonMeasureWithParent("parent ratio", ComparisonMethod.DIVIDE, pop, ancestors)
+const gtRatio = comparisonMeasureWithGrandTotalAlongAncestors("gt ratio", ComparisonMethod.DIVIDE, pop, ancestors)
 const query = from(populationTable._name)
-        .select([populationTable.continent, populationTable.country, populationTable.city], [], [pop, ratio])
+        .select([populationTable.continent, populationTable.country, populationTable.city], [], [pop, parentRatio, gtRatio])
         .rollup([populationTable.continent, populationTable.country, populationTable.city])
         .build()
 ```
@@ -927,7 +928,7 @@ Note the columns used to define the ancestors need to be passed to the select me
 Result
 ```
 +-------------+-------------+-------------+------------+---------------------+
-|   continent |     country |        city |        pop |               ratio |
+|   continent |     country |        city |        pop |        parent ratio |
 +-------------+-------------+-------------+------------+---------------------+
 | Grand Total | Grand Total | Grand Total |       28.5 |                 1.0 |
 |          am |       Total |       Total |       17.0 |  0.5964912280701754 |
