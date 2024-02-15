@@ -8,6 +8,7 @@ import io.squashql.query.dto.*;
 import io.squashql.table.PivotTable;
 import io.squashql.table.PivotTableUtils;
 import io.squashql.table.Table;
+import io.squashql.table.TableUtils;
 import io.squashql.transaction.DuckDBDataLoader;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
@@ -422,7 +423,7 @@ public class TestPivotTable {
             .rollup(columns)
             .build();
     Table table = this.executor.executeQuery(query);
-    List<Map<String, Object>> cells = PivotTableUtils.generateCells(table, false);
+    List<Map<String, Object>> cells = TableUtils.generateCells(table, false);
     List<Map<String, Object>> expectedCells = List.of(
             addEntryWithNullValue("other", Map.of("nonNullField", 8L)),
             addEntryWithNullValue("other", Map.of("nonNullField", 5L, "continent", "am")),
@@ -434,7 +435,7 @@ public class TestPivotTable {
     );
     Assertions.assertThat(cells).containsExactlyElementsOf(expectedCells);
 
-    cells = PivotTableUtils.generateCells(table, true);
+    cells = TableUtils.generateCells(table, true);
     expectedCells = List.of(
             Map.of("nonNullField", 8L),
             Map.of("nonNullField", 5L, "continent", "am"),

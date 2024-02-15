@@ -1,6 +1,5 @@
 package io.squashql.spring.web.rest;
 
-import com.google.common.collect.ImmutableList;
 import io.squashql.query.*;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
@@ -53,17 +52,7 @@ public class QueryController {
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(),
             true,
             null);
-    List<String> fields = table.headers().stream().map(Header::name).collect(Collectors.toList());
-    SimpleTableDto simpleTable = SimpleTableDto.builder()
-            .rows(ImmutableList.copyOf(table.iterator()))
-            .columns(fields)
-            .build();
-    QueryResultDto result = QueryResultDto.builder()
-            .table(simpleTable)
-            .metadata(TableUtils.buildTableMetadata(table))
-            .debug(DebugInfoDto.builder().cache(csBuilder.build()).build())
-            .build();
-    return ResponseEntity.ok(result);
+    return ResponseEntity.ok(createQueryResultDto(table, csBuilder, query.minify));
   }
 
   @PostMapping(MAPPING_QUERY_PIVOT)
@@ -83,7 +72,7 @@ public class QueryController {
     Table table = this.queryExecutor.executeQueryMerge(
             queryMergeDto,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get());
-    return ResponseEntity.ok(createQueryResultDto(table));
+    return ResponseEntity.ok(createQueryResultDto(table, CacheStatsDto.builder(), queryMergeDto.minify));
   }
 
   @PostMapping(MAPPING_QUERY_MERGE_PIVOT)
@@ -99,18 +88,16 @@ public class QueryController {
   @PostMapping(MAPPING_QUERY_JOIN_EXPERIMENTAL)
   public ResponseEntity<QueryResultDto> executeQueryJoin(@RequestBody QueryJoinDto queryJoinDto) {
     Table table = this.queryExecutor.executeExperimentalQueryMerge(queryJoinDto);
-    return ResponseEntity.ok(createQueryResultDto(table));
+    return ResponseEntity.ok(createQueryResultDto(table, CacheStatsDto.builder(), queryJoinDto.minify));
   }
 
-  private static QueryResultDto createQueryResultDto(Table table) {
+  private static QueryResultDto createQueryResultDto(Table table, CacheStatsDto.CacheStatsDtoBuilder csBuilder, Boolean minify) {
     List<String> fields = table.headers().stream().map(Header::name).collect(Collectors.toList());
-    SimpleTableDto simpleTable = SimpleTableDto.builder()
-            .rows(ImmutableList.copyOf(table.iterator()))
-            .columns(fields)
-            .build();
     QueryResultDto result = QueryResultDto.builder()
-            .table(simpleTable)
+            .columns(fields)
+            .cells(TableUtils.generateCells(table, minify))
             .metadata(TableUtils.buildTableMetadata(table))
+            .debug(DebugInfoDto.builder().cache(csBuilder.build()).build())
             .build();
     return result;
   }
