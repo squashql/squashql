@@ -11,6 +11,7 @@ export interface Measure {
 }
 
 export type BasicMeasure = Measure
+
 export class AggregatedMeasure implements BasicMeasure {
   readonly class: string = PACKAGE + "AggregatedMeasure"
   readonly field: Field
@@ -104,7 +105,8 @@ export class ComparisonMeasureReferencePosition implements Measure {
               private referencePosition: Map<Field, string>,
               private columnSetKey?: ColumnSetKey,
               private period?: Period,
-              private ancestors?: Array<Field>) {
+              private ancestors?: Array<Field>,
+              private grandTotalAlongAncestors?: boolean) {
     this.alias = alias
   }
 
@@ -118,6 +120,7 @@ export class ComparisonMeasureReferencePosition implements Measure {
       "period": this.period,
       "referencePosition": this.referencePosition ? Object.fromEntries(serializeMap(this.referencePosition)) : undefined,
       "ancestors": this.ancestors,
+      "grandTotalAlongAncestors": this.grandTotalAlongAncestors,
     }
   }
 }
@@ -262,5 +265,12 @@ export function comparisonMeasureWithParent(alias: string,
                                             comparisonMethod: ComparisonMethod,
                                             measure: Measure,
                                             ancestors: Array<Field>): Measure {
-  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, undefined, undefined, undefined, ancestors)
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, undefined, undefined, undefined, ancestors, false)
+}
+
+export function comparisonMeasureWithGrandTotalAlongAncestors(alias: string,
+                                                              comparisonMethod: ComparisonMethod,
+                                                              measure: Measure,
+                                                              ancestors: Array<Field>): Measure {
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, undefined, undefined, undefined, ancestors, true)
 }

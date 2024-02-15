@@ -16,7 +16,8 @@ public record CompiledComparisonMeasure(String alias,
                                         Map<TypedField, String> referencePosition,
                                         CompiledPeriod period,
                                         ColumnSetKey columnSetKey,
-                                        List<TypedField> ancestors) implements CompiledMeasure {
+                                        List<TypedField> ancestors,
+                                        boolean grandTotalAlongAncestors) implements CompiledMeasure {
 
 
   @Override

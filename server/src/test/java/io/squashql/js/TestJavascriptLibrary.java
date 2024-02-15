@@ -73,6 +73,11 @@ public class TestJavascriptLibrary {
             ComparisonMethod.DIVIDE,
             price,
             List.of(tableField("Year"), tableField("Month"))));
+    q.withMeasure(new ComparisonMeasureReferencePosition("grandTotalAlongAncestors",
+            ComparisonMethod.DIVIDE,
+            price,
+            List.of(tableField("Year"), tableField("Month")),
+            true));
 
     var queryCondition = or(and(eq("a"), eq("b")), lt(5), like("a%"));
     q.withCondition(tableField("f1"), queryCondition);

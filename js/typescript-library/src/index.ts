@@ -15,7 +15,7 @@ export {
   sumIf, minIf, maxIf, avgIf, countIf, countDistinctIf,
   plus, minus, multiply, divide,
   integer, decimal,
-  comparisonMeasureWithPeriod, comparisonMeasureWithinSameGroup, comparisonMeasureWithParent,
+  comparisonMeasureWithPeriod, comparisonMeasureWithinSameGroup, comparisonMeasureWithParent, comparisonMeasureWithGrandTotalAlongAncestors,
   totalCount,
   ComparisonMethod,
 } from './measure'
