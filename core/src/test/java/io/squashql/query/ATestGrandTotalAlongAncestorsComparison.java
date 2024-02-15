@@ -23,7 +23,7 @@ import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestGrandTotalAlongAncestorsComparison extends ABaseTestQuery {
 
-  private final String storeName = "store";// FIXME + getClass().getSimpleName().toLowerCase();
+  private final String storeName = "store" + getClass().getSimpleName().toLowerCase();
   private final List<Field> fields = tableFields(List.of("continent", "country", "city")); // ancestors
   private final Measure amount = Functions.sum("amount", "amount");
   private final ComparisonMeasureReferencePosition percentOfGT = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, this.amount, this.fields, true);
