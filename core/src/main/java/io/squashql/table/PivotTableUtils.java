@@ -1,12 +1,14 @@
 package io.squashql.table;
 
 import io.squashql.query.Header;
+import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.util.ListUtils;
 import io.squashql.util.NullAndTotalComparator;
 import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
 
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public final class PivotTableUtils {
 
@@ -216,6 +218,46 @@ public final class PivotTableUtils {
 
         BitSet bitSet = bitSetByValue.get(headerNames.get(i));
         if ((bitSet == null && !NullAndTotalComparator.isTotal(value)) || (bitSet != null && !bitSet.get(line[0]))) {
+          cell.put(headerNames.get(i), value);
+        }
+      }
+      line[0]++;
+      cells.add(cell);
+    });
+    return cells;
+  }
+
+  public static List<Map<String, Object>> generateCells(Table table, boolean minify) {
+    Set<String> measuresWithNullValuesOnEntireColumn;
+    if (minify) {
+      measuresWithNullValuesOnEntireColumn = new HashSet<>(table.measures().stream().map(CompiledMeasure::alias).collect(Collectors.toSet()));
+      Set<String> toRemoveFromCandidates = new HashSet<>();
+      for (String m : measuresWithNullValuesOnEntireColumn) {
+        List<Object> columnValues = table.getColumnValues(m);
+        for (Object columnValue : columnValues) {
+          if (columnValue != null) {
+            toRemoveFromCandidates.add(m);
+            break;
+          }
+        }
+      }
+      measuresWithNullValuesOnEntireColumn.removeAll(toRemoveFromCandidates);
+    } else {
+      measuresWithNullValuesOnEntireColumn = Collections.emptySet();
+    }
+
+    List<Map<String, Object>> cells = new ArrayList<>((int) table.count());
+    List<String> headerNames = table.headers().stream().map(Header::name).toList();
+    int[] line = new int[1];
+    table.forEach(row -> {
+      Map<String, Object> cell = new HashMap<>();
+      for (int i = 0; i < row.size(); i++) {
+        if (measuresWithNullValuesOnEntireColumn.contains(headerNames.get(i))) {
+          continue;
+        }
+        Object value = row.get(i);
+
+        if (!NullAndTotalComparator.isTotal(value)) {
           cell.put(headerNames.get(i), value);
         }
       }
