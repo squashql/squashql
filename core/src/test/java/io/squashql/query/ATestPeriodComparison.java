@@ -442,7 +442,7 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     Assertions.assertThat(finalTable).containsExactlyInAnyOrder(
             List.of(yearType(2022), 12L),
             List.of(yearType(2023), 12L),
-            List.of("Grand Total", 24L));
+            List.of(GRAND_TOTAL, 24L));
   }
 
   protected Object yearType(int i) {

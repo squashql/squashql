@@ -23,18 +23,12 @@ public class ParentComparisonExecutor extends AComparisonExecutor {
   protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasure cm, ObjectIntMap<String> indexByColumn) {
     List<TypedField> ancestors = new ArrayList<>(this.pcm.ancestors());
     Collections.reverse(ancestors);
-    return new ShiftProcedure(ancestors, indexByColumn);
+    return new AncestorShiftProcedure(ancestors, indexByColumn, cm.grandTotalAlongAncestors());
   }
 
-  static class ShiftProcedure implements BiPredicate<Object[], Header[]> {
-
-    final List<TypedField> ancestors;
-    final ObjectIntMap<String> indexByColumn;
-
-    ShiftProcedure(List<TypedField> ancestors, ObjectIntMap<String> indexByColumn) {
-      this.ancestors = ancestors;
-      this.indexByColumn = indexByColumn;
-    }
+  record AncestorShiftProcedure(List<TypedField> ancestors,
+                                ObjectIntMap<String> indexByColumn,
+                                boolean grandTotalAlongAncestors) implements BiPredicate<Object[], Header[]> {
 
     @Override
     public boolean test(Object[] row, Header[] headers) {
@@ -45,7 +39,9 @@ public class ParentComparisonExecutor extends AComparisonExecutor {
           int index = this.indexByColumn.get(name);
           if (!SQLTranslator.TOTAL_CELL.equals(row[index])) {
             row[index] = SQLTranslator.TOTAL_CELL;
-            break;
+            if (!this.grandTotalAlongAncestors) {
+              break;
+            }
           }
         }
       }
