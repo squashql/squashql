@@ -11,6 +11,7 @@ export class QueryMerge {
 
   private readonly _queries: Array<Query>
   private readonly _joins: Array<JoinType>
+  minify?: boolean
 
   constructor(query: Query) {
     this._queries = []
@@ -33,6 +34,7 @@ export class QueryMerge {
     return {
       "queries": this._queries,
       "joinTypes": this._joins,
+      "minify": this.minify,
     }
   }
 }
@@ -50,6 +52,7 @@ export class Query {
   orders: Map<Field, Order>
   subQuery: Query
   limit: number = -1
+  minify?: boolean
 
   constructor() {
     this.columns = []
@@ -131,7 +134,8 @@ export class Query {
       "whereCriteriaDto": this.whereCriteria,
       "havingCriteriaDto": this.havingCriteriaDto,
       "orders": Object.fromEntries(serializeMap(this.orders)),
-      "limit": this.limit
+      "limit": this.limit,
+      "minify": this.minify
     }
   }
 }
