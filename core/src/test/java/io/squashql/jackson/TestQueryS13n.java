@@ -198,7 +198,7 @@ public class TestQueryS13n {
     QueryDto query = Query.from("table")
             .select(List.of(f1, f2), List.of(), List.of())
             .build();
-    PivotTableQueryDto pivotTableQueryDto = new PivotTableQueryDto(query, List.of(f1), List.of(f2), false);
+    PivotTableQueryDto pivotTableQueryDto = new PivotTableQueryDto(query, List.of(f1), List.of(f2));
     String serialize = JacksonUtil.serialize(pivotTableQueryDto);
     PivotTableQueryDto deserialize = JacksonUtil.deserialize(serialize, PivotTableQueryDto.class);
     Assertions.assertThat(deserialize).isEqualTo(pivotTableQueryDto);

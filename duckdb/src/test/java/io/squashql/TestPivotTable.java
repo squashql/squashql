@@ -114,10 +114,11 @@ public class TestPivotTable {
             .build();
 
     QueryMergeDto queryMerge = QueryMergeDto.from(query1).join(query2, JoinType.LEFT);
+    queryMerge.minify = true;
     List<Field> rows = List.of(new AliasedField("continent"), new AliasedField("country"));
     List<Field> columns = List.of(this.spendingCategory.as("category"));
 
-    PivotTable pivotTable = this.executor.executePivotQueryMerge(new PivotTableQueryMergeDto(queryMerge, rows, columns, true), null);
+    PivotTable pivotTable = this.executor.executePivotQueryMerge(new PivotTableQueryMergeDto(queryMerge, rows, columns), null);
     {
       List<Map<String, Object>> cells = PivotTableUtils.generateCells(pivotTable, true);
       String expectedCells = """
@@ -354,7 +355,7 @@ public class TestPivotTable {
     // use AliasedField for rows and columns
     List<Field> rows = List.of(new AliasedField("continent"), new AliasedField("country"));
     List<Field> columns = List.of(new AliasedField("category"));
-    PivotTable pivotTable = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns, null));
+    PivotTable pivotTable = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns));
     // We check it does not throw and it returns a result
     Assertions.assertThat(pivotTable.table.count()).isEqualTo(18L);
   }
@@ -386,7 +387,7 @@ public class TestPivotTable {
             .show();
     List<Field> rows = List.of(groupCS.newField, countryAliased);
     List<Field> columns = List.of(this.spendingCategory);
-    PivotTable pivotTable = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns, false));
+    PivotTable pivotTable = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns));
     Assertions.assertThat(pivotTable.table.headers().stream().map(Header::name))
             .containsExactly("group", "countryAliased", this.spendingCategory.fullName, "amountComp", "amount");
     Assertions.assertThat(pivotTable.table).containsExactlyInAnyOrder(

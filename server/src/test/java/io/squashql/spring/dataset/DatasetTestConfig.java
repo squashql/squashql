@@ -46,7 +46,7 @@ public class DatasetTestConfig {
     QueryDto query = Query.from("our_prices")
             .select(tableFields(List.of("ean", "pdv", "scenario")), List.of(new AggregatedMeasure("count", "*", "count")))
             .build();
-    PivotTable pt = queryExecutor.executePivotQuery(new PivotTableQueryDto(query, tableFields(List.of("pdv", "ean")), tableFields(List.of("scenario")), false));
+    PivotTable pt = queryExecutor.executePivotQuery(new PivotTableQueryDto(query, tableFields(List.of("pdv", "ean")), tableFields(List.of("scenario"))));
     pt.show();
     toJson(pt);
   }

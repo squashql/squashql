@@ -92,7 +92,7 @@ public class TestDuckDBQuery {
     TestUtil.assertThatThrownBy(() -> this.executor.executeQueryMerge(queryMergeDto, null))
             .isInstanceOf(LimitExceedException.class)
             .hasMessageContaining("too big");
-    TestUtil.assertThatThrownBy(() -> this.executor.executePivotQueryMerge(new PivotTableQueryMergeDto(queryMergeDto, List.of(tableField("eanId")), List.of(), false), null))
+    TestUtil.assertThatThrownBy(() -> this.executor.executePivotQueryMerge(new PivotTableQueryMergeDto(queryMergeDto, List.of(tableField("eanId")), List.of()), null))
             .isInstanceOf(LimitExceedException.class)
             .hasMessageContaining("too big");
   }

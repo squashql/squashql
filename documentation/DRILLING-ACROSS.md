@@ -278,15 +278,12 @@ querier.executePivotQuery(new QueryMerge(queryShipment, queryReturnWithReason, J
         .then(result => console.log(result))
 ```
 
-Note `PivotConfig` accept another boolean parameter: `minify` set to true by default. It indicates if columns full of null
+Note `QueryMerge#minify` attribute is set to true by default. It indicates if columns full of null
 values should be returned or not in the final result. If set to false:
 
 ```typescript
-const pivotConfig: PivotConfig = {
-  rows: [shipment.product],
-  columns: [returnTable.reason], 
-  minify: false
-}
+const queryMerge = new QueryMerge(queryShipment, queryReturnWithReason, JoinType.FULL)
+queryMerge.minify = false
 ```
 
 <img src="assets/drilling-accross-notminify.png" width="1000">

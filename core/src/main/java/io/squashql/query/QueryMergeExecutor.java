@@ -34,9 +34,10 @@ public class QueryMergeExecutor {
       Set<Field> columnsFromColumnSets = query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream()).collect(Collectors.toSet());
       List<Field> localRows = getLocalFields(rows, query, columnsFromColumnSets);
       List<Field> localColumns = getLocalFields(columns, query, columnsFromColumnSets);
+      query.minify = false;
 
       return queryExecutor.executePivotQuery(
-              new PivotTableQueryDto(query, localRows, localColumns, false),
+              new PivotTableQueryDto(query, localRows, localColumns),
               CacheStatsDto.builder(),
               user,
               false,

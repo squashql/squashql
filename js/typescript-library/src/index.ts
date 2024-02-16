@@ -1,5 +1,5 @@
 export {
-  Query, Table, JoinType, QueryMerge,
+  Query, Table, JoinType,
 } from './query'
 
 export {
@@ -64,3 +64,4 @@ export {
 } from "./virtualtable"
 
 export * from "./dependencies"
+export {QueryMerge} from "./queryMerge"

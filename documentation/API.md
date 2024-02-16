@@ -58,14 +58,11 @@ To enable the pivot table feature, a `PivotConfig` parameter needs to be pass to
 ```typescript
 const pivotConfig: PivotConfig = {
   rows: [budget.category],
-  columns: [budget.year, budget.month],
-  minify: true
+  columns: [budget.year, budget.month]
 }
 ```
 It is used by SquashQL to know which totals and subtotals needs to be computed. The union of the two lists rows and columns
 must be exactly equal to the list of columns provided in the select.
-
-The parameter `minify` is optional (default is `true`). If `true`, columns full of null values are removed the returned result.
 
 ```typescript
 const income = sumIf("Income", budget.amount, criterion(budget.incomeExpenditure, eq("Income")))
@@ -133,6 +130,25 @@ querier.executeQuery(new QueryMerge(myFirstQuery, mySecondQuery)).then(response 
 Note the result of `QueryMerge` can also be displayed as a pivot table by using `querier.executePivotQuery()`. 
 
 Full documentation of [Drilling across in the dedicated page](./documentation/DRILLING-ACROSS.md).
+
+## Minify
+
+Minify is an option to remove columns that contain only null values from the final result. This attribute exists in the 
+following classes:
+
+- Query
+- QueryMerge
+- QueryJoin
+
+If not set, the default value is `true`. You can change it like this:
+
+```typescript
+const q: Query | QueryMerge | QueryJoin = ...
+q.minify = false
+```
+
+It is also useful when using `PivotTableQuery` and `PivotTableQueryMerge`. The attribute needs to be set to the desired value
+on the underlying query object: `PivotTableQuery#query` or `PivotTableQueryMerge#query`.
 
 ## Under the hood
 

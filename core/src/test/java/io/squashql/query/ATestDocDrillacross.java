@@ -67,8 +67,7 @@ public abstract class ATestDocDrillacross extends ABaseTestQuery {
     this.executor.executeQueryMerge(queryMerge, null).show();
     PivotTable pt = this.executor.executePivotQueryMerge(new PivotTableQueryMergeDto(QueryMergeDto.from(query1).join(query2, JoinType.FULL),
                     List.of(tableField("product")),
-                    List.of(tableField("reason")),
-                    false),
+                    List.of(tableField("reason"))),
             null);
     pt.show();
     List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, false);
