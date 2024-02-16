@@ -5,7 +5,7 @@ This is a quick introduction to SquashQL API. For an in-depth documentation, ple
 ## Regular query
 
 To execute a query. It accepts a json object built with the Typescript library and returns a JSON
-object representing the result table of the computation. The object returns is of type [QueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts#L53)
+object representing the result table of the computation. The object returns is of type [QueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts)
 
 ```typescript
 class Budget {
@@ -98,7 +98,7 @@ querier.executePivotQuery(query, pivotConfig, true).then(r => console.log(r))
 
 To execute *Drilling across* query i.e. querying two fact tables. The two results are aligned by
 performing a sort-merge operation on the common attribute column headers.
-The object returns is of type [QueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts#L53).
+The object returns is of type [QueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts).
 
 ```typescript
 class MyTable {

@@ -77,7 +77,8 @@ export function createPivotTableQueryMerge(query: QueryMerge, pivotConfig: Pivot
 }
 
 export interface QueryResult {
-  table: SimpleTable,
+  columns: Array<string>
+  cells: Array<Record<string, any>>,
   metadata: Array<MetadataItem>
   debug: any
 }

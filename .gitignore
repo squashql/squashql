@@ -39,5 +39,10 @@ node_modules
 build-from-querydto.json
 build-from-query.json
 build-from-query-merge.json
+build-from-query-pivot.json,
+build-from-query-merge-pivot.json
+build-from-query-join.json
+build-from-query-result.json
+build-from-pivot-query-result.json
 js/typescript-library/dist
 js/client-typescript-library/build
