@@ -1,9 +1,10 @@
 import * as fs from "fs"
 import {TableField, tableFields} from "./field"
 import {avg, max, sum} from "./measure"
-import {JoinType, QueryMerge} from "./query"
+import {JoinType} from "./query"
 import {from} from "./queryBuilder"
 import {Action, QueryCacheParameter} from "./parameters"
+import {QueryMerge} from "./queryMerge"
 
 export function generateFromQueryMerge() {
   const fields = tableFields(["a", "b"])

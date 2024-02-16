@@ -63,7 +63,7 @@ public class QueryController {
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(),
             true,
             null);
-    List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, pivotTableQueryDto.minify);
+    List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, pivotTableQueryDto.query.minify);
     return ResponseEntity.ok(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values));
   }
 
@@ -81,7 +81,7 @@ public class QueryController {
             pivotTableQueryMergeDto,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get()
     );
-    List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, pivotTableQueryMergeDto.minify);
+    List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, pivotTableQueryMergeDto.query.minify);
     return ResponseEntity.ok(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values));
   }
 

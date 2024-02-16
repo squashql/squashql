@@ -1,22 +1,20 @@
-import {Query, QueryMerge} from "./query"
+import {Query} from "./query"
 import {Field} from "./field"
+import {QueryMerge} from "./queryMerge"
 
 export interface PivotTableQuery {
   query: Query
   rows: Array<Field>
   columns: Array<Field>
-  minify?: boolean
 }
 
 export interface PivotTableQueryMerge {
   query: QueryMerge
   rows: Array<Field>
   columns: Array<Field>
-  minify?: boolean
 }
 
 export interface PivotConfig {
   rows: Array<Field>
   columns: Array<Field>
-  minify?: boolean
 }

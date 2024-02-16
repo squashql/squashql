@@ -506,16 +506,16 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .select(List.of(category, ean), List.of(sum("ca", "price")))
             .build();
     int base = 0;
-    this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category), List.of(ean), false));
+    this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category), List.of(ean)));
     assertCacheStats(0, (base = base + 2));
-    this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category, ean), List.of(), false));
+    this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category, ean), List.of()));
     assertCacheStats(0, (base = base + 2));
-    this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(), List.of(category, ean), false));
+    this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(), List.of(category, ean)));
     assertCacheStats(2, base); // same as the previous
-    this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(ean), List.of(category), false));
+    this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(ean), List.of(category)));
     assertCacheStats(2, (base = base + 2));
     // Same as the first query
-    this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category), List.of(ean), false));
+    this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category), List.of(ean)));
     assertCacheStats(4, base);
   }
 

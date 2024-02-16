@@ -182,7 +182,8 @@ public class HttpClientQuerierTest {
     QueryDto query = Query.from("our_prices")
             .select(tableFields(List.of("ean", "pdv")), List.of(CountMeasure.INSTANCE))
             .build();
-    PivotTableQueryDto pivotTableQuery = new PivotTableQueryDto(query, tableFields(List.of("pdv")), tableFields(List.of("ean")), false);
+    query.minify = false;
+    PivotTableQueryDto pivotTableQuery = new PivotTableQueryDto(query, tableFields(List.of("pdv")), tableFields(List.of("ean")));
     PivotTableQueryResultDto response = this.querier.run(pivotTableQuery);
 
     Assertions.assertThat(response.rows).containsExactlyElementsOf(pivotTableQuery.rows.stream().map(Field::name).toList());
