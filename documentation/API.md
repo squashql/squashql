@@ -133,7 +133,7 @@ Full documentation of [Drilling across in the dedicated page](./documentation/DR
 
 ## Minify
 
-Minify is an option to remove columns that contains only null values from the final result. This attribute exists in the 
+Minify is an option to remove columns that contain only null values from the final result. This attribute exists in the 
 following classes:
 
 - Query
@@ -148,7 +148,7 @@ q.minify = false
 ```
 
 It is also useful when using `PivotTableQuery` and `PivotTableQueryMerge`. The attribute needs to be set to the desired value
-on the underlying query: `PivotTableQuery#query` or `PivotTableQueryMerge#query`.
+on the underlying query object: `PivotTableQuery#query` or `PivotTableQueryMerge#query`.
 
 ## Under the hood
 
