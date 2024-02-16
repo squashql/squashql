@@ -51,6 +51,8 @@ public class QueryDto {
 
   public int limit = -1;
 
+  public Boolean minify;
+
   public QueryDto withColumn(Field column) {
     this.columns.add(column);
     return this;

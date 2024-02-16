@@ -7,6 +7,7 @@ import io.squashql.query.dto.*;
 import io.squashql.spring.SquashQLApplication;
 import io.squashql.spring.dataset.DatasetTestConfig;
 import io.squashql.spring.web.rest.QueryControllerTest;
+import io.squashql.util.TestUtil;
 import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,7 +63,7 @@ public class HttpClientQuerierTest {
             .withMeasure(new AggregatedMeasure("qs", "quantity", "sum"));
 
     QueryResultDto response = this.querier.run(query);
-    assertQuery(response.table);
+    assertQuery(TestUtil.cellsToTable(response.cells, response.columns));
     Assertions.assertThat(response.metadata).containsExactly(
             new MetadataItem(SCENARIO_FIELD_NAME, SCENARIO_FIELD_NAME, String.class),
             new MetadataItem("qs", "qs", long.class));
@@ -83,20 +84,18 @@ public class HttpClientQuerierTest {
             .withMeasure(new AggregatedMeasure(("qa"), "quantity", "avg"));
 
     QueryResultDto response = this.querier.queryMerge(QueryMergeDto.from(query1).join(query2, JoinType.FULL));
-    Assertions.assertThat(response.table.rows).containsExactlyInAnyOrder(List.of("MDD up", 4000, 1000d),
+    Assertions.assertThat(TestUtil.cellsToTable(response.cells, response.columns).rows).containsExactlyInAnyOrder(List.of("MDD up", 4000, 1000d),
             List.of("MN & MDD down", 4000, 1000d),
             List.of("MN & MDD up", 4000, 1000d),
             List.of("MN up", 4000, 1000d),
             List.of(MAIN_SCENARIO_NAME, 4000, 1000d));
-    Assertions.assertThat(response.table.columns).containsExactly(SCENARIO_FIELD_NAME, "qs", "qa");
+    Assertions.assertThat(response.columns).containsExactly(SCENARIO_FIELD_NAME, "qs", "qa");
     Assertions.assertThat(response.metadata).containsExactly(
             new MetadataItem(SCENARIO_FIELD_NAME, SCENARIO_FIELD_NAME, String.class),
             new MetadataItem("qs", "qs", long.class),
             new MetadataItem("qa", "qa", double.class));
 //            new MetadataItem("qs", "sum(quantity)", long.class),
 //            new MetadataItem("qa", "avg(quantity)", double.class));
-
-    Assertions.assertThat(response.debug).isNull();
   }
 
   @Test
@@ -122,7 +121,7 @@ public class HttpClientQuerierTest {
             .build();
 
     QueryResultDto response = this.querier.run(query);
-    SimpleTableDto table = response.table;
+    SimpleTableDto table = TestUtil.cellsToTable(response.cells, response.columns);
     double baseValue = 40_000d;
     double mnValue = 42_000d;
     double mnmddValue = 44_000d;
@@ -148,7 +147,7 @@ public class HttpClientQuerierTest {
             .build();
 
     QueryResultDto response = this.querier.run(query);
-    SimpleTableDto table = response.table;
+    SimpleTableDto table = TestUtil.cellsToTable(response.cells, response.columns);
     Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
             List.of(MAIN_SCENARIO_NAME, "ITM Balma", 20d),
             List.of(MAIN_SCENARIO_NAME, "ITM Toulouse and Drive", 20d)
@@ -213,7 +212,7 @@ public class HttpClientQuerierTest {
             .build();
 
     QueryResultDto response = this.querier.run(query);
-    SimpleTableDto table = response.table;
+    SimpleTableDto table = TestUtil.cellsToTable(response.cells, response.columns);
     final int totalCountIdx = table.columns.indexOf(TotalCountMeasure.ALIAS);
     Assertions.assertThat(table.rows.stream().mapToInt(row -> (int) row.get(totalCountIdx))).containsOnly(5);
   }

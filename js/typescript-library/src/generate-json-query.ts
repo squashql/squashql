@@ -52,6 +52,7 @@ export function generateFromQuery() {
           .limit(10)
           .build()
 
+  q.minify = false
   q.withParameter(new QueryCacheParameter(Action.NOT_USE))
 
   const data = JSON.stringify(q)

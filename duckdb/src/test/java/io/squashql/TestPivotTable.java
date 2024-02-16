@@ -7,15 +7,20 @@ import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.table.PivotTable;
 import io.squashql.table.PivotTableUtils;
+import io.squashql.table.Table;
+import io.squashql.table.TableUtils;
 import io.squashql.transaction.DuckDBDataLoader;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
+import static io.squashql.query.Functions.max;
+import static io.squashql.query.Functions.sum;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 
 public class TestPivotTable {
@@ -94,8 +99,8 @@ public class TestPivotTable {
   void testDrillingAcrossFullName() {
     setup(getFieldsByStore(), this::loadData);
 
-    Measure amount = Functions.sum("amount", this.amount);
-    Measure pop = Functions.sum("population", this.population);
+    Measure amount = sum("amount", this.amount);
+    Measure pop = sum("population", this.population);
 
     List<Measure> measuresSpending = List.of(amount);
     QueryDto query1 = Query
@@ -362,7 +367,7 @@ public class TestPivotTable {
     GroupColumnSetDto groupCS = new GroupColumnSetDto("group", countryAliased)
             .withNewGroup("european", List.of("uk", "france"))
             .withNewGroup("anglophone", List.of("usa", "uk"));
-    Measure amount = Functions.sum("amount", "amount");
+    Measure amount = sum("amount", "amount");
     ComparisonMeasureReferencePosition amountComp = new ComparisonMeasureReferencePosition(
             "amountComp",
             ABSOLUTE_DIFFERENCE,
@@ -393,5 +398,58 @@ public class TestPivotTable {
             List.of("anglophone", "usa", "extra", 0d, 10d),
             List.of("anglophone", "uk", GRAND_TOTAL, -5d, 5d),
             List.of("anglophone", "uk", "extra", -5d, 5d));
+  }
+
+  @Test
+  void testGenerateCells() {
+    TableTypedField country = new TableTypedField(this.storeSpending, "country", String.class);
+    TableTypedField continent = new TableTypedField(this.storeSpending, "continent", String.class);
+    TableTypedField nonNullField = new TableTypedField(this.storeSpending, "nonNullField", int.class);
+    TableTypedField nullField = new TableTypedField(this.storeSpending, "other", String.class);
+
+    // Use null values to test minify option
+    setup(Map.of(this.storeSpending, List.of(continent, country, nonNullField, nullField)), () -> {
+      this.dl.load(this.storeSpending, List.of(
+              new Object[]{"eu", "france", 1, null},
+              new Object[]{"eu", null, 0, null}, // use a null value to make sure it is not filtered out
+              new Object[]{"eu", "germany", 2, null},
+              new Object[]{"am", "usa", 5, null}));
+    });
+
+    List<Field> columns = List.of(this.continent.as("continent"), this.country.as("country"));
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .select(columns, List.of(sum("nonNullField", "nonNullField"), max("other", "other")))
+            .rollup(columns)
+            .build();
+    Table table = this.executor.executeQuery(query);
+    List<Map<String, Object>> cells = TableUtils.generateCells(table, false);
+    List<Map<String, Object>> expectedCells = List.of(
+            addEntryWithNullValue("other", Map.of("nonNullField", 8L)),
+            addEntryWithNullValue("other", Map.of("nonNullField", 5L, "continent", "am")),
+            addEntryWithNullValue("other", Map.of("nonNullField", 5L, "continent", "am", "country", "usa")),
+            addEntryWithNullValue("other", Map.of("nonNullField", 3L, "continent", "eu")),
+            addEntryWithNullValue("other", Map.of("nonNullField", 1L, "continent", "eu", "country", "france")),
+            addEntryWithNullValue("other", Map.of("nonNullField", 2L, "continent", "eu", "country", "germany")),
+            addEntryWithNullValue("country", addEntryWithNullValue("other", Map.of("nonNullField", 0L, "continent", "eu")))
+    );
+    Assertions.assertThat(cells).containsExactlyElementsOf(expectedCells);
+
+    cells = TableUtils.generateCells(table, true);
+    expectedCells = List.of(
+            Map.of("nonNullField", 8L),
+            Map.of("nonNullField", 5L, "continent", "am"),
+            Map.of("nonNullField", 5L, "continent", "am", "country", "usa"),
+            Map.of("nonNullField", 3L, "continent", "eu"),
+            Map.of("nonNullField", 1L, "continent", "eu", "country", "france"),
+            Map.of("nonNullField", 2L, "continent", "eu", "country", "germany"),
+            addEntryWithNullValue("country", Map.of("nonNullField", 0L, "continent", "eu")));
+    Assertions.assertThat(cells).containsExactlyElementsOf(expectedCells);
+  }
+
+  private Map<String, Object> addEntryWithNullValue(String key, Map<String, Object> map) {
+    Map<String, Object> r = new HashMap<>(map);
+    r.put(key, null);
+    return r;
   }
 }
