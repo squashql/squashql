@@ -96,7 +96,9 @@
                       build-from-query-merge.json,
                       build-from-query-pivot.json,
                       build-from-query-merge-pivot.json,
-                      build-from-query-join.json"/>
+                      build-from-query-join.json,
+                      build-from-query-result.json,
+                      build-from-pivot-query-result.json"/>
                 </copy>
               </target>
             </configuration>
