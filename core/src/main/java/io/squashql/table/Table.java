@@ -3,6 +3,7 @@ package io.squashql.table;
 import io.squashql.query.Field;
 import io.squashql.query.Header;
 import io.squashql.query.compiled.CompiledMeasure;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.QueryDto;
 import org.eclipse.collections.api.list.primitive.IntList;
@@ -81,7 +82,7 @@ public interface Table extends Iterable<List<Object>> {
     int i = 0;
     MutableIntList list = MutableIntListFactoryImpl.INSTANCE.empty();
     for (Header header : headers()) {
-      if (header.name().equals(column.name())) {
+      if (header.name().equals(SqlUtils.squashqlExpression(column))) {
         list.add(i);
       }
       i++;

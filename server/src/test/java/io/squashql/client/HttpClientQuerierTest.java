@@ -3,6 +3,7 @@ package io.squashql.client;
 import io.squashql.client.http.HttpClientQuerier;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.spring.SquashQLApplication;
 import io.squashql.spring.dataset.DatasetTestConfig;
@@ -186,8 +187,8 @@ public class HttpClientQuerierTest {
     PivotTableQueryDto pivotTableQuery = new PivotTableQueryDto(query, tableFields(List.of("pdv")), tableFields(List.of("ean")));
     PivotTableQueryResultDto response = this.querier.run(pivotTableQuery);
 
-    Assertions.assertThat(response.rows).containsExactlyElementsOf(pivotTableQuery.rows.stream().map(Field::name).toList());
-    Assertions.assertThat(response.columns).containsExactlyElementsOf(pivotTableQuery.columns.stream().map(Field::name).toList());
+    Assertions.assertThat(response.rows).containsExactlyElementsOf(pivotTableQuery.rows.stream().map(SqlUtils::squashqlExpression).toList());
+    Assertions.assertThat(response.columns).containsExactlyElementsOf(pivotTableQuery.columns.stream().map(SqlUtils::squashqlExpression).toList());
     Assertions.assertThat(response.values).containsExactlyElementsOf(List.of(CountMeasure.INSTANCE.alias));
     List<Map<String, Object>> cells = List.of(
             Map.of(CountMeasure.ALIAS, 20),

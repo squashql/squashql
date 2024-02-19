@@ -5,6 +5,7 @@ import io.squashql.list.Lists.DoubleList;
 import io.squashql.list.Lists.LocalDateList;
 import io.squashql.query.builder.Query;
 import io.squashql.query.compiled.CompiledExpressionMeasure;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
@@ -77,7 +78,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.competitor.name(), this.ean.name(), vector.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.competitor), SqlUtils.squashqlExpression(this.ean), vector.alias());
     assertVectorTuples(result, vector);
   }
 
@@ -106,12 +107,12 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
 
     // Create a new table with "fake" measures to be able to check the result
     ColumnarTable orderedTable = new ColumnarTable(
-            List.of(result.getHeader(this.competitor.name()), result.getHeader(this.ean.name()), new Header("orderedPrices", DoubleList.class, true), new Header("orderedDates", List.class, true)),
+            List.of(result.getHeader(SqlUtils.squashqlExpression(this.competitor)), result.getHeader(SqlUtils.squashqlExpression(this.ean)), new Header("orderedPrices", DoubleList.class, true), new Header("orderedDates", List.class, true)),
             Set.of(new CompiledExpressionMeasure("orderedPrices", ""), new CompiledExpressionMeasure("orderedDates", "")),
-            List.of(result.getColumnValues(this.competitor.name()), result.getColumnValues(this.ean.name()), orderedPricesList, orderedDatesList));
+            List.of(result.getColumnValues(SqlUtils.squashqlExpression(this.competitor)), result.getColumnValues(SqlUtils.squashqlExpression(this.ean)), orderedPricesList, orderedDatesList));
 
     Assertions.assertThat(orderedTable.headers().stream().map(Header::name))
-            .containsExactly(this.competitor.name(), this.ean.name(), "orderedPrices", "orderedDates");
+            .containsExactly(SqlUtils.squashqlExpression(this.competitor), SqlUtils.squashqlExpression(this.ean), "orderedPrices", "orderedDates");
     List<LocalDate> expectedLocalDates = new ArrayList<>();
     for (int d = 1; d < day; d++) {
       for (int m = 1; m < month; m++) {
@@ -161,7 +162,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.competitor.name(), this.ean.name(), vector.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.competitor), SqlUtils.squashqlExpression(this.ean), vector.alias());
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, GRAND_TOTAL, 54d),
             List.of(competitorX, TOTAL, 18d),

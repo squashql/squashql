@@ -3,6 +3,7 @@ package io.squashql.util;
 import io.squashql.query.ColumnSet;
 import io.squashql.query.ColumnSetKey;
 import io.squashql.query.Field;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 
 import java.util.*;
@@ -20,9 +21,9 @@ public final class Queries {
     Map<String, Comparator<?>> res = new HashMap<>();
     orders.forEach((c, order) -> {
       if (order instanceof SimpleOrderDto so) {
-        res.put(c.name(), NullAndTotalComparator.nullsLastAndTotalsFirst(so.order == DESC ? Comparator.naturalOrder().reversed() : Comparator.naturalOrder()));
+        res.put(SqlUtils.squashqlExpression(c), NullAndTotalComparator.nullsLastAndTotalsFirst(so.order == DESC ? Comparator.naturalOrder().reversed() : Comparator.naturalOrder()));
       } else if (order instanceof ExplicitOrderDto eo) {
-        res.put(c.name(), NullAndTotalComparator.nullsLastAndTotalsFirst(new CustomExplicitOrdering(eo.explicit)));
+        res.put(SqlUtils.squashqlExpression(c), NullAndTotalComparator.nullsLastAndTotalsFirst(new CustomExplicitOrdering(eo.explicit)));
       } else {
         throw new IllegalStateException("Unexpected value: " + orders);
       }
@@ -37,8 +38,8 @@ public final class Queries {
         List<Object> l = new ArrayList<>(v);
         m.put(k, l);
       });
-      res.put(cs.newField.name(), new CustomExplicitOrdering(new ArrayList<>(m.keySet())));
-      res.put(cs.field.name(), DependentExplicitOrdering.create(m));
+      res.put(SqlUtils.squashqlExpression(cs.newField), new CustomExplicitOrdering(new ArrayList<>(m.keySet())));
+      res.put(SqlUtils.squashqlExpression(cs.field), DependentExplicitOrdering.create(m));
     }
 
     return res;

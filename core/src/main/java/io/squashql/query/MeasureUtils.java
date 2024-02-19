@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.query.compiled.*;
 import io.squashql.query.database.QueryRewriter;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
@@ -31,10 +32,10 @@ public final class MeasureUtils {
       String alias = cm.getMeasure().alias();
       if (cm.ancestors != null) {
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
-        return formula + ", ancestors = " + cm.ancestors.stream().map(Field::name).toList();
+        return formula + ", ancestors = " + cm.ancestors.stream().map(SqlUtils::squashqlExpression).toList();
       } else {
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current)", alias + "(reference)");
-        return formula + ", reference = " + cm.referencePosition.entrySet().stream().map(e -> String.join("=", e.getKey().name(), e.getValue())).toList();
+        return formula + ", reference = " + cm.referencePosition.entrySet().stream().map(e -> String.join("=", SqlUtils.squashqlExpression(e.getKey()), e.getValue())).toList();
       }
     } else if (m instanceof ExpressionMeasure em) {
       return em.expression;
@@ -53,7 +54,7 @@ public final class MeasureUtils {
 
     @Override
     public TypedField resolveField(Field field) {
-      return new TableTypedField(null, field.name(), String.class);
+      return new TableTypedField(null, ((TableField) field).fullName, String.class);
     }
 
     @Override
@@ -63,7 +64,7 @@ public final class MeasureUtils {
   }
 
 
-   private static String quoteExpression(Measure m) {
+  private static String quoteExpression(Measure m) {
     if (m.alias() != null) {
       return m.alias();
     }
