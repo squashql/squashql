@@ -77,6 +77,9 @@ public class TestJavascriptLibrary {
             price,
             List.of(tableField("Year"), tableField("Month")),
             true));
+    q.withMeasure(new ComparisonMeasureGrandTotal("grandTotal",
+            ComparisonMethod.DIVIDE,
+            price));
 
     var queryCondition = or(and(eq("a"), eq("b")), lt(5), like("a%"));
     q.withCondition(tableField("f1"), queryCondition);

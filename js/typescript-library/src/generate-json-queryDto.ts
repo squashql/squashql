@@ -2,7 +2,10 @@ import {JoinType, Query, Table} from "./query"
 import {
   AggregatedMeasure,
   avgIf,
-  BinaryOperationMeasure, BinaryOperator, comparisonMeasureWithGrandTotalAlongAncestors,
+  BinaryOperationMeasure,
+  BinaryOperator,
+  comparisonMeasureWithGrandTotal,
+  comparisonMeasureWithGrandTotalAlongAncestors,
   comparisonMeasureWithinSameGroup,
   comparisonMeasureWithParent,
   comparisonMeasureWithPeriod,
@@ -75,6 +78,7 @@ export function generateFromQueryDto() {
   ]), new Month(tableField("Month"), tableField("Year"))))
   q.withMeasure(comparisonMeasureWithParent("parent", ComparisonMethod.DIVIDE, price, [tableField("Year"), tableField("Month")]))
   q.withMeasure(comparisonMeasureWithGrandTotalAlongAncestors("grandTotalAlongAncestors", ComparisonMethod.DIVIDE, price, [tableField("Year"), tableField("Month")]))
+  q.withMeasure(comparisonMeasureWithGrandTotal("grandTotal", ComparisonMethod.DIVIDE, price))
 
   const queryCondition = or(or(and(eq("a"), eq("b")), lt(5)), like("a%"))
   q.withWhereCriteria(all([

@@ -1,6 +1,6 @@
 package io.squashql.query;
 
-import io.squashql.query.compiled.CompiledComparisonMeasure;
+import io.squashql.query.compiled.CompiledComparisonMeasureReferencePosition;
 import io.squashql.query.compiled.CompiledPeriod;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
@@ -17,11 +17,11 @@ import java.util.function.BiPredicate;
 
 import static io.squashql.query.PeriodUnit.*;
 
-public class PeriodComparisonExecutor extends AComparisonExecutor {
+public class PeriodComparisonExecutor extends AComparisonExecutor<CompiledComparisonMeasureReferencePosition> {
 
-  final CompiledComparisonMeasure cmrp;
+  private final CompiledComparisonMeasureReferencePosition cmrp;
 
-  public PeriodComparisonExecutor(CompiledComparisonMeasure cmrp) {
+  public PeriodComparisonExecutor(CompiledComparisonMeasureReferencePosition cmrp) {
     this.cmrp = cmrp;
   }
 
@@ -40,7 +40,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
   }
 
   @Override
-  protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasure cm, ObjectIntMap<String> indexByColumn) {
+  protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
     Map<PeriodUnit, String> referencePosition = new HashMap<>();
     CompiledPeriod period = this.cmrp.period();
     Map<TypedField, PeriodUnit> mapping = mapping(period);
@@ -75,10 +75,10 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
       this.indexByPeriodUnit = indexByPeriodUnit;
       PeriodUnit[] periodUnits = getPeriodUnits(period);
       this.transformationByPeriodUnit = new HashMap<>();
-      for (int i = 0; i < periodUnits.length; i++) {
-        Object parse = parse(referencePosition.get(periodUnits[i]));
+      for (PeriodUnit periodUnit : periodUnits) {
+        Object parse = parse(referencePosition.get(periodUnit));
         if (parse != null) {
-          this.transformationByPeriodUnit.put(periodUnits[i], parse);
+          this.transformationByPeriodUnit.put(periodUnit, parse);
         }
       }
     }
@@ -109,7 +109,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor {
             return false;
           }
           LocalDate d = LocalDate.of(readAsLong(row[yearIndex]), quarter * 3, 1);
-          LocalDate newDate = d.plusMonths(((int) quarterTransformation) * 3);
+          LocalDate newDate = d.plusMonths(((int) quarterTransformation) * 3l);
           write(row, quarterIndex, headers[quarterIndex], (int) IsoFields.QUARTER_OF_YEAR.getFrom(newDate));
           write(row, yearIndex, headers[yearIndex], newDate.getYear());// year might have changed
         }
