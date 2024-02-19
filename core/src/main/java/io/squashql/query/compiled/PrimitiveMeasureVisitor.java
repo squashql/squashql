@@ -28,7 +28,12 @@ public class PrimitiveMeasureVisitor implements MeasureVisitor<Boolean> {
   }
 
   @Override
-  public Boolean visit(CompiledComparisonMeasure measure) {
+  public Boolean visit(CompiledComparisonMeasureReferencePosition measure) {
+    return false;
+  }
+
+  @Override
+  public Boolean visit(CompiledGrandTotalComparisonMeasure compiledGrandTotalComparisonMeasure) {
     return false;
   }
 

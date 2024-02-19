@@ -298,16 +298,18 @@ public class QueryResolver {
   protected CompiledMeasure compileMeasure(Measure measure, boolean topMeasure) {
     return this.cache.computeIfAbsent(measure, m -> {
       final CompiledMeasure compiledMeasure;
-      if (m instanceof AggregatedMeasure) {
-        compiledMeasure = compileAggregatedMeasure((AggregatedMeasure) m);
-      } else if (m instanceof ExpressionMeasure) {
-        compiledMeasure = compileExpressionMeasure((ExpressionMeasure) m);
-      } else if (m instanceof ConstantMeasure<?>) {
-        compiledMeasure = compileConstantMeasure((ConstantMeasure<?>) m);
-      } else if (m instanceof BinaryOperationMeasure) {
-        compiledMeasure = compileBinaryOperationMeasure((BinaryOperationMeasure) m, topMeasure);
-      } else if (m instanceof ComparisonMeasureReferencePosition) {
-        compiledMeasure = compileComparisonMeasure((ComparisonMeasureReferencePosition) m, topMeasure);
+      if (m instanceof AggregatedMeasure am) {
+        compiledMeasure = compileAggregatedMeasure(am);
+      } else if (m instanceof ExpressionMeasure em) {
+        compiledMeasure = compileExpressionMeasure(em);
+      } else if (m instanceof ConstantMeasure<?> cm) {
+        compiledMeasure = compileConstantMeasure(cm);
+      } else if (m instanceof BinaryOperationMeasure bom) {
+        compiledMeasure = compileBinaryOperationMeasure(bom, topMeasure);
+      } else if (m instanceof ComparisonMeasureReferencePosition cmrp) {
+        compiledMeasure = compileComparisonMeasure(cmrp, topMeasure);
+      } else if (m instanceof ComparisonMeasureGrandTotal cmgt) {
+        compiledMeasure = new CompiledGrandTotalComparisonMeasure(cmgt.alias, cmgt.comparisonMethod, compileMeasure(cmgt.measure, topMeasure));
       } else if (m instanceof VectorAggMeasure v) {
         compiledMeasure = compileVectorAggMeasure(v);
       } else if (m instanceof VectorTupleAggMeasure v) {
@@ -351,7 +353,7 @@ public class QueryResolver {
   }
 
   private CompiledMeasure compileComparisonMeasure(ComparisonMeasureReferencePosition m, boolean topMeasure) {
-    return new CompiledComparisonMeasure(
+    return new CompiledComparisonMeasureReferencePosition(
             m.alias,
             m.comparisonMethod,
             m.comparisonOperator,

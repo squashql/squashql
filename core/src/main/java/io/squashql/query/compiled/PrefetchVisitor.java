@@ -45,10 +45,18 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
   }
 
   @Override
-  public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledComparisonMeasure cmrp) {
+  public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledComparisonMeasureReferencePosition cmrp) {
     QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.columns, this.groupColumns, cmrp, this.originalQueryScope);
     Map<QueryScope, Set<CompiledMeasure>> result = new HashMap<>(Map.of(this.originalQueryScope, Set.of(cmrp.measure())));
     result.put(readScope, Set.of(cmrp.measure()));
+    return result;
+  }
+
+  @Override
+  public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledGrandTotalComparisonMeasure cgt) {
+    QueryScope readScope = MeasureUtils.getReadScopeComparisonGrandTotalMeasure(this.originalQueryScope);
+    Map<QueryScope, Set<CompiledMeasure>> result = new HashMap<>(Map.of(this.originalQueryScope, Set.of(cgt.measure())));
+    result.put(readScope, Set.of(cgt.measure()));
     return result;
   }
 
