@@ -197,8 +197,8 @@ public class TableUtils {
       }
       GroupColumnSetDto cs = (GroupColumnSetDto) columnSet;
       // Remove from the map of comparators to use default one when only none is defined for regular column
-      copy.remove(cs.newField.name());
-      copy.remove(cs.field.name());
+      copy.remove(SqlUtils.squashqlExpression(cs.newField));
+      copy.remove(SqlUtils.squashqlExpression(cs.field));
     });
 
     List<Header> headers = table.headers;
@@ -224,7 +224,7 @@ public class TableUtils {
     for (ColumnSet columnSet : new HashSet<>(columnSets)) {
       GroupColumnSetDto cs = (GroupColumnSetDto) columnSet;
       // cs.field can appear multiple times in the table.
-      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(cs.newField.name()));
+      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(SqlUtils.squashqlExpression(cs.newField)));
     }
 
     int[] finalIndices = MultipleColumnsSorter.sort(args, comparators, contextIndices);

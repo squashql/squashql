@@ -53,11 +53,6 @@ public class TableField implements Field {
   }
 
   @Override
-  public String name() {
-    return this.fullName;
-  }
-
-  @Override
   public Field as(String alias) {
     return new TableField(this.tableName, this.fieldName, this.fullName, alias);
   }

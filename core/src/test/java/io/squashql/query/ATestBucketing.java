@@ -2,7 +2,11 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
-import io.squashql.query.dto.*;
+import io.squashql.query.database.SqlUtils;
+import io.squashql.query.dto.ConditionType;
+import io.squashql.query.dto.CriteriaDto;
+import io.squashql.query.dto.JoinType;
+import io.squashql.query.dto.VirtualTableDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
@@ -89,7 +93,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.shop.name(), this.bucket.name(), this.sales.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.shop), SqlUtils.squashqlExpression(this.bucket), this.sales.alias());
     Assertions.assertThat(result).containsExactly(
             List.of("0", "hypersensitive", 240d),
             List.of("0", "sensitive", 150d),
@@ -107,7 +111,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
             .build();
     result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.shop.name(), this.bucket.name(), this.sales.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.shop), SqlUtils.squashqlExpression(this.bucket), this.sales.alias());
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, GRAND_TOTAL, 900d),
             List.of("0", TOTAL, 450d),
@@ -134,7 +138,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.shop.name(), this.bucket.name(), this.sales.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.shop), SqlUtils.squashqlExpression(this.bucket), this.sales.alias());
     Assertions.assertThat(result).containsExactly(
             List.of("0", "hypersensitive", 240d),
             List.of("0", "sensitive", 150d),
@@ -163,7 +167,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.bucket.name(), this.category.name(), CountMeasure.INSTANCE.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.bucket), SqlUtils.squashqlExpression(this.category), CountMeasure.INSTANCE.alias());
     Assertions.assertThat(result).containsExactly(
             List.of("hypersensitive", "expensive", 6L),
             List.of("sensitive", "cheap", 6L),

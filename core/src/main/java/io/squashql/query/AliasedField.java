@@ -14,11 +14,6 @@ public class AliasedField implements Field {
   public String alias;
 
   @Override
-  public String name() {
-    throw new IllegalStateException("Incorrect path of execution");
-  }
-
-  @Override
   public Field as(String alias) {
     return new AliasedField(alias); // does not make sense...
   }

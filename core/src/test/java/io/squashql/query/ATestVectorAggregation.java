@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.PivotTableQueryDto;
 import io.squashql.query.dto.QueryDto;
@@ -94,7 +95,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.ean.name(), vector.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.ean), vector.alias());
     List<List<Object>> points = List.of(List.of(GRAND_TOTAL), List.of(productA), List.of(productB));
     List<List<Number>> expectedVectors = List.of(
             List.of(6006d, 33033d, 303303d),
@@ -114,7 +115,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.competitor.name(), vector.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.competitor), vector.alias());
     List<List<Object>> points = List.of(List.of(GRAND_TOTAL), List.of(competitorX), List.of(competitorY));
     List<List<Number>> expectedVectors = List.of(
             List.of(3003d, 21021d, 201201d),
@@ -132,7 +133,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.ean.name(), vector.alias(), CountMeasure.ALIAS);
+            .containsExactly(SqlUtils.squashqlExpression(this.ean), vector.alias(), CountMeasure.ALIAS);
     List<List<Object>> points = List.of(List.of(productA), List.of(productB));
     List<List<Number>> expectedVectors = List.of(
             List.of(6d, 33d, 303d),
@@ -151,7 +152,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.ean.name(), this.competitor.name(), vector.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.ean), SqlUtils.squashqlExpression(this.competitor), vector.alias());
     List<List<Object>> points = List.of(
             List.of(GRAND_TOTAL, GRAND_TOTAL),
             List.of(productA, TOTAL),
@@ -184,7 +185,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.ean.name(), this.competitor.name(), vector.alias(), CountMeasure.ALIAS);
+            .containsExactly(SqlUtils.squashqlExpression(this.ean), SqlUtils.squashqlExpression(this.competitor), vector.alias(), CountMeasure.ALIAS);
     List<List<Object>> points = List.of(
             List.of(productA, competitorZ),
             List.of(productA, competitorY),
@@ -216,7 +217,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.ean.name(), this.date.name(), vector.alias(), vectorSum.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.ean), SqlUtils.squashqlExpression(this.date), vector.alias(), vectorSum.alias());
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, GRAND_TOTAL, 342342d, 342342d),
             List.of(productA, TOTAL, 342d, 342d),
@@ -239,7 +240,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.ean.name(), this.competitor.name(), vector.alias(), CountMeasure.ALIAS);
+            .containsExactly(SqlUtils.squashqlExpression(this.ean), SqlUtils.squashqlExpression(this.competitor), vector.alias(), CountMeasure.ALIAS);
     List<List<Object>> points = List.of(
             List.of(GRAND_TOTAL, GRAND_TOTAL),
             List.of(productA, TOTAL),
@@ -278,7 +279,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
     Runnable r = () -> {
       Table result = this.executor.executeQuery(query);
       Assertions.assertThat(result.headers().stream().map(Header::name))
-              .containsExactly(this.ean.name(), this.competitor.name(), vector.alias());
+              .containsExactly(SqlUtils.squashqlExpression(this.ean), SqlUtils.squashqlExpression(this.competitor), vector.alias());
       List<List<Object>> points = List.of(
               List.of(GRAND_TOTAL, GRAND_TOTAL),
               List.of(productA, TOTAL),
@@ -329,7 +330,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
     Table result = this.executor.executeQuery(q1);
     TestUtil.assertCacheStats(this.queryCache, hitCount, missCount + 3);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.ean.name(), this.competitor.name(), vectorWoTransformer.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.ean), SqlUtils.squashqlExpression(this.competitor), vectorWoTransformer.alias());
 
     BiConsumer<Table, Measure> resultChecker = (table, vector) -> {
       List<List<Object>> points = List.of(
@@ -367,7 +368,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
     missCount = (int) this.queryCache.stats(null).missCount;
     Table table = this.executor.executeQuery(q2);
     Assertions.assertThat(table.headers().stream().map(Header::name))
-            .containsExactly(this.ean.name(), this.competitor.name(), vectorWithTransformer.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.ean), SqlUtils.squashqlExpression(this.competitor), vectorWithTransformer.alias());
     resultChecker.accept(table, vectorWithTransformer);
     // hit -> count; miss -> vectorWithTransformer
     TestUtil.assertCacheStats(this.queryCache, hitCount + 1, missCount + 1);
@@ -388,7 +389,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
 
     PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, List.of(competitor), List.of(ean)));
     Assertions.assertThat(result.table.headers().stream().map(Header::name))
-            .containsExactly(ean.name(), competitor.name(), vector.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.ean), SqlUtils.squashqlExpression(this.competitor), vector.alias());
     List<List<Object>> points = List.of(
             List.of(GRAND_TOTAL, GRAND_TOTAL),
             List.of(GRAND_TOTAL, competitorZ),
