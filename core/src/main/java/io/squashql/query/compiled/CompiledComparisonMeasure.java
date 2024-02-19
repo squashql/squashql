@@ -5,7 +5,7 @@ import io.squashql.query.ComparisonMethod;
 import java.util.function.BiFunction;
 
 /**
- * Marker interface for comparison measure
+ * Interface for comparison measure.
  */
 public interface CompiledComparisonMeasure extends CompiledMeasure {
 

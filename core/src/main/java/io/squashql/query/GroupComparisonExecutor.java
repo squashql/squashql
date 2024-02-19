@@ -16,7 +16,7 @@ import java.util.function.BiPredicate;
 
 public class GroupComparisonExecutor extends AComparisonExecutor<CompiledComparisonMeasureReferencePosition> {
 
-  final CompiledGroupColumnSet cSet;
+  private final CompiledGroupColumnSet cSet;
 
   public GroupComparisonExecutor(CompiledGroupColumnSet cSet) {
     this.cSet = cSet;

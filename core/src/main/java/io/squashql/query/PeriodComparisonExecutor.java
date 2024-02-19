@@ -19,7 +19,7 @@ import static io.squashql.query.PeriodUnit.*;
 
 public class PeriodComparisonExecutor extends AComparisonExecutor<CompiledComparisonMeasureReferencePosition> {
 
-  final CompiledComparisonMeasureReferencePosition cmrp;
+  private final CompiledComparisonMeasureReferencePosition cmrp;
 
   public PeriodComparisonExecutor(CompiledComparisonMeasureReferencePosition cmrp) {
     this.cmrp = cmrp;
@@ -75,10 +75,10 @@ public class PeriodComparisonExecutor extends AComparisonExecutor<CompiledCompar
       this.indexByPeriodUnit = indexByPeriodUnit;
       PeriodUnit[] periodUnits = getPeriodUnits(period);
       this.transformationByPeriodUnit = new HashMap<>();
-      for (int i = 0; i < periodUnits.length; i++) {
-        Object parse = parse(referencePosition.get(periodUnits[i]));
+      for (PeriodUnit periodUnit : periodUnits) {
+        Object parse = parse(referencePosition.get(periodUnit));
         if (parse != null) {
-          this.transformationByPeriodUnit.put(periodUnits[i], parse);
+          this.transformationByPeriodUnit.put(periodUnit, parse);
         }
       }
     }
@@ -109,7 +109,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor<CompiledCompar
             return false;
           }
           LocalDate d = LocalDate.of(readAsLong(row[yearIndex]), quarter * 3, 1);
-          LocalDate newDate = d.plusMonths(((int) quarterTransformation) * 3);
+          LocalDate newDate = d.plusMonths(((int) quarterTransformation) * 3l);
           write(row, quarterIndex, headers[quarterIndex], (int) IsoFields.QUARTER_OF_YEAR.getFrom(newDate));
           write(row, yearIndex, headers[yearIndex], newDate.getYear());// year might have changed
         }

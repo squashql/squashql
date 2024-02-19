@@ -13,7 +13,7 @@ import java.util.function.BiPredicate;
 
 public class ParentComparisonExecutor extends AComparisonExecutor<CompiledComparisonMeasureReferencePosition> {
 
-  final CompiledComparisonMeasureReferencePosition pcm;
+  private final CompiledComparisonMeasureReferencePosition pcm;
 
   public ParentComparisonExecutor(CompiledComparisonMeasureReferencePosition pcm) {
     this.pcm = pcm;

@@ -10,6 +10,8 @@ public interface MeasureVisitor<R> {
 
   R visit(CompiledComparisonMeasureReferencePosition measure);
 
+  R visit(CompiledGrandTotalComparisonMeasure compiledGrandTotalComparisonMeasure);
+
   R visit(CompiledDoubleConstantMeasure measure);
 
   R visit(CompiledLongConstantMeasure measure);
@@ -17,6 +19,4 @@ public interface MeasureVisitor<R> {
   R visit(CompiledVectorAggMeasure measure);
 
   R visit(CompiledVectorTupleAggMeasure compiledVectorTupleAggMeasure);
-
-  R visit(CompiledGrandTotalComparisonMeasure compiledGrandTotalComparisonMeasure);
 }
