@@ -1,6 +1,6 @@
 package io.squashql.query;
 
-import io.squashql.query.compiled.CompiledComparisonMeasureReferencePosition;
+import io.squashql.query.compiled.CompiledComparisonMeasure;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.type.TypedField;
@@ -11,16 +11,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.BiPredicate;
 
-public class ParentComparisonExecutor extends AComparisonExecutor<CompiledComparisonMeasureReferencePosition> {
+public class ParentComparisonExecutor extends AComparisonExecutor {
 
-  final CompiledComparisonMeasureReferencePosition pcm;
+  final CompiledComparisonMeasure pcm;
 
-  public ParentComparisonExecutor(CompiledComparisonMeasureReferencePosition pcm) {
+  public ParentComparisonExecutor(CompiledComparisonMeasure pcm) {
     this.pcm = pcm;
   }
 
   @Override
-  protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
+  protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasure cm, ObjectIntMap<String> indexByColumn) {
     List<TypedField> ancestors = new ArrayList<>(this.pcm.ancestors());
     Collections.reverse(ancestors);
     return new AncestorShiftProcedure(ancestors, indexByColumn, cm.grandTotalAlongAncestors());

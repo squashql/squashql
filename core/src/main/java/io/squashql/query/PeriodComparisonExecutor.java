@@ -1,6 +1,6 @@
 package io.squashql.query;
 
-import io.squashql.query.compiled.CompiledComparisonMeasureReferencePosition;
+import io.squashql.query.compiled.CompiledComparisonMeasure;
 import io.squashql.query.compiled.CompiledPeriod;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
@@ -17,11 +17,11 @@ import java.util.function.BiPredicate;
 
 import static io.squashql.query.PeriodUnit.*;
 
-public class PeriodComparisonExecutor extends AComparisonExecutor<CompiledComparisonMeasureReferencePosition> {
+public class PeriodComparisonExecutor extends AComparisonExecutor {
 
-  final CompiledComparisonMeasureReferencePosition cmrp;
+  final CompiledComparisonMeasure cmrp;
 
-  public PeriodComparisonExecutor(CompiledComparisonMeasureReferencePosition cmrp) {
+  public PeriodComparisonExecutor(CompiledComparisonMeasure cmrp) {
     this.cmrp = cmrp;
   }
 
@@ -40,7 +40,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor<CompiledCompar
   }
 
   @Override
-  protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
+  protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasure cm, ObjectIntMap<String> indexByColumn) {
     Map<PeriodUnit, String> referencePosition = new HashMap<>();
     CompiledPeriod period = this.cmrp.period();
     Map<TypedField, PeriodUnit> mapping = mapping(period);

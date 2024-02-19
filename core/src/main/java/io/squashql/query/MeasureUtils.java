@@ -79,7 +79,7 @@ public final class MeasureUtils {
   public static QueryExecutor.QueryScope getReadScopeComparisonMeasureReferencePosition(
           List<TypedField> columns,
           List<TypedField> groupColumns,
-          CompiledComparisonMeasureReferencePosition cm,
+          CompiledComparisonMeasure cm,
           QueryExecutor.QueryScope queryScope) {
     AtomicReference<CompiledCriteria> copy = new AtomicReference<>(queryScope.whereCriteria() == null ? null : CompiledCriteria.deepCopy(queryScope.whereCriteria()));
     Consumer<TypedField> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
@@ -99,17 +99,6 @@ public final class MeasureUtils {
             queryScope.havingCriteria(),
             new ArrayList<>(rollupColumns),
             new ArrayList<>(queryScope.groupingSets()), // FIXME should handle groupingSets
-            queryScope.cteRecordTables(),
-            queryScope.limit());
-  }
-
-  public static QueryExecutor.QueryScope getReadScopeComparisonGrandTotalMeasure(QueryExecutor.QueryScope queryScope) {
-    return new QueryExecutor.QueryScope(queryScope.table(),
-            queryScope.columns(),
-            queryScope.whereCriteria(),
-            queryScope.havingCriteria(),
-            Collections.emptyList(),
-            List.of(queryScope.columns(), List.of()), // list of empty list => GT
             queryScope.cteRecordTables(),
             queryScope.limit());
   }

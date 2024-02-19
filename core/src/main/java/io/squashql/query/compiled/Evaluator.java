@@ -50,7 +50,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
   }
 
   @Override
-  public Void visit(CompiledComparisonMeasureReferencePosition cm) {
+  public Void visit(CompiledComparisonMeasure cm) {
     AComparisonExecutor executor;
     if (cm.columnSetKey() == GROUP) {
       CompiledColumnSet cs = this.executionContext.columnSets().get(GROUP);
@@ -86,17 +86,6 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     Class<?> outputType = cm.comparisonOperator() != null ? UnknownType.class : BinaryOperations.getComparisonOutputType(cm.comparisonMethod(), writeToTable.getHeader(cm.measure()).type());
     Header header = new Header(cm.alias(), outputType, true);
     writeToTable.addAggregates(header, cm, agg);
-  }
-
-  @Override
-  public Void visit(CompiledGrandTotalComparisonMeasure cm) {
-    QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonGrandTotalMeasure(this.executionContext.queryScope());
-    Table readFromTable = this.executionContext.tableByScope().get(readScope); // Table where to read the aggregates
-    if (readFromTable.count() == this.executionContext.queryLimit()) {
-      throw new RuntimeException("Too many rows, some intermediate results exceed the limit " + this.executionContext.queryLimit());
-    }
-    executeComparator(cm, this.executionContext.getWriteToTable(), readFromTable, new GrandTotalComparisonExecutor());
-    return null;
   }
 
   @Override

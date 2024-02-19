@@ -1,7 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.compiled.CompiledGroupColumnSet;
-import io.squashql.query.compiled.CompiledComparisonMeasureReferencePosition;
+import io.squashql.query.compiled.CompiledComparisonMeasure;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.type.TypedField;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
 
-public class GroupComparisonExecutor extends AComparisonExecutor<CompiledComparisonMeasureReferencePosition> {
+public class GroupComparisonExecutor extends AComparisonExecutor {
 
   final CompiledGroupColumnSet cSet;
 
@@ -23,7 +23,7 @@ public class GroupComparisonExecutor extends AComparisonExecutor<CompiledCompari
   }
 
   @Override
-  protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
+  protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasure cm, ObjectIntMap<String> indexByColumn) {
     return new ShiftProcedure(this.cSet, cm.referencePosition(), indexByColumn);
   }
 

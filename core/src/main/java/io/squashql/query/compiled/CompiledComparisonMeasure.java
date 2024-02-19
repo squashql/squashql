@@ -1,17 +1,37 @@
 package io.squashql.query.compiled;
 
+import io.squashql.query.ColumnSetKey;
 import io.squashql.query.ComparisonMethod;
+import io.squashql.query.database.QueryRewriter;
+import io.squashql.type.TypedField;
 
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 
-/**
- * Marker interface for comparison measure
- */
-public interface CompiledComparisonMeasure extends CompiledMeasure {
+public record CompiledComparisonMeasure(String alias,
+                                        ComparisonMethod comparisonMethod,
+                                        BiFunction<Object, Object, Object> comparisonOperator,
+                                        CompiledMeasure measure,
+                                        Map<TypedField, String> referencePosition,
+                                        CompiledPeriod period,
+                                        ColumnSetKey columnSetKey,
+                                        List<TypedField> ancestors,
+                                        boolean grandTotalAlongAncestors) implements CompiledMeasure {
 
-  CompiledMeasure measure();
 
-  ComparisonMethod comparisonMethod();
+  @Override
+  public String sqlExpression(QueryRewriter queryRewriter, boolean withAlias) {
+    throw new IllegalStateException("incorrect path of execution");
+  }
 
-  BiFunction<Object, Object, Object> comparisonOperator();
+  @Override
+  public String alias() {
+    return this.alias;
+  }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
+  }
 }

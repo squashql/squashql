@@ -17,15 +17,15 @@ import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class AComparisonExecutor<T extends CompiledComparisonMeasure> {
+public abstract class AComparisonExecutor {
 
   public static final String REF_POS_FIRST = "first";
 
-  protected abstract BiPredicate<Object[], Header[]> createShiftProcedure(T cm,
+  protected abstract BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasure cm,
                                                                          ObjectIntMap<String> indexByColumn);
 
   public List<Object> compare(
-          T cm,
+          CompiledComparisonMeasure cm,
           Table writeToTable,
           Table readFromTable) {
     MutableObjectIntMap<String> indexByColumn = new ObjectIntHashMap<>();
