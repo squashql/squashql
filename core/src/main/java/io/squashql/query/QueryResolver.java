@@ -80,14 +80,14 @@ public class QueryResolver {
       if (columnSet != null) {
         Field newField = ((GroupColumnSetDto) columnSet).newField;
         if (field.equals(newField)) {
-          return new TableTypedField(null, newField.name(), String.class, null, false);
+          return new TableTypedField(null, ((TableField) newField).fullName, String.class, null, false);
         }
       }
 
       if (f instanceof TableField tf) {
-        return getTableTypedField(tf.name(), field.alias());
+        return getTableTypedField(tf.fullName, field.alias());
       } else if (f instanceof FunctionField ff) {
-        return new FunctionTypedField(getTableTypedField(ff.field.name(), ff.field.alias()), ff.function, ff.alias);
+        return new FunctionTypedField(resolveField(ff.field), ff.function, ff.alias);
       } else if (f instanceof BinaryOperationField ff) {
         return new BinaryOperationTypedField(ff.operator, resolveField(ff.leftOperand), resolveField(ff.rightOperand), ff.alias);
       } else if (f instanceof ConstantField ff) {
@@ -106,7 +106,18 @@ public class QueryResolver {
     } catch (FieldNotFoundException e) {
       // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
       // contains only "raw" fields, it will throw an exception.
-      return new TableTypedField(null, field.name(), Number.class, field.alias(), false);
+      String name = null;
+      if (field instanceof AliasedField af) {
+        name = af.alias;
+      } else if (field instanceof TableField tf) {
+        name = tf.fullName;
+      }
+
+      if (name != null) {
+        return new TableTypedField(null, name, Number.class, field.alias(), false);
+      }
+
+      throw e;
     }
   }
 

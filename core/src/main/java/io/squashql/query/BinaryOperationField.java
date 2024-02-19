@@ -23,11 +23,6 @@ public class BinaryOperationField implements Field {
   }
 
   @Override
-  public String name() {
-    throw new IllegalStateException("Incorrect path of execution");
-  }
-
-  @Override
   public Field as(String alias) {
     return new BinaryOperationField(this.operator, this.leftOperand, this.rightOperand, alias);
   }
