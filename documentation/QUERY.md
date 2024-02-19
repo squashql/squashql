@@ -951,6 +951,13 @@ Result
 +-------------+-------------+-------------+------------+---------------------+---------------------+
 ```
 
+`comparisonMeasureWithGrandTotal` method is used to create a special measure built to compare values of an underlying
+measure with the grand total values of the same measure.
+
+```typescript
+const gtRatio = comparisonMeasureWithGrandTotal("gt ratio", ComparisonMethod.DIVIDE, pop)
+```
+
 ##### Group comparison - ColumnSet
 
 This type of comparison is mainly used for what-if comparison but not limited to it. It involves the creation of a new

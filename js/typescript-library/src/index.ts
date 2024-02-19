@@ -16,6 +16,7 @@ export {
   plus, minus, multiply, divide,
   integer, decimal,
   comparisonMeasureWithPeriod, comparisonMeasureWithinSameGroup, comparisonMeasureWithParent, comparisonMeasureWithGrandTotalAlongAncestors,
+  comparisonMeasureWithGrandTotal,
   totalCount,
   ComparisonMethod,
 } from './measure'
