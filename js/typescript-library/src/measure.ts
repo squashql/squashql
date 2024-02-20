@@ -131,6 +131,25 @@ export class ComparisonMeasureGrandTotal implements Measure {
   }
 }
 
+export class ParametrizedMeasure implements Measure {
+  readonly class: string = PACKAGE + "measure.ParametrizedMeasure"
+  readonly expression?: string
+
+  constructor(readonly alias: string,
+              readonly key: string,
+              readonly parameters: Record<string, any>) {
+  }
+
+  toJSON() {
+    return {
+      "@class": this.class,
+      "alias": this.alias,
+      "key": this.key,
+      "parameters": this.parameters,
+    }
+  }
+}
+
 export enum ComparisonMethod {
   ABSOLUTE_DIFFERENCE = "ABSOLUTE_DIFFERENCE",
   RELATIVE_DIFFERENCE = "RELATIVE_DIFFERENCE",

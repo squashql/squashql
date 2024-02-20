@@ -4,6 +4,8 @@ import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.*;
+import io.squashql.query.measure.ParametrizedMeasure;
+import io.squashql.query.measure.Repository;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
@@ -80,6 +82,17 @@ public class TestJavascriptLibrary {
     q.withMeasure(new ComparisonMeasureGrandTotal("grandTotal",
             ComparisonMethod.DIVIDE,
             price));
+    q.withMeasure(new ParametrizedMeasure("var measure", Repository.VAR, Map.of(
+            "value", tableField("price"),
+            "date", tableField("date"),
+            "quantile", 0.95
+    )));
+    q.withMeasure(new ParametrizedMeasure("incr var measure", Repository.INCREMENTAL_VAR, Map.of(
+            "value", tableField("price"),
+            "date", tableField("date"),
+            "quantile", 0.95,
+            "ancestors", tableFields(List.of("f1", "f2", "f3"))
+    )));
 
     var queryCondition = or(and(eq("a"), eq("b")), lt(5), like("a%"));
     q.withCondition(tableField("f1"), queryCondition);
@@ -112,6 +125,13 @@ public class TestJavascriptLibrary {
     Assertions.assertThat(q.rollupColumns).isEqualTo(qjs.rollupColumns);
     Assertions.assertThat(q.parameters).isEqualTo(qjs.parameters);
     Assertions.assertThat(q.orders).isEqualTo(qjs.orders);
+
+    Measure compGroup = q.measures.stream().filter(m -> m.alias().equals("comp group")).findFirst().get();
+    Measure compGroup1 = qjs.measures.stream().filter(m -> m.alias().equals("comp group")).findFirst().get();
+    if (!compGroup1.equals(compGroup)) {
+      System.out.println();
+    }
+
     Assertions.assertThat(q.measures).isEqualTo(qjs.measures);
     Assertions.assertThat(q.whereCriteriaDto).isEqualTo(qjs.whereCriteriaDto);
     Assertions.assertThat(q.table).isEqualTo(qjs.table);

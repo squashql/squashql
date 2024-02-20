@@ -12,7 +12,7 @@ import {
   ComparisonMethod,
   decimal,
   ExpressionMeasure,
-  integer,
+  integer, ParametrizedMeasure,
   sum,
   totalCount,
 } from "./measure"
@@ -79,6 +79,17 @@ export function generateFromQueryDto() {
   q.withMeasure(comparisonMeasureWithParent("parent", ComparisonMethod.DIVIDE, price, [tableField("Year"), tableField("Month")]))
   q.withMeasure(comparisonMeasureWithGrandTotalAlongAncestors("grandTotalAlongAncestors", ComparisonMethod.DIVIDE, price, [tableField("Year"), tableField("Month")]))
   q.withMeasure(comparisonMeasureWithGrandTotal("grandTotal", ComparisonMethod.DIVIDE, price))
+  q.withMeasure(new ParametrizedMeasure("var measure", "VAR", {
+    "value": tableField("price"),
+    "date": tableField("date"),
+    "quantile": 0.95
+  }))
+  q.withMeasure(new ParametrizedMeasure("incr var measure", "INCREMENTAL_VAR", {
+    "value": tableField("price"),
+    "date": tableField("date"),
+    "quantile": 0.95,
+    "ancestors": [tableField("f1"), tableField("f2"), tableField("f3")],
+  }))
 
   const queryCondition = or(or(and(eq("a"), eq("b")), lt(5)), like("a%"))
   q.withWhereCriteria(all([
@@ -114,5 +125,5 @@ export function generateFromQueryDto() {
   q.onSubQuery(subQ)
 
   const data = JSON.stringify(q)
-  fs.writeFileSync('build-from-querydto.json', data)
+  fs.writeFileSync('json/build-from-querydto.json', data)
 }

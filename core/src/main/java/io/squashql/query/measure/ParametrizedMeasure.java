@@ -1,5 +1,7 @@
 package io.squashql.query.measure;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.squashql.jackson.ParametrizedMeasureDeserializer;
 import io.squashql.query.Measure;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -12,10 +14,13 @@ import java.util.Map;
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
 @AllArgsConstructor
+@JsonDeserialize(using = ParametrizedMeasureDeserializer.class)
 public class ParametrizedMeasure implements Measure {
 
   public String alias;
+
   public String key;
+
   public Map<String, Object> parameters;
 
   @Override

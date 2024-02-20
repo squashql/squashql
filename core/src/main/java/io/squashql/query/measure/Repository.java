@@ -1,22 +1,17 @@
 package io.squashql.query.measure;
 
-import io.squashql.list.Lists;
-import io.squashql.query.*;
-import io.squashql.util.MultipleColumnsSorter;
+import com.fasterxml.jackson.databind.JavaType;
+import io.squashql.jackson.SquashQLTypeFactory;
+import io.squashql.query.Field;
+import io.squashql.query.Measure;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 
-import java.time.LocalDate;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
-import static io.squashql.query.agg.AggregationFunction.ANY_VALUE;
-import static io.squashql.query.agg.AggregationFunction.SUM;
-import static io.squashql.util.ListUtils.reorder;
-import static java.util.Comparator.naturalOrder;
 
 public final class Repository {
 
@@ -27,67 +22,37 @@ public final class Repository {
   }
 
   public static Measure create(ParametrizedMeasure m) {
-    if (m.key.equals(VAR)) {
-      return var(m.alias, get(m, "value"), get(m, "date"), get(m, "quantile"));
-    } else if (m.key.equals(INCREMENTAL_VAR)) {
-      return incrementalVar(m.alias, get(m, "value"), get(m, "date"), get(m, "quantile"), get(m, "ancestors"));
-    } else {
-      throw new IllegalArgumentException("unknown " + ParametrizedMeasure.class + ": " + m);
+    String methodName = switch (m.key) {
+      case VAR -> "var";
+      case INCREMENTAL_VAR -> "incrementalVar";
+      default -> throw new IllegalArgumentException("unknown " + ParametrizedMeasure.class + ": " + m);
+    };
+
+    try {
+      Method var = Arrays.stream(ParametrizedMeasureFactory.class.getDeclaredMethods()).filter(method -> method.getName().equals(methodName)).findFirst().get();
+      List<String> parameterNames = getParameterTypes(m.key).stream().map(Pair::getOne).toList();
+      List<Object> args = new ArrayList<>();
+      args.add(m.alias);
+      for (String paramName : parameterNames) {
+        args.add(m.parameters.get(paramName));
+      }
+      return (Measure) var.invoke(null, args.toArray(new Object[0]));
+    } catch (IllegalAccessException |
+             InvocationTargetException e) {
+      throw new RuntimeException(e);
     }
   }
 
-  private static <T> T get(ParametrizedMeasure m, String field) {
-    return (T) m.parameters.get(field);
-  }
-
-  private static Measure var(String alias, Field value, Field date, double quantile) {
-    Function<List<Object>, Object> transformer = (tuple) -> {
-      Lists.DoubleList prices = (Lists.DoubleList) tuple.get(0);
-      Lists.LocalDateList dates = (Lists.LocalDateList) tuple.get(1);
-      int[] sort = MultipleColumnsSorter.sort(Collections.singletonList(dates), Collections.singletonList(naturalOrder()), new int[0]);
-
-      List<Double> orderedPrices = reorder(prices, sort);
-      List<LocalDate> orderedDates = reorder(dates, sort);
-      var index = (int) Math.floor(orderedPrices.size() * (1 - quantile));
-      var quantileDate = orderedDates.get(index);
-      var quantilePnL = orderedPrices.get(index);
-
-      return List.of(quantileDate, quantilePnL);
-    };
-    return new VectorTupleAggMeasure(alias, List.of(new FieldAndAggFunc(value, SUM), new FieldAndAggFunc(date, ANY_VALUE)), date, transformer);
-  }
-
-  private static Measure incrementalVar(String alias, Field value, Field date, double quantile, List<Field> ancestors) {
-    Measure vector = new VectorTupleAggMeasure("__vector__",
-            List.of(new FieldAndAggFunc(value, SUM),
-                    new FieldAndAggFunc(date, ANY_VALUE)),
-            date,
-            null);
-
-    BiFunction<Object, Object, Object> comparisonOperator = (currentValue, parentValue) -> {
-      List<Double> current = orderTupleOfList(currentValue).getOne();
-      List<Double> parent = orderTupleOfList(parentValue).getOne();
-
-      int size = parent.size();
-      var index = (int) Math.floor(size * (1 - quantile));
-      var varParentWithCurrent = parent.get(index);
-      List<Double> minus = new ArrayList<>(size);
-      for (int i = 0; i < size; i++) {
-        minus.add(parent.get(0) - current.get(0));
-      }
-
-      Collections.sort(minus);
-      var varParentWithoutCurrent = minus.get(index);
-
-      return varParentWithCurrent - varParentWithoutCurrent;
-    };
-    return new ComparisonMeasureReferencePosition(alias, comparisonOperator, vector, ancestors);
-  }
-
-  private static Pair<List<Double>, List<LocalDate>> orderTupleOfList(Object value) {
-    Lists.DoubleList prices = (Lists.DoubleList) ((List) value).get(0);
-    Lists.LocalDateList dates = (Lists.LocalDateList) ((List) value).get(1);
-    int[] sort = MultipleColumnsSorter.sort(Collections.singletonList(dates), Collections.singletonList(naturalOrder()), new int[0]);
-    return Tuples.pair(reorder(prices, sort), reorder(dates, sort));
+  public static List<Pair<String, JavaType>> getParameterTypes(String key) {
+    JavaType fieldJT = SquashQLTypeFactory.of(Field.class);
+    JavaType doubleJT = SquashQLTypeFactory.of(double.class);
+    JavaType listOfFieldsJT = SquashQLTypeFactory.listOf(Field.class);
+    if (key.equals(VAR)) {
+      return List.of(Tuples.pair("value", fieldJT), Tuples.pair("date", fieldJT), Tuples.pair("quantile", doubleJT));
+    } else if (key.equals(INCREMENTAL_VAR)) {
+      return List.of(Tuples.pair("value", fieldJT), Tuples.pair("date", fieldJT), Tuples.pair("quantile", doubleJT), Tuples.pair("ancestors", listOfFieldsJT));
+    } else {
+      throw new IllegalArgumentException("unknown key: " + key);
+    }
   }
 }

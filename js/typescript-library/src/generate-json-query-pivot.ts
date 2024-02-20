@@ -15,5 +15,5 @@ export function generateFromQueryPivot() {
   q.minify = true
   const pivotQuery = createPivotTableQuery(q, {rows: [tableField("a")], columns: [tableField("b")]})
   const data = JSON.stringify(pivotQuery)
-  fs.writeFileSync('build-from-query-pivot.json', data)
+  fs.writeFileSync('json/build-from-query-pivot.json', data)
 }
