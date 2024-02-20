@@ -4,6 +4,8 @@ import io.squashql.query.compiled.*;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.FieldNotFoundException;
+import io.squashql.query.measure.ParametrizedMeasure;
+import io.squashql.query.measure.Repository;
 import io.squashql.store.Store;
 import io.squashql.type.*;
 import lombok.Data;
@@ -314,6 +316,8 @@ public class QueryResolver {
         compiledMeasure = compileVectorAggMeasure(v);
       } else if (m instanceof VectorTupleAggMeasure v) {
         compiledMeasure = compileVectorTupleAggMeasure(v);
+      } else if (m instanceof ParametrizedMeasure pm) {
+        compiledMeasure = compileMeasure(Repository.create(pm), topMeasure);
       } else {
         throw new IllegalArgumentException("Unknown type of measure " + m.getClass().getSimpleName());
       }
