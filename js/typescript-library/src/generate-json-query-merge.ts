@@ -22,5 +22,5 @@ export function generateFromQueryMerge() {
 
   const q = new QueryMerge(query1).join(query2, JoinType.LEFT).join(query3, JoinType.INNER).withParameter(new QueryCacheParameter(Action.NOT_USE))
   const data = JSON.stringify(q)
-  fs.writeFileSync('build-from-query-merge.json', data)
+  fs.writeFileSync('json/build-from-query-merge.json', data)
 }

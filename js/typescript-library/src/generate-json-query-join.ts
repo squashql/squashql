@@ -38,5 +38,5 @@ export function generateFromQueryJoin() {
           .limit(12)
   q.minify = true
   const data = JSON.stringify(q)
-  fs.writeFileSync('build-from-query-join.json', data)
+  fs.writeFileSync('json/build-from-query-join.json', data)
 }

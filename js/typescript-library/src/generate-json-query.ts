@@ -56,5 +56,5 @@ export function generateFromQuery() {
   q.withParameter(new QueryCacheParameter(Action.NOT_USE))
 
   const data = JSON.stringify(q)
-  fs.writeFileSync('build-from-query.json', data)
+  fs.writeFileSync('json/build-from-query.json', data)
 }

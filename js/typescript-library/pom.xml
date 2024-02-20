@@ -86,11 +86,25 @@
         <version>3.1.0</version>
         <executions>
           <execution>
+            <id>clean old files</id>
+            <phase>clean</phase>
+            <configuration>
+              <target>
+                <delete dir="${basedir}/json"/>
+                <mkdir dir="${basedir}/json"/>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>copy new files</id>
             <phase>package</phase>
             <configuration>
               <target>
-                <copy todir="${basedir}/../../server/src/test/resources/">
-                  <fileset dir="${basedir}" includes="
+                <copy todir="${basedir}/../../server/src/test/resources/json/">
+                  <fileset dir="${basedir}/json" includes="
                       build-from-querydto.json,
                       build-from-query.json,
                       build-from-query-merge.json,

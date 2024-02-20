@@ -19,7 +19,7 @@ function generateFromQueryResult() {
     }],
     debug: undefined,
   }
-  fs.writeFileSync('build-from-query-result.json', JSON.stringify(r))
+  fs.writeFileSync('json/build-from-query-result.json', JSON.stringify(r))
 }
 
 function generateFromPivotQueryResult() {
@@ -32,7 +32,7 @@ function generateFromPivotQueryResult() {
     columns: ["key3"],
     values: ["key4"]
   }
-  fs.writeFileSync('build-from-pivot-query-result.json', JSON.stringify(r))
+  fs.writeFileSync('json/build-from-pivot-query-result.json', JSON.stringify(r))
 }
 
 

@@ -11,7 +11,8 @@ export {
 } from './order'
 
 export {
-  Measure, BasicMeasure, AggregatedMeasure, ExpressionMeasure, sum, min, max, avg, count, countDistinct,
+  Measure, BasicMeasure, AggregatedMeasure, ExpressionMeasure, ParametrizedMeasure,
+  sum, min, max, avg, count, countDistinct,
   sumIf, minIf, maxIf, avgIf, countIf, countDistinctIf,
   plus, minus, multiply, divide,
   integer, decimal,

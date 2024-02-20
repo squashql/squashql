@@ -20,5 +20,5 @@ export function generateFromQueryMergePivot() {
   q.minify = false
   const pivotQuery = createPivotTableQueryMerge(q, {rows: [tableField("a")], columns: [tableField("b")]})
   const data = JSON.stringify(pivotQuery)
-  fs.writeFileSync('build-from-query-merge-pivot.json', data)
+  fs.writeFileSync('json/build-from-query-merge-pivot.json', data)
 }
