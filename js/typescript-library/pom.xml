@@ -103,7 +103,7 @@
             <phase>package</phase>
             <configuration>
               <target>
-                <copy todir="${basedir}/../../server/src/test/resources/">
+                <copy todir="${basedir}/../../server/src/test/resources/json/">
                   <fileset dir="${basedir}/json" includes="
                       build-from-querydto.json,
                       build-from-query.json,

@@ -39,3 +39,4 @@ node_modules
 js/typescript-library/json
 js/typescript-library/dist
 js/client-typescript-library/build
+server/src/test/resources/json
