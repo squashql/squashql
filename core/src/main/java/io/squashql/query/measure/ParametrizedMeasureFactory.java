@@ -54,6 +54,9 @@ public final class ParametrizedMeasureFactory {
             null);
 
     BiFunction<Object, Object, Object> comparisonOperator = (currentValue, parentValue) -> {
+      if (currentValue == null || parentValue == null) {
+        return null;
+      }
       List<Double> current = orderTupleOfList(currentValue).getOne();
       List<Double> parent = orderTupleOfList(parentValue).getOne();
 

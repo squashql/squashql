@@ -4,6 +4,7 @@ import com.google.common.base.Suppliers;
 import io.squashql.jdbc.JdbcDatastore;
 import io.squashql.jdbc.JdbcUtil;
 import io.squashql.store.Store;
+import lombok.extern.slf4j.Slf4j;
 import org.duckdb.DuckDBConnection;
 
 import java.sql.Connection;
@@ -12,6 +13,7 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.function.Supplier;
 
+@Slf4j
 public class DuckDBDatastore implements JdbcDatastore {
 
   private final DuckDBConnection connection;
@@ -28,6 +30,7 @@ public class DuckDBDatastore implements JdbcDatastore {
       this.connection = (DuckDBConnection) DriverManager.getConnection("jdbc:duckdb:");
       this.stores = cacheMetadata ? Suppliers.memoize(this::fetchStoresByName) : this::fetchStoresByName;
     } catch (Exception e) {
+      log.error("Connection error", e);
       throw new RuntimeException(e);
     }
   }

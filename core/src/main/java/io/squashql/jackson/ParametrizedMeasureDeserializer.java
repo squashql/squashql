@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.squashql.jackson.JacksonUtil.OBJECT_MAPPER;
+
 @NoArgsConstructor
 public class ParametrizedMeasureDeserializer extends JsonDeserializer<ParametrizedMeasure> {
 
@@ -28,7 +30,7 @@ public class ParametrizedMeasureDeserializer extends JsonDeserializer<Parametriz
       if (javaType == null) {
         throw new IllegalArgumentException("Incorrect key " + propertyKey + ". Expected keys are: " + parameterTypes.keySet());
       }
-      parameters.put(propertyKey, JacksonUtil.OBJECT_MAPPER.readerFor(javaType).readValue(property.getValue()));
+      parameters.put(propertyKey, OBJECT_MAPPER.readerFor(javaType).readValue(property.getValue()));
     }
 
     String alias = node.get("alias").asText();
