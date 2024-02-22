@@ -1,12 +1,10 @@
 package io.squashql.query;
 
-import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.compiled.*;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
-import io.squashql.query.dto.QueryJoinDto;
 import io.squashql.query.join.ExperimentalQueryMergeExecutor;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.table.ColumnarTable;
@@ -129,7 +127,8 @@ public class QueryExecutor {
       }
     }
 
-    QueryDto deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), QueryDto.class);
+//    QueryDto deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), QueryDto.class);
+    QueryDto deepCopy = query; // FIXME
     deepCopy.groupingSets = groupingSets;
     return deepCopy;
   }
