@@ -6,7 +6,6 @@ import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
-import io.squashql.query.dto.QueryJoinDto;
 import io.squashql.query.join.ExperimentalQueryMergeExecutor;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.table.ColumnarTable;

@@ -1,6 +1,6 @@
 {
   "name": "@squashql/squashql-js",
-  "version": "1.12.0",
+  "version": "1.12.1",
   "description": "SquashQL query builder/helper",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

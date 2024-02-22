@@ -30,7 +30,7 @@ public final class ParametrizedMeasureFactory {
     Function<List<Object>, Object> transformer = (tuple) -> {
       Lists.DoubleList prices = (Lists.DoubleList) tuple.get(0);
       Lists.LocalDateList dates = (Lists.LocalDateList) tuple.get(1);
-      int[] sort = MultipleColumnsSorter.sort(Collections.singletonList(dates), Collections.singletonList(naturalOrder()), new int[0]);
+      int[] sort = MultipleColumnsSorter.sort(Collections.singletonList(prices), Collections.singletonList(naturalOrder()), new int[0]);
 
       List<Double> orderedPrices = reorder(prices, sort);
       List<LocalDate> orderedDates = reorder(dates, sort);
@@ -54,19 +54,24 @@ public final class ParametrizedMeasureFactory {
             null);
 
     BiFunction<Object, Object, Object> comparisonOperator = (currentValue, parentValue) -> {
+      if (currentValue == null || parentValue == null) {
+        return null;
+      }
       List<Double> current = orderTupleOfList(currentValue).getOne();
       List<Double> parent = orderTupleOfList(parentValue).getOne();
 
       int size = parent.size();
       var index = (int) Math.floor(size * (1 - quantile));
-      var varParentWithCurrent = parent.get(index);
       List<Double> minus = new ArrayList<>(size);
       for (int i = 0; i < size; i++) {
-        minus.add(parent.get(0) - current.get(0));
+        minus.add(parent.get(i) - current.get(i));
       }
 
       Collections.sort(minus);
       var varParentWithoutCurrent = minus.get(index);
+      List<Double> parentVector = new ArrayList<>(parent);
+      Collections.sort(parentVector);
+      var varParentWithCurrent = parentVector.get(index);
 
       return varParentWithCurrent - varParentWithoutCurrent;
     };

@@ -6,7 +6,7 @@
   <parent>
     <groupId>io.squashql</groupId>
     <artifactId>squashql-parent</artifactId>
-    <version>1.12.1-SNAPSHOT</version>
+    <version>1.12.2-SNAPSHOT</version>
   </parent>
 
   <groupId>io.squashql</groupId>
@@ -27,6 +27,11 @@
       <groupId>org.duckdb</groupId>
       <artifactId>duckdb_jdbc</artifactId>
       <version>${duckdb.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>

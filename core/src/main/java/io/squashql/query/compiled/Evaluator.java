@@ -173,7 +173,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
       columnValues.add(readTable.getColumnValues(alias));
     }
 
-    List<Object> vectorValues = ListUtils.createListWithNulls((int) readTable.count());
+    List<Object> vectorValues = ListUtils.createListWithNulls((int) writeToTable.count());
     writeToTable.pointDictionary().forEach((point, index) -> {
       int position = readTable.pointDictionary().getPosition(point);
       if (position >= 0) {
