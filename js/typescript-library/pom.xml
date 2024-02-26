@@ -104,15 +104,7 @@
             <configuration>
               <target>
                 <copy todir="${basedir}/../../server/src/test/resources/json/">
-                  <fileset dir="${basedir}/json" includes="
-                      build-from-querydto.json,
-                      build-from-query.json,
-                      build-from-query-merge.json,
-                      build-from-query-pivot.json,
-                      build-from-query-merge-pivot.json,
-                      build-from-query-join.json,
-                      build-from-query-result.json,
-                      build-from-pivot-query-result.json"/>
+                  <fileset dir="${basedir}/json"/>
                 </copy>
               </target>
             </configuration>

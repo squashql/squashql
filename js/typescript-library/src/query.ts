@@ -18,7 +18,6 @@ export class Query {
   whereCriteria: Criteria
   havingCriteriaDto: Criteria
   orders: Map<Field, Order>
-  subQuery: Query
   limit: number = -1
   minify?: boolean
 
@@ -36,11 +35,6 @@ export class Query {
 
   onTable(table: Table): Query {
     this.table = table
-    return this
-  }
-
-  onSubQuery(query: Query): Query {
-    this.subQuery = query
     return this
   }
 
@@ -92,7 +86,6 @@ export class Query {
   toJSON() {
     return {
       "table": this.table,
-      "subQuery": this.subQuery,
       "virtualTableDtos": this.virtualTables,
       "columns": this.columns,
       "rollupColumns": this.rollupColumns,
@@ -110,8 +103,19 @@ export class Query {
 
 export class Table {
   joins: Array<Join> = []
+  name: string
+  subQuery: Query
 
-  constructor(public name: string) {
+  static from(name: string) {
+    const t = new Table()
+    t.name = name
+    return t
+  }
+
+  static fromSubQuery(subQuery: Query) {
+    const t = new Table()
+    t.subQuery = subQuery
+    return t
   }
 
   join(other: Table, type: JoinType, criteria: Criteria) {

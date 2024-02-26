@@ -38,10 +38,10 @@ import {GroupColumnSet, Month} from "./columnsets"
 import {AliasedField, ConstantField, countRows, TableField, tableField} from "./field"
 
 export function generateFromQueryDto() {
-  const table = new Table("myTable")
-  const refTable = new Table("refTable")
+  const table = Table.from("myTable")
+  const refTable = Table.from("refTable")
   table.join(refTable, JoinType.INNER, criterion_(new TableField("fromField"), new TableField("toField"), ConditionType.EQ))
-  table.join(new Table("a"), JoinType.LEFT, criterion_(new TableField("a.a_id"), new TableField("myTable.id"), ConditionType.EQ))
+  table.join(Table.from("a"), JoinType.LEFT, criterion_(new TableField("a.a_id"), new TableField("myTable.id"), ConditionType.EQ))
   const a = tableField("a")
   const b = tableField("b").as("b_alias")
   const q = new Query()
@@ -122,7 +122,7 @@ export function generateFromQueryDto() {
           .withColumn(tableField("aa"))
           .withColumn(new AliasedField("bb"))
           .withMeasure(sum("sum_aa", new TableField("f")))
-  q.onSubQuery(subQ)
+  q.table = Table.fromSubQuery(subQ)
 
   const data = JSON.stringify(q)
   fs.writeFileSync('json/build-from-querydto.json', data)
