@@ -46,7 +46,7 @@ public class QueryResolver {
     this.columns = query.columns.stream().map(this::resolveField).toList();
     this.groupColumns = Optional.ofNullable(query.columnSets.get(ColumnSetKey.GROUP))
             .stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
-    this.subQueryMeasures = query.subQuery == null ? Collections.emptyMap() : compileMeasures(query.subQuery.measures, false);
+    this.subQueryMeasures = query.table.subQuery == null ? Collections.emptyMap() : compileMeasures(query.table.subQuery.measures, false);
     this.scope = toQueryScope(query);
     this.measures = compileMeasures(query.measures, true);
     this.compiledColumnSets = compiledColumnSets(query.columnSets);
@@ -165,7 +165,7 @@ public class QueryResolver {
     List<TypedField> rollupColumns = query.rollupColumns.stream().map(this::resolveField).toList();
     List<List<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(this::resolveField).toList()).toList();
     return new QueryExecutor.QueryScope(
-            compileTable(query.table, query.subQuery),
+            compileTable(query.table),
             combinedColumns,
             compileCriteria(query.whereCriteriaDto),
             compileCriteria(query.havingCriteriaDto),
@@ -176,21 +176,21 @@ public class QueryResolver {
   }
 
   protected void checkQuery(final QueryDto query) {
-    if (query.table == null && query.subQuery == null) {
+    if (query.table.name == null && query.table.subQuery == null) {
       throw new IllegalArgumentException("A table or sub-query was expected in " + query);
-    } else if (query.table != null && query.subQuery != null) {
+    } else if (query.table.name != null && query.table.subQuery != null) {
       throw new IllegalArgumentException("Cannot define a table and a sub-query at the same time in " + query);
     }
   }
 
-  private DatabaseQuery toSubQuery(final QueryDto subQuery) {
+  private DatabaseQuery toSubQuery(QueryDto subQuery) {
     checkSubQuery(subQuery);
-    final CompiledTable table = compileTable(subQuery.table, subQuery.subQuery);
+    final CompiledTable table = compileTable(subQuery.table);
     final List<TypedField> select = subQuery.columns.stream().map(this::resolveField).toList();
     final CompiledCriteria whereCriteria = compileCriteria(subQuery.whereCriteriaDto);
     final CompiledCriteria havingCriteria = compileCriteria(subQuery.havingCriteriaDto);
     // should we check groupingSet and rollup as well are empty ?
-    DatabaseQuery query = new DatabaseQuery(null,
+    DatabaseQuery query = new DatabaseQuery(null, // FIXME is it correct?
             table,
             new HashSet<>(select),
             whereCriteria,
@@ -203,7 +203,7 @@ public class QueryResolver {
   }
 
   private void checkSubQuery(final QueryDto subQuery) {
-    if (subQuery.subQuery != null) {
+    if (subQuery.table.subQuery != null) {
       throw new IllegalArgumentException("sub-query in a sub-query is not supported");
     }
     if (subQuery.virtualTableDtos != null && !subQuery.virtualTableDtos.isEmpty()) {
@@ -232,8 +232,8 @@ public class QueryResolver {
   /**
    * Table
    */
-  public CompiledTable compileTable(TableDto table, QueryDto subQuery) {
-    if (table != null) {
+  public CompiledTable compileTable(TableDto table) {
+    if (table.name != null) {
       List<CompiledJoin> joins = compileJoins(table.joins);
       if (table.isCte) {
         return new CteTable(table.name, joins);
@@ -250,8 +250,9 @@ public class QueryResolver {
         }
       }
       return new MaterializedTable(table.name, joins);
-    } else if (subQuery != null) {
-      return new NestedQueryTable(toSubQuery(subQuery));
+    } else if (table.subQuery != null) {
+      List<CompiledJoin> joins = compileJoins(table.joins);
+      return new NestedQueryTable(toSubQuery(table.subQuery), joins);
     } else {
       throw new IllegalStateException();
     }
@@ -269,7 +270,7 @@ public class QueryResolver {
   }
 
   public CompiledJoin compileJoin(JoinDto join) {
-    CompiledTable table = compileTable(join.table, null);
+    CompiledTable table = compileTable(join.table);
     if (table instanceof NamedTable nt) {
       return new CompiledJoin(nt, join.type, compileCriteria(join.joinCriteria));
     } else {
