@@ -3,6 +3,7 @@ package io.squashql.util;
 import io.squashql.query.*;
 import io.squashql.query.dto.GroupColumnSetDto;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.TableDto;
 import io.squashql.query.parameter.Parameter;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,9 @@ public class TestDatabaseQueryCreation {
 
   @Test
   void testNoTable() {
-    Assertions.assertThatThrownBy(() -> new QueryResolver(new QueryDto(), Collections.emptyMap()))
+    QueryDto query = new QueryDto();
+    query.table = new TableDto();
+    Assertions.assertThatThrownBy(() -> new QueryResolver(query, Collections.emptyMap()))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("table or sub-query was expected");
   }

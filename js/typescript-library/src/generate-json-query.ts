@@ -1,15 +1,15 @@
 import * as fs from "fs"
 import {GroupColumnSet} from "./columnsets"
 import {all, ConditionType, criterion, criterion_, eq, gt, havingCriterion, lt} from "./conditions"
-import {TableField, tableField, tableFields} from "./field"
+import {AliasedField, TableField, tableField, tableFields} from "./field"
 import {avg, ExpressionMeasure, sum} from "./measure"
 import {OrderKeyword} from "./order"
 import {Action, QueryCacheParameter} from "./parameters"
 import {JoinType} from "./query"
-import {from} from "./queryBuilder"
+import {from, fromSubQuery} from "./queryBuilder"
 import {VirtualTable} from "./virtualtable"
 
-export function generateFromQuery() {
+function generateFromQuery() {
   const values = new Map(Object.entries({
     "a": ["a1", "a2"],
     "b": ["b1", "b2"]
@@ -57,4 +57,26 @@ export function generateFromQuery() {
 
   const data = JSON.stringify(q)
   fs.writeFileSync('json/build-from-query.json', data)
+}
+
+function generateFromSubQuery() {
+  const fields = tableFields(["myTable.a", "myTable.b"])
+  const sq = from("myTable")
+          .select(fields, [], [sum("pnl_sum", new TableField("myTable.pnl"))])
+          .build()
+
+  const cte1 = new VirtualTable("myCte1", ["id", "other"], [[0, "x"], [1, "y"]])
+  const q = fromSubQuery(sq)
+          .joinVirtual(cte1, JoinType.INNER)
+          .on(criterion_(new TableField("myTable.a"), new TableField("myCte1.id"), ConditionType.EQ))
+          .select(tableFields(["myTable.a", "myCte1.other"]), [], [avg("pnl_avg", new AliasedField("pnl_sum"))])
+          .build()
+
+  const data = JSON.stringify(q)
+  fs.writeFileSync('json/build-from-subquery.json', data)
+}
+
+export function generateJsonQuery() {
+  generateFromQuery()
+  generateFromSubQuery()
 }

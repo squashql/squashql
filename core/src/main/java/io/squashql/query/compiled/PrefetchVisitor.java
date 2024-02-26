@@ -198,7 +198,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
       subQueryMeasures.forEach(subQuery::withMeasure);
 
       QueryScope topQueryScope = new QueryScope(
-              new NestedQueryTable(subQuery),
+              new NestedQueryTable(subQuery, Collections.emptyList()),
               topQuerySelectColumns,
               null, // the filter applied to the sub-query is enough
               this.originalQueryScope.havingCriteria(),

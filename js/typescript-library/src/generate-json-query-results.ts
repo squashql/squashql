@@ -35,7 +35,6 @@ function generateFromPivotQueryResult() {
   fs.writeFileSync('json/build-from-pivot-query-result.json', JSON.stringify(r))
 }
 
-
 export function generateQueryResults() {
   generateFromQueryResult()
   generateFromPivotQueryResult()
