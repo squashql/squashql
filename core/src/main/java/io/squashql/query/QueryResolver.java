@@ -192,7 +192,7 @@ public class QueryResolver {
     // should we check groupingSet and rollup as well are empty ?
     DatabaseQuery query = new DatabaseQuery(null, // FIXME is it correct?
             table,
-            new HashSet<>(select),
+            new LinkedHashSet<>(select),
             whereCriteria,
             havingCriteria,
             Collections.emptyList(),

@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import io.squashql.query.builder.Query;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.*;
 import io.squashql.query.dto.*;
@@ -16,6 +17,7 @@ import java.util.Map;
 
 import static io.squashql.query.Functions.*;
 import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.dto.JoinType.INNER;
 import static io.squashql.query.dto.JoinType.LEFT;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
@@ -323,6 +325,28 @@ public class TestSQLTranslator {
   }
 
   @Test
+  void testJoinsNestedQuery() {
+    QueryDto subQuery = Query.from(BASE_STORE_NAME)
+            .select(tableFields(List.of("a", "b")), List.of(sum("pnl_sum", "pnl")))
+            .build();
+
+    VirtualTableDto virtualTable = new VirtualTableDto("virtual", List.of("id", "value"), List.of(List.of(0, "0"), List.of(1, "1")));
+
+    QueryDto query = Query.from(subQuery)
+            .join(virtualTable, INNER)
+            .on(criterion(BASE_STORE_NAME + ".a", virtualTable.name + ".id", ConditionType.EQ))
+            .select(tableFields(List.of("b", "value")), List.of(avg("pnl_avg", "pnl_sum")))
+            .build();
+
+    Assertions.assertThat(translate(compileQuery(query))).isEqualTo("" +
+            "with `virtual` as (select 0 as `id`, '0' as `value` union all select 1 as `id`, '1' as `value`) " +
+            "select `b`, `value`, avg(`pnl_sum`) as `pnl_avg` from (" +
+            "select `a`, `b`, sum(`pnl`) as `pnl_sum` from `dataset.baseStore` group by `a`, `b`" +
+            ") " +
+            "inner join `virtual` on `dataset.baseStore`.`a` = `virtual`.`id` group by `b`, `value`");
+  }
+
+  @Test
   void testConditionsWithValue() {
     final QueryDto query = new QueryDto()
             .withColumn(tableField(SCENARIO_FIELD_NAME))
@@ -367,20 +391,20 @@ public class TestSQLTranslator {
   void testSelectFromSelectWithAlias() {
     // Kind of leaf agg. !!!
     TableDto a = new TableDto("a");
-    final QueryDto subQuery = new QueryDto()
+    QueryDto subQuery = new QueryDto()
             .table(a)
             .withColumn(tableField("c1").as("alias_c1"))
             .withColumn(tableField("c3"))
             .withMeasure(avg("mean", "c2"));
 
-    final QueryDto query = new QueryDto()
+    QueryDto query = new QueryDto()
             .table(subQuery)
             .withColumn(tableField("c3")) // c3 needs to be in the subquery
             .withMeasure(sum("sum c1", new AliasedField("alias_c1"))) // alias_c1 is a field from the subquery
             .withMeasure(sum("sum GT", "mean"))
             .withWhereCriteria(criterion("type", eq("myType")));
     Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select `c3`, sum(`alias_c1`) as `sum c1`, sum(`mean`) as `sum GT` from (select `c3`, `c1` as `alias_c1`, avg(`c2`) as `mean` from `dataset.a` group by `c3`, `alias_c1`) where `type` = 'myType' group by `c3`");
+            .isEqualTo("select `c3`, sum(`alias_c1`) as `sum c1`, sum(`mean`) as `sum GT` from (select `c1` as `alias_c1`, `c3`, avg(`c2`) as `mean` from `dataset.a` group by `alias_c1`, `c3`) where `type` = 'myType' group by `c3`");
   }
 
   @Test
