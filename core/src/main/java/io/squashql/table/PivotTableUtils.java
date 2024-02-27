@@ -1,6 +1,9 @@
 package io.squashql.table;
 
+import io.squashql.query.Header;
 import io.squashql.util.ListUtils;
+import io.squashql.util.NullAndTotalComparator;
+import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -62,19 +65,19 @@ public final class PivotTableUtils {
     });
 
     List<List<Object>> finalRows = new ArrayList<>();
-    Supplier<List<Object>> listSpwaner = () -> {
+    Supplier<List<Object>> listSpawner = () -> {
       finalRows.add(new ArrayList<>(rows.size() + size));
       return finalRows.get(finalRows.size() - 1);
     };
     for (int i = 0; i < columns.size(); i++) {
-      List<Object> r = listSpwaner.get();
+      List<Object> r = listSpawner.get();
       for (int j = 0; j < rows.size(); j++) {
         r.add(columns.get(i)); // recopy name of the column
       }
       r.addAll(headerColumns.get(i));
     }
 
-    List<Object> r = listSpwaner.get();
+    List<Object> r = listSpawner.get();
     r.addAll(rows);
     for (int i = 0; i < columnHeaderValues.size(); i++) {
       r.addAll(values); // Recopy measure names
@@ -82,7 +85,7 @@ public final class PivotTableUtils {
 
     int[] index = new int[1];
     rowHeaderValues.forEach(a -> {
-      List<Object> rr = listSpwaner.get();
+      List<Object> rr = listSpawner.get();
       rr.addAll(Arrays.asList(a.a));
       rr.addAll(cells.get(index[0]++));
     });
@@ -123,6 +126,103 @@ public final class PivotTableUtils {
       }
     }
     return mapping;
+  }
+
+  private static Map<String, BitSet> findNullValuesOnEntireColumn(PivotTable pivotTable) {
+    int[] rowIndices = getHeaderIndices(pivotTable.table, pivotTable.columns);
+    int[] measureIndices = getHeaderIndices(pivotTable.table, pivotTable.values);
+    int[] line = new int[1];
+    Map<ObjectArrayKey, Set<Object>[]> distinctValuesByKey = new HashMap<>();
+    Map<ObjectArrayKey, IntArrayList> lineByKey = new HashMap<>();
+    pivotTable.table.forEach(row -> {
+      Object[] coord = new Object[rowIndices.length];
+      for (int i = 0; i < rowIndices.length; i++) {
+        coord[i] = row.get(rowIndices[i]);
+      }
+
+      ObjectArrayKey key = new ObjectArrayKey(coord);
+      Set<Object>[] distinctValues = distinctValuesByKey.computeIfAbsent(key, k -> {
+        Set[] sets = new Set[measureIndices.length];
+        for (int i = 0; i < measureIndices.length; i++) {
+          sets[i] = new HashSet();
+        }
+        return sets;
+      });
+
+      for (int i = 0; i < measureIndices.length; i++) {
+        distinctValues[i].add(row.get(measureIndices[i]));
+      }
+      lineByKey.computeIfAbsent(key, k -> new IntArrayList()).add(line[0]);
+      line[0]++;
+    });
+
+    BitSet[] bitSets = new BitSet[measureIndices.length];
+    for (int i = 0; i < measureIndices.length; i++) {
+      bitSets[i] = new BitSet(line[0]);
+    }
+    for (Map.Entry<ObjectArrayKey, Set<Object>[]> entry : distinctValuesByKey.entrySet()) {
+      Set<Object>[] distinctValues = entry.getValue();
+      for (int i = 0; i < measureIndices.length; i++) {
+        if (distinctValues[i].size() == 1 && distinctValues[i].iterator().next() == null) {
+          // only nulls values.
+          int finalI = i;
+          lineByKey.get(entry.getKey()).forEach(index -> bitSets[finalI].set(index));
+        }
+      }
+    }
+
+    Map<String, BitSet> result = new HashMap<>();
+    for (int i = 0; i < pivotTable.values.size(); i++) {
+      result.put(pivotTable.values.get(i), bitSets[i]);
+    }
+    return result;
+  }
+
+  /**
+   * Generates cells of the pivot table. Entire column of null values are removed if minify set to true or null (default).
+   * For instance, if the pivot table looks like this:
+   * <pre>
+   * +-------------+-------------+-------------+-------------+--------+------------+---------------------+---------------------+
+   * |    category |    category | Grand Total | Grand Total |  extra |      extra | minimum expenditure | minimum expenditure |
+   * |   continent |     country |      amount |  population | amount | population |              amount |          population |
+   * +-------------+-------------+-------------+-------------+--------+------------+---------------------+---------------------+
+   * | Grand Total | Grand Total |        56.0 |       465.0 |   17.0 |       null |                39.0 |                null |
+   * |          am |       Total |        39.0 |       330.0 |   10.0 |       null |                29.0 |                null |
+   * |          am |         usa |        39.0 |       330.0 |   10.0 |       null |                29.0 |                null |
+   * |          eu |       Total |        17.0 |       135.0 |    7.0 |       null |                10.0 |                null |
+   * |          eu |      france |         8.0 |        70.0 |    2.0 |       null |                 6.0 |                null |
+   * |          eu |          uk |         9.0 |        65.0 |    5.0 |       null |                 4.0 |                null |
+   * +-------------+-------------+-------------+-------------+--------+------------+---------------------+---------------------+
+   * </pre>
+   * The two columns for extra/population and minimum expenditure/population are removed.
+   */
+  public static List<Map<String, Object>> generateCells(PivotTable pivotTable, Boolean minify) {
+    Map<String, BitSet> empty = new HashMap<>();
+    for (String value : pivotTable.values) {
+      empty.put(value, null);
+    }
+
+    Map<String, BitSet> bitSetByValue = minify == null || minify
+            ? PivotTableUtils.findNullValuesOnEntireColumn(pivotTable)
+            : empty;
+
+    List<Map<String, Object>> cells = new ArrayList<>((int) pivotTable.table.count());
+    List<String> headerNames = pivotTable.table.headers().stream().map(Header::name).toList();
+    int[] line = new int[1];
+    pivotTable.table.forEach(row -> {
+      Map<String, Object> cell = new HashMap<>();
+      for (int i = 0; i < row.size(); i++) {
+        Object value = row.get(i);
+
+        BitSet bitSet = bitSetByValue.get(headerNames.get(i));
+        if ((bitSet == null && !NullAndTotalComparator.isTotal(value)) || (bitSet != null && !bitSet.get(line[0]))) {
+          cell.put(headerNames.get(i), value);
+        }
+      }
+      line[0]++;
+      cells.add(cell);
+    });
+    return cells;
   }
 
   private record ObjectArrayKey(Object[] a) {

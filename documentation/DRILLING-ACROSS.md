@@ -255,6 +255,39 @@ values for quantity sold are simply copy from the first result.
 +-------------+-------------+---------------+-------------------+
 ```
 
+It can also be displayed as a pivot table:
+
+<img src="assets/drilling-accross-minify.png" width="600">
+
+👉 https://jsfiddle.net/azeq/702gxqcb/
+
+```typescript
+const queryShipment = from(shipment._name)
+        .select([shipment.product], [], [sum("quantity sold", shipment.quantity)])
+        .build()
+const queryReturnWithReason = from(returnTable._name)
+        .select([returnTable.product, returnTable.reason], [], [sum("quantity returned", returnTable.quantity)])
+        .build()
+
+const pivotConfig: PivotConfig = {
+  rows: [shipment.product],
+  columns: [returnTable.reason]
+}
+
+querier.executePivotQuery(new QueryMerge(queryShipment, queryReturnWithReason, JoinType.FULL), pivotConfig)
+        .then(result => console.log(result))
+```
+
+Note `QueryMerge#minify` attribute is set to true by default. It indicates if columns full of null
+values should be returned or not in the final result. If set to false:
+
+```typescript
+const queryMerge = new QueryMerge(queryShipment, queryReturnWithReason, JoinType.FULL)
+queryMerge.minify = false
+```
+
+<img src="assets/drilling-accross-notminify.png" width="1000">
+
 ### Limit
 
 SquashQL has an implicit limit query result set to 10000. In case of drilling across, this limit is applied to the queries

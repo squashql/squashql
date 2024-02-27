@@ -11,21 +11,16 @@ export interface Measure {
 }
 
 export type BasicMeasure = Measure
+
 export class AggregatedMeasure implements BasicMeasure {
   readonly class: string = PACKAGE + "AggregatedMeasure"
-  readonly field: Field
-  readonly aggregationFunction: string
-  readonly alias: string
   readonly expression?: string
-  readonly distinct?: boolean
-  readonly criteria?: Criteria
 
-  constructor(alias: string, field: Field, aggregationFunction: string, distinct?: boolean, criterion?: Criteria) {
-    this.alias = alias
-    this.field = field
-    this.aggregationFunction = aggregationFunction
-    this.distinct = distinct
-    this.criteria = criterion
+  constructor(readonly alias: string,
+              readonly field: Field,
+              readonly aggregationFunction: string,
+              readonly distinct?: boolean,
+              readonly criteria?: Criteria) {
   }
 
   toJSON() {
@@ -43,10 +38,9 @@ export class AggregatedMeasure implements BasicMeasure {
 
 export class ExpressionMeasure implements BasicMeasure {
   readonly class: string = PACKAGE + "ExpressionMeasure"
-  readonly alias: string
 
-  constructor(alias: string, private sqlExpression: string) {
-    this.alias = alias
+  constructor(readonly alias: string,
+              private sqlExpression: string) {
   }
 
   toJSON() {
@@ -62,17 +56,13 @@ export const totalCount = new ExpressionMeasure("_total_count_", "COUNT(*) OVER 
 
 export class BinaryOperationMeasure implements Measure {
   readonly class: string = PACKAGE + "BinaryOperationMeasure"
-  readonly alias: string
   readonly expression?: string
-  readonly operator: BinaryOperator
-  readonly leftOperand: Measure
-  readonly rightOperand: Measure
 
-  constructor(alias: string, operator: BinaryOperator, leftOperand: Measure, rightOperand: Measure) {
+  constructor(readonly alias: string,
+              readonly operator: BinaryOperator,
+              readonly leftOperand: Measure,
+              readonly rightOperand: Measure) {
     this.alias = alias
-    this.operator = operator
-    this.leftOperand = leftOperand
-    this.rightOperand = rightOperand
   }
 
   toJSON() {
@@ -95,17 +85,16 @@ export enum BinaryOperator {
 
 export class ComparisonMeasureReferencePosition implements Measure {
   readonly class: string = PACKAGE + "ComparisonMeasureReferencePosition"
-  readonly alias: string
   readonly expression?: string
 
-  constructor(alias: string,
-              private comparisonMethod: ComparisonMethod,
-              private measure: Measure,
-              private referencePosition: Map<Field, string>,
-              private columnSetKey?: ColumnSetKey,
-              private period?: Period,
-              private ancestors?: Array<Field>) {
-    this.alias = alias
+  constructor(readonly alias: string,
+              readonly comparisonMethod: ComparisonMethod,
+              readonly measure: Measure,
+              readonly referencePosition: Map<Field, string>,
+              readonly columnSetKey?: ColumnSetKey,
+              readonly period?: Period,
+              readonly ancestors?: Array<Field>,
+              readonly grandTotalAlongAncestors?: boolean) {
   }
 
   toJSON() {
@@ -118,6 +107,45 @@ export class ComparisonMeasureReferencePosition implements Measure {
       "period": this.period,
       "referencePosition": this.referencePosition ? Object.fromEntries(serializeMap(this.referencePosition)) : undefined,
       "ancestors": this.ancestors,
+      "grandTotalAlongAncestors": this.grandTotalAlongAncestors,
+    }
+  }
+}
+
+export class ComparisonMeasureGrandTotal implements Measure {
+  readonly class: string = PACKAGE + "ComparisonMeasureGrandTotal"
+  readonly expression?: string
+
+  constructor(readonly alias: string,
+              readonly comparisonMethod: ComparisonMethod,
+              readonly measure: Measure) {
+  }
+
+  toJSON() {
+    return {
+      "@class": this.class,
+      "alias": this.alias,
+      "comparisonMethod": this.comparisonMethod,
+      "measure": this.measure,
+    }
+  }
+}
+
+export class ParametrizedMeasure implements Measure {
+  readonly class: string = PACKAGE + "measure.ParametrizedMeasure"
+  readonly expression?: string
+
+  constructor(readonly alias: string,
+              readonly key: string,
+              readonly parameters: Record<string, any>) {
+  }
+
+  toJSON() {
+    return {
+      "@class": this.class,
+      "alias": this.alias,
+      "key": this.key,
+      "parameters": this.parameters,
     }
   }
 }
@@ -132,7 +160,7 @@ export class LongConstantMeasure implements Measure {
   readonly class: string = PACKAGE + "LongConstantMeasure"
   readonly alias: string
 
-  constructor(private value: number) {
+  constructor(readonly value: number) {
   }
 
   toJSON() {
@@ -147,7 +175,7 @@ export class DoubleConstantMeasure implements Measure {
   readonly class: string = PACKAGE + "DoubleConstantMeasure"
   readonly alias: string
 
-  constructor(private value: number) {
+  constructor(readonly value: number) {
   }
 
   toJSON() {
@@ -251,16 +279,29 @@ export function comparisonMeasureWithPeriod(alias: string,
   return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, undefined, period)
 }
 
-export function comparisonMeasureWithBucket(alias: string,
-                                            comparisonMethod: ComparisonMethod,
-                                            measure: Measure,
-                                            referencePosition: Map<Field, string>): Measure {
-  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, ColumnSetKey.BUCKET)
+export function comparisonMeasureWithinSameGroup(alias: string,
+                                                 comparisonMethod: ComparisonMethod,
+                                                 measure: Measure,
+                                                 referencePosition: Map<Field, string>): Measure {
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, ColumnSetKey.GROUP)
 }
 
 export function comparisonMeasureWithParent(alias: string,
                                             comparisonMethod: ComparisonMethod,
                                             measure: Measure,
                                             ancestors: Array<Field>): Measure {
-  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, undefined, undefined, undefined, ancestors)
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, undefined, undefined, undefined, ancestors, false)
+}
+
+export function comparisonMeasureWithGrandTotalAlongAncestors(alias: string,
+                                                              comparisonMethod: ComparisonMethod,
+                                                              measure: Measure,
+                                                              ancestors: Array<Field>): Measure {
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, undefined, undefined, undefined, ancestors, true)
+}
+
+export function comparisonMeasureWithGrandTotal(alias: string,
+                                                comparisonMethod: ComparisonMethod,
+                                                measure: Measure): Measure {
+  return new ComparisonMeasureGrandTotal(alias, comparisonMethod, measure)
 }

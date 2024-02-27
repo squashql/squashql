@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.query.compiled.*;
 import io.squashql.query.database.QueryRewriter;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
@@ -31,10 +32,10 @@ public final class MeasureUtils {
       String alias = cm.getMeasure().alias();
       if (cm.ancestors != null) {
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias, alias + "(parent)");
-        return formula + ", ancestors = " + cm.ancestors.stream().map(Field::name).toList();
+        return formula + ", ancestors = " + cm.ancestors.stream().map(SqlUtils::squashqlExpression).toList();
       } else {
         String formula = cm.getComparisonMethod().expressionGenerator.apply(alias + "(current)", alias + "(reference)");
-        return formula + ", reference = " + cm.referencePosition.entrySet().stream().map(e -> String.join("=", e.getKey().name(), e.getValue())).toList();
+        return formula + ", reference = " + cm.referencePosition.entrySet().stream().map(e -> String.join("=", SqlUtils.squashqlExpression(e.getKey()), e.getValue())).toList();
       }
     } else if (m instanceof ExpressionMeasure em) {
       return em.expression;
@@ -53,7 +54,7 @@ public final class MeasureUtils {
 
     @Override
     public TypedField resolveField(Field field) {
-      return new TableTypedField(null, field.name(), String.class);
+      return new TableTypedField(null, ((TableField) field).fullName, String.class);
     }
 
     @Override
@@ -63,7 +64,7 @@ public final class MeasureUtils {
   }
 
 
-   private static String quoteExpression(Measure m) {
+  private static String quoteExpression(Measure m) {
     if (m.alias() != null) {
       return m.alias();
     }
@@ -77,12 +78,12 @@ public final class MeasureUtils {
 
   public static QueryExecutor.QueryScope getReadScopeComparisonMeasureReferencePosition(
           List<TypedField> columns,
-          List<TypedField> bucketColumns,
-          CompiledComparisonMeasure cm,
+          List<TypedField> groupColumns,
+          CompiledComparisonMeasureReferencePosition cm,
           QueryExecutor.QueryScope queryScope) {
     AtomicReference<CompiledCriteria> copy = new AtomicReference<>(queryScope.whereCriteria() == null ? null : CompiledCriteria.deepCopy(queryScope.whereCriteria()));
     Consumer<TypedField> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
-    bucketColumns.forEach(criteriaRemover);
+    groupColumns.forEach(criteriaRemover);
     Optional.ofNullable(cm.period())
             .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover));
     Set<TypedField> rollupColumns = new LinkedHashSet<>(queryScope.rollupColumns()); // order does matter
@@ -99,6 +100,17 @@ public final class MeasureUtils {
             new ArrayList<>(rollupColumns),
             new ArrayList<>(queryScope.groupingSets()), // FIXME should handle groupingSets
             new ArrayList<>(queryScope.orderBy()),
+            queryScope.cteRecordTables(),
+            queryScope.limit());
+  }
+
+  public static QueryExecutor.QueryScope getReadScopeComparisonGrandTotalMeasure(QueryExecutor.QueryScope queryScope) {
+    return new QueryExecutor.QueryScope(queryScope.table(),
+            queryScope.columns(),
+            queryScope.whereCriteria(),
+            queryScope.havingCriteria(),
+            Collections.emptyList(),
+            List.of(queryScope.columns(), List.of()), // list of empty list => GT
             queryScope.cteRecordTables(),
             queryScope.limit());
   }

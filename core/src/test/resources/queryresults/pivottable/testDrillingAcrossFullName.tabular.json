@@ -1,0 +1,157 @@
+{
+  "rows":[
+    [
+      "Grand Total",
+      "Grand Total",
+      "Grand Total",
+      56.0,
+      465.0
+    ],
+    [
+      "Grand Total",
+      "am",
+      "Total",
+      39.0,
+      330.0
+    ],
+    [
+      "Grand Total",
+      "am",
+      "usa",
+      39.0,
+      330.0
+    ],
+    [
+      "Grand Total",
+      "eu",
+      "Total",
+      17.0,
+      135.0
+    ],
+    [
+      "Grand Total",
+      "eu",
+      "france",
+      8.0,
+      70.0
+    ],
+    [
+      "Grand Total",
+      "eu",
+      "uk",
+      9.0,
+      65.0
+    ],
+    [
+      "extra",
+      "Grand Total",
+      "Grand Total",
+      17.0,
+      null
+    ],
+    [
+      "extra",
+      "am",
+      "Total",
+      10.0,
+      null
+    ],
+    [
+      "extra",
+      "am",
+      "usa",
+      10.0,
+      null
+    ],
+    [
+      "extra",
+      "eu",
+      "Total",
+      7.0,
+      null
+    ],
+    [
+      "extra",
+      "eu",
+      "france",
+      2.0,
+      null
+    ],
+    [
+      "extra",
+      "eu",
+      "uk",
+      5.0,
+      null
+    ],
+    [
+      "minimum expenditure",
+      "Grand Total",
+      "Grand Total",
+      39.0,
+      null
+    ],
+    [
+      "minimum expenditure",
+      "am",
+      "Total",
+      29.0,
+      null
+    ],
+    [
+      "minimum expenditure",
+      "am",
+      "usa",
+      29.0,
+      null
+    ],
+    [
+      "minimum expenditure",
+      "eu",
+      "Total",
+      10.0,
+      null
+    ],
+    [
+      "minimum expenditure",
+      "eu",
+      "france",
+      6.0,
+      null
+    ],
+    [
+      "minimum expenditure",
+      "eu",
+      "uk",
+      4.0,
+      null
+    ]
+  ],
+  "headers":[
+    {
+      "name":"storespendingatestpivottable.spending category",
+      "type":"java.lang.String",
+      "isMeasure":false
+    },
+    {
+      "name":"continent",
+      "type":"java.lang.String",
+      "isMeasure":false
+    },
+    {
+      "name":"country",
+      "type":"java.lang.String",
+      "isMeasure":false
+    },
+    {
+      "name":"amount",
+      "type":"double",
+      "isMeasure":true
+    },
+    {
+      "name":"population",
+      "type":"double",
+      "isMeasure":true
+    }
+  ]
+}

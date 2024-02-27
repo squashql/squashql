@@ -2,14 +2,17 @@ import {JoinType, Query, Table} from "./query"
 import {
   AggregatedMeasure,
   avgIf,
-  BinaryOperationMeasure, BinaryOperator,
-  comparisonMeasureWithBucket,
+  BinaryOperationMeasure,
+  BinaryOperator,
+  comparisonMeasureWithGrandTotal,
+  comparisonMeasureWithGrandTotalAlongAncestors,
+  comparisonMeasureWithinSameGroup,
   comparisonMeasureWithParent,
   comparisonMeasureWithPeriod,
   ComparisonMethod,
   decimal,
   ExpressionMeasure,
-  integer,
+  integer, ParametrizedMeasure,
   sum,
   totalCount,
 } from "./measure"
@@ -31,14 +34,14 @@ import {
 } from "./conditions"
 import * as fs from "fs"
 import {OrderKeyword} from "./order"
-import {BucketColumnSet, Month} from "./columnsets"
+import {GroupColumnSet, Month} from "./columnsets"
 import {AliasedField, ConstantField, countRows, TableField, tableField} from "./field"
 
 export function generateFromQueryDto() {
-  const table = new Table("myTable")
-  const refTable = new Table("refTable")
+  const table = Table.from("myTable")
+  const refTable = Table.from("refTable")
   table.join(refTable, JoinType.INNER, criterion_(new TableField("fromField"), new TableField("toField"), ConditionType.EQ))
-  table.join(new Table("a"), JoinType.LEFT, criterion_(new TableField("a.a_id"), new TableField("myTable.id"), ConditionType.EQ))
+  table.join(Table.from("a"), JoinType.LEFT, criterion_(new TableField("a.a_id"), new TableField("myTable.id"), ConditionType.EQ))
   const a = tableField("a")
   const b = tableField("b").as("b_alias")
   const q = new Query()
@@ -65,7 +68,7 @@ export function generateFromQueryDto() {
   const one = new ConstantField(1)
   q.withMeasure(avgIf("whatever", f1.divide(one.plus(rate)), criterion_(f1.plus(f2).as("f1+f2"), one, ConditionType.GT)))
 
-  q.withMeasure(comparisonMeasureWithBucket("comp bucket", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, new Map([
+  q.withMeasure(comparisonMeasureWithinSameGroup("comp group", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, new Map([
     [tableField("group"), "g"],
     [tableField("scenario"), "s-1"]
   ])))
@@ -74,6 +77,19 @@ export function generateFromQueryDto() {
     [tableField("Month"), "m"]
   ]), new Month(tableField("Month"), tableField("Year"))))
   q.withMeasure(comparisonMeasureWithParent("parent", ComparisonMethod.DIVIDE, price, [tableField("Year"), tableField("Month")]))
+  q.withMeasure(comparisonMeasureWithGrandTotalAlongAncestors("grandTotalAlongAncestors", ComparisonMethod.DIVIDE, price, [tableField("Year"), tableField("Month")]))
+  q.withMeasure(comparisonMeasureWithGrandTotal("grandTotal", ComparisonMethod.DIVIDE, price))
+  q.withMeasure(new ParametrizedMeasure("var measure", "VAR", {
+    "value": tableField("price"),
+    "date": tableField("date"),
+    "quantile": 0.95
+  }))
+  q.withMeasure(new ParametrizedMeasure("incr var measure", "INCREMENTAL_VAR", {
+    "value": tableField("price"),
+    "date": tableField("date"),
+    "quantile": 0.95,
+    "ancestors": [tableField("f1"), tableField("f2"), tableField("f3")],
+  }))
 
   const queryCondition = or(or(and(eq("a"), eq("b")), lt(5)), like("a%"))
   q.withWhereCriteria(all([
@@ -96,7 +112,7 @@ export function generateFromQueryDto() {
     "a": ["a1", "a2"],
     "b": ["b1", "b2"]
   }))
-  q.withBucketColumnSet(new BucketColumnSet(tableField("group"), tableField("scenario"), values))
+  q.withGroupColumnSet(new GroupColumnSet(tableField("group"), tableField("scenario"), values))
 
   // SubQuery - Note this is not valid because a table has been set above, but we are just testing
   // the json here.
@@ -106,8 +122,8 @@ export function generateFromQueryDto() {
           .withColumn(tableField("aa"))
           .withColumn(new AliasedField("bb"))
           .withMeasure(sum("sum_aa", new TableField("f")))
-  q.onSubQuery(subQ)
+  q.table = Table.fromSubQuery(subQ)
 
   const data = JSON.stringify(q)
-  fs.writeFileSync('build-from-querydto.json', data)
+  fs.writeFileSync('json/build-from-querydto.json', data)
 }

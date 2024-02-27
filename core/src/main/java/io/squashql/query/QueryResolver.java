@@ -4,6 +4,8 @@ import io.squashql.query.compiled.*;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.FieldNotFoundException;
+import io.squashql.query.measure.ParametrizedMeasure;
+import io.squashql.query.measure.Repository;
 import io.squashql.store.Store;
 import io.squashql.type.*;
 import lombok.Data;
@@ -15,7 +17,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.squashql.query.ColumnSetKey.BUCKET;
+import static io.squashql.query.ColumnSetKey.GROUP;
 import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUNT;
 
 @Data
@@ -25,7 +27,7 @@ public class QueryResolver {
   private final Map<String, Store> storesByName;
   private final Set<String> cteTableNames = new HashSet<>();
   private final QueryExecutor.QueryScope scope;
-  private final List<TypedField> bucketColumns;
+  private final List<TypedField> groupColumns;
   private final List<TypedField> columns;
   private final CompilationCache cache = new CompilationCache();
   private final Map<Measure, CompiledMeasure> subQueryMeasures;
@@ -42,9 +44,9 @@ public class QueryResolver {
       }
     }
     this.columns = query.columns.stream().map(this::resolveField).toList();
-    this.bucketColumns = Optional.ofNullable(query.columnSets.get(ColumnSetKey.BUCKET))
+    this.groupColumns = Optional.ofNullable(query.columnSets.get(ColumnSetKey.GROUP))
             .stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
-    this.subQueryMeasures = query.subQuery == null ? Collections.emptyMap() : compileMeasures(query.subQuery.measures, false);
+    this.subQueryMeasures = query.table.subQuery == null ? Collections.emptyMap() : compileMeasures(query.table.subQuery.measures, false);
     this.scope = toQueryScope(query);
     this.measures = compileMeasures(query.measures, true);
     this.compiledColumnSets = compiledColumnSets(query.columnSets);
@@ -76,18 +78,18 @@ public class QueryResolver {
   public TypedField resolveField(final Field field) {
     return this.cache.computeIfAbsent(field, f -> {
       // Special case for the column that is created due to the column set.
-      ColumnSet columnSet = this.query.columnSets.get(BUCKET);
+      ColumnSet columnSet = this.query.columnSets.get(GROUP);
       if (columnSet != null) {
-        Field newField = ((BucketColumnSetDto) columnSet).newField;
+        Field newField = ((GroupColumnSetDto) columnSet).newField;
         if (field.equals(newField)) {
-          return new TableTypedField(null, newField.name(), String.class, null, false);
+          return new TableTypedField(null, ((TableField) newField).fullName, String.class, null, false);
         }
       }
 
       if (f instanceof TableField tf) {
-        return getTableTypedField(tf.name(), field.alias());
+        return getTableTypedField(tf.fullName, field.alias());
       } else if (f instanceof FunctionField ff) {
-        return new FunctionTypedField(getTableTypedField(ff.field.name(), ff.field.alias()), ff.function, ff.alias);
+        return new FunctionTypedField(resolveField(ff.field), ff.function, ff.alias);
       } else if (f instanceof BinaryOperationField ff) {
         return new BinaryOperationTypedField(ff.operator, resolveField(ff.leftOperand), resolveField(ff.rightOperand), ff.alias);
       } else if (f instanceof ConstantField ff) {
@@ -106,7 +108,18 @@ public class QueryResolver {
     } catch (FieldNotFoundException e) {
       // This can happen if the using a "field" coming from the calculation of a subquery. Since the field provider
       // contains only "raw" fields, it will throw an exception.
-      return new TableTypedField(null, field.name(), Number.class, field.alias(), false);
+      String name = null;
+      if (field instanceof AliasedField af) {
+        name = af.alias;
+      } else if (field instanceof TableField tf) {
+        name = tf.fullName;
+      }
+
+      if (name != null) {
+        return new TableTypedField(null, name, Number.class, field.alias(), false);
+      }
+
+      throw e;
     }
   }
 
@@ -152,7 +165,7 @@ public class QueryResolver {
     List<TypedField> rollupColumns = query.rollupColumns.stream().map(this::resolveField).toList();
     List<List<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(this::resolveField).toList()).toList();
     return new QueryExecutor.QueryScope(
-            compileTable(query.table, query.subQuery),
+            compileTable(query.table),
             combinedColumns,
             compileCriteria(query.whereCriteriaDto),
             compileCriteria(query.havingCriteriaDto),
@@ -164,24 +177,24 @@ public class QueryResolver {
   }
 
   protected void checkQuery(final QueryDto query) {
-    if (query.table == null && query.subQuery == null) {
+    if (query.table.name == null && query.table.subQuery == null) {
       throw new IllegalArgumentException("A table or sub-query was expected in " + query);
-    } else if (query.table != null && query.subQuery != null) {
+    } else if (query.table.name != null && query.table.subQuery != null) {
       throw new IllegalArgumentException("Cannot define a table and a sub-query at the same time in " + query);
     }
   }
 
-  private DatabaseQuery toSubQuery(final QueryDto subQuery) {
+  private DatabaseQuery toSubQuery(QueryDto subQuery) {
     checkSubQuery(subQuery);
-    final CompiledTable table = compileTable(subQuery.table, subQuery.subQuery);
+    final CompiledTable table = compileTable(subQuery.table);
     final List<TypedField> select = subQuery.columns.stream().map(this::resolveField).toList();
     final CompiledCriteria whereCriteria = compileCriteria(subQuery.whereCriteriaDto);
     final CompiledCriteria havingCriteria = compileCriteria(subQuery.havingCriteriaDto);
     final List<CompiledOrderBy> orderBy = compileOrderBy(subQuery.orders);
     // should we check groupingSet and rollup as well are empty ?
-    DatabaseQuery query = new DatabaseQuery(null,
+    DatabaseQuery query = new DatabaseQuery(null, // FIXME is it correct?
             table,
-            new HashSet<>(select),
+            new LinkedHashSet<>(select),
             whereCriteria,
             havingCriteria,
             Collections.emptyList(),
@@ -193,7 +206,7 @@ public class QueryResolver {
   }
 
   private void checkSubQuery(final QueryDto subQuery) {
-    if (subQuery.subQuery != null) {
+    if (subQuery.table.subQuery != null) {
       throw new IllegalArgumentException("sub-query in a sub-query is not supported");
     }
     if (subQuery.virtualTableDtos != null && !subQuery.virtualTableDtos.isEmpty()) {
@@ -223,8 +236,8 @@ public class QueryResolver {
   /**
    * Table
    */
-  public CompiledTable compileTable(TableDto table, QueryDto subQuery) {
-    if (table != null) {
+  public CompiledTable compileTable(TableDto table) {
+    if (table.name != null) {
       List<CompiledJoin> joins = compileJoins(table.joins);
       if (table.isCte) {
         return new CteTable(table.name, joins);
@@ -241,8 +254,9 @@ public class QueryResolver {
         }
       }
       return new MaterializedTable(table.name, joins);
-    } else if (subQuery != null) {
-      return new NestedQueryTable(toSubQuery(subQuery));
+    } else if (table.subQuery != null) {
+      List<CompiledJoin> joins = compileJoins(table.joins);
+      return new NestedQueryTable(toSubQuery(table.subQuery), joins);
     } else {
       throw new IllegalStateException();
     }
@@ -260,7 +274,7 @@ public class QueryResolver {
   }
 
   public CompiledJoin compileJoin(JoinDto join) {
-    CompiledTable table = compileTable(join.table, null);
+    CompiledTable table = compileTable(join.table);
     if (table instanceof NamedTable nt) {
       return new CompiledJoin(nt, join.type, compileCriteria(join.joinCriteria));
     } else {
@@ -298,20 +312,24 @@ public class QueryResolver {
   protected CompiledMeasure compileMeasure(Measure measure, boolean topMeasure) {
     return this.cache.computeIfAbsent(measure, m -> {
       final CompiledMeasure compiledMeasure;
-      if (m instanceof AggregatedMeasure) {
-        compiledMeasure = compileAggregatedMeasure((AggregatedMeasure) m);
-      } else if (m instanceof ExpressionMeasure) {
-        compiledMeasure = compileExpressionMeasure((ExpressionMeasure) m);
-      } else if (m instanceof ConstantMeasure<?>) {
-        compiledMeasure = compileConstantMeasure((ConstantMeasure<?>) m);
-      } else if (m instanceof BinaryOperationMeasure) {
-        compiledMeasure = compileBinaryOperationMeasure((BinaryOperationMeasure) m, topMeasure);
-      } else if (m instanceof ComparisonMeasureReferencePosition) {
-        compiledMeasure = compileComparisonMeasure((ComparisonMeasureReferencePosition) m, topMeasure);
+      if (m instanceof AggregatedMeasure am) {
+        compiledMeasure = compileAggregatedMeasure(am);
+      } else if (m instanceof ExpressionMeasure em) {
+        compiledMeasure = compileExpressionMeasure(em);
+      } else if (m instanceof ConstantMeasure<?> cm) {
+        compiledMeasure = compileConstantMeasure(cm);
+      } else if (m instanceof BinaryOperationMeasure bom) {
+        compiledMeasure = compileBinaryOperationMeasure(bom, topMeasure);
+      } else if (m instanceof ComparisonMeasureReferencePosition cmrp) {
+        compiledMeasure = compileComparisonMeasure(cmrp, topMeasure);
+      } else if (m instanceof ComparisonMeasureGrandTotal cmgt) {
+        compiledMeasure = new CompiledGrandTotalComparisonMeasure(cmgt.alias, cmgt.comparisonMethod, compileMeasure(cmgt.measure, topMeasure));
       } else if (m instanceof VectorAggMeasure v) {
         compiledMeasure = compileVectorAggMeasure(v);
       } else if (m instanceof VectorTupleAggMeasure v) {
         compiledMeasure = compileVectorTupleAggMeasure(v);
+      } else if (m instanceof ParametrizedMeasure pm) {
+        compiledMeasure = compileMeasure(Repository.create(pm), topMeasure);
       } else {
         throw new IllegalArgumentException("Unknown type of measure " + m.getClass().getSimpleName());
       }
@@ -351,7 +369,7 @@ public class QueryResolver {
   }
 
   private CompiledMeasure compileComparisonMeasure(ComparisonMeasureReferencePosition m, boolean topMeasure) {
-    return new CompiledComparisonMeasure(
+    return new CompiledComparisonMeasureReferencePosition(
             m.alias,
             m.comparisonMethod,
             m.comparisonOperator,
@@ -359,7 +377,8 @@ public class QueryResolver {
             m.referencePosition == null ? null : m.referencePosition.entrySet().stream().collect(Collectors.toMap(e -> resolveField(e.getKey()), Map.Entry::getValue)),
             compilePeriod(m.period),
             m.columnSetKey,
-            m.ancestors == null ? null : m.ancestors.stream().map(this::resolveField).collect(Collectors.toList()));
+            m.ancestors == null ? null : m.ancestors.stream().map(this::resolveField).collect(Collectors.toList()),
+            m.grandTotalAlongAncestors);
   }
 
   private CompiledPeriod compilePeriod(Period period) {
@@ -394,15 +413,15 @@ public class QueryResolver {
   private Map<ColumnSetKey, CompiledColumnSet> compiledColumnSets(Map<ColumnSetKey, ColumnSet> columnSets) {
     Map<ColumnSetKey, CompiledColumnSet> m = new HashMap<>();
     for (Map.Entry<ColumnSetKey, ColumnSet> entry : columnSets.entrySet()) {
-      if (entry.getKey() != BUCKET) {
+      if (entry.getKey() != GROUP) {
         throw new IllegalArgumentException("unexpected column set " + entry.getValue());
       }
-      BucketColumnSetDto bucket = (BucketColumnSetDto) entry.getValue();
-      m.put(entry.getKey(), new CompiledBucketColumnSet(
-              bucket.getColumnsForPrefetching().stream().map(this::resolveField).toList(),
-              bucket.getNewColumns().stream().map(this::resolveField).toList(),
+      GroupColumnSetDto group = (GroupColumnSetDto) entry.getValue();
+      m.put(entry.getKey(), new CompiledGroupColumnSet(
+              group.getColumnsForPrefetching().stream().map(this::resolveField).toList(),
+              group.getNewColumns().stream().map(this::resolveField).toList(),
               entry.getKey(),
-              bucket.values));
+              group.values));
     }
     return m;
   }

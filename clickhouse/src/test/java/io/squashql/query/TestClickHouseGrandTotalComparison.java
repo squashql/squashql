@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 /**
  * Do not edit this class, it has been generated automatically by {@link ClickHouseClassTemplateGenerator}.
  */
-public class TestClickHouseBucketComparison extends ATestBucketComparison {
+public class TestClickHouseGrandTotalComparison extends ATestGrandTotalComparison {
 
   public org.testcontainers.containers.GenericContainer container = ClickHouseTestUtil.createClickHouseContainer();
 

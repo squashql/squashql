@@ -350,7 +350,7 @@ FROM myTable
        LEFT OUTER JOIN otherTable ON myTable.id = otherTable.key1 AND refTable.id = otherTable.key2
 ```
 
-### Joining on virtual created on-the-fly at query time
+### Joining on virtual table created on-the-fly at query time
 
 You can define and use a virtual table in the query by joining it to an existing table. Such table is not materialized
 in the database and only exists during the query execution time. Note the join operation is performed by the underlying
@@ -911,43 +911,54 @@ const populationTable = new PopulationTable()
 
 const pop = sum("pop", populationTable.population)
 const ancestors = [populationTable.continent, populationTable.country, populationTable.city]
-const ratio = comparisonMeasureWithParent("ratio", ComparisonMethod.DIVIDE, pop, ancestors)
+const parentRatio = comparisonMeasureWithParent("parent ratio", ComparisonMethod.DIVIDE, pop, ancestors)
+const gtRatio = comparisonMeasureWithGrandTotalAlongAncestors("gt ratio", ComparisonMethod.DIVIDE, pop, ancestors)
 const query = from(populationTable._name)
-        .select([populationTable.continent, populationTable.country, populationTable.city], [], [pop, ratio])
+        .select([populationTable.continent, populationTable.country, populationTable.city], [], [pop, parentRatio, gtRatio])
         .rollup([populationTable.continent, populationTable.country, populationTable.city])
         .build()
 ```
 
 `comparisonMeasureWithParent` method is used to create a special measure built to compare values of an underlying
-measure (third argument) with the parent values of the same measure. Parenthood is indicated with the array of `ancestors`
-(fourth argument) which contains column names in "lineage reverse order". 
+measure (third argument) with the parent values of the same measure. 
 
+`comparisonMeasureWithGrandTotalAlongAncestors` method is used to create a special measure built to compare values of an underlying
+measure (third argument) with the grand total values of the same measure along the ancestors.
+
+Parenthood is indicated with the array of `ancestors` (fourth argument) which contains column names in "lineage reverse order".
 Note the columns used to define the ancestors need to be passed to the select method but not necessary to the rollup method. 
 
 Result
 ```
-+-------------+-------------+-------------+------------+---------------------+
-|   continent |     country |        city |        pop |               ratio |
-+-------------+-------------+-------------+------------+---------------------+
-| Grand Total | Grand Total | Grand Total |       28.5 |                 1.0 |
-|          am |       Total |       Total |       17.0 |  0.5964912280701754 |
-|          am |      canada |       Total |        6.0 | 0.35294117647058826 |
-|          am |      canada |    montreal |        2.0 |  0.3333333333333333 |
-|          am |      canada |       otawa |        1.0 | 0.16666666666666666 |
-|          am |      canada |     toronto |        3.0 |                 0.5 |
-|          am |         usa |       Total |       11.0 |  0.6470588235294118 |
-|          am |         usa |     chicago |        3.0 |  0.2727272727272727 |
-|          am |         usa |         nyc |        8.0 |  0.7272727272727273 |
-|          eu |       Total |       Total |       11.5 | 0.40350877192982454 |
-|          eu |      france |       Total |        2.5 | 0.21739130434782608 |
-|          eu |      france |        lyon |        0.5 |                 0.2 |
-|          eu |      france |       paris |        2.0 |                 0.8 |
-|          eu |          uk |       Total |        9.0 |   0.782608695652174 |
-|          eu |          uk |      london |        9.0 |                 1.0 |
-+-------------+-------------+-------------+------------+---------------------+
++-------------+-------------+-------------+------------+---------------------+---------------------+
+|   continent |     country |        city | population |        parent ratio |            gt ratio |
++-------------+-------------+-------------+------------+---------------------+---------------------+
+| Grand Total | Grand Total | Grand Total |       35.0 |                 1.0 |                 1.0 |
+|          am |       Total |       Total |       24.0 |  0.6857142857142857 |  0.6857142857142857 |
+|          am |      canada |       Total |       12.0 |                 0.5 | 0.34285714285714286 |
+|          am |      canada |    montreal |        7.0 |  0.5833333333333334 |                 0.2 |
+|          am |      canada |       otawa |        2.0 | 0.16666666666666666 | 0.05714285714285714 |
+|          am |      canada |     toronto |        3.0 |                0.25 | 0.08571428571428572 |
+|          am |         usa |       Total |       12.0 |                 0.5 | 0.34285714285714286 |
+|          am |         usa |     chicago |        4.0 |  0.3333333333333333 | 0.11428571428571428 |
+|          am |         usa |         nyc |        8.0 |  0.6666666666666666 | 0.22857142857142856 |
+|          eu |       Total |       Total |       11.0 |  0.3142857142857143 |  0.3142857142857143 |
+|          eu |      france |       Total |        3.0 |  0.2727272727272727 | 0.08571428571428572 |
+|          eu |      france |        lyon |        1.0 |  0.3333333333333333 | 0.02857142857142857 |
+|          eu |      france |       paris |        2.0 |  0.6666666666666666 | 0.05714285714285714 |
+|          eu |          uk |       Total |        8.0 |  0.7272727272727273 | 0.22857142857142856 |
+|          eu |          uk |      london |        8.0 |                 1.0 | 0.22857142857142856 |
++-------------+-------------+-------------+------------+---------------------+---------------------+
 ```
 
-##### Dynamic comparison - What-if - ColumnSet
+`comparisonMeasureWithGrandTotal` method is used to create a special measure built to compare values of an underlying
+measure with the grand total values of the same measure.
+
+```typescript
+const gtRatio = comparisonMeasureWithGrandTotal("gt ratio", ComparisonMethod.DIVIDE, pop)
+```
+
+##### Group comparison - ColumnSet
 
 This type of comparison is mainly used for what-if comparison but not limited to it. It involves the creation of a new
 "virtual" column called `ColumnSet` that only exists in SquashQL to create groups among which the comparisons are
@@ -998,7 +1009,7 @@ To do that, we start by creating those groups that we put in a dedicated object
 
 ```typescript
 import {
-  BucketColumnSet
+  GroupColumnSet
 } from "@squashql/squashql-js"
 
 const groups = new Map(Object.entries({
@@ -1007,17 +1018,17 @@ const groups = new Map(Object.entries({
   "group3": ["base", "s3"],
   "group4": ["s1", "s2", "s3"],
 }))
-const columnSet = new BucketColumnSet(new TableField("group"), new TableField("myTable.scenario"), groups)
+const columnSet = new GroupColumnSet(new TableField("group"), new TableField("myTable.scenario"), groups)
 ```
 
-The first argument of `BucketColumnSet` is the name of the new (virtual) column that will be created.
+The first argument of `GroupColumnSet` is the name of the new (virtual) column that will be created.
 The second argument is the name of the existing column whose values will be grouped together.
 The third argument is the defined groups to be used for the comparison. The orders of the keys (group1, group2....)
 and in the arrays are important.
 
-We can use the `BucketColumnSet` as follows
+We can use the `GroupColumnSet` as follows
 ```typescript
-import {BucketColumnSet, ExpressionMeasure, from} from "@squashql/squashql-js"
+import {GroupColumnSet, ExpressionMeasure, from} from "@squashql/squashql-js"
 
 const values = new Map(Object.entries({
   "group1": ["base", "s1"],
@@ -1028,7 +1039,7 @@ const values = new Map(Object.entries({
 const saleprice = new TableField("myTable.saleprice")
 const loavessold = new TableField("myTable.loavessold")
 const revenue = sum("revenue", saleprice.multiply(loavessold))
-const columnSet = new BucketColumnSet(new TableField("group"), new TableField("myTable.scenario"), groups)
+const columnSet = new GroupColumnSet(new TableField("group"), new TableField("myTable.scenario"), groups)
 const query = from("myTable")
         .select([], [columnSet], [revenue])
         .build()
@@ -1053,9 +1064,9 @@ Result
 As you can see, adding the column set to the query will add two columns in the result: group and scenario so that we 
 can remove scenario column from the first argument.
 
-Now to perform the comparison, use the built-in measure `comparisonMeasureWithBucket`
+Now to perform the comparison, use the built-in measure `comparisonMeasureWithinSameGroup`
 ```typescript
-import {BucketColumnSet, comparisonMeasureWithBucket, ComparisonMethod, ExpressionMeasure, from} from "@squashql/squashql-js"
+import {GroupColumnSet, comparisonMeasureWithinSameGroup, ComparisonMethod, ExpressionMeasure, from} from "@squashql/squashql-js"
 
 const values = new Map(Object.entries({
   "group1": ["base", "s1"],
@@ -1066,8 +1077,8 @@ const values = new Map(Object.entries({
 const saleprice = new TableField("myTable.saleprice")
 const loavessold = new TableField("myTable.loavessold")
 const revenue = sum("revenue", saleprice.multiply(loavessold))
-const columnSet = new BucketColumnSet(new TableField("group"), new TableField("myTable.scenario"), groups)
-const revenueComparison = comparisonMeasureWithBucket("revenueComparison",
+const columnSet = new GroupColumnSet(new TableField("group"), new TableField("myTable.scenario"), groups)
+const revenueComparison = comparisonMeasureWithinSameGroup("revenueComparison",
         ComparisonMethod.ABSOLUTE_DIFFERENCE,
         revenue,
         new Map([[new TableField("myTable.scenario"), "s-1"]]))

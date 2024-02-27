@@ -59,13 +59,17 @@ export interface CanAddHaving extends HasOrderBy, CanAddOrderBy {
 
 export function from(tableName: string): HasStartedBuildingTable {
   const queryBuilder = new QueryBuilder()
-  queryBuilder.queryDto.table = new Table(tableName)
+  const t = new Table()
+  t.name = tableName
+  queryBuilder.queryDto.table = t
   return queryBuilder
 }
 
 export function fromSubQuery(subQuery: Query): HasStartedBuildingTable {
   const queryBuilder = new QueryBuilder()
-  queryBuilder.queryDto.subQuery = subQuery
+  const t = new Table()
+  t.subQuery = subQuery
+  queryBuilder.queryDto.table = t
   return queryBuilder
 }
 
@@ -89,7 +93,7 @@ class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
   private addJoinToQueryDto() {
     const jtb = this.currentJoinTableBuilder
     if (jtb != null) {
-      this.queryDto.table.join(new Table(jtb.tableName), jtb.joinType, jtb.joinCriteria)
+      this.queryDto.table.join(Table.from(jtb.tableName), jtb.joinType, jtb.joinCriteria)
       this.currentJoinTableBuilder = null
     }
   }

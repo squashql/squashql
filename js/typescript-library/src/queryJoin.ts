@@ -4,6 +4,7 @@ import {serializeMap} from "./util"
 
 export class QueryJoin {
 
+  minify?: boolean
   private readonly _table: Table
   private readonly _queries: Array<Query>
   private current: number = 0
@@ -13,13 +14,13 @@ export class QueryJoin {
   constructor(query: Query) {
     this._queries = []
     this._queries.push(query)
-    this._table = new Table(`__cte${this.current++}__`)
+    this._table = Table.from(`__cte${this.current++}__`)
     this._orders = new Map()
   }
 
   join(query: Query, joinType: JoinType, criteria?: Criteria): QueryJoin {
     this._queries.push(query)
-    this._table.join(new Table(`__cte${this.current++}__`), joinType, criteria)
+    this._table.join(Table.from(`__cte${this.current++}__`), joinType, criteria)
     return this
   }
 
@@ -37,8 +38,9 @@ export class QueryJoin {
     return {
       "table": this._table,
       "queries": this._queries,
+      "minify": this.minify,
       "orders": Object.fromEntries(serializeMap(this._orders)),
-      "limit": this._limit
+      "limit": this._limit,
     }
   }
 }

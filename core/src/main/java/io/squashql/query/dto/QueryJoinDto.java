@@ -21,6 +21,7 @@ public class QueryJoinDto {
   public int current = 0;
   public Map<Field, OrderDto> orders;
   public int limit = -1;
+  public Boolean minify;
 
   private QueryJoinDto(QueryDto q1) {
     this.queries.add(q1);

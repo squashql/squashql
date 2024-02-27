@@ -17,6 +17,9 @@ public class VectorTupleAggMeasure implements Measure {
   public String alias;
   public List<FieldAndAggFunc> fieldToAggregateAndAggFunc;
   public Field vectorAxis;
+  /**
+   * Internal attribute that is not supposed to be exposed.
+   */
   public Function<List<Object>, Object> transformer;
   @With
   public String expression;

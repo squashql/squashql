@@ -3,10 +3,12 @@ package io.squashql.client;
 import io.squashql.client.http.HttpClientQuerier;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.spring.SquashQLApplication;
 import io.squashql.spring.dataset.DatasetTestConfig;
 import io.squashql.spring.web.rest.QueryControllerTest;
+import io.squashql.util.TestUtil;
 import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +25,6 @@ import static io.squashql.query.Functions.criterion;
 import static io.squashql.query.Functions.eq;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
-import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
@@ -63,7 +64,7 @@ public class HttpClientQuerierTest {
             .withMeasure(new AggregatedMeasure("qs", "quantity", "sum"));
 
     QueryResultDto response = this.querier.run(query);
-    assertQuery(response.table);
+    assertQuery(TestUtil.cellsToTable(response.cells, response.columns));
     Assertions.assertThat(response.metadata).containsExactly(
             new MetadataItem(SCENARIO_FIELD_NAME, SCENARIO_FIELD_NAME, String.class),
             new MetadataItem("qs", "qs", long.class));
@@ -84,28 +85,26 @@ public class HttpClientQuerierTest {
             .withMeasure(new AggregatedMeasure(("qa"), "quantity", "avg"));
 
     QueryResultDto response = this.querier.queryMerge(QueryMergeDto.from(query1).join(query2, JoinType.FULL));
-    Assertions.assertThat(response.table.rows).containsExactlyInAnyOrder(List.of("MDD up", 4000, 1000d),
+    Assertions.assertThat(TestUtil.cellsToTable(response.cells, response.columns).rows).containsExactlyInAnyOrder(List.of("MDD up", 4000, 1000d),
             List.of("MN & MDD down", 4000, 1000d),
             List.of("MN & MDD up", 4000, 1000d),
             List.of("MN up", 4000, 1000d),
             List.of(MAIN_SCENARIO_NAME, 4000, 1000d));
-    Assertions.assertThat(response.table.columns).containsExactly(SCENARIO_FIELD_NAME, "qs", "qa");
+    Assertions.assertThat(response.columns).containsExactly(SCENARIO_FIELD_NAME, "qs", "qa");
     Assertions.assertThat(response.metadata).containsExactly(
             new MetadataItem(SCENARIO_FIELD_NAME, SCENARIO_FIELD_NAME, String.class),
             new MetadataItem("qs", "qs", long.class),
             new MetadataItem("qa", "qa", double.class));
 //            new MetadataItem("qs", "sum(quantity)", long.class),
 //            new MetadataItem("qa", "avg(quantity)", double.class));
-
-    Assertions.assertThat(response.debug).isNull();
   }
 
   @Test
   void testRunGroupingScenarioQuery() {
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", tableField(SCENARIO_FIELD_NAME))
-            .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
-            .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
-            .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
+    GroupColumnSetDto groupCS = new GroupColumnSetDto("group", tableField(SCENARIO_FIELD_NAME))
+            .withNewGroup("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
+            .withNewGroup("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
+            .withNewGroup("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
 
     Measure aggregatedMeasure = Functions.sum("capdv", "capdv");
     ComparisonMeasureReferencePosition capdvDiff = new ComparisonMeasureReferencePosition(
@@ -116,14 +115,14 @@ public class HttpClientQuerierTest {
                     tableField(SCENARIO_FIELD_NAME), "first",
                     tableField("group"), "g"
             ),
-            ColumnSetKey.BUCKET);
+            ColumnSetKey.GROUP);
     var query = Query
             .from("our_prices")
-            .select_(List.of(bucketCS), List.of(capdvDiff, aggregatedMeasure))
+            .select_(List.of(groupCS), List.of(capdvDiff, aggregatedMeasure))
             .build();
 
     QueryResultDto response = this.querier.run(query);
-    SimpleTableDto table = response.table;
+    SimpleTableDto table = TestUtil.cellsToTable(response.cells, response.columns);
     double baseValue = 40_000d;
     double mnValue = 42_000d;
     double mnmddValue = 44_000d;
@@ -149,7 +148,7 @@ public class HttpClientQuerierTest {
             .build();
 
     QueryResultDto response = this.querier.run(query);
-    SimpleTableDto table = response.table;
+    SimpleTableDto table = TestUtil.cellsToTable(response.cells, response.columns);
     Assertions.assertThat(table.rows).containsExactlyInAnyOrder(
             List.of(MAIN_SCENARIO_NAME, "ITM Balma", 20d),
             List.of(MAIN_SCENARIO_NAME, "ITM Toulouse and Drive", 20d)
@@ -184,24 +183,24 @@ public class HttpClientQuerierTest {
     QueryDto query = Query.from("our_prices")
             .select(tableFields(List.of("ean", "pdv")), List.of(CountMeasure.INSTANCE))
             .build();
+    query.minify = false;
     PivotTableQueryDto pivotTableQuery = new PivotTableQueryDto(query, tableFields(List.of("pdv")), tableFields(List.of("ean")));
     PivotTableQueryResultDto response = this.querier.run(pivotTableQuery);
 
-    Assertions.assertThat(response.rows).containsExactlyElementsOf(pivotTableQuery.rows.stream().map(Field::name).toList());
-    Assertions.assertThat(response.columns).containsExactlyElementsOf(pivotTableQuery.columns.stream().map(Field::name).toList());
+    Assertions.assertThat(response.rows).containsExactlyElementsOf(pivotTableQuery.rows.stream().map(SqlUtils::squashqlExpression).toList());
+    Assertions.assertThat(response.columns).containsExactlyElementsOf(pivotTableQuery.columns.stream().map(SqlUtils::squashqlExpression).toList());
     Assertions.assertThat(response.values).containsExactlyElementsOf(List.of(CountMeasure.INSTANCE.alias));
-    Assertions.assertThat(response.queryResult.table.rows)
-            .containsExactly(
-                    List.of(GRAND_TOTAL, GRAND_TOTAL, 20),
-                    List.of(GRAND_TOTAL, "ITM Balma", 10),
-                    List.of(GRAND_TOTAL, "ITM Toulouse and Drive", 10),
-                    List.of("ITMella 250g", GRAND_TOTAL, 10),
-                    List.of("ITMella 250g", "ITM Balma", 5),
-                    List.of("ITMella 250g", "ITM Toulouse and Drive", 5),
-
-                    List.of("Nutella 250g", GRAND_TOTAL, 10),
-                    List.of("Nutella 250g", "ITM Balma", 5),
-                    List.of("Nutella 250g", "ITM Toulouse and Drive", 5));
+    List<Map<String, Object>> cells = List.of(
+            Map.of(CountMeasure.ALIAS, 20),
+            Map.of(CountMeasure.ALIAS, 10, "pdv", "ITM Balma"),
+            Map.of(CountMeasure.ALIAS, 10, "pdv", "ITM Toulouse and Drive"),
+            Map.of(CountMeasure.ALIAS, 10, "ean", "ITMella 250g"),
+            Map.of(CountMeasure.ALIAS, 5, "ean", "ITMella 250g", "pdv", "ITM Balma"),
+            Map.of(CountMeasure.ALIAS, 5, "ean", "ITMella 250g", "pdv", "ITM Toulouse and Drive"),
+            Map.of(CountMeasure.ALIAS, 10, "ean", "Nutella 250g"),
+            Map.of(CountMeasure.ALIAS, 5, "ean", "Nutella 250g", "pdv", "ITM Balma"),
+            Map.of(CountMeasure.ALIAS, 5, "ean", "Nutella 250g", "pdv", "ITM Toulouse and Drive"));
+    Assertions.assertThat(response.cells).isEqualTo(cells);
   }
 
   @Test
@@ -215,7 +214,7 @@ public class HttpClientQuerierTest {
             .build();
 
     QueryResultDto response = this.querier.run(query);
-    SimpleTableDto table = response.table;
+    SimpleTableDto table = TestUtil.cellsToTable(response.cells, response.columns);
     final int totalCountIdx = table.columns.indexOf(TotalCountMeasure.ALIAS);
     Assertions.assertThat(table.rows.stream().mapToInt(row -> (int) row.get(totalCountIdx))).containsOnly(5);
   }

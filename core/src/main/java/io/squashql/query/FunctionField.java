@@ -5,8 +5,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import static io.squashql.query.database.SqlUtils.singleOperandFunctionName;
-
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
@@ -20,11 +18,6 @@ public class FunctionField implements Field {
   public FunctionField(String function, Field field) {
     this.function = function;
     this.field = field;
-  }
-
-  @Override
-  public String name() {
-    return singleOperandFunctionName(this.function, this.field.name());
   }
 
   @Override

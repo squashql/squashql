@@ -16,7 +16,7 @@ import java.util.Map;
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
-public class BucketColumnSetDto implements ColumnSet {
+public class GroupColumnSetDto implements ColumnSet {
 
   public Field newField;
 
@@ -24,13 +24,13 @@ public class BucketColumnSetDto implements ColumnSet {
 
   public Map<String, List<String>> values = new LinkedHashMap<>();
 
-  public BucketColumnSetDto(String name, Field field) {
+  public GroupColumnSetDto(String name, Field field) {
     this.newField = new TableField(name);
     this.field = field;
   }
 
-  public BucketColumnSetDto withNewBucket(String bucketName, List<String> bucketValues) {
-    this.values.put(bucketName, new ArrayList<>(bucketValues));
+  public GroupColumnSetDto withNewGroup(String groupName, List<String> groupValues) {
+    this.values.put(groupName, new ArrayList<>(groupValues));
     return this;
   }
 
@@ -46,6 +46,6 @@ public class BucketColumnSetDto implements ColumnSet {
 
   @Override
   public ColumnSetKey getColumnSetKey() {
-    return ColumnSetKey.BUCKET;
+    return ColumnSetKey.GROUP;
   }
 }

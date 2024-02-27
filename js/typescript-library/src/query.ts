@@ -1,4 +1,4 @@
-import {BucketColumnSet, ColumnSet, ColumnSetKey} from "./columnsets"
+import {ColumnSet, ColumnSetKey, GroupColumnSet} from "./columnsets"
 import {Field} from "./field"
 import {Measure} from "./measure"
 import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order"
@@ -6,36 +6,6 @@ import {Parameter} from "./parameters"
 import {VirtualTable} from "./virtualtable"
 import {serializeMap} from "./util"
 import Criteria from "./criteria"
-
-export class QueryMerge {
-
-  private readonly _queries: Array<Query>
-  private readonly _joins: Array<JoinType>
-
-  constructor(query: Query) {
-    this._queries = []
-    this._joins = []
-    this._queries.push(query)
-  }
-
-  join(query: Query, joinType: JoinType): QueryMerge {
-    this._queries.push(query)
-    this._joins.push(joinType)
-    return this
-  }
-
-  withParameter(parameter: Parameter): QueryMerge {
-    this._queries.forEach(q => q.withParameter(parameter))
-    return this
-  }
-
-  toJSON() {
-    return {
-      "queries": this._queries,
-      "joinTypes": this._joins,
-    }
-  }
-}
 
 export class Query {
   columns: Array<Field>
@@ -48,8 +18,8 @@ export class Query {
   whereCriteria: Criteria
   havingCriteriaDto: Criteria
   orders: Map<Field, Order>
-  subQuery: Query
   limit: number = -1
+  minify?: boolean
 
   constructor() {
     this.columns = []
@@ -65,11 +35,6 @@ export class Query {
 
   onTable(table: Table): Query {
     this.table = table
-    return this
-  }
-
-  onSubQuery(query: Query): Query {
-    this.subQuery = query
     return this
   }
 
@@ -93,8 +58,8 @@ export class Query {
     return this
   }
 
-  withBucketColumnSet(columSet: BucketColumnSet): Query {
-    this.columnSets.set(ColumnSetKey.BUCKET, columSet)
+  withGroupColumnSet(columSet: GroupColumnSet): Query {
+    this.columnSets.set(ColumnSetKey.GROUP, columSet)
     return this
   }
 
@@ -121,7 +86,6 @@ export class Query {
   toJSON() {
     return {
       "table": this.table,
-      "subQuery": this.subQuery,
       "virtualTableDtos": this.virtualTables,
       "columns": this.columns,
       "rollupColumns": this.rollupColumns,
@@ -131,15 +95,27 @@ export class Query {
       "whereCriteriaDto": this.whereCriteria,
       "havingCriteriaDto": this.havingCriteriaDto,
       "orders": Object.fromEntries(serializeMap(this.orders)),
-      "limit": this.limit
+      "limit": this.limit,
+      "minify": this.minify
     }
   }
 }
 
 export class Table {
   joins: Array<Join> = []
+  name: string
+  subQuery: Query
 
-  constructor(public name: string) {
+  static from(name: string) {
+    const t = new Table()
+    t.name = name
+    return t
+  }
+
+  static fromSubQuery(subQuery: Query) {
+    const t = new Table()
+    t.subQuery = subQuery
+    return t
   }
 
   join(other: Table, type: JoinType, criteria: Criteria) {

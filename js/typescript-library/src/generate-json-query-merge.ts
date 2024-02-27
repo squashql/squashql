@@ -1,9 +1,10 @@
 import * as fs from "fs"
 import {TableField, tableFields} from "./field"
 import {avg, max, sum} from "./measure"
-import {JoinType, QueryMerge} from "./query"
+import {JoinType} from "./query"
 import {from} from "./queryBuilder"
 import {Action, QueryCacheParameter} from "./parameters"
+import {QueryMerge} from "./queryMerge"
 
 export function generateFromQueryMerge() {
   const fields = tableFields(["a", "b"])
@@ -21,5 +22,5 @@ export function generateFromQueryMerge() {
 
   const q = new QueryMerge(query1).join(query2, JoinType.LEFT).join(query3, JoinType.INNER).withParameter(new QueryCacheParameter(Action.NOT_USE))
   const data = JSON.stringify(q)
-  fs.writeFileSync('build-from-query-merge.json', data)
+  fs.writeFileSync('json/build-from-query-merge.json', data)
 }

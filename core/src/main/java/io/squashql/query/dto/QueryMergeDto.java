@@ -15,6 +15,7 @@ public class QueryMergeDto {
 
   public List<QueryDto> queries = new ArrayList<>();
   public List<JoinType> joinTypes = new ArrayList<>();
+  public Boolean minify;
 
   private QueryMergeDto(QueryDto q1) {
     this.queries.add(q1);

@@ -1,5 +1,5 @@
 export {
-  Query, Table, JoinType, QueryMerge,
+  Query, Table, JoinType,
 } from './query'
 
 export {
@@ -11,11 +11,13 @@ export {
 } from './order'
 
 export {
-  Measure, BasicMeasure, AggregatedMeasure, ExpressionMeasure, sum, min, max, avg, count, countDistinct,
+  Measure, BasicMeasure, AggregatedMeasure, ExpressionMeasure, ParametrizedMeasure,
+  sum, min, max, avg, count, countDistinct,
   sumIf, minIf, maxIf, avgIf, countIf, countDistinctIf,
   plus, minus, multiply, divide,
   integer, decimal,
-  comparisonMeasureWithPeriod, comparisonMeasureWithBucket, comparisonMeasureWithParent,
+  comparisonMeasureWithPeriod, comparisonMeasureWithinSameGroup, comparisonMeasureWithParent, comparisonMeasureWithGrandTotalAlongAncestors,
+  comparisonMeasureWithGrandTotal,
   totalCount,
   ComparisonMethod,
 } from './measure'
@@ -28,7 +30,7 @@ export {
 } from './conditions'
 
 export {
-  ColumnSet, BucketColumnSet,
+  ColumnSet, GroupColumnSet,
   Period, Month, Year, Quarter, Semester,
 } from './columnsets'
 
@@ -64,3 +66,4 @@ export {
 } from "./virtualtable"
 
 export * from "./dependencies"
+export {QueryMerge} from "./queryMerge"

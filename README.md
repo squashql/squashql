@@ -81,8 +81,7 @@ querier.executePivotQuery(query, pivotConfig)
 
 👉 https://jsfiddle.net/azeq/c6f9ox4u/
 
-Try the [tutorial](https://github.com/squashql/squashql-showcase/blob/main/TUTORIAL.md#pivot-table) to build your own
-pivot table.
+Try the [tutorial](https://github.com/squashql/squashql-showcase/blob/main/TUTORIAL.md#pivot-table) to build your own pivot table.
 
 ### Bucketing
 
@@ -170,29 +169,29 @@ at query time. In below example, it is defined as `continent_name -> country_nam
 
 ### Drilling across
 
-Query two or more fact tables and stitch together the results on shared columns.
+Query two or more fact tables and stitch together the results on shared columns. SquashQL will fill aggregated values with 
+null for entries that are not compatible with the result they come from.
 
 ```
 Result query 1                        Result query 2
-+-------------+---------------+       +-------------+-------------------+
-|     product | quantity sold |       |     product | quantity returned |
-+-------------+---------------+       +-------------+-------------------+
-| Grand Total |            54 |       | Grand Total |                 5 |
-|           A |            15 |       |           A |                 1 |
-|           B |            23 |       |           C |                 3 |
-|           C |            16 |       |           D |                 1 |
-+-------------+---------------+       +-------------+-------------------+
++-------------+---------------+       +-------------+-------------+-------------------+
+|     product | quantity sold |       |     product |      reason | quantity returned |
++-------------+---------------+       +-------------+-------------+-------------------+
+| Grand Total |            54 |       | Grand Total | Grand Total |                 5 |
+|           A |            15 |       |           A |       Total |                 1 |
+|           B |            23 |       |           A |   defective |                 1 |
+|           C |            16 |       |           C |       Total |                 3 |
++-------------+---------------+       |           C |    unwanted |                 3 |
+                                      |           D |       Total |                 1 |
+                                      |           D |    unwanted |                 1 |
+                                      +-------------+-------------+-------------------+
+```
 
 Drilling across result (with left join)
-+-------------+---------------+-------------------+
-|     product | quantity sold | quantity returned |
-+-------------+---------------+-------------------+
-| Grand Total |            54 |                 5 |
-|           A |            15 |                 1 |
-|           B |            23 |              null |
-|           C |            16 |                 3 |
-+-------------+---------------+-------------------+
-```
+
+<img src="documentation/assets/drilling-accross-minify.png" width="500">
+
+👉 https://jsfiddle.net/azeq/702gxqcb/
 
 N query results can be merged, `N >= 2`.
 

@@ -6,7 +6,7 @@ import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
-import io.squashql.query.dto.BucketColumnSetDto;
+import io.squashql.query.dto.GroupColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.type.TypedField;
@@ -18,6 +18,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.squashql.util.ListUtils.reorder;
@@ -191,13 +192,13 @@ public class TableUtils {
     Map<String, Comparator<?>> copy = new HashMap<>(comparatorByColumnName);
 
     columnSets.forEach(columnSet -> {
-      if (columnSet.getColumnSetKey() != ColumnSetKey.BUCKET) {
+      if (columnSet.getColumnSetKey() != ColumnSetKey.GROUP) {
         throw new IllegalArgumentException("Unexpected column set type " + columnSet);
       }
-      BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
+      GroupColumnSetDto cs = (GroupColumnSetDto) columnSet;
       // Remove from the map of comparators to use default one when only none is defined for regular column
-      copy.remove(cs.newField.name());
-      copy.remove(cs.field.name());
+      copy.remove(SqlUtils.squashqlExpression(cs.newField));
+      copy.remove(SqlUtils.squashqlExpression(cs.field));
     });
 
     List<Header> headers = table.headers;
@@ -221,9 +222,9 @@ public class TableUtils {
     int[] contextIndices = new int[args.size()];
     Arrays.fill(contextIndices, -1);
     for (ColumnSet columnSet : new HashSet<>(columnSets)) {
-      BucketColumnSetDto cs = (BucketColumnSetDto) columnSet;
+      GroupColumnSetDto cs = (GroupColumnSetDto) columnSet;
       // cs.field can appear multiple times in the table.
-      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(cs.newField.name()));
+      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(SqlUtils.squashqlExpression(cs.newField)));
     }
 
     int[] finalIndices = MultipleColumnsSorter.sort(args, comparators, contextIndices);
@@ -389,5 +390,46 @@ public class TableUtils {
       }
     }
     return groupingHeaders;
+  }
+
+  public static List<Map<String, Object>> generateCells(Table table, Boolean minify) {
+    Set<String> measuresWithNullValuesOnEntireColumn;
+    if (minify == null || minify) {
+      measuresWithNullValuesOnEntireColumn = new HashSet<>(table.measures().stream().map(CompiledMeasure::alias).collect(Collectors.toSet()));
+      Set<String> toRemoveFromCandidates = new HashSet<>();
+      for (String m : measuresWithNullValuesOnEntireColumn) {
+        List<Object> columnValues = table.getColumnValues(m);
+        for (Object columnValue : columnValues) {
+          if (columnValue != null) {
+            toRemoveFromCandidates.add(m);
+            break;
+          }
+        }
+      }
+      measuresWithNullValuesOnEntireColumn.removeAll(toRemoveFromCandidates);
+    } else {
+      measuresWithNullValuesOnEntireColumn = Collections.emptySet();
+    }
+
+    List<Map<String, Object>> cells = new ArrayList<>((int) table.count());
+    List<String> headerNames = table.headers().stream().map(Header::name).toList();
+    int[] sizeOfCell = new int[]{-1};
+    table.forEach(row -> {
+      if (sizeOfCell[0] == -1) {
+        sizeOfCell[0] = row.size() - measuresWithNullValuesOnEntireColumn.size();
+      }
+      Map<String, Object> cell = new HashMap<>(sizeOfCell[0]);
+      for (int i = 0; i < row.size(); i++) {
+        if (measuresWithNullValuesOnEntireColumn.contains(headerNames.get(i))) {
+          continue;
+        }
+        Object value = row.get(i);
+        if (!NullAndTotalComparator.isTotal(value)) {
+          cell.put(headerNames.get(i), value);
+        }
+      }
+      cells.add(cell);
+    });
+    return cells;
   }
 }
