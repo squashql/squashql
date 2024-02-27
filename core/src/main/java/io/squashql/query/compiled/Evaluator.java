@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
-import static io.squashql.query.ColumnSetKey.BUCKET;
+import static io.squashql.query.ColumnSetKey.GROUP;
 
 public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>, MeasureVisitor<Void> {
 
@@ -50,14 +50,14 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
   }
 
   @Override
-  public Void visit(CompiledComparisonMeasure cm) {
-    AComparisonExecutor executor;
-    if (cm.columnSetKey() == BUCKET) {
-      CompiledColumnSet cs = this.executionContext.columnSets().get(BUCKET);
+  public Void visit(CompiledComparisonMeasureReferencePosition cm) {
+    AComparisonExecutor<CompiledComparisonMeasureReferencePosition> executor;
+    if (cm.columnSetKey() == GROUP) {
+      CompiledColumnSet cs = this.executionContext.columnSets().get(GROUP);
       if (cs == null) {
-        throw new IllegalArgumentException(String.format("columnSet %s is not specified in the query but is used in a comparison measure: %s", BUCKET, cm));
+        throw new IllegalArgumentException(String.format("columnSet %s is not specified in the query but is used in a comparison measure: %s", GROUP, cm));
       }
-      executor = new BucketComparisonExecutor((CompiledBucketColumnSet) cs);
+      executor = new GroupComparisonExecutor((CompiledGroupColumnSet) cs);
     } else if (cm.period() != null) {
       for (TypedField field : cm.period().getTypedFields()) {
         if (!this.executionContext.columns().contains(field)) {
@@ -72,7 +72,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     }
 
     QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(
-            this.executionContext.columns(), this.executionContext.bucketColumns(), cm, this.executionContext.queryScope());
+            this.executionContext.columns(), this.executionContext.groupColumns(), cm, this.executionContext.queryScope());
     Table readFromTable = this.executionContext.tableByScope().get(readScope); // Table where to read the aggregates
     if (readFromTable.count() == this.executionContext.queryLimit()) {
       throw new RuntimeException("Too many rows, some intermediate results exceed the limit " + this.executionContext.queryLimit());
@@ -81,7 +81,18 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     return null;
   }
 
-  private static void executeComparator(CompiledComparisonMeasure cm, Table writeToTable, Table readFromTable, AComparisonExecutor executor) {
+  @Override
+  public Void visit(CompiledGrandTotalComparisonMeasure cm) {
+    QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonGrandTotalMeasure(this.executionContext.queryScope());
+    Table readFromTable = this.executionContext.tableByScope().get(readScope); // Table where to read the aggregates
+    if (readFromTable.count() == this.executionContext.queryLimit()) {
+      throw new RuntimeException("Too many rows, some intermediate results exceed the limit " + this.executionContext.queryLimit());
+    }
+    executeComparator(cm, this.executionContext.getWriteToTable(), readFromTable, new GrandTotalComparisonExecutor());
+    return null;
+  }
+
+  private static <T extends CompiledComparisonMeasure> void executeComparator(T cm, Table writeToTable, Table readFromTable, AComparisonExecutor<T> executor) {
     List<Object> agg = executor.compare(cm, writeToTable, readFromTable);
     Class<?> outputType = cm.comparisonOperator() != null ? UnknownType.class : BinaryOperations.getComparisonOutputType(cm.comparisonMethod(), writeToTable.getHeader(cm.measure()).type());
     Header header = new Header(cm.alias(), outputType, true);
@@ -132,7 +143,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
   @Override
   public Void visit(CompiledVectorAggMeasure measure) {
     // Retrieve the query scope use for the prefetch, the logic should be the same to retrieve the result.
-    QueryExecutor.QueryScope prefetchQueryScope = new PrefetchVisitor(this.executionContext.columns(), this.executionContext.bucketColumns(), this.executionContext.queryScope())
+    QueryExecutor.QueryScope prefetchQueryScope = new PrefetchVisitor(this.executionContext.columns(), this.executionContext.groupColumns(), this.executionContext.queryScope())
             .visit(measure)
             .keySet()
             .iterator()
@@ -146,7 +157,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
   @Override
   public Void visit(CompiledVectorTupleAggMeasure measure) {
     // Retrieve the query scope use for the prefetch, the logic should be the same to retrieve the result.
-    QueryExecutor.QueryScope prefetchQueryScope = new PrefetchVisitor(this.executionContext.columns(), this.executionContext.bucketColumns(), this.executionContext.queryScope())
+    QueryExecutor.QueryScope prefetchQueryScope = new PrefetchVisitor(this.executionContext.columns(), this.executionContext.groupColumns(), this.executionContext.queryScope())
             .visit(measure)
             .keySet()
             .iterator()
@@ -162,7 +173,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
       columnValues.add(readTable.getColumnValues(alias));
     }
 
-    List<Object> vectorValues = ListUtils.createListWithNulls((int) readTable.count());
+    List<Object> vectorValues = ListUtils.createListWithNulls((int) writeToTable.count());
     writeToTable.pointDictionary().forEach((point, index) -> {
       int position = readTable.pointDictionary().getPosition(point);
       if (position >= 0) {

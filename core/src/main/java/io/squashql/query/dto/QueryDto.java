@@ -24,8 +24,6 @@ public class QueryDto {
 
   public TableDto table;
 
-  public QueryDto subQuery;
-
   public List<VirtualTableDto> virtualTableDtos = new ArrayList<>();
 
   public List<Field> columns = new ArrayList<>();
@@ -58,6 +56,8 @@ public class QueryDto {
 
   public int limit = -1;
 
+  public Boolean minify;
+
   public QueryDto withColumn(Field column) {
     this.columns.add(column);
     return this;
@@ -89,7 +89,7 @@ public class QueryDto {
   }
 
   public QueryDto table(QueryDto subQuery) {
-    this.subQuery = subQuery;
+    table(new TableDto(subQuery));
     return this;
   }
 

@@ -36,6 +36,7 @@ export function generateFromQueryJoin() {
           .join(query3, JoinType.INNER)
           .orderBy(orders)
           .limit(12)
+  q.minify = true
   const data = JSON.stringify(q)
-  fs.writeFileSync('build-from-query-join.json', data)
+  fs.writeFileSync('json/build-from-query-join.json', data)
 }

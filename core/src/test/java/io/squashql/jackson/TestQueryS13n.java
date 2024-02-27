@@ -76,12 +76,12 @@ public class TestQueryS13n {
   }
 
   @Test
-  void testRoundTripBucketComparisonQuery() {
+  void testRoundTripGroupComparisonQuery() {
     String groupOfScenario = "Group of scenario";
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto(groupOfScenario, tableField(SCENARIO_FIELD_NAME))
-            .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
-            .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
-            .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
+    GroupColumnSetDto groupCS = new GroupColumnSetDto(groupOfScenario, tableField(SCENARIO_FIELD_NAME))
+            .withNewGroup("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
+            .withNewGroup("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
+            .withNewGroup("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
 
     AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
     ComparisonMeasureReferencePosition priceComp = new ComparisonMeasureReferencePosition(
@@ -92,11 +92,11 @@ public class TestQueryS13n {
                     tableField(SCENARIO_FIELD_NAME), "first",
                     tableField(groupOfScenario), "g"
             ),
-            ColumnSetKey.BUCKET);
+            ColumnSetKey.GROUP);
 
     var query = new QueryDto()
             .table("products")
-            .withColumnSet(ColumnSetKey.BUCKET, bucketCS)
+            .withColumnSet(ColumnSetKey.GROUP, groupCS)
             .withMeasure(priceComp)
             .withMeasure(price);
 

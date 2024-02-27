@@ -5,7 +5,7 @@ This is a quick introduction to SquashQL API. For an in-depth documentation, ple
 ## Regular query
 
 To execute a query. It accepts a json object built with the Typescript library and returns a JSON
-object representing the result table of the computation. The object returns is of type [QueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts#L53)
+object representing the result table of the computation. The object returns is of type [QueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts)
 
 ```typescript
 class Budget {
@@ -52,7 +52,7 @@ SquashQL brings the ability to execute any SQL queries and transform their resul
 
 To execute a query whose result will be enriched with totals and subtotals to be able to display the result as a pivot table.
 It accepts a json object built with the Typescript library and returns a JSON object representing the result table of the computation.
-The object returns is of type [PivotTableQueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts#L59).
+The object returns is of type [PivotTableQueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts).
 
 To enable the pivot table feature, a `PivotConfig` parameter needs to be pass to the `execute` method:
 ```typescript
@@ -98,7 +98,7 @@ querier.executePivotQuery(query, pivotConfig, true).then(r => console.log(r))
 
 To execute *Drilling across* query i.e. querying two fact tables. The two results are aligned by
 performing a sort-merge operation on the common attribute column headers.
-The object returns is of type [QueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts#L53).
+The object returns is of type [QueryResult](https://github.com/squashql/squashql/blob/main/js/typescript-library/src/querier.ts).
 
 ```typescript
 class MyTable {
@@ -127,7 +127,28 @@ const mySecondQuery = from(otherTable._name)
 querier.executeQuery(new QueryMerge(myFirstQuery, mySecondQuery)).then(response => console.log(response))
 ```
 
+Note the result of `QueryMerge` can also be displayed as a pivot table by using `querier.executePivotQuery()`. 
+
 Full documentation of [Drilling across in the dedicated page](./documentation/DRILLING-ACROSS.md).
+
+## Minify
+
+Minify is an option to remove columns that contain only null values from the final result. This attribute exists in the 
+following classes:
+
+- Query
+- QueryMerge
+- QueryJoin
+
+If not set, the default value is `true`. You can change it like this:
+
+```typescript
+const q: Query | QueryMerge | QueryJoin = ...
+q.minify = false
+```
+
+It is also useful when using `PivotTableQuery` and `PivotTableQueryMerge`. The attribute needs to be set to the desired value
+on the underlying query object: `PivotTableQuery#query` or `PivotTableQueryMerge#query`.
 
 ## Under the hood
 

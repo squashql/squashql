@@ -20,9 +20,9 @@ public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
     return qb;
   }
 
-  public static HasTable from(QueryDto subQuery) {
+  public static HasStartedBuildingTable from(QueryDto subQuery) {
     Query qb = new Query();
-    qb.queryDto.subQuery = subQuery;
+    qb.queryDto.table = new TableDto(subQuery);
     return qb;
   }
 

@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
@@ -22,9 +23,13 @@ import static io.squashql.query.database.QueryEngine.TOTAL;
 public abstract class ATestBucketing extends ABaseTestQuery {
 
   private final String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  private final String bigStoreName = "bigstore" + getClass().getSimpleName().toLowerCase();
   private final TableField ean = new TableField(this.storeName, "ean");
+  private final TableField bigEan = new TableField(this.bigStoreName, "ean");
   private final TableField shop = new TableField(this.storeName, "shop");
+  private final TableField bigShop = new TableField(this.bigStoreName, "shop");
   private final TableField unitPrice = new TableField(this.storeName, "unitPrice");
+  private final TableField bigUnitPrice = new TableField(this.bigStoreName, "unitPrice");
   private final TableField qtySold = new TableField(this.storeName, "qtySold");
   private final TableField kvi = new TableField(this.storeName, "kvi");
 
@@ -61,7 +66,13 @@ public abstract class ATestBucketing extends ABaseTestQuery {
     TableTypedField unitPrice = new TableTypedField(this.storeName, "unitPrice", double.class);
     TableTypedField qtySold = new TableTypedField(this.storeName, "qtySold", int.class);
     TableTypedField kvi = new TableTypedField(this.storeName, "kvi", double.class);
-    return Map.of(this.storeName, List.of(ean, shop, unitPrice, qtySold, kvi));
+
+    TableTypedField bigEan = new TableTypedField(this.bigStoreName, "ean", int.class);
+    TableTypedField bigShop = new TableTypedField(this.bigStoreName, "shop", String.class);
+    TableTypedField bigUnitPrice = new TableTypedField(this.bigStoreName, "unitPrice", double.class);
+    return Map.of(
+            this.storeName, List.of(ean, shop, unitPrice, qtySold, kvi),
+            this.bigStoreName, List.of(bigEan, bigShop, bigUnitPrice));
   }
 
   @Override
@@ -73,6 +84,14 @@ public abstract class ATestBucketing extends ABaseTestQuery {
       }
     }
     this.tm.load(this.storeName, tuples);
+
+    tuples.clear();
+    for (int shop = 0; shop < 10; shop++) {
+      for (int ean = 0; ean < 10; ean++) {
+        tuples.add(new Object[]{ean, String.valueOf(shop), (double) (ean + 1) * (shop + 1)});
+      }
+    }
+    this.tm.load(this.bigStoreName, tuples);
   }
 
   @Test
@@ -89,7 +108,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.shop.name(), this.bucket.name(), this.sales.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.shop), SqlUtils.squashqlExpression(this.bucket), this.sales.alias());
     Assertions.assertThat(result).containsExactly(
             List.of("0", "hypersensitive", 240d),
             List.of("0", "sensitive", 150d),
@@ -107,7 +126,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
             .build();
     result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.shop.name(), this.bucket.name(), this.sales.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.shop), SqlUtils.squashqlExpression(this.bucket), this.sales.alias());
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, GRAND_TOTAL, 900d),
             List.of("0", TOTAL, 450d),
@@ -134,7 +153,7 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.shop.name(), this.bucket.name(), this.sales.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.shop), SqlUtils.squashqlExpression(this.bucket), this.sales.alias());
     Assertions.assertThat(result).containsExactly(
             List.of("0", "hypersensitive", 240d),
             List.of("0", "sensitive", 150d),
@@ -163,10 +182,48 @@ public abstract class ATestBucketing extends ABaseTestQuery {
 
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.bucket.name(), this.category.name(), CountMeasure.INSTANCE.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.bucket), SqlUtils.squashqlExpression(this.category), CountMeasure.INSTANCE.alias());
     Assertions.assertThat(result).containsExactly(
             List.of("hypersensitive", "expensive", 6L),
             List.of("sensitive", "cheap", 6L),
             List.of("unsensitive", "cheap", 8L));
+  }
+
+  @Test
+  void testJoinVirtualTableOnSubQuery() {
+    Field shop = this.bigShop.as("shop_aliased");
+    QueryDto avgPrice = Query.from(this.bigStoreName)
+            .select(List.of(shop), List.of(avg("avg_price", this.bigUnitPrice)))
+            .build();
+
+    String priceTableStoreName = "priceTable";
+    TableField category = new TableField(priceTableStoreName, "category");
+    TableField min = new TableField(priceTableStoreName, "min");
+    TableField max = new TableField(priceTableStoreName, "max");
+    VirtualTableDto priceTable = new VirtualTableDto(
+            priceTableStoreName,
+            List.of(category.fieldName, min.fieldName, max.fieldName),
+            List.of(
+                    List.of("small", 0d, 17d),
+                    List.of("middle", 17d, 30d),
+                    List.of("high", 30d, 101d)
+            ));
+
+    CriteriaDto criteria = all(
+            criterion(new AliasedField("avg_price"), min, ConditionType.GE),
+            criterion(new AliasedField("avg_price"), max, ConditionType.LT));
+    QueryDto q = Query.from(avgPrice)
+            .join(priceTable, JoinType.INNER)
+            .on(criteria)
+            .select(List.of(category), List.of(CountMeasure.INSTANCE))
+            .build();
+
+    Table result = this.executor.executeQuery(q);
+    Assertions.assertThat(result.headers().stream().map(Header::name))
+            .containsExactly(SqlUtils.squashqlExpression(category), CountMeasure.INSTANCE.alias());
+    Assertions.assertThat(result).containsExactly(
+            List.of("high", 5L),
+            List.of("middle", 2L),
+            List.of("small", 3L));
   }
 }

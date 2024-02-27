@@ -21,7 +21,7 @@ import java.util.*;
 import java.util.function.IntConsumer;
 import java.util.stream.Collectors;
 
-import static io.squashql.query.ColumnSetKey.BUCKET;
+import static io.squashql.query.ColumnSetKey.GROUP;
 import static io.squashql.query.agg.AggregationFunction.GROUPING;
 import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUNT;
 
@@ -81,31 +81,40 @@ public class QueryExecutor {
     final QueryResolver resolver = result.getTwo();
     if (replaceTotalCellsAndOrderRows) {
       table = TableUtils.replaceTotalCellValues((ColumnarTable) table,
-              pivotTableQueryDto.rows.stream().map(Field::name).toList(),
-              pivotTableQueryDto.columns.stream().map(Field::name).toList());
+              pivotTableQueryDto.rows.stream().map(SqlUtils::squashqlExpression).toList(),
+              pivotTableQueryDto.columns.stream().map(SqlUtils::squashqlExpression).toList());
       table = TableUtils.orderRows((ColumnarTable) table, resolver.squashqlComparators(), resolver.getCompiledColumnSets().values(),
               resolver.useDefaultComparator());
     }
 
     List<String> values = pivotTableQueryDto.query.measures.stream().map(Measure::alias).toList();
-    return Tuples.pair(new PivotTable(table, pivotTableQueryDto.rows.stream().map(Field::name).toList(), pivotTableQueryDto.columns.stream().map(Field::name).toList(), values), resolver);
+    return Tuples.pair(new PivotTable(table,
+            pivotTableQueryDto.rows.stream().map(SqlUtils::squashqlExpression).toList(),
+            pivotTableQueryDto.columns.stream().map(SqlUtils::squashqlExpression).toList(), values),
+            resolver);
   }
 
   private static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
-    Set<Field> axes = new HashSet<>(context.rows);
-    axes.addAll(context.columns);
-    Set<Field> select = new HashSet<>(query.columns);
-    select.addAll(query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream()).collect(Collectors.toSet()));
+    Set<String> rowExpressions = context.rows.stream().map(SqlUtils::squashqlExpression).collect(Collectors.toSet());
+    Set<String> columnExpressions = context.columns.stream().map(SqlUtils::squashqlExpression).collect(Collectors.toSet());
+
+    Set<String> queryColumnExpressions = query.columns.stream().map(SqlUtils::squashqlExpression).collect(Collectors.toSet());
+    Set<String> queryColumnSetExpressions = query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream()).map(SqlUtils::squashqlExpression).collect(Collectors.toSet());
+
+    Set<String> axes = new HashSet<>(rowExpressions);
+    axes.addAll(columnExpressions);
+    Set<String> select = new HashSet<>(queryColumnExpressions);
+    select.addAll(queryColumnSetExpressions);
     axes.removeAll(select);
 
     if (!axes.isEmpty()) {
-      throw new IllegalArgumentException(axes.stream().map(Field::name).toList() + " on rows or columns by not in select. Please add those fields in select");
+      throw new IllegalArgumentException(axes + " on rows or columns by not in select. Please add those fields in select");
     }
-    axes = new HashSet<>(context.rows);
-    axes.addAll(context.columns);
+    axes = new HashSet<>(rowExpressions);
+    axes.addAll(columnExpressions);
     select.removeAll(axes);
     if (!select.isEmpty()) {
-      throw new IllegalArgumentException(select.stream().map(Field::name).toList() + " in select but not on rows or columns. Please add those fields on one axis");
+      throw new IllegalArgumentException(select + " in select but not on rows or columns. Please add those fields on one axis");
     }
 
     List<Field> rows = context.cleansedRows;
@@ -168,7 +177,7 @@ public class QueryExecutor {
 
     QueryResolver queryResolver = new QueryResolver(query, this.queryEngine.datastore().storesByName());
     DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
-            queryResolver.getColumns(), queryResolver.getBucketColumns(), queryResolver.getMeasures().values(), queryResolver.getScope());
+            queryResolver.getColumns(), queryResolver.getGroupColumns(), queryResolver.getMeasures().values(), queryResolver.getScope());
     // Compute what needs to be prefetched
     Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
     Map<QueryScope, Set<CompiledMeasure>> measuresByQueryScope = new HashMap<>();
@@ -222,11 +231,11 @@ public class QueryExecutor {
       tableByScope.put(scope, result);
     }
 
-    if (query.columnSets.containsKey(BUCKET)) {
+    if (query.columnSets.containsKey(GROUP)) {
       // Apply this as it modifies the "shape" of the result
-      BucketColumnSetDto columnSet = (BucketColumnSetDto) query.columnSets.get(BUCKET);
+      GroupColumnSetDto columnSet = (GroupColumnSetDto) query.columnSets.get(GROUP);
       // Reshape all results
-      tableByScope.replaceAll((scope, table) -> BucketerExecutor.bucket(table, columnSet));
+      tableByScope.replaceAll((scope, table) -> GrouperExecutor.group(table, columnSet));
     }
 
     // Here we take the global plan and execute the plans for a given scope one by one, in dependency order. The order
@@ -238,7 +247,7 @@ public class QueryExecutor {
         final ExecutionContext executionContext = new ExecutionContext(queryNode.queryScope,
                 tableByScope,
                 queryResolver.getColumns(),
-                queryResolver.getBucketColumns(),
+                queryResolver.getGroupColumns(),
                 queryResolver.getCompiledColumnSets(),
                 queryLimit);
         evaluator.accept(queryNode, executionContext);
@@ -280,11 +289,11 @@ public class QueryExecutor {
 
   private static DependencyGraph<QueryPlanNodeKey> computeDependencyGraph(
           List<TypedField> columns,
-          List<TypedField> bucketColumns,
+          List<TypedField> groupColumns,
           Collection<CompiledMeasure> measures,
           QueryScope queryScope) {
     GraphDependencyBuilder<QueryPlanNodeKey> builder = new GraphDependencyBuilder<>(nodeKey -> {
-      Map<QueryScope, Set<CompiledMeasure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(columns, bucketColumns, nodeKey.queryScope));
+      Map<QueryScope, Set<CompiledMeasure>> dependencies = nodeKey.measure.accept(new PrefetchVisitor(columns, groupColumns, nodeKey.queryScope));
       Set<QueryPlanNodeKey> set = new HashSet<>();
       for (Map.Entry<QueryScope, Set<CompiledMeasure>> entry : dependencies.entrySet()) {
         QueryScope key = entry.getKey();
@@ -351,7 +360,7 @@ public class QueryExecutor {
   public record ExecutionContext(QueryScope queryScope,
                                  Map<QueryScope, Table> tableByScope,
                                  List<TypedField> columns,
-                                 List<TypedField> bucketColumns,
+                                 List<TypedField> groupColumns,
                                  Map<ColumnSetKey, CompiledColumnSet> columnSets,
                                  int queryLimit) {
     public Table getWriteToTable() {
@@ -378,9 +387,9 @@ public class QueryExecutor {
     public static List<Field> cleanse(QueryDto query, List<Field> fields) {
       // ColumnSet is a special type of column that does not exist in the database but only in SquashQL. Totals can't be
       // computed. This is why it is removed from the axes.
-      ColumnSet columnSet = query.columnSets.get(BUCKET);
+      ColumnSet columnSet = query.columnSets.get(GROUP);
       if (columnSet != null) {
-        Field newField = ((BucketColumnSetDto) columnSet).newField;
+        Field newField = ((GroupColumnSetDto) columnSet).newField;
         if (fields.contains(newField)) {
           fields = new ArrayList<>(fields);
           fields.remove(newField);
@@ -391,8 +400,8 @@ public class QueryExecutor {
 
   }
 
-  public PivotTable executePivotQueryMerge(QueryMergeDto queryMerge, List<Field> rows, List<Field> columns, SquashQLUser user) {
-    return QueryMergeExecutor.executePivotQueryMerge(this, queryMerge, rows, columns, user);
+  public PivotTable executePivotQueryMerge(PivotTableQueryMergeDto pivotTableQueryMergeDto, SquashQLUser user) {
+    return QueryMergeExecutor.executePivotQueryMerge(this, pivotTableQueryMergeDto, user);
   }
 
   public Table executeQueryMerge(QueryMergeDto queryMerge, SquashQLUser user) {

@@ -5,6 +5,7 @@ import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.dto.CacheStatsDto;
+import io.squashql.query.dto.SimpleTableDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
@@ -114,6 +115,21 @@ public class TestUtil {
       }
     }
     return new ColumnarTable(headers, measures, values);
+  }
+
+  /**
+   * Do not work if the query contains totals or sub-totals.
+   */
+  public static SimpleTableDto cellsToTable(List<Map<String, Object>> cells, List<String> columns) {
+    List<List<Object>> rows = new ArrayList<>(columns.size());
+    for (Map<String, Object> cell : cells) {
+      List<Object> row = new ArrayList<>(columns.size());
+      for (String column : columns) {
+        row.add(cell.get(column));
+      }
+      rows.add(row);
+    }
+    return new SimpleTableDto(columns, rows);
   }
 
   @NoArgsConstructor // for Jackson

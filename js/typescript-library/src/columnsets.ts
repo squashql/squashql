@@ -7,12 +7,12 @@ export interface ColumnSet {
 }
 
 export enum ColumnSetKey {
-  BUCKET = "BUCKET",
+  GROUP = "GROUP",
 }
 
-export class BucketColumnSet implements ColumnSet {
-  readonly class: string = PACKAGE + "dto.BucketColumnSetDto"
-  readonly key: ColumnSetKey = ColumnSetKey.BUCKET
+export class GroupColumnSet implements ColumnSet {
+  readonly class: string = PACKAGE + "dto.GroupColumnSetDto"
+  readonly key: ColumnSetKey = ColumnSetKey.GROUP
 
   constructor(private newField: Field, private field: Field, private values: Map<string, Array<string>>) {
   }

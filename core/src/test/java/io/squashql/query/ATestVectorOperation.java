@@ -5,7 +5,10 @@ import io.squashql.list.Lists.DoubleList;
 import io.squashql.list.Lists.LocalDateList;
 import io.squashql.query.builder.Query;
 import io.squashql.query.compiled.CompiledExpressionMeasure;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.query.measure.ParametrizedMeasure;
+import io.squashql.query.measure.Repository;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
@@ -23,6 +26,7 @@ import static io.squashql.query.agg.AggregationFunction.ANY_VALUE;
 import static io.squashql.query.agg.AggregationFunction.SUM;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
+import static io.squashql.query.measure.Repository.VAR;
 import static io.squashql.util.ListUtils.reorder;
 import static java.util.Comparator.naturalOrder;
 
@@ -36,7 +40,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
   static final String competitorZ = "Z";
   static final int day = 5;
   static final int month = 4;
-  final String storeName = "mystore" + getClass().getSimpleName().toLowerCase();
+  final String storeName = "mystore";// + getClass().getSimpleName().toLowerCase();
   final Field competitor = new TableField(this.storeName, "competitor");
   final Field ean = new TableField(this.storeName, "ean");
   final Field price = new TableField(this.storeName, "price");
@@ -77,8 +81,68 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.competitor.name(), this.ean.name(), vector.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.competitor), SqlUtils.squashqlExpression(this.ean), vector.alias());
     assertVectorTuples(result, vector);
+  }
+
+  @Test
+  void testVar() {
+    Measure var = new ParametrizedMeasure(
+            "var 95",
+            VAR,
+            Map.of(
+                    "value", this.price,
+                    "date", this.date,
+                    "quantile", 0.95
+            ));
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(this.competitor, this.ean), List.of(var))
+            .rollup(List.of(this.competitor, this.ean))
+            .build();
+    Table result = this.executor.executeQuery(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of(GRAND_TOTAL, GRAND_TOTAL, List.of(LocalDate.of(2023, 1, 1), 6d)),
+            List.of(competitorX, TOTAL, List.of(LocalDate.of(2023, 1, 1), 2d)),
+            List.of(competitorX, productA, List.of(LocalDate.of(2023, 1, 1), 1d)),
+            List.of(competitorX, productB, List.of(LocalDate.of(2023, 1, 1), 1d)),
+            List.of(competitorY, TOTAL, List.of(LocalDate.of(2023, 1, 1), 2d)),
+            List.of(competitorY, productA, List.of(LocalDate.of(2023, 1, 1), 1d)),
+            List.of(competitorY, productB, List.of(LocalDate.of(2023, 1, 1), 1d)),
+            List.of(competitorZ, TOTAL, List.of(LocalDate.of(2023, 1, 1), 2d)),
+            List.of(competitorZ, productA, List.of(LocalDate.of(2023, 1, 1), 1d)),
+            List.of(competitorZ, productB, List.of(LocalDate.of(2023, 1, 1), 1d)));
+  }
+
+  // FIXME this will not work if where clause because in case of inc. var, filters should not be cleared
+  @Test
+  void testIncrementalVar() {
+    List<Field> fields = List.of(this.competitor, this.ean);
+
+    Measure incrementalVar = new ParametrizedMeasure("inc var",
+            Repository.INCREMENTAL_VAR, Map.of(
+            "value", this.price,
+            "date", this.date,
+            "quantile", 0.95,
+            "ancestors", fields
+    ));
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(fields, List.of(incrementalVar))
+            .rollup(fields)
+            .build();
+    Table result = this.executor.executeQuery(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of(GRAND_TOTAL, GRAND_TOTAL, 6d),
+            List.of(competitorX, TOTAL, 2d),
+            List.of(competitorX, productA, 1d),
+            List.of(competitorX, productB, 1d),
+            List.of(competitorY, TOTAL, 2d),
+            List.of(competitorY, productA, 1d),
+            List.of(competitorY, productB, 1d),
+            List.of(competitorZ, TOTAL, 2d),
+            List.of(competitorZ, productA, 1d),
+            List.of(competitorZ, productB, 1d));
   }
 
   @Test
@@ -106,12 +170,12 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
 
     // Create a new table with "fake" measures to be able to check the result
     ColumnarTable orderedTable = new ColumnarTable(
-            List.of(result.getHeader(this.competitor.name()), result.getHeader(this.ean.name()), new Header("orderedPrices", DoubleList.class, true), new Header("orderedDates", List.class, true)),
+            List.of(result.getHeader(SqlUtils.squashqlExpression(this.competitor)), result.getHeader(SqlUtils.squashqlExpression(this.ean)), new Header("orderedPrices", DoubleList.class, true), new Header("orderedDates", List.class, true)),
             Set.of(new CompiledExpressionMeasure("orderedPrices", ""), new CompiledExpressionMeasure("orderedDates", "")),
-            List.of(result.getColumnValues(this.competitor.name()), result.getColumnValues(this.ean.name()), orderedPricesList, orderedDatesList));
+            List.of(result.getColumnValues(SqlUtils.squashqlExpression(this.competitor)), result.getColumnValues(SqlUtils.squashqlExpression(this.ean)), orderedPricesList, orderedDatesList));
 
     Assertions.assertThat(orderedTable.headers().stream().map(Header::name))
-            .containsExactly(this.competitor.name(), this.ean.name(), "orderedPrices", "orderedDates");
+            .containsExactly(SqlUtils.squashqlExpression(this.competitor), SqlUtils.squashqlExpression(this.ean), "orderedPrices", "orderedDates");
     List<LocalDate> expectedLocalDates = new ArrayList<>();
     for (int d = 1; d < day; d++) {
       for (int m = 1; m < month; m++) {
@@ -161,7 +225,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result.headers().stream().map(Header::name))
-            .containsExactly(this.competitor.name(), this.ean.name(), vector.alias());
+            .containsExactly(SqlUtils.squashqlExpression(this.competitor), SqlUtils.squashqlExpression(this.ean), vector.alias());
     Assertions.assertThat(result).containsExactly(
             List.of(GRAND_TOTAL, GRAND_TOTAL, 54d),
             List.of(competitorX, TOTAL, 18d),

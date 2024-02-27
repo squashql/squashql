@@ -4,11 +4,10 @@ import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
-import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.LimitExceedException;
-import io.squashql.query.dto.QueryJoinDto;
 import io.squashql.spring.dataset.DatasetTestConfig;
+import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +23,8 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static io.squashql.query.Functions.*;
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.sum;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
@@ -63,7 +63,7 @@ public class QueryControllerTest {
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
-              Assertions.assertThat(queryResult.table.rows).containsExactlyInAnyOrder(
+              Assertions.assertThat(TestUtil.cellsToTable(queryResult.cells, queryResult.columns).rows).containsExactlyInAnyOrder(
                       List.of("MN & MDD up", "Nutella 250g", 110000d, 102000d, 1.0784313725490196),
                       List.of("MN & MDD up", "ITMella 250g", 110000d, 102000d, 1.0784313725490196),
 
@@ -79,7 +79,7 @@ public class QueryControllerTest {
                       List.of(MAIN_SCENARIO_NAME, "ITMella 250g", 100000d, 102000d, 0.9803921568627451d),
                       List.of(MAIN_SCENARIO_NAME, "Nutella 250g", 100000d, 102000d, 0.9803921568627451d));
 
-              Assertions.assertThat(queryResult.table.columns).containsExactly(
+              Assertions.assertThat(queryResult.columns).containsExactly(
                       SCENARIO_FIELD_NAME, "ean", "capdv", "capdv_concurrents", "indice_prix");
 
               Assertions.assertThat(queryResult.metadata).containsExactly(
@@ -138,10 +138,10 @@ public class QueryControllerTest {
 
   @Test
   void testScenarioGroupingQuery() throws Exception {
-    BucketColumnSetDto bucketCS = new BucketColumnSetDto("group", tableField(SCENARIO_FIELD_NAME))
-            .withNewBucket("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
-            .withNewBucket("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
-            .withNewBucket("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
+    GroupColumnSetDto groupCS = new GroupColumnSetDto("group", tableField(SCENARIO_FIELD_NAME))
+            .withNewGroup("group1", List.of(MAIN_SCENARIO_NAME, "MN up"))
+            .withNewGroup("group2", List.of(MAIN_SCENARIO_NAME, "MN & MDD up"))
+            .withNewGroup("group3", List.of(MAIN_SCENARIO_NAME, "MN up", "MN & MDD up"));
 
     Measure aggregatedMeasure = Functions.sum("capdv", "capdv");
     Measure indicePrix = new ExpressionMeasure(
@@ -152,13 +152,13 @@ public class QueryControllerTest {
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             aggregatedMeasure,
             Map.of(tableField(SCENARIO_FIELD_NAME), "s-1", tableField("group"), "g"),
-            ColumnSetKey.BUCKET);
+            ColumnSetKey.GROUP);
     ComparisonMeasureReferencePosition indicePrixDiff = new ComparisonMeasureReferencePosition(
             "indicePrixDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             indicePrix,
             Map.of(tableField(SCENARIO_FIELD_NAME), "s-1", tableField("group"), "g"),
-            ColumnSetKey.BUCKET);
+            ColumnSetKey.GROUP);
 
     var query = Query
             .from("our_prices")
@@ -166,7 +166,7 @@ public class QueryControllerTest {
             .on(criterion("our_prices" + ".pdv", "our_stores_their_stores" + ".our_store", ConditionType.EQ))
             .join("their_prices", JoinType.INNER)
             .on(criterion("their_prices" + ".competitor_concurrent_pdv", "our_stores_their_stores" + ".their_store", ConditionType.EQ))
-            .select_(List.of(bucketCS), List.of(aggregatedMeasureDiff, indicePrixDiff))
+            .select_(List.of(groupCS), List.of(aggregatedMeasureDiff, indicePrixDiff))
             .build();
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY)
@@ -180,7 +180,7 @@ public class QueryControllerTest {
               double baseValue = 0.9803921568627451d;
               double mnValue = 1.0294117647058822d;
               double mnmddValue = 1.0784313725490196d;
-              Assertions.assertThat(queryResult.table.rows).containsExactlyInAnyOrder(
+              Assertions.assertThat(TestUtil.cellsToTable(queryResult.cells, queryResult.columns).rows).containsExactlyInAnyOrder(
                       List.of("group1", MAIN_SCENARIO_NAME, 0d, 0d),
                       List.of("group1", "MN up", 10_000d, mnValue - baseValue),
                       List.of("group2", MAIN_SCENARIO_NAME, 0d, 0d),
@@ -188,7 +188,7 @@ public class QueryControllerTest {
                       List.of("group3", MAIN_SCENARIO_NAME, 0d, 0d),
                       List.of("group3", "MN up", 10_000d, mnValue - baseValue),
                       List.of("group3", "MN & MDD up", 10_000d, mnmddValue - mnValue));
-              Assertions.assertThat(queryResult.table.columns).containsExactly("group",
+              Assertions.assertThat(queryResult.columns).containsExactly("group",
                       SCENARIO_FIELD_NAME,
                       "aggregatedMeasureDiff",
                       "indicePrixDiff");
@@ -250,10 +250,10 @@ public class QueryControllerTest {
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
-              Assertions.assertThat(queryResult.table.rows).containsExactlyInAnyOrder(
+              Assertions.assertThat(TestUtil.cellsToTable(queryResult.cells, queryResult.columns).rows).containsExactlyInAnyOrder(
                       List.of("ITMella 250g", 102000d, 10200d),
                       List.of("Nutella 250g", 102000d, 10200d));
-              Assertions.assertThat(queryResult.table.columns).containsExactly("ean", "capdv-sum", "capdv-avg");
+              Assertions.assertThat(queryResult.columns).containsExactly("ean", "capdv-sum", "capdv-avg");
             });
   }
 
@@ -274,11 +274,11 @@ public class QueryControllerTest {
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               PivotTableQueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, PivotTableQueryResultDto.class);
-              Assertions.assertThat(queryResult.queryResult.table.rows).containsExactlyInAnyOrder(
-                      List.of(QueryEngine.GRAND_TOTAL, 102000d * 2, 10200d),
-                      List.of("ITMella 250g", 102000d, 10200d),
-                      List.of("Nutella 250g", 102000d, 10200d));
-              Assertions.assertThat(queryResult.queryResult.table.columns).containsExactly("ean", "capdv-sum", "capdv-avg");
+              List<Map<String, Object>> cells = List.of(
+                      Map.of("capdv-avg", 10200d, "capdv-sum", 102000d * 2),
+                      Map.of("ean", "ITMella 250g", "capdv-avg", 10200d, "capdv-sum", 102000d),
+                      Map.of("ean", "Nutella 250g", "capdv-avg", 10200d, "capdv-sum", 102000d));
+              Assertions.assertThat(queryResult.cells).isEqualTo(cells);
             });
   }
 
@@ -325,10 +325,10 @@ public class QueryControllerTest {
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
-              Assertions.assertThat(queryResult.table.rows).containsExactlyInAnyOrder(
+              Assertions.assertThat(TestUtil.cellsToTable(queryResult.cells, queryResult.columns).rows).containsExactlyInAnyOrder(
                       List.of("ITMella 250g", 102d, 29d),
                       List.of("Nutella 250g", 102d, 40d));
-              Assertions.assertThat(queryResult.table.columns).containsExactly("our_prices.ean", "price_sum", "competitor_sum");
+              Assertions.assertThat(queryResult.columns).containsExactly("our_prices.ean", "price_sum", "competitor_sum");
             });
   }
 }

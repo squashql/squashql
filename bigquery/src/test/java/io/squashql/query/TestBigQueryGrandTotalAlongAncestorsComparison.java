@@ -15,7 +15,7 @@ import static io.squashql.query.BigQueryTestUtil.PROJECT_ID;
 /**
  * Do not edit this class, it has been generated automatically by {@link io.squashql.template.BigQueryClassTemplateGenerator}.
  */
-public class TestBigQueryBucketComparison extends ATestBucketComparison {
+public class TestBigQueryGrandTotalAlongAncestorsComparison extends ATestGrandTotalAlongAncestorsComparison {
 
   @AfterAll
   void tearDown() {

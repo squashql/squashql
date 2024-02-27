@@ -6,7 +6,7 @@
 
   <groupId>io.squashql</groupId>
   <artifactId>squashql-parent</artifactId>
-  <version>1.7.4-SNAPSHOT</version>
+  <version>1.12.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>SquashQL</name>
@@ -58,7 +58,7 @@
     <logback.version>1.2.13</logback.version>
     <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
 
-    <duckdb.version>0.9.2</duckdb.version>
+    <duckdb.version>0.10.0</duckdb.version>
     <clickhouse.version>0.5.0</clickhouse.version>
     <spark.version>3.5.0</spark.version>
     <bigquery.version>26.29.0</bigquery.version>

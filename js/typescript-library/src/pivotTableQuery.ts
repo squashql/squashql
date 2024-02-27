@@ -1,5 +1,6 @@
-import {Query, QueryMerge} from "./query"
+import {Query} from "./query"
 import {Field} from "./field"
+import {QueryMerge} from "./queryMerge"
 
 export interface PivotTableQuery {
   query: Query

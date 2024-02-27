@@ -18,7 +18,7 @@ import static io.squashql.query.agg.AggregationFunction.*;
 public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<CompiledMeasure>>> {
 
   private final List<TypedField> columns;
-  private final List<TypedField> bucketColumns;
+  private final List<TypedField> groupColumns;
   private final QueryScope originalQueryScope;
 
   private Map<QueryScope, Set<CompiledMeasure>> empty() {
@@ -45,10 +45,18 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
   }
 
   @Override
-  public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledComparisonMeasure cmrp) {
-    QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.columns, this.bucketColumns, cmrp, this.originalQueryScope);
+  public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledComparisonMeasureReferencePosition cmrp) {
+    QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(this.columns, this.groupColumns, cmrp, this.originalQueryScope);
     Map<QueryScope, Set<CompiledMeasure>> result = new HashMap<>(Map.of(this.originalQueryScope, Set.of(cmrp.measure())));
     result.put(readScope, Set.of(cmrp.measure()));
+    return result;
+  }
+
+  @Override
+  public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledGrandTotalComparisonMeasure cgt) {
+    QueryScope readScope = MeasureUtils.getReadScopeComparisonGrandTotalMeasure(this.originalQueryScope);
+    Map<QueryScope, Set<CompiledMeasure>> result = new HashMap<>(Map.of(this.originalQueryScope, Set.of(cgt.measure())));
+    result.put(readScope, Set.of(cgt.measure()));
     return result;
   }
 
@@ -191,7 +199,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
       subQueryMeasures.forEach(subQuery::withMeasure);
 
       QueryScope topQueryScope = new QueryScope(
-              new NestedQueryTable(subQuery),
+              new NestedQueryTable(subQuery, Collections.emptyList()),
               topQuerySelectColumns,
               null, // the filter applied to the sub-query is enough
               this.originalQueryScope.havingCriteria(),

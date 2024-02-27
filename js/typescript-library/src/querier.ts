@@ -1,9 +1,10 @@
 import axios, {AxiosInstance} from "axios"
-import {Query, QueryMerge} from "./query"
+import {Query} from "./query"
 import {CreateAxiosDefaults} from "axios/index"
 import {PivotConfig, PivotTableQuery, PivotTableQueryMerge} from "./pivotTableQuery"
 import {Measure} from "./measure"
 import {QueryJoin} from "./queryJoin"
+import {QueryMerge} from "./queryMerge"
 
 export class Querier {
 
@@ -76,13 +77,14 @@ export function createPivotTableQueryMerge(query: QueryMerge, pivotConfig: Pivot
 }
 
 export interface QueryResult {
-  table: SimpleTable,
+  columns: Array<string>
+  cells: Array<Record<string, any>>,
   metadata: Array<MetadataItem>
   debug: any
 }
 
 export interface PivotTableQueryResult {
-  queryResult: QueryResult,
+  cells: Array<Record<string, any>>,
   rows: Array<string>
   columns: Array<string>
   values: Array<string>

@@ -8,7 +8,9 @@ public interface MeasureVisitor<R> {
 
   R visit(CompiledBinaryOperationMeasure measure);
 
-  R visit(CompiledComparisonMeasure measure);
+  R visit(CompiledComparisonMeasureReferencePosition measure);
+
+  R visit(CompiledGrandTotalComparisonMeasure compiledGrandTotalComparisonMeasure);
 
   R visit(CompiledDoubleConstantMeasure measure);
 
