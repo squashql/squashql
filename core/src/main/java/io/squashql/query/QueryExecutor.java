@@ -256,7 +256,7 @@ public class QueryExecutor {
 
   private static boolean canBeCached(CompiledMeasure measure, QueryScope scope) {
     // Make sure to never cache the grouping measures. It could cause issue in some cases.
-    if (generateGroupingMeasures(scope).values().contains(measure)) {
+    if (generateGroupingMeasures(scope).containsValue(measure)) {
       return false;
     }
     // In case of vectors, we can rely only on the alias of the measure.
@@ -395,7 +395,7 @@ public class QueryExecutor {
    * the value is the compiled measure.
    */
   public static Map<String, CompiledMeasure> generateGroupingMeasures(QueryScope queryScope) {
-    Map<String, CompiledMeasure> measures = new HashMap();
+    Map<String, CompiledMeasure> measures = new HashMap<>();
     List<TypedField> rollups = new ArrayList<>();
     rollups.addAll(queryScope.rollupColumns);
     rollups.addAll(queryScope.groupingSets

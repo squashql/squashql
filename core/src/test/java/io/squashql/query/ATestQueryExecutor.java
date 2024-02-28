@@ -526,7 +526,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of("s2", "cloth", 1L),
             List.of("s2", "drink", 1L));
 
-    query.orderBy(tableField("category"), OrderKeywordDto.DESC);
+    query.orderBy(tableField("category"), DESC);
     result = this.executor.executeQuery(query);
     // The order is enforced by the user on category, but we can't know the order of the scenario column, this is why
     // only the category column is checked
@@ -623,12 +623,24 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of("drink", 7.5d),
             List.of("food", 9d));
 
-    query.orderBy(tableField("p"), OrderKeywordDto.DESC);
+    query.orderBy(tableField("p"), DESC);
     result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
             List.of("cloth", 30d),
             List.of("food", 9d),
             List.of("drink", 7.5d));
+
+    // With AliasedField
+    query = Query
+            .from(this.storeName)
+            .select(tableFields(List.of("category")), List.of(sum("p", "price")))
+            .orderBy(new AliasedField("p"), ASC)
+            .build();
+    result = this.executor.executeQuery(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of("drink", 7.5d),
+            List.of("food", 9d),
+            List.of("cloth", 30d));
   }
 
   @Test
@@ -738,7 +750,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .from(this.storeName)
             .select(tableFields(List.of("category")), List.of(sum("p_sum", "price")))
             .rollup(tableFields(List.of("category")))
-            .orderBy(tableField("category"), OrderKeywordDto.DESC)
+            .orderBy(tableField("category"), DESC)
             .build();
 
     QueryDto query2 = Query
