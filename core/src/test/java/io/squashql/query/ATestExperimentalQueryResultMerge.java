@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.squashql.query.Functions.*;
+import static io.squashql.query.dto.OrderKeywordDto.DESC;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -108,6 +109,31 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
 
     result = this.executor.executeExperimentalQueryMerge(jq.limit(1)); // with limit
     Assertions.assertThat(result).containsExactly(List.of("A", "0", 1d, 10d));
+  }
+
+  @Test
+  void testOrderByMeasure() {
+    QueryDto queryL = Query
+            .from(this.storeA)
+            .select(List.of(this.category, this.idA), List.of(this.priceASum))
+            .build();
+
+    QueryDto queryR = Query
+            .from(this.storeB)
+            .select(List.of(this.idB), List.of(this.priceBSum))
+            .build();
+
+    QueryJoinDto jq = QueryJoinDto.from(queryL).join(queryR, JoinType.LEFT, criterion(this.idB, this.idA, ConditionType.EQ))
+            .orderBy(Map.of(new AliasedField(this.priceASum.alias()), new SimpleOrderDto(DESC)))
+            .limit(-1);
+    Table result = this.executor.executeExperimentalQueryMerge(jq);
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
+            .containsExactly(this.storeA + ".category", this.storeA + ".idA", "priceA", "priceB");
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList("B", "3", 4d, getDoubleNullJoinValue()),
+            List.of("B", "0", 3d, 10d),
+            List.of("A", "1", 2d, 20d),
+            List.of("A", "0", 1d, 10d));
   }
 
   @Test

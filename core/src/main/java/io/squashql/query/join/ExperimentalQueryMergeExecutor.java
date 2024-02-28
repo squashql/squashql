@@ -7,6 +7,7 @@ import io.squashql.query.database.*;
 import io.squashql.query.dto.*;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
+import io.squashql.type.AliasedTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
@@ -176,8 +177,7 @@ public class ExperimentalQueryMergeExecutor {
     }
 
     // The measures
-    for (int i = 0; i < holders.size(); i++) {
-      Holder holder = holders.get(i);
+    for (Holder holder : holders) {
       holder.query.measures.forEach(m -> selectSt.add(holder.queryRewriter.escapeAlias(m.alias())));
     }
 
@@ -185,14 +185,17 @@ public class ExperimentalQueryMergeExecutor {
 
     sb.append(joinSb);
 
-    addOrderBy(queryJoin.orders, sb, queryRewriter, selectedColumns, holders);
-    addLimit(queryLimit, sb);
-
     List<CompiledMeasure> measures = new ArrayList<>();
-    for (int i = 0; i < holders.size(); i++) {
-      Holder holder = holders.get(i);
-      holder.query.measures.forEach(measure -> measures.add(holder.queryResolver.getMeasures().get(measure)));
+    Set<String> measureAliases = new HashSet<>();
+    for (Holder holder : holders) {
+      holder.query.measures.forEach(measure -> {
+        measures.add(holder.queryResolver.getMeasures().get(measure));
+        measureAliases.add(measure.alias());
+      });
     }
+
+    addOrderBy(queryJoin.orders, sb, queryRewriter, selectedColumns, measureAliases, holders);
+    addLimit(queryLimit, sb);
 
     return Tuples.triple(sb.toString(), selectedColumns, measures);
   }
@@ -278,7 +281,8 @@ public class ExperimentalQueryMergeExecutor {
     }
   }
 
-  public static void addOrderBy(Map<Field, OrderDto> orders, StringBuilder sb, QueryRewriter queryRewriter, List<TypedField> selectedColumns, List<Holder> holders) {
+  public static void addOrderBy(Map<Field, OrderDto> orders, StringBuilder sb, QueryRewriter queryRewriter,
+                                List<TypedField> selectedColumns, Set<String> measureAliases, List<Holder> holders) {
     if (orders != null && !orders.isEmpty()) {
       sb.append(" order by ");
       List<String> orderList = new ArrayList<>();
@@ -286,12 +290,17 @@ public class ExperimentalQueryMergeExecutor {
         Field key = e.getKey();
         TypedField typedField = null;
         Holder h = null;
-        if (key.alias() != null) {
-          // Rely on the alias
-          for (TypedField selectedColumn : selectedColumns) {
-            if (key.alias().equals(selectedColumn.alias())) {
-              typedField = selectedColumn;
-              break;
+        String alias = key.alias();
+        if (alias != null) {
+          if (measureAliases.contains(alias)) {
+            typedField = new AliasedTypedField(alias);
+          } else {
+            // Rely on the alias
+            for (TypedField selectedColumn : selectedColumns) {
+              if (alias.equals(selectedColumn.alias())) {
+                typedField = selectedColumn;
+                break;
+              }
             }
           }
         } else {
@@ -324,7 +333,12 @@ public class ExperimentalQueryMergeExecutor {
 
         String orderByField = h == null ? queryRewriter.aliasOrFullExpression(typedField)
                 : SqlUtils.getFieldFullName(h.queryRewriter.cteName(h.cteTableName), h.queryRewriter.fieldName(getFieldName(typedField)));
-        orderList.add(orderByField + " nulls last");
+        OrderDto orderDto = e.getValue();
+        if (orderDto instanceof SimpleOrderDto sod) {
+          orderList.add(orderByField + " " + sod.order.name() + " nulls last");
+        } else {
+          throw new IllegalArgumentException("only ASC or DESC ordering is supporting");
+        }
       }
       sb.append(String.join(", ", orderList));
     }
@@ -361,13 +375,6 @@ public class ExperimentalQueryMergeExecutor {
     } else {
       return null;
     }
-  }
-
-  private static String replaceTableNameByCteNameIfNotNull(Holder holder, String s) {
-    if (holder.originalTableName != null) {
-      s = s.replace(holder.queryRewriter.tableName(holder.originalTableName), holder.queryRewriter.cteName(holder.cteTableName));
-    }
-    return s;
   }
 
   private static Holder getHolderOrigin(List<Holder> holders, Field field) {
