@@ -27,16 +27,19 @@ public final class ParametrizedMeasureFactory {
    * Called by reflection.
    */
   public static Measure var(String alias, Field value, Field date, double quantile) {
+    // The function that computes the VaR for a given quantile
     Function<List<Object>, Object> transformer = (tuple) -> {
-      Lists.DoubleList prices = (Lists.DoubleList) tuple.get(0);
+      // Read the vector of pnl
+      Lists.DoubleList values = (Lists.DoubleList) tuple.get(0);
+      // Read the vector of date
       Lists.LocalDateList dates = (Lists.LocalDateList) tuple.get(1);
-      int[] sort = MultipleColumnsSorter.sort(Collections.singletonList(prices), Collections.singletonList(naturalOrder()), new int[0]);
-
-      List<Double> orderedPrices = reorder(prices, sort);
+      // Order the both vectors by value ascending order
+      int[] sort = MultipleColumnsSorter.sort(Collections.singletonList(values), Collections.singletonList(naturalOrder()), new int[0]);
+      List<Double> orderedValues = reorder(values, sort);
       List<LocalDate> orderedDates = reorder(dates, sort);
-      var index = (int) Math.floor(orderedPrices.size() * (1 - quantile));
+      var index = (int) Math.floor(orderedValues.size() * (1 - quantile));
       var quantileDate = orderedDates.get(index);
-      var quantilePnL = orderedPrices.get(index);
+      var quantilePnL = orderedValues.get(index);
 
       return List.of(quantileDate, quantilePnL);
     };
