@@ -1026,7 +1026,7 @@ The second argument is the name of the existing column whose values will be grou
 The third argument is the defined groups to be used for the comparison. The orders of the keys (group1, group2....)
 and in the arrays are important.
 
-We can use the `GroupColumnSet` as follows
+We can use the `GroupColumnSet` as follows, as the second argument of `select`
 ```typescript
 import {GroupColumnSet, ExpressionMeasure, from} from "@squashql/squashql-js"
 
@@ -1077,17 +1077,19 @@ const values = new Map(Object.entries({
 const saleprice = new TableField("myTable.saleprice")
 const loavessold = new TableField("myTable.loavessold")
 const revenue = sum("revenue", saleprice.multiply(loavessold))
-const columnSet = new GroupColumnSet(new TableField("group"), new TableField("myTable.scenario"), groups)
+const scenario = new TableField("myTable.scenario")
+const columnSet = new GroupColumnSet(new TableField("group"), scenario, groups)
 const revenueComparison = comparisonMeasureWithinSameGroup("revenueComparison",
         ComparisonMethod.ABSOLUTE_DIFFERENCE,
         revenue,
-        new Map([[new TableField("myTable.scenario"), "s-1"]]))
+        new Map([[scenario, "s-1"]]))
 const query = from("myTable")
         .select([], [columnSet], [revenue, revenueComparison])
         .build()
 ```
 
-`{"scenario": "s-1"}`, the "translation" or "shift" operator indicates that each value is to be compared with the one for the previous scenario (in the current group).
+`{scenario: "s-1"}`, the "translation" or "shift" operator indicates that each value is to be compared with the one for 
+the previous scenario (in the current group).
 This is why order in `values` is important. Usage of `first` keyword is also possible (see time-series comparison).
 
 Result
@@ -1106,6 +1108,25 @@ Result
 | group4 |       s2 |   300.0 |             -72.0 |
 | group4 |       s3 |   350.0 |              50.0 |
 +--------+----------+---------+-------------------+
+```
+
+Note: if only one group is specified, such as:
+```typescript
+const values = new Map(Object.entries({
+  "group4": ["s1", "s2", "s3"],
+}))
+```
+
+the additional column named "group" is not added to the final result.
+
+```
++----------+---------+-------------------+
+| scenario | revenue | revenueComparison |
++----------+---------+-------------------+
+|       s1 |   372.0 |              12.0 |
+|       s2 |   300.0 |             -72.0 |
+|       s3 |   350.0 |              50.0 |
++----------+---------+-------------------+
 ```
 
 ## Parameters
