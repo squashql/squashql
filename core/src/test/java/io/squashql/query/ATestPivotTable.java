@@ -3,6 +3,7 @@ package io.squashql.query;
 import com.google.common.collect.ImmutableList;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.table.PivotTable;
 import io.squashql.table.Table;
@@ -29,7 +30,7 @@ import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestPivotTable extends ABaseTestQuery {
 
-  private final String storeSpending = "storespending" + ATestPivotTable.class.getSimpleName().toLowerCase();
+  private final String storeSpending = "myStore";// FIXME + ATestPivotTable.class.getSimpleName().toLowerCase();
   private final String storePopulation = "storepopulation" + ATestPivotTable.class.getSimpleName().toLowerCase();
   private final TableField city = new TableField(this.storeSpending, "city");
   private final TableField country = new TableField(this.storeSpending, "country");
@@ -470,6 +471,105 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     +-------------+---------------------+-------------+-------------+--------+------------+--------+------------+--------+------------+
      */
     verifyResults(testInfo, query1, query2, JoinType.INNER, tableFields(List.of("group", "spending category")), tableFields(List.of("country")));
+  }
+
+  @Test
+  void testOneColumnEachAxisFullNameHideTotalsOnRows() {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(criterion(this.city, in("la", "london"))) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.city), List.of(amount))
+            .build();
+    List<Field> rows = List.of(this.city);
+    List<Field> columns = List.of(this.spendingCategory);
+
+    // Hide city on rows.
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns, List.of(this.city)));
+
+    Assertions.assertThat(result.table).containsExactly(
+            List.of(GRAND_TOTAL, "la", 13d),
+            List.of(GRAND_TOTAL, "london", 9d),
+
+            List.of("extra", "la", 4d),
+            List.of("extra", "london", 5d),
+
+            List.of("minimum expenditure", "la", 9d),
+            List.of("minimum expenditure", "london", 4d)
+    );
+
+    Assertions.assertThat(result.pivotTableCells).containsExactly(
+            List.of(SqlUtils.squashqlExpression(this.spendingCategory), GRAND_TOTAL, "extra", "minimum expenditure"),
+            List.of(SqlUtils.squashqlExpression(this.city), "amount", "amount", "amount"),
+            List.of("la", 13d, 4d, 9d),
+            List.of("london", 9d, 5d, 4d)
+    );
+  }
+
+  @Test
+  void testOneColumnEachAxisFullNameHideTotalsOnColumns() {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(criterion(this.city, in("la", "london"))) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.city), List.of(amount))
+            .build();
+    List<Field> rows = List.of(this.city);
+    List<Field> columns = List.of(this.spendingCategory);
+
+    // Hide city on rows.
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns, List.of(this.spendingCategory)));
+
+    Assertions.assertThat(result.table).containsExactly(
+            List.of("extra", GRAND_TOTAL, 9d),
+            List.of("extra", "la", 4d),
+            List.of("extra", "london", 5d),
+
+            List.of("minimum expenditure", GRAND_TOTAL, 13d),
+            List.of("minimum expenditure", "la", 9d),
+            List.of("minimum expenditure", "london", 4d)
+    );
+
+    Assertions.assertThat(result.pivotTableCells).containsExactly(
+            List.of(SqlUtils.squashqlExpression(this.spendingCategory), "extra", "minimum expenditure"),
+            List.of(SqlUtils.squashqlExpression(this.city), "amount", "amount"),
+            List.of(GRAND_TOTAL, 9d, 13d),
+            List.of("la", 4d, 9d),
+            List.of("london", 5d, 4d)
+    );
+  }
+
+  @Test
+  void testOneColumnEachAxisFullNameHideTotalsOnColumnsAndRows() {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(criterion(this.city, in("la", "london"))) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.city), List.of(amount))
+            .build();
+    List<Field> rows = List.of(this.city);
+    List<Field> columns = List.of(this.spendingCategory);
+
+    // Hide city on rows.
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns, List.of(this.spendingCategory, this.city)));
+
+    Assertions.assertThat(result.table).containsExactly(
+            List.of("extra", "la", 4d),
+            List.of("extra", "london", 5d),
+
+            List.of("minimum expenditure", "la", 9d),
+            List.of("minimum expenditure", "london", 4d)
+    );
+
+    Assertions.assertThat(result.pivotTableCells).containsExactly(
+            List.of(SqlUtils.squashqlExpression(this.spendingCategory), "extra", "minimum expenditure"),
+            List.of(SqlUtils.squashqlExpression(this.city), "amount", "amount"),
+            List.of("la", 4d, 9d),
+            List.of("london", 5d, 4d)
+    );
   }
 
   private void verifyResults(TestInfo testInfo, QueryDto query, List<String> rows, List<String> columns) {

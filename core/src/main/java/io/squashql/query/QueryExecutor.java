@@ -108,7 +108,7 @@ public class QueryExecutor {
     List<Field> columns = context.cleansedColumns;
     List<List<Field>> groupingSets = new ArrayList<>();
     // GT use an empty list instead of list of size 1 with an empty string because could cause issue later on with FieldSupplier
-    groupingSets.add(List.of());
+    groupingSets.add(Collections.emptyList());
     // Rows
     for (int i = rows.size(); i >= 1; i--) {
       groupingSets.add(rows.subList(0, i));
@@ -128,8 +128,23 @@ public class QueryExecutor {
       }
     }
 
+    // FIXME
+    Set<Set<Field>> groupingSetWithHideTotals = new HashSet<>();
+    for (List<Field> groupingSet : groupingSets) {
+      Set<Field> g = new HashSet<>(groupingSet);
+      g.addAll(context.hideTotals);
+      groupingSetWithHideTotals.add(g);
+    }
+    // FIXME
+
     QueryDto deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), QueryDto.class);
-    deepCopy.groupingSets = groupingSets;
+    List<List<Field>> list = new ArrayList<>();
+    for (Set<Field> groupingSet : groupingSetWithHideTotals) {
+      ArrayList<Field> fields = new ArrayList<>(groupingSet);
+      list.add(fields);
+    }
+    //    deepCopy.groupingSets = groupingSets;
+    deepCopy.groupingSets = list;
     return deepCopy;
   }
 
@@ -359,8 +374,10 @@ public class QueryExecutor {
     private final List<Field> cleansedRows;
     private final List<Field> columns;
     private final List<Field> cleansedColumns;
+    private final List<Field> hideTotals;
 
     public PivotTableContext(PivotTableQueryDto pivotTableQueryDto) {
+      this.hideTotals = pivotTableQueryDto.hideTotals == null ? Collections.emptyList() : pivotTableQueryDto.hideTotals;
       this.rows = pivotTableQueryDto.rows;
       this.cleansedRows = cleanse(pivotTableQueryDto.query, pivotTableQueryDto.rows);
       this.columns = pivotTableQueryDto.columns;
