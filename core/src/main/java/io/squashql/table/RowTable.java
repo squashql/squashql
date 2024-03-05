@@ -31,6 +31,11 @@ public class RowTable implements Table {
   }
 
   @Override
+  public void removeColumn(String column) {
+    throwNotSupportedException();
+  }
+
+  @Override
   public List<Object> getColumn(int columnIndex) {
     throwNotSupportedException();
     return null;

@@ -11,10 +11,9 @@ import java.util.function.Supplier;
 
 public class ColumnarTable implements Table {
 
+  public final Supplier<ObjectArrayDictionary> pointDictionary;
   protected final List<Header> headers;
   protected final Set<CompiledMeasure> measures;
-
-  public final Supplier<ObjectArrayDictionary> pointDictionary;
   protected final List<List<Object>> values;
 
   public ColumnarTable(List<Header> headers, Set<CompiledMeasure> measures, List<List<Object>> values) {
@@ -56,6 +55,7 @@ public class ColumnarTable implements Table {
    * BE CAREFUL !! This method assumes this table and the table from passed in arguments have the same headers
    * {@code Header#isMeasure == false} in the same order.
    */
+  @Override
   public void transferAggregates(Table from, CompiledMeasure measure) {
     if (this.headers.stream().filter(h -> !h.isMeasure()).count() !=
             from.headers().stream().filter(h -> !h.isMeasure()).count()) {
@@ -82,6 +82,16 @@ public class ColumnarTable implements Table {
     } else {
       throw new IllegalArgumentException();
     }
+  }
+
+  @Override
+  public void removeColumn(String column) {
+    int index = columnIndex(column);
+    Header header = this.headers.remove(index);
+    if (header.isMeasure()) {
+      this.measures.removeIf(m -> m.alias().equals(header.name()));
+    }
+    this.values.remove(index);
   }
 
   @Override
