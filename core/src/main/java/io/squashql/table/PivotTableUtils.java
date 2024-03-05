@@ -56,7 +56,7 @@ public final class PivotTableUtils {
         for (int j = 0; j < colIndices.length; j++) {
           buffer[colIndices[j]] = headerColumns.get(j).get(i * values.size());
         }
-        int position = ((ColumnarTable) table).pointDictionary.get().getPosition(buffer);
+        int position = table.pointDictionary().getPosition(buffer);
 
         for (String value : values) {
           r.add(position >= 0 ? table.getColumnValues(value).get(position) : null);

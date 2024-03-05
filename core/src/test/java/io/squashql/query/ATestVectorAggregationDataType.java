@@ -89,7 +89,7 @@ public abstract class ATestVectorAggregationDataType extends ABaseTestQuery {
     Assertions.assertThat(header.type()).isEqualTo(expectedType);
     List<Object> aggregateValues = result.getColumnValues(vectorMeasure.alias());
     for (int i = 0; i < points.size(); i++) {
-      ObjectArrayDictionary dictionary = result.pointDictionary.get();
+      ObjectArrayDictionary dictionary = result.pointDictionary();
       int position = dictionary.getPosition(points.get(i).toArray());
       List<?> actual = (List<?>) aggregateValues.get(position);
       // SORT to have a deterministic comparison

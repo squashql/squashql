@@ -27,11 +27,15 @@ import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestGroupComparison extends ABaseTestQuery {
 
-  protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  private static final String groupOfScenario = "Group of scenario";
+  private final String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  private final TableField ean = new TableField(this.storeName, "ean");
+  private final TableField category = new TableField(this.storeName, "category");
+  private final TableField price = new TableField(this.storeName, "price");
+  private final TableField qty = new TableField(this.storeName, "quantity");
+  private final TableField scenario = new TableField(this.storeName, SCENARIO_FIELD_NAME);
 
-  protected String groupOfScenario = "Group of scenario";
-
-  protected GroupColumnSetDto groupCS = new GroupColumnSetDto(this.groupOfScenario, tableField(SCENARIO_FIELD_NAME))
+  protected GroupColumnSetDto groupCS = new GroupColumnSetDto(groupOfScenario, tableField(SCENARIO_FIELD_NAME))
           .withNewGroup("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
           .withNewGroup("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
           .withNewGroup("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
@@ -70,7 +74,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
   @ValueSource(booleans = {true, false})
   void testAbsoluteDifferenceWithFirst(boolean fullName) {
     Field scenario = fullName ? new TableField(this.storeName, SCENARIO_FIELD_NAME) : new TableField(SCENARIO_FIELD_NAME);
-    GroupColumnSetDto group = new GroupColumnSetDto(this.groupOfScenario, scenario)
+    GroupColumnSetDto group = new GroupColumnSetDto(groupOfScenario, scenario)
             .withNewGroup("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
             .withNewGroup("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
             .withNewGroup("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
@@ -82,7 +86,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
             price,
             Map.of(
                     scenario, AComparisonExecutor.REF_POS_FIRST,
-                    tableField(this.groupOfScenario), "g"
+                    tableField(groupOfScenario), "g"
             ),
             ColumnSetKey.GROUP);
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
@@ -92,7 +96,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
             quantity,
             Map.of(
                     scenario, AComparisonExecutor.REF_POS_FIRST,
-                    tableField(this.groupOfScenario), "g"
+                    tableField(groupOfScenario), "g"
             ),
             ColumnSetKey.GROUP);
 
@@ -103,7 +107,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
 
     Table dataset = this.executor.executeQuery(query);
     Assertions.assertThat(dataset.headers().stream().map(Header::name)).containsExactly(
-            this.groupOfScenario, fullName ? SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME) : SCENARIO_FIELD_NAME,
+            groupOfScenario, fullName ? SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME) : SCENARIO_FIELD_NAME,
             "priceDiff", "p",
             "quantityDiff", "q");
     Assertions.assertThat(dataset).containsExactlyInAnyOrder(
@@ -137,7 +141,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
             price,
             Map.of(
                     tableField(SCENARIO_FIELD_NAME), "s-1",
-                    tableField(this.groupOfScenario), "g"
+                    tableField(groupOfScenario), "g"
             ),
             ColumnSetKey.GROUP);
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
@@ -145,7 +149,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
             "quantityDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
-            Map.of(tableField(SCENARIO_FIELD_NAME), "s-1", tableField(this.groupOfScenario), "g"),
+            Map.of(tableField(SCENARIO_FIELD_NAME), "s-1", tableField(groupOfScenario), "g"),
             ColumnSetKey.GROUP);
 
     var query = new QueryDto()
@@ -158,7 +162,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
 
     Table dataset = this.executor.executeQuery(query);
     Assertions.assertThat(dataset.headers().stream().map(Header::name)).containsExactly(
-            this.groupOfScenario, SCENARIO_FIELD_NAME,
+            groupOfScenario, SCENARIO_FIELD_NAME,
             "priceDiff", "p",
             "quantityDiff", "q");
     Assertions.assertThat(dataset).containsExactlyInAnyOrder(
@@ -180,7 +184,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
             price,
             Map.of(
                     tableField(SCENARIO_FIELD_NAME), AComparisonExecutor.REF_POS_FIRST,
-                    tableField(this.groupOfScenario), "g"
+                    tableField(groupOfScenario), "g"
             ),
             ColumnSetKey.GROUP);
     AggregatedMeasure quantity = new AggregatedMeasure("q", "quantity", "sum");
@@ -190,7 +194,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
             quantity,
             Map.of(
                     tableField(SCENARIO_FIELD_NAME), AComparisonExecutor.REF_POS_FIRST,
-                    tableField(this.groupOfScenario), "g"
+                    tableField(groupOfScenario), "g"
             ),
             ColumnSetKey.GROUP);
 
@@ -204,7 +208,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
 
     Table dataset = this.executor.executeQuery(query);
     Assertions.assertThat(dataset.headers().stream().map(Header::name)).containsExactly(
-            this.groupOfScenario, SCENARIO_FIELD_NAME,
+            groupOfScenario, SCENARIO_FIELD_NAME,
             "priceDiff", "p",
             "quantityDiff", "q");
     Assertions.assertThat(dataset).containsExactlyInAnyOrder(
@@ -220,7 +224,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
   @Test
   void testOrderIsPreserved() {
     // The following order should be respected even if columns are ordered by default.
-    GroupColumnSetDto groupCS = new GroupColumnSetDto(this.groupOfScenario, tableField(SCENARIO_FIELD_NAME))
+    GroupColumnSetDto groupCS = new GroupColumnSetDto(groupOfScenario, tableField(SCENARIO_FIELD_NAME))
             .withNewGroup("B", List.of("s1", MAIN_SCENARIO_NAME))
             .withNewGroup("A", List.of("s2", MAIN_SCENARIO_NAME, "s1"))
             .withNewGroup("C", List.of(MAIN_SCENARIO_NAME, "s2", "s1"));
@@ -232,7 +236,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
 
     Table dataset = this.executor.executeQuery(query);
     Assertions.assertThat(dataset.headers().stream().map(Header::name))
-            .containsExactly(this.groupOfScenario, SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
+            .containsExactly(groupOfScenario, SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
     Assertions.assertThat(dataset).containsExactly(
             List.of("B", "s1", 3l),
             List.of("B", MAIN_SCENARIO_NAME, 3l),
@@ -247,7 +251,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
   @Test
   void testOrderIsPreservedAndNaturallyOrderOnOtherColumns() {
     // The following order should be respected even if columns are ordered by default.
-    GroupColumnSetDto groupCS = new GroupColumnSetDto(this.groupOfScenario, tableField(SCENARIO_FIELD_NAME))
+    GroupColumnSetDto groupCS = new GroupColumnSetDto(groupOfScenario, tableField(SCENARIO_FIELD_NAME))
             .withNewGroup("B", List.of("s1", MAIN_SCENARIO_NAME))
             .withNewGroup("A", List.of("s2", MAIN_SCENARIO_NAME));
 
@@ -278,7 +282,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
   @Test
   void testTotal() {
     // The following order should be respected even if columns are ordered by default.
-    GroupColumnSetDto groupCS = new GroupColumnSetDto(this.groupOfScenario, tableField(SCENARIO_FIELD_NAME))
+    GroupColumnSetDto groupCS = new GroupColumnSetDto(groupOfScenario, tableField(SCENARIO_FIELD_NAME))
             .withNewGroup("B", List.of("s1", MAIN_SCENARIO_NAME))
             .withNewGroup("A", List.of("s2", MAIN_SCENARIO_NAME, "s1"))
             .withNewGroup("C", List.of(MAIN_SCENARIO_NAME, "s2", "s1"));
@@ -291,7 +295,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
 
     Table dataset = this.executor.executeQuery(query);
     Assertions.assertThat(dataset.headers().stream().map(Header::name))
-            .containsExactly(this.groupOfScenario, SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
+            .containsExactly(groupOfScenario, SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
     Assertions.assertThat(dataset).containsExactly(
             List.of("B", "s1", 3l),
             List.of("B", MAIN_SCENARIO_NAME, 3l),
@@ -301,5 +305,34 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
             List.of("C", MAIN_SCENARIO_NAME, 3l),
             List.of("C", "s2", 3l),
             List.of("C", "s1", 3l));
+  }
+
+  @Test
+  void testAbsoluteDifferenceWithPreviousSingleGroup() {
+    GroupColumnSetDto group = new GroupColumnSetDto(groupOfScenario, this.scenario)
+            .withNewGroup("whatever", List.of(MAIN_SCENARIO_NAME, "s1", "s2")); // Name of the group is not important when single group
+
+    AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
+    ComparisonMeasureReferencePosition priceComp = new ComparisonMeasureReferencePosition(
+            "priceDiff",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            price,
+            Map.of(this.scenario, "s-1"),
+            ColumnSetKey.GROUP);
+
+    var query = Query
+            .from(this.storeName)
+            .select_(List.of(group), List.of(priceComp, price))
+            .build();
+
+    Table dataset = this.executor.executeQuery(query);
+    Assertions.assertThat(dataset.headers().stream().map(Header::name)).containsExactly(
+            SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME),
+            "priceDiff",
+            "p");
+    Assertions.assertThat(dataset).containsExactlyInAnyOrder(
+            List.of("base", 0d, 15d),
+            List.of("s1", 2d, 17d),
+            List.of("s2", -2.5d, 14.5d));
   }
 }

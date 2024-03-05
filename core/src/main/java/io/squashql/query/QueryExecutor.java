@@ -251,6 +251,14 @@ public class QueryExecutor {
             .hitCount(stats.hitCount)
             .evictionCount(stats.evictionCount)
             .missCount(stats.missCount);
+
+    if (query.columnSets.containsKey(GROUP)) {
+      GroupColumnSetDto columnSet = (GroupColumnSetDto) query.columnSets.get(GROUP);
+      if (columnSet.values.size() == 1) { // only one group, no need to keep the additional column
+        result.removeColumn(SqlUtils.squashqlExpression(columnSet.newField));
+      }
+    }
+
     return result;
   }
 

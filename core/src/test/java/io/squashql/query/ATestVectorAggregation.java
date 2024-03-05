@@ -422,7 +422,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
   private void assertVectorValues(ColumnarTable result, Measure vectorMeasure, List<List<Object>> points, List<List<Number>> expectedVectors) {
     List<Object> aggregateValues = result.getColumnValues(vectorMeasure.alias());
     for (int i = 0; i < points.size(); i++) {
-      ObjectArrayDictionary dictionary = result.pointDictionary.get();
+      ObjectArrayDictionary dictionary = result.pointDictionary();
       int position = dictionary.getPosition(points.get(i).toArray());
       Object actual = aggregateValues.get(position);
       // SORT to have a deterministic comparison
@@ -435,7 +435,7 @@ public abstract class ATestVectorAggregation extends ABaseTestQuery {
   private void assertValues(ColumnarTable result, Measure otherMeasure, List<List<Object>> points, List<Number> expectedValues) {
     List<Object> aggregateValues = result.getColumnValues(otherMeasure.alias());
     for (int i = 0; i < points.size(); i++) {
-      ObjectArrayDictionary dictionary = result.pointDictionary.get();
+      ObjectArrayDictionary dictionary = result.pointDictionary();
       int position = dictionary.getPosition(points.get(i).toArray());
       Object actual = aggregateValues.get(position);
       Assertions.assertThat(actual).isEqualTo(expectedValues.get(i));
