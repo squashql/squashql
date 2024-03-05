@@ -31,14 +31,14 @@ public class TableUtils {
     return toString(null, rows, null, rowElementPrinters, predicate);
   }
 
-  public static String toString(List<? extends Object> columns,
+  public static String toString(List<?> columns,
                                 Iterable<List<Object>> rows,
                                 Function<Object, String> columnElementPrinters,
                                 Function<Object, String> rowElementPrinters) {
     return toString(columns, rows, columnElementPrinters, rowElementPrinters, __ -> false);
   }
 
-  public static String toString(List<? extends Object> columns,
+  public static String toString(List<?> columns,
                                 Iterable<List<Object>> rows,
                                 Function<Object, String> columnElementPrinters,
                                 Function<Object, String> rowElementPrinters,
@@ -201,7 +201,7 @@ public class TableUtils {
       copy.remove(SqlUtils.squashqlExpression(cs.field));
     });
 
-    List<Header> headers = table.headers;
+    List<Header> headers = table.headers();
     for (Header header : headers) {
       String headerName = header.name();
       Comparator<?> queryComp = comparatorByColumnName.get(headerName);
@@ -230,11 +230,11 @@ public class TableUtils {
     int[] finalIndices = MultipleColumnsSorter.sort(args, comparators, contextIndices);
 
     List<List<Object>> values = new ArrayList<>();
-    for (List<Object> value : table.values) {
+    for (List<Object> value : table.getColumns()) {
       values.add(reorder(value, finalIndices));
     }
 
-    return new ColumnarTable(headers, table.measures, values);
+    return new ColumnarTable(headers, table.measures(), values);
   }
 
   /**
@@ -253,11 +253,11 @@ public class TableUtils {
     boolean[] lazilyCreated = new boolean[1];
     Supplier<Table> finalTable = Suppliers.memoize(() -> {
       List<List<Object>> newValues = new ArrayList<>();
-      for (int i = 0; i < table.headers.size(); i++) {
+      for (int i = 0; i < table.headers().size(); i++) {
         newValues.add(new ArrayList<>(table.getColumn(i)));
       }
       lazilyCreated[0] = true;
-      return new ColumnarTable(table.headers, table.measures, newValues);
+      return new ColumnarTable(table.headers(), table.measures(), newValues);
     });
 
     for (int rowIndex = 0; rowIndex < table.count(); rowIndex++) {
