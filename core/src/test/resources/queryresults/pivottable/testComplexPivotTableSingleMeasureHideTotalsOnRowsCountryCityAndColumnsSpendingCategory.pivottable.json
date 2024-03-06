@@ -1,15 +1,15 @@
 [
   [
-    "myStore.spending category",
-    "myStore.spending category",
-    "myStore.spending category",
+    "storespendingatestpivottable.spending category",
+    "storespendingatestpivottable.spending category",
+    "storespendingatestpivottable.spending category",
     "extra",
     "minimum expenditure"
   ],
   [
-    "myStore.continent",
-    "myStore.country",
-    "myStore.city",
+    "storespendingatestpivottable.continent",
+    "storespendingatestpivottable.country",
+    "storespendingatestpivottable.city",
     "amount",
     "amount"
   ],

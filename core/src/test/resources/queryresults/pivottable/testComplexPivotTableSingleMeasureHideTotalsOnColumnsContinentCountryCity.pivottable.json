@@ -1,24 +1,24 @@
 [
   [
-    "myStore.continent",
+    "storespendingatestpivottable.continent",
     "eu",
     "eu",
     "eu"
   ],
   [
-    "myStore.country",
+    "storespendingatestpivottable.country",
     "france",
     "france",
     "uk"
   ],
   [
-    "myStore.city",
+    "storespendingatestpivottable.city",
     "lyon",
     "paris",
     "london"
   ],
   [
-    "myStore.spending category",
+    "storespendingatestpivottable.spending category",
     "amount",
     "amount",
     "amount"

@@ -66,22 +66,22 @@
   ],
   "headers": [
     {
-      "name": "myStore.spending category",
+      "name": "storespendingatestpivottable.spending category",
       "type": "java.lang.String",
       "isMeasure": false
     },
     {
-      "name": "myStore.continent",
+      "name": "storespendingatestpivottable.continent",
       "type": "java.lang.String",
       "isMeasure": false
     },
     {
-      "name": "myStore.country",
+      "name": "storespendingatestpivottable.country",
       "type": "java.lang.String",
       "isMeasure": false
     },
     {
-      "name": "myStore.city",
+      "name": "storespendingatestpivottable.city",
       "type": "java.lang.String",
       "isMeasure": false
     },
