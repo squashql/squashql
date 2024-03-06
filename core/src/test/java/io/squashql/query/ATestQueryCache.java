@@ -513,10 +513,10 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(), List.of(category, ean)));
     assertCacheStats(2, base); // same as the previous
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(ean), List.of(category)));
-    assertCacheStats(2, (base = base + 2));
+    assertCacheStats(4, base); // Same as the first query but row and category are reversed
     // Same as the first query
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category), List.of(ean)));
-    assertCacheStats(4, base);
+    assertCacheStats(6, base);
   }
 
   @Test

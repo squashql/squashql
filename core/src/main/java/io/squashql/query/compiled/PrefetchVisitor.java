@@ -157,7 +157,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
 
       String vectorAxisAlias = safeColumnAlias(SqlUtils.squashqlExpression(vectorAxis));
       List<TypedField> subQueryRollupColumns = new ArrayList<>();
-      List<List<TypedField>> subQueryGroupingSets = new ArrayList<>();
+      Set<Set<TypedField>> subQueryGroupingSets = new HashSet<>();
       subQuerySelectColumns.add(vectorAxis.as(vectorAxisAlias));// it will end up in the group by (See SqlTranslator) if rollup or in the grouping sets
 
       if (!this.originalQueryScope.rollupColumns().isEmpty()) {
@@ -166,8 +166,8 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
           subQueryRollupColumns.add(r.as(safeColumnAlias(SqlUtils.squashqlExpression(r))));
         }
       } else if (!this.originalQueryScope.groupingSets().isEmpty()) {
-        for (List<TypedField> groupingSet : this.originalQueryScope.groupingSets()) {
-          List<TypedField> copy = new ArrayList<>();
+        for (Set<TypedField> groupingSet : this.originalQueryScope.groupingSets()) {
+          Set<TypedField> copy = new HashSet<>();
           for (TypedField r : groupingSet) {
             // Here we can choose any alias but for debugging purpose, we create one from the expression.
             copy.add(r.as(safeColumnAlias(SqlUtils.squashqlExpression(r))));
@@ -203,7 +203,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
               null, // the filter applied to the sub-query is enough
               this.originalQueryScope.havingCriteria(),
               Collections.emptyList(), // remove rollup, it has been computed in the subquery
-              Collections.emptyList(),
+              Collections.emptySet(),
               this.originalQueryScope.cteRecordTables(),
               this.originalQueryScope.limit());
 

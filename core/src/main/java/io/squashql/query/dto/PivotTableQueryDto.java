@@ -17,4 +17,11 @@ public class PivotTableQueryDto {
   public QueryDto query;
   public List<Field> rows;
   public List<Field> columns;
+  public List<Field> hideTotals;
+
+  public PivotTableQueryDto(QueryDto query, List<Field> rows, List<Field> columns) {
+    this.query = query;
+    this.rows = rows;
+    this.columns = columns;
+  }
 }

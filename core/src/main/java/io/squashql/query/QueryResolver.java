@@ -163,7 +163,7 @@ public class QueryResolver {
     final List<TypedField> combinedColumns = Stream.concat(this.columns.stream(), columnSets.stream()).toList();
 
     List<TypedField> rollupColumns = query.rollupColumns.stream().map(this::resolveField).toList();
-    List<List<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(this::resolveField).toList()).toList();
+    Set<Set<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(this::resolveField).collect(Collectors.toSet())).collect(Collectors.toSet());
     return new QueryExecutor.QueryScope(
             compileTable(query.table),
             combinedColumns,
@@ -196,7 +196,7 @@ public class QueryResolver {
             whereCriteria,
             havingCriteria,
             Collections.emptyList(),
-            Collections.emptyList(),
+            Collections.emptySet(),
             subQuery.limit);
     this.subQueryMeasures.values().forEach(query::withMeasure);
     return query;

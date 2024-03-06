@@ -1,6 +1,5 @@
 package io.squashql.query;
 
-import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.compiled.*;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
@@ -8,10 +7,8 @@ import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.query.join.ExperimentalQueryMergeExecutor;
 import io.squashql.query.parameter.QueryCacheParameter;
-import io.squashql.table.ColumnarTable;
-import io.squashql.table.PivotTable;
-import io.squashql.table.Table;
-import io.squashql.table.TableUtils;
+import io.squashql.table.*;
+import io.squashql.table.PivotTableUtils.PivotTableContext;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +20,7 @@ import java.util.stream.Collectors;
 import static io.squashql.query.ColumnSetKey.GROUP;
 import static io.squashql.query.agg.AggregationFunction.GROUPING;
 import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUNT;
+import static io.squashql.table.PivotTableUtils.prepareQuery;
 
 @Slf4j
 public class QueryExecutor {
@@ -79,58 +77,6 @@ public class QueryExecutor {
             pivotTableQueryDto.rows.stream().map(SqlUtils::squashqlExpression).toList(),
             pivotTableQueryDto.columns.stream().map(SqlUtils::squashqlExpression).toList(),
             values);
-  }
-
-  private static QueryDto prepareQuery(QueryDto query, PivotTableContext context) {
-    Set<String> rowExpressions = context.rows.stream().map(SqlUtils::squashqlExpression).collect(Collectors.toSet());
-    Set<String> columnExpressions = context.columns.stream().map(SqlUtils::squashqlExpression).collect(Collectors.toSet());
-
-    Set<String> queryColumnExpressions = query.columns.stream().map(SqlUtils::squashqlExpression).collect(Collectors.toSet());
-    Set<String> queryColumnSetExpressions = query.columnSets.values().stream().flatMap(cs -> cs.getNewColumns().stream()).map(SqlUtils::squashqlExpression).collect(Collectors.toSet());
-
-    Set<String> axes = new HashSet<>(rowExpressions);
-    axes.addAll(columnExpressions);
-    Set<String> select = new HashSet<>(queryColumnExpressions);
-    select.addAll(queryColumnSetExpressions);
-    axes.removeAll(select);
-
-    if (!axes.isEmpty()) {
-      throw new IllegalArgumentException(axes + " on rows or columns by not in select. Please add those fields in select");
-    }
-    axes = new HashSet<>(rowExpressions);
-    axes.addAll(columnExpressions);
-    select.removeAll(axes);
-    if (!select.isEmpty()) {
-      throw new IllegalArgumentException(select + " in select but not on rows or columns. Please add those fields on one axis");
-    }
-
-    List<Field> rows = context.cleansedRows;
-    List<Field> columns = context.cleansedColumns;
-    List<List<Field>> groupingSets = new ArrayList<>();
-    // GT use an empty list instead of list of size 1 with an empty string because could cause issue later on with FieldSupplier
-    groupingSets.add(List.of());
-    // Rows
-    for (int i = rows.size(); i >= 1; i--) {
-      groupingSets.add(rows.subList(0, i));
-    }
-
-    // Cols
-    for (int i = columns.size(); i >= 1; i--) {
-      groupingSets.add(columns.subList(0, i));
-    }
-
-    // all combinations
-    for (int i = rows.size(); i >= 1; i--) {
-      for (int j = columns.size(); j >= 1; j--) {
-        List<Field> all = new ArrayList<>(rows.subList(0, i));
-        all.addAll(columns.subList(0, j));
-        groupingSets.add(all);
-      }
-    }
-
-    QueryDto deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), QueryDto.class);
-    deepCopy.groupingSets = groupingSets;
-    return deepCopy;
   }
 
   public Table executeRaw(String rawSqlQuery) {
@@ -303,7 +249,7 @@ public class QueryExecutor {
                            CompiledCriteria whereCriteria,
                            CompiledCriteria havingCriteria,
                            List<TypedField> rollupColumns,
-                           List<List<TypedField>> groupingSets,
+                           Set<Set<TypedField>> groupingSets,
                            List<CteRecordTable> cteRecordTables,
                            int limit) {
 
@@ -349,38 +295,6 @@ public class QueryExecutor {
     public Table getWriteToTable() {
       return this.tableByScope.get(this.queryScope);
     }
-  }
-
-  /**
-   * This object is temporary until BigQuery supports the grouping sets. See <a href="https://issuetracker.google.com/issues/35905909">issue</a>
-   */
-  private static class PivotTableContext {
-    private final List<Field> rows;
-    private final List<Field> cleansedRows;
-    private final List<Field> columns;
-    private final List<Field> cleansedColumns;
-
-    public PivotTableContext(PivotTableQueryDto pivotTableQueryDto) {
-      this.rows = pivotTableQueryDto.rows;
-      this.cleansedRows = cleanse(pivotTableQueryDto.query, pivotTableQueryDto.rows);
-      this.columns = pivotTableQueryDto.columns;
-      this.cleansedColumns = cleanse(pivotTableQueryDto.query, pivotTableQueryDto.columns);
-    }
-
-    public static List<Field> cleanse(QueryDto query, List<Field> fields) {
-      // ColumnSet is a special type of column that does not exist in the database but only in SquashQL. Totals can't be
-      // computed. This is why it is removed from the axes.
-      ColumnSet columnSet = query.columnSets.get(GROUP);
-      if (columnSet != null) {
-        Field newField = ((GroupColumnSetDto) columnSet).newField;
-        if (fields.contains(newField)) {
-          fields = new ArrayList<>(fields);
-          fields.remove(newField);
-        }
-      }
-      return fields;
-    }
-
   }
 
   public PivotTable executePivotQueryMerge(PivotTableQueryMergeDto pivotTableQueryMergeDto, SquashQLUser user) {

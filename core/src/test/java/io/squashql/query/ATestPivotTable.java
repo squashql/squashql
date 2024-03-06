@@ -2,7 +2,9 @@ package io.squashql.query;
 
 import com.google.common.collect.ImmutableList;
 import io.squashql.TestClass;
+import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.builder.Query;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.table.PivotTable;
 import io.squashql.table.Table;
@@ -18,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.Functions.*;
@@ -40,6 +43,16 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
   private final TableField population = new TableField(this.storePopulation, "population");
   private final TableField countryPop = new TableField(this.storePopulation, "country");
   private final TableField continentPop = new TableField(this.storePopulation, "continent");
+
+  /**
+   * For debugging purpose
+   */
+  private final Consumer<PivotTable> consumer = pivotTable -> {
+    pivotTable.show();
+    pivotTable.table.show();
+    System.out.println(TestUtil.tableToJson(pivotTable.table));
+    System.out.println(JacksonUtil.serialize(pivotTable.pivotTableCells));
+  };
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
@@ -131,7 +144,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
 
     QueryDto query = Query
             .from(this.storeSpending)
-            .where(criterion("city", in("la", "london"))) // to reduce size of the output
+            .where(criterion(this.city, in("la", "london"))) // to reduce size of the output
             .select(tableFields(List.of("spending category", "city")), List.of(amount))
             .build();
     List<Field> rows = tableFields(List.of("city"));
@@ -208,8 +221,8 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeSpending)
             .where(all(
-                    criterion("city", in("paris", "lyon", "london")),
-                    criterion("country", in("france", "uk"))
+                    criterion(this.city, in("paris", "lyon", "london")),
+                    criterion(this.country, in("france", "uk"))
             )) // to reduce size of the output
             .select(tableFields(List.of("spending category", "spending subcategory", "country", "city")), measures)
             .build();
@@ -472,6 +485,398 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     verifyResults(testInfo, query1, query2, JoinType.INNER, tableFields(List.of("group", "spending category")), tableFields(List.of("country")));
   }
 
+  @Test
+  void testOneColumnEachAxisFullNameHideTotalsOnRows() {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(criterion(this.city, in("la", "london"))) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.city), List.of(amount))
+            .build();
+    List<Field> rows = List.of(this.city);
+    List<Field> columns = List.of(this.spendingCategory);
+
+    // Hide city on rows.
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns, List.of(this.city)));
+
+    Assertions.assertThat(result.table).containsExactly(
+            List.of(GRAND_TOTAL, "la", 13d),
+            List.of(GRAND_TOTAL, "london", 9d),
+
+            List.of("extra", "la", 4d),
+            List.of("extra", "london", 5d),
+
+            List.of("minimum expenditure", "la", 9d),
+            List.of("minimum expenditure", "london", 4d)
+    );
+
+    Assertions.assertThat(result.pivotTableCells).containsExactly(
+            List.of(SqlUtils.squashqlExpression(this.spendingCategory), GRAND_TOTAL, "extra", "minimum expenditure"),
+            List.of(SqlUtils.squashqlExpression(this.city), "amount", "amount", "amount"),
+            List.of("la", 13d, 4d, 9d),
+            List.of("london", 9d, 5d, 4d)
+    );
+  }
+
+  @Test
+  void testOneColumnEachAxisFullNameHideTotalsOnColumns() {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(criterion(this.city, in("la", "london"))) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.city), List.of(amount))
+            .build();
+    List<Field> rows = List.of(this.city);
+    List<Field> columns = List.of(this.spendingCategory);
+
+    // Hide city on rows.
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns, List.of(this.spendingCategory)));
+
+    Assertions.assertThat(result.table).containsExactly(
+            List.of("extra", GRAND_TOTAL, 9d),
+            List.of("extra", "la", 4d),
+            List.of("extra", "london", 5d),
+
+            List.of("minimum expenditure", GRAND_TOTAL, 13d),
+            List.of("minimum expenditure", "la", 9d),
+            List.of("minimum expenditure", "london", 4d)
+    );
+
+    Assertions.assertThat(result.pivotTableCells).containsExactly(
+            List.of(SqlUtils.squashqlExpression(this.spendingCategory), "extra", "minimum expenditure"),
+            List.of(SqlUtils.squashqlExpression(this.city), "amount", "amount"),
+            List.of(GRAND_TOTAL, 9d, 13d),
+            List.of("la", 4d, 9d),
+            List.of("london", 5d, 4d)
+    );
+  }
+
+  @Test
+  void testOneColumnEachAxisFullNameHideTotalsOnColumnsAndRows() {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(criterion(this.city, in("la", "london"))) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.city), List.of(amount))
+            .build();
+    List<Field> rows = List.of(this.city);
+    List<Field> columns = List.of(this.spendingCategory);
+
+    // Hide city on rows.
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns, List.of(this.spendingCategory, this.city)));
+
+    Assertions.assertThat(result.table).containsExactly(
+            List.of("extra", "la", 4d),
+            List.of("extra", "london", 5d),
+
+            List.of("minimum expenditure", "la", 9d),
+            List.of("minimum expenditure", "london", 4d)
+    );
+
+    Assertions.assertThat(result.pivotTableCells).containsExactly(
+            List.of(SqlUtils.squashqlExpression(this.spendingCategory), "extra", "minimum expenditure"),
+            List.of(SqlUtils.squashqlExpression(this.city), "amount", "amount"),
+            List.of("la", 4d, 9d),
+            List.of("london", 5d, 4d)
+    );
+  }
+
+  @Test
+  void testComplexPivotTableSingleMeasureHideTotalsOnRowsContinentCountryCity(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    List<Measure> measures = List.of(amount);
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(all(
+                    criterion(this.city, in("paris", "lyon", "london")),
+                    criterion(this.country, in("france", "uk"))
+            )) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.continent, this.country, this.city), measures)
+            .build();
+    List<Field> rows = List.of(this.continent, this.country, this.city);
+    List<Field> columns = List.of(this.spendingCategory);
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns,
+            List.of(this.city, this.country, this.continent)
+    ));
+    verifyResults(testInfo, result);
+  }
+
+  @Test
+  void testComplexPivotTableSingleMeasureHideTotalsOnRowsContinentCountry(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    List<Measure> measures = List.of(amount);
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(all(
+                    criterion(this.city, in("paris", "lyon", "london")),
+                    criterion(this.country, in("france", "uk"))
+            )) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.continent, this.country, this.city), measures)
+            .build();
+    List<Field> rows = List.of(this.continent, this.country, this.city);
+    List<Field> columns = List.of(this.spendingCategory);
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns,
+            List.of(this.country, this.continent)
+    ));
+    verifyResults(testInfo, result);
+  }
+
+  @Test
+  void testComplexPivotTableSingleMeasureHideTotalsOnRowsContinent(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    List<Measure> measures = List.of(amount);
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(all(
+                    criterion(this.city, in("paris", "lyon", "london")),
+                    criterion(this.country, in("france", "uk"))
+            )) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.continent, this.country, this.city), measures)
+            .build();
+    List<Field> rows = List.of(this.continent, this.country, this.city);
+    List<Field> columns = List.of(this.spendingCategory);
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns,
+            List.of(this.continent)
+    ));
+    verifyResults(testInfo, result);
+  }
+
+  @Test
+  void testComplexPivotTableSingleMeasureHideTotalsOnColumnsContinentCountryCity(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    List<Measure> measures = List.of(amount);
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(all(
+                    criterion(this.city, in("paris", "lyon", "london")),
+                    criterion(this.country, in("france", "uk"))
+            )) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.continent, this.country, this.city), measures)
+            .build();
+    List<Field> columns = List.of(this.continent, this.country, this.city);
+    List<Field> rows = List.of(this.spendingCategory);
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns,
+            List.of(this.city, this.country, this.continent)
+    ));
+    verifyResults(testInfo, result);
+  }
+
+  @Test
+  void testComplexPivotTableSingleMeasureHideTotalsOnColumnsContinentCountry(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    List<Measure> measures = List.of(amount);
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(all(
+                    criterion(this.city, in("paris", "lyon", "london")),
+                    criterion(this.country, in("france", "uk"))
+            )) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.continent, this.country, this.city), measures)
+            .build();
+    List<Field> columns = List.of(this.continent, this.country, this.city);
+    List<Field> rows = List.of(this.spendingCategory);
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns,
+            List.of(this.country, this.continent)
+    ));
+    verifyResults(testInfo, result);
+  }
+
+  @Test
+  void testComplexPivotTableSingleMeasureHideTotalsOnColumnsContinent(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    List<Measure> measures = List.of(amount);
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(all(
+                    criterion(this.city, in("paris", "lyon", "london")),
+                    criterion(this.country, in("france", "uk"))
+            )) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.continent, this.country, this.city), measures)
+            .build();
+    List<Field> columns = List.of(this.continent, this.country, this.city);
+    List<Field> rows = List.of(this.spendingCategory);
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns,
+            List.of(this.continent)
+    ));
+    verifyResults(testInfo, result);
+  }
+
+  /**
+   * Hide everything (all totals and subtotals).
+   */
+  @Test
+  void testComplexPivotTableSingleMeasureHideTotalsOnRowsAndColumnsContinentCountryCitySpendingCategory() {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    List<Measure> measures = List.of(amount);
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(all(
+                    criterion(this.city, in("paris", "lyon", "london")),
+                    criterion(this.country, in("france", "uk"))
+            )) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.continent, this.country, this.city), measures)
+            .build();
+    List<Field> columns = List.of(this.continent, this.country, this.city);
+    List<Field> rows = List.of(this.spendingCategory);
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns,
+            List.of(this.spendingCategory, this.continent, this.country, this.city)
+    ));
+    Assertions.assertThat(result.table).containsExactly(
+            List.of("extra", "eu", "france", "lyon", 1d),
+            List.of("extra", "eu", "france", "paris", 1d),
+            List.of("extra", "eu", "uk", "london", 5d),
+
+            List.of("minimum expenditure", "eu", "france", "lyon", 3d),
+            List.of("minimum expenditure", "eu", "france", "paris", 3d),
+            List.of("minimum expenditure", "eu", "uk", "london", 4d)
+    );
+
+    Assertions.assertThat(result.pivotTableCells).containsExactly(
+            List.of(SqlUtils.squashqlExpression(this.continent), "eu", "eu", "eu"),
+            List.of(SqlUtils.squashqlExpression(this.country), "france", "france", "uk"),
+            List.of(SqlUtils.squashqlExpression(this.city), "lyon", "paris", "london"),
+            List.of(SqlUtils.squashqlExpression(this.spendingCategory), "amount", "amount", "amount"),
+            List.of("extra", 1d, 1d, 5d),
+            List.of("minimum expenditure", 3d, 3d, 4d)
+    );
+  }
+
+  @Test
+  void testComplexPivotTableSingleMeasureHideTotalsOnRowsSpendingCategoryAndColumnsContinent(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    List<Measure> measures = List.of(amount);
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(all(
+                    criterion(this.city, in("paris", "lyon", "london")),
+                    criterion(this.country, in("france", "uk"))
+            )) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.continent, this.country, this.city), measures)
+            .build();
+    List<Field> columns = List.of(this.continent, this.country, this.city);
+    List<Field> rows = List.of(this.spendingCategory);
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns,
+            List.of(this.spendingCategory, this.continent)
+    ));
+    verifyResults(testInfo, result);
+  }
+
+  @Test
+  void testComplexPivotTableSingleMeasureHideTotalsOnRowsSpendingCategoryAndColumnsCountry(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    List<Measure> measures = List.of(amount);
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(all(
+                    criterion(this.city, in("paris", "lyon", "london")),
+                    criterion(this.country, in("france", "uk"))
+            )) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.continent, this.country, this.city), measures)
+            .build();
+    List<Field> columns = List.of(this.continent, this.country, this.city);
+    List<Field> rows = List.of(this.spendingCategory);
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns,
+            List.of(this.spendingCategory, this.country)
+    ));
+    verifyResults(testInfo, result);
+  }
+
+  @Test
+  void testComplexPivotTableSingleMeasureHideTotalsOnRowsSpendingCategoryAndColumnsCountryCity(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    List<Measure> measures = List.of(amount);
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(all(
+                    criterion(this.city, in("paris", "lyon", "london")),
+                    criterion(this.country, in("france", "uk"))
+            )) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.continent, this.country, this.city), measures)
+            .build();
+    List<Field> columns = List.of(this.continent, this.country, this.city);
+    List<Field> rows = List.of(this.spendingCategory);
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns,
+            List.of(this.spendingCategory, this.country, this.city)
+    ));
+    verifyResults(testInfo, result);
+  }
+
+  @Test
+  void testComplexPivotTableSingleMeasureHideTotalsOnRowsContinentAndColumnsSpendingCategory(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    List<Measure> measures = List.of(amount);
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(all(
+                    criterion(this.city, in("paris", "lyon", "london")),
+                    criterion(this.country, in("france", "uk"))
+            )) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.continent, this.country, this.city), measures)
+            .build();
+    List<Field> rows = List.of(this.continent, this.country, this.city);
+    List<Field> columns = List.of(this.spendingCategory);
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns,
+            List.of(this.spendingCategory, this.continent)
+    ));
+    verifyResults(testInfo, result);
+  }
+
+  @Test
+  void testComplexPivotTableSingleMeasureHideTotalsOnRowsCountryAndColumnsSpendingCategory(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    List<Measure> measures = List.of(amount);
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(all(
+                    criterion(this.city, in("paris", "lyon", "london")),
+                    criterion(this.country, in("france", "uk"))
+            )) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.continent, this.country, this.city), measures)
+            .build();
+    List<Field> rows = List.of(this.continent, this.country, this.city);
+    List<Field> columns = List.of(this.spendingCategory);
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns,
+            List.of(this.spendingCategory, this.country)
+    ));
+    verifyResults(testInfo, result);
+  }
+
+  @Test
+  void testComplexPivotTableSingleMeasureHideTotalsOnRowsCountryCityAndColumnsSpendingCategory(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", this.amount);
+
+    List<Measure> measures = List.of(amount);
+    QueryDto query = Query
+            .from(this.storeSpending)
+            .where(all(
+                    criterion(this.city, in("paris", "lyon", "london")),
+                    criterion(this.country, in("france", "uk"))
+            )) // to reduce size of the output
+            .select(List.of(this.spendingCategory, this.continent, this.country, this.city), measures)
+            .build();
+    List<Field> rows = List.of(this.continent, this.country, this.city);
+    List<Field> columns = List.of(this.spendingCategory);
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns,
+            List.of(this.spendingCategory, this.country, this.city)
+    ));
+    verifyResults(testInfo, result);
+  }
+
   private void verifyResults(TestInfo testInfo, QueryDto query, List<String> rows, List<String> columns) {
     verifyResults(testInfo, query, null, null, tableFields(rows), tableFields(columns));
   }
@@ -484,6 +889,14 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     PivotTable pt = query2 == null
             ? this.executor.executePivotQuery(new PivotTableQueryDto(query1, rows, columns))
             : this.executor.executePivotQueryMerge(new PivotTableQueryMergeDto(QueryMergeDto.from(query1).join(query2, joinType), rows, columns), null);
+    verifyResults(testInfo, pt);
+  }
+
+  /**
+   * To save in file '*.tabular.json': System.out.println(TestUtil.tableToJson(pivotTable.table));
+   * To save in file '*.pivottable.json': System.out.println(JacksonUtil.serialize(pivotTable.pivotTableCells));
+   */
+  private void verifyResults(TestInfo testInfo, PivotTable pt) {
     Table expectedTabular = tableFromFile(testInfo);
 
     Assertions.assertThat(pt.table).containsExactlyElementsOf(ImmutableList.copyOf(expectedTabular.iterator()));
