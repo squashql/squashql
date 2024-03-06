@@ -19,7 +19,7 @@ public class DatabaseQuery {
   public final CompiledCriteria whereCriteria;
   public final CompiledCriteria havingCriteria;
   public final List<TypedField> rollup;
-  public final List<List<TypedField>> groupingSets;
+  public final Set<Set<TypedField>> groupingSets;
   public final int limit;
   public List<CompiledMeasure> measures = new ArrayList<>();
 

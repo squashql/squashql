@@ -106,8 +106,32 @@ public class QueryExecutor {
 
     List<Field> rows = context.cleansedRows;
     List<Field> columns = context.cleansedColumns;
-
-    // FIXME
+//    List<List<Field>> groupingSets = new ArrayList<>();
+//    // GT use an empty list instead of list of size 1 with an empty string because could cause issue later on with FieldSupplier
+//    groupingSets.add(List.of());
+//    // Rows
+//    for (int i = rows.size(); i >= 1; i--) {
+//      groupingSets.add(rows.subList(0, i));
+//    }
+//
+//    // Cols
+//    for (int i = columns.size(); i >= 1; i--) {
+//      groupingSets.add(columns.subList(0, i));
+//    }
+//
+//    // all combinations
+//    for (int i = rows.size(); i >= 1; i--) {
+//      for (int j = columns.size(); j >= 1; j--) {
+//        List<Field> all = new ArrayList<>(rows.subList(0, i));
+//        all.addAll(columns.subList(0, j));
+//        groupingSets.add(all);
+//      }
+//    }
+//
+//    QueryDto deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), QueryDto.class);
+//    deepCopy.groupingSets = groupingSets;
+//    return deepCopy;
+//    // FIXME
     Set<Set<Field>> toExclude = new HashSet<>();
     List<Field> hideTotalsOnRows = context.hideTotals.stream().filter(rows::contains).toList();
     for (Field hideTotal : hideTotalsOnRows) {
@@ -356,7 +380,7 @@ public class QueryExecutor {
                            CompiledCriteria whereCriteria,
                            CompiledCriteria havingCriteria,
                            List<TypedField> rollupColumns,
-                           List<List<TypedField>> groupingSets,
+                           Set<Set<TypedField>> groupingSets,
                            List<CteRecordTable> cteRecordTables,
                            int limit) {
 

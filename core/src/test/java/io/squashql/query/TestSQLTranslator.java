@@ -8,7 +8,6 @@ import io.squashql.store.Store;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -21,6 +20,7 @@ import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.dto.JoinType.INNER;
 import static io.squashql.query.dto.JoinType.LEFT;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TestSQLTranslator {
 
@@ -156,7 +156,7 @@ public class TestSQLTranslator {
             .withMeasure(new AggregatedMeasure("pnl.avg", "pnl", "avg"))
             .withMeasure(new AggregatedMeasure("mean pnl", "pnl", "avg"))
             .table(BASE_STORE_NAME);
-    Assertions.assertThat(translate(compileQuery(query)))
+    assertThat(translate(compileQuery(query)))
             .isEqualTo("select sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg`, avg(`pnl`) as `mean pnl` from `dataset.baseStore`");
   }
 
@@ -167,7 +167,7 @@ public class TestSQLTranslator {
             .withLimit(8)
             .table(BASE_STORE_NAME);
 
-    Assertions.assertThat(translate(compileQuery(query)))
+    assertThat(translate(compileQuery(query)))
             .isEqualTo("select sum(`pnl`) as `pnl.sum` from `dataset.baseStore` limit 8");
   }
 
@@ -181,7 +181,7 @@ public class TestSQLTranslator {
             .withMeasure(new AggregatedMeasure("pnl.avg", "pnl", "avg"))
             .table(BASE_STORE_NAME);
 
-    Assertions.assertThat(translate(compileQuery(query)))
+    assertThat(translate(compileQuery(query)))
             .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum`, sum(`delta`) as `delta.sum`, avg(`pnl`) as `pnl.avg` from `dataset.baseStore` group by " +
                     "`scenario`, `type`");
   }
@@ -195,7 +195,7 @@ public class TestSQLTranslator {
             .withMeasure(new AggregatedMeasure("delta.sum", SqlUtils.getFieldFullName(BASE_STORE_NAME, "delta"), "sum"))
             .table(BASE_STORE_NAME);
 
-    Assertions.assertThat(translate(compileQuery(query)))
+    assertThat(translate(compileQuery(query)))
             .isEqualTo("select `dataset.baseStore`.`scenario`, `dataset.baseStore`.`type`, sum(`dataset.baseStore`.`pnl`) as `pnl.sum`, sum(`dataset.baseStore`.`delta`) as `delta.sum` from `dataset.baseStore` group by " +
                     "`dataset.baseStore`.`scenario`, `dataset.baseStore`.`type`");
   }
@@ -207,7 +207,7 @@ public class TestSQLTranslator {
             .withMeasure(new AggregatedMeasure("pnl.sum", "pnl", "sum"))
             .withMeasure(new ExpressionMeasure("indice", "100 * sum(`delta`) / sum(`pnl`)"));
 
-    Assertions.assertThat(translate(compileQuery(query)))
+    assertThat(translate(compileQuery(query)))
             .isEqualTo("select sum(`pnl`) as `pnl.sum`, 100 * sum(`delta`) / sum(`pnl`) as `indice` from `dataset.baseStore`");
   }
 
@@ -223,7 +223,7 @@ public class TestSQLTranslator {
             .withMeasure(new AggregatedMeasure("pnl.sum", "price", "sum"))
             .table(BASE_STORE_NAME);
 
-    Assertions.assertThat(translate(compileQuery(query)))
+    assertThat(translate(compileQuery(query)))
             .isEqualTo("""
                     select `scenario`, `type`,
                      sum(`price`) as `pnl.sum`
@@ -243,7 +243,7 @@ public class TestSQLTranslator {
             .withMeasure(new AggregatedMeasure("pnl.sum", "price", "sum"))
             .table(BASE_STORE_NAME);
 
-    Assertions.assertThat(translate(compileQuery(query)))
+    assertThat(translate(compileQuery(query)))
             .isEqualTo("""
                     select `dataset.baseStore`.`scenario`, `dataset.baseStore`.`type`,
                      sum(`price`) as `pnl.sum`
@@ -260,7 +260,7 @@ public class TestSQLTranslator {
             .withMeasure(new AggregatedMeasure("pnl.sum", "price", "sum"))
             .table(BASE_STORE_NAME);
 
-    Assertions.assertThat(translate(compileQuery(query)))
+    assertThat(translate(compileQuery(query)))
             .isEqualTo("select `scenario`, `type`," +
                     " sum(`price`) as `pnl.sum`" +
                     " from `dataset.baseStore` group by `type`, rollup(`scenario`)");
@@ -287,7 +287,7 @@ public class TestSQLTranslator {
             .table(baseStore)
             .withMeasure(new AggregatedMeasure("pnl.avg", "pnl", "avg"));
 
-    Assertions.assertThat(translate(compileQuery(query)))
+    assertThat(translate(compileQuery(query)))
             .isEqualTo("select avg(`pnl`) as `pnl.avg` from `dataset.baseStore`"
                     + " inner join `dataset.table1` on `dataset.baseStore`.`id` = `dataset.table1`.`table1_id`"
                     + " inner join `dataset.table4` on (`dataset.table1`.`table1_field_2` = `dataset.table4`.`table4_id_1` and `dataset.table1`.`table1_field_3` = `dataset.table4`.`table4_id_2`)"
@@ -317,7 +317,7 @@ public class TestSQLTranslator {
 
     final QueryDto query = new QueryDto().table(a).withColumn(tableField("A.y"));
 
-    Assertions.assertThat(translate(compileQuery(query, stores)))
+    assertThat(translate(compileQuery(query, stores)))
             .isEqualTo("select `dataset.A`.`y` from `dataset.A` " +
                     "inner join `dataset.B` on `dataset.A`.`a_id` = `dataset.B`.`b_id` " +
                     "left join `dataset.C` on (`dataset.C`.`c_other_id` = `dataset.B`.`b_other_id` and `dataset.C`.`c_f` = `dataset.A`.`a_f`) " +
@@ -338,7 +338,7 @@ public class TestSQLTranslator {
             .select(tableFields(List.of("b", "value")), List.of(avg("pnl_avg", "pnl_sum")))
             .build();
 
-    Assertions.assertThat(translate(compileQuery(query))).isEqualTo("" +
+    assertThat(translate(compileQuery(query))).isEqualTo("" +
             "with `virtual` as (select 0 as `id`, '0' as `value` union all select 1 as `id`, '1' as `value`) " +
             "select `b`, `value`, avg(`pnl_sum`) as `pnl_avg` from (" +
             "select `a`, `b`, sum(`pnl`) as `pnl_sum` from `dataset.baseStore` group by `a`, `b`" +
@@ -360,7 +360,7 @@ public class TestSQLTranslator {
                     criterion(minus(new TableField("pnl"), new ConstantField(1)), lt(11d)))
             )
             .table(BASE_STORE_NAME);
-    Assertions.assertThat(translate(compileQuery(query)))
+    assertThat(translate(compileQuery(query)))
             .isEqualTo("select `scenario`, `type`, sum(`pnl`) as `pnl.sum` from `dataset.baseStore`"
                     + " where (((`scenario` = 'base' or `scenario` = 's1') or `scenario` = 's2')"
                     + " and `delta` >= 123.0 and (`type` = 'A''' or `type` = 'B') and `pnl` < 10.0 and (`pnl`-1) < 11.0)"
@@ -380,7 +380,7 @@ public class TestSQLTranslator {
                     eq("s2"),
                     isNull())))
             .table(BASE_STORE_NAME);
-    Assertions.assertThat(translate(compileQuery(query)))
+    assertThat(translate(compileQuery(query)))
             .isEqualTo("select `dataset.baseStore`.`scenario`, sum(`pnl`) as `pnl.sum` from `dataset.baseStore`"
                     + " where ((`dataset.baseStore`.`scenario` = 'base' or `dataset.baseStore`.`scenario` = 's2') or `dataset.baseStore`.`scenario` is null)"
                     + " group by `dataset.baseStore`.`scenario`"
@@ -403,7 +403,7 @@ public class TestSQLTranslator {
             .withMeasure(sum("sum c1", new AliasedField("alias_c1"))) // alias_c1 is a field from the subquery
             .withMeasure(sum("sum GT", "mean"))
             .withWhereCriteria(criterion("type", eq("myType")));
-    Assertions.assertThat(translate(compileQuery(query)))
+    assertThat(translate(compileQuery(query)))
             .isEqualTo("select `c3`, sum(`alias_c1`) as `sum c1`, sum(`mean`) as `sum GT` from (select `c1` as `alias_c1`, `c3`, avg(`c2`) as `mean` from `dataset.a` group by `alias_c1`, `c3`) where `type` = 'myType' group by `c3`");
   }
 
@@ -416,7 +416,7 @@ public class TestSQLTranslator {
             .table(a)
             .withMeasure(plus)
             .withMeasure(divide);
-    Assertions.assertThat(translate(compileQuery(query)))
+    assertThat(translate(compileQuery(query)))
             .isEqualTo("select (sum(`pnl`)+avg(`delta`)) as `plus`, ((sum(`pnl`)+avg(`delta`))/100.0) as `divide` from `dataset.a`");
   }
 
@@ -427,7 +427,7 @@ public class TestSQLTranslator {
             .table(a)
             .withMeasure(sum("pnlSum", "pnl"))
             .withMeasure(sumIf("pnlSumFiltered", "pnl", criterion("country", eq("france"))));
-    Assertions.assertThat(translate(compileQuery(query)))
+    assertThat(translate(compileQuery(query)))
             .isEqualTo("select sum(`pnl`) as `pnlSum`, sum(case when `country` = 'france' then `pnl` end) as `pnlSumFiltered` from `dataset.baseStore`");
 
     // With full path
@@ -436,7 +436,7 @@ public class TestSQLTranslator {
             .withMeasure(sum("pnlSum", a.name + ".pnl"))
             .withMeasure(sumIf("pnlSumFiltered", a.name + ".pnl", criterion(a.name + ".country", eq("france"))));
     String format = "select sum(`%1$s`.`pnl`) as `pnlSum`, sum(case when `%1$s`.`country` = 'france' then `%1$s`.`pnl` end) as `pnlSumFiltered` from `%1$s`";
-    Assertions.assertThat(translate(compileQuery(query))).isEqualTo(String.format(format, "dataset.baseStore"));
+    assertThat(translate(compileQuery(query))).isEqualTo(String.format(format, "dataset.baseStore"));
   }
 
   @Test
@@ -457,7 +457,7 @@ public class TestSQLTranslator {
                     "select `id`, `b`, sum(`pnl`) as `pnl.sum` from `%1$s` " +
                     "inner join `%2$s` on `id` = `a` group by `id`, `b`",
             "dataset.baseStore", virtualTable.name);
-    Assertions.assertThat(translate(compileQuery(query))).isEqualTo(expected);
+    assertThat(translate(compileQuery(query))).isEqualTo(expected);
   }
 
   @Test
@@ -488,7 +488,7 @@ public class TestSQLTranslator {
             "inner join `virtual1` on `dataset.baseStore`.`id` = `virtual1`.`a1` " +
             "inner join `virtual2` on `dataset.baseStore`.`id` = `virtual2`.`a2` " +
             "group by `id`, `virtual1`.`b1`, `virtual2`.`b2`";
-    Assertions.assertThat(translate(compileQuery(query))).isEqualTo(expected);
+    assertThat(translate(compileQuery(query))).isEqualTo(expected);
   }
 
   @Test
@@ -510,7 +510,7 @@ public class TestSQLTranslator {
                     "select `id`, `b`, sum(`pnl`) as `pnl.sum` from `%1$s` " +
                     "inner join `%2$s` on `%1$s`.`id` = `%2$s`.`a` group by `id`, `b`",
             "dataset.baseStore", virtualTable.name);
-    Assertions.assertThat(translate(compileQuery(query))).isEqualTo(expected);
+    assertThat(translate(compileQuery(query))).isEqualTo(expected);
   }
 
   @Test
@@ -526,8 +526,11 @@ public class TestSQLTranslator {
             List.of(), // GT
             List.of(a), // total a
             List.of(a, b));
-    Assertions.assertThat(translate(compileQuery(query)))
-            .isEqualTo("select `a`, `b`, sum(`pnl`) as `pnl.sum` from `dataset.baseStore` group by grouping sets((), (`a`), (`a`,`b`))");
+    assertThat(translate(compileQuery(query)))
+            .satisfiesAnyOf(
+                    sql -> assertThat(sql).isEqualTo("select `a`, `b`, sum(`pnl`) as `pnl.sum` from `dataset.baseStore` group by grouping sets((), (`a`), (`b`,`a`))"),
+                    sql -> assertThat(sql).isEqualTo("select `a`, `b`, sum(`pnl`) as `pnl.sum` from `dataset.baseStore` group by grouping sets((), (`a`), (`a`,`b`))")
+            );
   }
 
   @Test
@@ -541,7 +544,7 @@ public class TestSQLTranslator {
 
     DefaultQueryRewriter qr = new DefaultQueryRewriter(null);
     String expression = compiledMeasure(measure).sqlExpression(qr, true);
-    Assertions.assertThat(expression)
+    assertThat(expression)
             .isEqualTo("sum(case when (`recommendation`.`finalprice` > `recommendation`.`recoprice` and `recommendation`.`recoprice` > 0)" +
                     " then (`recommendation`.`finalprice`-`recommendation`.`recoprice`) end)" +
                     " as `increase_sum`");
@@ -550,7 +553,7 @@ public class TestSQLTranslator {
     Field one = new ConstantField(1);
     Field tvaRate = new TableField("product.tva_rate");
     Measure whatever = sum("whatever", divide(initial_price, plus(one, tvaRate)));
-    Assertions.assertThat(compiledMeasure(whatever).sqlExpression(qr, true))
+    assertThat(compiledMeasure(whatever).sqlExpression(qr, true))
             .isEqualTo("sum((`recommendation`.`initial_price`/(1+`product`.`tva_rate`))) as `whatever`");
   }
 
@@ -565,7 +568,7 @@ public class TestSQLTranslator {
     BinaryOperationField divide = new BinaryOperationField(BinaryOperator.DIVIDE, f1_minus_f2, a);
     BinaryOperationField multiply = new BinaryOperationField(BinaryOperator.MULTIPLY, divide, c);
     BinaryOperationField plus = new BinaryOperationField(BinaryOperator.PLUS, multiply, new ConstantField(2));
-    Assertions.assertThat(compileField(plus).sqlExpression(qr))
+    assertThat(compileField(plus).sqlExpression(qr))
             .isEqualTo("((((`a`-`b`)/`a`)*`c`)+2)");
   }
 }

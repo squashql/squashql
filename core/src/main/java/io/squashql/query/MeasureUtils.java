@@ -98,7 +98,7 @@ public final class MeasureUtils {
             copy.get(),
             queryScope.havingCriteria(),
             new ArrayList<>(rollupColumns),
-            new ArrayList<>(queryScope.groupingSets()), // FIXME should handle groupingSets
+            new HashSet<>(queryScope.groupingSets()), // FIXME should handle groupingSets
             queryScope.cteRecordTables(),
             queryScope.limit());
   }
@@ -109,7 +109,7 @@ public final class MeasureUtils {
             queryScope.whereCriteria(),
             queryScope.havingCriteria(),
             Collections.emptyList(),
-            List.of(queryScope.columns(), List.of()), // list of empty list => GT
+            Set.of(new HashSet<>(queryScope.columns()), Set.of()), // list of empty list => GT
             queryScope.cteRecordTables(),
             queryScope.limit());
   }

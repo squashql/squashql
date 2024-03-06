@@ -324,8 +324,10 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeSpending)
             .where(all(
-                    criterion(this.city, in("paris", "lyon", "london")),
-                    criterion(this.country, in("france", "uk"))
+                    criterion("city", in("paris", "lyon", "london")),
+                    criterion("country", in("france", "uk"))
+//                    criterion(this.city, in("paris", "lyon", "london")),
+//                    criterion(this.country, in("france", "uk"))
             )) // to reduce size of the output
             .select(tableFields(List.of("spending category", "spending subcategory", "continent", "country", "city")), measures)
             .build();
