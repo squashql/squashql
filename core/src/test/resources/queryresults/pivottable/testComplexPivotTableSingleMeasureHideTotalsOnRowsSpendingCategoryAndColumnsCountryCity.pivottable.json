@@ -1,0 +1,44 @@
+[
+  [
+    "myStore.continent",
+    "Grand Total",
+    "eu",
+    "eu",
+    "eu"
+  ],
+  [
+    "myStore.country",
+    "Grand Total",
+    "france",
+    "france",
+    "uk"
+  ],
+  [
+    "myStore.city",
+    "Grand Total",
+    "lyon",
+    "paris",
+    "london"
+  ],
+  [
+    "myStore.spending category",
+    "amount",
+    "amount",
+    "amount",
+    "amount"
+  ],
+  [
+    "extra",
+    7.0,
+    1.0,
+    1.0,
+    5.0
+  ],
+  [
+    "minimum expenditure",
+    10.0,
+    3.0,
+    3.0,
+    4.0
+  ]
+]

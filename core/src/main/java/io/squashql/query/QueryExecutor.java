@@ -106,45 +106,83 @@ public class QueryExecutor {
 
     List<Field> rows = context.cleansedRows;
     List<Field> columns = context.cleansedColumns;
-    List<List<Field>> groupingSets = new ArrayList<>();
-    // GT use an empty list instead of list of size 1 with an empty string because could cause issue later on with FieldSupplier
-    groupingSets.add(Collections.emptyList());
+
+    // FIXME
+    Set<Set<Field>> toExclude = new HashSet<>();
+    List<Field> hideTotalsOnRows = context.hideTotals.stream().filter(rows::contains).toList();
+    for (Field hideTotal : hideTotalsOnRows) {
+      Set<Field> s = new HashSet<>();
+      for (Field row : rows) {
+        if (row.equals(hideTotal)) {
+          break;
+        }
+        s.add(row);
+      }
+      toExclude.add(s);
+//      copy.addAll(columns);
+      for (int i = columns.size(); i >= 1; i--) {
+        Set<Field> copy = new HashSet<>(s);
+        Set<Field> sss = new HashSet<>(columns.subList(0, i));
+        copy.addAll(sss);
+        toExclude.add(copy);
+      }
+    }
+
+    List<Field> hideTotalsOnColumns = context.hideTotals.stream().filter(columns::contains).toList();
+    for (Field hideTotal : hideTotalsOnColumns) {
+      Set<Field> s = new HashSet<>();
+      for (Field column : columns) {
+        if (column.equals(hideTotal)) {
+          break;
+        }
+        s.add(column);
+      }
+      toExclude.add(s);
+//      copy.addAll(rows);
+      for (int i = rows.size(); i >= 1; i--) {
+        Set<Field> copy = new HashSet<>(s);
+        Set<Field> sss = new HashSet<>(rows.subList(0, i));
+        copy.addAll(sss);
+        toExclude.add(copy);
+      }
+    }
+    // FIXME
+
+    Set<Set<Field>> groupingSets = new HashSet<>();
+    // GT uses an empty list instead of list of size 1 with an empty string because could cause issue later on with FieldSupplier
+    if (!toExclude.contains(Collections.emptySet())) {
+      groupingSets.add(Collections.emptySet());
+    }
+
     // Rows
     for (int i = rows.size(); i >= 1; i--) {
-      groupingSets.add(rows.subList(0, i));
+      Set<Field> s = new HashSet<>(rows.subList(0, i));
+      if (!toExclude.contains(s)) {
+        groupingSets.add(s);
+      }
     }
 
     // Cols
     for (int i = columns.size(); i >= 1; i--) {
-      groupingSets.add(columns.subList(0, i));
+      Set<Field> s = new HashSet<>(columns.subList(0, i));
+      if (!toExclude.contains(s)) {
+        groupingSets.add(s);
+      }
     }
 
     // all combinations
     for (int i = rows.size(); i >= 1; i--) {
       for (int j = columns.size(); j >= 1; j--) {
-        List<Field> all = new ArrayList<>(rows.subList(0, i));
+        Set<Field> all = new HashSet<>(rows.subList(0, i));
         all.addAll(columns.subList(0, j));
-        groupingSets.add(all);
+        if (!toExclude.contains(all)) {
+          groupingSets.add(all);
+        }
       }
     }
 
-    // FIXME
-    Set<Set<Field>> groupingSetWithHideTotals = new HashSet<>();
-    for (List<Field> groupingSet : groupingSets) {
-      Set<Field> g = new HashSet<>(groupingSet);
-      g.addAll(context.hideTotals);
-      groupingSetWithHideTotals.add(g);
-    }
-    // FIXME
-
     QueryDto deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), QueryDto.class);
-    List<List<Field>> list = new ArrayList<>();
-    for (Set<Field> groupingSet : groupingSetWithHideTotals) {
-      ArrayList<Field> fields = new ArrayList<>(groupingSet);
-      list.add(fields);
-    }
-    //    deepCopy.groupingSets = groupingSets;
-    deepCopy.groupingSets = list;
+    deepCopy.groupingSets = groupingSets.stream().map(set -> (List<Field>) new ArrayList<>(set)).toList();
     return deepCopy;
   }
 
