@@ -69,7 +69,7 @@ export class Querier {
 }
 
 export function createPivotTableQuery(query: Query, pivotConfig: PivotConfig): PivotTableQuery {
-  return {query, rows: pivotConfig.rows, columns: pivotConfig.columns, hideTotals: pivotConfig.hideTotals}
+  return {query, rows: pivotConfig.rows, columns: pivotConfig.columns, hiddenTotals: pivotConfig.hiddenTotals}
 }
 
 export function createPivotTableQueryMerge(query: QueryMerge, pivotConfig: PivotConfig): PivotTableQueryMerge {
@@ -87,6 +87,7 @@ export interface PivotTableQueryResult {
   cells: Array<Record<string, any>>,
   rows: Array<string>
   columns: Array<string>
+  hiddenTotals: Array<string>
   values: Array<string>
 }
 

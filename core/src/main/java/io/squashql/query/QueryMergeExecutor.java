@@ -55,7 +55,8 @@ public class QueryMergeExecutor {
     return new PivotTable(table,
             rows.stream().map(SqlUtils::squashqlExpression).toList(),
             columns.stream().map(SqlUtils::squashqlExpression).toList(),
-            values);
+            values,
+            Collections.emptyList()); // not supported for now
   }
 
   private static List<Field> getLocalFields(List<Field> elements, QueryDto query, Set<Field> columnsFromColumnSets) {

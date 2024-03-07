@@ -9,12 +9,14 @@ public class PivotTable {
   public final List<String> rows;
   public final List<String> columns;
   public final List<String> values;
+  public final List<String> hideTotals;
 
-  public PivotTable(Table table, List<String> rows, List<String> columns, List<String> values) {
+  public PivotTable(Table table, List<String> rows, List<String> columns, List<String> values, List<String> hideTotals) {
     this.table = table;
     this.rows = rows;
     this.columns = columns;
     this.values = values;
+    this.hideTotals = hideTotals;
     this.pivotTableCells = PivotTableUtils.pivot(this);
   }
 

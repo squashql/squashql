@@ -332,6 +332,7 @@ public class TestJavascriptLibrary {
     expected.rows = List.of("key1", "key2");
     expected.columns = List.of("key3");
     expected.values = List.of("key4");
+    expected.hiddenTotals = List.of("key2");
     PivotTableQueryResultDto r = JacksonUtil.deserialize(TestUtil.readAllLines(name), PivotTableQueryResultDto.class);
     Assertions.assertThat(r).isEqualTo(expected);
   }

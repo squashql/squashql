@@ -30,7 +30,8 @@ function generateFromPivotQueryResult() {
     ],
     rows: ["key1", "key2"],
     columns: ["key3"],
-    values: ["key4"]
+    values: ["key4"],
+    hiddenTotals: ["key2"]
   }
   fs.writeFileSync('json/build-from-pivot-query-result.json', JSON.stringify(r))
 }
