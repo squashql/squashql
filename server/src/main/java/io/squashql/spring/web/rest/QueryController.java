@@ -64,7 +64,7 @@ public class QueryController {
             true,
             null);
     List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, pivotTableQueryDto.query.minify);
-    return ResponseEntity.ok(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values, pt.hideTotals));
+    return ResponseEntity.ok(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values, pt.hiddenTotals));
   }
 
   @PostMapping(MAPPING_QUERY_MERGE)
@@ -82,7 +82,7 @@ public class QueryController {
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get()
     );
     List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, pivotTableQueryMergeDto.query.minify);
-    return ResponseEntity.ok(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values, pt.hideTotals));
+    return ResponseEntity.ok(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values, pt.hiddenTotals));
   }
 
   @PostMapping(MAPPING_QUERY_JOIN_EXPERIMENTAL)

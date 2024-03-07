@@ -307,6 +307,6 @@ public class TestDuckDBDoc {
    */
   private static void toJson(PivotTable pt) {
     List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, null);
-    System.out.println(JacksonUtil.serialize(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values, pt.hideTotals)));
+    System.out.println(JacksonUtil.serialize(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values, pt.hiddenTotals)));
   }
 }

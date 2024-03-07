@@ -306,11 +306,11 @@ public final class PivotTableUtils {
   }
 
   private static void addGroupingSetsToExcludeFromHideTotals(PivotTableContext context, List<Field> rows, Set<Set<Field>> toExclude, List<Field> columns) {
-    List<Field> hideTotalsOnRows = context.hiddenTotals.stream().filter(rows::contains).toList();
-    for (Field hideTotal : hideTotalsOnRows) {
+    List<Field> hiddenTotalsOnRows = context.hiddenTotals.stream().filter(rows::contains).toList();
+    for (Field hiddenTotal : hiddenTotalsOnRows) {
       Set<Field> s = new HashSet<>();
       for (Field row : rows) {
-        if (row.equals(hideTotal)) {
+        if (row.equals(hiddenTotal)) {
           break;
         }
         s.add(row);
