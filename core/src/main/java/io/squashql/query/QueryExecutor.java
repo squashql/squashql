@@ -76,7 +76,8 @@ public class QueryExecutor {
     return new PivotTable(result,
             pivotTableQueryDto.rows.stream().map(SqlUtils::squashqlExpression).toList(),
             pivotTableQueryDto.columns.stream().map(SqlUtils::squashqlExpression).toList(),
-            values);
+            values,
+            pivotTableQueryDto.hiddenTotals == null ? Collections.emptyList() : pivotTableQueryDto.hiddenTotals.stream().map(SqlUtils::squashqlExpression).toList());
   }
 
   public Table executeRaw(String rawSqlQuery) {

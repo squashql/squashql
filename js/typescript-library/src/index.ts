@@ -19,7 +19,7 @@ export {
   comparisonMeasureWithPeriod, comparisonMeasureWithinSameGroup, comparisonMeasureWithParent, comparisonMeasureWithGrandTotalAlongAncestors,
   comparisonMeasureWithGrandTotal,
   totalCount,
-  ComparisonMethod,
+  ComparisonMethod, BinaryOperator, BinaryOperationMeasure
 } from './measure'
 
 export {

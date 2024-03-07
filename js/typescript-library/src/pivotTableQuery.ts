@@ -6,7 +6,7 @@ export interface PivotTableQuery {
   query: Query
   rows: Array<Field>
   columns: Array<Field>
-  hideTotals?: Array<Field>
+  hiddenTotals?: Array<Field>
 }
 
 export interface PivotTableQueryMerge {
@@ -18,5 +18,5 @@ export interface PivotTableQueryMerge {
 export interface PivotConfig {
   rows: Array<Field>
   columns: Array<Field>
-  hideTotals?: Array<Field>
+  hiddenTotals?: Array<Field>
 }

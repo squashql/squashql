@@ -71,6 +71,6 @@ public abstract class ATestDocDrillacross extends ABaseTestQuery {
             null);
     pt.show();
     List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, false);
-    System.out.println(JacksonUtil.serialize(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values)));
+    System.out.println(JacksonUtil.serialize(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values, pt.hiddenTotals)));
   }
 }

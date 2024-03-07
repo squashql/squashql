@@ -16,7 +16,7 @@ export function generateFromQueryPivot() {
   const pivotQuery = createPivotTableQuery(q, {
     rows: [tableField("a")],
     columns: [tableField("b")],
-    hideTotals: [tableField("b")]
+    hiddenTotals: [tableField("b")]
   })
   const data = JSON.stringify(pivotQuery)
   fs.writeFileSync('json/build-from-query-pivot.json', data)

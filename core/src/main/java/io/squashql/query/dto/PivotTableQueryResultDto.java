@@ -17,4 +17,5 @@ public class PivotTableQueryResultDto {
   public List<String> rows;
   public List<String> columns;
   public List<String> values;
+  public List<String> hiddenTotals;
 }
