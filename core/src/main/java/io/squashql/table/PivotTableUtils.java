@@ -152,9 +152,9 @@ public final class PivotTableUtils {
 
       ObjectArrayKey key = new ObjectArrayKey(coord);
       Set<Object>[] distinctValues = distinctValuesByKey.computeIfAbsent(key, k -> {
-        Set[] sets = new Set[measureIndices.length];
+        Set<Object>[] sets = new Set[measureIndices.length];
         for (int i = 0; i < measureIndices.length; i++) {
-          sets[i] = new HashSet();
+          sets[i] = new HashSet<>();
         }
         return sets;
       });
@@ -346,9 +346,6 @@ public final class PivotTableUtils {
     }
   }
 
-  /**
-   * This object is temporary until BigQuery supports the grouping sets. See <a href="https://issuetracker.google.com/issues/35905909">issue</a>
-   */
   public static class PivotTableContext {
     private final List<Field> rows;
     private final List<Field> cleansedRows;
