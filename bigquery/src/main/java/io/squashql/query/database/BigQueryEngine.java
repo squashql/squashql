@@ -49,15 +49,15 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
       TableResult tableResult = this.datastore.getBigquery().query(queryConfig);
       Schema schema = tableResult.getSchema();
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
-              query.select,
-              query.measures,
+              query.scope().columns(),
+              query.measures(),
               schema.getFields(),
               (column, name) -> BigQueryUtil.bigQueryTypeToClass(column),
               tableResult.iterateAll().iterator(),
               (i, fieldValueList) -> getTypeValue(fieldValueList, schema, i));
       return new ColumnarTable(
               result.getOne(),
-              new HashSet<>(query.measures),
+              new HashSet<>(query.measures()),
               result.getTwo());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);

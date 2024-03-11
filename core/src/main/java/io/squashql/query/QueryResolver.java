@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.query.compiled.*;
 import io.squashql.query.database.DatabaseQuery;
+import io.squashql.query.database.QueryScope;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.query.measure.ParametrizedMeasure;
@@ -26,7 +27,7 @@ public class QueryResolver {
   private final QueryDto query;
   private final Map<String, Store> storesByName;
   private final Set<String> cteTableNames = new HashSet<>();
-  private final QueryExecutor.QueryScope scope;
+  private final QueryScope scope;
   private final List<TypedField> groupColumns;
   private final List<TypedField> columns;
   private final CompilationCache cache = new CompilationCache();
@@ -157,14 +158,14 @@ public class QueryResolver {
   /**
    * Queries
    */
-  private QueryExecutor.QueryScope toQueryScope(QueryDto query) {
+  private QueryScope toQueryScope(QueryDto query) {
     checkQuery(query);
     final List<TypedField> columnSets = query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
     final List<TypedField> combinedColumns = Stream.concat(this.columns.stream(), columnSets.stream()).toList();
 
     List<TypedField> rollupColumns = query.rollupColumns.stream().map(this::resolveField).toList();
     Set<Set<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(this::resolveField).collect(Collectors.toSet())).collect(Collectors.toSet());
-    return new QueryExecutor.QueryScope(
+    return new QueryScope(
             compileTable(query.table),
             combinedColumns,
             compileCriteria(query.whereCriteriaDto),
@@ -190,15 +191,15 @@ public class QueryResolver {
     final CompiledCriteria whereCriteria = compileCriteria(subQuery.whereCriteriaDto);
     final CompiledCriteria havingCriteria = compileCriteria(subQuery.havingCriteriaDto);
     // should we check groupingSet and rollup as well are empty ?
-    DatabaseQuery query = new DatabaseQuery(null, // FIXME is it correct?
-            table,
-            new LinkedHashSet<>(select),
+    QueryScope queryScope = new QueryScope(table,
+            select,
             whereCriteria,
             havingCriteria,
             Collections.emptyList(),
             Collections.emptySet(),
+            null, // FIXME is it correct?
             subQuery.limit);
-    this.subQueryMeasures.values().forEach(query::withMeasure);
+    DatabaseQuery query = new DatabaseQuery(queryScope, new ArrayList<>(this.subQueryMeasures.values()));
     return query;
   }
 
@@ -215,18 +216,6 @@ public class QueryResolver {
     if (subQuery.parameters != null && !subQuery.parameters.isEmpty()) {
       throw new IllegalArgumentException("parameters are not expected in sub query: " + subQuery);
     }
-  }
-
-  public DatabaseQuery toDatabaseQuery(final QueryExecutor.QueryScope query, final int limit) {
-    return new DatabaseQuery(
-            query.cteRecordTables(),
-            query.table(),
-            new LinkedHashSet<>(query.columns()),
-            query.whereCriteria(),
-            query.havingCriteria(),
-            query.rollupColumns(),
-            query.groupingSets(),
-            limit);
   }
 
   /**

@@ -4,6 +4,7 @@ import io.squashql.query.*;
 import io.squashql.query.QueryExecutor.ExecutionContext;
 import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import io.squashql.query.comp.BinaryOperations;
+import io.squashql.query.database.QueryScope;
 import io.squashql.store.UnknownType;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;
@@ -71,7 +72,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
       throw new IllegalArgumentException(String.format("Comparison measure not correctly defined (%s). It should have a period or columnSetKey parameter", cm));
     }
 
-    QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(
+    QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(
             this.executionContext.columns(), this.executionContext.groupColumns(), cm, this.executionContext.queryScope());
     Table readFromTable = this.executionContext.tableByScope().get(readScope); // Table where to read the aggregates
     if (readFromTable.count() == this.executionContext.queryLimit()) {
@@ -83,7 +84,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
 
   @Override
   public Void visit(CompiledGrandTotalComparisonMeasure cm) {
-    QueryExecutor.QueryScope readScope = MeasureUtils.getReadScopeComparisonGrandTotalMeasure(this.executionContext.queryScope());
+    QueryScope readScope = MeasureUtils.getReadScopeComparisonGrandTotalMeasure(this.executionContext.queryScope());
     Table readFromTable = this.executionContext.tableByScope().get(readScope); // Table where to read the aggregates
     if (readFromTable.count() == this.executionContext.queryLimit()) {
       throw new RuntimeException("Too many rows, some intermediate results exceed the limit " + this.executionContext.queryLimit());
@@ -143,7 +144,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
   @Override
   public Void visit(CompiledVectorAggMeasure measure) {
     // Retrieve the query scope use for the prefetch, the logic should be the same to retrieve the result.
-    QueryExecutor.QueryScope prefetchQueryScope = new PrefetchVisitor(this.executionContext.columns(), this.executionContext.groupColumns(), this.executionContext.queryScope())
+    QueryScope prefetchQueryScope = new PrefetchVisitor(this.executionContext.columns(), this.executionContext.groupColumns(), this.executionContext.queryScope())
             .visit(measure)
             .keySet()
             .iterator()
@@ -157,7 +158,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
   @Override
   public Void visit(CompiledVectorTupleAggMeasure measure) {
     // Retrieve the query scope use for the prefetch, the logic should be the same to retrieve the result.
-    QueryExecutor.QueryScope prefetchQueryScope = new PrefetchVisitor(this.executionContext.columns(), this.executionContext.groupColumns(), this.executionContext.queryScope())
+    QueryScope prefetchQueryScope = new PrefetchVisitor(this.executionContext.columns(), this.executionContext.groupColumns(), this.executionContext.queryScope())
             .visit(measure)
             .keySet()
             .iterator()

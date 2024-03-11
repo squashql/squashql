@@ -1,8 +1,8 @@
 package io.squashql.query.compiled;
 
 import io.squashql.query.MeasureUtils;
-import io.squashql.query.QueryExecutor.QueryScope;
 import io.squashql.query.database.DatabaseQuery;
+import io.squashql.query.database.QueryScope;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.type.AliasedTypedField;
 import io.squashql.type.TypedField;
@@ -146,7 +146,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
         topQuerySelectColumns.add(new AliasedTypedField(alias));
       }
 
-      Stream.concat(this.originalQueryScope.rollupColumns().stream(), this.originalQueryScope.groupingSets().stream().flatMap(Collection::stream))
+      Stream.concat(this.originalQueryScope.rollup().stream(), this.originalQueryScope.groupingSets().stream().flatMap(Collection::stream))
               .forEach(rollup -> {
                 String expression = SqlUtils.squashqlExpression(rollup);
                 String alias = safeColumnAlias(expression);
@@ -160,8 +160,8 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
       Set<Set<TypedField>> subQueryGroupingSets = new HashSet<>();
       subQuerySelectColumns.add(vectorAxis.as(vectorAxisAlias));// it will end up in the group by (See SqlTranslator) if rollup or in the grouping sets
 
-      if (!this.originalQueryScope.rollupColumns().isEmpty()) {
-        for (TypedField r : this.originalQueryScope.rollupColumns()) {
+      if (!this.originalQueryScope.rollup().isEmpty()) {
+        for (TypedField r : this.originalQueryScope.rollup()) {
           // Here we can choose any alias but for debugging purpose, we create one from the expression.
           subQueryRollupColumns.add(r.as(safeColumnAlias(SqlUtils.squashqlExpression(r))));
         }
@@ -187,15 +187,16 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
         subQueryMeasures.add(new CompiledAggregatedMeasure(subQueryMeasureAlias, fieldToAggregate, vectorAggFunc, null, false));
       }
 
-      DatabaseQuery subQuery = new DatabaseQuery(this.originalQueryScope.cteRecordTables(),
+      QueryScope subQueryScope = new QueryScope(
               this.originalQueryScope.table(),
-              new HashSet<>(subQuerySelectColumns),
+              subQuerySelectColumns,
               this.originalQueryScope.whereCriteria(),
               this.originalQueryScope.havingCriteria(),
               subQueryRollupColumns,
               subQueryGroupingSets,
+              this.originalQueryScope.cteRecordTables(),
               -1);
-      subQueryMeasures.forEach(subQuery::withMeasure);
+      DatabaseQuery subQuery = new DatabaseQuery(subQueryScope, new ArrayList<>(subQueryMeasures));
 
       QueryScope topQueryScope = new QueryScope(
               new NestedQueryTable(subQuery, Collections.emptyList()),
