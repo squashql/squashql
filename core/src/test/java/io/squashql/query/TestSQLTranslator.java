@@ -11,9 +11,7 @@ import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static io.squashql.query.Functions.*;
 import static io.squashql.query.TableField.tableField;
@@ -76,15 +74,9 @@ public class TestSQLTranslator {
     }
 
     DatabaseQuery toDatabaseQuery() {
-      final DatabaseQuery compiled = toDatabaseQuery(getScope(), this.limit);
       // Keep the order
-      for (Measure measure : getQuery().measures) {
-        CompiledMeasure compiledMeasure = getMeasures().get(measure);
-        if (compiledMeasure != null) {
-          compiled.withMeasure(compiledMeasure);
-        }
-      }
-      return compiled;
+      List<CompiledMeasure> measures = getQuery().measures.stream().map(measure -> getMeasures().get(measure)).filter(m -> m != null).toList();
+      return new DatabaseQuery(getScope().copyWithNewLimit(this.limit), measures);
     }
 
     @Override
@@ -142,9 +134,7 @@ public class TestSQLTranslator {
   private DatabaseQuery compileQuery(QueryDto query, Map<String, Store> stores) {
     return new QueryResolver(query, stores) {
       DatabaseQuery toDatabaseQuery() {
-        final DatabaseQuery compiled = toDatabaseQuery(getScope(), query.limit);
-        getMeasures().values().forEach(compiled::withMeasure);
-        return compiled;
+        return new DatabaseQuery(getScope().copyWithNewLimit(query.limit), new ArrayList<>(getMeasures().values()));
       }
     }.toDatabaseQuery();
   }

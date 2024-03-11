@@ -21,33 +21,34 @@ public class SQLTranslator {
     return translate(query, new DefaultQueryRewriter(query));
   }
 
-  public static String translate(DatabaseQuery query, QueryRewriter queryRewriter) {
+  public static String translate(DatabaseQuery dq, QueryRewriter queryRewriter) {
+    QueryScope query = dq.scope();
     List<String> selects = new ArrayList<>();
     List<String> groupBy = new ArrayList<>();
     List<String> aggregates = new ArrayList<>();
 
-    query.select.forEach(f -> {
+    query.columns().forEach(f -> {
       selects.add(queryRewriter.select(f));
       groupBy.add(queryRewriter.groupBy(f));
     });
-    query.measures.forEach(m -> aggregates.add(m.sqlExpression(queryRewriter, true))); // Alias is needed when using sub-queries
+    dq.measures().forEach(m -> aggregates.add(m.sqlExpression(queryRewriter, true))); // Alias is needed when using sub-queries
 
     selects.addAll(aggregates);
 
     StringBuilder statement = new StringBuilder();
-    addCtes(query.cteRecordTables, statement, queryRewriter);
+    addCtes(query.cteRecordTables(), statement, queryRewriter);
     statement.append("select ");
     statement.append(String.join(", ", selects));
     statement.append(" from ");
-    statement.append(query.table.sqlExpression(queryRewriter));
-    addWhereConditions(statement, query, queryRewriter);
-    if (!query.groupingSets.isEmpty()) {
-      addGroupingSets(query.groupingSets.stream().map(g -> g.stream().map(queryRewriter::rollup).toList()).toList(), statement);
+    statement.append(query.table().sqlExpression(queryRewriter));
+    addWhereConditions(statement, dq, queryRewriter);
+    if (!query.groupingSets().isEmpty()) {
+      addGroupingSets(query.groupingSets().stream().map(g -> g.stream().map(queryRewriter::rollup).toList()).toList(), statement);
     } else {
-      addGroupByAndRollup(groupBy, query.rollup.stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
+      addGroupByAndRollup(groupBy, query.rollup().stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
     }
-    addHavingConditions(statement, query.havingCriteria, queryRewriter);
-    addLimit(query.limit, statement);
+    addHavingConditions(statement, query.havingCriteria(), queryRewriter);
+    addLimit(query.limit(), statement);
     return statement.toString();
   }
 
@@ -136,8 +137,8 @@ public class SQLTranslator {
   }
 
   protected static void addWhereConditions(StringBuilder statement, DatabaseQuery query, QueryRewriter queryRewriter) {
-    if (query.whereCriteria != null) {
-      String whereClause = query.whereCriteria.sqlExpression(queryRewriter);
+    if (query.scope().whereCriteria() != null) {
+      String whereClause = query.scope().whereCriteria().sqlExpression(queryRewriter);
       if (whereClause != null) {
         statement
                 .append(" where ")

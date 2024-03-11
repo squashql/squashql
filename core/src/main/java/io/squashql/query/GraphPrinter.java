@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import io.squashql.query.database.QueryScope;
 import io.squashql.type.TypedField;
 
 import java.util.*;
@@ -20,8 +21,8 @@ public class GraphPrinter {
     }
 
     IntSupplier id = new AtomicInteger()::getAndIncrement;
-    Map<QueryExecutor.QueryScope, Integer> idByScope = new HashMap<>();
-    Function<QueryExecutor.QueryScope, Integer> idProvider = scope -> idByScope.computeIfAbsent(scope, k -> id.getAsInt());
+    Map<QueryScope, Integer> idByScope = new HashMap<>();
+    Function<QueryScope, Integer> idProvider = scope -> idByScope.computeIfAbsent(scope, k -> id.getAsInt());
     Set<N> alreadyPrinted = new HashSet<>();
     for (DependencyGraph.NodeWithId<N> root : roots) {
       appendNode(sb, root, alreadyPrinted, idProvider);
@@ -31,14 +32,14 @@ public class GraphPrinter {
 
     sb.append(System.lineSeparator());
     sb.append("Scopes:").append(System.lineSeparator());
-    for (Map.Entry<QueryExecutor.QueryScope, Integer> e : idByScope.entrySet()) {
+    for (Map.Entry<QueryScope, Integer> e : idByScope.entrySet()) {
       sb.append("#").append(e.getValue()).append(": ").append(printQueryPlanNodeKey(e.getKey())).append(System.lineSeparator());
     }
 
     System.out.println(sb);
   }
 
-  private static <N> void executeRecursively(StringBuilder sb, DependencyGraph graph, DependencyGraph.NodeWithId<N> node, Set<N> alreadyPrinted, Function<QueryExecutor.QueryScope, Integer> idProvider, int level) {
+  private static <N> void executeRecursively(StringBuilder sb, DependencyGraph graph, DependencyGraph.NodeWithId<N> node, Set<N> alreadyPrinted, Function<QueryScope, Integer> idProvider, int level) {
     Set<DependencyGraph.NodeWithId<N>> successors = graph.successors(node);
     for (DependencyGraph.NodeWithId<N> successor : successors) {
       for (int i = 0; i < level; i++) {
@@ -50,14 +51,14 @@ public class GraphPrinter {
     }
   }
 
-  private static <N> void appendNode(StringBuilder sb, DependencyGraph.NodeWithId<N> node, Set<N> alreadyPrinted, Function<QueryExecutor.QueryScope, Integer> idProvider) {
+  private static <N> void appendNode(StringBuilder sb, DependencyGraph.NodeWithId<N> node, Set<N> alreadyPrinted, Function<QueryScope, Integer> idProvider) {
     sb.append("#").append(node.id);
     if (alreadyPrinted.add(node.node)) {
       sb.append(", n=").append(printQueryPlanNodeKey(idProvider, node.node));
     }
   }
 
-  private static String printQueryPlanNodeKey(Function<QueryExecutor.QueryScope, Integer> idProvider, Object o) {
+  private static String printQueryPlanNodeKey(Function<QueryScope, Integer> idProvider, Object o) {
     if (o instanceof QueryExecutor.QueryPlanNodeKey key) {
       StringBuilder sb = new StringBuilder();
       sb.append("scope=").append("#").append(idProvider.apply(key.queryScope()));
@@ -68,17 +69,17 @@ public class GraphPrinter {
     }
   }
 
-  private static String printQueryPlanNodeKey(QueryExecutor.QueryScope scope) {
+  private static String printQueryPlanNodeKey(QueryScope scope) {
     StringBuilder sb = new StringBuilder();
     appendIfNotNullOrNotEmpty(sb, null, scope.table());
     appendIfNotNullOrNotEmpty(sb, "columns=", scope.columns().stream().map(TypedField::toString).toList());
     appendIfNotNullOrNotEmpty(sb, null, scope.whereCriteria());
-    appendIfNotNullOrNotEmpty(sb, "rollup=", scope.rollupColumns().stream().map(TypedField::toString).toList());
+    appendIfNotNullOrNotEmpty(sb, "rollup=", scope.rollup().stream().map(TypedField::toString).toList());
     return sb.toString();
   }
 
   private static void appendIfNotNullOrNotEmpty(StringBuilder sb, String prefix, Object o) {
-    if (o instanceof Collection collection) {
+    if (o instanceof Collection<?> collection) {
       if (collection.isEmpty()) {
         return;
       }
