@@ -48,7 +48,7 @@ public class SQLTranslator {
       addGroupByAndRollup(groupBy, query.rollup().stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
     }
     addHavingConditions(statement, query.havingCriteria(), queryRewriter);
-    addLimit(query.limit(), statement);
+    addLimit(query.newScopeWithLimit(), statement);
     return statement.toString();
   }
 

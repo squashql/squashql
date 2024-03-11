@@ -109,19 +109,19 @@ public class QueryExecutor {
     DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
             queryResolver.getColumns(), queryResolver.getGroupColumns(), queryResolver.getMeasures().values(), queryResolver.getScope());
     // Compute what needs to be prefetched
-    Map<QueryScope, QueryScope> prefetchQueryByQueryScope = new HashMap<>();
+    Map<QueryScope, QueryScope> prefetchQueryScopeByQueryScope = new HashMap<>();
     Map<QueryScope, Set<CompiledMeasure>> measuresByQueryScope = new HashMap<>();
     ExecutionPlan<QueryPlanNodeKey> prefetchingPlan = new ExecutionPlan<>(dependencyGraph, (node) -> {
       QueryScope scope = node.queryScope;
       int limit = scope.equals(queryResolver.getScope()) ? queryLimit : queryLimit + 1; // limit + 1 to detect when results can be wrong
-      prefetchQueryByQueryScope.computeIfAbsent(scope, k -> scope.limit(limit));
+      prefetchQueryScopeByQueryScope.computeIfAbsent(scope, k -> scope.newScopeWithLimit(limit));
       measuresByQueryScope.computeIfAbsent(scope, k -> new HashSet<>()).add(node.measure);
     });
     prefetchingPlan.execute();
 
     Map<QueryScope, Table> tableByScope = new HashMap<>();
-    for (QueryScope scope : prefetchQueryByQueryScope.keySet()) {
-      QueryScope prefetchQueryScope = prefetchQueryByQueryScope.get(scope);
+    for (QueryScope scope : prefetchQueryScopeByQueryScope.keySet()) {
+      QueryScope prefetchQueryScope = prefetchQueryScopeByQueryScope.get(scope);
       Set<CompiledMeasure> measures = measuresByQueryScope.get(scope);
       QueryCache.QueryCacheKey queryCacheKey = new QueryCache.QueryCacheKey(scope, user);
       QueryCache queryCache = getQueryCache((QueryCacheParameter) query.parameters.getOrDefault(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.USE)), user);
