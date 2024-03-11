@@ -4,6 +4,7 @@ import com.google.common.base.Suppliers;
 import io.squashql.query.*;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.QueryEngine;
+import io.squashql.query.database.QueryScope;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.GroupColumnSetDto;
@@ -327,7 +328,7 @@ public class TableUtils {
    *   +-------------+-------------+------+----------------------+----+
    * </pre>
    */
-  public static Table replaceNullCellsByTotal(Table input, QueryExecutor.QueryScope scope) {
+  public static Table replaceNullCellsByTotal(Table input, QueryScope scope) {
     Map<String, String> groupingHeaders = findGroupingHeaderNamesByBaseName(input.headers(), scope);
     if (!groupingHeaders.isEmpty()) {
       List<List<Object>> newValues = new ArrayList<>();
@@ -363,7 +364,7 @@ public class TableUtils {
    * [___grouping___field_name_b___, field_name_b]
    * ...
    */
-  private static Map<String, String> findGroupingHeaderNamesByBaseName(List<Header> headers, QueryExecutor.QueryScope scope) {
+  private static Map<String, String> findGroupingHeaderNamesByBaseName(List<Header> headers, QueryScope scope) {
     Set<String> rollupExpressions = QueryExecutor.generateGroupingMeasures(scope).keySet();
     Map<String, String> groupingHeaders = new HashMap<>();
     // rollupExpressions can be empty when working with vector. In that case, we rely on the header name only.

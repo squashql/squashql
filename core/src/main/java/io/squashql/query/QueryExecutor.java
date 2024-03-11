@@ -3,12 +3,16 @@ package io.squashql.query;
 import io.squashql.query.compiled.*;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
+import io.squashql.query.database.QueryScope;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.query.join.ExperimentalQueryMergeExecutor;
 import io.squashql.query.parameter.QueryCacheParameter;
-import io.squashql.table.*;
+import io.squashql.table.ColumnarTable;
+import io.squashql.table.PivotTable;
 import io.squashql.table.PivotTableUtils.PivotTableContext;
+import io.squashql.table.Table;
+import io.squashql.table.TableUtils;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
@@ -105,19 +109,19 @@ public class QueryExecutor {
     DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
             queryResolver.getColumns(), queryResolver.getGroupColumns(), queryResolver.getMeasures().values(), queryResolver.getScope());
     // Compute what needs to be prefetched
-    Map<QueryScope, DatabaseQuery> prefetchQueryByQueryScope = new HashMap<>();
+    Map<QueryScope, QueryScope> prefetchQueryScopeByQueryScope = new HashMap<>();
     Map<QueryScope, Set<CompiledMeasure>> measuresByQueryScope = new HashMap<>();
     ExecutionPlan<QueryPlanNodeKey> prefetchingPlan = new ExecutionPlan<>(dependencyGraph, (node) -> {
       QueryScope scope = node.queryScope;
       int limit = scope.equals(queryResolver.getScope()) ? queryLimit : queryLimit + 1; // limit + 1 to detect when results can be wrong
-      prefetchQueryByQueryScope.computeIfAbsent(scope, k -> queryResolver.toDatabaseQuery(scope, limit));
+      prefetchQueryScopeByQueryScope.computeIfAbsent(scope, k -> scope.copyWithNewLimit(limit));
       measuresByQueryScope.computeIfAbsent(scope, k -> new HashSet<>()).add(node.measure);
     });
     prefetchingPlan.execute();
 
     Map<QueryScope, Table> tableByScope = new HashMap<>();
-    for (QueryScope scope : prefetchQueryByQueryScope.keySet()) {
-      DatabaseQuery prefetchQuery = prefetchQueryByQueryScope.get(scope);
+    for (QueryScope scope : prefetchQueryScopeByQueryScope.keySet()) {
+      QueryScope prefetchQueryScope = prefetchQueryScopeByQueryScope.get(scope);
       Set<CompiledMeasure> measures = measuresByQueryScope.get(scope);
       QueryCache.QueryCacheKey queryCacheKey = new QueryCache.QueryCacheKey(scope, user);
       QueryCache queryCache = getQueryCache((QueryCacheParameter) query.parameters.getOrDefault(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.USE)), user);
@@ -141,8 +145,7 @@ public class QueryExecutor {
       Table result;
       if (!notCached.isEmpty()) {
         notCached.add(COMPILED_COUNT);
-        notCached.forEach(prefetchQuery::withMeasure);
-        result = this.queryEngine.execute(prefetchQuery);
+        result = this.queryEngine.execute(new DatabaseQuery(prefetchQueryScope, new ArrayList<>(notCached)));
         result = TableUtils.replaceNullCellsByTotal(result, scope);
       } else {
         // Create an empty result that will be populated by the query cache
@@ -245,45 +248,6 @@ public class QueryExecutor {
     return builder.build(queriedMeasures.stream().map(m -> new QueryPlanNodeKey(queryScope, m)).toList());
   }
 
-  public record QueryScope(CompiledTable table,
-                           List<TypedField> columns,
-                           CompiledCriteria whereCriteria,
-                           CompiledCriteria havingCriteria,
-                           List<TypedField> rollupColumns,
-                           Set<Set<TypedField>> groupingSets,
-                           List<CteRecordTable> cteRecordTables,
-                           int limit) {
-
-    @Override
-    public String toString() {
-      final StringBuilder sb = new StringBuilder("QueryScope{");
-      sb.append("table=").append(this.table);
-      if (this.columns != null && !this.columns.isEmpty()) {
-        sb.append(", columns=").append(this.columns);
-      }
-      if (this.whereCriteria != null) {
-        sb.append(", whereCriteria=").append(this.whereCriteria);
-      }
-      if (this.havingCriteria != null) {
-        sb.append(", havingCriteria=").append(this.havingCriteria);
-      }
-      if (this.rollupColumns != null && !this.rollupColumns.isEmpty()) {
-        sb.append(", rollupColumns=").append(this.rollupColumns);
-      }
-      if (this.groupingSets != null && !this.groupingSets.isEmpty()) {
-        sb.append(", groupingSets=").append(this.groupingSets);
-      }
-      if (this.cteRecordTables != null && !this.cteRecordTables.isEmpty()) {
-        sb.append(", cteRecordTables=").append(this.cteRecordTables);
-      }
-      if (this.limit > 0) {
-        sb.append(", limit=").append(this.limit);
-      }
-      sb.append('}');
-      return sb.toString();
-    }
-  }
-
   public record QueryPlanNodeKey(QueryScope queryScope, CompiledMeasure measure) {
   }
 
@@ -320,8 +284,8 @@ public class QueryExecutor {
   public static Map<String, CompiledMeasure> generateGroupingMeasures(QueryScope queryScope) {
     Map<String, CompiledMeasure> measures = new HashMap<>();
     List<TypedField> rollups = new ArrayList<>();
-    rollups.addAll(queryScope.rollupColumns);
-    rollups.addAll(queryScope.groupingSets
+    rollups.addAll(queryScope.rollup());
+    rollups.addAll(queryScope.groupingSets()
             .stream()
             .flatMap(Collection::stream)
             .toList());

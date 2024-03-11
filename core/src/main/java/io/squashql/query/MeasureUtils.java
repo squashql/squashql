@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.query.compiled.*;
 import io.squashql.query.database.QueryRewriter;
+import io.squashql.query.database.QueryScope;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.type.TableTypedField;
@@ -76,24 +77,24 @@ public final class MeasureUtils {
     }
   }
 
-  public static QueryExecutor.QueryScope getReadScopeComparisonMeasureReferencePosition(
+  public static QueryScope getReadScopeComparisonMeasureReferencePosition(
           List<TypedField> columns,
           List<TypedField> groupColumns,
           CompiledComparisonMeasureReferencePosition cm,
-          QueryExecutor.QueryScope queryScope) {
+          QueryScope queryScope) {
     AtomicReference<CompiledCriteria> copy = new AtomicReference<>(queryScope.whereCriteria() == null ? null : CompiledCriteria.deepCopy(queryScope.whereCriteria()));
     Consumer<TypedField> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
     groupColumns.forEach(criteriaRemover);
     Optional.ofNullable(cm.period())
             .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover));
-    Set<TypedField> rollupColumns = new LinkedHashSet<>(queryScope.rollupColumns()); // order does matter
+    Set<TypedField> rollupColumns = new LinkedHashSet<>(queryScope.rollup()); // order does matter
     Optional.ofNullable(cm.ancestors())
             .ifPresent(ancestors -> {
               ancestors.forEach(criteriaRemover);
               List<TypedField> ancestorFields = ancestors.stream().filter(columns::contains).toList();
               rollupColumns.addAll(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage reverse order".
             });
-    return new QueryExecutor.QueryScope(queryScope.table(),
+    return new QueryScope(queryScope.table(),
             queryScope.columns(),
             copy.get(),
             queryScope.havingCriteria(),
@@ -103,8 +104,8 @@ public final class MeasureUtils {
             queryScope.limit());
   }
 
-  public static QueryExecutor.QueryScope getReadScopeComparisonGrandTotalMeasure(QueryExecutor.QueryScope queryScope) {
-    return new QueryExecutor.QueryScope(queryScope.table(),
+  public static QueryScope getReadScopeComparisonGrandTotalMeasure(QueryScope queryScope) {
+    return new QueryScope(queryScope.table(),
             queryScope.columns(),
             queryScope.whereCriteria(),
             queryScope.havingCriteria(),
