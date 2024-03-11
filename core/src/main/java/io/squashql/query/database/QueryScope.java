@@ -15,9 +15,9 @@ public record QueryScope(CompiledTable table,
                          List<TypedField> rollup,
                          Set<Set<TypedField>> groupingSets,
                          List<CteRecordTable> cteRecordTables,
-                         int newScopeWithLimit) {
+                         int limit) {
 
-  public QueryScope newScopeWithLimit(int newLimit) {
+  public QueryScope copyWithNewLimit(int newLimit) {
     return new QueryScope(this.table, this.columns, this.whereCriteria, this.havingCriteria, this.rollup, this.groupingSets, this.cteRecordTables, newLimit);
   }
 

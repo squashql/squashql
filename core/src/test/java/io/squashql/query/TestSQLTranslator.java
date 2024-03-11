@@ -75,7 +75,7 @@ public class TestSQLTranslator {
     DatabaseQuery toDatabaseQuery() {
       // Keep the order
       List<CompiledMeasure> measures = getQuery().measures.stream().map(measure -> getMeasures().get(measure)).filter(m -> m != null).toList();
-      return new DatabaseQuery(getScope().newScopeWithLimit(this.limit), measures);
+      return new DatabaseQuery(getScope().copyWithNewLimit(this.limit), measures);
     }
 
     @Override
@@ -133,7 +133,7 @@ public class TestSQLTranslator {
   private DatabaseQuery compileQuery(QueryDto query, Map<String, Store> stores) {
     return new QueryResolver(query, stores) {
       DatabaseQuery toDatabaseQuery() {
-        return new DatabaseQuery(getScope().newScopeWithLimit(query.limit), new ArrayList<>(getMeasures().values()));
+        return new DatabaseQuery(getScope().copyWithNewLimit(query.limit), new ArrayList<>(getMeasures().values()));
       }
     }.toDatabaseQuery();
   }

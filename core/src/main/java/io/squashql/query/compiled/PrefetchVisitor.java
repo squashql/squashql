@@ -206,7 +206,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
               Collections.emptyList(), // remove rollup, it has been computed in the subquery
               Collections.emptySet(),
               this.originalQueryScope.cteRecordTables(),
-              this.originalQueryScope.newScopeWithLimit());
+              this.originalQueryScope.limit());
 
       int size = subQueryMeasureAliases.size();
       for (int i = 0; i < size; i++) {

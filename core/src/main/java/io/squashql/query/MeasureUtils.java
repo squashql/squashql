@@ -101,7 +101,7 @@ public final class MeasureUtils {
             new ArrayList<>(rollupColumns),
             new HashSet<>(queryScope.groupingSets()), // FIXME should handle groupingSets
             queryScope.cteRecordTables(),
-            queryScope.newScopeWithLimit());
+            queryScope.limit());
   }
 
   public static QueryScope getReadScopeComparisonGrandTotalMeasure(QueryScope queryScope) {
@@ -112,7 +112,7 @@ public final class MeasureUtils {
             Collections.emptyList(),
             Set.of(new HashSet<>(queryScope.columns()), Set.of()), // list of empty list => GT
             queryScope.cteRecordTables(),
-            queryScope.newScopeWithLimit());
+            queryScope.limit());
   }
 
   private static CompiledCriteria removeCriteriaOnField(TypedField field, CompiledCriteria root) {
