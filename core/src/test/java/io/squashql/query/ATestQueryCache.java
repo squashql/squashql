@@ -563,7 +563,39 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     assertCacheStats(1, 2);
   }
 
-  // FIXME test with order by
+  @Test
+  void testOrderBy() {
+    Measure sum = sum("ps", "price");
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(tableFields(List.of("category")), List.of(sum))
+            .build();
+    Table result = this.executor.executeQuery(query);
+    Assertions.assertThat(result).containsExactlyInAnyOrder( // order cannot be guaranteed
+            List.of("cloth", 10d),
+            List.of("drink", 2d),
+            List.of("food", 3d));
+    assertCacheStats(0, 2);
+
+    // Execute the same
+    query.orderBy(new AliasedField("ps"), OrderKeywordDto.ASC);
+    result = this.executor.executeQuery(query);
+    assertCacheStats(0, 4);
+    Assertions.assertThat(result).containsExactly( // order is always the same
+            List.of("drink", 2d),
+            List.of("food", 3d),
+            List.of("cloth", 10d));
+
+    query.orders.clear();
+    query.orderBy(new TableField("category"), OrderKeywordDto.ASC);
+    result = this.executor.executeQuery(query);
+    assertCacheStats(0, 6);
+    Assertions.assertThat(result).containsExactly( // order is always the same
+            List.of("cloth", 10d),
+            List.of("drink", 2d),
+            List.of("food", 3d));
+  }
+
 
   private void assertCacheStats(int hitCount, int missCount) {
     TestUtil.assertCacheStats(this.queryCache, hitCount, missCount);
