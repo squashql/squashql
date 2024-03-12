@@ -16,7 +16,7 @@ public final class Queries {
   private Queries() {
   }
 
-  public static Map<String, Comparator<?>> getSquashQLComparators(QueryDto queryDto) {
+  public static Map<String, Comparator<?>> getComparators(QueryDto queryDto) {
     Map<Field, OrderDto> orders = queryDto.orders;
     Map<String, Comparator<?>> res = new LinkedHashMap<>(); // order is important !
     orders.forEach((c, order) -> {

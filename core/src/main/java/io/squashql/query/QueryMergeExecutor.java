@@ -80,7 +80,7 @@ public class QueryMergeExecutor {
     List<CompletableFuture<Table>> futures = new ArrayList<>();
     for (QueryDto q : queryMerge.queries) {
       // Use putIfAbsent because the comparators of the first query take precedence over the second's
-      Queries.getSquashQLComparators(q).forEach(comparators::putIfAbsent);
+      Queries.getComparators(q).forEach(comparators::putIfAbsent);
       columnSets.addAll(q.columnSets.values());
       futures.add(CompletableFuture.supplyAsync(() -> executor.apply(q)));
     }
