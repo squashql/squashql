@@ -528,15 +528,14 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
     query.orderBy(tableField("category"), DESC);
     result = this.executor.executeQuery(query);
-    // The order is enforced by the user on category, but we can't know the order of the scenario column, this is why
-    // only the category column is checked
-    Assertions.assertThat(result.getColumnValues("category")).containsExactly(
-            "drink",
-            "drink",
-            "drink",
-            "cloth",
-            "cloth",
-            "cloth");
+    // The order is enforced by the user on category, and natural order applies to other columns
+    Assertions.assertThat(result).containsExactly(
+            List.of(MAIN_SCENARIO_NAME, "drink", 1L),
+            List.of("s1", "drink", 1L),
+            List.of("s2", "drink", 1L),
+            List.of(MAIN_SCENARIO_NAME, "cloth", 1L),
+            List.of("s1", "cloth", 1L),
+            List.of("s2", "cloth", 1L));
 
     List<String> elements = List.of("s2", MAIN_SCENARIO_NAME, "s1");
     query.orderBy(tableField(SCENARIO_FIELD_NAME), elements);
@@ -606,10 +605,9 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .orderBy(tableField("subcategory"), ASC)
             .build();
     result = this.executor.executeQuery(query);
-    // NULLS FIRST, see CompiledOrderBy
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList(null, 6L),
-            Arrays.asList("biscuit", 3L));
+            Arrays.asList("biscuit", 3L),
+            Arrays.asList(null, 6L));
   }
 
   @Test

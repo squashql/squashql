@@ -3,14 +3,10 @@ package io.squashql.util;
 import io.squashql.query.ColumnSet;
 import io.squashql.query.ColumnSetKey;
 import io.squashql.query.Field;
-import io.squashql.query.QueryResolver;
-import io.squashql.query.compiled.CompiledOrderBy;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
-import io.squashql.type.TypedField;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static io.squashql.query.dto.OrderKeywordDto.DESC;
 
@@ -20,20 +16,10 @@ public final class Queries {
   private Queries() {
   }
 
-  /**
-   * Creates {@link Comparator} for each order by from the query {@link QueryResolver#getQuery()}. If all is set to true,
-   * it also creates comparator for orderBy that can be computed on the DB side, otherwise only the comparator for the
-   * fields "computed" by squashql i.e. squashql measures or {@link GroupColumnSetDto}.
-   */
-  public static Map<String, Comparator<?>> getSquashQLComparators(QueryResolver queryResolver, boolean all) {
-    Map<Field, OrderDto> orders = queryResolver.getQuery().orders;
+  public static Map<String, Comparator<?>> getSquashQLComparators(QueryDto queryDto) {
+    Map<Field, OrderDto> orders = queryDto.orders;
     Map<String, Comparator<?>> res = new LinkedHashMap<>(); // order is important !
-    Set<TypedField> fieldOrderedInDB = queryResolver.getCompiledOrderByInDB().stream().map(CompiledOrderBy::field).collect(Collectors.toSet());
     orders.forEach((c, order) -> {
-      if (!all && fieldOrderedInDB.contains(queryResolver.resolveField(c))) {
-        return;
-      }
-
       if (order instanceof SimpleOrderDto so) {
         res.put(SqlUtils.squashqlExpression(c), NullAndTotalComparator.nullsLastAndTotalsFirst(so.order == DESC ? Comparator.naturalOrder().reversed() : Comparator.naturalOrder()));
       } else if (order instanceof ExplicitOrderDto eo) {
@@ -44,7 +30,7 @@ public final class Queries {
     });
 
     // Special case for group that defines implicitly an order.
-    ColumnSet group = queryResolver.getQuery().columnSets.get(ColumnSetKey.GROUP);
+    ColumnSet group = queryDto.columnSets.get(ColumnSetKey.GROUP);
     if (group != null) {
       GroupColumnSetDto cs = (GroupColumnSetDto) group;
       Map<Object, List<Object>> m = new LinkedHashMap<>();

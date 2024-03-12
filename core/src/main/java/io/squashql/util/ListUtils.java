@@ -23,4 +23,8 @@ public final class ListUtils {
     }
     return l;
   }
+
+//  public static <T> int index(List<T> list, T o) {
+//    list.inde
+//  }
 }

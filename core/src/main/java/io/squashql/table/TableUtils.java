@@ -182,12 +182,11 @@ public class TableUtils {
    * Naturally order the rows from left to right.
    */
   public static Table orderRows(ColumnarTable table) {
-    return orderRows(table, Collections.emptyMap(), false, Collections.emptySet());
+    return orderRows(table, Collections.emptyMap(), Collections.emptySet());
   }
 
   public static Table orderRows(ColumnarTable table,
                                 Map<String, Comparator<?>> comparatorByColumnName,
-                                boolean applyDefaultOrderingIfNoComparator,
                                 Collection<ColumnSet> columnSets) {
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
@@ -203,19 +202,23 @@ public class TableUtils {
       copy.remove(SqlUtils.squashqlExpression(cs.field));
     });
 
-    boolean noComparator = copy.isEmpty();
+    // Start with the explicit comparators. FIXME does not handle columns that appears multiple times. Need to be tested
+    List<String> namesForOrdering = new ArrayList<>(table.headers().size());
+    comparatorByColumnName.forEach((columnName, comp) -> {
+      args.add(table.getColumnValues(columnName));
+      comparators.add(comp);
+      namesForOrdering.add(columnName);
+    });
 
+    // Order by default if not explicitly asked in the query.
     List<Header> headers = table.headers();
     for (Header header : headers) {
       String headerName = header.name();
-      Comparator<?> queryComp = comparatorByColumnName.get(headerName);
-      // Order by default if not explicitly asked in the query. Otherwise, respect the order.
-      if (queryComp != null || (noComparator && !applyDefaultOrderingIfNoComparator)) {
+      if (!comparatorByColumnName.containsKey(headerName)) {
+        namesForOrdering.add(headerName);
         args.add(table.getColumnValues(headerName));
         // Always order table. If not defined, use natural order comp.
-        comparators.add(queryComp == null
-                ? NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder())
-                : queryComp);
+        comparators.add(NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder()));
       }
     }
 
@@ -229,7 +232,10 @@ public class TableUtils {
     for (ColumnSet columnSet : new HashSet<>(columnSets)) {
       GroupColumnSetDto cs = (GroupColumnSetDto) columnSet;
       // cs.field can appear multiple times in the table.
-      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(SqlUtils.squashqlExpression(cs.newField)));
+      int index = namesForOrdering.indexOf(SqlUtils.squashqlExpression(cs.field));
+      contextIndices[index] = namesForOrdering.indexOf(SqlUtils.squashqlExpression(cs.newField));
+      // FIXME does not handle properly cs.field that can appear multiple times
+      //      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(SqlUtils.squashqlExpression(cs.newField)));
     }
 
     int[] finalIndices = MultipleColumnsSorter.sort(args, comparators, contextIndices);

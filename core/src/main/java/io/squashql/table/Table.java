@@ -80,6 +80,7 @@ public interface Table extends Iterable<List<Object>> {
     return index;
   }
 
+  // FIXME delete?
   default IntList columnIndices(Field column) {
     int i = 0;
     MutableIntList list = MutableIntListFactoryImpl.INSTANCE.empty();
