@@ -137,7 +137,7 @@ public class TestDuckDBQuery {
   }
 
   @Test
-  void testOrderBySquashQLMeasureOrderIsPreserver() {
+  void testOrderBySquashQLMeasureOrderIsPreserved() {
     Runnable loader = () -> {
       List<Object[]> tuples = new ArrayList<>(List.of(
               new Object[]{2020, 0, 2d},
@@ -171,7 +171,8 @@ public class TestDuckDBQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     // Order first by year then by a measure computed by SquashQL. The order should be preserved i.e. year ordered then
-    // yoy ordered among year.
+    // yoy ordered among year. This is working because orderBy year is applied twice: at DB level and by SquashQL to be
+    // able to order "yoy" and preserve the order of year.
     Assertions.assertThat(result).containsExactly(
             Arrays.asList(2020, 0, 2d, null),
             Arrays.asList(2020, 1, 3d, null),

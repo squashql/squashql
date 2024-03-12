@@ -309,40 +309,4 @@ public class TestDuckDBDoc {
     List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, null);
     System.out.println(JacksonUtil.serialize(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values, pt.hiddenTotals)));
   }
-
-
-  @Test
-  void test() {
-    String sql = """
-            CREATE TABLE sales (
-                sale_id INT PRIMARY KEY,
-                year INT,
-                month INT,
-                amount DECIMAL(10, 2)
-            );
-
-            INSERT INTO sales (sale_id, year, month, amount) VALUES
-            (8, 2022, 8, 3200.25),
-            (9, 2022, 9, 3500.50),
-            (10, 2022, 10, 3800.75),
-            (11, 2022, 11, 4000.00),
-            (12, 2022, 12, 4200.25),
-            (13, 2023, 1, 4500.50),
-            (14, 2023, 2, 4800.75),
-            (15, 2023, 3, 5000.00),
-                        """;
-
-    this.engine.executeSql(sql);
-    this.executor.executeRaw("select year, month, sum(amount) from sales group by year, month order by year DESC, month ASC").show();
-    this.executor.executeRaw("select year, sum(amount) from sales group by rollup(year) order by sum(amount) ASC, year DESC").show();
-
-    // Problem order by with rollup => not match the use case. If we order by a measure, we don't care about ordering the values of totals.
-    // Example: product, price => order desc price. Put rollup, the value of GT will appear first
-    // Order by is not really compatible with rollup. For instance, if year is an int, totals are written for year 0. => 0 cannot be used
-    // in order by year because it is misleading.
-    // Now add category and rollup(category, price). Does not make sense to order by price as some total of categories can interleave with
-    // not total. and the order by is useless. Show an example.
-
-    // Support only order by single basic measure without rollup or grouping sets.
-  }
 }

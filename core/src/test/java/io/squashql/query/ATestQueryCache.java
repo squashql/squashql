@@ -596,7 +596,6 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             List.of("food", 3d));
   }
 
-
   private void assertCacheStats(int hitCount, int missCount) {
     TestUtil.assertCacheStats(this.queryCache, hitCount, missCount);
   }
