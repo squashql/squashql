@@ -1,18 +1,18 @@
 package io.squashql;
 
-import io.squashql.query.QueryExecutor;
+import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.LimitExceedException;
+import io.squashql.table.Table;
 import io.squashql.transaction.DuckDBDataLoader;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.squashql.query.Functions.sum;
@@ -95,5 +95,89 @@ public class TestDuckDBQuery {
     TestUtil.assertThatThrownBy(() -> this.executor.executePivotQueryMerge(new PivotTableQueryMergeDto(queryMergeDto, List.of(tableField("eanId")), List.of()), null))
             .isInstanceOf(LimitExceedException.class)
             .hasMessageContaining("too big");
+  }
+
+  @Test
+  void testOrderBySquashQLMeasure() {
+    Runnable loader = () -> this.dl.load(this.storeName, List.of(
+            new Object[]{2020, 2d},
+            new Object[]{2021, 3d},
+            new Object[]{2022, 10d}
+    ));
+    TableTypedField year = new TableTypedField(this.storeName, "year", int.class);
+    TableTypedField price = new TableTypedField(this.storeName, "price", double.class);
+    setup(Map.of(this.storeName, List.of(year, price)), loader);
+
+    Measure sum = sum("p", "price");
+    Period.Year period = new Period.Year(tableField("year"));
+    Measure comp = new ComparisonMeasureReferencePosition(
+            "yoy",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            sum,
+            Map.of(period.year(), "y-1"),
+            period);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(tableFields(List.of("year")), List.of(comp))
+            .orderBy(new AliasedField("yoy"), OrderKeywordDto.DESC)
+            .build();
+    Table result = this.executor.executeQuery(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of(2022, 7d),
+            List.of(2021, 1d),
+            Arrays.asList(2020, null));
+
+    query.orders.clear();
+    query.orderBy(new AliasedField("yoy"), OrderKeywordDto.ASC);
+    result = this.executor.executeQuery(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of(2021, 1d),
+            List.of(2022, 7d),
+            Arrays.asList(2020, null)); // null always last
+  }
+
+  @Test
+  void testOrderBySquashQLMeasureOrderIsPreserver() {
+    Runnable loader = () -> {
+      List<Object[]> tuples = new ArrayList<>(List.of(
+              new Object[]{2020, 0, 2d},
+              new Object[]{2020, 1, 3d},
+              new Object[]{2021, 0, 3d},
+              new Object[]{2021, 1, 5d},
+              new Object[]{2022, 0, 10d},
+              new Object[]{2022, 1, 5d}
+      ));
+      Collections.shuffle(tuples);
+      this.dl.load(this.storeName, tuples);
+    };
+    TableTypedField year = new TableTypedField(this.storeName, "year", int.class);
+    TableTypedField month = new TableTypedField(this.storeName, "month", int.class);
+    TableTypedField price = new TableTypedField(this.storeName, "price", double.class);
+    setup(Map.of(this.storeName, List.of(year, month, price)), loader);
+
+    Measure sum = sum("p", "price");
+    Period.Year period = new Period.Year(tableField("year"));
+    Measure comp = new ComparisonMeasureReferencePosition(
+            "yoy",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            sum,
+            Map.of(period.year(), "y-1"),
+            period);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(tableFields(List.of("year", "month")), List.of(sum, comp))
+            .orderBy(new TableField("year"), OrderKeywordDto.ASC)
+            .orderBy(new AliasedField("yoy"), OrderKeywordDto.ASC)
+            .build();
+    Table result = this.executor.executeQuery(query);
+    // Order first by year then by a measure computed by SquashQL. The order should be preserved i.e. year ordered then
+    // yoy ordered among year.
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList(2020, 0, 2d, null),
+            Arrays.asList(2020, 1, 3d, null),
+            List.of(2021, 0, 3d, 1d),
+            List.of(2021, 1, 5d, 2d),
+            List.of(2022, 1, 5d, 0d),
+            List.of(2022, 0, 10d, 7d));
   }
 }

@@ -194,7 +194,7 @@ public class QueryExecutor {
     result = TableUtils.selectAndOrderColumns(queryResolver, (ColumnarTable) result, query);
     if (replaceTotalCellsAndOrderRows) {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result, !query.rollupColumns.isEmpty());
-      result = TableUtils.orderRows((ColumnarTable) result, Queries.getSquashQLComparators(queryResolver, false), !queryResolver.getCompiledOrderByInDB().isEmpty(), query.columnSets.values());
+      result = TableUtils.orderRows((ColumnarTable) result, Queries.getSquashQLComparators(queryResolver, true), !queryResolver.getCompiledOrderByInDB().isEmpty(), query.columnSets.values());
     }
 
     CacheStatsDto stats = this.queryCache.stats(user);

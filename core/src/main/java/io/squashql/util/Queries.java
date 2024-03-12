@@ -27,7 +27,7 @@ public final class Queries {
    */
   public static Map<String, Comparator<?>> getSquashQLComparators(QueryResolver queryResolver, boolean all) {
     Map<Field, OrderDto> orders = queryResolver.getQuery().orders;
-    Map<String, Comparator<?>> res = new HashMap<>();
+    Map<String, Comparator<?>> res = new LinkedHashMap<>(); // order is important !
     Set<TypedField> fieldOrderedInDB = queryResolver.getCompiledOrderByInDB().stream().map(CompiledOrderBy::field).collect(Collectors.toSet());
     orders.forEach((c, order) -> {
       if (!all && fieldOrderedInDB.contains(queryResolver.resolveField(c))) {
