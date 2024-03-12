@@ -182,11 +182,12 @@ public class TableUtils {
    * Naturally order the rows from left to right.
    */
   public static Table orderRows(ColumnarTable table) {
-    return orderRows(table, Collections.emptyMap(), Collections.emptySet());
+    return orderRows(table, Collections.emptyMap(), false, Collections.emptySet());
   }
 
   public static Table orderRows(ColumnarTable table,
                                 Map<String, Comparator<?>> comparatorByColumnName,
+                                boolean applyDefaultOrderingIfNoComparator,
                                 Collection<ColumnSet> columnSets) {
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
@@ -202,15 +203,18 @@ public class TableUtils {
       copy.remove(SqlUtils.squashqlExpression(cs.field));
     });
 
+    boolean noComparator = copy.isEmpty();
+
     List<Header> headers = table.headers();
     for (Header header : headers) {
       String headerName = header.name();
       Comparator<?> queryComp = comparatorByColumnName.get(headerName);
       // Order by default if not explicitly asked in the query. Otherwise, respect the order.
-      if (queryComp != null || copy.isEmpty()) {
+      if (queryComp != null || (noComparator && !applyDefaultOrderingIfNoComparator)) {
         args.add(table.getColumnValues(headerName));
         // Always order table. If not defined, use natural order comp.
-        comparators.add(queryComp == null ? NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder())
+        comparators.add(queryComp == null
+                ? NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder())
                 : queryComp);
       }
     }

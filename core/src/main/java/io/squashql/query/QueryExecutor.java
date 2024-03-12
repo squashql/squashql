@@ -73,7 +73,8 @@ public class QueryExecutor {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result,
               pivotTableQueryDto.rows.stream().map(SqlUtils::squashqlExpression).toList(),
               pivotTableQueryDto.columns.stream().map(SqlUtils::squashqlExpression).toList());
-      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
+      QueryResolver queryResolver = new QueryResolver(preparedQuery, this.queryEngine.datastore().storesByName()); // FIXME avoid to recreate it ?
+      result = TableUtils.orderRows((ColumnarTable) result, Queries.getSquashQLComparators(queryResolver, false), !queryResolver.getCompiledOrderByInDB().isEmpty(), preparedQuery.columnSets.values());
     }
 
     List<String> values = pivotTableQueryDto.query.measures.stream().map(Measure::alias).toList();
@@ -193,7 +194,7 @@ public class QueryExecutor {
     result = TableUtils.selectAndOrderColumns(queryResolver, (ColumnarTable) result, query);
     if (replaceTotalCellsAndOrderRows) {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result, !query.rollupColumns.isEmpty());
-      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
+      result = TableUtils.orderRows((ColumnarTable) result, Queries.getSquashQLComparators(queryResolver, false), !queryResolver.getCompiledOrderByInDB().isEmpty(), query.columnSets.values());
     }
 
     CacheStatsDto stats = this.queryCache.stats(user);

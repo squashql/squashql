@@ -563,6 +563,8 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     assertCacheStats(1, 2);
   }
 
+  // FIXME test with order by
+
   private void assertCacheStats(int hitCount, int missCount) {
     TestUtil.assertCacheStats(this.queryCache, hitCount, missCount);
   }

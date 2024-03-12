@@ -3,6 +3,7 @@ package io.squashql.query;
 import io.squashql.query.compiled.*;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryScope;
+import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.FieldNotFoundException;
 import io.squashql.query.measure.ParametrizedMeasure;
@@ -34,6 +35,10 @@ public class QueryResolver {
   private final Map<Measure, CompiledMeasure> subQueryMeasures;
   private final Map<Measure, CompiledMeasure> measures;
   private final Map<ColumnSetKey, CompiledColumnSet> compiledColumnSets;
+  /**
+   * The {@link OrderDto} to be computed only by the DB. Excluding orders made on measures computed by SquashQL.
+   */
+  private final List<CompiledOrderBy> compiledOrderByInDB;
 
   public QueryResolver(QueryDto query, Map<String, Store> storesByName) {
     this.query = query;
@@ -48,6 +53,7 @@ public class QueryResolver {
     this.groupColumns = Optional.ofNullable(query.columnSets.get(ColumnSetKey.GROUP))
             .stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
     this.subQueryMeasures = query.table.subQuery == null ? Collections.emptyMap() : compileMeasures(query.table.subQuery.measures, false);
+    this.compiledOrderByInDB = compileOrderByInDB(query.orders);
     this.scope = toQueryScope(query);
     this.measures = compileMeasures(query.measures, true);
     this.compiledColumnSets = compiledColumnSets(query.columnSets);
@@ -155,24 +161,22 @@ public class QueryResolver {
     throw new FieldNotFoundException("Cannot find field with name " + fieldName);
   }
 
-  /**
-   * Queries
-   */
   private QueryScope toQueryScope(QueryDto query) {
     checkQuery(query);
     final List<TypedField> columnSets = query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
     final List<TypedField> combinedColumns = Stream.concat(this.columns.stream(), columnSets.stream()).toList();
 
-    List<TypedField> rollupColumns = query.rollupColumns.stream().map(this::resolveField).toList();
+    List<TypedField> rollup = query.rollupColumns.stream().map(this::resolveField).toList();
     Set<Set<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(this::resolveField).collect(Collectors.toSet())).collect(Collectors.toSet());
     return new QueryScope(
             compileTable(query.table),
             combinedColumns,
             compileCriteria(query.whereCriteriaDto),
             compileCriteria(query.havingCriteriaDto),
-            rollupColumns,
+            rollup,
             groupingSets,
             compileVirtualTables(query.virtualTableDtos),
+            this.compiledOrderByInDB,
             query.limit);
   }
 
@@ -198,9 +202,9 @@ public class QueryResolver {
             Collections.emptyList(),
             Collections.emptySet(),
             null, // FIXME is it correct?
+            Collections.emptyList(),
             subQuery.limit);
-    DatabaseQuery query = new DatabaseQuery(queryScope, new ArrayList<>(this.subQueryMeasures.values()));
-    return query;
+    return new DatabaseQuery(queryScope, new ArrayList<>(this.subQueryMeasures.values()));
   }
 
   private void checkSubQuery(final QueryDto subQuery) {
@@ -404,8 +408,26 @@ public class QueryResolver {
     return m;
   }
 
+  /**
+   * Compiles orderBy but remove the ones concerning measures computed by SquashQL.
+   */
+  private List<CompiledOrderBy> compileOrderByInDB(Map<Field, OrderDto> orders) {
+    List<CompiledOrderBy> r = new ArrayList<>();
+    for (Map.Entry<Field, OrderDto> e : orders.entrySet()) {
+      String expression = SqlUtils.squashqlExpression(e.getKey());
+      Optional<Measure> first = this.query.measures.stream().filter(m -> m.alias().equals(expression)).findFirst();
+      if (first.isPresent() && !MeasureUtils.isPrimitive(compileMeasure(first.get(), true))) {
+        continue;
+      }
+      TypedField key = resolveWithFallback(e.getKey());
+      r.add(new CompiledOrderBy(key, e.getValue()));
+    }
+    return r;
+  }
+
   @Value
   private static class CompilationCache {
+
     Map<Field, TypedField> compiledFields = new ConcurrentHashMap<>();
     Map<Measure, CompiledMeasure> compiledMeasure = new ConcurrentHashMap<>();
     Map<CriteriaDto, CompiledCriteria> compiledCriteria = new ConcurrentHashMap<>();

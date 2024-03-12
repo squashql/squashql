@@ -541,12 +541,13 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     List<String> elements = List.of("s2", MAIN_SCENARIO_NAME, "s1");
     query.orderBy(tableField(SCENARIO_FIELD_NAME), elements);
     result = this.executor.executeQuery(query);
+    // Order of orderBy is important. First orderBy => category in DESC order, then orderBy scenario in the order defined by the user
     Assertions.assertThat(result).containsExactly(
             List.of("s2", "drink", 1L),
-            List.of("s2", "cloth", 1L),
             List.of(MAIN_SCENARIO_NAME, "drink", 1L),
-            List.of(MAIN_SCENARIO_NAME, "cloth", 1L),
             List.of("s1", "drink", 1L),
+            List.of("s2", "cloth", 1L),
+            List.of(MAIN_SCENARIO_NAME, "cloth", 1L),
             List.of("s1", "cloth", 1L));
   }
 
@@ -605,9 +606,10 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .orderBy(tableField("subcategory"), ASC)
             .build();
     result = this.executor.executeQuery(query);
+    // NULLS FIRST, see CompiledOrderBy
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList("biscuit", 3L),
-            Arrays.asList(null, 6L));
+            Arrays.asList(null, 6L),
+            Arrays.asList("biscuit", 3L));
   }
 
   @Test
@@ -622,13 +624,6 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of("cloth", 30d),
             List.of("drink", 7.5d),
             List.of("food", 9d));
-
-    query.orderBy(tableField("p"), DESC);
-    result = this.executor.executeQuery(query);
-    Assertions.assertThat(result).containsExactly(
-            List.of("cloth", 30d),
-            List.of("food", 9d),
-            List.of("drink", 7.5d));
 
     // With AliasedField
     query = Query

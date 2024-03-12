@@ -569,13 +569,13 @@ public class TestSQLTranslator {
     TableTypedField stringField = new TableTypedField("store", "field", String.class);
     TableTypedField intField = new TableTypedField("store", "field", int.class);
     String sql = new CompiledOrderBy(stringField, new SimpleOrderDto(OrderKeywordDto.ASC)).sqlExpression(qr);
-    assertThat(sql).isEqualTo("`dataset.store`.`field` asc");
+    assertThat(sql).isEqualTo("`dataset.store`.`field` asc nulls first");
     sql = new CompiledOrderBy(stringField, new SimpleOrderDto(OrderKeywordDto.DESC)).sqlExpression(qr);
-    assertThat(sql).isEqualTo("`dataset.store`.`field` desc");
+    assertThat(sql).isEqualTo("`dataset.store`.`field` desc nulls first");
     sql = new CompiledOrderBy(intField, new ExplicitOrderDto(List.of(2023, 2027))).sqlExpression(qr);
-    assertThat(sql).isEqualTo("case when `dataset.store`.`field` = 2023 then 1 when `dataset.store`.`field` = 2027 then 2 else 3 end");
+    assertThat(sql).isEqualTo("case when `dataset.store`.`field` is null then 1 when `dataset.store`.`field` = 2023 then 2 when `dataset.store`.`field` = 2027 then 3 else 4 end");
     sql = new CompiledOrderBy(stringField, new ExplicitOrderDto(List.of(2023, 2027))).sqlExpression(qr);
     // When field is a string, values should be escaped
-    assertThat(sql).isEqualTo("case when `dataset.store`.`field` = '2023' then 1 when `dataset.store`.`field` = '2027' then 2 else 3 end");
+    assertThat(sql).isEqualTo("case when `dataset.store`.`field` is null then 1 when `dataset.store`.`field` = '2023' then 2 when `dataset.store`.`field` = '2027' then 3 else 4 end");
   }
 }

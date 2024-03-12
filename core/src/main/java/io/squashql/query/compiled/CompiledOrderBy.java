@@ -11,17 +11,22 @@ import java.util.Collections;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * NULLS FIRST always.
+ */
 public record CompiledOrderBy(TypedField field, OrderDto orderDto) {
 
-  public String sqlExpression(final QueryRewriter queryRewriter) {
+  public String sqlExpression(QueryRewriter queryRewriter) {
     StringJoiner joiner = new StringJoiner(" ");
     if (this.orderDto instanceof SimpleOrderDto simpleOrder) {
       String expression = this.field.sqlExpression(queryRewriter); // TODO todo-mde should be queryRewriter.orderBy(field) because some db supports using the alias, others not.
-      joiner.add(expression).add(simpleOrder.order.name().toLowerCase());
+      joiner.add(expression).add(simpleOrder.order.name().toLowerCase()).add("nulls first");
       return joiner.toString();
     } else if (this.orderDto instanceof ExplicitOrderDto explicitOrder) {
       AtomicInteger i = new AtomicInteger(0);
       joiner.add("case");
+      CompiledCriteria isNull = new CompiledCriteria(Functions.isNull(), null, this.field, null, null, Collections.emptyList());
+      joiner.add("when").add(isNull.sqlExpression(queryRewriter)).add("then").add(String.valueOf(i.incrementAndGet()));
       explicitOrder.explicit.forEach(element -> {
         CompiledCriteria cc = new CompiledCriteria(Functions.eq(element), null, this.field, null, null, Collections.emptyList());
         joiner.add("when").add(cc.sqlExpression(queryRewriter)).add("then").add(String.valueOf(i.incrementAndGet()));
