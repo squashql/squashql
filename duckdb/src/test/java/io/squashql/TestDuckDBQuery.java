@@ -181,4 +181,39 @@ public class TestDuckDBQuery {
             List.of(2022, 1, 5d, 0d),
             List.of(2022, 0, 10d, 7d));
   }
+
+  @Test
+  void testOrderByWithDuplicates() {
+    TableTypedField year = new TableTypedField(this.storeName, "year", int.class);
+    TableTypedField ean = new TableTypedField(this.storeName, "ean", String.class);
+    TableTypedField category = new TableTypedField(this.storeName, "category", String.class);
+    TableTypedField price = new TableTypedField(this.storeName, "price", double.class);
+    setup(Map.of(this.storeName, List.of(year, ean, category, price)), () -> this.dl.load(this.storeName, List.of(
+            new Object[]{2023, "bottle", "drink", 2d},
+            new Object[]{2023, "cookie", "food", 3d},
+            new Object[]{2023, "shirt", "cloth", 10d},
+            new Object[]{2024, "bottle", "drink", 4d},
+            new Object[]{2024, "cookie", "food", 5d},
+            new Object[]{2024, "shirt", "cloth", 12d}
+    )));
+
+    GroupColumnSetDto group = new GroupColumnSetDto("group", tableField("category"))
+            .withNewGroup("Food & Drink", List.of("food", "drink"))
+            .withNewGroup("Other", List.of("cloth"));
+
+    // Execute a query where several columns appear multiple times: year and category appears twice.
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(tableFields(List.of("year", "category", "year")), List.of(group), List.of(sum("p", "price")))
+            .orderBy(new TableField("year"), OrderKeywordDto.DESC)
+            .build();
+    Table result = this.executor.executeQuery(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of("Food & Drink", "food", 2024, "food", 2024, 5d),
+            List.of("Food & Drink", "drink", 2024, "drink", 2024, 4d),
+            List.of("Other", "cloth", 2024, "cloth", 2024, 12d),
+            List.of("Food & Drink", "food", 2023, "food", 2023, 3d),
+            List.of("Food & Drink", "drink", 2023, "drink", 2023, 2d),
+            List.of("Other", "cloth", 2023, "cloth", 2023, 10d));
+  }
 }

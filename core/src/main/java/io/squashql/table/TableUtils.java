@@ -190,19 +190,8 @@ public class TableUtils {
                                 Collection<ColumnSet> columnSets) {
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
-    Map<String, Comparator<?>> copy = new HashMap<>(comparatorByColumnName);
 
-    columnSets.forEach(columnSet -> {
-      if (columnSet.getColumnSetKey() != ColumnSetKey.GROUP) {
-        throw new IllegalArgumentException("Unexpected column set type " + columnSet);
-      }
-      GroupColumnSetDto cs = (GroupColumnSetDto) columnSet;
-      // Remove from the map of comparators to use default one when only none is defined for regular column
-      copy.remove(SqlUtils.squashqlExpression(cs.newField));
-      copy.remove(SqlUtils.squashqlExpression(cs.field));
-    });
-
-    // Start with the explicit comparators. FIXME does not handle columns that appears multiple times. Need to be tested
+    // Start with the explicit comparators.
     List<String> namesForOrdering = new ArrayList<>(table.headers().size());
     comparatorByColumnName.forEach((columnName, comp) -> {
       args.add(table.getColumnValues(columnName));
@@ -234,8 +223,6 @@ public class TableUtils {
       // cs.field can appear multiple times in the table.
       int index = namesForOrdering.indexOf(SqlUtils.squashqlExpression(cs.field));
       contextIndices[index] = namesForOrdering.indexOf(SqlUtils.squashqlExpression(cs.newField));
-      // FIXME does not handle properly cs.field that can appear multiple times
-      //      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(SqlUtils.squashqlExpression(cs.newField)));
     }
 
     int[] finalIndices = MultipleColumnsSorter.sort(args, comparators, contextIndices);
@@ -406,7 +393,7 @@ public class TableUtils {
   public static List<Map<String, Object>> generateCells(Table table, Boolean minify) {
     Set<String> measuresWithNullValuesOnEntireColumn;
     if (minify == null || minify) {
-      measuresWithNullValuesOnEntireColumn = new HashSet<>(table.measures().stream().map(CompiledMeasure::alias).collect(Collectors.toSet()));
+      measuresWithNullValuesOnEntireColumn = table.measures().stream().map(CompiledMeasure::alias).collect(Collectors.toCollection(HashSet::new));
       Set<String> toRemoveFromCandidates = new HashSet<>();
       for (String m : measuresWithNullValuesOnEntireColumn) {
         List<Object> columnValues = table.getColumnValues(m);
