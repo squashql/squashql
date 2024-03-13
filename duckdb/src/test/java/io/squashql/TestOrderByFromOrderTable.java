@@ -1,20 +1,35 @@
 package io.squashql;
 
 import io.squashql.query.QueryExecutor;
+import io.squashql.query.TableField;
+import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
+import io.squashql.query.dto.ConditionType;
+import io.squashql.query.dto.JoinType;
+import io.squashql.query.dto.OrderKeywordDto;
+import io.squashql.query.dto.QueryDto;
 import io.squashql.transaction.DuckDBDataLoader;
 import io.squashql.type.TableTypedField;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
+import static io.squashql.query.Functions.all;
+import static io.squashql.query.Functions.criterion;
+
 public class TestOrderByFromOrderTable {
-  protected String storeName = "myStore";
-  protected String orderTable = "orderTable";
-  protected DuckDBDatastore datastore;
-  protected DuckDBQueryEngine queryEngine;
-  protected DuckDBDataLoader dl;
-  protected QueryExecutor executor;
+  private final String storeName = "myStore";
+  private final String orderTable = "orderTable";
+  private final TableField portfolio = new TableField(this.storeName, "portfolio");
+  private final TableField ticker = new TableField(this.storeName, "ticker");
+  private final TableField orderId = new TableField(this.orderTable, "orderId");
+  private final TableField portfolioOrder = new TableField(this.orderTable, "portfolio");
+  private final TableField tickerOrder = new TableField(this.orderTable, "ticker");
+
+  private DuckDBDatastore datastore;
+  private DuckDBQueryEngine queryEngine;
+  private DuckDBDataLoader dl;
+  private QueryExecutor executor;
 
   void setup(Map<String, List<TableTypedField>> fieldsByStore, Runnable dataLoading) {
     this.datastore = new DuckDBDatastore();
@@ -65,13 +80,24 @@ public class TestOrderByFromOrderTable {
   void testOrderByFromOrderTable() {
     setup(getFieldsByStore(), this::loadData);
 
-    this.executor.executeRaw("select * from "  + this.storeName).show();
-    this.executor.executeRaw("select * from "  + this.orderTable).show();
+    this.executor.executeRaw("select * from " + this.storeName).show();
+    this.executor.executeRaw("select * from " + this.orderTable).show();
 
     String order = "select myStore.portfolio, myStore.ticker from " + this.storeName + " inner join " + this.orderTable + " on myStore.portfolio=orderTable.portfolio and myStore.ticker=orderTable.ticker" +
             " order by" +
             " myStore.portfolio, orderTable.orderId";
     System.out.println(order);
     this.executor.executeRaw(order).show();
+
+    QueryDto query = Query.from(this.storeName)
+            .join(this.orderTable, JoinType.INNER)
+            .on(all(
+                    criterion(this.portfolio, this.portfolioOrder, ConditionType.EQ),
+                    criterion(this.ticker, this.tickerOrder, ConditionType.EQ)))
+            .select(List.of(this.portfolio, this.ticker), List.of())
+            .orderBy(this.portfolio, OrderKeywordDto.ASC)
+            .orderBy(this.orderId, OrderKeywordDto.ASC)
+            .build();
+    this.executor.executeQuery(query).show();
   }
 }
