@@ -1,7 +1,10 @@
 package io.squashql.table;
 
 import com.google.common.base.Suppliers;
-import io.squashql.query.*;
+import io.squashql.query.ColumnSet;
+import io.squashql.query.Header;
+import io.squashql.query.Measure;
+import io.squashql.query.QueryExecutor;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.QueryScope;
@@ -10,7 +13,6 @@ import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.GroupColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.type.TypedField;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.NullAndTotalComparator;
 
@@ -140,42 +142,33 @@ public class TableUtils {
   /**
    * Selects and reorder the columns to match the selection and order in the query.
    */
-  public static ColumnarTable selectAndOrderColumns(QueryResolver queryResolver,
-                                                    ColumnarTable table,
-                                                    QueryDto queryDto) {
+  public static ColumnarTable selectAndOrderColumns(QueryDto queryDto,
+                                                    ColumnarTable table) {
     // Resolve fields...
-    List<TypedField> finalFields = new ArrayList<>();
+    List<String> finalColumns = new ArrayList<>();
     queryDto.columnSets.values()
-            .forEach(cs -> finalFields.addAll(cs.getNewColumns()
+            .forEach(cs -> finalColumns.addAll(cs.getNewColumns()
                     .stream()
-                    .map(queryResolver::getOrResolveTypedField)
+                    .map(SqlUtils::squashqlExpression)
                     .toList()));
-    finalFields.addAll(queryDto.columns.stream().map(queryResolver::getOrResolveTypedField).toList());
-
-    // ... and then get their string representation.
-    List<String> finalColumns = finalFields.stream().map(SqlUtils::squashqlExpression).toList();
-    List<CompiledMeasure> measures = new ArrayList<>();
-    for (Measure measure : queryDto.measures) {
-      CompiledMeasure compiledMeasure = queryResolver.getMeasures().get(measure);
-      if (compiledMeasure != null) {
-        measures.add(compiledMeasure);
-      }
-    }
-    return selectAndOrderColumns(table, finalColumns, measures);
+    finalColumns.addAll(queryDto.columns.stream().map(SqlUtils::squashqlExpression).toList());
+    return selectAndOrderColumns(table, finalColumns, queryDto.measures.stream().map(Measure::alias).toList());
   }
 
-  public static ColumnarTable selectAndOrderColumns(ColumnarTable table, List<String> columns, List<CompiledMeasure> measures) {
+  public static ColumnarTable selectAndOrderColumns(ColumnarTable table, List<String> columns, List<String> measureAliases) {
     List<Header> headers = new ArrayList<>();
     List<List<Object>> values = new ArrayList<>();
     for (String finalColumn : columns) {
       headers.add(table.getHeader(finalColumn));
       values.add(Objects.requireNonNull(table.getColumnValues(finalColumn)));
     }
-    for (CompiledMeasure measure : measures) {
-      headers.add(table.getHeader(measure));
-      values.add(Objects.requireNonNull(table.getAggregateValues(measure)));
+    for (String alias : measureAliases) {
+      headers.add(table.getHeader(alias));
+      values.add(Objects.requireNonNull(table.getColumnValues(alias)));
     }
-    return new ColumnarTable(headers, new HashSet<>(measures), values);
+    return new ColumnarTable(headers,
+            table.measures().stream().filter(cm -> measureAliases.contains(cm.alias())).collect(Collectors.toSet()),
+            values);
   }
 
   /**

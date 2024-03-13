@@ -8,8 +8,10 @@ import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.OrderKeywordDto;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.table.Table;
 import io.squashql.transaction.DuckDBDataLoader;
 import io.squashql.type.TableTypedField;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
@@ -43,22 +45,29 @@ public class TestOrderByFromOrderTable {
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
     TableTypedField portfolio = new TableTypedField(this.storeName, "portfolio", String.class);
     TableTypedField ticker = new TableTypedField(this.storeName, "ticker", String.class);
+    TableTypedField year = new TableTypedField(this.storeName, "year", int.class);
 
     TableTypedField orderId = new TableTypedField(this.orderTable, "orderId", int.class);
     TableTypedField portfolioOrder = new TableTypedField(this.orderTable, "portfolio", String.class);
     TableTypedField tickerOrder = new TableTypedField(this.orderTable, "ticker", String.class);
-    return Map.of(this.storeName, List.of(portfolio, ticker), this.orderTable, List.of(orderId, portfolioOrder, tickerOrder));
+    return Map.of(this.storeName, List.of(portfolio, ticker, year), this.orderTable, List.of(orderId, portfolioOrder, tickerOrder));
   }
 
   protected void loadData() {
     // Shuffle
     List<Object[]> tuples = Arrays.asList(
-            new Object[]{"A", "AAPL"},
-            new Object[]{"A", "NVDA"},
-            new Object[]{"A", "TSLA"},
-            new Object[]{"B", "MSFT"},
-            new Object[]{"B", "AAPL"},
-            new Object[]{"B", "META"}
+            new Object[]{"A", "AAPL", 2024},
+            new Object[]{"A", "AAPL", 2023},
+            new Object[]{"A", "NVDA", 2024},
+            new Object[]{"A", "NVDA", 2023},
+            new Object[]{"A", "TSLA", 2024},
+            new Object[]{"A", "TSLA", 2023},
+            new Object[]{"B", "MSFT", 2024},
+            new Object[]{"B", "MSFT", 2023},
+            new Object[]{"B", "AAPL", 2024},
+            new Object[]{"B", "AAPL", 2023},
+            new Object[]{"B", "META", 2024},
+            new Object[]{"B", "META", 2023}
     );
     Collections.shuffle(tuples, new Random(1234));
     this.dl.load(this.storeName, tuples);
@@ -80,15 +89,6 @@ public class TestOrderByFromOrderTable {
   void testOrderByFromOrderTable() {
     setup(getFieldsByStore(), this::loadData);
 
-    this.executor.executeRaw("select * from " + this.storeName).show();
-    this.executor.executeRaw("select * from " + this.orderTable).show();
-
-    String order = "select myStore.portfolio, myStore.ticker from " + this.storeName + " inner join " + this.orderTable + " on myStore.portfolio=orderTable.portfolio and myStore.ticker=orderTable.ticker" +
-            " order by" +
-            " myStore.portfolio, orderTable.orderId";
-    System.out.println(order);
-    this.executor.executeRaw(order).show();
-
     QueryDto query = Query.from(this.storeName)
             .join(this.orderTable, JoinType.INNER)
             .on(all(
@@ -98,6 +98,13 @@ public class TestOrderByFromOrderTable {
             .orderBy(this.portfolio, OrderKeywordDto.ASC)
             .orderBy(this.orderId, OrderKeywordDto.ASC)
             .build();
-    this.executor.executeQuery(query).show();
+    Table result = this.executor.executeQuery(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of("A", "AAPL"),
+            List.of("A", "NVDA"),
+            List.of("A", "TSLA"),
+            List.of("B", "MSFT"),
+            List.of("B", "AAPL"),
+            List.of("B", "META"));
   }
 }
