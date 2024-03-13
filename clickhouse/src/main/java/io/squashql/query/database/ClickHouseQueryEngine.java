@@ -57,15 +57,15 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
                  .execute()
                  .get()) {
       Pair<List<Header>, List<List<Object>>> result = transformToColumnFormat(
-              query.select,
-              query.measures,
+              query.scope().columns(),
+              query.measures(),
               response.getColumns(),
               (column, name) -> ClickHouseUtil.clickHouseTypeToClass(column),
               response.records().iterator(),
               (index, r) -> getValue(r, index, response.getColumns()));
       return new ColumnarTable(
               result.getOne(),
-              new HashSet<>(query.measures),
+              new HashSet<>(query.measures()),
               result.getTwo());
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(e);

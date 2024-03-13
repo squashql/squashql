@@ -4,6 +4,7 @@ import com.google.common.base.Suppliers;
 import io.squashql.query.*;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.QueryEngine;
+import io.squashql.query.database.QueryScope;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.GroupColumnSetDto;
@@ -31,14 +32,14 @@ public class TableUtils {
     return toString(null, rows, null, rowElementPrinters, predicate);
   }
 
-  public static String toString(List<? extends Object> columns,
+  public static String toString(List<?> columns,
                                 Iterable<List<Object>> rows,
                                 Function<Object, String> columnElementPrinters,
                                 Function<Object, String> rowElementPrinters) {
     return toString(columns, rows, columnElementPrinters, rowElementPrinters, __ -> false);
   }
 
-  public static String toString(List<? extends Object> columns,
+  public static String toString(List<?> columns,
                                 Iterable<List<Object>> rows,
                                 Function<Object, String> columnElementPrinters,
                                 Function<Object, String> rowElementPrinters,
@@ -189,28 +190,24 @@ public class TableUtils {
                                 Collection<ColumnSet> columnSets) {
     List<List<?>> args = new ArrayList<>();
     List<Comparator<?>> comparators = new ArrayList<>();
-    Map<String, Comparator<?>> copy = new HashMap<>(comparatorByColumnName);
 
-    columnSets.forEach(columnSet -> {
-      if (columnSet.getColumnSetKey() != ColumnSetKey.GROUP) {
-        throw new IllegalArgumentException("Unexpected column set type " + columnSet);
-      }
-      GroupColumnSetDto cs = (GroupColumnSetDto) columnSet;
-      // Remove from the map of comparators to use default one when only none is defined for regular column
-      copy.remove(SqlUtils.squashqlExpression(cs.newField));
-      copy.remove(SqlUtils.squashqlExpression(cs.field));
+    // Start with the explicit comparators.
+    List<String> namesForOrdering = new ArrayList<>(table.headers().size());
+    comparatorByColumnName.forEach((columnName, comp) -> {
+      args.add(table.getColumnValues(columnName));
+      comparators.add(comp);
+      namesForOrdering.add(columnName);
     });
 
-    List<Header> headers = table.headers;
+    // Order by default if not explicitly asked in the query.
+    List<Header> headers = table.headers();
     for (Header header : headers) {
       String headerName = header.name();
-      Comparator<?> queryComp = comparatorByColumnName.get(headerName);
-      // Order by default if not explicitly asked in the query. Otherwise, respect the order.
-      if (queryComp != null || copy.isEmpty()) {
+      if (!comparatorByColumnName.containsKey(headerName)) {
+        namesForOrdering.add(headerName);
         args.add(table.getColumnValues(headerName));
         // Always order table. If not defined, use natural order comp.
-        comparators.add(queryComp == null ? NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder())
-                : queryComp);
+        comparators.add(NullAndTotalComparator.nullsLastAndTotalsFirst(Comparator.naturalOrder()));
       }
     }
 
@@ -224,17 +221,18 @@ public class TableUtils {
     for (ColumnSet columnSet : new HashSet<>(columnSets)) {
       GroupColumnSetDto cs = (GroupColumnSetDto) columnSet;
       // cs.field can appear multiple times in the table.
-      table.columnIndices(cs.field).forEach(i -> contextIndices[i] = table.columnIndex(SqlUtils.squashqlExpression(cs.newField)));
+      int index = namesForOrdering.indexOf(SqlUtils.squashqlExpression(cs.field));
+      contextIndices[index] = namesForOrdering.indexOf(SqlUtils.squashqlExpression(cs.newField));
     }
 
     int[] finalIndices = MultipleColumnsSorter.sort(args, comparators, contextIndices);
 
     List<List<Object>> values = new ArrayList<>();
-    for (List<Object> value : table.values) {
+    for (List<Object> value : table.getColumns()) {
       values.add(reorder(value, finalIndices));
     }
 
-    return new ColumnarTable(headers, table.measures, values);
+    return new ColumnarTable(headers, table.measures(), values);
   }
 
   /**
@@ -253,11 +251,11 @@ public class TableUtils {
     boolean[] lazilyCreated = new boolean[1];
     Supplier<Table> finalTable = Suppliers.memoize(() -> {
       List<List<Object>> newValues = new ArrayList<>();
-      for (int i = 0; i < table.headers.size(); i++) {
+      for (int i = 0; i < table.headers().size(); i++) {
         newValues.add(new ArrayList<>(table.getColumn(i)));
       }
       lazilyCreated[0] = true;
-      return new ColumnarTable(table.headers, table.measures, newValues);
+      return new ColumnarTable(table.headers(), table.measures(), newValues);
     });
 
     for (int rowIndex = 0; rowIndex < table.count(); rowIndex++) {
@@ -327,7 +325,7 @@ public class TableUtils {
    *   +-------------+-------------+------+----------------------+----+
    * </pre>
    */
-  public static Table replaceNullCellsByTotal(Table input, QueryExecutor.QueryScope scope) {
+  public static Table replaceNullCellsByTotal(Table input, QueryScope scope) {
     Map<String, String> groupingHeaders = findGroupingHeaderNamesByBaseName(input.headers(), scope);
     if (!groupingHeaders.isEmpty()) {
       List<List<Object>> newValues = new ArrayList<>();
@@ -363,7 +361,7 @@ public class TableUtils {
    * [___grouping___field_name_b___, field_name_b]
    * ...
    */
-  private static Map<String, String> findGroupingHeaderNamesByBaseName(List<Header> headers, QueryExecutor.QueryScope scope) {
+  private static Map<String, String> findGroupingHeaderNamesByBaseName(List<Header> headers, QueryScope scope) {
     Set<String> rollupExpressions = QueryExecutor.generateGroupingMeasures(scope).keySet();
     Map<String, String> groupingHeaders = new HashMap<>();
     // rollupExpressions can be empty when working with vector. In that case, we rely on the header name only.
@@ -395,7 +393,7 @@ public class TableUtils {
   public static List<Map<String, Object>> generateCells(Table table, Boolean minify) {
     Set<String> measuresWithNullValuesOnEntireColumn;
     if (minify == null || minify) {
-      measuresWithNullValuesOnEntireColumn = new HashSet<>(table.measures().stream().map(CompiledMeasure::alias).collect(Collectors.toSet()));
+      measuresWithNullValuesOnEntireColumn = table.measures().stream().map(CompiledMeasure::alias).collect(Collectors.toCollection(HashSet::new));
       Set<String> toRemoveFromCandidates = new HashSet<>();
       for (String m : measuresWithNullValuesOnEntireColumn) {
         List<Object> columnValues = table.getColumnValues(m);

@@ -513,10 +513,10 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(), List.of(category, ean)));
     assertCacheStats(2, base); // same as the previous
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(ean), List.of(category)));
-    assertCacheStats(2, (base = base + 2));
+    assertCacheStats(4, base); // Same as the first query but row and category are reversed
     // Same as the first query
     this.executor.executePivotQuery(new PivotTableQueryDto(q, List.of(category), List.of(ean)));
-    assertCacheStats(4, base);
+    assertCacheStats(6, base);
   }
 
   @Test
@@ -561,6 +561,39 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             Arrays.asList(null, TOTAL, 5d),
             Arrays.asList(null, "other", 5d));
     assertCacheStats(1, 2);
+  }
+
+  @Test
+  void testOrderBy() {
+    Measure sum = sum("ps", "price");
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(tableFields(List.of("category")), List.of(sum))
+            .build();
+    Table result = this.executor.executeQuery(query);
+    Assertions.assertThat(result).containsExactlyInAnyOrder( // order cannot be guaranteed
+            List.of("cloth", 10d),
+            List.of("drink", 2d),
+            List.of("food", 3d));
+    assertCacheStats(0, 2);
+
+    // Execute the same
+    query.orderBy(new AliasedField("ps"), OrderKeywordDto.ASC);
+    result = this.executor.executeQuery(query);
+    assertCacheStats(0, 4);
+    Assertions.assertThat(result).containsExactly( // order is always the same
+            List.of("drink", 2d),
+            List.of("food", 3d),
+            List.of("cloth", 10d));
+
+    query.orders.clear();
+    query.orderBy(new TableField("category"), OrderKeywordDto.ASC);
+    result = this.executor.executeQuery(query);
+    assertCacheStats(0, 6);
+    Assertions.assertThat(result).containsExactly( // order is always the same
+            List.of("cloth", 10d),
+            List.of("drink", 2d),
+            List.of("food", 3d));
   }
 
   private void assertCacheStats(int hitCount, int missCount) {

@@ -43,8 +43,7 @@ public class ExperimentalQueryMergeExecutor {
       this.query = query;
       this.cteTableName = cteTableName;
       this.queryResolver = new QueryResolver(query, ExperimentalQueryMergeExecutor.this.queryEngine.datastore().storesByName());
-      this.dbQuery = this.queryResolver.toDatabaseQuery(this.queryResolver.getScope(), -1);
-      this.queryResolver.getMeasures().values().forEach(this.dbQuery::withMeasure);
+      this.dbQuery = new DatabaseQuery(this.queryResolver.getScope().copyWithNewLimit(-1), new ArrayList<>(this.queryResolver.getMeasures().values()));
       this.queryRewriter = ExperimentalQueryMergeExecutor.this.queryEngine.queryRewriter(this.dbQuery);
       this.originalTableName = query.table != null ? query.table.name : null;
       this.sql = SQLTranslator.translate(this.dbQuery, this.queryRewriter);

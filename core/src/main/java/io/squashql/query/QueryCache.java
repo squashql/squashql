@@ -1,6 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.compiled.CompiledMeasure;
+import io.squashql.query.database.QueryScope;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
@@ -31,6 +32,6 @@ public interface QueryCache {
 
   CacheStatsDto stats(SquashQLUser user);
 
-  record QueryCacheKey(QueryExecutor.QueryScope scope, SquashQLUser user) {
+  record QueryCacheKey(QueryScope scope, SquashQLUser user) {
   }
 }

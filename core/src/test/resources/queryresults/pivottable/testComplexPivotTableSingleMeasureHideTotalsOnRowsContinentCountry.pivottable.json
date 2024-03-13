@@ -1,0 +1,58 @@
+[
+  [
+    "storespendingatestpivottable.spending category",
+    "storespendingatestpivottable.spending category",
+    "storespendingatestpivottable.spending category",
+    "Grand Total",
+    "extra",
+    "minimum expenditure"
+  ],
+  [
+    "storespendingatestpivottable.continent",
+    "storespendingatestpivottable.country",
+    "storespendingatestpivottable.city",
+    "amount",
+    "amount",
+    "amount"
+  ],
+  [
+    "eu",
+    "france",
+    "Total",
+    8.0,
+    2.0,
+    6.0
+  ],
+  [
+    "eu",
+    "france",
+    "lyon",
+    4.0,
+    1.0,
+    3.0
+  ],
+  [
+    "eu",
+    "france",
+    "paris",
+    4.0,
+    1.0,
+    3.0
+  ],
+  [
+    "eu",
+    "uk",
+    "Total",
+    9.0,
+    5.0,
+    4.0
+  ],
+  [
+    "eu",
+    "uk",
+    "london",
+    9.0,
+    5.0,
+    4.0
+  ]
+]

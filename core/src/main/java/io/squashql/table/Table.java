@@ -1,14 +1,9 @@
 package io.squashql.table;
 
-import io.squashql.query.Field;
 import io.squashql.query.Header;
 import io.squashql.query.compiled.CompiledMeasure;
-import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.QueryDto;
-import org.eclipse.collections.api.list.primitive.IntList;
-import org.eclipse.collections.api.list.primitive.MutableIntList;
-import org.eclipse.collections.impl.list.mutable.primitive.MutableIntListFactoryImpl;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -33,6 +28,8 @@ public interface Table extends Iterable<List<Object>> {
   void addAggregates(Header header, CompiledMeasure measure, List<Object> values);
 
   void transferAggregates(Table from, CompiledMeasure measure);
+
+  void removeColumn(String column);
 
   default List<Object> getColumn(int columnIndex) {
     List<Object> elements = new ArrayList<>();
@@ -76,18 +73,6 @@ public interface Table extends Iterable<List<Object>> {
       throw new IllegalArgumentException("no column named " + column + ". Available columns are " + headers().stream().map(Header::name).toList());
     }
     return index;
-  }
-
-  default IntList columnIndices(Field column) {
-    int i = 0;
-    MutableIntList list = MutableIntListFactoryImpl.INSTANCE.empty();
-    for (Header header : headers()) {
-      if (header.name().equals(SqlUtils.squashqlExpression(column))) {
-        list.add(i);
-      }
-      i++;
-    }
-    return list;
   }
 
   default int index(Header header) {

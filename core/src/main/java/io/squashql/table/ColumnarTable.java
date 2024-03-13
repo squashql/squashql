@@ -1,6 +1,5 @@
 package io.squashql.table;
 
-import com.google.common.base.Suppliers;
 import io.squashql.query.Header;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
@@ -11,11 +10,10 @@ import java.util.function.Supplier;
 
 public class ColumnarTable implements Table {
 
-  protected final List<Header> headers;
-  protected final Set<CompiledMeasure> measures;
-
-  public final Supplier<ObjectArrayDictionary> pointDictionary;
-  protected final List<List<Object>> values;
+  private final MemoizingSupplier<ObjectArrayDictionary> pointDictionary;
+  private final List<Header> headers;
+  private final Set<CompiledMeasure> measures;
+  private final List<List<Object>> values;
 
   public ColumnarTable(List<Header> headers, Set<CompiledMeasure> measures, List<List<Object>> values) {
     if (headers.stream().filter(Header::isMeasure)
@@ -26,7 +24,7 @@ public class ColumnarTable implements Table {
     this.headers = new ArrayList<>(headers);
     this.measures = new HashSet<>(measures);
     this.values = new ArrayList<>(values);
-    this.pointDictionary = Suppliers.memoize(() -> createPointDictionary(this));
+    this.pointDictionary = new MemoizingSupplier<>(() -> createPointDictionary(this));
   }
 
   public static ObjectArrayDictionary createPointDictionary(Table table) {
@@ -56,6 +54,7 @@ public class ColumnarTable implements Table {
    * BE CAREFUL !! This method assumes this table and the table from passed in arguments have the same headers
    * {@code Header#isMeasure == false} in the same order.
    */
+  @Override
   public void transferAggregates(Table from, CompiledMeasure measure) {
     if (this.headers.stream().filter(h -> !h.isMeasure()).count() !=
             from.headers().stream().filter(h -> !h.isMeasure()).count()) {
@@ -82,6 +81,18 @@ public class ColumnarTable implements Table {
     } else {
       throw new IllegalArgumentException();
     }
+  }
+
+  @Override
+  public void removeColumn(String column) {
+    int index = columnIndex(column);
+    Header header = this.headers.remove(index);
+    if (header.isMeasure()) {
+      this.measures.removeIf(m -> m.alias().equals(header.name()));
+    } else {
+      this.pointDictionary.forget();
+    }
+    this.values.remove(index);
   }
 
   @Override
@@ -163,5 +174,39 @@ public class ColumnarTable implements Table {
   @Override
   public int hashCode() {
     return Objects.hash(this.headers, this.measures, this.values);
+  }
+
+  private static class MemoizingSupplier<T> implements Supplier<T> {
+
+    private final Supplier<T> delegate;
+    private boolean initialized;
+    private T value;
+
+    MemoizingSupplier(Supplier<T> delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public T get() {
+      if (!this.initialized) {
+        T t = this.delegate.get();
+        this.value = t;
+        this.initialized = true;
+        return t;
+      }
+      return this.value;
+    }
+
+    public void forget() {
+      this.value = null;
+      this.initialized = false;
+    }
+
+    @Override
+    public String toString() {
+      return "Suppliers.memoize("
+              + (this.initialized ? "<supplier that returned " + this.value + ">" : this.delegate)
+              + ")";
+    }
   }
 }

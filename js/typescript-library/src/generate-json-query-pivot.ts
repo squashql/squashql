@@ -13,7 +13,11 @@ export function generateFromQueryPivot() {
                   [avg("sum", new TableField("f1"))])
           .build()
   q.minify = true
-  const pivotQuery = createPivotTableQuery(q, {rows: [tableField("a")], columns: [tableField("b")]})
+  const pivotQuery = createPivotTableQuery(q, {
+    rows: [tableField("a")],
+    columns: [tableField("b")],
+    hiddenTotals: [tableField("b")]
+  })
   const data = JSON.stringify(pivotQuery)
   fs.writeFileSync('json/build-from-query-pivot.json', data)
 }

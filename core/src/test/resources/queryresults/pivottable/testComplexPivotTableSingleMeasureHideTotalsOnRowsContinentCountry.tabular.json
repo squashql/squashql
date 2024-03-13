@@ -1,0 +1,136 @@
+{
+  "headers": [
+    {
+      "name": "storespendingatestpivottable.spending category",
+      "type": "java.lang.String",
+      "isMeasure": false
+    },
+    {
+      "name": "storespendingatestpivottable.continent",
+      "type": "java.lang.String",
+      "isMeasure": false
+    },
+    {
+      "name": "storespendingatestpivottable.country",
+      "type": "java.lang.String",
+      "isMeasure": false
+    },
+    {
+      "name": "storespendingatestpivottable.city",
+      "type": "java.lang.String",
+      "isMeasure": false
+    },
+    {
+      "name": "amount",
+      "type": "double",
+      "isMeasure": true
+    }
+  ],
+  "rows": [
+    [
+      "Grand Total",
+      "eu",
+      "france",
+      "Total",
+      8.0
+    ],
+    [
+      "Grand Total",
+      "eu",
+      "france",
+      "lyon",
+      4.0
+    ],
+    [
+      "Grand Total",
+      "eu",
+      "france",
+      "paris",
+      4.0
+    ],
+    [
+      "Grand Total",
+      "eu",
+      "uk",
+      "Total",
+      9.0
+    ],
+    [
+      "Grand Total",
+      "eu",
+      "uk",
+      "london",
+      9.0
+    ],
+    [
+      "extra",
+      "eu",
+      "france",
+      "Total",
+      2.0
+    ],
+    [
+      "extra",
+      "eu",
+      "france",
+      "lyon",
+      1.0
+    ],
+    [
+      "extra",
+      "eu",
+      "france",
+      "paris",
+      1.0
+    ],
+    [
+      "extra",
+      "eu",
+      "uk",
+      "Total",
+      5.0
+    ],
+    [
+      "extra",
+      "eu",
+      "uk",
+      "london",
+      5.0
+    ],
+    [
+      "minimum expenditure",
+      "eu",
+      "france",
+      "Total",
+      6.0
+    ],
+    [
+      "minimum expenditure",
+      "eu",
+      "france",
+      "lyon",
+      3.0
+    ],
+    [
+      "minimum expenditure",
+      "eu",
+      "france",
+      "paris",
+      3.0
+    ],
+    [
+      "minimum expenditure",
+      "eu",
+      "uk",
+      "Total",
+      4.0
+    ],
+    [
+      "minimum expenditure",
+      "eu",
+      "uk",
+      "london",
+      4.0
+    ]
+  ]
+}
