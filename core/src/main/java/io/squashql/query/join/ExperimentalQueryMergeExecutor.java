@@ -1,6 +1,5 @@
 package io.squashql.query.join;
 
-import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.*;
@@ -97,7 +96,7 @@ public class ExperimentalQueryMergeExecutor {
 
     int index = 1;
     for (JoinDto join : queryJoin.table.joins) {
-      CriteriaDto joinConditionCopy = JacksonUtil.deserialize(JacksonUtil.serialize(join.joinCriteria), CriteriaDto.class);
+      CriteriaDto joinConditionCopy = join.clone().joinCriteria;
       if (joinConditionCopy == null) {
         // Guess the condition
         for (Field field : holders.get(index).query.columns) {

@@ -1,6 +1,5 @@
 package io.squashql.query;
 
-import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.compiled.*;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
@@ -211,7 +210,7 @@ public class QueryExecutor {
   }
 
   private static QueryDto prepareQuery(QueryDto query) {
-    QueryDto deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), QueryDto.class);
+    QueryDto deepCopy = query.clone();
     deepCopy.limit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
 
     if (deepCopy.orders != null) {

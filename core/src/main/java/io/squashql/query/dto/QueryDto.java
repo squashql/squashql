@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
 import io.squashql.query.parameter.Parameter;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -20,7 +21,8 @@ import static io.squashql.query.dto.ConditionType.AND;
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
-public class QueryDto {
+@AllArgsConstructor
+public class QueryDto implements Cloneable {
 
   public TableDto table;
 
@@ -126,6 +128,27 @@ public class QueryDto {
 
   public String json() {
     return JacksonUtil.serialize(this);
+  }
+
+  @Override
+  public QueryDto clone() {
+    QueryDto clone = new QueryDto(
+            this.table.clone(),
+            new ArrayList<>(this.virtualTableDtos),
+            new ArrayList<>(this.columns),
+            new ArrayList<>(this.rollupColumns),
+            new ArrayList<>(this.groupingSets.stream().map(ArrayList::new).toList()),
+            new HashMap<>(this.columnSets),
+            new ArrayList<>(this.measures),
+            this.whereCriteriaDto == null ? null : this.whereCriteriaDto.clone(),
+            this.havingCriteriaDto == null ? null : this.havingCriteriaDto.clone(),
+            new LinkedHashMap<>(this.orders),
+            new HashMap<>(this.parameters),
+            this.limit,
+            this.minify
+    );
+
+    return clone;
   }
 
   public static class KeyFieldSerializer extends JsonSerializer<Field> {

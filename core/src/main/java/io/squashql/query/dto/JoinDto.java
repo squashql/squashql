@@ -1,5 +1,6 @@
 package io.squashql.query.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -7,15 +8,19 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
-public class JoinDto {
+@AllArgsConstructor
+public class JoinDto implements Cloneable {
 
   public TableDto table;
   public JoinType type; // inner|left
   public CriteriaDto joinCriteria;
 
-  public JoinDto(TableDto table, JoinType type, CriteriaDto joinCriteria) {
-    this.table = table;
-    this.type = type;
-    this.joinCriteria = joinCriteria;
+  @Override
+  public JoinDto clone() {
+    return new JoinDto(
+            this.table.clone(),
+            this.type,
+            this.joinCriteria == null ? null : this.joinCriteria.clone()
+    );
   }
 }

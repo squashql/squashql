@@ -1,6 +1,5 @@
 package io.squashql.table;
 
-import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.ColumnSet;
 import io.squashql.query.Field;
 import io.squashql.query.Header;
@@ -300,7 +299,7 @@ public final class PivotTableUtils {
       }
     }
 
-    QueryDto deepCopy = JacksonUtil.deserialize(JacksonUtil.serialize(query), QueryDto.class);
+    QueryDto deepCopy = query.clone();
     deepCopy.groupingSets = groupingSets.stream().map(set -> (List<Field>) new ArrayList<>(set)).toList();
     return deepCopy;
   }
