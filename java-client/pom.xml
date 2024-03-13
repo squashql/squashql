@@ -7,7 +7,7 @@
   <parent>
     <artifactId>squashql-parent</artifactId>
     <groupId>io.squashql</groupId>
-    <version>1.14.1-SNAPSHOT</version>
+    <version>1.14.2-SNAPSHOT</version>
   </parent>
 
   <groupId>io.squashql</groupId>
