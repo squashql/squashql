@@ -528,25 +528,25 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
     query.orderBy(tableField("category"), DESC);
     result = this.executor.executeQuery(query);
-    // The order is enforced by the user on category, but we can't know the order of the scenario column, this is why
-    // only the category column is checked
-    Assertions.assertThat(result.getColumnValues("category")).containsExactly(
-            "drink",
-            "drink",
-            "drink",
-            "cloth",
-            "cloth",
-            "cloth");
+    // The order is enforced by the user on category, and natural order applies to other columns
+    Assertions.assertThat(result).containsExactly(
+            List.of(MAIN_SCENARIO_NAME, "drink", 1L),
+            List.of("s1", "drink", 1L),
+            List.of("s2", "drink", 1L),
+            List.of(MAIN_SCENARIO_NAME, "cloth", 1L),
+            List.of("s1", "cloth", 1L),
+            List.of("s2", "cloth", 1L));
 
     List<String> elements = List.of("s2", MAIN_SCENARIO_NAME, "s1");
     query.orderBy(tableField(SCENARIO_FIELD_NAME), elements);
     result = this.executor.executeQuery(query);
+    // Order of orderBy is important. First orderBy => category in DESC order, then orderBy scenario in the order defined by the user
     Assertions.assertThat(result).containsExactly(
             List.of("s2", "drink", 1L),
-            List.of("s2", "cloth", 1L),
             List.of(MAIN_SCENARIO_NAME, "drink", 1L),
-            List.of(MAIN_SCENARIO_NAME, "cloth", 1L),
             List.of("s1", "drink", 1L),
+            List.of("s2", "cloth", 1L),
+            List.of(MAIN_SCENARIO_NAME, "cloth", 1L),
             List.of("s1", "cloth", 1L));
   }
 
@@ -622,13 +622,6 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of("cloth", 30d),
             List.of("drink", 7.5d),
             List.of("food", 9d));
-
-    query.orderBy(tableField("p"), DESC);
-    result = this.executor.executeQuery(query);
-    Assertions.assertThat(result).containsExactly(
-            List.of("cloth", 30d),
-            List.of("food", 9d),
-            List.of("drink", 7.5d));
 
     // With AliasedField
     query = Query

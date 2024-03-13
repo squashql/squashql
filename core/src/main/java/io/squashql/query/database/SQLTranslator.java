@@ -2,6 +2,7 @@ package io.squashql.query.database;
 
 import com.google.common.collect.Ordering;
 import io.squashql.query.compiled.CompiledCriteria;
+import io.squashql.query.compiled.CompiledOrderBy;
 import io.squashql.query.compiled.CteRecordTable;
 import io.squashql.store.UnknownType;
 import io.squashql.type.TypedField;
@@ -48,6 +49,7 @@ public class SQLTranslator {
       addGroupByAndRollup(groupBy, query.rollup().stream().map(queryRewriter::rollup).toList(), queryRewriter.usePartialRollupSyntax(), statement);
     }
     addHavingConditions(statement, query.havingCriteria(), queryRewriter);
+    addOrderBy(statement, query.orderBy(), queryRewriter);
     addLimit(query.limit(), statement);
     return statement.toString();
   }
@@ -60,9 +62,16 @@ public class SQLTranslator {
     statement.append(String.join(", ", cteRecordTables.stream().map(t -> t.sqlExpression(qr)).toList())).append(" ");
   }
 
+  private static void addOrderBy(StringBuilder statement, List<CompiledOrderBy> orderBy, QueryRewriter qr) {
+    if (!orderBy.isEmpty()) {
+      statement.append(" order by ");
+      statement.append(String.join(", ", orderBy.stream().map(t -> t.sqlExpression(qr)).toList())).append(" ");
+    }
+  }
+
   public static void addLimit(int limit, StringBuilder statement) {
     if (limit > 0) {
-      statement.append(" limit " + limit);
+      statement.append(" limit ").append(limit);
     }
   }
 

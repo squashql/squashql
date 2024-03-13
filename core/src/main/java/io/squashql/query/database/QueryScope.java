@@ -1,6 +1,7 @@
 package io.squashql.query.database;
 
 import io.squashql.query.compiled.CompiledCriteria;
+import io.squashql.query.compiled.CompiledOrderBy;
 import io.squashql.query.compiled.CompiledTable;
 import io.squashql.query.compiled.CteRecordTable;
 import io.squashql.type.TypedField;
@@ -15,10 +16,11 @@ public record QueryScope(CompiledTable table,
                          List<TypedField> rollup,
                          Set<Set<TypedField>> groupingSets,
                          List<CteRecordTable> cteRecordTables,
+                         List<CompiledOrderBy> orderBy,
                          int limit) {
 
   public QueryScope copyWithNewLimit(int newLimit) {
-    return new QueryScope(this.table, this.columns, this.whereCriteria, this.havingCriteria, this.rollup, this.groupingSets, this.cteRecordTables, newLimit);
+    return new QueryScope(this.table, this.columns, this.whereCriteria, this.havingCriteria, this.rollup, this.groupingSets, this.cteRecordTables, this.orderBy, newLimit);
   }
 
   @Override
@@ -42,6 +44,9 @@ public record QueryScope(CompiledTable table,
     }
     if (this.cteRecordTables != null && !this.cteRecordTables.isEmpty()) {
       sb.append(", cteRecordTables=").append(this.cteRecordTables);
+    }
+    if (this.orderBy != null && !this.orderBy.isEmpty()) {
+      sb.append(", orderBy=").append(this.orderBy);
     }
     if (this.limit > 0) {
       sb.append(", limit=").append(this.limit);

@@ -18,7 +18,7 @@ public final class Queries {
 
   public static Map<String, Comparator<?>> getComparators(QueryDto queryDto) {
     Map<Field, OrderDto> orders = queryDto.orders;
-    Map<String, Comparator<?>> res = new HashMap<>();
+    Map<String, Comparator<?>> res = new LinkedHashMap<>(); // order is important !
     orders.forEach((c, order) -> {
       if (order instanceof SimpleOrderDto so) {
         res.put(SqlUtils.squashqlExpression(c), NullAndTotalComparator.nullsLastAndTotalsFirst(so.order == DESC ? Comparator.naturalOrder().reversed() : Comparator.naturalOrder()));

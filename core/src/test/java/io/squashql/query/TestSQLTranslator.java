@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.query.builder.Query;
 import io.squashql.query.compiled.CompiledMeasure;
+import io.squashql.query.compiled.CompiledOrderBy;
 import io.squashql.query.database.*;
 import io.squashql.query.dto.*;
 import io.squashql.store.Store;
@@ -560,5 +561,21 @@ public class TestSQLTranslator {
     BinaryOperationField plus = new BinaryOperationField(BinaryOperator.PLUS, multiply, new ConstantField(2));
     assertThat(compileField(plus).sqlExpression(qr))
             .isEqualTo("((((`a`-`b`)/`a`)*`c`)+2)");
+  }
+
+  @Test
+  void testOrderBy() {
+    SQLTranslatorQueryRewriter qr = new SQLTranslatorQueryRewriter();
+    TableTypedField stringField = new TableTypedField("store", "field", String.class);
+    TableTypedField intField = new TableTypedField("store", "field", int.class);
+    String sql = new CompiledOrderBy(stringField, new SimpleOrderDto(OrderKeywordDto.ASC)).sqlExpression(qr);
+    assertThat(sql).isEqualTo("`dataset.store`.`field` asc nulls first");
+    sql = new CompiledOrderBy(stringField, new SimpleOrderDto(OrderKeywordDto.DESC)).sqlExpression(qr);
+    assertThat(sql).isEqualTo("`dataset.store`.`field` desc nulls first");
+    sql = new CompiledOrderBy(intField, new ExplicitOrderDto(List.of(2023, 2027))).sqlExpression(qr);
+    assertThat(sql).isEqualTo("case when `dataset.store`.`field` is null then 1 when `dataset.store`.`field` = 2023 then 2 when `dataset.store`.`field` = 2027 then 3 else 4 end");
+    sql = new CompiledOrderBy(stringField, new ExplicitOrderDto(List.of(2023, 2027))).sqlExpression(qr);
+    // When field is a string, values should be escaped
+    assertThat(sql).isEqualTo("case when `dataset.store`.`field` is null then 1 when `dataset.store`.`field` = '2023' then 2 when `dataset.store`.`field` = '2027' then 3 else 4 end");
   }
 }

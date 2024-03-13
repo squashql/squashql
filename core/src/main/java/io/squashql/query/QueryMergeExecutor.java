@@ -24,7 +24,9 @@ public class QueryMergeExecutor {
             limit -> {
               throw new LimitExceedException("Result of " + query + " is too big (limit=" + limit + ")");
             });
-    return execute(queryMerge, t -> (ColumnarTable) TableUtils.replaceTotalCellValues((ColumnarTable) t, true), executor);
+    return execute(queryMerge,
+            t -> (ColumnarTable) TableUtils.replaceTotalCellValues((ColumnarTable) t, true),
+            executor);
   }
 
   public static PivotTable executePivotQueryMerge(QueryExecutor queryExecutor, PivotTableQueryMergeDto pivotTableQueryMergeDto, SquashQLUser user) {
@@ -73,16 +75,13 @@ public class QueryMergeExecutor {
   private static ColumnarTable execute(QueryMergeDto queryMerge,
                                        Function<Table, ColumnarTable> replaceTotalCellValuesFunction,
                                        Function<QueryDto, Table> executor) {
-    Map<String, Comparator<?>> comparators = new HashMap<>();
+    Map<String, Comparator<?>> comparators = new LinkedHashMap<>();
     Set<ColumnSet> columnSets = new HashSet<>();
-    for (int i = queryMerge.queries.size() - 1; i >= 0; i--) {
-      QueryDto q = queryMerge.queries.get(i);
-      comparators.putAll(Queries.getComparators(q)); // the comparators of the first query take precedence over the second's
-      columnSets.addAll(q.columnSets.values());
-    }
-
     List<CompletableFuture<Table>> futures = new ArrayList<>();
     for (QueryDto q : queryMerge.queries) {
+      // Use putIfAbsent because the comparators of the first query take precedence over the second's
+      Queries.getComparators(q).forEach(comparators::putIfAbsent);
+      columnSets.addAll(q.columnSets.values());
       futures.add(CompletableFuture.supplyAsync(() -> executor.apply(q)));
     }
 
