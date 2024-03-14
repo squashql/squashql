@@ -1,26 +1,27 @@
-package io.squashql;
+package io.squashql.query;
 
-import io.squashql.query.QueryExecutor;
-import io.squashql.query.TableField;
+import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
-import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.OrderKeywordDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.table.Table;
-import io.squashql.transaction.DuckDBDataLoader;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import java.util.*;
 
 import static io.squashql.query.Functions.all;
 import static io.squashql.query.Functions.criterion;
 
-public class TestOrderByFromOrderTable {
-  private final String storeName = "myStore";
+@TestClass
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public abstract class ATestOrderByFromOrderTable extends ABaseTestQuery {
+
+  protected final String storeName = "store" + getClass().getSimpleName().toLowerCase();
   private final String orderTable = "orderTable";
   private final TableField portfolio = new TableField(this.storeName, "portfolio");
   private final TableField ticker = new TableField(this.storeName, "ticker");
@@ -28,20 +29,7 @@ public class TestOrderByFromOrderTable {
   private final TableField portfolioOrder = new TableField(this.orderTable, "portfolio");
   private final TableField tickerOrder = new TableField(this.orderTable, "ticker");
 
-  private DuckDBDatastore datastore;
-  private DuckDBQueryEngine queryEngine;
-  private DuckDBDataLoader dl;
-  private QueryExecutor executor;
-
-  void setup(Map<String, List<TableTypedField>> fieldsByStore, Runnable dataLoading) {
-    this.datastore = new DuckDBDatastore();
-    this.dl = new DuckDBDataLoader(this.datastore);
-    fieldsByStore.forEach(this.dl::createOrReplaceTable);
-    this.queryEngine = new DuckDBQueryEngine(this.datastore);
-    this.executor = new QueryExecutor(this.queryEngine);
-    dataLoading.run();
-  }
-
+  @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
     TableTypedField portfolio = new TableTypedField(this.storeName, "portfolio", String.class);
     TableTypedField ticker = new TableTypedField(this.storeName, "ticker", String.class);
@@ -53,6 +41,7 @@ public class TestOrderByFromOrderTable {
     return Map.of(this.storeName, List.of(portfolio, ticker, year), this.orderTable, List.of(orderId, portfolioOrder, tickerOrder));
   }
 
+  @Override
   protected void loadData() {
     // Shuffle
     List<Object[]> tuples = Arrays.asList(
@@ -70,7 +59,7 @@ public class TestOrderByFromOrderTable {
             new Object[]{"B", "META", 2023}
     );
     Collections.shuffle(tuples, new Random(1234));
-    this.dl.load(this.storeName, tuples);
+    this.tm.load(this.storeName, tuples);
 
     // This table store the order in which we want the ticker to appear under each portfolio
     tuples = Arrays.asList(
@@ -82,13 +71,11 @@ public class TestOrderByFromOrderTable {
             new Object[]{2, "B", "META"}
     );
     Collections.shuffle(tuples, new Random(1234));
-    this.dl.load(this.orderTable, tuples);
+    this.tm.load(this.orderTable, tuples);
   }
 
   @Test
   void testOrderByFromOrderTable() {
-    setup(getFieldsByStore(), this::loadData);
-
     QueryDto query = Query.from(this.storeName)
             .join(this.orderTable, JoinType.INNER)
             .on(all(
