@@ -8,11 +8,8 @@ import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.query.join.ExperimentalQueryMergeExecutor;
 import io.squashql.query.parameter.QueryCacheParameter;
-import io.squashql.table.ColumnarTable;
-import io.squashql.table.PivotTable;
+import io.squashql.table.*;
 import io.squashql.table.PivotTableUtils.PivotTableContext;
-import io.squashql.table.Table;
-import io.squashql.table.TableUtils;
 import io.squashql.type.TypedField;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +21,6 @@ import java.util.stream.Collectors;
 import static io.squashql.query.ColumnSetKey.GROUP;
 import static io.squashql.query.agg.AggregationFunction.GROUPING;
 import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUNT;
-import static io.squashql.table.PivotTableUtils.prepareQuery;
 
 @Slf4j
 public class QueryExecutor {
@@ -67,7 +63,7 @@ public class QueryExecutor {
     }
 
     PivotTableContext pivotTableContext = new PivotTableContext(pivotTableQueryDto);
-    QueryDto preparedQuery = prepareQuery(pivotTableQueryDto.query, pivotTableContext);
+    QueryDto preparedQuery = PivotTableUtils.prepareQuery(pivotTableQueryDto.query, pivotTableContext);
     Table result = executeQuery(preparedQuery, cacheStatsDtoBuilder, user, false, limitNotifier);
     if (replaceTotalCellsAndOrderRows) {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result,
@@ -102,10 +98,9 @@ public class QueryExecutor {
                             SquashQLUser user,
                             boolean replaceTotalCellsAndOrderRows,
                             IntConsumer limitNotifier) {
-    int queryLimit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
-    query.limit = queryLimit;
+    QueryDto preparedQuery = prepareQuery(query);
 
-    QueryResolver queryResolver = new QueryResolver(query, this.queryEngine.datastore().storesByName());
+    QueryResolver queryResolver = new QueryResolver(preparedQuery, this.queryEngine.datastore().storesByName());
     DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
             queryResolver.getColumns(), queryResolver.getGroupColumns(), queryResolver.getMeasures().values(), queryResolver.getScope());
     // Compute what needs to be prefetched
@@ -113,7 +108,7 @@ public class QueryExecutor {
     Map<QueryScope, Set<CompiledMeasure>> measuresByQueryScope = new HashMap<>();
     ExecutionPlan<QueryPlanNodeKey> prefetchingPlan = new ExecutionPlan<>(dependencyGraph, (node) -> {
       QueryScope scope = node.queryScope;
-      int limit = scope.equals(queryResolver.getScope()) ? queryLimit : queryLimit + 1; // limit + 1 to detect when results can be wrong
+      int limit = scope.equals(queryResolver.getScope()) ? preparedQuery.limit : preparedQuery.limit + 1; // limit + 1 to detect when results can be wrong
       prefetchQueryScopeByQueryScope.computeIfAbsent(scope, k -> scope.copyWithNewLimit(limit));
       measuresByQueryScope.computeIfAbsent(scope, k -> new HashSet<>()).add(node.measure);
     });
@@ -124,7 +119,7 @@ public class QueryExecutor {
       QueryScope prefetchQueryScope = prefetchQueryScopeByQueryScope.get(scope);
       Set<CompiledMeasure> measures = measuresByQueryScope.get(scope);
       QueryCache.QueryCacheKey queryCacheKey = new QueryCache.QueryCacheKey(scope, user);
-      QueryCache queryCache = getQueryCache((QueryCacheParameter) query.parameters.getOrDefault(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.USE)), user);
+      QueryCache queryCache = getQueryCache((QueryCacheParameter) preparedQuery.parameters.getOrDefault(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.USE)), user);
 
       Set<CompiledMeasure> measuresToExcludeFromCache = new HashSet<>(); // the measures not to put in cache
       Set<CompiledMeasure> cached = new HashSet<>();
@@ -160,9 +155,9 @@ public class QueryExecutor {
       tableByScope.put(scope, result);
     }
 
-    if (query.columnSets.containsKey(GROUP)) {
+    if (preparedQuery.columnSets.containsKey(GROUP)) {
       // Apply this as it modifies the "shape" of the result
-      GroupColumnSetDto columnSet = (GroupColumnSetDto) query.columnSets.get(GROUP);
+      GroupColumnSetDto columnSet = (GroupColumnSetDto) preparedQuery.columnSets.get(GROUP);
       // Reshape all results
       tableByScope.replaceAll((scope, table) -> GrouperExecutor.group(table, columnSet));
     }
@@ -178,7 +173,7 @@ public class QueryExecutor {
                 queryResolver.getColumns(),
                 queryResolver.getGroupColumns(),
                 queryResolver.getCompiledColumnSets(),
-                queryLimit);
+                preparedQuery.limit);
         evaluator.accept(queryNode, executionContext);
       }
     });
@@ -186,15 +181,17 @@ public class QueryExecutor {
 
     Table result = tableByScope.get(queryResolver.getScope());
 
-    if (limitNotifier != null && result.count() == queryLimit) {
-      limitNotifier.accept(queryLimit);
+    if (limitNotifier != null && result.count() == preparedQuery.limit) {
+      limitNotifier.accept(preparedQuery.limit);
     }
 
-    result = TableUtils.selectAndOrderColumns(queryResolver, (ColumnarTable) result, query);
     if (replaceTotalCellsAndOrderRows) {
-      result = TableUtils.replaceTotalCellValues((ColumnarTable) result, !query.rollupColumns.isEmpty());
-      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(query), query.columnSets.values());
+      result = TableUtils.replaceTotalCellValues((ColumnarTable) result, !preparedQuery.rollupColumns.isEmpty());
+      result = TableUtils.orderRows((ColumnarTable) result, Queries.getComparators(preparedQuery), preparedQuery.columnSets.values());
     }
+    // Use `query` and not `preparedQuery` here because `preparedQuery` can have additional columns in case of orderBy.
+    // This is also why `selectAndOrderColumns()` is executed after `orderRows()`.
+    result = TableUtils.selectAndOrderColumns(query, (ColumnarTable) result);
 
     CacheStatsDto stats = this.queryCache.stats(user);
     cacheStatsDtoBuilder
@@ -202,14 +199,32 @@ public class QueryExecutor {
             .evictionCount(stats.evictionCount)
             .missCount(stats.missCount);
 
-    if (query.columnSets.containsKey(GROUP)) {
-      GroupColumnSetDto columnSet = (GroupColumnSetDto) query.columnSets.get(GROUP);
+    if (preparedQuery.columnSets.containsKey(GROUP)) {
+      GroupColumnSetDto columnSet = (GroupColumnSetDto) preparedQuery.columnSets.get(GROUP);
       if (columnSet.values.size() == 1) { // only one group, no need to keep the additional column
         result.removeColumn(SqlUtils.squashqlExpression(columnSet.newField));
       }
     }
 
     return result;
+  }
+
+  private static QueryDto prepareQuery(QueryDto query) {
+    QueryDto deepCopy = query.clone();
+    deepCopy.limit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
+
+    if (deepCopy.orders != null) {
+      // Fields in orderBy need to be in groupBy. Because orderBy is also executed by SquashQL, the column needs to be
+      // also added to the select. Those additional columns will eventually be discarded later on.
+      deepCopy.orders.keySet().forEach(c -> {
+        Set<String> measureAliases = deepCopy.measures.stream().map(Measure::alias).collect(Collectors.toSet());
+        if (!deepCopy.columns.contains(c) && !measureAliases.contains(SqlUtils.squashqlExpression(c))) {
+          deepCopy.columns.add(c);
+        }
+      });
+    }
+
+    return deepCopy;
   }
 
   private static boolean canBeCached(CompiledMeasure measure, QueryScope scope) {

@@ -14,7 +14,7 @@ import java.util.List;
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
 @AllArgsConstructor
-public class CriteriaDto {
+public class CriteriaDto implements Cloneable {
 
   public Field field;
   public Field fieldOther;
@@ -43,4 +43,17 @@ public class CriteriaDto {
     this.conditionType = conditionType;
     this.children = criteriaDtos;
   }
+
+  @Override
+  public CriteriaDto clone() {
+    return new CriteriaDto(
+            this.field,
+            this.fieldOther,
+            this.measure,
+            this.condition,
+            this.conditionType,
+            this.children == null ? null : this.children.stream().map(CriteriaDto::clone).toList()
+    );
+  }
+
 }
