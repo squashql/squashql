@@ -3,7 +3,7 @@ import {TableField, tableFields} from "./field"
 import {avg, max, sum} from "./measure"
 import {JoinType} from "./query"
 import {from} from "./queryBuilder"
-import {Action, QueryCacheParameter} from "./parameters"
+import {Action, QueryCacheParameter} from "./parameter"
 import {QueryMerge} from "./queryMerge"
 
 export function generateFromQueryMerge() {

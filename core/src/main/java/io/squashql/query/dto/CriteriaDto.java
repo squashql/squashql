@@ -1,5 +1,6 @@
 package io.squashql.query.dto;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.squashql.query.BasicMeasure;
 import io.squashql.query.Field;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ import java.util.List;
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
 @AllArgsConstructor
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public class CriteriaDto implements Cloneable {
 
   public Field field;

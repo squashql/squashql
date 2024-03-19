@@ -31,11 +31,12 @@ import {
   like,
   lt,
   or
-} from "./conditions"
+} from "./condition"
 import * as fs from "fs"
 import {OrderKeyword} from "./order"
-import {GroupColumnSet, Month} from "./columnsets"
+import {GroupColumnSet} from "./columnset"
 import {AliasedField, ConstantField, countRows, TableField, tableField} from "./field"
+import {Month} from "./period"
 
 export function generateFromQueryDto() {
   const table = Table.from("myTable")

@@ -6,10 +6,11 @@ import {
   ExpressionMeasure,
   LongConstantMeasure, Measure
 } from "./measure"
-import {Condition, ConstantCondition, InCondition, LogicalCondition, SingleValueCondition} from "./conditions"
+import {Condition, ConstantCondition, InCondition, LogicalCondition, SingleValueCondition} from "./condition"
 import Criteria from "./criteria"
 import {BinaryOperationField, ConstantField, Field, TableField} from "./field"
-import {GroupColumnSet, ColumnSet, Month, Period, Quarter, Semester, Year} from "./columnsets"
+import {GroupColumnSet, ColumnSet} from "./columnset"
+import {Month, Period, Quarter, Semester, Year} from "./period"
 
 export const computeFieldDependencies = (field: Field, resultArray: TableField[] = []): TableField[] => {
   switch (field.constructor) {

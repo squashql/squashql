@@ -11,15 +11,40 @@ export {
 } from './order'
 
 export {
-  Measure, BasicMeasure, AggregatedMeasure, ExpressionMeasure, ParametrizedMeasure,
-  sum, min, max, avg, count, countDistinct,
-  sumIf, minIf, maxIf, avgIf, countIf, countDistinctIf,
-  plus, minus, multiply, divide,
-  integer, decimal,
-  comparisonMeasureWithPeriod, comparisonMeasureWithinSameGroup, comparisonMeasureWithParent, comparisonMeasureWithGrandTotalAlongAncestors,
+  Measure,
+  BasicMeasure,
+  AggregatedMeasure,
+  ExpressionMeasure,
+  ParametrizedMeasure,
+  sum,
+  min,
+  max,
+  avg,
+  count,
+  countDistinct,
+  sumIf,
+  minIf,
+  maxIf,
+  avgIf,
+  countIf,
+  countDistinctIf,
+  plus,
+  minus,
+  multiply,
+  divide,
+  integer,
+  decimal,
+  comparisonMeasureWithPeriod,
+  comparisonMeasureWithinSameGroup,
+  comparisonMeasureWithParent,
+  comparisonMeasureWithGrandTotalAlongAncestors,
   comparisonMeasureWithGrandTotal,
   totalCount,
-  ComparisonMethod, BinaryOperator, BinaryOperationMeasure
+  ComparisonMethod,
+  BinaryOperator,
+  BinaryOperationMeasure,
+  ComparisonMeasureReferencePosition,
+  ComparisonMeasureGrandTotal
 } from './measure'
 
 export {
@@ -27,16 +52,19 @@ export {
   eq, neq, lt, le, gt, ge, _in, like, isNull, isNotNull,
   and, or,
   all, any, criterion, criterion_, havingCriterion,
-} from './conditions'
+} from './condition'
 
 export {
   ColumnSet, GroupColumnSet,
+} from './columnset'
+
+export {
   Period, Month, Year, Quarter, Semester,
-} from './columnsets'
+} from './period'
 
 export {
   Action, Parameter, QueryCacheParameter,
-} from './parameters'
+} from './parameter'
 
 export {
   Querier, QueryResult, PivotTableQueryResult, MetadataResult, StoreMetadata, MetadataItem, SimpleTable

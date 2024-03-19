@@ -1,8 +1,9 @@
 import PACKAGE from "./package"
 import Criteria from "./criteria"
 import {serializeMap} from "./util"
-import {ColumnSetKey, Period} from "./columnsets"
+import {ColumnSetKey} from "./columnset"
 import {Field} from "./field"
+import {Period} from "./period"
 
 export interface Measure {
   readonly class: string
@@ -90,7 +91,7 @@ export class ComparisonMeasureReferencePosition implements Measure {
   constructor(readonly alias: string,
               readonly comparisonMethod: ComparisonMethod,
               readonly measure: Measure,
-              readonly referencePosition: Map<Field, string>,
+              readonly referencePosition?: Map<Field, string>,
               readonly columnSetKey?: ColumnSetKey,
               readonly period?: Period,
               readonly ancestors?: Array<Field>,

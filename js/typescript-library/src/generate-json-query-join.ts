@@ -5,7 +5,7 @@ import {JoinType} from "./query"
 import {from} from "./queryBuilder"
 import {OrderKeyword, SimpleOrder} from "./order"
 import {QueryJoin} from "./queryJoin"
-import {all, ConditionType, criterion_} from "./conditions"
+import {all, ConditionType, criterion_} from "./condition"
 
 export function generateFromQueryJoin() {
   const a = new TableField("myTable1.a")

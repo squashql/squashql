@@ -1,4 +1,4 @@
-import {Parameter} from "./parameters"
+import {Parameter} from "./parameter"
 import {JoinType, Query} from "./query"
 
 export class QueryMerge {
