@@ -1,5 +1,5 @@
 import {Measure} from "./measure"
-import {ColumnSet} from "./columnsets"
+import {ColumnSet} from "./columnset"
 import {JoinType, Query, Table} from "./query"
 import Criteria from "./criteria"
 import {OrderKeyword} from "./order"

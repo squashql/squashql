@@ -7,7 +7,7 @@ import {
 } from "../../measure"
 import {Criteria, Measure, Year} from "../../index"
 import * as dependencies from "../../dependencies"
-import {ColumnSetKey} from "../../columnsets"
+import {ColumnSetKey} from "../../columnset"
 
 afterEach(() => {
   jest.restoreAllMocks()

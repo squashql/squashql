@@ -1,6 +1,6 @@
 import * as dependencies from "../../dependencies"
 import {TableField} from "../../field"
-import {GroupColumnSet, ColumnSet} from "../../columnsets"
+import {GroupColumnSet, ColumnSet} from "../../columnset"
 
 afterEach(() => {
   jest.restoreAllMocks()

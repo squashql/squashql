@@ -2,7 +2,7 @@ import {TableField} from "../../field"
 import Criteria from "../../criteria"
 import * as dependencies from "../../dependencies"
 import {AggregatedMeasure} from "../../measure"
-import {ConditionType, InCondition} from "../../conditions"
+import {ConditionType, InCondition} from "../../condition"
 
 afterEach(() => {
   jest.restoreAllMocks()

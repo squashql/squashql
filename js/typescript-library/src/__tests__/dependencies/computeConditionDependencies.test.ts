@@ -6,7 +6,7 @@ import {
   InCondition,
   LogicalCondition,
   SingleValueCondition
-} from "../../conditions"
+} from "../../condition"
 
 afterEach(() => {
   jest.restoreAllMocks()
