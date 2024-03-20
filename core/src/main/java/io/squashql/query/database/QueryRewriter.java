@@ -127,12 +127,20 @@ public interface QueryRewriter {
   }
 
   default String binaryOperation(BinaryOperator operator, String leftOperand, String rightOperand) {
-    return new StringBuilder()
-            .append("(")
-            .append(leftOperand)
-            .append(operator.infix)
-            .append(rightOperand)
-            .append(")")
-            .toString();
+    switch (operator) {
+      case PLUS, MINUS, MULTIPLY, DIVIDE -> {
+        return new StringBuilder()
+                .append("(")
+                .append(leftOperand)
+                .append(operator.infix)
+                .append(rightOperand)
+                .append(")")
+                .toString();
+      }
+      case RELATIVE_DIFFERENCE -> {
+        return String.format("((%s-%s)/%s)", leftOperand, rightOperand, rightOperand);
+      }
+      default -> throw new IllegalArgumentException(operator.toString());
+    }
   }
 }
