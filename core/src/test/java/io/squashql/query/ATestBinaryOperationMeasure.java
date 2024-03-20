@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.agg.AggregationFunction;
+import io.squashql.query.builder.Query;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
@@ -18,7 +19,7 @@ import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
 
-  protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  private final String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
@@ -135,5 +136,25 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
     Assertions
             .assertThat(table.headers().stream().map(Header::name))
             .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "divide1", "divide2", "divide3");
+  }
+
+  /**
+   * Try with measure of different types.
+   */
+  @Test
+  void testRelativeDifference() {
+    AggregatedMeasure sales = new AggregatedMeasure("sum(sales)", "sales", AggregationFunction.SUM);
+    AggregatedMeasure quantity = new AggregatedMeasure("sum(quantity)", "quantity", AggregationFunction.SUM);
+
+    QueryDto query = Query.from(this.storeName)
+            .select(List.of(),
+                    List.of(),
+                    List.of(new BinaryOperationMeasure("rel diff", BinaryOperator.RELATIVE_DIFFERENCE, sales, quantity)))
+            .build();
+
+    Table table = this.executor.executeQuery(query);
+    double salesV = 50d;
+    long qtyV = 20l;
+    Assertions.assertThat(table).contains(List.of((salesV - qtyV) / qtyV));
   }
 }

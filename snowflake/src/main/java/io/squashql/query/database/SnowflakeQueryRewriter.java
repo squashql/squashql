@@ -32,7 +32,6 @@ class SnowflakeQueryRewriter implements QueryRewriter {
   @Override
   public String binaryOperation(BinaryOperator operator, String leftOperand, String rightOperand) {
     return switch (operator) {
-      case PLUS, MINUS, MULTIPLY -> QueryRewriter.super.binaryOperation(operator, leftOperand, rightOperand);
       // https://docs.snowflake.com/en/sql-reference/functions/div0null
       case DIVIDE -> new StringBuilder()
               .append("DIV0NULL")
@@ -42,6 +41,7 @@ class SnowflakeQueryRewriter implements QueryRewriter {
               .append(rightOperand)
               .append(")")
               .toString();
+      default -> QueryRewriter.super.binaryOperation(operator, leftOperand, rightOperand);
     };
   }
 }

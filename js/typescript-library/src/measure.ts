@@ -82,6 +82,7 @@ export enum BinaryOperator {
   MINUS = "MINUS",
   MULTIPLY = "MULTIPLY",
   DIVIDE = "DIVIDE",
+  RELATIVE_DIFFERENCE = "RELATIVE_DIFFERENCE"
 }
 
 export class ComparisonMeasureReferencePosition implements Measure {
@@ -258,6 +259,10 @@ export function multiply(alias: string, measure1: Measure, measure2: Measure): M
 
 export function divide(alias: string, measure1: Measure, measure2: Measure): Measure {
   return new BinaryOperationMeasure(alias, BinaryOperator.DIVIDE, measure1, measure2)
+}
+
+export function relativeDifference(alias: string, measure1: Measure, measure2: Measure): Measure {
+  return new BinaryOperationMeasure(alias, BinaryOperator.RELATIVE_DIFFERENCE, measure1, measure2)
 }
 
 // CONSTANT

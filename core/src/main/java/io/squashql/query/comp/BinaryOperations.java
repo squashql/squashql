@@ -13,15 +13,19 @@ public class BinaryOperations {
     boolean isLong = outputDataType.equals(long.class) || outputDataType.equals(Long.class);
     return switch (method) {
       case ABSOLUTE_DIFFERENCE -> isLong ? BinaryOperations::minusAsLong : BinaryOperations::minusAsDouble;
-      case RELATIVE_DIFFERENCE -> (a, b) -> {
-        Double diff = BinaryOperations.minusAsDouble(a, b);
-        if (diff == null || b == null) {
-          return null;
-        } else {
-          return (a.doubleValue() - b.doubleValue()) / b.doubleValue();
-        }
-      };
+      case RELATIVE_DIFFERENCE -> relativeDifference();
       case DIVIDE -> createBiFunction(BinaryOperator.DIVIDE, dataType, dataType);
+    };
+  }
+
+  private static BiFunction<Number, Number, Number> relativeDifference() {
+    return (a, b) -> {
+      Double diff = BinaryOperations.minusAsDouble(a, b);
+      if (diff == null || b == null) {
+        return null;
+      } else {
+        return (a.doubleValue() - b.doubleValue()) / b.doubleValue();
+      }
     };
   }
 
@@ -42,6 +46,7 @@ public class BinaryOperations {
       case MINUS -> isLong ? BinaryOperations::minusAsLong : BinaryOperations::minusAsDouble;
       case MULTIPLY -> isLong ? BinaryOperations::multiplyAsLong : BinaryOperations::multiplyAsDouble;
       case DIVIDE -> BinaryOperations::divideAsDouble;
+      case RELATIVE_DIFFERENCE -> relativeDifference();
     };
   }
 

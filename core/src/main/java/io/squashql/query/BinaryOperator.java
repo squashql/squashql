@@ -4,7 +4,8 @@ public enum BinaryOperator {
   PLUS("+"),
   MINUS("-"),
   MULTIPLY("*"),
-  DIVIDE("/");
+  DIVIDE("/"),
+  RELATIVE_DIFFERENCE(null);
 
   public final String infix;
 
