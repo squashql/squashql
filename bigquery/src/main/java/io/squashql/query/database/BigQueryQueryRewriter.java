@@ -66,7 +66,6 @@ public class BigQueryQueryRewriter implements QueryRewriter {
   @Override
   public String binaryOperation(BinaryOperator operator, String leftOperand, String rightOperand) {
     return switch (operator) {
-      case PLUS, MINUS, MULTIPLY -> QueryRewriter.super.binaryOperation(operator, leftOperand, rightOperand);
       // https://cloud.google.com/bigquery/docs/reference/standard-sql/functions-and-operators#safe_divide
       case DIVIDE -> new StringBuilder()
               .append("SAFE_DIVIDE")
@@ -76,6 +75,7 @@ public class BigQueryQueryRewriter implements QueryRewriter {
               .append(rightOperand)
               .append(")")
               .toString();
+      default -> QueryRewriter.super.binaryOperation(operator, leftOperand, rightOperand);
     };
   }
 }
