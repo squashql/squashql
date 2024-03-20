@@ -56,6 +56,8 @@ export function generateFromQueryDto() {
   q.withMeasure(priceFood)
   const plus = new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood)
   q.withMeasure(plus)
+  const relDiff = new BinaryOperationMeasure("relDiff", BinaryOperator.RELATIVE_DIFFERENCE, price, priceFood)
+  q.withMeasure(relDiff)
   const expression = new ExpressionMeasure("myExpression", "sum(price*quantity)")
   q.withMeasure(expression)
   q.withMeasure(countRows)

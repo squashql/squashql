@@ -32,6 +32,7 @@ export {
   minus,
   multiply,
   divide,
+  relativeDifference,
   integer,
   decimal,
   comparisonMeasureWithPeriod,

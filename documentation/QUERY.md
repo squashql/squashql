@@ -665,20 +665,23 @@ Unlike a basic measure, a calculated measure is computed by SquashQL (not the da
 from the underlying database before applying the defined calculation.
 It is defined as the combination of other measures that can be either basic or not.
 
-#### Elementary: addition, subtraction, multiplication and division
+#### Elementary: addition, subtraction, multiplication, division and relative difference
 
 ```typescript
 import {
   sum,
-  multiply, divide, plus, minus, TableField
+  multiply, divide, plus, minus, relativeDifference, TableField
 } from "@squashql/squashql-js"
 
 const a = new TableField("myTable.a")
+const b = new TableField("myTable.b")
 const aSum = sum("aSum", a)
+const bSum = sum("bSum", b)
 const square = multiply("square", aSum, aSum)
 const twoTimes = plus("twoTimes", aSum, aSum)
 const zero = minus("zero", aSum, aSum)
 const one = divide("one", aSum, aSum)
+const relDiff = relativeDifference("relDiff", aSum, bSum) // = (aSum - bSum) / bSum
 ```
 
 Constant measures can be defined with `decimal` or `integer` operators:

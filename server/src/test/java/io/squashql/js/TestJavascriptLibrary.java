@@ -44,6 +44,8 @@ public class TestJavascriptLibrary {
     q.withMeasure(priceFood);
     var plus = new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood);
     q.withMeasure(plus);
+    var relDiff = new BinaryOperationMeasure("relDiff", BinaryOperator.RELATIVE_DIFFERENCE, price, priceFood);
+    q.withMeasure(relDiff);
     var expression = new ExpressionMeasure("myExpression", "sum(price*quantity)");
     q.withMeasure(expression);
     q.withMeasure(CountMeasure.INSTANCE);
