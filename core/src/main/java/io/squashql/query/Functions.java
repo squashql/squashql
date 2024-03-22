@@ -86,6 +86,10 @@ public class Functions {
     return new SingleValueConditionDto(ConditionType.NEQ, value);
   }
 
+  public static ConditionDto contains(Object value) {
+    return new SingleValueConditionDto(ConditionType.ARRAY_CONTAINS, value);
+  }
+
   public static ConditionDto in(Object... values) {
     return new InConditionDto(values);
   }

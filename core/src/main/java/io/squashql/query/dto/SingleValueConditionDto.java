@@ -13,7 +13,7 @@ import static io.squashql.query.dto.ConditionType.*;
 @NoArgsConstructor // For Jackson
 public final class SingleValueConditionDto implements ConditionDto {
 
-  private static final EnumSet<ConditionType> supportedTypes = EnumSet.of(LT, LE, GT, GE, EQ, NEQ, LIKE);
+  private static final EnumSet<ConditionType> supportedTypes = EnumSet.of(LT, LE, GT, GE, EQ, NEQ, LIKE, ARRAY_CONTAINS);
 
   public ConditionType type;
 

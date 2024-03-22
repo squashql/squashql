@@ -39,7 +39,7 @@ public class DuckDBDatastore implements JdbcDatastore {
     try {
       String schema = this.connection.getSchema();
       String catalog = this.connection.getCatalog();
-      return JdbcUtil.getStores(catalog, schema, getConnection(), JdbcUtil::sqlTypeToClass);
+      return JdbcUtil.getStores(catalog, schema, getConnection(), DuckDBUtil::sqlTypeToClass_);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

@@ -22,28 +22,32 @@ public final class DuckDBUtil {
    */
   public static Class<?> sqlTypeToClass(ResultSetMetaData metaData, int column) {
     try {
-      Class<?> klass = JdbcUtil.sqlTypeToClass(metaData.getColumnType(column));
-      // Special case for DuckDBColumnType.HUGEINT (128 bits integer). See also #getTypeValue
-      if (klass == Object.class) {
-        String columnTypeName = metaData.getColumnTypeName(column);
-        if (columnTypeName.equals(DuckDBColumnType.HUGEINT.name())) {
-          klass = long.class;
-        }
-      } else if (klass == List.class) {
-        String typeName = metaData.getColumnTypeName(column);
-        if (typeName.equals("DOUBLE[]") || typeName.equals("FLOAT[]")) {
-          return Lists.DoubleList.class;
-        } else if (typeName.equals("LONG[]") || typeName.equals("HUGEINT[]") || typeName.equals("INT[]")) {
-          return Lists.LongList.class;
-        } else if (typeName.equals("DATE[]")) {
-          return Lists.LocalDateList.class;
-        } else {
-          return List.class; // we convert Array to List
-        }
-      }
-      return klass;
+      return sqlTypeToClass_(metaData.getColumnType(column), metaData.getColumnTypeName(column));
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public static Class<?> sqlTypeToClass_(int dataType, String columnTypeName) {
+    Class<?> klass = JdbcUtil.sqlTypeToClass(dataType);
+    // Special case for DuckDBColumnType.HUGEINT (128 bits integer). See also #getTypeValue
+    if (klass == Object.class) {
+      if (columnTypeName.equals(DuckDBColumnType.HUGEINT.name())) {
+        klass = long.class;
+      }
+    } else if (klass == List.class) {
+      if (columnTypeName.equals("DOUBLE[]") || columnTypeName.equals("FLOAT[]")) {
+        return Lists.DoubleList.class;
+      } else if (columnTypeName.equals("LONG[]") || columnTypeName.equals("HUGEINT[]") || columnTypeName.equals("INT[]") || columnTypeName.equals("INTEGER[]")) {
+        return Lists.LongList.class;
+      } else if (columnTypeName.equals("DATE[]")) {
+        return Lists.LocalDateList.class;
+      } else if (columnTypeName.equals("VARCHAR[]")) {
+        return Lists.StringList.class;
+      } else {
+        return List.class; // we convert Array to List
+      }
+    }
+    return klass;
   }
 }

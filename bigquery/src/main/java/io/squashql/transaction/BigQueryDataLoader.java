@@ -45,8 +45,11 @@ public class BigQueryDataLoader implements DataLoader {
             .map(f -> {
               if (f.type().equals(Lists.LongList.class)) {
                 return Field.of(f.name(), StandardSQLTypeName.INT64).toBuilder().setMode(Field.Mode.REPEATED).build();
+              } else if (f.type().equals(Lists.StringList.class)) {
+                return Field.of(f.name(), StandardSQLTypeName.STRING).toBuilder().setMode(Field.Mode.REPEATED).build();
+              } else {
+                return Field.of(f.name(), BigQueryUtil.classToBigQueryType(f.type()));
               }
-              return Field.of(f.name(), BigQueryUtil.classToBigQueryType(f.type()));
             })
             .toList();
     // Table schema definition

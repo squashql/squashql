@@ -143,4 +143,8 @@ public interface QueryRewriter {
       default -> throw new IllegalArgumentException(operator.toString());
     }
   }
+
+  default String arrayContains(TypedField field, Object value) {
+    return "array_contains(" + field.sqlExpression(this) + ", " + value + ")";
+  }
 }

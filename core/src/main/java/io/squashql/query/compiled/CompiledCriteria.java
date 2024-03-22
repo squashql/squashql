@@ -57,6 +57,8 @@ public record CompiledCriteria(ConditionDto condition, ConditionType conditionTy
                         .collect(Collectors.joining(", ")) + ")";
         case EQ, NEQ, LT, LE, GT, GE, LIKE ->
                 expression + " " + dto.type().sqlInfix + " " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
+        case ARRAY_CONTAINS ->
+                queryRewriter.arrayContains(field, sqlMapper.apply(((SingleValueConditionDto) dto).value));
         default -> throw new IllegalStateException("Unexpected value: " + dto.type());
       };
     } else if (dto instanceof LogicalConditionDto logical) {

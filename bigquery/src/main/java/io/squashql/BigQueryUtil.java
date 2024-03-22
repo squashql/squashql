@@ -62,6 +62,8 @@ public final class BigQueryUtil {
       type = StandardSQLTypeName.DATETIME;
     } else if (clazz.equals(Lists.LongList.class)) {
       type = StandardSQLTypeName.ARRAY;
+    } else if (clazz.equals(Lists.StringList.class)) {
+      type = StandardSQLTypeName.ARRAY;
     } else {
       throw new IllegalArgumentException("Unsupported field type " + clazz);
     }

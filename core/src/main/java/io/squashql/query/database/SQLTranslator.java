@@ -1,6 +1,7 @@
 package io.squashql.query.database;
 
 import com.google.common.collect.Ordering;
+import io.squashql.list.Lists;
 import io.squashql.query.compiled.CompiledCriteria;
 import io.squashql.query.compiled.CompiledOrderBy;
 import io.squashql.query.compiled.CteRecordTable;
@@ -164,10 +165,11 @@ public class SQLTranslator {
             || field.type().equals(float.class)
             || field.type().equals(boolean.class)
             || field.type().equals(Boolean.class)
-            || field.type().equals(UnknownType.class)) {
+            || field.type().equals(UnknownType.class)
+            || field.type().equals(Lists.LongList.class)) {
       // no quote
       return String::valueOf;
-    } else if (field.type().equals(String.class)) {
+    } else if (field.type().equals(String.class) || field.type().equals(Lists.StringList.class)) {
       // quote
       return s -> "'" + queryRewriter.escapeSingleQuote(String.valueOf(s)) + "'";
     } else {

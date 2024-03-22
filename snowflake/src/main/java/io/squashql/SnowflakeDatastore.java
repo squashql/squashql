@@ -36,7 +36,7 @@ public class SnowflakeDatastore implements JdbcDatastore {
     properties.put("db", database);
     properties.put("schema", schema);
     this.connectionProperties = properties;
-    this.stores = Suppliers.memoize(() -> JdbcUtil.getStores(database, schema, getConnection(), JdbcUtil::sqlTypeToClass));
+    this.stores = Suppliers.memoize(() -> JdbcUtil.getStores(database, schema, getConnection(), (dataType, __) -> JdbcUtil.sqlTypeToClass(dataType)));
   }
 
   @Override

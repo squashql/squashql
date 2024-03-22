@@ -31,6 +31,8 @@ public final class ClickHouseUtil {
       type = ClickHouseDataType.Date.name();
     } else if (clazz.equals(Lists.LongList.class)) {
       type = "Array(Int64)";
+    } else if (clazz.equals(Lists.StringList.class)) {
+      type = "Array(String)";
     } else {
       throw new IllegalArgumentException("Unsupported field type " + clazz);
     }

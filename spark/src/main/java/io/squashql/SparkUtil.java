@@ -69,6 +69,8 @@ public final class SparkUtil {
       type = DataTypes.DateType;
     } else if (clazz.equals(Lists.LongList.class)) {
       type = DataTypes.createArrayType(DataTypes.LongType);
+    } else if (clazz.equals(Lists.StringList.class)) {
+      type = DataTypes.createArrayType(DataTypes.StringType);
     } else {
       throw new IllegalArgumentException("Unsupported field type " + clazz);
     }

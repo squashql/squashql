@@ -19,14 +19,14 @@ public class TestBigQueryVector extends ATestVector {
 
   @AfterAll
   void tearDown() {
-//    this.fieldsByStore.forEach((store, fields) -> BigQueryTestUtil.deleteTable(((BigQueryDatastore) this.datastore).getBigquery(), store));
+    this.fieldsByStore.forEach((store, fields) -> BigQueryTestUtil.deleteTable(((BigQueryDatastore) this.datastore).getBigquery(), store));
   }
 
   @Override
   protected void createTables() {
-//    BigQueryDataLoader tm = (BigQueryDataLoader) this.tm;
-//    BigQueryTestUtil.createDatasetIfDoesNotExist(tm.getBigQuery(), DATASET_NAME);
-//    this.fieldsByStore.forEach((store, fields) -> tm.dropAndCreateInMemoryTable(store, fields));
+    BigQueryDataLoader tm = (BigQueryDataLoader) this.tm;
+    BigQueryTestUtil.createDatasetIfDoesNotExist(tm.getBigQuery(), DATASET_NAME);
+    this.fieldsByStore.forEach((store, fields) -> tm.dropAndCreateInMemoryTable(store, fields));
   }
 
   @Override

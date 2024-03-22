@@ -78,4 +78,9 @@ public class BigQueryQueryRewriter implements QueryRewriter {
       default -> QueryRewriter.super.binaryOperation(operator, leftOperand, rightOperand);
     };
   }
+
+  @Override
+  public String arrayContains(TypedField field, Object value) {
+    return value + " in unnest(" + field.sqlExpression(this) + ")";
+  }
 }

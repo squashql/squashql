@@ -15,6 +15,7 @@ import io.squashql.query.Header;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
+import io.squashql.type.TypedField;
 import org.eclipse.collections.api.tuple.Pair;
 
 import java.util.HashSet;
@@ -145,6 +146,11 @@ public class ClickHouseQueryEngine extends AQueryEngine<ClickHouseDatastore> {
       // Not supported as of now: https://github.com/ClickHouse/ClickHouse/issues/322#issuecomment-615087004
       // Tested with version https://github.com/ClickHouse/ClickHouse/tree/v22.10.2.11-stable
       return false;
+    }
+
+    @Override
+    public String arrayContains(TypedField field, Object value) {
+      return "has(" + field.sqlExpression(this) + ", " + value + ")";
     }
   }
 }

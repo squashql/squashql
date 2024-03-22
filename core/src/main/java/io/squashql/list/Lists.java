@@ -28,6 +28,16 @@ public final class Lists {
     }
   }
 
+  public static class StringList extends ArrayList<String> {
+
+    public StringList() {
+    }
+
+    public StringList(int initialCapacity) {
+      super(initialCapacity);
+    }
+  }
+
   public static class LocalDateList extends ArrayList<LocalDate> {
 
     public LocalDateList() {
