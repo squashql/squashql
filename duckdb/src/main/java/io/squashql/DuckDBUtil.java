@@ -20,15 +20,15 @@ public final class DuckDBUtil {
    * @param column   the first column is 1, the second is 2, ...
    * @return the equivalent java class.
    */
-  public static Class<?> sqlTypeToClass(ResultSetMetaData metaData, int column) {
+  public static Class<?> getColumnJavaClass(ResultSetMetaData metaData, int column) {
     try {
-      return sqlTypeToClass_(metaData.getColumnType(column), metaData.getColumnTypeName(column));
+      return sqlTypeToJavaClass(metaData.getColumnType(column), metaData.getColumnTypeName(column));
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
   }
 
-  public static Class<?> sqlTypeToClass_(int dataType, String columnTypeName) {
+  public static Class<?> sqlTypeToJavaClass(int dataType, String columnTypeName) {
     Class<?> klass = JdbcUtil.sqlTypeToClass(dataType);
     // Special case for DuckDBColumnType.HUGEINT (128 bits integer). See also #getTypeValue
     if (klass == Object.class) {

@@ -29,10 +29,6 @@ public class ClickHouseDataLoader implements DataLoader {
     dropAndCreateInMemoryTable(this.clickHouseDataSource, table, fields, true);
   }
 
-  public void dropAndCreateInMemoryTableWithoutScenarioColumn(String table, List<TableTypedField> fields) {
-    dropAndCreateInMemoryTable(this.clickHouseDataSource, table, fields, false);
-  }
-
   public static void dropAndCreateInMemoryTable(ClickHouseDataSource clickHouseDataSource,
                                                 String table,
                                                 List<TableTypedField> fields,
@@ -45,22 +41,13 @@ public class ClickHouseDataLoader implements DataLoader {
     try (ClickHouseConnection conn = clickHouseDataSource.getConnection();
          ClickHouseStatement stmt = conn.createStatement()) {
       stmt.execute("drop table if exists " + table);
-//      StringBuilder sb = new StringBuilder();
-//      sb.append("(");
       int size = list.size();
       StringJoiner joiner = new StringJoiner(",", "(", ")");
       for (int i = 0; i < size; i++) {
         TableTypedField field = list.get(i);
-        joiner.add(SqlUtils.backtickEscape(field.name()) + " " + classToClickHouseType(field.type()));
-//        sb.append(SqlUtils.backtickEscape(field.name()))
-//                .append(" Nullable(")
-//                .append(classToClickHouseType(field.type()))
-//                .append(')');
-//        if (i < size - 1) {
-//          sb.append(", ");
-//        }
+        String format = !List.class.isAssignableFrom(field.type()) ? "Nullable(%s)" : "%s";
+        joiner.add(SqlUtils.backtickEscape(field.name()) + " " + String.format(format, classToClickHouseType(field.type())));
       }
-//      sb.append(")");
       stmt.execute("create table " + table + joiner + "engine=Memory");
     } catch (SQLException e) {
       throw new RuntimeException(e);

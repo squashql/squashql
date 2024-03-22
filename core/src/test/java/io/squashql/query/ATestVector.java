@@ -61,7 +61,7 @@ public abstract class ATestVector extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .where(criterion(this.tagSt, contains("2")))
-            .select(List.of(this.ean, this.tagSt), List.of(sum("price", this.price)))
+            .select(List.of(this.ean), List.of(sum("price", this.price)))
             .build();
     Table table = this.executor.executeQuery(query);
     Assertions.assertThat(table).containsExactly(
