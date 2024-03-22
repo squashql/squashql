@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.IntStream;
 
 import static io.squashql.ClickHouseUtil.classToClickHouseType;
@@ -44,21 +45,23 @@ public class ClickHouseDataLoader implements DataLoader {
     try (ClickHouseConnection conn = clickHouseDataSource.getConnection();
          ClickHouseStatement stmt = conn.createStatement()) {
       stmt.execute("drop table if exists " + table);
-      StringBuilder sb = new StringBuilder();
-      sb.append("(");
+//      StringBuilder sb = new StringBuilder();
+//      sb.append("(");
       int size = list.size();
+      StringJoiner joiner = new StringJoiner(",", "(", ")");
       for (int i = 0; i < size; i++) {
         TableTypedField field = list.get(i);
-        sb.append(SqlUtils.backtickEscape(field.name()))
-                .append(" Nullable(")
-                .append(classToClickHouseType(field.type()))
-                .append(')');
-        if (i < size - 1) {
-          sb.append(", ");
-        }
+        joiner.add(SqlUtils.backtickEscape(field.name()) + " " + classToClickHouseType(field.type()));
+//        sb.append(SqlUtils.backtickEscape(field.name()))
+//                .append(" Nullable(")
+//                .append(classToClickHouseType(field.type()))
+//                .append(')');
+//        if (i < size - 1) {
+//          sb.append(", ");
+//        }
       }
-      sb.append(")");
-      stmt.execute("create table " + table + sb + "engine=Memory");
+//      sb.append(")");
+      stmt.execute("create table " + table + joiner + "engine=Memory");
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }

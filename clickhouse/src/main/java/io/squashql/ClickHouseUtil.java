@@ -4,6 +4,7 @@ package io.squashql;
 import com.clickhouse.data.ClickHouseColumn;
 import com.clickhouse.data.ClickHouseDataType;
 import io.squashql.jdbc.JdbcUtil;
+import io.squashql.list.Lists;
 
 import java.time.LocalDate;
 
@@ -28,6 +29,8 @@ public final class ClickHouseUtil {
       type = ClickHouseDataType.Bool.name();
     } else if (clazz.equals(LocalDate.class)) {
       type = ClickHouseDataType.Date.name();
+    } else if (clazz.equals(Lists.LongList.class)) {
+      type = "Array(Int64)";
     } else {
       throw new IllegalArgumentException("Unsupported field type " + clazz);
     }

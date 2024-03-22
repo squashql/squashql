@@ -5,6 +5,7 @@ import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.LegacySQLTypeName;
 import com.google.cloud.bigquery.StandardSQLTypeName;
 import io.squashql.jdbc.JdbcUtil;
+import io.squashql.list.Lists;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -59,6 +60,8 @@ public final class BigQueryUtil {
       type = StandardSQLTypeName.DATE;
     } else if (clazz.equals(LocalDateTime.class)) {
       type = StandardSQLTypeName.DATETIME;
+    } else if (clazz.equals(Lists.LongList.class)) {
+      type = StandardSQLTypeName.ARRAY;
     } else {
       throw new IllegalArgumentException("Unsupported field type " + clazz);
     }

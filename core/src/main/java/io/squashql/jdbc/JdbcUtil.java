@@ -57,6 +57,10 @@ public final class JdbcUtil {
     if (clazz.equals(java.sql.Timestamp.class)) {
       return "TIMESTAMP";
     }
+    if (clazz.equals(Lists.LongList.class)) {
+//      return "INT[]"; // FIXME duckdb only
+      return "ARRAY";
+    }
     throw new IllegalArgumentException("Unsupported field type " + clazz);
   }
 
