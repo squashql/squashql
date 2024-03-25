@@ -25,17 +25,6 @@ public class TestDatabaseQueryCreation {
   }
 
   @Test
-  void testSubQueryOfSubQuery() {
-    QueryDto subSubQuery = new QueryDto();
-    QueryDto subQuery = new QueryDto().table(subSubQuery);
-    QueryDto queryDto = new QueryDto().table(subQuery);
-
-    Assertions.assertThatThrownBy(() -> new QueryResolver(queryDto, Collections.emptyMap()))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("not supported");
-  }
-
-  @Test
   void testColumnSetInSubQuery() {
     QueryDto subQuery = new QueryDto().table("table")
             .withColumnSet(ColumnSetKey.GROUP, new GroupColumnSetDto("a", tableField("b")));

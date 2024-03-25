@@ -188,32 +188,7 @@ public class QueryResolver {
     }
   }
 
-  private DatabaseQuery toSubQuery(QueryDto subQuery) {
-    checkSubQuery(subQuery);
-    final CompiledTable table = compileTable(subQuery.table);
-    final List<TypedField> select = subQuery.columns.stream().map(this::resolveField).toList();
-    final CompiledCriteria whereCriteria = compileCriteria(subQuery.whereCriteriaDto);
-    final CompiledCriteria havingCriteria = compileCriteria(subQuery.havingCriteriaDto);
-    // should we check groupingSet and rollup as well are empty ?
-    QueryScope queryScope = new QueryScope(table,
-            select,
-            whereCriteria,
-            havingCriteria,
-            Collections.emptyList(),
-            Collections.emptySet(),
-            null, // FIXME is it correct?
-            Collections.emptyList(),
-            subQuery.limit);
-    return new DatabaseQuery(queryScope, new ArrayList<>(this.subQueryMeasures.values()));
-  }
-
-  private void checkSubQuery(final QueryDto subQuery) {
-    if (subQuery.table.subQuery != null) {
-      throw new IllegalArgumentException("sub-query in a sub-query is not supported");
-    }
-    if (subQuery.virtualTableDtos != null && !subQuery.virtualTableDtos.isEmpty()) {
-      throw new IllegalArgumentException("virtualTables in a sub-query is not supported");
-    }
+  private void checkSubQuery(QueryDto subQuery) {
     if (subQuery.columnSets != null && !subQuery.columnSets.isEmpty()) {
       throw new IllegalArgumentException("column sets are not expected in sub query: " + subQuery);
     }
@@ -245,7 +220,10 @@ public class QueryResolver {
       return new MaterializedTable(table.name, joins);
     } else if (table.subQuery != null) {
       List<CompiledJoin> joins = compileJoins(table.joins);
-      return new NestedQueryTable(toSubQuery(table.subQuery), joins);
+      checkSubQuery(table.subQuery);
+      QueryResolver qr = new QueryResolver(table.subQuery, this.storesByName);
+      DatabaseQuery dq = new DatabaseQuery(qr.getScope(), new ArrayList<>(qr.measures.values()));
+      return new NestedQueryTable(dq, joins);
     } else {
       throw new IllegalStateException();
     }
