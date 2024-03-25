@@ -228,7 +228,8 @@ public class QueryExecutor {
   }
 
   private static boolean canBeCached(CompiledMeasure measure, QueryScope scope) {
-    // Make sure to never cache the grouping measures. It could cause issue in some cases.
+    // Make sure to never cache the grouping measures. It could cause issue in some cases because the result from the DB
+    // needs to always have __total__ instead of null before transferring values from cache to result.
     if (generateGroupingMeasures(scope).containsValue(measure)) {
       return false;
     }
