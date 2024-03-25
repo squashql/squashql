@@ -8,12 +8,12 @@ import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 
 import java.math.BigInteger;
-import java.sql.*;
 import java.sql.Date;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.function.IntFunction;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -57,6 +57,12 @@ public final class JdbcUtil {
     if (clazz.equals(java.sql.Timestamp.class)) {
       return "TIMESTAMP";
     }
+    if (clazz.equals(Lists.LongList.class)) {
+      return "INT[]"; // FIXME duckdb only
+    }
+    if (clazz.equals(Lists.StringList.class)) {
+      return "VARCHAR[]"; // FIXME duckdb only
+    }
     throw new IllegalArgumentException("Unsupported field type " + clazz);
   }
 
@@ -96,7 +102,7 @@ public final class JdbcUtil {
    * +-----------+-------------+------------------------------+-------------+-----------+-----------+-------------+---------------+----------------+----------------+----------+---------+------------+---------------+------------------+-------------------+------------------+-------------+---------------+--------------+-------------+------------------+------------------+--------------------+
    * </pre>
    */
-  public static Map<String, Store> getStores(String catalog, String schema, Connection connection, IntFunction<Class<?>> typeToClass) {
+  public static Map<String, Store> getStores(String catalog, String schema, Connection connection, BiFunction<Integer, String, Class<?>> typeToClass) {
     try (connection) {
       DatabaseMetaData metadata = connection.getMetaData();
       Map<String, Store> stores = new HashMap<>();
@@ -105,9 +111,10 @@ public final class JdbcUtil {
         String tableName = resultSet.getString("TABLE_NAME");
         String columnName = resultSet.getString("COLUMN_NAME");
         int dataType = resultSet.getInt("DATA_TYPE");
+        String columnTypeName = resultSet.getString("TYPE_NAME");
         stores.computeIfAbsent(tableName, k -> new Store(k, new ArrayList<>()))
                 .fields()
-                .add(new TableTypedField(tableName, columnName, typeToClass.apply(dataType)));
+                .add(new TableTypedField(tableName, columnName, typeToClass.apply(dataType, columnTypeName)));
       }
       return stores;
     } catch (SQLException e) {
@@ -186,7 +193,7 @@ public final class JdbcUtil {
   public static List<?> streamToList(Class<?> listClass, Stream<Object> stream) {
     if (listClass == Lists.LongList.class) {
       return stream
-              .map(e -> e instanceof BigInteger ? ((BigInteger) e).longValueExact() : (Long) e)
+              .map(e -> e instanceof BigInteger ? ((BigInteger) e).longValueExact() : ((Number) e).longValue())
               .collect(Collectors.toCollection(Lists.LongList::new));
     } else if (listClass == Lists.DoubleList.class) {
       return stream
@@ -209,6 +216,8 @@ public final class JdbcUtil {
       return Lists.LongList.class;
     } else if (elementClass.equals(LocalDate.class)) {
       return Lists.LocalDateList.class;
+    } else if (elementClass.equals(String.class)) {
+      return Lists.StringList.class;
     } else {
       return List.class; // we convert Array to List
     }

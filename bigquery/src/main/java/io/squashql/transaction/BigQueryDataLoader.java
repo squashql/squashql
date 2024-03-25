@@ -3,6 +3,7 @@ package io.squashql.transaction;
 import com.google.cloud.bigquery.*;
 import io.squashql.BigQueryServiceAccountDatastore;
 import io.squashql.BigQueryUtil;
+import io.squashql.list.Lists;
 import io.squashql.type.TableTypedField;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
@@ -41,7 +42,15 @@ public class BigQueryDataLoader implements DataLoader {
     TableId tableId = TableId.of(this.datasetName, tableName);
 
     List<com.google.cloud.bigquery.Field> fieldList = list.stream()
-            .map(f -> com.google.cloud.bigquery.Field.of(f.name(), BigQueryUtil.classToBigQueryType(f.type())))
+            .map(f -> {
+              if (f.type().equals(Lists.LongList.class)) {
+                return Field.of(f.name(), StandardSQLTypeName.INT64).toBuilder().setMode(Field.Mode.REPEATED).build();
+              } else if (f.type().equals(Lists.StringList.class)) {
+                return Field.of(f.name(), StandardSQLTypeName.STRING).toBuilder().setMode(Field.Mode.REPEATED).build();
+              } else {
+                return Field.of(f.name(), BigQueryUtil.classToBigQueryType(f.type()));
+              }
+            })
             .toList();
     // Table schema definition
     Schema schema = Schema.of(fieldList);

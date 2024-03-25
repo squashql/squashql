@@ -23,6 +23,7 @@ export enum ConditionType {
   OR = "OR",
   NULL = "NULL",
   NOT_NULL = "NOT_NULL",
+  ARRAY_CONTAINS = "ARRAY_CONTAINS",
 }
 
 function toJSON(c: Condition) {
@@ -191,4 +192,11 @@ export function ge(value: Primitive): Condition {
  */
 export function like(value: string): Condition {
   return new SingleValueCondition(ConditionType.LIKE, value)
+}
+
+/**
+ * Array contains condition.
+ */
+export function contains(value: any): Condition {
+  return new SingleValueCondition(ConditionType.ARRAY_CONTAINS, value)
 }

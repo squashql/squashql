@@ -36,7 +36,7 @@ public class DuckDBQueryEngine extends JdbcQueryEngine<DuckDBDatastore> {
 
   @Override
   protected BiFunction<ResultSetMetaData, Integer, Class<?>> typeToClassConverter() {
-    return DuckDBUtil::sqlTypeToClass;
+    return DuckDBUtil::getColumnJavaClass;
   }
 
   @Override

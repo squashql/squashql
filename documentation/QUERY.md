@@ -128,7 +128,7 @@ Queries can be filtered by using Criteria class.
 
 ### WHERE - filtering records
 
-A Criteria instance can contain a condition on a single field and can be build as so:
+A Criteria instance can contain a condition on a single field and can be built as so:
 ```typescript
 import { criterion, eq } from "@squashql/squashql-js"
 import {myTable} from "./table"
@@ -136,7 +136,7 @@ import {myTable} from "./table"
 const criteria = criterion(myTable.col2, eq("c"))
 ```
 
-Several criteria can be chained with AND or OR by using the methods `any` and `all`
+Several criteria can be chained with `AND` or `OR` by using the methods `any` and `all`
 
 ```typescript
 import {
@@ -161,6 +161,20 @@ GROUP BY col1, col2
 ```
 
 Condition operators available: `eq, neq, lt, le, gt, ge, _in, isNull, isNotNull, like, and, or`.
+
+If the field is an array, the condition `contains` can be used:
+
+```
+...
+.where(criterion(myTable.myArray, contains(2)))
+...
+```
+
+```sql
+...
+WHERE ARRAY_CONTAINS(myArray, 2)
+...
+```
 
 ### HAVING - filtering aggregates
 

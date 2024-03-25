@@ -43,6 +43,10 @@ public enum ConditionType {
    */
   LIKE("like"),
   /**
+   * Returns true if the array contains the element.
+   */
+  ARRAY_CONTAINS("array_contains"),
+  /**
    * Static condition, true only.
    */
   TRUE("true"),

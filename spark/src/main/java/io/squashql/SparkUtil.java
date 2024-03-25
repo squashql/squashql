@@ -1,6 +1,7 @@
 package io.squashql;
 
 import io.squashql.jdbc.JdbcUtil;
+import io.squashql.list.Lists;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.Types;
 import org.apache.spark.sql.types.ArrayType;
@@ -66,6 +67,10 @@ public final class SparkUtil {
       type = DataTypes.BooleanType;
     } else if (clazz.equals(LocalDate.class)) {
       type = DataTypes.DateType;
+    } else if (clazz.equals(Lists.LongList.class)) {
+      type = DataTypes.createArrayType(DataTypes.LongType);
+    } else if (clazz.equals(Lists.StringList.class)) {
+      type = DataTypes.createArrayType(DataTypes.StringType);
     } else {
       throw new IllegalArgumentException("Unsupported field type " + clazz);
     }
