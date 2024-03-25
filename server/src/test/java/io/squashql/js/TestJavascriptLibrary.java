@@ -102,6 +102,7 @@ public class TestJavascriptLibrary {
     q.withCondition(tableField("f3"), in(0, 1, 2));
     q.withCondition(tableField("f4"), isNull());
     q.withCondition(tableField("f5"), isNotNull());
+    q.withCondition(tableField("f6"), contains(2));
 
     q.withHavingCriteria(all(criterion(price, ge(10)), criterion(expression, lt(100))));
 

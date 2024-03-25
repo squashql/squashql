@@ -19,7 +19,7 @@ import {
 import {
   _in,
   all,
-  and, ConditionType,
+  and, ConditionType, contains,
   criterion,
   criterion_,
   eq,
@@ -100,7 +100,8 @@ export function generateFromQueryDto() {
     criterion(new TableField("f2"), gt(659)),
     criterion(new TableField("f3"), _in([0, 1, 2])),
     criterion(new TableField("f4"), isNull()),
-    criterion(new TableField("f5"), isNotNull())
+    criterion(new TableField("f5"), isNotNull()),
+    criterion(new TableField("f6"), contains(2))
   ]))
 
   q.withHavingCriteria(all([
