@@ -45,7 +45,7 @@ public class ClickHouseDatastore implements Datastore {
   }
 
   @Override
-  public Map<String, Store> storesByName() {
+  public Map<String, Store> storeByName() {
     return this.stores.get();
   }
 

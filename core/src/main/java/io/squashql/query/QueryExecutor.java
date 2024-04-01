@@ -100,7 +100,7 @@ public class QueryExecutor {
                             IntConsumer limitNotifier) {
     QueryDto preparedQuery = prepareQuery(query);
 
-    QueryResolver queryResolver = new QueryResolver(preparedQuery, this.queryEngine.datastore().storesByName());
+    QueryResolver queryResolver = new QueryResolver(preparedQuery, this.queryEngine.datastore().storeByName());
     DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
             queryResolver.getColumns(), queryResolver.getGroupColumns(), queryResolver.getMeasures().values(), queryResolver.getScope());
     // Compute what needs to be prefetched

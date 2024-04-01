@@ -4,5 +4,5 @@ import java.util.Map;
 
 public interface Datastore {
 
-  Map<String, Store> storesByName();
+  Map<String, Store> storeByName();
 }

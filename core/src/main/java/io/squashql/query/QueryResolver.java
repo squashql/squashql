@@ -26,13 +26,12 @@ import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUN
 public class QueryResolver {
 
   private final QueryDto query;
-  private final Map<String, Store> storesByName;
+  private final Map<String, Store> storeByName;
   private final Set<String> cteTableNames = new HashSet<>();
   private final QueryScope scope;
   private final List<TypedField> groupColumns;
   private final List<TypedField> columns;
   private final CompilationCache cache = new CompilationCache();
-  private final Map<Measure, CompiledMeasure> subQueryMeasures;
   private final Map<Measure, CompiledMeasure> measures;
   private final Map<ColumnSetKey, CompiledColumnSet> compiledColumnSets;
   /**
@@ -40,23 +39,27 @@ public class QueryResolver {
    */
   private final List<CompiledOrderBy> compiledOrderByInDB;
 
-  public QueryResolver(QueryDto query, Map<String, Store> storesByName) {
+  public QueryResolver(QueryDto query, Map<String, Store> storeByName) {
     this.query = query;
-    this.storesByName = new HashMap<>(storesByName);
-    if (query.virtualTableDtos != null) {
-      for (VirtualTableDto virtualTableDto : query.virtualTableDtos) {
-        this.storesByName.put(virtualTableDto.name, VirtualTableDto.toStore(virtualTableDto));
-        this.cteTableNames.add(virtualTableDto.name);
-      }
-    }
+    this.storeByName = createStoreByName(query, storeByName);
     this.columns = query.columns.stream().map(this::resolveField).toList();
     this.groupColumns = Optional.ofNullable(query.columnSets.get(ColumnSetKey.GROUP))
             .stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
-    this.subQueryMeasures = query.table.subQuery == null ? Collections.emptyMap() : compileMeasures(query.table.subQuery.measures, false);
     this.compiledOrderByInDB = compileOrderByInDB(query.orders);
     this.scope = toQueryScope(query);
     this.measures = compileMeasures(query.measures, true);
     this.compiledColumnSets = compiledColumnSets(query.columnSets);
+  }
+
+  private Map<String, Store> createStoreByName(QueryDto query, Map<String, Store> storeByName) {
+    Map<String, Store> res = new HashMap<>(storeByName);
+    if (query.virtualTableDtos != null) {
+      for (VirtualTableDto virtualTableDto : query.virtualTableDtos) {
+        res.put(virtualTableDto.name, VirtualTableDto.toStore(virtualTableDto));
+        this.cteTableNames.add(virtualTableDto.name);
+      }
+    }
+    return res;
   }
 
   /**
@@ -135,7 +138,7 @@ public class QueryResolver {
     if (split.length > 1) {
       final String tableName = split[0];
       final String fieldNameInTable = split[1];
-      Store store = this.storesByName.get(tableName);
+      Store store = this.storeByName.get(tableName);
       if (store != null) {
         for (TableTypedField field : store.fields()) {
           if (field.name().equals(fieldNameInTable)) {
@@ -144,7 +147,7 @@ public class QueryResolver {
         }
       }
     } else {
-      for (Store store : this.storesByName.values()) {
+      for (Store store : this.storeByName.values()) {
         for (TableTypedField field : store.fields()) {
           if (field.name().equals(fieldName)) {
             // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
@@ -188,32 +191,8 @@ public class QueryResolver {
     }
   }
 
-  private DatabaseQuery toSubQuery(QueryDto subQuery) {
-    checkSubQuery(subQuery);
-    final CompiledTable table = compileTable(subQuery.table);
-    final List<TypedField> select = subQuery.columns.stream().map(this::resolveField).toList();
-    final CompiledCriteria whereCriteria = compileCriteria(subQuery.whereCriteriaDto);
-    final CompiledCriteria havingCriteria = compileCriteria(subQuery.havingCriteriaDto);
-    // should we check groupingSet and rollup as well are empty ?
-    QueryScope queryScope = new QueryScope(table,
-            select,
-            whereCriteria,
-            havingCriteria,
-            Collections.emptyList(),
-            Collections.emptySet(),
-            null, // FIXME is it correct?
-            Collections.emptyList(),
-            subQuery.limit);
-    return new DatabaseQuery(queryScope, new ArrayList<>(this.subQueryMeasures.values()));
-  }
-
-  private void checkSubQuery(final QueryDto subQuery) {
-    if (subQuery.table.subQuery != null) {
-      throw new IllegalArgumentException("sub-query in a sub-query is not supported");
-    }
-    if (subQuery.virtualTableDtos != null && !subQuery.virtualTableDtos.isEmpty()) {
-      throw new IllegalArgumentException("virtualTables in a sub-query is not supported");
-    }
+  private void checkSubQuery(QueryDto subQuery) {
+    compileMeasures(subQuery.measures, false);
     if (subQuery.columnSets != null && !subQuery.columnSets.isEmpty()) {
       throw new IllegalArgumentException("column sets are not expected in sub query: " + subQuery);
     }
@@ -245,7 +224,10 @@ public class QueryResolver {
       return new MaterializedTable(table.name, joins);
     } else if (table.subQuery != null) {
       List<CompiledJoin> joins = compileJoins(table.joins);
-      return new NestedQueryTable(toSubQuery(table.subQuery), joins);
+      checkSubQuery(table.subQuery);
+      QueryResolver qr = new QueryResolver(table.subQuery, this.storeByName);
+      DatabaseQuery dq = new DatabaseQuery(qr.getScope(), new ArrayList<>(qr.measures.values()));
+      return new NestedQueryTable(dq, joins);
     } else {
       throw new IllegalStateException();
     }

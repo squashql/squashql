@@ -49,7 +49,7 @@ public class SnowflakeDatastore implements JdbcDatastore {
   }
 
   @Override
-  public Map<String, Store> storesByName() {
+  public Map<String, Store> storeByName() {
     return this.stores.get();
   }
 }

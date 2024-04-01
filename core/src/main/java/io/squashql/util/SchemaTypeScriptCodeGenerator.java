@@ -42,7 +42,7 @@ public class SchemaTypeScriptCodeGenerator {
 
   public static String getFileContent(Datastore datastore) {
     StringBuilder sb = new StringBuilder();
-    Map<String, Store> storesByName = new TreeMap<>(datastore.storesByName()); // order by store name
+    Map<String, Store> storesByName = new TreeMap<>(datastore.storeByName()); // order by store name
     storesByName.forEach((storeName, store) -> {
       sb.append("export class ").append(transformName(storeName, true)).append("Table {").append(System.lineSeparator());
       addAttribute(sb, "tableName", storeName);
