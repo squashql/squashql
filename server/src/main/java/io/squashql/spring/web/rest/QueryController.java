@@ -134,7 +134,7 @@ public class QueryController {
   @GetMapping(MAPPING_METADATA)
   public ResponseEntity<MetadataResultDto> getMetadata() {
     List<MetadataResultDto.StoreMetadata> stores = new ArrayList<>();
-    for (Store store : this.queryEngine.datastore().storesByName().values()) {
+    for (Store store : this.queryEngine.datastore().storeByName().values()) {
       List<MetadataItem> items = store.fields().stream().map(f -> new MetadataItem(f.name(), f.name(), f.type())).toList();
       stores.add(new MetadataResultDto.StoreMetadata(store.name(), items));
     }

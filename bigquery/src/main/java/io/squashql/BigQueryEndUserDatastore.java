@@ -68,7 +68,7 @@ public class BigQueryEndUserDatastore implements BigQueryDatastore {
   }
 
   @Override
-  public Map<String, Store> storesByName() {
+  public Map<String, Store> storeByName() {
     OAuth2AuthenticationToken token = getOAuth2AuthenticationToken();
     return this.stores.get(token.getPrincipal().getName(), name -> fetchStoresByName(this));
   }

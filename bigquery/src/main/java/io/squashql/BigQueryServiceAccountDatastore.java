@@ -51,7 +51,7 @@ public class BigQueryServiceAccountDatastore implements BigQueryDatastore {
   }
 
   @Override
-  public Map<String, Store> storesByName() {
+  public Map<String, Store> storeByName() {
     return this.stores.get();
   }
 

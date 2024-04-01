@@ -26,7 +26,7 @@ import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUN
 public class QueryResolver {
 
   private final QueryDto query;
-  private final Map<String, Store> storesByName;
+  private final Map<String, Store> storeByName;
   private final Set<String> cteTableNames = new HashSet<>();
   private final QueryScope scope;
   private final List<TypedField> groupColumns;
@@ -39,9 +39,9 @@ public class QueryResolver {
    */
   private final List<CompiledOrderBy> compiledOrderByInDB;
 
-  public QueryResolver(QueryDto query, Map<String, Store> storesByName) {
+  public QueryResolver(QueryDto query, Map<String, Store> storeByName) {
     this.query = query;
-    this.storesByName = createStoresByName(query, storesByName);
+    this.storeByName = createStoreByName(query, storeByName);
     this.columns = query.columns.stream().map(this::resolveField).toList();
     this.groupColumns = Optional.ofNullable(query.columnSets.get(ColumnSetKey.GROUP))
             .stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
@@ -51,7 +51,7 @@ public class QueryResolver {
     this.compiledColumnSets = compiledColumnSets(query.columnSets);
   }
 
-  private Map<String, Store> createStoresByName(QueryDto query, Map<String, Store> storesByName) {
+  private Map<String, Store> createStoreByName(QueryDto query, Map<String, Store> storesByName) {
     Map<String, Store> res = new HashMap<>(storesByName);
     if (query.virtualTableDtos != null) {
       for (VirtualTableDto virtualTableDto : query.virtualTableDtos) {
@@ -138,7 +138,7 @@ public class QueryResolver {
     if (split.length > 1) {
       final String tableName = split[0];
       final String fieldNameInTable = split[1];
-      Store store = this.storesByName.get(tableName);
+      Store store = this.storeByName.get(tableName);
       if (store != null) {
         for (TableTypedField field : store.fields()) {
           if (field.name().equals(fieldNameInTable)) {
@@ -147,7 +147,7 @@ public class QueryResolver {
         }
       }
     } else {
-      for (Store store : this.storesByName.values()) {
+      for (Store store : this.storeByName.values()) {
         for (TableTypedField field : store.fields()) {
           if (field.name().equals(fieldName)) {
             // We omit on purpose the store name. It will be determined by the underlying SQL engine of the DB.
@@ -225,7 +225,7 @@ public class QueryResolver {
     } else if (table.subQuery != null) {
       List<CompiledJoin> joins = compileJoins(table.joins);
       checkSubQuery(table.subQuery);
-      QueryResolver qr = new QueryResolver(table.subQuery, this.storesByName);
+      QueryResolver qr = new QueryResolver(table.subQuery, this.storeByName);
       DatabaseQuery dq = new DatabaseQuery(qr.getScope(), new ArrayList<>(qr.measures.values()));
       return new NestedQueryTable(dq, joins);
     } else {

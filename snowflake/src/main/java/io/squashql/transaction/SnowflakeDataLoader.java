@@ -86,7 +86,7 @@ public class SnowflakeDataLoader implements DataLoader {
   }
 
   private void ensureScenarioColumnIsPresent(String store) {
-    List<TableTypedField> fields = this.snowflakeDatastore.storesByName().get(store).fields();
+    List<TableTypedField> fields = this.snowflakeDatastore.storeByName().get(store).fields();
     boolean found = fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
     if (!found) {
       throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));

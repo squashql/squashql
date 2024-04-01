@@ -56,7 +56,7 @@ public class DuckDBDatastore implements JdbcDatastore {
   }
 
   @Override
-  public Map<String, Store> storesByName() {
+  public Map<String, Store> storeByName() {
     return this.stores.get();
   }
 }
