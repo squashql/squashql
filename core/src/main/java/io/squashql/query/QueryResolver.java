@@ -51,8 +51,8 @@ public class QueryResolver {
     this.compiledColumnSets = compiledColumnSets(query.columnSets);
   }
 
-  private Map<String, Store> createStoreByName(QueryDto query, Map<String, Store> storesByName) {
-    Map<String, Store> res = new HashMap<>(storesByName);
+  private Map<String, Store> createStoreByName(QueryDto query, Map<String, Store> storeByName) {
+    Map<String, Store> res = new HashMap<>(storeByName);
     if (query.virtualTableDtos != null) {
       for (VirtualTableDto virtualTableDto : query.virtualTableDtos) {
         res.put(virtualTableDto.name, VirtualTableDto.toStore(virtualTableDto));
