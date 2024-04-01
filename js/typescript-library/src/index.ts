@@ -53,6 +53,7 @@ export {
   eq, neq, lt, le, gt, ge, _in, like, isNull, isNotNull,
   and, or,
   all, any, criterion, criterion_, havingCriterion,
+  SingleValueCondition
 } from './condition'
 
 export {
@@ -83,7 +84,7 @@ export {
 } from './queryBuilder'
 
 export {
-  TableField, ConstantField, Field, AliasedField, tableFields, tableField,
+  TableField, ConstantField, Field, AliasedField, BinaryOperationField, tableFields, tableField,
   countRows
 } from './field'
 export {
