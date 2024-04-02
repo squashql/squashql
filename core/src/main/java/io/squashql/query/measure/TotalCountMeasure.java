@@ -1,4 +1,4 @@
-package io.squashql.query;
+package io.squashql.query.measure;
 
 public class TotalCountMeasure extends ExpressionMeasure {
 

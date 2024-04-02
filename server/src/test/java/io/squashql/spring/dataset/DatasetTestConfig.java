@@ -3,7 +3,7 @@ package io.squashql.spring.dataset;
 import com.google.common.collect.ImmutableList;
 import io.squashql.DuckDBDatastore;
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.AggregatedMeasure;
+import io.squashql.query.measure.AggregatedMeasure;
 import io.squashql.query.Header;
 import io.squashql.query.QueryExecutor;
 import io.squashql.query.SquashQLUser;
@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.field.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestConfiguration

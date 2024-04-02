@@ -4,6 +4,8 @@ import io.squashql.TestClass;
 import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.query.measure.AggregatedMeasure;
+import io.squashql.query.measure.BinaryOperationMeasure;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;

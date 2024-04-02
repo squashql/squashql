@@ -7,10 +7,12 @@ import io.squashql.query.database.QueryScope;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.query.join.ExperimentalQueryMergeExecutor;
+import io.squashql.query.measure.Measure;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.table.*;
-import io.squashql.table.PivotTableUtils.PivotTableContext;
+import io.squashql.table.PivotTableContext;
 import io.squashql.type.TypedField;
+import io.squashql.query.measure.visitor.PartialMeasureVisitor;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
 
@@ -225,7 +227,7 @@ public class QueryExecutor {
     }
 
     if (deepCopy.measures != null) {
-      Queries.PartialMeasureVisitor visitor = new Queries.PartialMeasureVisitor(new PivotTableContext(new PivotTableQueryDto(query, Collections.emptyList(), query.columns)));
+      PartialMeasureVisitor visitor = new PartialMeasureVisitor(new PivotTableContext(new PivotTableQueryDto(query, Collections.emptyList(), query.columns)));
       deepCopy.measures.replaceAll(m -> m.accept(visitor));
     }
 

@@ -1,8 +1,8 @@
 package io.squashql.query.dto;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.squashql.query.BasicMeasure;
-import io.squashql.query.Field;
+import io.squashql.query.measure.BasicMeasure;
+import io.squashql.query.field.Field;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

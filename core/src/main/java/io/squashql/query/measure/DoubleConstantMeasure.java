@@ -1,5 +1,6 @@
-package io.squashql.query;
+package io.squashql.query.measure;
 
+import io.squashql.query.measure.visitor.MeasureVisitor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;

@@ -1,6 +1,6 @@
 package io.squashql.join;
 
-import io.squashql.query.TableField;
+import io.squashql.query.field.TableField;
 import io.squashql.query.builder.Query;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.*;

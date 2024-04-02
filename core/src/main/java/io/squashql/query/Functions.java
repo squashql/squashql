@@ -2,6 +2,11 @@ package io.squashql.query;
 
 import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.dto.*;
+import io.squashql.query.field.BinaryOperationField;
+import io.squashql.query.field.Field;
+import io.squashql.query.field.FunctionField;
+import io.squashql.query.field.TableField;
+import io.squashql.query.measure.*;
 
 import java.util.List;
 

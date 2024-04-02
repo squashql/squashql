@@ -3,6 +3,8 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.query.field.Field;
+import io.squashql.query.measure.Measure;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
@@ -13,7 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.field.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestClass

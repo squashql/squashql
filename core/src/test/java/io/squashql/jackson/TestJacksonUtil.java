@@ -1,8 +1,8 @@
 package io.squashql.jackson;
 
-import io.squashql.query.Field;
-import io.squashql.query.Measure;
-import io.squashql.query.TableField;
+import io.squashql.query.field.Field;
+import io.squashql.query.measure.Measure;
+import io.squashql.query.field.TableField;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.measure.ParametrizedMeasure;
 import io.squashql.query.measure.Repository;

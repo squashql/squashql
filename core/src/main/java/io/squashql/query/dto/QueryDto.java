@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
+import io.squashql.query.field.Field;
+import io.squashql.query.measure.Measure;
 import io.squashql.query.parameter.Parameter;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;

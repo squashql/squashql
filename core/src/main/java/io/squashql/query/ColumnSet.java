@@ -2,6 +2,8 @@ package io.squashql.query;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.squashql.query.field.Field;
+
 import java.util.List;
 
 /**

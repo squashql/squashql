@@ -4,8 +4,11 @@ import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.*;
-import io.squashql.query.measure.ParametrizedMeasure;
-import io.squashql.query.measure.Repository;
+import io.squashql.query.field.AliasedField;
+import io.squashql.query.field.ConstantField;
+import io.squashql.query.field.Field;
+import io.squashql.query.field.TableField;
+import io.squashql.query.measure.*;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
@@ -15,8 +18,8 @@ import java.util.List;
 import java.util.Map;
 
 import static io.squashql.query.Functions.*;
-import static io.squashql.query.TableField.tableField;
-import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.field.TableField.tableField;
+import static io.squashql.query.field.TableField.tableFields;
 import static io.squashql.query.builder.Query.from;
 
 public class TestJavascriptLibrary {

@@ -1,8 +1,8 @@
 package io.squashql.query.database;
 
-import io.squashql.query.Field;
-import io.squashql.query.FunctionField;
-import io.squashql.query.TableField;
+import io.squashql.query.field.Field;
+import io.squashql.query.field.FunctionField;
+import io.squashql.query.field.TableField;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;

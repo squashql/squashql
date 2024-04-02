@@ -5,6 +5,9 @@ import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.LimitExceedException;
+import io.squashql.query.field.AliasedField;
+import io.squashql.query.field.TableField;
+import io.squashql.query.measure.Measure;
 import io.squashql.table.Table;
 import io.squashql.transaction.DuckDBDataLoader;
 import io.squashql.type.TableTypedField;
@@ -16,8 +19,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.squashql.query.Functions.sum;
-import static io.squashql.query.TableField.tableField;
-import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.field.TableField.tableField;
+import static io.squashql.query.field.TableField.tableFields;
 
 public class TestDuckDBQuery {
   protected String storeName = "myStore";

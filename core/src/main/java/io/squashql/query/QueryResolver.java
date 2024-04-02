@@ -6,8 +6,8 @@ import io.squashql.query.database.QueryScope;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.FieldNotFoundException;
-import io.squashql.query.measure.ParametrizedMeasure;
-import io.squashql.query.measure.Repository;
+import io.squashql.query.field.*;
+import io.squashql.query.measure.*;
 import io.squashql.store.Store;
 import io.squashql.type.*;
 import lombok.Data;
@@ -85,7 +85,7 @@ public class QueryResolver {
   /**
    * Field resolver
    */
-  public TypedField resolveField(final Field field) {
+  public TypedField resolveField(Field field) {
     return this.cache.computeIfAbsent(field, f -> {
       // Special case for the column that is created due to the column set.
       ColumnSet columnSet = this.query.columnSets.get(GROUP);
@@ -437,7 +437,7 @@ public class QueryResolver {
       }
     }
 
-    private CompiledCriteria computeIfAbsent(final CriteriaDto criteria, final Function<CriteriaDto, CompiledCriteria> mappingFunction) {
+    private CompiledCriteria computeIfAbsent(CriteriaDto criteria, Function<CriteriaDto, CompiledCriteria> mappingFunction) {
       if (this.compiledCriteria.containsKey(criteria)) {
         return this.compiledCriteria.get(criteria);
       } else {

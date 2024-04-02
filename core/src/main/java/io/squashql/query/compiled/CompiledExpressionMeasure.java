@@ -1,6 +1,6 @@
 package io.squashql.query.compiled;
 
-import io.squashql.query.TotalCountMeasure;
+import io.squashql.query.measure.TotalCountMeasure;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SqlUtils;
 

@@ -5,6 +5,10 @@ import io.squashql.query.builder.Query;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.GroupColumnSetDto;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.query.field.Field;
+import io.squashql.query.field.TableField;
+import io.squashql.query.measure.AggregatedMeasure;
+import io.squashql.query.measure.CountMeasure;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
@@ -18,8 +22,8 @@ import java.util.Map;
 
 import static io.squashql.query.ComparisonMethod.RELATIVE_DIFFERENCE;
 import static io.squashql.query.Functions.eq;
-import static io.squashql.query.TableField.tableField;
-import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.field.TableField.tableField;
+import static io.squashql.query.field.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 

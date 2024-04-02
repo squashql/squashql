@@ -4,6 +4,8 @@ import io.squashql.TestClass;
 import io.squashql.list.Lists;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.query.field.Field;
+import io.squashql.query.field.TableField;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;

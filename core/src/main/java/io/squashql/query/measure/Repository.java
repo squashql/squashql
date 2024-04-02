@@ -2,8 +2,7 @@ package io.squashql.query.measure;
 
 import com.fasterxml.jackson.databind.JavaType;
 import io.squashql.jackson.SquashQLTypeFactory;
-import io.squashql.query.Field;
-import io.squashql.query.Measure;
+import io.squashql.query.field.Field;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 

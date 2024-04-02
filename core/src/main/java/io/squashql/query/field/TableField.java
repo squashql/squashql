@@ -1,4 +1,4 @@
-package io.squashql.query;
+package io.squashql.query.field;
 
 import io.squashql.query.database.SqlUtils;
 import lombok.AllArgsConstructor;

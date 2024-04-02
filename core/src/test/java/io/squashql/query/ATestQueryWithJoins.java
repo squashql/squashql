@@ -1,7 +1,7 @@
 package io.squashql.query;
 
 import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.field.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 import io.squashql.TestClass;

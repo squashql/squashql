@@ -2,8 +2,8 @@ package io.squashql.query.dto;
 
 import io.squashql.query.ColumnSet;
 import io.squashql.query.ColumnSetKey;
-import io.squashql.query.Field;
-import io.squashql.query.TableField;
+import io.squashql.query.field.Field;
+import io.squashql.query.field.TableField;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;

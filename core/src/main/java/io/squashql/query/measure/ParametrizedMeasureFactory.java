@@ -2,6 +2,7 @@ package io.squashql.query.measure;
 
 import io.squashql.list.Lists;
 import io.squashql.query.*;
+import io.squashql.query.field.Field;
 import io.squashql.util.MultipleColumnsSorter;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;

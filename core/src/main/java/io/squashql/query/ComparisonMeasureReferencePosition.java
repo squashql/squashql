@@ -1,6 +1,9 @@
 package io.squashql.query;
 
 import io.squashql.query.dto.Period;
+import io.squashql.query.field.Field;
+import io.squashql.query.measure.Measure;
+import io.squashql.query.measure.visitor.MeasureVisitor;
 import lombok.*;
 
 import java.util.List;

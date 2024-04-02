@@ -5,6 +5,8 @@ import io.squashql.query.builder.Query;
 import io.squashql.query.dto.GroupColumnSetDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.dto.TableDto;
+import io.squashql.query.field.AliasedField;
+import io.squashql.query.measure.AggregatedMeasure;
 import io.squashql.query.parameter.Parameter;
 import io.squashql.store.Store;
 import io.squashql.type.TableTypedField;
@@ -16,8 +18,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static io.squashql.query.TableField.tableField;
-import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.field.TableField.tableField;
+import static io.squashql.query.field.TableField.tableFields;
 
 public class TestDatabaseQueryCreation {
 

@@ -1,5 +1,8 @@
-package io.squashql.query;
+package io.squashql.query.measure;
 
+import io.squashql.query.FieldAndAggFunc;
+import io.squashql.query.measure.visitor.MeasureVisitor;
+import io.squashql.query.field.Field;
 import lombok.*;
 
 import java.util.List;

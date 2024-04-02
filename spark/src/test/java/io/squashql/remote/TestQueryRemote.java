@@ -2,7 +2,7 @@ package io.squashql.remote;
 
 import com.github.dockerjava.api.command.LogContainerCmd;
 import io.squashql.SparkDatastore;
-import io.squashql.query.AggregatedMeasure;
+import io.squashql.query.measure.AggregatedMeasure;
 import io.squashql.query.QueryExecutor;
 import io.squashql.query.database.SparkQueryEngine;
 import io.squashql.query.dto.QueryDto;
@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
-import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.field.TableField.tableField;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 import static org.testcontainers.containers.output.OutputFrame.OutputType.STDERR;

@@ -1,6 +1,7 @@
-package io.squashql.query;
+package io.squashql.query.measure;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.squashql.query.measure.visitor.MeasureVisitor;
 
 /**
  * Marker interface.

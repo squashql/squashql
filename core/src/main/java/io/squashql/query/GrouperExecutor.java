@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.GroupColumnSetDto;
+import io.squashql.query.field.Field;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
