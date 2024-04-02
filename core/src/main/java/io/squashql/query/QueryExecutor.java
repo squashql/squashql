@@ -65,7 +65,7 @@ public class QueryExecutor {
 
     PivotTableContext pivotTableContext = new PivotTableContext(pivotTableQueryDto);
     QueryDto preparedQuery = PivotTableUtils.prepareQuery(pivotTableQueryDto.query, pivotTableContext);
-    Table result = executeQuery(preparedQuery, cacheStatsDtoBuilder, user, false, limitNotifier);
+    Table result = executeQuery(preparedQuery, cacheStatsDtoBuilder, user, false, limitNotifier, pivotTableContext);
     if (replaceTotalCellsAndOrderRows) {
       result = TableUtils.replaceTotalCellValues((ColumnarTable) result,
               pivotTableQueryDto.rows.stream().map(SqlUtils::squashqlExpression).toList(),
@@ -85,21 +85,29 @@ public class QueryExecutor {
     return this.queryEngine.executeRawSql(rawSqlQuery);
   }
 
+  /**
+   * Tabular API.
+   */
   public Table executeQuery(QueryDto query) {
     return executeQuery(
             query,
             CacheStatsDto.builder(),
             null,
             true,
-            null);
+            null,
+            createPivotTableContext(query));
   }
 
+  /**
+   * Tabular API. Tabular is a special case of Pivot Table
+   */
   public Table executeQuery(QueryDto query,
                             CacheStatsDto.CacheStatsDtoBuilder cacheStatsDtoBuilder,
                             SquashQLUser user,
                             boolean replaceTotalCellsAndOrderRows,
-                            IntConsumer limitNotifier) {
-    QueryDto preparedQuery = prepareQuery(query);
+                            IntConsumer limitNotifier,
+                            PivotTableContext pivotTableContext) {
+    QueryDto preparedQuery = prepareQuery(query, pivotTableContext);
 
     QueryResolver queryResolver = new QueryResolver(preparedQuery, this.queryEngine.datastore().storeByName());
     DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
@@ -210,7 +218,7 @@ public class QueryExecutor {
     return result;
   }
 
-  private static QueryDto prepareQuery(QueryDto query) {
+  private static QueryDto prepareQuery(QueryDto query, PivotTableContext pivotTableContext) {
     QueryDto deepCopy = query.clone();
     deepCopy.limit = query.limit < 0 ? LIMIT_DEFAULT_VALUE : query.limit;
 
@@ -226,7 +234,7 @@ public class QueryExecutor {
     }
 
     if (deepCopy.measures != null) {
-      PartialMeasureVisitor visitor = new PartialMeasureVisitor(new PivotTableContext(new PivotTableQueryDto(query, Collections.emptyList(), query.columns)));
+      PartialMeasureVisitor visitor = new PartialMeasureVisitor(pivotTableContext);
       deepCopy.measures.replaceAll(m -> m.accept(visitor));
     }
 
@@ -318,5 +326,9 @@ public class QueryExecutor {
       });
     }
     return measures;
+  }
+
+  public static PivotTableContext createPivotTableContext(QueryDto query) {
+    return new PivotTableContext(new PivotTableQueryDto(query, query.columns, Collections.emptyList(), Collections.emptyList()));
   }
 }

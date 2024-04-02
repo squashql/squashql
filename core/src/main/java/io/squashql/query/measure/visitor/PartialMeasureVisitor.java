@@ -79,8 +79,8 @@ public record PartialMeasureVisitor(
   @Override
   public Measure visit(PartialComparisonAncestorsMeasure measure) {
     List<Field> ancestors = measure.axis != null ? switch (measure.axis) {
-      case ROW -> this.pivotTableContext.cleansedRows;
-      case COLUMN -> this.pivotTableContext.cleansedColumns;
+      case ROW -> this.pivotTableContext.cleansedColumns;
+      case COLUMN -> this.pivotTableContext.cleansedRows;
     } : this.pivotTableContext.cleansedColumns;
     return new ComparisonMeasureReferencePosition(
             measure.alias,

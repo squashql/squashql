@@ -2,11 +2,14 @@ package io.squashql.util;
 
 import com.google.common.collect.ImmutableList;
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.*;
+import io.squashql.query.GlobalCache;
+import io.squashql.query.Header;
+import io.squashql.query.SquashQLUser;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.query.dto.SimpleTableDto;
 import io.squashql.table.ColumnarTable;
+import io.squashql.table.PivotTable;
 import io.squashql.table.RowTable;
 import io.squashql.table.Table;
 import lombok.AllArgsConstructor;
@@ -14,6 +17,7 @@ import lombok.NoArgsConstructor;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.ThrowableAssert;
 import org.assertj.core.util.Throwables;
+import org.junit.jupiter.api.TestInfo;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -115,6 +119,50 @@ public class TestUtil {
       }
     }
     return new ColumnarTable(headers, measures, values);
+  }
+
+  /**
+   * To save in file '*.tabular.json': System.out.println(TestUtil.tableToJson(pivotTable.table));
+   * To save in file '*.pivottable.json': System.out.println(JacksonUtil.serialize(pivotTable.pivotTableCells));
+   */
+  public static void verifyResults(String directory, TestInfo testInfo, PivotTable pt) {
+    Table expectedTabular = tableFromFile(directory, testInfo);
+
+    Assertions.assertThat(pt.table).containsExactlyElementsOf(ImmutableList.copyOf(expectedTabular.iterator()));
+    Assertions.assertThat(pt.table.headers()).containsExactlyElementsOf(expectedTabular.headers());
+
+    List<List<Object>> expectedPivotTable = pivotTableFromFile(directory, testInfo);
+    Assertions.assertThat(pt.pivotTableCells).containsExactlyElementsOf(expectedPivotTable);
+  }
+
+  private static Table tableFromFile(String directory, TestInfo testInfo) {
+    return TestUtil.deserializeTableFromFile(Paths.get("queryresults", directory, testInfo.getTestMethod().get().getName() + ".tabular.json"));
+  }
+
+  private static List<List<Object>> pivotTableFromFile(String directory, TestInfo testInfo) {
+    return TestUtil.deserializeFromFile(Paths.get("queryresults", directory, testInfo.getTestMethod().get().getName() + ".pivottable.json"), List.class);
+  }
+
+  public static void writePivotTableToFiles(String absolutePathDirectory, TestInfo testInfo, PivotTable pt) {
+    try {
+      String fileNameTabular = testInfo.getTestMethod().get().getName() + ".tabular.json";
+      File file = Path.of(absolutePathDirectory, fileNameTabular).toFile();
+      file.createNewFile();
+      PrintWriter writer = new PrintWriter(file);
+      writer.println(TestUtil.tableToJson(pt.table));
+      writer.flush();
+      writer.close();
+
+      String fileNamePivotTable = testInfo.getTestMethod().get().getName() + ".pivottable.json";
+      file = Path.of(absolutePathDirectory, fileNamePivotTable).toFile();
+      file.createNewFile();
+      writer = new PrintWriter(file);
+      writer.println(JacksonUtil.serialize(pt.pivotTableCells));
+      writer.flush();
+      writer.close();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**

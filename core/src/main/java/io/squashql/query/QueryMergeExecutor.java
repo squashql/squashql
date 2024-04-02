@@ -13,6 +13,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.squashql.query.QueryExecutor.createPivotTableContext;
+
 public class QueryMergeExecutor {
 
   public static Table executeQueryMerge(QueryExecutor queryExecutor, QueryMergeDto queryMerge, SquashQLUser user) {
@@ -23,7 +25,9 @@ public class QueryMergeExecutor {
             false,
             limit -> {
               throw new LimitExceedException("Result of " + query + " is too big (limit=" + limit + ")");
-            });
+            },
+            createPivotTableContext(query)
+    );
     return execute(queryMerge,
             t -> (ColumnarTable) TableUtils.replaceTotalCellValues((ColumnarTable) t, true),
             executor);

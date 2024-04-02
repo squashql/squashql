@@ -2,11 +2,16 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.dto.PivotTableQueryDto;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.table.PivotTable;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
+import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
+import org.eclipse.collections.impl.list.mutable.FastList;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 
 import java.util.Arrays;
@@ -14,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 import static io.squashql.query.Axis.COLUMN;
+import static io.squashql.query.Axis.ROW;
+import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.ComparisonMethod.DIVIDE;
 import static io.squashql.query.Functions.compareWithParentOfAxisMeasure;
 import static io.squashql.query.Functions.compareWithTotalOfAxisMeasure;
@@ -45,15 +52,15 @@ public abstract class ATestPartialMeasureComparison extends ABaseTestQuery {
   @Override
   protected void loadData() {
     this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
-            new Object[]{"paris", "france", "eu", "car", 1d},
-            new Object[]{"paris", "france", "eu", "home", 2d},
+            new Object[]{"paris", "france", "eu", "car", 2d},
+            new Object[]{"paris", "france", "eu", "home", 4d},
             new Object[]{"paris", "france", "eu", "hobbies", 1d},
-            new Object[]{"lyon", "france", "eu", "car", 0.1d},
+            new Object[]{"lyon", "france", "eu", "car", 1d},
             new Object[]{"lyon", "france", "eu", "home", 2d},
             new Object[]{"lyon", "france", "eu", "hobbies", 1d},
             new Object[]{"london", "uk", "eu", "car", 2d},
-            new Object[]{"london", "uk", "eu", "home", 2d},
-            new Object[]{"london", "uk", "eu", "hobbies", 5d}
+            new Object[]{"london", "uk", "eu", "home", 5d},
+            new Object[]{"london", "uk", "eu", "hobbies", 3d}
     ));
   }
 
@@ -70,13 +77,13 @@ public abstract class ATestPartialMeasureComparison extends ABaseTestQuery {
 
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, GRAND_TOTAL, 16.1d, 1d),
-            Arrays.asList("eu", TOTAL, TOTAL, 16.1d, 16.1d / 16.1d),
-            Arrays.asList("eu", "france", TOTAL, 7.1d, 7.1d / 16.1d),
-            Arrays.asList("eu", "france", "lyon", 3.1d, 3.1d / 7.1d),
-            Arrays.asList("eu", "france", "paris", 4d, 4d / 7.1d),
-            Arrays.asList("eu", "uk", TOTAL, 9d, 9d / 16.1d),
-            Arrays.asList("eu", "uk", "london", 9d, 9d / 9d));
+            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, GRAND_TOTAL, 21d, 1d),
+            Arrays.asList("eu", TOTAL, TOTAL, 21d, 21d / 21d),
+            Arrays.asList("eu", "france", TOTAL, 11d, 11d / 21d),
+            Arrays.asList("eu", "france", "lyon", 4d, 4d / 11d),
+            Arrays.asList("eu", "france", "paris", 7d, 7d / 11d),
+            Arrays.asList("eu", "uk", TOTAL, 10d, 10d / 21d),
+            Arrays.asList("eu", "uk", "london", 10d, 10d / 10d));
   }
 
   @Test
@@ -92,14 +99,74 @@ public abstract class ATestPartialMeasureComparison extends ABaseTestQuery {
 
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, GRAND_TOTAL, 16.1d, 1d),
-            Arrays.asList("eu", TOTAL, TOTAL, 16.1d, 16.1d / 16.1d),
-            Arrays.asList("eu", "france", TOTAL, 7.1d, 7.1d / 16.1d),
-            Arrays.asList("eu", "france", "lyon", 3.1d, 3.1d / 16.1),
-            Arrays.asList("eu", "france", "paris", 4d, 4d / 16.1),
-            Arrays.asList("eu", "uk", TOTAL, 9d, 9d / 16.1d),
-            Arrays.asList("eu", "uk", "london", 9d, 9d / 16.1));
+            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, GRAND_TOTAL, 21d, 1d),
+            Arrays.asList("eu", TOTAL, TOTAL, 21d, 21d / 21d),
+            Arrays.asList("eu", "france", TOTAL, 11d, 11d / 21d),
+            Arrays.asList("eu", "france", "lyon", 4d, 4d / 21d),
+            Arrays.asList("eu", "france", "paris", 7d, 7d / 21d),
+            Arrays.asList("eu", "uk", TOTAL, 10d, 10d / 21d),
+            Arrays.asList("eu", "uk", "london", 10d, 10d / 21d));
   }
 
+  @Test
+  void testCompareWithParentOfColumnPivotTable(TestInfo testInfo) {
+    Measure pop = Functions.sum("amount", this.amount);
+    List<Field> fields = List.of(this.continent, this.country, this.city);
+    Measure pOp = compareWithParentOfAxisMeasure("diff", ABSOLUTE_DIFFERENCE, pop, COLUMN);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(FastList.newList(fields).with(this.spendingCategory), List.of(pop, pOp))
+            .build();
+
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, fields, List.of(this.spendingCategory)));
+    verifyResults(testInfo, result);
+  }
+
+  @Test
+  void testCompareWithTotalOfColumnPivotTable(TestInfo testInfo) {
+    Measure pop = Functions.sum("amount", this.amount);
+    List<Field> fields = List.of(this.continent, this.country, this.city);
+    Measure pOp = compareWithTotalOfAxisMeasure("diff", ABSOLUTE_DIFFERENCE, pop, COLUMN);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(FastList.newList(fields).with(this.spendingCategory), List.of(pop, pOp))
+            .build();
+
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, fields, List.of(this.spendingCategory)));
+    verifyResults(testInfo, result);
+  }
+
+  @Test
+  void testCompareWithTotalOfRowPivotTable(TestInfo testInfo) {
+    Measure pop = Functions.sum("amount", this.amount);
+    List<Field> fields = List.of(this.continent, this.country, this.city);
+    Measure pOp = compareWithTotalOfAxisMeasure("diff", ABSOLUTE_DIFFERENCE, pop, ROW);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(FastList.newList(fields).with(this.spendingCategory), List.of(pop, pOp))
+            .build();
+
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, fields, List.of(this.spendingCategory)));
+    verifyResults(testInfo, result);
+  }
+
+  @Test
+  void testCompareWithParentOfRowPivotTable(TestInfo testInfo) {
+    Measure pop = Functions.sum("amount", this.amount);
+    List<Field> fields = List.of(this.continent, this.country, this.city);
+    Measure pOp = compareWithParentOfAxisMeasure("diff", ABSOLUTE_DIFFERENCE, pop, ROW);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(FastList.newList(fields).with(this.spendingCategory), List.of(pop, pOp))
+            .build();
+
+    PivotTable result = this.executor.executePivotQuery(new PivotTableQueryDto(query, fields, List.of(this.spendingCategory)));
+    verifyResults(testInfo, result);
+  }
+
+  //    TestUtil.writePivotTableToFiles("/Users/paul/dev/github/squashql/core/src/test/resources/queryresults/partialmeasurecomparison", testInfo, result);
   // TODO test with PT.
+  private void verifyResults(TestInfo testInfo, PivotTable pt) {
+    TestUtil.verifyResults("partialmeasurecomparison", testInfo, pt);
+  }
 }

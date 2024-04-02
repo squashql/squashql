@@ -246,13 +246,6 @@ public class Functions {
     return new FunctionField("MONTH", new TableField(field));
   }
 
-  public static Measure compareWithParentMeasure(String alias,
-                                                 ComparisonMethod comparisonMethod,
-                                                 Measure underlyingMeasure,
-                                                 List<Field> ancestors) {
-    return new ComparisonMeasureReferencePosition(alias, comparisonMethod, underlyingMeasure, ancestors);
-  }
-
   public static Measure compareWithParentOfAxisMeasure(String alias,
                                                  ComparisonMethod comparisonMethod,
                                                  Measure underlyingMeasure,

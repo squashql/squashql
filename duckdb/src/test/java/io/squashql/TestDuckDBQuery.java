@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.squashql.query.Functions.sum;
+import static io.squashql.query.QueryExecutor.createPivotTableContext;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 
@@ -64,12 +65,12 @@ public class TestDuckDBQuery {
             .build();
 
     AtomicInteger limitCapture = new AtomicInteger(-1);
-    this.executor.executeQuery(query, CacheStatsDto.builder(), null, true, limitCapture::set);
+    this.executor.executeQuery(query, CacheStatsDto.builder(), null, true, limitCapture::set, createPivotTableContext(query));
     Assertions.assertThat(limitCapture.get()).isEqualTo(-1);
 
     int limit = 2;
     query.limit = limit;
-    this.executor.executeQuery(query, CacheStatsDto.builder(), null, true, limitCapture::set);
+    this.executor.executeQuery(query, CacheStatsDto.builder(), null, true, limitCapture::set, createPivotTableContext(query));
     Assertions.assertThat(limitCapture.get()).isEqualTo(limit);
   }
 
