@@ -1,4 +1,4 @@
-package io.squashql.query.field;
+package io.squashql.query;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 

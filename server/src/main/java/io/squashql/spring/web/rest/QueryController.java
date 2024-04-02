@@ -3,7 +3,6 @@ package io.squashql.spring.web.rest;
 import io.squashql.query.*;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.*;
-import io.squashql.query.measure.Measure;
 import io.squashql.store.Store;
 import io.squashql.table.PivotTable;
 import io.squashql.table.PivotTableUtils;

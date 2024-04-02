@@ -1,13 +1,12 @@
 package io.squashql.query;
 
-import io.squashql.query.measure.Measure;
 import io.squashql.query.measure.visitor.MeasureVisitor;
 import lombok.*;
 
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
-@AllArgsConstructor
+@AllArgsConstructor // TODO rename
 public class PartialComparisonAncestorsMeasure implements Measure {
 
   public String alias;

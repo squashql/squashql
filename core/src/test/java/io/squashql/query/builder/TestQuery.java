@@ -1,9 +1,9 @@
 package io.squashql.query.builder;
 
-import io.squashql.query.measure.AggregatedMeasure;
+import io.squashql.query.AggregatedMeasure;
 import io.squashql.query.ColumnSetKey;
 import io.squashql.query.Functions;
-import io.squashql.query.measure.Measure;
+import io.squashql.query.Measure;
 import io.squashql.query.dto.*;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -11,8 +11,8 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static io.squashql.query.Functions.*;
-import static io.squashql.query.field.TableField.tableField;
-import static io.squashql.query.field.TableField.tableFields;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.dto.ConditionType.EQ;
 
 public class TestQuery {

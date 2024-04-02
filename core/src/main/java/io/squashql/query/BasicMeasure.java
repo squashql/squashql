@@ -1,4 +1,4 @@
-package io.squashql.query.measure;
+package io.squashql.query;
 
 /**
  * Marker interface.

@@ -7,7 +7,6 @@ import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.query.measure.Measure;
 import io.squashql.store.Datastore;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
@@ -19,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.squashql.query.Functions.*;
-import static io.squashql.query.field.TableField.tableFields;
+import static io.squashql.query.TableField.tableFields;
 
 @TestClass(ignore = {TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE, TestClass.Type.CLICKHOUSE, TestClass.Type.SPARK})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

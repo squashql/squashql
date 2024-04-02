@@ -2,11 +2,6 @@ package io.squashql.query;
 
 import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.dto.Period;
-import io.squashql.query.field.Field;
-import io.squashql.query.measure.AggregatedMeasure;
-import io.squashql.query.measure.BinaryOperationMeasure;
-import io.squashql.query.measure.DoubleConstantMeasure;
-import io.squashql.query.measure.Measure;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -15,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 import static io.squashql.query.Functions.*;
-import static io.squashql.query.field.TableField.tableField;
-import static io.squashql.query.field.TableField.tableFields;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 
 public class TestMeasures {
 

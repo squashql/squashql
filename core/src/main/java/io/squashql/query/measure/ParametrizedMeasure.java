@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.squashql.jackson.ParametrizedMeasureDeserializer;
 import io.squashql.jackson.ParametrizedMeasureSerializer;
+import io.squashql.query.Measure;
 import io.squashql.query.measure.visitor.MeasureVisitor;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;

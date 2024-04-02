@@ -2,7 +2,7 @@ package io.squashql.util;
 
 import io.squashql.query.ColumnSet;
 import io.squashql.query.ColumnSetKey;
-import io.squashql.query.field.Field;
+import io.squashql.query.Field;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 

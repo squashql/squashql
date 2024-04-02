@@ -1,7 +1,7 @@
 package io.squashql.table;
 
 import io.squashql.query.ColumnSet;
-import io.squashql.query.field.Field;
+import io.squashql.query.Field;
 import io.squashql.query.dto.GroupColumnSetDto;
 import io.squashql.query.dto.PivotTableQueryDto;
 import io.squashql.query.dto.QueryDto;

@@ -3,7 +3,7 @@ package io.squashql.table;
 import com.google.common.base.Suppliers;
 import io.squashql.query.ColumnSet;
 import io.squashql.query.Header;
-import io.squashql.query.measure.Measure;
+import io.squashql.query.Measure;
 import io.squashql.query.QueryExecutor;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.QueryEngine;

@@ -1,8 +1,8 @@
 package io.squashql.query.builder;
 
 import io.squashql.query.ColumnSet;
-import io.squashql.query.field.Field;
-import io.squashql.query.measure.Measure;
+import io.squashql.query.Field;
+import io.squashql.query.Measure;
 import java.util.Collections;
 import java.util.List;
 

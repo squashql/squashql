@@ -1,6 +1,6 @@
 package io.squashql.query.dto;
 
-import io.squashql.query.field.Field;
+import io.squashql.query.Field;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

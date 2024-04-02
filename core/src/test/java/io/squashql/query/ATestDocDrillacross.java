@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Map;
 
 import static io.squashql.query.Functions.sum;
-import static io.squashql.query.field.TableField.tableField;
-import static io.squashql.query.field.TableField.tableFields;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

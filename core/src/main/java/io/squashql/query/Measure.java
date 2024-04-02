@@ -1,4 +1,4 @@
-package io.squashql.query.measure;
+package io.squashql.query;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.squashql.query.measure.visitor.MeasureVisitor;

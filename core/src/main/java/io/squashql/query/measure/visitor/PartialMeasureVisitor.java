@@ -1,8 +1,7 @@
 package io.squashql.query.measure.visitor;
 
 import io.squashql.query.*;
-import io.squashql.query.field.Field;
-import io.squashql.query.measure.*;
+import io.squashql.query.measure.ParametrizedMeasure;
 import io.squashql.table.PivotTableContext;
 
 import java.util.List;

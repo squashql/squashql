@@ -3,7 +3,6 @@ package io.squashql.query;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.LimitExceedException;
-import io.squashql.query.field.Field;
 import io.squashql.table.*;
 import io.squashql.util.Queries;
 

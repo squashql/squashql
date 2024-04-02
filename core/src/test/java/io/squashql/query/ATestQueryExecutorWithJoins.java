@@ -1,7 +1,7 @@
 package io.squashql.query;
 
 import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.field.TableField.tableFields;
+import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 import io.squashql.query.builder.Query;
@@ -9,7 +9,6 @@ import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.ConditionType;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.query.measure.CountMeasure;
 import io.squashql.store.Datastore;
 import io.squashql.table.Table;
 import io.squashql.transaction.DataLoader;

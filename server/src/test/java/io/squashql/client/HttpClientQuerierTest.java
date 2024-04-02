@@ -5,10 +5,6 @@ import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
-import io.squashql.query.measure.AggregatedMeasure;
-import io.squashql.query.measure.CountMeasure;
-import io.squashql.query.measure.Measure;
-import io.squashql.query.measure.TotalCountMeasure;
 import io.squashql.spring.SquashQLApplication;
 import io.squashql.spring.dataset.DatasetTestConfig;
 import io.squashql.spring.web.rest.QueryControllerTest;
@@ -27,8 +23,8 @@ import java.util.stream.Stream;
 
 import static io.squashql.query.Functions.criterion;
 import static io.squashql.query.Functions.eq;
-import static io.squashql.query.field.TableField.tableField;
-import static io.squashql.query.field.TableField.tableFields;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 

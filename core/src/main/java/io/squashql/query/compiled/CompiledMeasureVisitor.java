@@ -18,5 +18,5 @@ public interface CompiledMeasureVisitor<R> {
 
   R visit(CompiledVectorAggMeasure measure);
 
-  R visit(CompiledVectorTupleAggMeasure compiledVectorTupleAggMeasure);
+  R visit(CompiledVectorTupleAggMeasure measure);
 }

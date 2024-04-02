@@ -1,6 +1,5 @@
-package io.squashql.query.measure;
+package io.squashql.query;
 
-import io.squashql.query.BinaryOperator;
 import io.squashql.query.measure.visitor.MeasureVisitor;
 import lombok.*;
 

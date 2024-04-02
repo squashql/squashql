@@ -6,10 +6,6 @@ import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
-import io.squashql.query.field.AliasedField;
-import io.squashql.query.field.Field;
-import io.squashql.query.field.TableField;
-import io.squashql.query.measure.Measure;
 import io.squashql.table.PivotTable;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
@@ -28,8 +24,8 @@ import java.util.function.Consumer;
 
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.Functions.*;
-import static io.squashql.query.field.TableField.tableField;
-import static io.squashql.query.field.TableField.tableFields;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 
 @TestClass

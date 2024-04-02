@@ -4,7 +4,7 @@ import feign.*;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.measure.Measure;
+import io.squashql.query.Measure;
 import io.squashql.query.dto.*;
 import okhttp3.OkHttpClient;
 

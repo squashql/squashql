@@ -1,10 +1,7 @@
 package io.squashql.query.measure.visitor;
 
-import io.squashql.query.ComparisonMeasureGrandTotal;
-import io.squashql.query.ComparisonMeasureReferencePosition;
-import io.squashql.query.LongConstantMeasure;
-import io.squashql.query.PartialComparisonAncestorsMeasure;
-import io.squashql.query.measure.*;
+import io.squashql.query.*;
+import io.squashql.query.measure.ParametrizedMeasure;
 
 public interface MeasureVisitor<R> {
 

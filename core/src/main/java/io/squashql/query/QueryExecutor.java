@@ -7,7 +7,6 @@ import io.squashql.query.database.QueryScope;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.query.join.ExperimentalQueryMergeExecutor;
-import io.squashql.query.measure.Measure;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.table.*;
 import io.squashql.table.PivotTableContext;

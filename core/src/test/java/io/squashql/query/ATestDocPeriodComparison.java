@@ -4,7 +4,6 @@ import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.Period;
 import io.squashql.query.dto.QueryDto;
-import io.squashql.query.measure.Measure;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.junit.jupiter.api.Disabled;
@@ -14,8 +13,8 @@ import org.junit.jupiter.api.TestInstance;
 import java.util.List;
 import java.util.Map;
 
-import static io.squashql.query.field.TableField.tableField;
-import static io.squashql.query.field.TableField.tableFields;
+import static io.squashql.query.TableField.tableField;
+import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 /**

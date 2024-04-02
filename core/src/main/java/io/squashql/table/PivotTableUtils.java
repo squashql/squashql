@@ -1,6 +1,6 @@
 package io.squashql.table;
 
-import io.squashql.query.field.Field;
+import io.squashql.query.Field;
 import io.squashql.query.Header;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.QueryDto;

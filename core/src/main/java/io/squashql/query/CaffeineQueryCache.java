@@ -10,7 +10,6 @@ import io.squashql.query.compiled.CompiledAggregatedMeasure;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.CacheStatsDto;
-import io.squashql.query.measure.CountMeasure;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;

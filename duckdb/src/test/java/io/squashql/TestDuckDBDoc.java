@@ -5,10 +5,6 @@ import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.dto.*;
-import io.squashql.query.field.Field;
-import io.squashql.query.field.TableField;
-import io.squashql.query.measure.AggregatedMeasure;
-import io.squashql.query.measure.CountMeasure;
 import io.squashql.table.PivotTable;
 import io.squashql.table.PivotTableUtils;
 import org.junit.jupiter.api.Test;
@@ -19,7 +15,7 @@ import java.util.Map;
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.ComparisonMethod.DIVIDE;
 import static io.squashql.query.Functions.*;
-import static io.squashql.query.field.TableField.tableField;
+import static io.squashql.query.TableField.tableField;
 
 /**
  * Various tests that print out tables used for documentation purpose. It does not test anything.

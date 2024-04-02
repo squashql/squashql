@@ -1,6 +1,5 @@
-package io.squashql.query.field;
+package io.squashql.query;
 
-import io.squashql.query.BinaryOperator;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

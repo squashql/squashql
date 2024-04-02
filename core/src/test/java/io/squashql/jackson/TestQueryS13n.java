@@ -3,11 +3,6 @@ package io.squashql.jackson;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.*;
-import io.squashql.query.field.Field;
-import io.squashql.query.field.TableField;
-import io.squashql.query.measure.AggregatedMeasure;
-import io.squashql.query.measure.BinaryOperationMeasure;
-import io.squashql.query.measure.ExpressionMeasure;
 import io.squashql.query.parameter.Parameter;
 import io.squashql.query.parameter.QueryCacheParameter;
 import org.assertj.core.api.Assertions;
@@ -18,7 +13,7 @@ import java.util.Map;
 
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.Functions.*;
-import static io.squashql.query.field.TableField.tableField;
+import static io.squashql.query.TableField.tableField;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 

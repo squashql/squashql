@@ -1,7 +1,6 @@
-package io.squashql.query.measure;
+package io.squashql.query;
 
 import io.squashql.query.measure.visitor.MeasureVisitor;
-import io.squashql.query.field.Field;
 import lombok.*;
 
 @ToString

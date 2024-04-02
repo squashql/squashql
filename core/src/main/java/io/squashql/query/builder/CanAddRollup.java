@@ -1,6 +1,6 @@
 package io.squashql.query.builder;
 
-import io.squashql.query.field.Field;
+import io.squashql.query.Field;
 import java.util.List;
 
 public interface CanAddRollup extends HasOrderBy, CanAddOrderBy, CanAddHaving {

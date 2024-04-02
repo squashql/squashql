@@ -5,7 +5,6 @@ import io.squashql.query.QueryExecutor.ExecutionContext;
 import io.squashql.query.QueryExecutor.QueryPlanNodeKey;
 import io.squashql.query.comp.BinaryOperations;
 import io.squashql.query.database.QueryScope;
-import io.squashql.query.measure.DoubleConstantMeasure;
 import io.squashql.store.UnknownType;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;

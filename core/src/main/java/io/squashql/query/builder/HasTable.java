@@ -1,6 +1,6 @@
 package io.squashql.query.builder;
 
-import io.squashql.query.field.Field;
+import io.squashql.query.Field;
 import io.squashql.query.dto.ConditionDto;
 import io.squashql.query.dto.CriteriaDto;
 
