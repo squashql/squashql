@@ -24,11 +24,11 @@ import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestParentComparison extends ABaseTestQuery {
 
-  private String storeName = "store" + getClass().getSimpleName().toLowerCase();
-  private TableField city = new TableField(this.storeName, "city");
-  private TableField country = new TableField(this.storeName, "country");
-  private TableField continent = new TableField(this.storeName, "continent");
-  private TableField population = new TableField(this.storeName, "population");
+  private final String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  private final TableField city = new TableField(this.storeName, "city");
+  private final TableField country = new TableField(this.storeName, "country");
+  private final TableField continent = new TableField(this.storeName, "continent");
+  private final TableField population = new TableField(this.storeName, "population");
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
@@ -192,39 +192,6 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
             .rollup(fields)
             .build();
 
-    Table result = this.executor.executeQuery(query);
-    Assertions.assertThat(result).containsExactly(
-            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, GRAND_TOTAL, 36d, 1d),
-            Arrays.asList("am", TOTAL, TOTAL, 24d, .6666666666666666),
-            Arrays.asList("am", "canada", TOTAL, 12d, .5),
-            Arrays.asList("am", "canada", "montreal", 7d, .5833333333333334),
-            Arrays.asList("am", "canada", "otawa", 2d, .16666666666666666),
-            Arrays.asList("am", "canada", "toronto", 3d, 0.25),
-            Arrays.asList("am", "usa", TOTAL, 12d, .5),
-            Arrays.asList("am", "usa", "chicago", 4d, .3333333333333333),
-            Arrays.asList("am", "usa", "nyc", 8d, .6666666666666666),
-            Arrays.asList("eu", TOTAL, TOTAL, 12d, .3333333333333333),
-            Arrays.asList("eu", "france", TOTAL, 3d, .25),
-            Arrays.asList("eu", "france", "lyon", 1d, .3333333333333333),
-            Arrays.asList("eu", "france", "paris", 2d, .6666666666666666),
-            Arrays.asList("eu", "uk", TOTAL, 8d, .6666666666666666),
-            Arrays.asList("eu", "uk", "london", 8d, 1d),
-            Arrays.asList("eu", null, TOTAL, 1d, .08333333333333333),
-            Arrays.asList("eu", null, "monaco", 1d, 1d));
-  }
-
-  @Test
-  void testSimpleWithTotalsPartial() {
-    Measure pop = Functions.sum("population", this.population);
-    List<Field> fields = List.of(this.continent, this.country, this.city);
-    PartialComparisonAncestorsMeasure pOp = new PartialComparisonAncestorsMeasure("percentOfParent", DIVIDE, pop, Axis.COLUMN);
-    QueryDto query = Query
-            .from(this.storeName)
-            .select(fields, List.of(pop, pOp))
-            .rollup(fields)
-            .build();
-
-    // FIXME factorized this part with the part above
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
             Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, GRAND_TOTAL, 36d, 1d),

@@ -245,4 +245,29 @@ public class Functions {
   public static Field month(String field) {
     return new FunctionField("MONTH", new TableField(field));
   }
+
+  public static Measure compareWithParentMeasure(String alias,
+                                                 ComparisonMethod comparisonMethod,
+                                                 Measure underlyingMeasure,
+                                                 List<Field> ancestors) {
+    return new ComparisonMeasureReferencePosition(alias, comparisonMethod, underlyingMeasure, ancestors);
+  }
+
+  public static Measure compareWithParentOfAxisMeasure(String alias,
+                                                 ComparisonMethod comparisonMethod,
+                                                 Measure underlyingMeasure,
+                                                 Axis axis) {
+    return new PartialComparisonAncestorsMeasure(alias, comparisonMethod, underlyingMeasure, axis, false);
+  }
+
+  public static Measure compareWithTotalOfAxisMeasure(String alias,
+                                                ComparisonMethod comparisonMethod,
+                                                Measure underlyingMeasure,
+                                                Axis axis) {
+    return new PartialComparisonAncestorsMeasure(alias, comparisonMethod, underlyingMeasure, axis, true);
+  }
+
+//  GrandTotal = "% on grand total",
+//  ParentOnRows = "% of parent of row",
+//  TotalOnRows = "% of row",
 }

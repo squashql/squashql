@@ -21,15 +21,8 @@ public class PartialComparisonAncestorsMeasure implements Measure {
   public PartialComparisonAncestorsMeasure(String alias,
                                            ComparisonMethod comparisonMethod,
                                            Measure measure,
-                                           Axis axis) {
-    this(alias, comparisonMethod, measure, axis, false);
-  }
-
-  private PartialComparisonAncestorsMeasure(String alias,
-                                            ComparisonMethod comparisonMethod,
-                                            Measure measure,
-                                            Axis axis,
-                                            boolean grandTotalAlongAncestors) {
+                                           Axis axis,
+                                           boolean grandTotalAlongAncestors) {
     this.alias = alias;
     this.comparisonMethod = comparisonMethod;
     this.measure = measure;

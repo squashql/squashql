@@ -20,7 +20,7 @@ import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuery {
 
-  protected String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  private final String storeName = "store" + getClass().getSimpleName().toLowerCase();
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
