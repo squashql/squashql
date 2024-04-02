@@ -27,4 +27,9 @@ public class LongConstantMeasure extends ConstantMeasure<Long> {
     measure.expression = expression;
     return measure;
   }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
+  }
 }

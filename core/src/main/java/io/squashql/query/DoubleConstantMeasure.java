@@ -27,4 +27,9 @@ public class DoubleConstantMeasure extends ConstantMeasure<Double> {
     measure.expression = expression;
     return measure;
   }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
+  }
 }

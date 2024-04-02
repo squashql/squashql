@@ -33,4 +33,9 @@ public class ComparisonMeasureGrandTotal implements Measure {
   public String expression() {
     return this.expression;
   }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
+  }
 }

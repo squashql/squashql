@@ -1,6 +1,6 @@
 package io.squashql.query.compiled;
 
-public class PrimitiveMeasureVisitor implements MeasureVisitor<Boolean> {
+public class PrimitiveMeasureVisitor implements CompiledMeasureVisitor<Boolean> {
 
   @Override
   public Boolean visit(CompiledAggregatedMeasure measure) {

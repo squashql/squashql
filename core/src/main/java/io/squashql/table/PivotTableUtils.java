@@ -346,11 +346,11 @@ public final class PivotTableUtils {
   }
 
   public static class PivotTableContext {
-    private final List<Field> rows;
-    private final List<Field> cleansedRows;
-    private final List<Field> columns;
-    private final List<Field> cleansedColumns;
-    private final List<Field> hiddenTotals;
+    public final List<Field> rows;
+    public final List<Field> cleansedRows;
+    public final List<Field> columns;
+    public final List<Field> cleansedColumns;
+    public final List<Field> hiddenTotals;
 
     public PivotTableContext(PivotTableQueryDto pivotTableQueryDto) {
       this.hiddenTotals = pivotTableQueryDto.hiddenTotals == null ? Collections.emptyList() : pivotTableQueryDto.hiddenTotals;

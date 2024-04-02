@@ -224,6 +224,11 @@ public class QueryExecutor {
       });
     }
 
+    if (deepCopy.measures != null) {
+      Queries.PartialMeasureVisitor visitor = new Queries.PartialMeasureVisitor(new PivotTableContext(new PivotTableQueryDto(query, Collections.emptyList(), query.columns)));
+      deepCopy.measures.replaceAll(m -> m.accept(visitor));
+    }
+
     return deepCopy;
   }
 

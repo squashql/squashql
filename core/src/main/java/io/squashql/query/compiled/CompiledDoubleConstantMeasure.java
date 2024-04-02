@@ -15,7 +15,7 @@ public record CompiledDoubleConstantMeasure(Double value) implements CompiledMea
   }
 
   @Override
-  public <R> R accept(MeasureVisitor<R> visitor) {
+  public <R> R accept(CompiledMeasureVisitor<R> visitor) {
     return visitor.visit(this);
   }
 }

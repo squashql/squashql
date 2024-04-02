@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 import static io.squashql.query.agg.AggregationFunction.*;
 
 @RequiredArgsConstructor
-public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<CompiledMeasure>>> {
+public class PrefetchVisitor implements CompiledMeasureVisitor<Map<QueryScope, Set<CompiledMeasure>>> {
 
   private final List<TypedField> columns;
   private final List<TypedField> groupColumns;

@@ -217,7 +217,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   void testSimpleWithTotalsPartial() {
     Measure pop = Functions.sum("population", this.population);
     List<Field> fields = List.of(this.continent, this.country, this.city);
-    PartialComparisonMeasureReferencePosition pOp = new PartialComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, Axis.COLUMN);
+    PartialComparisonAncestorsMeasure pOp = new PartialComparisonAncestorsMeasure("percentOfParent", DIVIDE, pop, Axis.COLUMN);
     QueryDto query = Query
             .from(this.storeName)
             .select(fields, List.of(pop, pOp))

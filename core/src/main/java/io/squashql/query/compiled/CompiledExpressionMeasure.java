@@ -23,7 +23,7 @@ public record CompiledExpressionMeasure(String alias, String expression) impleme
   }
 
   @Override
-  public <R> R accept(MeasureVisitor<R> visitor) {
+  public <R> R accept(CompiledMeasureVisitor<R> visitor) {
     return visitor.visit(this);
   }
 }

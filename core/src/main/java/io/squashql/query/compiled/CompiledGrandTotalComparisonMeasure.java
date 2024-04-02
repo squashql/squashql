@@ -25,7 +25,7 @@ public record CompiledGrandTotalComparisonMeasure(String alias,
   }
 
   @Override
-  public <R> R accept(MeasureVisitor<R> visitor) {
+  public <R> R accept(CompiledMeasureVisitor<R> visitor) {
     return visitor.visit(this);
   }
 }
