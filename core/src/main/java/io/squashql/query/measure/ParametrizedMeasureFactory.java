@@ -41,7 +41,7 @@ public final class ParametrizedMeasureFactory {
       var quantileDate = orderedDates.get(index);
       var quantilePnL = orderedValues.get(index);
 
-      return List.of(quantileDate, quantilePnL);
+      return List.of(quantileDate, -quantilePnL);
     };
     return new VectorTupleAggMeasure(alias, List.of(new FieldAndAggFunc(value, SUM), new FieldAndAggFunc(date, ANY_VALUE)), date, transformer);
   }
@@ -76,7 +76,7 @@ public final class ParametrizedMeasureFactory {
       Collections.sort(parentVector);
       var varParentWithCurrent = parentVector.get(index);
 
-      return varParentWithCurrent - varParentWithoutCurrent;
+      return -1 * (varParentWithCurrent - varParentWithoutCurrent);
     };
     return new ComparisonMeasureReferencePosition(alias, comparisonOperator, vector, ancestors);
   }
