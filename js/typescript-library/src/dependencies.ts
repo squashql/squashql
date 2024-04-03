@@ -1,6 +1,6 @@
 import {
   AggregatedMeasure,
-  BinaryOperationMeasure,
+  BinaryOperationMeasure, ComparisonMeasureGrandTotal,
   ComparisonMeasureReferencePosition,
   DoubleConstantMeasure,
   ExpressionMeasure,
@@ -89,6 +89,9 @@ export const computeMeasureDependencies = (measure: Measure, resultArray: TableF
         (measure as ComparisonMeasureReferencePosition)["ancestors"]
         .forEach((field) => computeFieldDependencies(field, resultArray))
       }
+      break
+    case ComparisonMeasureGrandTotal:
+      computeMeasureDependencies((measure as ComparisonMeasureGrandTotal)["measure"], resultArray)
       break
     case DoubleConstantMeasure:
     case LongConstantMeasure:
