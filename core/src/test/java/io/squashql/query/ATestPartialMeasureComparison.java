@@ -65,7 +65,7 @@ public abstract class ATestPartialMeasureComparison extends ABaseTestQuery {
   }
 
   @Test
-  void testPercentOfParent() {
+  void testPercentOfParentOfAxis() {
     Measure pop = Functions.sum("amount", this.amount);
     List<Field> fields = List.of(this.continent, this.country, this.city);
     Measure pOp = compareWithParentOfAxisMeasure("percentOfParent", DIVIDE, pop, COLUMN);
