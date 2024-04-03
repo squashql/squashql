@@ -55,10 +55,13 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     AComparisonExecutor<CompiledComparisonMeasureReferencePosition> executor;
     if (cm.columnSetKey() == GROUP) {
       CompiledColumnSet cs = this.executionContext.columnSets().get(GROUP);
-      if (cs == null) {
-        throw new IllegalArgumentException(String.format("columnSet %s is not specified in the query but is used in a comparison measure: %s", GROUP, cm));
+      if (cs != null) {
+        executor = new GroupComparisonExecutor((CompiledGroupColumnSet) cs);
+      } else {
+        // No CS. it is a single group comparison. Order => ASC
+        TypedField next = cm.referencePosition().keySet().iterator().next();
+        executor = new SingleGroupComparisonExecutor(next);
       }
-      executor = new GroupComparisonExecutor((CompiledGroupColumnSet) cs);
     } else if (cm.period() != null) {
       for (TypedField field : cm.period().getTypedFields()) {
         if (!this.executionContext.columns().contains(field)) {

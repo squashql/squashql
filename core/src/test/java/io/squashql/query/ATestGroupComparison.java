@@ -18,6 +18,7 @@ import java.util.Map;
 
 import static io.squashql.query.ComparisonMethod.RELATIVE_DIFFERENCE;
 import static io.squashql.query.Functions.eq;
+import static io.squashql.query.Functions.sum;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
@@ -312,13 +313,13 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
     GroupColumnSetDto group = new GroupColumnSetDto(groupOfScenario, this.scenario)
             .withNewGroup("whatever", List.of(MAIN_SCENARIO_NAME, "s1", "s2")); // Name of the group is not important when single group
 
-    AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
+    Measure price = sum("p", this.price);
     ComparisonMeasureReferencePosition priceComp = new ComparisonMeasureReferencePosition(
             "priceDiff",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
             Map.of(this.scenario, "s-1"),
-            ColumnSetKey.GROUP);
+            ColumnSetKey.GROUP); // FIXME we should be able to pass the list of scenarios to the measure here
 
     var query = Query
             .from(this.storeName)
@@ -334,5 +335,39 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
             List.of("base", 0d, 15d),
             List.of("s1", 2d, 17d),
             List.of("s2", -2.5d, 14.5d));
+  }
+
+  @Test
+  void testAbsoluteDifferenceWithPreviousSingleGroupUndefined() {
+    Measure price = sum("p", this.price);
+    ComparisonMeasureReferencePosition priceCompPrev = new ComparisonMeasureReferencePosition(
+            "priceCompPrev",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            price,
+            Map.of(this.scenario, "s-1"),
+            ColumnSetKey.GROUP);
+
+    ComparisonMeasureReferencePosition priceCompFirst = new ComparisonMeasureReferencePosition(
+            "priceCompFirst",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            price,
+            Map.of(this.scenario, "first"),
+            ColumnSetKey.GROUP);
+
+    var query = Query
+            .from(this.storeName)
+            .select(List.of(this.scenario), List.of(price, priceCompPrev, priceCompFirst))
+            .build();
+
+    Table dataset = this.executor.executeQuery(query);
+    Assertions.assertThat(dataset.headers().stream().map(Header::name)).containsExactly(
+            SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME),
+            "p",
+            "priceCompPrev",
+            "priceCompFirst");
+    Assertions.assertThat(dataset).containsExactlyInAnyOrder(
+            List.of("base", 15d, 0d, 0d),
+            List.of("s1", 17d, 2d, 2d),
+            List.of("s2", 14.5d, -2.5d, -.5));
   }
 }

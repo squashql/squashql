@@ -22,7 +22,8 @@ public abstract class AComparisonExecutor<T extends CompiledComparisonMeasure> {
   public static final String REF_POS_FIRST = "first";
 
   protected abstract BiPredicate<Object[], Header[]> createShiftProcedure(T cm,
-                                                                         ObjectIntMap<String> indexByColumn);
+                                                                          ObjectIntMap<String> indexByColumn,
+                                                                          Table readFromTable);
 
   public List<Object> compare(
           T cm,
@@ -36,7 +37,7 @@ public abstract class AComparisonExecutor<T extends CompiledComparisonMeasure> {
         indexByColumn.put(header.name(), index++);
       }
     }
-    BiPredicate<Object[], Header[]> procedure = createShiftProcedure(cm, indexByColumn);
+    BiPredicate<Object[], Header[]> procedure = createShiftProcedure(cm, indexByColumn, readFromTable);
 
     int readFromTableColumnsCount = (int) readFromTable.headers().stream().filter(header -> !header.isMeasure()).count();
     Object[] buffer = new Object[readFromTableColumnsCount];

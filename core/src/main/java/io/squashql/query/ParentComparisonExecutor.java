@@ -3,6 +3,7 @@ package io.squashql.query;
 import io.squashql.query.compiled.CompiledComparisonMeasureReferencePosition;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
+import io.squashql.table.Table;
 import io.squashql.type.TypedField;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
 
@@ -20,7 +21,9 @@ public class ParentComparisonExecutor extends AComparisonExecutor<CompiledCompar
   }
 
   @Override
-  protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
+  protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasureReferencePosition cm,
+                                                                 ObjectIntMap<String> indexByColumn,
+                                                                 Table readFromTable) {
     List<TypedField> ancestors = new ArrayList<>(this.pcm.ancestors());
     Collections.reverse(ancestors);
     return new AncestorShiftProcedure(ancestors, indexByColumn, cm.grandTotalAlongAncestors());
