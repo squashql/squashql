@@ -298,7 +298,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
     Table table = this.executor.executeQuery(query);
-    Assertions.assertThat(table).containsExactlyInAnyOrder(
+    Assertions.assertThat(table).containsExactly(
             List.of("s1", 17.0d, 33L),
             List.of("s2", 14.5d, 33L));
   }
@@ -311,7 +311,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("p", "price"), sum("q", "quantity")))
             .build();
     Table table = this.executor.executeQuery(query);
-    Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("s1", 17.0d, 33L));
+    Assertions.assertThat(table).containsExactly(List.of("s1", 17.0d, 33L));
   }
 
   @Test
@@ -326,7 +326,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .build();
 
     Table table = this.executor.executeQuery(query);
-    Assertions.assertThat(table).containsExactlyInAnyOrder(List.of("drink", "starbuck's coffee", 10L));
+    Assertions.assertThat(table).containsExactly(List.of("drink", "starbuck's coffee", 10L));
 
     query = Query
             .from(this.storeName)
@@ -431,7 +431,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
                             sumIf("quantity filtered", this.storeName + ".quantity", criterion(this.storeName + ".category", or))))
             .build();
     Table result = this.executor.executeQuery(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(
+    Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, 30L, 30L),
             List.of("s1", 30L, 30L),
             List.of("s2", 30L, 30L));
@@ -446,7 +446,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
                     List.of(sumIf("quantity filtered", "quantity", Functions.all(category, criterion("subcategory", eq("biscuit"))))))
             .build();
     result = this.executor.executeQuery(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(
+    Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, 20L),
             List.of("s1", 20L),
             List.of("s2", 20L));
@@ -461,7 +461,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
                     List.of(sumIf("quantity filtered", this.storeName + ".quantity", criterion(this.storeName + ".category", or))))
             .build();
     Table result = this.executor.executeQuery(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(
+    Assertions.assertThat(result).containsExactly(
             List.of(MAIN_SCENARIO_NAME, 30L),
             List.of("s1", 30L),
             List.of("s2", 30L));
@@ -482,10 +482,10 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
                             countDistinct("count distinct categories", this.storeName + ".category")))
             .build();
     Table result = this.executor.executeQuery(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(
+    Assertions.assertThat(result).containsExactly(
+            List.of("cloth", 3L, 1L),
             List.of("drink", 3L, 1L),
-            List.of("food", 3L, 1L),
-            List.of("cloth", 3L, 1L));
+            List.of("food", 3L, 1L));
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly("category", "count categories", "count distinct categories");
   }
@@ -505,7 +505,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
                                     criterion(new TableField(this.storeName + ".isFood"), eq(true)))))
             .build();
     Table result = this.executor.executeQuery(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of(6L, 2L));
+    Assertions.assertThat(result).containsExactly(List.of(6L, 2L));
     Assertions.assertThat(result.headers().stream().map(Header::name))
             .containsExactly("count categories if food", "count distinct categories if food");
   }

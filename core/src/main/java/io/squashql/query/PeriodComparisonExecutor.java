@@ -4,6 +4,7 @@ import io.squashql.query.compiled.CompiledComparisonMeasureReferencePosition;
 import io.squashql.query.compiled.CompiledPeriod;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.database.SqlUtils;
+import io.squashql.table.Table;
 import io.squashql.type.TypedField;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
@@ -40,7 +41,9 @@ public class PeriodComparisonExecutor extends AComparisonExecutor<CompiledCompar
   }
 
   @Override
-  protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasureReferencePosition cm, ObjectIntMap<String> indexByColumn) {
+  protected BiPredicate<Object[], Header[]> createShiftProcedure(CompiledComparisonMeasureReferencePosition cm,
+                                                                 ObjectIntMap<String> indexByColumn,
+                                                                 Table readFromTable) {
     Map<PeriodUnit, String> referencePosition = new HashMap<>();
     CompiledPeriod period = this.cmrp.period();
     Map<TypedField, PeriodUnit> mapping = mapping(period);

@@ -341,6 +341,7 @@ public class QueryResolver {
             m.referencePosition == null ? null : m.referencePosition.entrySet().stream().collect(Collectors.toMap(e -> resolveField(e.getKey()), Map.Entry::getValue)),
             compilePeriod(m.period),
             m.columnSetKey,
+            m.elements,
             m.ancestors == null ? null : m.ancestors.stream().map(this::resolveField).collect(Collectors.toList()),
             m.grandTotalAlongAncestors);
   }

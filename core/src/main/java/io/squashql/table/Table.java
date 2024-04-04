@@ -29,8 +29,6 @@ public interface Table extends Iterable<List<Object>> {
 
   void transferAggregates(Table from, CompiledMeasure measure);
 
-  void removeColumn(String column);
-
   default List<Object> getColumn(int columnIndex) {
     List<Object> elements = new ArrayList<>();
     for (List<Object> objects : this) {

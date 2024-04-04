@@ -9,7 +9,7 @@ import java.util.Map;
 public record CompiledGroupColumnSet(List<TypedField> columnsForPrefetching,
                                      List<TypedField> newColumns,
                                      ColumnSetKey columnSetKey,
-                                     Map<String, List<String>> values) implements CompiledColumnSet {
+                                     Map<Object, List<Object>> values) implements CompiledColumnSet {
 
   public TypedField newField() {
     return this.newColumns.get(0);

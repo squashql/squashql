@@ -199,13 +199,6 @@ public class QueryExecutor {
             .evictionCount(stats.evictionCount)
             .missCount(stats.missCount);
 
-    if (preparedQuery.columnSets.containsKey(GROUP)) {
-      GroupColumnSetDto columnSet = (GroupColumnSetDto) preparedQuery.columnSets.get(GROUP);
-      if (columnSet.values.size() == 1) { // only one group, no need to keep the additional column
-        result.removeColumn(SqlUtils.squashqlExpression(columnSet.newField));
-      }
-    }
-
     return result;
   }
 

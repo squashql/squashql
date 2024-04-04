@@ -1,5 +1,6 @@
 package io.squashql.table;
 
+import com.google.common.base.Suppliers;
 import io.squashql.query.Header;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
@@ -10,7 +11,7 @@ import java.util.function.Supplier;
 
 public class ColumnarTable implements Table {
 
-  private final MemoizingSupplier<ObjectArrayDictionary> pointDictionary;
+  private final Supplier<ObjectArrayDictionary> pointDictionary;
   private final List<Header> headers;
   private final Set<CompiledMeasure> measures;
   private final List<List<Object>> values;
@@ -24,7 +25,7 @@ public class ColumnarTable implements Table {
     this.headers = new ArrayList<>(headers);
     this.measures = new HashSet<>(measures);
     this.values = new ArrayList<>(values);
-    this.pointDictionary = new MemoizingSupplier<>(() -> createPointDictionary(this));
+    this.pointDictionary = Suppliers.memoize(() -> createPointDictionary(this));
   }
 
   public static ObjectArrayDictionary createPointDictionary(Table table) {
@@ -81,18 +82,6 @@ public class ColumnarTable implements Table {
     } else {
       throw new IllegalArgumentException();
     }
-  }
-
-  @Override
-  public void removeColumn(String column) {
-    int index = columnIndex(column);
-    Header header = this.headers.remove(index);
-    if (header.isMeasure()) {
-      this.measures.removeIf(m -> m.alias().equals(header.name()));
-    } else {
-      this.pointDictionary.forget();
-    }
-    this.values.remove(index);
   }
 
   @Override
@@ -174,39 +163,5 @@ public class ColumnarTable implements Table {
   @Override
   public int hashCode() {
     return Objects.hash(this.headers, this.measures, this.values);
-  }
-
-  private static class MemoizingSupplier<T> implements Supplier<T> {
-
-    private final Supplier<T> delegate;
-    private boolean initialized;
-    private T value;
-
-    MemoizingSupplier(Supplier<T> delegate) {
-      this.delegate = delegate;
-    }
-
-    @Override
-    public T get() {
-      if (!this.initialized) {
-        T t = this.delegate.get();
-        this.value = t;
-        this.initialized = true;
-        return t;
-      }
-      return this.value;
-    }
-
-    public void forget() {
-      this.value = null;
-      this.initialized = false;
-    }
-
-    @Override
-    public String toString() {
-      return "Suppliers.memoize("
-              + (this.initialized ? "<supplier that returned " + this.value + ">" : this.delegate)
-              + ")";
-    }
   }
 }

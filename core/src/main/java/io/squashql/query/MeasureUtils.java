@@ -85,6 +85,9 @@ public final class MeasureUtils {
     AtomicReference<CompiledCriteria> copy = new AtomicReference<>(queryScope.whereCriteria() == null ? null : CompiledCriteria.deepCopy(queryScope.whereCriteria()));
     Consumer<TypedField> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
     groupColumns.forEach(criteriaRemover);
+    Optional.ofNullable(cm.referencePosition())
+            // to handle ComparisonMeasure with no GroupColumn => previous member, first member...
+            .ifPresent(ref -> ref.keySet().forEach(criteriaRemover));
     Optional.ofNullable(cm.period())
             .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover));
     Set<TypedField> rollupColumns = new LinkedHashSet<>(queryScope.rollup()); // order does matter

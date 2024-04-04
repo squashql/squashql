@@ -22,7 +22,7 @@ public class GroupColumnSetDto implements ColumnSet {
 
   public Field field;
 
-  public Map<String, List<String>> values = new LinkedHashMap<>();
+  public Map<Object, List<Object>> values = new LinkedHashMap<>();
 
   public GroupColumnSetDto(String name, Field field) {
     this.newField = new TableField(name);
