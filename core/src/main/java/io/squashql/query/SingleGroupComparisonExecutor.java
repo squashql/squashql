@@ -39,11 +39,7 @@ public class SingleGroupComparisonExecutor extends AComparisonExecutor<CompiledC
       String column = SqlUtils.squashqlExpression(field);
       this.columnAndTransformation = Tuples.pair(column, parse(referencePosition.get(field)));
       Object[] array = readFromTable.getColumnValues(column).toArray(new Object[0]);
-      if (elements == null) {
-        Arrays.sort(array);
-      } else {
-        Arrays.sort(array, new CustomExplicitOrdering(elements));
-      }
+      Arrays.sort(array, elements == null ? null : new CustomExplicitOrdering(elements));
       this.values = Arrays.asList(array);
     }
 
