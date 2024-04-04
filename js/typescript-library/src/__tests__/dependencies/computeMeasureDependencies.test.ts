@@ -70,6 +70,7 @@ describe('computeMeasureDependencies', () => {
             mockMeasure1,
             referencePosition,
             ColumnSetKey.GROUP,
+            undefined,
             mockPeriod,
             ancestors
     )

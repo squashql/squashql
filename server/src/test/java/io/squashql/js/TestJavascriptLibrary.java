@@ -62,8 +62,12 @@ public class TestJavascriptLibrary {
     q.withMeasure(new ComparisonMeasureReferencePosition("comp group",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
-            Map.of(tableField("scenario"), "s-1", tableField("group"), "g"),
-            ColumnSetKey.GROUP));
+            Map.of(tableField("scenario"), "s-1")));
+    q.withMeasure(new ComparisonMeasureReferencePosition("comp group in order",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            price,
+            Map.of(tableField("scenario"), "s-1"),
+            List.of("base", "s1", "s2")));
 
     Period.Month month = new Period.Month(tableField("Month"), tableField("Year"));
     q.withMeasure(new ComparisonMeasureReferencePosition("growth",
