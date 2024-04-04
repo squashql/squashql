@@ -1164,7 +1164,7 @@ const revenueComparison = comparisonMeasureWithinSameGroupInOrder("revenueCompar
         elements)
 const query = from("myTable")
         .select([scenario], [], [revenue, revenueComparison])
-        .orderByFirstElements(scenario, elements) // orderBy to display correctly the elements
+        .orderByFirstElements(scenario, elements) // orderByFirstElements to display correctly the elements
         .build()
 ```
 
