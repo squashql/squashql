@@ -53,16 +53,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
   @Override
   public Void visit(CompiledComparisonMeasureReferencePosition cm) {
     AComparisonExecutor<CompiledComparisonMeasureReferencePosition> executor;
-    if (cm.columnSetKey() == GROUP) {
-      CompiledColumnSet cs = this.executionContext.columnSets().get(GROUP);
-      if (cs != null) {
-        executor = new GroupComparisonExecutor((CompiledGroupColumnSet) cs);
-      } else {
-        // No CS. it is a single group comparison. Order => ASC
-        TypedField next = cm.referencePosition().keySet().iterator().next();
-        executor = new SingleGroupComparisonExecutor(next);
-      }
-    } else if (cm.period() != null) {
+    if (cm.period() != null) {
       for (TypedField field : cm.period().getTypedFields()) {
         if (!this.executionContext.columns().contains(field)) {
           throw new IllegalArgumentException(String.format("%s is not specified in the query but is used in a comparison measure: %s", field.name(), cm));
@@ -72,7 +63,14 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
     } else if (cm.ancestors() != null) {
       executor = new ParentComparisonExecutor(cm);
     } else {
-      throw new IllegalArgumentException(String.format("Comparison measure not correctly defined (%s). It should have a period or columnSetKey parameter", cm));
+      CompiledColumnSet cs = this.executionContext.columnSets().get(GROUP);
+      if (cs != null) {
+        executor = new GroupComparisonExecutor((CompiledGroupColumnSet) cs);
+      } else {
+        // No CS. it is a single group comparison. Order => ASC
+        TypedField next = cm.referencePosition().keySet().iterator().next();
+        executor = new SingleGroupComparisonExecutor(next);
+      }
     }
 
     QueryScope readScope = MeasureUtils.getReadScopeComparisonMeasureReferencePosition(

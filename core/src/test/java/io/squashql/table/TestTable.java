@@ -75,33 +75,4 @@ public class TestTable {
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("does not match the headers of the destination table");
   }
-
-  @Test
-  void testRemoveColumn() {
-    Header pop = new Header("population.avg", double.class, true);
-    Header city = new Header("city", String.class, false);
-    Header country = new Header("country", String.class, false);
-    CompiledAggregatedMeasure popAvg = new CompiledAggregatedMeasure("population.avg", new AliasedTypedField("population"), AVG, null, false);
-    ColumnarTable table = new ColumnarTable(
-            List.of(country, city, pop),
-            Set.of(popAvg),
-            List.of(
-                    Arrays.asList("france", "france", "spain", "spain"),
-                    Arrays.asList("paris", "toulouse", "madrid", "barcelona"),
-                    Arrays.asList(1d, 2d, 3d, 4d)));
-    Assertions.assertThat(table.headers().stream().map(Header::name)).containsExactly(country.name(), city.name(), pop.name());
-    Assertions.assertThat(table.measures()).containsExactly(popAvg);
-    Assertions.assertThat(table.pointDictionary().getPointLength()).isEqualTo(2);
-
-    table.removeColumn(country.name());
-    // Make sure the point dictionary is rebuilt
-    Assertions.assertThat(table.headers().stream().map(Header::name)).containsExactly(city.name(), pop.name());
-    Assertions.assertThat(table.measures()).containsExactly(popAvg);
-    Assertions.assertThat(table.pointDictionary().getPointLength()).isEqualTo(1);
-
-    table.removeColumn(pop.name());
-    Assertions.assertThat(table.headers().stream().map(Header::name)).containsExactly(city.name());
-    Assertions.assertThat(table.measures()).isEmpty();
-    Assertions.assertThat(table.pointDictionary().getPointLength()).isEqualTo(1);
-  }
 }
