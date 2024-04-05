@@ -124,6 +124,9 @@ public class TestUtil {
   /**
    * To save in file '*.tabular.json': System.out.println(TestUtil.tableToJson(pivotTable.table));
    * To save in file '*.pivottable.json': System.out.println(JacksonUtil.serialize(pivotTable.pivotTableCells));
+   *
+   * {@link #writePivotTableToFiles(String, TestInfo, PivotTable)}
+   * TestUtil.writePivotTableToFiles("/Users/paul/dev/github/squashql/core/src/test/resources/queryresults/partialmeasurecomparison", testInfo, pivotTable);
    */
   public static void verifyResults(String directory, TestInfo testInfo, PivotTable pt) {
     Table expectedTabular = tableFromFile(directory, testInfo);

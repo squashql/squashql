@@ -22,8 +22,8 @@ import static io.squashql.query.Axis.COLUMN;
 import static io.squashql.query.Axis.ROW;
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.ComparisonMethod.DIVIDE;
-import static io.squashql.query.Functions.compareWithParentOfAxisMeasure;
-import static io.squashql.query.Functions.compareWithTotalOfAxisMeasure;
+import static io.squashql.query.Functions.comparisonMeasureWithParentOfAxis;
+import static io.squashql.query.Functions.comparisonMeasureWithTotalOfAxis;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
@@ -32,7 +32,7 @@ import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestPartialMeasureComparison extends ABaseTestQuery {
 
-  private final String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  private final String storeName = "store" + ATestPartialMeasureComparison.class.getSimpleName().toLowerCase();
   private final TableField city = new TableField(this.storeName, "city");
   private final TableField country = new TableField(this.storeName, "country");
   private final TableField continent = new TableField(this.storeName, "continent");
@@ -68,7 +68,7 @@ public abstract class ATestPartialMeasureComparison extends ABaseTestQuery {
   void testPercentOfParentOfAxis() {
     Measure pop = Functions.sum("amount", this.amount);
     List<Field> fields = List.of(this.continent, this.country, this.city);
-    Measure pOp = compareWithParentOfAxisMeasure("percentOfParent", DIVIDE, pop, COLUMN);
+    Measure pOp = comparisonMeasureWithParentOfAxis("percentOfParent", DIVIDE, pop, COLUMN);
     QueryDto query = Query
             .from(this.storeName)
             .select(fields, List.of(pop, pOp))
@@ -90,7 +90,7 @@ public abstract class ATestPartialMeasureComparison extends ABaseTestQuery {
   void testPercentOfTotalOfAxis() {
     Measure pop = Functions.sum("amount", this.amount);
     List<Field> fields = List.of(this.continent, this.country, this.city);
-    Measure pOp = compareWithTotalOfAxisMeasure("percentOfParent", DIVIDE, pop, COLUMN);
+    Measure pOp = comparisonMeasureWithTotalOfAxis("percentOfParent", DIVIDE, pop, COLUMN);
     QueryDto query = Query
             .from(this.storeName)
             .select(fields, List.of(pop, pOp))
@@ -112,7 +112,7 @@ public abstract class ATestPartialMeasureComparison extends ABaseTestQuery {
   void testCompareWithParentOfColumnPivotTable(TestInfo testInfo) {
     Measure pop = Functions.sum("amount", this.amount);
     List<Field> fields = List.of(this.continent, this.country, this.city);
-    Measure pOp = compareWithParentOfAxisMeasure("diff", ABSOLUTE_DIFFERENCE, pop, COLUMN);
+    Measure pOp = comparisonMeasureWithParentOfAxis("diff", ABSOLUTE_DIFFERENCE, pop, COLUMN);
     QueryDto query = Query
             .from(this.storeName)
             .select(FastList.newList(fields).with(this.spendingCategory), List.of(pop, pOp))
@@ -126,7 +126,7 @@ public abstract class ATestPartialMeasureComparison extends ABaseTestQuery {
   void testCompareWithTotalOfColumnPivotTable(TestInfo testInfo) {
     Measure pop = Functions.sum("amount", this.amount);
     List<Field> fields = List.of(this.continent, this.country, this.city);
-    Measure pOp = compareWithTotalOfAxisMeasure("diff", ABSOLUTE_DIFFERENCE, pop, COLUMN);
+    Measure pOp = comparisonMeasureWithTotalOfAxis("diff", ABSOLUTE_DIFFERENCE, pop, COLUMN);
     QueryDto query = Query
             .from(this.storeName)
             .select(FastList.newList(fields).with(this.spendingCategory), List.of(pop, pOp))
@@ -140,7 +140,7 @@ public abstract class ATestPartialMeasureComparison extends ABaseTestQuery {
   void testCompareWithTotalOfRowPivotTable(TestInfo testInfo) {
     Measure pop = Functions.sum("amount", this.amount);
     List<Field> fields = List.of(this.continent, this.country, this.city);
-    Measure pOp = compareWithTotalOfAxisMeasure("diff", ABSOLUTE_DIFFERENCE, pop, ROW);
+    Measure pOp = comparisonMeasureWithTotalOfAxis("diff", ABSOLUTE_DIFFERENCE, pop, ROW);
     QueryDto query = Query
             .from(this.storeName)
             .select(FastList.newList(fields).with(this.spendingCategory), List.of(pop, pOp))
@@ -154,7 +154,7 @@ public abstract class ATestPartialMeasureComparison extends ABaseTestQuery {
   void testCompareWithParentOfRowPivotTable(TestInfo testInfo) {
     Measure pop = Functions.sum("amount", this.amount);
     List<Field> fields = List.of(this.continent, this.country, this.city);
-    Measure pOp = compareWithParentOfAxisMeasure("diff", ABSOLUTE_DIFFERENCE, pop, ROW);
+    Measure pOp = comparisonMeasureWithParentOfAxis("diff", ABSOLUTE_DIFFERENCE, pop, ROW);
     QueryDto query = Query
             .from(this.storeName)
             .select(FastList.newList(fields).with(this.spendingCategory), List.of(pop, pOp))
@@ -164,8 +164,6 @@ public abstract class ATestPartialMeasureComparison extends ABaseTestQuery {
     verifyResults(testInfo, result);
   }
 
-  //    TestUtil.writePivotTableToFiles("/Users/paul/dev/github/squashql/core/src/test/resources/queryresults/partialmeasurecomparison", testInfo, result);
-  // TODO test with PT.
   private void verifyResults(TestInfo testInfo, PivotTable pt) {
     TestUtil.verifyResults("partialmeasurecomparison", testInfo, pt);
   }

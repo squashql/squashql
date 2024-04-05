@@ -246,21 +246,17 @@ public class Functions {
     return new FunctionField("MONTH", new TableField(field));
   }
 
-  public static Measure compareWithParentOfAxisMeasure(String alias,
-                                                 ComparisonMethod comparisonMethod,
-                                                 Measure underlyingMeasure,
-                                                 Axis axis) {
+  public static Measure comparisonMeasureWithParentOfAxis(String alias,
+                                                          ComparisonMethod comparisonMethod,
+                                                          Measure underlyingMeasure,
+                                                          Axis axis) {
     return new PartialComparisonAncestorsMeasure(alias, comparisonMethod, underlyingMeasure, axis, false);
   }
 
-  public static Measure compareWithTotalOfAxisMeasure(String alias,
-                                                ComparisonMethod comparisonMethod,
-                                                Measure underlyingMeasure,
-                                                Axis axis) {
+  public static Measure comparisonMeasureWithTotalOfAxis(String alias,
+                                                         ComparisonMethod comparisonMethod,
+                                                         Measure underlyingMeasure,
+                                                         Axis axis) {
     return new PartialComparisonAncestorsMeasure(alias, comparisonMethod, underlyingMeasure, axis, true);
   }
-
-//  GrandTotal = "% on grand total",
-//  ParentOnRows = "% of parent of row",
-//  TotalOnRows = "% of row",
 }
