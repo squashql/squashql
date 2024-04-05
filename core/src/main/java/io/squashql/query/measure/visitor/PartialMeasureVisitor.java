@@ -36,6 +36,7 @@ public record PartialMeasureVisitor(
             measure.comparisonOperator,
             measure.measure.accept(this),
             measure.columnSetKey,
+            measure.elements,
             measure.referencePosition,
             measure.period,
             measure.ancestors,
