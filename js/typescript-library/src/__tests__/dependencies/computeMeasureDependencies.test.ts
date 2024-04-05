@@ -1,9 +1,14 @@
 import {TableField} from "../../field"
 import {
-    AggregatedMeasure,
-    BinaryOperationMeasure,
-    BinaryOperator,
-    ComparisonMeasureReferencePosition, ComparisonMethod, DoubleConstantMeasure, ExpressionMeasure, LongConstantMeasure
+  AggregatedMeasure,
+  BinaryOperationMeasure,
+  BinaryOperator,
+  ComparisonMeasureGrandTotal,
+  ComparisonMeasureReferencePosition,
+  ComparisonMethod,
+  DoubleConstantMeasure,
+  ExpressionMeasure,
+  LongConstantMeasure
 } from "../../measure"
 import {Criteria, Measure, Year} from "../../index"
 import * as dependencies from "../../dependencies"
@@ -65,6 +70,7 @@ describe('computeMeasureDependencies', () => {
             mockMeasure1,
             referencePosition,
             ColumnSetKey.GROUP,
+            undefined,
             mockPeriod,
             ancestors
     )
@@ -93,6 +99,15 @@ describe('computeMeasureDependencies', () => {
     const result = dependencies.computeMeasureDependencies(measure)
 
     expect(result.length).toEqual(0)
+  })
+
+  it('should compute dependencies for ComparisonMeasureGrandTotal', () => {
+    const underlying = new BinaryOperationMeasure('alias', BinaryOperator.PLUS, mockMeasure1, mockMeasure2)
+    const measure = new ComparisonMeasureGrandTotal('alias', ComparisonMethod.DIVIDE, underlying)
+    const array = []
+    const result = dependencies.computeMeasureDependencies(measure, array)
+
+    expect(result).toEqual(expect.arrayContaining([mockField1, mockField2]))
   })
 
   it('should throw an error for unknown Measure type', () => {

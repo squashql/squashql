@@ -102,16 +102,16 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
-            List.of(GRAND_TOTAL, GRAND_TOTAL, List.of(LocalDate.of(2023, 1, 1), 6d)),
-            List.of(competitorX, TOTAL, List.of(LocalDate.of(2023, 1, 1), 2d)),
-            List.of(competitorX, productA, List.of(LocalDate.of(2023, 1, 1), 1d)),
-            List.of(competitorX, productB, List.of(LocalDate.of(2023, 1, 1), 1d)),
-            List.of(competitorY, TOTAL, List.of(LocalDate.of(2023, 1, 1), 2d)),
-            List.of(competitorY, productA, List.of(LocalDate.of(2023, 1, 1), 1d)),
-            List.of(competitorY, productB, List.of(LocalDate.of(2023, 1, 1), 1d)),
-            List.of(competitorZ, TOTAL, List.of(LocalDate.of(2023, 1, 1), 2d)),
-            List.of(competitorZ, productA, List.of(LocalDate.of(2023, 1, 1), 1d)),
-            List.of(competitorZ, productB, List.of(LocalDate.of(2023, 1, 1), 1d)));
+            List.of(GRAND_TOTAL, GRAND_TOTAL, List.of(LocalDate.of(2023, 1, 1), -6d)),
+            List.of(competitorX, TOTAL, List.of(LocalDate.of(2023, 1, 1), -2d)),
+            List.of(competitorX, productA, List.of(LocalDate.of(2023, 1, 1), -1d)),
+            List.of(competitorX, productB, List.of(LocalDate.of(2023, 1, 1), -1d)),
+            List.of(competitorY, TOTAL, List.of(LocalDate.of(2023, 1, 1), -2d)),
+            List.of(competitorY, productA, List.of(LocalDate.of(2023, 1, 1), -1d)),
+            List.of(competitorY, productB, List.of(LocalDate.of(2023, 1, 1), -1d)),
+            List.of(competitorZ, TOTAL, List.of(LocalDate.of(2023, 1, 1), -2d)),
+            List.of(competitorZ, productA, List.of(LocalDate.of(2023, 1, 1), -1d)),
+            List.of(competitorZ, productB, List.of(LocalDate.of(2023, 1, 1), -1d)));
   }
 
   // FIXME this will not work if where clause because in case of inc. var, filters should not be cleared
@@ -133,16 +133,16 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
-            List.of(GRAND_TOTAL, GRAND_TOTAL, 6d),
-            List.of(competitorX, TOTAL, 2d),
-            List.of(competitorX, productA, 1d),
-            List.of(competitorX, productB, 1d),
-            List.of(competitorY, TOTAL, 2d),
-            List.of(competitorY, productA, 1d),
-            List.of(competitorY, productB, 1d),
-            List.of(competitorZ, TOTAL, 2d),
-            List.of(competitorZ, productA, 1d),
-            List.of(competitorZ, productB, 1d));
+            List.of(GRAND_TOTAL, GRAND_TOTAL, -6d),
+            List.of(competitorX, TOTAL, -2d),
+            List.of(competitorX, productA, -1d),
+            List.of(competitorX, productB, -1d),
+            List.of(competitorY, TOTAL, -2d),
+            List.of(competitorY, productA, -1d),
+            List.of(competitorY, productB, -1d),
+            List.of(competitorZ, TOTAL, -2d),
+            List.of(competitorZ, productA, -1d),
+            List.of(competitorZ, productB, -1d));
   }
 
   @Test

@@ -10,14 +10,13 @@ import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 import java.util.Map;
 
 import static io.squashql.query.ComparisonMethod.RELATIVE_DIFFERENCE;
 import static io.squashql.query.Functions.eq;
+import static io.squashql.query.Functions.sum;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
@@ -59,22 +58,20 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
 
     this.tm.load("s1", this.storeName, List.of(
             new Object[]{"bottle", "drink", 4d, 9},
-            new Object[]{"cookie", "food", 3d, 20},
-            new Object[]{"shirt", "cloth", 10d, 3}
+            new Object[]{"cookie", "food", 4d, 20},
+            new Object[]{"shirt", "cloth", 11d, 3}
     ));
 
     this.tm.load("s2", this.storeName, List.of(
             new Object[]{"bottle", "drink", 1.5d, 12},
-            new Object[]{"cookie", "food", 3d, 20},
-            new Object[]{"shirt", "cloth", 10d, 3}
+            new Object[]{"cookie", "food", 2.5d, 20},
+            new Object[]{"shirt", "cloth", 9d, 3}
     ));
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void testAbsoluteDifferenceWithFirst(boolean fullName) {
-    Field scenario = fullName ? new TableField(this.storeName, SCENARIO_FIELD_NAME) : new TableField(SCENARIO_FIELD_NAME);
-    GroupColumnSetDto group = new GroupColumnSetDto(groupOfScenario, scenario)
+  @Test
+  void testAbsoluteDifferenceWithFirst() {
+    GroupColumnSetDto group = new GroupColumnSetDto(groupOfScenario, this.scenario)
             .withNewGroup("group1", List.of(MAIN_SCENARIO_NAME, "s1"))
             .withNewGroup("group2", List.of(MAIN_SCENARIO_NAME, "s2"))
             .withNewGroup("group3", List.of(MAIN_SCENARIO_NAME, "s1", "s2"));
@@ -85,7 +82,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
             Map.of(
-                    scenario, AComparisonExecutor.REF_POS_FIRST,
+                    this.scenario, AComparisonExecutor.REF_POS_FIRST,
                     tableField(groupOfScenario), "g"
             ),
             ColumnSetKey.GROUP);
@@ -95,7 +92,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             quantity,
             Map.of(
-                    scenario, AComparisonExecutor.REF_POS_FIRST,
+                    this.scenario, AComparisonExecutor.REF_POS_FIRST,
                     tableField(groupOfScenario), "g"
             ),
             ColumnSetKey.GROUP);
@@ -107,29 +104,29 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
 
     Table dataset = this.executor.executeQuery(query);
     Assertions.assertThat(dataset.headers().stream().map(Header::name)).containsExactly(
-            groupOfScenario, fullName ? SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME) : SCENARIO_FIELD_NAME,
+            groupOfScenario, SqlUtils.squashqlExpression(this.scenario),
             "priceDiff", "p",
             "quantityDiff", "q");
-    Assertions.assertThat(dataset).containsExactlyInAnyOrder(
-            List.of("group1", "base", 0d, 15d, 0l, 34l),
-            List.of("group1", "s1", 2d, 17d, -2l, 32l),
-            List.of("group2", "base", 0d, 15d, 0l, 34l),
-            List.of("group2", "s2", -0.5d, 14.5d, 1l, 35l),
-            List.of("group3", "base", 0d, 15d, 0l, 34l),
-            List.of("group3", "s1", 2d, 17d, -2l, 32l),
-            List.of("group3", "s2", -0.5d, 14.5d, 1l, 35l));
+    Assertions.assertThat(dataset).containsExactly(
+            List.of("group1", MAIN_SCENARIO_NAME, 0d, 15d, 0l, 34l),
+            List.of("group1", "s1", 4d, 19d, -2l, 32l),
+            List.of("group2", MAIN_SCENARIO_NAME, 0d, 15d, 0l, 34l),
+            List.of("group2", "s2", -2d, 13d, 1l, 35l),
+            List.of("group3", MAIN_SCENARIO_NAME, 0d, 15d, 0l, 34l),
+            List.of("group3", "s1", 4d, 19d, -2l, 32l),
+            List.of("group3", "s2", -2d, 13d, 1l, 35l));
 
     // Add a condition
     query = Query
             .from(this.storeName)
-            .where(scenario, eq("s1"))
+            .where(this.scenario, eq("s1"))
             .select_(List.of(group), List.of(priceComp))
             .build();
 
     dataset = this.executor.executeQuery(query);
-    Assertions.assertThat(dataset).containsExactlyInAnyOrder(
-            List.of("group1", "s1", 2d),
-            List.of("group3", "s1", 2d));
+    Assertions.assertThat(dataset).containsExactly(
+            List.of("group1", "s1", 4d),
+            List.of("group3", "s1", 4d));
   }
 
   @Test
@@ -152,27 +149,23 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
             Map.of(tableField(SCENARIO_FIELD_NAME), "s-1", tableField(groupOfScenario), "g"),
             ColumnSetKey.GROUP);
 
-    var query = new QueryDto()
-            .table(this.storeName)
-            .withColumnSet(ColumnSetKey.GROUP, this.groupCS)
-            .withMeasure(priceComp)
-            .withMeasure(price)
-            .withMeasure(quantityComp)
-            .withMeasure(quantity);
+    var query = Query.from(this.storeName)
+            .select(List.of(), List.of(this.groupCS), List.of(priceComp, price, quantityComp, quantity))
+            .build();
 
     Table dataset = this.executor.executeQuery(query);
     Assertions.assertThat(dataset.headers().stream().map(Header::name)).containsExactly(
             groupOfScenario, SCENARIO_FIELD_NAME,
             "priceDiff", "p",
             "quantityDiff", "q");
-    Assertions.assertThat(dataset).containsExactlyInAnyOrder(
+    Assertions.assertThat(dataset).containsExactly(
             List.of("group1", MAIN_SCENARIO_NAME, 0d, 15d, 0l, 34l),
-            List.of("group1", "s1", 2d, 17d, -2l, 32l),
+            List.of("group1", "s1", 4d, 19d, -2l, 32l),
             List.of("group2", MAIN_SCENARIO_NAME, 0d, 15d, 0l, 34l),
-            List.of("group2", "s2", -0.5d, 14.5d, 1l, 35l),
+            List.of("group2", "s2", -2d, 13d, 1l, 35l),
             List.of("group3", MAIN_SCENARIO_NAME, 0d, 15d, 0l, 34l),
-            List.of("group3", "s1", 2d, 17d, -2l, 32l),
-            List.of("group3", "s2", -2.5, 14.5d, 3l, 35l));
+            List.of("group3", "s1", 4d, 19d, -2l, 32l),
+            List.of("group3", "s2", -6d, 13d, 3l, 35l));
   }
 
   @Test
@@ -211,14 +204,14 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
             groupOfScenario, SCENARIO_FIELD_NAME,
             "priceDiff", "p",
             "quantityDiff", "q");
-    Assertions.assertThat(dataset).containsExactlyInAnyOrder(
+    Assertions.assertThat(dataset).containsExactly(
             List.of("group1", MAIN_SCENARIO_NAME, 0d, 15d, 0d, 34l),
-            List.of("group1", "s1", 0.13333333333333333d, 17d, -0.058823529411764705d, 32l),
+            List.of("group1", "s1", 0.26666666666666666d, 19d, -0.058823529411764705d, 32l),
             List.of("group2", MAIN_SCENARIO_NAME, 0d, 15d, 0d, 34l),
-            List.of("group2", "s2", -0.03333333333333333d, 14.5d, 0.029411764705882353d, 35l),
+            List.of("group2", "s2", -0.13333333333333333d, 13d, 0.029411764705882353d, 35l),
             List.of("group3", MAIN_SCENARIO_NAME, 0d, 15d, 0d, 34l),
-            List.of("group3", "s1", 0.13333333333333333d, 17d, -0.058823529411764705d, 32l),
-            List.of("group3", "s2", -0.03333333333333333d, 14.5d, 0.029411764705882353d, 35l));
+            List.of("group3", "s1", 0.26666666666666666d, 19d, -0.058823529411764705d, 32l),
+            List.of("group3", "s2", -0.13333333333333333d, 13d, 0.029411764705882353d, 35l));
   }
 
   @Test
@@ -308,31 +301,171 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
   }
 
   @Test
-  void testAbsoluteDifferenceWithPreviousSingleGroup() {
-    GroupColumnSetDto group = new GroupColumnSetDto(groupOfScenario, this.scenario)
-            .withNewGroup("whatever", List.of(MAIN_SCENARIO_NAME, "s1", "s2")); // Name of the group is not important when single group
-
-    AggregatedMeasure price = new AggregatedMeasure("p", "price", "sum");
-    ComparisonMeasureReferencePosition priceComp = new ComparisonMeasureReferencePosition(
-            "priceDiff",
+  void testAbsoluteDifferenceWithPreviousSingleGroupUndefined() {
+    Measure price = sum("p", this.price);
+    ComparisonMeasureReferencePosition priceCompPrev = new ComparisonMeasureReferencePosition(
+            "priceCompPrev",
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
             price,
-            Map.of(this.scenario, "s-1"),
-            ColumnSetKey.GROUP);
+            Map.of(this.scenario, "s-1"));
+
+    ComparisonMeasureReferencePosition priceCompFirst = new ComparisonMeasureReferencePosition(
+            "priceCompFirst",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            price,
+            Map.of(this.scenario, "first"));
 
     var query = Query
             .from(this.storeName)
-            .select_(List.of(group), List.of(priceComp, price))
+            .select(List.of(this.scenario), List.of(price, priceCompPrev, priceCompFirst))
             .build();
 
     Table dataset = this.executor.executeQuery(query);
     Assertions.assertThat(dataset.headers().stream().map(Header::name)).containsExactly(
             SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME),
-            "priceDiff",
-            "p");
-    Assertions.assertThat(dataset).containsExactlyInAnyOrder(
-            List.of("base", 0d, 15d),
-            List.of("s1", 2d, 17d),
-            List.of("s2", -2.5d, 14.5d));
+            "p",
+            "priceCompPrev",
+            "priceCompFirst");
+    Assertions.assertThat(dataset).containsExactly(
+            List.of("base", 15d, 0d, 0d),
+            List.of("s1", 19d, 4d, 4d),
+            List.of("s2", 13d, -6d, -2d));
+
+    // With a filter
+    query = Query
+            .from(this.storeName)
+            .where(this.scenario, eq("s2"))
+            .select(List.of(this.scenario), List.of(price, priceCompPrev, priceCompFirst))
+            .build();
+
+    dataset = this.executor.executeQuery(query);
+    Assertions.assertThat(dataset.headers().stream().map(Header::name)).containsExactly(
+            SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME),
+            "p",
+            "priceCompPrev",
+            "priceCompFirst");
+    Assertions.assertThat(dataset).containsExactly(List.of("s2", 13d, -6d, -2d));
+
+    query = Query
+            .from(this.storeName)
+            .select(List.of(this.scenario, this.ean), List.of(price, priceCompPrev, priceCompFirst))
+            .build();
+
+    dataset = this.executor.executeQuery(query);
+    Assertions.assertThat(dataset).containsExactly(
+            List.of(MAIN_SCENARIO_NAME, "bottle", 2d, 0d, 0d),
+            List.of(MAIN_SCENARIO_NAME, "cookie", 3d, 0d, 0d),
+            List.of(MAIN_SCENARIO_NAME, "shirt", 10d, 0d, 0d),
+            List.of("s1", "bottle", 4d, 2d, 2d),
+            List.of("s1", "cookie", 4d, 1d, 1d),
+            List.of("s1", "shirt", 11d, 1d, 1d),
+            List.of("s2", "bottle", 1.5d, -2.5d, -0.5d),
+            List.of("s2", "cookie", 2.5d, -1.5d, -0.5d),
+            List.of("s2", "shirt", 9d, -2d, -1d));
+
+    query = Query
+            .from(this.storeName)
+            .select(List.of(this.ean, this.scenario), List.of(price, priceCompPrev, priceCompFirst))
+            .build();
+
+    dataset = this.executor.executeQuery(query);
+    Assertions.assertThat(dataset).containsExactly(
+            List.of("bottle", MAIN_SCENARIO_NAME, 2d, 0d, 0d),
+            List.of("bottle", "s1", 4d, 2d, 2d),
+            List.of("bottle", "s2", 1.5d, -2.5d, -0.5d),
+            List.of("cookie", MAIN_SCENARIO_NAME, 3d, 0d, 0d),
+            List.of("cookie", "s1", 4d, 1d, 1d),
+            List.of("cookie", "s2", 2.5d, -1.5d, -0.5d),
+            List.of("shirt", MAIN_SCENARIO_NAME, 10d, 0d, 0d),
+            List.of("shirt", "s1", 11d, 1d, 1d),
+            List.of("shirt", "s2", 9d, -2d, -1d));
+  }
+
+  @Test
+  void testAbsoluteDifferenceWithPreviousSingleGroupExplicitlyDefined() {
+    List<String> elements = List.of("s2", MAIN_SCENARIO_NAME, "s1");
+    Measure price = sum("p", this.price);
+    ComparisonMeasureReferencePosition priceCompPrev = new ComparisonMeasureReferencePosition(
+            "priceCompPrev",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            price,
+            Map.of(this.scenario, "s-1"),
+            elements);
+
+    ComparisonMeasureReferencePosition priceCompFirst = new ComparisonMeasureReferencePosition(
+            "priceCompFirst",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            price,
+            Map.of(this.scenario, "first"),
+            elements);
+
+    var query = Query
+            .from(this.storeName)
+            .select(List.of(this.scenario), List.of(price, priceCompPrev, priceCompFirst))
+            .orderBy(this.scenario, elements)
+            .build();
+
+    Table dataset = this.executor.executeQuery(query);
+    Assertions.assertThat(dataset.headers().stream().map(Header::name)).containsExactly(
+            SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME),
+            "p",
+            "priceCompPrev",
+            "priceCompFirst");
+    Assertions.assertThat(dataset).containsExactly(
+            List.of("s2", 13d, 0d, 0d),
+            List.of("base", 15d, 2d, 2d),
+            List.of("s1", 19d, 4d, 6d));
+
+    // With a filter
+    query = Query
+            .from(this.storeName)
+            .where(this.scenario, eq("s1"))
+            .select(List.of(this.scenario), List.of(price, priceCompPrev, priceCompFirst))
+            .orderBy(this.scenario, elements)
+            .build();
+
+    dataset = this.executor.executeQuery(query);
+    Assertions.assertThat(dataset.headers().stream().map(Header::name)).containsExactly(
+            SqlUtils.getFieldFullName(this.storeName, SCENARIO_FIELD_NAME),
+            "p",
+            "priceCompPrev",
+            "priceCompFirst");
+    Assertions.assertThat(dataset).containsExactly(List.of("s1", 19d, 4d, 6d));
+
+    query = Query
+            .from(this.storeName)
+            .select(List.of(this.scenario, this.ean), List.of(price, priceCompPrev, priceCompFirst))
+            .orderBy(this.scenario, elements)
+            .build();
+
+    dataset = this.executor.executeQuery(query);
+    Assertions.assertThat(dataset).containsExactly(
+            List.of("s2", "bottle", 1.5d, 0d, 0d),
+            List.of("s2", "cookie", 2.5d, 0d, 0d),
+            List.of("s2", "shirt", 9d, 0d, 0d),
+            List.of(MAIN_SCENARIO_NAME, "bottle", 2d, 0.5d, 0.5d),
+            List.of(MAIN_SCENARIO_NAME, "cookie", 3d, 0.5d, 0.5d),
+            List.of(MAIN_SCENARIO_NAME, "shirt", 10d, 1d, 1d),
+            List.of("s1", "bottle", 4d, 2d, 2.5d),
+            List.of("s1", "cookie", 4d, 1d, 1.5d),
+            List.of("s1", "shirt", 11d, 1d, 2d));
+
+    query = Query
+            .from(this.storeName)
+            .select(List.of(this.ean, this.scenario), List.of(price, priceCompPrev, priceCompFirst))
+            .orderBy(this.scenario, elements)
+            .build();
+
+    dataset = this.executor.executeQuery(query);
+    Assertions.assertThat(dataset).containsExactly(
+            List.of("bottle", "s2", 1.5d, 0d, 0d),
+            List.of("cookie", "s2", 2.5d, 0d, 0d),
+            List.of("shirt", "s2", 9d, 0d, 0d),
+            List.of("bottle", MAIN_SCENARIO_NAME, 2d, 0.5d, 0.5d),
+            List.of("cookie", MAIN_SCENARIO_NAME, 3d, 0.5d, 0.5d),
+            List.of("shirt", MAIN_SCENARIO_NAME, 10d, 1d, 1d),
+            List.of("bottle", "s1", 4d, 2d, 2.5d),
+            List.of("cookie", "s1", 4d, 1d, 1.5d),
+            List.of("shirt", "s1", 11d, 1d, 2d));
   }
 }

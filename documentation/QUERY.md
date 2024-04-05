@@ -1127,22 +1127,57 @@ Result
 +--------+----------+---------+-------------------+
 ```
 
-Note: if only one group is specified, such as:
+##### Dimension comparison
+
+It is also possible to perform a dimension comparison. Let's say we only want to compare s1, s2 and s3 belonging to the 
+dimension scenario. To compare each value with the previous one:
 ```typescript
-const values = new Map(Object.entries({
-  "group4": ["s1", "s2", "s3"],
-}))
+const revenueComparison = comparisonMeasureWithinSameGroup("revenueComparison",
+        ComparisonMethod.ABSOLUTE_DIFFERENCE,
+        revenue,
+        new Map([[scenario, "s-1"]]))
+const query = from("myTable")
+        .select([scenario], [], [revenue, revenueComparison])
+        .build()
 ```
 
-the additional column named "group" is not added to the final result.
-
+Result
 ```
 +----------+---------+-------------------+
 | scenario | revenue | revenueComparison |
 +----------+---------+-------------------+
-|       s1 |   372.0 |              12.0 |
+|       s1 |   372.0 |               0.0 |
 |       s2 |   300.0 |             -72.0 |
 |       s3 |   350.0 |              50.0 |
++----------+---------+-------------------+
+```
+
+Replace `s-1` with `first` to compare s2 with s1 and s3 with s1 (first element of the dimension).
+
+The order in which the comparison is performed is following the natural order of the values. If you want to change the order, 
+you can pass a list of values:
+
+```typescript
+const elements = ["s3", "s1", "s2"]
+const revenueComparison = comparisonMeasureWithinSameGroupInOrder("revenueComparison",
+        ComparisonMethod.ABSOLUTE_DIFFERENCE,
+        revenue,
+        new Map([[scenario, "s-1"]]),
+        elements)
+const query = from("myTable")
+        .select([scenario], [], [revenue, revenueComparison])
+        .orderByFirstElements(scenario, elements) // orderByFirstElements to display correctly the elements but this is not mandatory
+        .build()
+```
+
+Result
+```
++----------+---------+-------------------+
+| scenario | revenue | revenueComparison |
++----------+---------+-------------------+
+|       s3 |   350.0 |               0.0 |
+|       s1 |   372.0 |              22.0 |
+|       s2 |   300.0 |             -72.0 |
 +----------+---------+-------------------+
 ```
 

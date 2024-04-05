@@ -94,6 +94,7 @@ export class ComparisonMeasureReferencePosition implements Measure {
               readonly measure: Measure,
               readonly referencePosition?: Map<Field, string>,
               readonly columnSetKey?: ColumnSetKey,
+              readonly elements?: Array<any>,
               readonly period?: Period,
               readonly ancestors?: Array<Field>,
               readonly grandTotalAlongAncestors?: boolean) {
@@ -106,6 +107,7 @@ export class ComparisonMeasureReferencePosition implements Measure {
       "comparisonMethod": this.comparisonMethod,
       "measure": this.measure,
       "columnSetKey": this.columnSetKey,
+      "elements": this.elements,
       "period": this.period,
       "referencePosition": this.referencePosition ? Object.fromEntries(serializeMap(this.referencePosition)) : undefined,
       "ancestors": this.ancestors,
@@ -282,28 +284,36 @@ export function comparisonMeasureWithPeriod(alias: string,
                                             measure: Measure,
                                             referencePosition: Map<Field, string>,
                                             period: Period): Measure {
-  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, undefined, period)
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, undefined, undefined, period)
 }
 
 export function comparisonMeasureWithinSameGroup(alias: string,
                                                  comparisonMethod: ComparisonMethod,
                                                  measure: Measure,
                                                  referencePosition: Map<Field, string>): Measure {
-  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, ColumnSetKey.GROUP)
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition)
+}
+
+export function comparisonMeasureWithinSameGroupInOrder(alias: string,
+                                                        comparisonMethod: ComparisonMethod,
+                                                        measure: Measure,
+                                                        referencePosition: Map<Field, string>,
+                                                        elements: Array<any>): Measure {
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, undefined, elements)
 }
 
 export function comparisonMeasureWithParent(alias: string,
                                             comparisonMethod: ComparisonMethod,
                                             measure: Measure,
                                             ancestors: Array<Field>): Measure {
-  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, undefined, undefined, undefined, ancestors, false)
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, undefined, undefined, undefined, undefined, ancestors, false)
 }
 
 export function comparisonMeasureWithGrandTotalAlongAncestors(alias: string,
                                                               comparisonMethod: ComparisonMethod,
                                                               measure: Measure,
                                                               ancestors: Array<Field>): Measure {
-  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, undefined, undefined, undefined, ancestors, true)
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, undefined, undefined, undefined, undefined, ancestors, true)
 }
 
 export function comparisonMeasureWithGrandTotal(alias: string,

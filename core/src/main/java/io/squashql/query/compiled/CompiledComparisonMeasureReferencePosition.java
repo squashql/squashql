@@ -16,6 +16,7 @@ public record CompiledComparisonMeasureReferencePosition(String alias,
                                                          Map<TypedField, String> referencePosition,
                                                          CompiledPeriod period,
                                                          ColumnSetKey columnSetKey,
+                                                         List<?> elements,
                                                          List<TypedField> ancestors,
                                                          boolean grandTotalAlongAncestors) implements CompiledComparisonMeasure {
 

@@ -6,7 +6,7 @@ import {
   BinaryOperator,
   comparisonMeasureWithGrandTotal,
   comparisonMeasureWithGrandTotalAlongAncestors,
-  comparisonMeasureWithinSameGroup,
+  comparisonMeasureWithinSameGroup, comparisonMeasureWithinSameGroupInOrder,
   comparisonMeasureWithParent,
   comparisonMeasureWithPeriod,
   ComparisonMethod,
@@ -72,9 +72,11 @@ export function generateFromQueryDto() {
   q.withMeasure(avgIf("whatever", f1.divide(one.plus(rate)), criterion_(f1.plus(f2).as("f1+f2"), one, ConditionType.GT)))
 
   q.withMeasure(comparisonMeasureWithinSameGroup("comp group", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, new Map([
-    [tableField("group"), "g"],
     [tableField("scenario"), "s-1"]
   ])))
+  q.withMeasure(comparisonMeasureWithinSameGroupInOrder("comp group in order", ComparisonMethod.ABSOLUTE_DIFFERENCE, price, new Map([
+    [tableField("scenario"), "s-1"]
+  ]), ["base", "s1", "s2"]))
   q.withMeasure(comparisonMeasureWithPeriod("growth", ComparisonMethod.DIVIDE, price, new Map([
     [tableField("Year"), "y-1"],
     [tableField("Month"), "m"]

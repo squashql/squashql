@@ -64,16 +64,16 @@ public class GrouperExecutor {
   }
 
   private static Function<Object[], List<Object[]>> createGrouper(GroupColumnSetDto groupColumnSetDto) {
-    Map<String, List<String>> groupsByValue = new HashMap<>();
-    for (Map.Entry<String, List<String>> value : groupColumnSetDto.values.entrySet()) {
-      for (String v : value.getValue()) {
+    Map<Object, List<Object>> groupsByValue = new HashMap<>();
+    for (Map.Entry<Object, List<Object>> value : groupColumnSetDto.values.entrySet()) {
+      for (Object v : value.getValue()) {
         groupsByValue
                 .computeIfAbsent(v, k -> new ArrayList<>())
                 .add(value.getKey());
       }
     }
     Function<Object[], List<Object[]>> grouper = toGroupColumnValues -> {
-      List<String> groups = groupsByValue.get(toGroupColumnValues[0]);
+      List<Object> groups = groupsByValue.get(toGroupColumnValues[0]);
       return groups == null ? Collections.emptyList()
               : groups.stream().map(b -> new Object[] {b, toGroupColumnValues[0]}).toList();
     };
