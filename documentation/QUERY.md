@@ -1127,8 +1127,10 @@ Result
 +--------+----------+---------+-------------------+
 ```
 
-It is also possible to perform a "single group" comparison. Let's say we only want to compare s1, s2 and s3.
-To compare each value with the previous one:
+##### Dimension comparison
+
+It is also possible to perform a dimension comparison. Let's say we only want to compare s1, s2 and s3 belonging to the 
+dimension scenario. To compare each value with the previous one:
 ```typescript
 const revenueComparison = comparisonMeasureWithinSameGroup("revenueComparison",
         ComparisonMethod.ABSOLUTE_DIFFERENCE,
@@ -1150,7 +1152,7 @@ Result
 +----------+---------+-------------------+
 ```
 
-Replace `s-1` with `first` to compare s2 with s1 and s3 with s1 (first element of the group)
+Replace `s-1` with `first` to compare s2 with s1 and s3 with s1 (first element of the dimension).
 
 The order in which the comparison is performed is following the natural order of the values. If you want to change the order, 
 you can pass a list of values:
@@ -1164,7 +1166,7 @@ const revenueComparison = comparisonMeasureWithinSameGroupInOrder("revenueCompar
         elements)
 const query = from("myTable")
         .select([scenario], [], [revenue, revenueComparison])
-        .orderByFirstElements(scenario, elements) // orderByFirstElements to display correctly the elements
+        .orderByFirstElements(scenario, elements) // orderByFirstElements to display correctly the elements but this is not mandatory
         .build()
 ```
 
