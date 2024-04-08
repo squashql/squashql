@@ -25,5 +25,5 @@ public interface MeasureVisitor<R> {
 
   R visit(ParametrizedMeasure measure);
 
-  R visit(PartialComparisonAncestorsMeasure measure);
+  R visit(PartialHierarchicalComparisonMeasure measure);
 }

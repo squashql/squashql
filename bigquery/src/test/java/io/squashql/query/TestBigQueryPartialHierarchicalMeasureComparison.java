@@ -15,7 +15,7 @@ import static io.squashql.query.BigQueryTestUtil.PROJECT_ID;
 /**
  * Do not edit this class, it has been generated automatically by {@link io.squashql.template.BigQueryClassTemplateGenerator}.
  */
-public class TestBigQueryPartialMeasureComparison extends ATestPartialMeasureComparison {
+public class TestBigQueryPartialHierarchicalMeasureComparison extends ATestPartialHierarchicalMeasureComparison {
 
   @AfterAll
   void tearDown() {

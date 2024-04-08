@@ -91,7 +91,7 @@ public record PartialMeasureVisitor(
   }
 
   @Override
-  public Measure visit(PartialComparisonAncestorsMeasure measure) {
+  public Measure visit(PartialHierarchicalComparisonMeasure measure) {
     List<Field> ancestors = getAncestors(measure.axis);
     return new ComparisonMeasureReferencePosition(
             measure.alias,

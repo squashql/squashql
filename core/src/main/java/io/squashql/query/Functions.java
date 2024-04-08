@@ -250,13 +250,13 @@ public class Functions {
                                                           ComparisonMethod comparisonMethod,
                                                           Measure underlyingMeasure,
                                                           Axis axis) {
-    return new PartialComparisonAncestorsMeasure(alias, comparisonMethod, underlyingMeasure, axis, false);
+    return new PartialHierarchicalComparisonMeasure(alias, comparisonMethod, underlyingMeasure, axis, false);
   }
 
   public static Measure comparisonMeasureWithTotalOfAxis(String alias,
                                                          ComparisonMethod comparisonMethod,
                                                          Measure underlyingMeasure,
                                                          Axis axis) {
-    return new PartialComparisonAncestorsMeasure(alias, comparisonMethod, underlyingMeasure, axis, true);
+    return new PartialHierarchicalComparisonMeasure(alias, comparisonMethod, underlyingMeasure, axis, true);
   }
 }

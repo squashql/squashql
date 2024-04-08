@@ -7,7 +7,7 @@ import lombok.*;
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
 @AllArgsConstructor
-public class PartialComparisonAncestorsMeasure implements Measure {
+public class PartialHierarchicalComparisonMeasure implements Measure {
 
   public String alias;
   @With
@@ -19,11 +19,11 @@ public class PartialComparisonAncestorsMeasure implements Measure {
   public Axis axis;
   public boolean grandTotalAlongAncestors;
 
-  public PartialComparisonAncestorsMeasure(String alias,
-                                           ComparisonMethod comparisonMethod,
-                                           Measure measure,
-                                           Axis axis,
-                                           boolean grandTotalAlongAncestors) {
+  public PartialHierarchicalComparisonMeasure(String alias,
+                                              ComparisonMethod comparisonMethod,
+                                              Measure measure,
+                                              Axis axis,
+                                              boolean grandTotalAlongAncestors) {
     this.alias = alias;
     this.comparisonMethod = comparisonMethod;
     this.measure = measure;

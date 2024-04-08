@@ -29,9 +29,9 @@ import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestPartialMeasureComparison extends ABaseTestQuery {
+public abstract class ATestPartialHierarchicalMeasureComparison extends ABaseTestQuery {
 
-  private final String storeName = "store" + ATestPartialMeasureComparison.class.getSimpleName().toLowerCase();
+  private final String storeName = "store" + ATestPartialHierarchicalMeasureComparison.class.getSimpleName().toLowerCase();
   private final TableField city = new TableField(this.storeName, "city");
   private final TableField country = new TableField(this.storeName, "country");
   private final TableField continent = new TableField(this.storeName, "continent");
