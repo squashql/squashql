@@ -22,8 +22,7 @@ import static io.squashql.query.Axis.COLUMN;
 import static io.squashql.query.Axis.ROW;
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
 import static io.squashql.query.ComparisonMethod.DIVIDE;
-import static io.squashql.query.Functions.comparisonMeasureWithParentOfAxis;
-import static io.squashql.query.Functions.comparisonMeasureWithTotalOfAxis;
+import static io.squashql.query.Functions.*;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
@@ -91,21 +90,23 @@ public abstract class ATestPartialMeasureComparison extends ABaseTestQuery {
     Measure pop = Functions.sum("amount", this.amount);
     List<Field> fields = List.of(this.continent, this.country, this.city);
     Measure pOp = comparisonMeasureWithTotalOfAxis("percentOfParent", DIVIDE, pop, COLUMN);
+    // Binary measure should work. The underlying measure has to be "transformed".
+    Measure twice = multiply("twice", comparisonMeasureWithTotalOfAxis("percentOfParent", DIVIDE, pop, COLUMN), integer(2));
     QueryDto query = Query
             .from(this.storeName)
-            .select(fields, List.of(pop, pOp))
+            .select(fields, List.of(pop, pOp, twice))
             .rollup(fields)
             .build();
 
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, GRAND_TOTAL, 21d, 1d),
-            Arrays.asList("eu", TOTAL, TOTAL, 21d, 21d / 21d),
-            Arrays.asList("eu", "france", TOTAL, 11d, 11d / 21d),
-            Arrays.asList("eu", "france", "lyon", 4d, 4d / 21d),
-            Arrays.asList("eu", "france", "paris", 7d, 7d / 21d),
-            Arrays.asList("eu", "uk", TOTAL, 10d, 10d / 21d),
-            Arrays.asList("eu", "uk", "london", 10d, 10d / 21d));
+            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, GRAND_TOTAL, 21d, 1d, 2d),
+            Arrays.asList("eu", TOTAL, TOTAL, 21d, 21d / 21d, 2d),
+            Arrays.asList("eu", "france", TOTAL, 11d, 11d / 21d, 2 * 11d / 21d),
+            Arrays.asList("eu", "france", "lyon", 4d, 4d / 21d, 2 * 4d / 21d),
+            Arrays.asList("eu", "france", "paris", 7d, 7d / 21d, 2 * 7d / 21d),
+            Arrays.asList("eu", "uk", TOTAL, 10d, 10d / 21d, 2 * 10d / 21d),
+            Arrays.asList("eu", "uk", "london", 10d, 10d / 21d, 2 * 10d / 21d));
   }
 
   @Test
