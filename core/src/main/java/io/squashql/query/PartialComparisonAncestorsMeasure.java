@@ -6,7 +6,7 @@ import lombok.*;
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
-@AllArgsConstructor // TODO rename
+@AllArgsConstructor
 public class PartialComparisonAncestorsMeasure implements Measure {
 
   public String alias;

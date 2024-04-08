@@ -5,6 +5,7 @@ import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.LimitExceedException;
+import io.squashql.query.measure.ParametrizedMeasure;
 import io.squashql.table.Table;
 import io.squashql.transaction.DuckDBDataLoader;
 import io.squashql.type.TableTypedField;
@@ -12,6 +13,7 @@ import io.squashql.util.TestUtil;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -19,6 +21,7 @@ import static io.squashql.query.Functions.sum;
 import static io.squashql.query.QueryExecutor.createPivotTableContext;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.measure.Repository.VAR;
 
 public class TestDuckDBQuery {
   protected String storeName = "myStore";
@@ -216,5 +219,27 @@ public class TestDuckDBQuery {
             List.of("Food & Drink", "food", 2023, "food", 2023, 3d),
             List.of("Food & Drink", "drink", 2023, "drink", 2023, 2d),
             List.of("Other", "cloth", 2023, "cloth", 2023, 10d));
+  }
+
+  @Test
+  void testMissingParameterInParametrizedMeasure() {
+    TableTypedField date = new TableTypedField(this.storeName, "date", LocalDate.class);
+    setup(Map.of(this.storeName, List.of(date)), () -> {
+    });
+    Measure var = new ParametrizedMeasure(
+            "var 95",
+            VAR,
+            Map.of(
+                    // value is missing
+                    "date", date,
+                    "quantile", 0.95
+            ));
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(Collections.emptyList(), List.of(var))
+            .build();
+    Assertions.assertThatThrownBy(() -> this.executor.executeQuery(query))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Parameter 'value' was expected but not provided");
   }
 }

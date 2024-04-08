@@ -418,17 +418,17 @@ public class QueryResolver {
     /**
      * We don't rely on Map.computeIfAbsent directly as it doesn't allow recursive updates
      */
-    private TypedField computeIfAbsent(final Field field, final Function<Field, TypedField> mappingFunction) {
+    private TypedField computeIfAbsent(Field field, Function<Field, TypedField> mappingFunction) {
       if (this.compiledFields.containsKey(field)) {
         return this.compiledFields.get(field);
       } else {
-        final TypedField typedField = mappingFunction.apply(field);
+        TypedField typedField = mappingFunction.apply(field);
         this.compiledFields.put(field, typedField);
         return typedField;
       }
     }
 
-    private CompiledMeasure computeIfAbsent(final Measure measure, final Function<Measure, CompiledMeasure> mappingFunction) {
+    private CompiledMeasure computeIfAbsent(Measure measure, Function<Measure, CompiledMeasure> mappingFunction) {
       if (this.compiledMeasure.containsKey(measure)) {
         return this.compiledMeasure.get(measure);
       } else {

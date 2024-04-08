@@ -24,7 +24,7 @@ public final class ParametrizedMeasureFactory {
   }
 
   /**
-   * Called by reflection.
+   * Called by reflection. See {@link Repository#create(ParametrizedMeasure)}
    */
   public static Measure var(String alias, Field value, Field date, double quantile) {
     // The function that computes the VaR for a given quantile
@@ -47,7 +47,7 @@ public final class ParametrizedMeasureFactory {
   }
 
   /**
-   * Called by reflection.
+   * Called by reflection. See {@link Repository#create(ParametrizedMeasure)}
    */
   public static Measure incrementalVar(String alias, Field value, Field date, double quantile, List<Field> ancestors) {
     Measure vector = new VectorTupleAggMeasure("__vector__",
