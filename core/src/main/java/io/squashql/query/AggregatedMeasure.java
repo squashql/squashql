@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import io.squashql.query.measure.visitor.MeasureVisitor;
 import io.squashql.query.dto.CriteriaDto;
 import lombok.*;
 
@@ -53,5 +54,10 @@ public class AggregatedMeasure implements BasicMeasure {
   @Override
   public String expression() {
     return this.expression;
+  }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
   }
 }

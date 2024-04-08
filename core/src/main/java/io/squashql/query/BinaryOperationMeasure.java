@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import io.squashql.query.measure.visitor.MeasureVisitor;
 import lombok.*;
 
 @ToString
@@ -35,4 +36,8 @@ public class BinaryOperationMeasure implements Measure {
     return this.expression;
   }
 
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
+  }
 }

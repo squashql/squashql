@@ -99,6 +99,18 @@ public class TestJavascriptLibrary {
             "quantile", 0.95,
             "ancestors", tableFields(List.of("f1", "f2", "f3"))
     )));
+    q.withMeasure(comparisonMeasureWithParentOfAxis(
+            "comp parent of column",
+            ComparisonMethod.DIVIDE,
+            CountMeasure.INSTANCE,
+            Axis.COLUMN
+    ));
+    q.withMeasure(comparisonMeasureWithTotalOfAxis(
+            "comp total of row",
+            ComparisonMethod.DIVIDE,
+            CountMeasure.INSTANCE,
+            Axis.ROW
+    ));
 
     var queryCondition = or(and(eq("a"), eq("b")), lt(5), like("a%"));
     q.withCondition(tableField("f1"), queryCondition);

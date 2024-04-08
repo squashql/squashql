@@ -1,6 +1,6 @@
 package io.squashql.query.compiled;
 
-public class PrimitiveMeasureVisitor implements MeasureVisitor<Boolean> {
+public class PrimitiveMeasureVisitor implements CompiledMeasureVisitor<Boolean> {
 
   @Override
   public Boolean visit(CompiledAggregatedMeasure measure) {
@@ -44,7 +44,7 @@ public class PrimitiveMeasureVisitor implements MeasureVisitor<Boolean> {
   }
 
   @Override
-  public Boolean visit(CompiledVectorTupleAggMeasure compiledVectorTupleAggMeasure) {
+  public Boolean visit(CompiledVectorTupleAggMeasure measure) {
     // This measure is "indirectly" computed by the underlying DB, but it is not a primitive. See PrefetchVisitor.
     return false;
   }

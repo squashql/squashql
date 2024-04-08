@@ -18,7 +18,7 @@ import java.util.function.BiFunction;
 
 import static io.squashql.query.ColumnSetKey.GROUP;
 
-public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>, MeasureVisitor<Void> {
+public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>, CompiledMeasureVisitor<Void> {
 
   private ExecutionContext executionContext;
 

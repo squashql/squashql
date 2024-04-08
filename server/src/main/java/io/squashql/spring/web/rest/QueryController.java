@@ -19,6 +19,8 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static io.squashql.query.QueryExecutor.createPivotTableContext;
+
 @Import({JacksonConfiguration.class, SquashQLErrorHandler.class})
 @RestController
 public class QueryController {
@@ -51,7 +53,8 @@ public class QueryController {
             csBuilder,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get(),
             true,
-            null);
+            null,
+            createPivotTableContext(query));
     return ResponseEntity.ok(createQueryResultDto(table, csBuilder, query.minify));
   }
 

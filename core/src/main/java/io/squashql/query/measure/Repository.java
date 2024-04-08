@@ -2,9 +2,10 @@ package io.squashql.query.measure;
 
 import com.fasterxml.jackson.databind.JavaType;
 import io.squashql.jackson.SquashQLTypeFactory;
+import io.squashql.query.Axis;
 import io.squashql.query.Field;
 import io.squashql.query.Measure;
-import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.api.tuple.Triple;
 import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.lang.reflect.InvocationTargetException;
@@ -21,36 +22,48 @@ public final class Repository {
   private Repository() {
   }
 
-  public static Measure create(ParametrizedMeasure m) {
-    String methodName = switch (m.key) {
+  public static Measure create(ParametrizedMeasure pm) {
+    String methodName = switch (pm.key) {
       case VAR -> "var";
       case INCREMENTAL_VAR -> "incrementalVar";
-      default -> throw new IllegalArgumentException("unknown " + ParametrizedMeasure.class + ": " + m);
+      default -> throw new IllegalArgumentException("unknown " + ParametrizedMeasure.class + ": " + pm);
     };
 
     try {
-      Method var = Arrays.stream(ParametrizedMeasureFactory.class.getDeclaredMethods()).filter(method -> method.getName().equals(methodName)).findFirst().get();
-      List<String> parameterNames = getParameterTypes(m.key).stream().map(Pair::getOne).toList();
+      Method method = Arrays.stream(ParametrizedMeasureFactory.class.getDeclaredMethods()).filter(m -> m.getName().equals(methodName)).findFirst().get();
+      List<String> parameterNames = getParameterTypes(pm.key).stream().map(Triple::getOne).toList();
+      List<Boolean> isMandatory = getParameterTypes(pm.key).stream().map(Triple::getThree).toList();
       List<Object> args = new ArrayList<>();
-      args.add(m.alias);
-      for (String paramName : parameterNames) {
-        args.add(m.parameters.get(paramName));
+      args.add(pm.alias);
+      for (int i = 0; i < parameterNames.size(); i++) {
+        Object e = pm.parameters.get(parameterNames.get(i));
+        if (e == null) {
+          if (isMandatory.get(i)) {
+            throw new IllegalArgumentException(String.format("Parameter '%s' was expected but not provided in %s", parameterNames.get(i), pm));
+          }
+          continue;
+        }
+        args.add(e);
       }
-      return (Measure) var.invoke(null, args.toArray(new Object[0]));
+      return (Measure) method.invoke(null, args.toArray(new Object[0]));
     } catch (IllegalAccessException |
              InvocationTargetException e) {
       throw new RuntimeException(e);
     }
   }
 
-  public static List<Pair<String, JavaType>> getParameterTypes(String key) {
+  /**
+   * Boolean -> is mandatory?
+   */
+  public static List<Triple<String, JavaType, Boolean>> getParameterTypes(String key) {
     JavaType fieldJT = SquashQLTypeFactory.of(Field.class);
     JavaType doubleJT = SquashQLTypeFactory.of(double.class);
     JavaType listOfFieldsJT = SquashQLTypeFactory.listOf(Field.class);
+    JavaType axis = SquashQLTypeFactory.of(Axis.class);
     if (key.equals(VAR)) {
-      return List.of(Tuples.pair("value", fieldJT), Tuples.pair("date", fieldJT), Tuples.pair("quantile", doubleJT));
+      return List.of(Tuples.triple("value", fieldJT, true), Tuples.triple("date", fieldJT, true), Tuples.triple("quantile", doubleJT, true));
     } else if (key.equals(INCREMENTAL_VAR)) {
-      return List.of(Tuples.pair("value", fieldJT), Tuples.pair("date", fieldJT), Tuples.pair("quantile", doubleJT), Tuples.pair("ancestors", listOfFieldsJT));
+      return List.of(Tuples.triple("value", fieldJT, true), Tuples.triple("date", fieldJT, true), Tuples.triple("quantile", doubleJT, true), Tuples.triple("ancestors", listOfFieldsJT, true), Tuples.triple("axis", axis, false));
     } else {
       throw new IllegalArgumentException("unknown key: " + key);
     }

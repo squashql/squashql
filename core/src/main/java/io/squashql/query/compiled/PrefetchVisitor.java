@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 import static io.squashql.query.agg.AggregationFunction.*;
 
 @RequiredArgsConstructor
-public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<CompiledMeasure>>> {
+public class PrefetchVisitor implements CompiledMeasureVisitor<Map<QueryScope, Set<CompiledMeasure>>> {
 
   private final List<TypedField> columns;
   private final List<TypedField> groupColumns;
@@ -124,14 +124,14 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
   }
 
   @Override
-  public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledVectorTupleAggMeasure vecMeasure) {
-    TypedField vectorAxis = vecMeasure.vectorAxis();
-    List<TypedField> fieldToAggregates = vecMeasure.fieldToAggregateAndAggFunc().stream().map(CompiledFieldAndAggFunc::field).toList();
-    List<String> vectorAggFuncs = vecMeasure.fieldToAggregateAndAggFunc().stream().map(CompiledFieldAndAggFunc::aggFunc).toList();
+  public Map<QueryScope, Set<CompiledMeasure>> visit(CompiledVectorTupleAggMeasure measure) {
+    TypedField vectorAxis = measure.vectorAxis();
+    List<TypedField> fieldToAggregates = measure.fieldToAggregateAndAggFunc().stream().map(CompiledFieldAndAggFunc::field).toList();
+    List<String> vectorAggFuncs = measure.fieldToAggregateAndAggFunc().stream().map(CompiledFieldAndAggFunc::aggFunc).toList();
     if (this.originalQueryScope.columns().contains(vectorAxis)) {
       Set<CompiledMeasure> m = new HashSet<>();
       for (int i = 0; i < fieldToAggregates.size(); i++) {
-        m.add(new CompiledAggregatedMeasure(vecMeasure.alias(), fieldToAggregates.get(i), vectorAggFuncs.get(i), null, false));
+        m.add(new CompiledAggregatedMeasure(measure.alias(), fieldToAggregates.get(i), vectorAggFuncs.get(i), null, false));
       }
       return Map.of(this.originalQueryScope, m);
     } else {
@@ -212,7 +212,7 @@ public class PrefetchVisitor implements MeasureVisitor<Map<QueryScope, Set<Compi
 
       int size = subQueryMeasureAliases.size();
       for (int i = 0; i < size; i++) {
-        String alias = size > 1 ? vecMeasure.alias() + "_" + i : vecMeasure.alias();
+        String alias = size > 1 ? measure.alias() + "_" + i : measure.alias();
         topQueryMeasures.add(new CompiledAggregatedMeasure(alias, new AliasedTypedField(subQueryMeasureAliases.get(i)), ARRAY_AGG, null, false));
       }
       return Map.of(topQueryScope, topQueryMeasures);

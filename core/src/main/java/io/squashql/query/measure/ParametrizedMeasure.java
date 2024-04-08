@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import io.squashql.jackson.ParametrizedMeasureDeserializer;
 import io.squashql.jackson.ParametrizedMeasureSerializer;
 import io.squashql.query.Measure;
+import io.squashql.query.measure.visitor.MeasureVisitor;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -39,5 +40,10 @@ public class ParametrizedMeasure implements Measure {
   @Override
   public Measure withExpression(String __) {
     return this;
+  }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
   }
 }

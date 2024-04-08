@@ -245,4 +245,18 @@ public class Functions {
   public static Field month(String field) {
     return new FunctionField("MONTH", new TableField(field));
   }
+
+  public static Measure comparisonMeasureWithParentOfAxis(String alias,
+                                                          ComparisonMethod comparisonMethod,
+                                                          Measure underlyingMeasure,
+                                                          Axis axis) {
+    return new PartialHierarchicalComparisonMeasure(alias, comparisonMethod, underlyingMeasure, axis, false);
+  }
+
+  public static Measure comparisonMeasureWithTotalOfAxis(String alias,
+                                                         ComparisonMethod comparisonMethod,
+                                                         Measure underlyingMeasure,
+                                                         Axis axis) {
+    return new PartialHierarchicalComparisonMeasure(alias, comparisonMethod, underlyingMeasure, axis, true);
+  }
 }

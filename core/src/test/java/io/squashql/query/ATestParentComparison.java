@@ -24,11 +24,11 @@ import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestParentComparison extends ABaseTestQuery {
 
-  private String storeName = "store" + getClass().getSimpleName().toLowerCase();
-  private TableField city = new TableField(this.storeName, "city");
-  private TableField country = new TableField(this.storeName, "country");
-  private TableField continent = new TableField(this.storeName, "continent");
-  private TableField population = new TableField(this.storeName, "population");
+  private final String storeName = "store" + getClass().getSimpleName().toLowerCase();
+  private final TableField city = new TableField(this.storeName, "city");
+  private final TableField country = new TableField(this.storeName, "country");
+  private final TableField continent = new TableField(this.storeName, "continent");
+  private final TableField population = new TableField(this.storeName, "population");
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {

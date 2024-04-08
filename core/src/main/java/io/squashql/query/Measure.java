@@ -1,6 +1,7 @@
 package io.squashql.query;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.squashql.query.measure.visitor.MeasureVisitor;
 
 /**
  * Marker interface.
@@ -14,4 +15,5 @@ public interface Measure {
 
   Measure withExpression(String expression);
 
+  <R> R accept(MeasureVisitor<R> visitor);
 }

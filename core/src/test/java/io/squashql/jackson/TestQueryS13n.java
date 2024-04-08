@@ -3,6 +3,8 @@ package io.squashql.jackson;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.*;
+import io.squashql.query.measure.ParametrizedMeasure;
+import io.squashql.query.measure.Repository;
 import io.squashql.query.parameter.Parameter;
 import io.squashql.query.parameter.QueryCacheParameter;
 import org.assertj.core.api.Assertions;
@@ -182,7 +184,7 @@ public class TestQueryS13n {
   void testTableField() {
     TableField fieldFullName = new TableField("table.name");
     TableField simpleNameField = new TableField("name");
-    TableField field = new TableField("table","name");
+    TableField field = new TableField("table", "name");
     TableField fieldFullNameDeserialize = JacksonUtil.deserialize(JacksonUtil.serialize(fieldFullName), TableField.class);
     Assertions.assertThat(fieldFullNameDeserialize).isEqualTo(fieldFullName);
     TableField fieldDeserialize = JacksonUtil.deserialize(JacksonUtil.serialize(field), TableField.class);
@@ -202,5 +204,48 @@ public class TestQueryS13n {
     String serialize = JacksonUtil.serialize(pivotTableQueryDto);
     PivotTableQueryDto deserialize = JacksonUtil.deserialize(serialize, PivotTableQueryDto.class);
     Assertions.assertThat(deserialize).isEqualTo(pivotTableQueryDto);
+  }
+
+  @Test
+  void testParametrizedMeasure() {
+    TableField value = new TableField("myTable.value");
+    TableField date = new TableField("myTable.date");
+    ParametrizedMeasure pm = new ParametrizedMeasure("var measure", Repository.VAR, Map.of(
+            "value", value,
+            "date", date,
+            "quantile", 0.95));
+
+    QueryDto query = new QueryDto();
+    query.table("myTable");
+    query.withColumn(value);
+    query.withMeasure(pm);
+
+    String tableFieldSer = JacksonUtil.serialize(value);
+    Field tableFieldDes = JacksonUtil.deserialize(tableFieldSer, Field.class);
+    Assertions.assertThat(tableFieldDes).isEqualTo(value);
+
+    String pmSer = JacksonUtil.serialize(pm);
+    Measure pmDes = JacksonUtil.deserialize(pmSer, Measure.class);
+    Assertions.assertThat(pmDes).isEqualTo(pm);
+
+    String querySer = JacksonUtil.serialize(query);
+    QueryDto queryDes = JacksonUtil.deserialize(querySer, QueryDto.class);
+    Assertions.assertThat(queryDes).isEqualTo(query);
+  }
+
+  @Test
+  void testIncrVar() {
+    TableField value = new TableField("myTable.value");
+    TableField date = new TableField("myTable.date");
+    Measure incrementalVar = new ParametrizedMeasure("partial inc var",
+            Repository.INCREMENTAL_VAR, Map.of(
+            "value", value,
+            "date", date,
+            "quantile", 0.95,
+            "axis", Axis.COLUMN
+    ));
+    String pmSer = JacksonUtil.serialize(incrementalVar);
+    Measure pmDes = JacksonUtil.deserialize(pmSer, Measure.class);
+    Assertions.assertThat(pmDes).isEqualTo(incrementalVar);
   }
 }

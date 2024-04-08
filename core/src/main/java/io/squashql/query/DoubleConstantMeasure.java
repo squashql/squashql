@@ -1,5 +1,6 @@
 package io.squashql.query;
 
+import io.squashql.query.measure.visitor.MeasureVisitor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -26,5 +27,10 @@ public class DoubleConstantMeasure extends ConstantMeasure<Double> {
     DoubleConstantMeasure measure = new DoubleConstantMeasure(this.value);
     measure.expression = expression;
     return measure;
+  }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
   }
 }

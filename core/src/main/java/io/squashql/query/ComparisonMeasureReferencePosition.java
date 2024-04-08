@@ -1,6 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.dto.Period;
+import io.squashql.query.measure.visitor.MeasureVisitor;
 import lombok.*;
 
 import java.util.List;
@@ -114,5 +115,10 @@ public class ComparisonMeasureReferencePosition implements Measure {
   @Override
   public String expression() {
     return this.expression;
+  }
+
+  @Override
+  public <R> R accept(MeasureVisitor<R> visitor) {
+    return visitor.visit(this);
   }
 }

@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import static io.squashql.query.Functions.*;
+import static io.squashql.query.QueryExecutor.createPivotTableContext;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
@@ -610,6 +611,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             CacheStatsDto.builder(),
             user,
             true,
-            null);
+            null,
+            createPivotTableContext(query));
   }
 }

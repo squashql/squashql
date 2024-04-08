@@ -1,6 +1,5 @@
 package io.squashql.query;
 
-import com.google.common.collect.ImmutableList;
 import io.squashql.TestClass;
 import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.builder.Query;
@@ -15,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -98,14 +96,6 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             new Object[]{"uk", "eu", 65d},
             new Object[]{"usa", "am", 330d}
     ));
-  }
-
-  private static Table tableFromFile(TestInfo testInfo) {
-    return TestUtil.deserializeTableFromFile(Paths.get("queryresults", "pivottable", testInfo.getTestMethod().get().getName() + ".tabular.json"));
-  }
-
-  private static List<List<Object>> pivotTableFromFile(TestInfo testInfo) {
-    return TestUtil.deserializeFromFile(Paths.get("queryresults", "pivottable", testInfo.getTestMethod().get().getName() + ".pivottable.json"), List.class);
   }
 
   @Test
@@ -892,17 +882,7 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
     verifyResults(testInfo, pt);
   }
 
-  /**
-   * To save in file '*.tabular.json': System.out.println(TestUtil.tableToJson(pivotTable.table));
-   * To save in file '*.pivottable.json': System.out.println(JacksonUtil.serialize(pivotTable.pivotTableCells));
-   */
   private void verifyResults(TestInfo testInfo, PivotTable pt) {
-    Table expectedTabular = tableFromFile(testInfo);
-
-    Assertions.assertThat(pt.table).containsExactlyElementsOf(ImmutableList.copyOf(expectedTabular.iterator()));
-    Assertions.assertThat(pt.table.headers()).containsExactlyElementsOf(expectedTabular.headers());
-
-    List<List<Object>> expectedPivotTable = pivotTableFromFile(testInfo);
-    Assertions.assertThat(pt.pivotTableCells).containsExactlyElementsOf(expectedPivotTable);
+    TestUtil.verifyResults("pivottable", testInfo, pt);
   }
 }
