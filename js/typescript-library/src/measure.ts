@@ -135,6 +135,34 @@ export class ComparisonMeasureGrandTotal implements Measure {
   }
 }
 
+export enum Axis {
+  ROW = "ROW",
+  COLUMN = "COLUMN",
+}
+
+export class PartialHierarchicalComparisonMeasure implements Measure {
+  readonly class: string = PACKAGE + "PartialHierarchicalComparisonMeasure"
+  readonly expression?: string
+
+  constructor(readonly alias: string,
+              readonly comparisonMethod: ComparisonMethod,
+              readonly measure: Measure,
+              readonly axis: Axis,
+              readonly grandTotalAlongAncestors: boolean) {
+  }
+
+  toJSON() {
+    return {
+      "@class": this.class,
+      "alias": this.alias,
+      "comparisonMethod": this.comparisonMethod,
+      "measure": this.measure,
+      "axis": this.axis,
+      "grandTotalAlongAncestors": this.grandTotalAlongAncestors,
+    }
+  }
+}
+
 export class ParametrizedMeasure implements Measure {
   readonly class: string = PACKAGE + "measure.ParametrizedMeasure"
   readonly expression?: string
@@ -320,4 +348,18 @@ export function comparisonMeasureWithGrandTotal(alias: string,
                                                 comparisonMethod: ComparisonMethod,
                                                 measure: Measure): Measure {
   return new ComparisonMeasureGrandTotal(alias, comparisonMethod, measure)
+}
+
+export function comparisonMeasureWithParentOfAxis(alias: string,
+                                                  comparisonMethod: ComparisonMethod,
+                                                  measure: Measure,
+                                                  axis: Axis) {
+  return new PartialHierarchicalComparisonMeasure(alias, comparisonMethod, measure, axis, false)
+}
+
+export function comparisonMeasureWithTotalOfAxis(alias: string,
+                                                 comparisonMethod: ComparisonMethod,
+                                                 measure: Measure,
+                                                 axis: Axis) {
+  return new PartialHierarchicalComparisonMeasure(alias, comparisonMethod, measure, axis, true)
 }

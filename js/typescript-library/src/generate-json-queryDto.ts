@@ -2,24 +2,30 @@ import {JoinType, Query, Table} from "./query"
 import {
   AggregatedMeasure,
   avgIf,
+  Axis,
   BinaryOperationMeasure,
   BinaryOperator,
   comparisonMeasureWithGrandTotal,
   comparisonMeasureWithGrandTotalAlongAncestors,
-  comparisonMeasureWithinSameGroup, comparisonMeasureWithinSameGroupInOrder,
+  comparisonMeasureWithinSameGroup,
+  comparisonMeasureWithinSameGroupInOrder,
   comparisonMeasureWithParent,
-  comparisonMeasureWithPeriod,
+  comparisonMeasureWithParentOfAxis,
+  comparisonMeasureWithPeriod, comparisonMeasureWithTotalOfAxis,
   ComparisonMethod,
   decimal,
   ExpressionMeasure,
-  integer, ParametrizedMeasure,
+  integer,
+  ParametrizedMeasure,
   sum,
   totalCount,
 } from "./measure"
 import {
   _in,
   all,
-  and, ConditionType, contains,
+  and,
+  ConditionType,
+  contains,
   criterion,
   criterion_,
   eq,
@@ -95,6 +101,18 @@ export function generateFromQueryDto() {
     "quantile": 0.95,
     "ancestors": [tableField("f1"), tableField("f2"), tableField("f3")],
   }))
+  q.withMeasure(comparisonMeasureWithParentOfAxis(
+          "comp parent of column",
+          ComparisonMethod.DIVIDE,
+          countRows,
+          Axis.COLUMN
+  ))
+  q.withMeasure(comparisonMeasureWithTotalOfAxis(
+          "comp total of row",
+          ComparisonMethod.DIVIDE,
+          countRows,
+          Axis.ROW
+  ))
 
   const queryCondition = or(or(and(eq("a"), eq("b")), lt(5)), like("a%"))
   q.withWhereCriteria(all([
