@@ -975,6 +975,12 @@ measure with the grand total values of the same measure.
 const gtRatio = comparisonMeasureWithGrandTotal("gt ratio", ComparisonMethod.DIVIDE, pop)
 ```
 
+`comparisonMeasureWithParentOfAxis`: same as `comparisonMeasureWithParent` but the list of ancestors is deduced at query 
+time by what's on the axes. When not using the pivot table API, only using `Axis.COLUMN` makes sense.
+
+`comparisonMeasureWithTotalOfAxis`: same as `comparisonMeasureWithGrandTotalAlongAncestors` but the list of ancestors is 
+deduced at query time by what's on the axes. When not using the pivot table API, only using `Axis.COLUMN` makes sense.
+
 ##### Group comparison - ColumnSet
 
 This type of comparison is mainly used for what-if comparison but not limited to it. It involves the creation of a new
