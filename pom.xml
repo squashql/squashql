@@ -58,7 +58,7 @@
     <logback.version>1.2.13</logback.version>
     <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
 
-    <duckdb.version>0.10.0</duckdb.version>
+    <duckdb.version>0.10.1</duckdb.version>
     <clickhouse.version>0.6.0-patch1</clickhouse.version>
     <spark.version>3.5.0</spark.version>
     <bigquery.version>26.34.0</bigquery.version>

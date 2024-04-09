@@ -29,13 +29,8 @@ public final class DuckDBUtil {
   }
 
   public static Class<?> sqlTypeToJavaClass(int dataType, String columnTypeName) {
-    Class<?> klass = JdbcUtil.sqlTypeToClass(dataType);
-    // Special case for DuckDBColumnType.HUGEINT (128 bits integer). See also #getTypeValue
-    if (klass == Object.class) {
-      if (columnTypeName.equals(DuckDBColumnType.HUGEINT.name())) {
-        klass = long.class;
-      }
-    } else if (klass == List.class) {
+    if (columnTypeName.endsWith("]")) {
+      // See DuckDBResultSetMetaData#TypeNameToType
       if (columnTypeName.equals("DOUBLE[]") || columnTypeName.equals("FLOAT[]")) {
         return Lists.DoubleList.class;
       } else if (columnTypeName.equals("LONG[]") || columnTypeName.equals("HUGEINT[]") || columnTypeName.equals("INT[]") || columnTypeName.equals("INTEGER[]")) {
@@ -45,7 +40,15 @@ public final class DuckDBUtil {
       } else if (columnTypeName.equals("VARCHAR[]")) {
         return Lists.StringList.class;
       } else {
-        return List.class; // we convert Array to List
+        return List.class;
+      }
+    }
+
+    Class<?> klass = JdbcUtil.sqlTypeToClass(dataType);
+    // Special case for DuckDBColumnType.HUGEINT (128 bits integer). See also #getTypeValue
+    if (klass == Object.class) {
+      if (columnTypeName.equals(DuckDBColumnType.HUGEINT.name())) {
+        klass = long.class;
       }
     }
     return klass;
