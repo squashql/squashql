@@ -93,28 +93,37 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
             Map.of(
                     "value", this.price,
                     "date", this.date,
-                    "quantile", 0.95
+                    "quantile", 0.95,
+                    "return", "value" // what's to return
+            ));
+    Measure varDate = new ParametrizedMeasure(
+            "var 95 (Date)",
+            VAR,
+            Map.of(
+                    "value", this.price,
+                    "date", this.date,
+                    "quantile", 0.95,
+                    "return", "date" // what's to return
             ));
     QueryDto query = Query
             .from(this.storeName)
-            .select(List.of(this.competitor, this.ean), List.of(var))
+            .select(List.of(this.competitor, this.ean), List.of(varDate, var))
             .rollup(List.of(this.competitor, this.ean))
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
-            List.of(GRAND_TOTAL, GRAND_TOTAL, List.of(LocalDate.of(2023, 1, 1), -6d)),
-            List.of(competitorX, TOTAL, List.of(LocalDate.of(2023, 1, 1), -2d)),
-            List.of(competitorX, productA, List.of(LocalDate.of(2023, 1, 1), -1d)),
-            List.of(competitorX, productB, List.of(LocalDate.of(2023, 1, 1), -1d)),
-            List.of(competitorY, TOTAL, List.of(LocalDate.of(2023, 1, 1), -2d)),
-            List.of(competitorY, productA, List.of(LocalDate.of(2023, 1, 1), -1d)),
-            List.of(competitorY, productB, List.of(LocalDate.of(2023, 1, 1), -1d)),
-            List.of(competitorZ, TOTAL, List.of(LocalDate.of(2023, 1, 1), -2d)),
-            List.of(competitorZ, productA, List.of(LocalDate.of(2023, 1, 1), -1d)),
-            List.of(competitorZ, productB, List.of(LocalDate.of(2023, 1, 1), -1d)));
+            List.of(GRAND_TOTAL, GRAND_TOTAL, LocalDate.of(2023, 1, 1), -6d),
+            List.of(competitorX, TOTAL, LocalDate.of(2023, 1, 1), -2d),
+            List.of(competitorX, productA, LocalDate.of(2023, 1, 1), -1d),
+            List.of(competitorX, productB, LocalDate.of(2023, 1, 1), -1d),
+            List.of(competitorY, TOTAL, LocalDate.of(2023, 1, 1), -2d),
+            List.of(competitorY, productA, LocalDate.of(2023, 1, 1), -1d),
+            List.of(competitorY, productB, LocalDate.of(2023, 1, 1), -1d),
+            List.of(competitorZ, TOTAL, LocalDate.of(2023, 1, 1), -2d),
+            List.of(competitorZ, productA, LocalDate.of(2023, 1, 1), -1d),
+            List.of(competitorZ, productB, LocalDate.of(2023, 1, 1), -1d));
   }
 
-  // FIXME this will not work if where clause because in case of inc. var, filters should not be cleared
   @Test
   void testIncrementalVar() {
     List<Field> fields = List.of(this.competitor, this.ean);

@@ -26,22 +26,26 @@ public final class ParametrizedMeasureFactory {
   /**
    * Called by reflection. See {@link Repository#create(ParametrizedMeasure)}
    */
-  public static Measure var(String alias, Field value, Field date, double quantile) {
+  public static Measure var(String alias, Field value, Field date, double quantile, String returnInstruction) {
+    boolean returnDate = returnInstruction.equals("date");
     // The function that computes the VaR for a given quantile
     Function<List<Object>, Object> transformer = (tuple) -> {
       // Read the vector of pnl
       Lists.DoubleList values = (Lists.DoubleList) tuple.get(0);
-      // Read the vector of date
-      Lists.LocalDateList dates = (Lists.LocalDateList) tuple.get(1);
       // Order the both vectors by value ascending order
       int[] sort = MultipleColumnsSorter.sort(Collections.singletonList(values), Collections.singletonList(naturalOrder()), new int[0]);
       List<Double> orderedValues = reorder(values, sort);
-      List<LocalDate> orderedDates = reorder(dates, sort);
       var index = (int) Math.floor(orderedValues.size() * (1 - quantile));
-      var quantileDate = orderedDates.get(index);
       var quantilePnL = orderedValues.get(index);
 
-      return List.of(quantileDate, -quantilePnL);
+      if (returnDate) {
+        // Read the vector of date
+        Lists.LocalDateList dates = (Lists.LocalDateList) tuple.get(1);
+        List<LocalDate> orderedDates = reorder(dates, sort);
+        return orderedDates.get(index);
+      } else {
+        return -quantilePnL;
+      }
     };
     return new VectorTupleAggMeasure(alias, List.of(new FieldAndAggFunc(value, SUM), new FieldAndAggFunc(date, ANY_VALUE)), date, transformer);
   }
@@ -50,9 +54,10 @@ public final class ParametrizedMeasureFactory {
    * Called by reflection. See {@link Repository#create(ParametrizedMeasure)}
    */
   public static Measure incrementalVar(String alias, Field value, Field date, double quantile, List<Field> ancestors) {
-    Measure vector = new VectorTupleAggMeasure("__vector__",
+    Measure vector = new VectorTupleAggMeasure(
+            String.format("__vector_%s___", alias),
             List.of(new FieldAndAggFunc(value, SUM),
-                    new FieldAndAggFunc(date, ANY_VALUE)),
+                    new FieldAndAggFunc(date, ANY_VALUE)), // FIXME should we need the date?
             date,
             null);
 
@@ -82,8 +87,8 @@ public final class ParametrizedMeasureFactory {
   }
 
   private static Pair<List<Double>, List<LocalDate>> orderTupleOfList(Object value) {
-    Lists.DoubleList prices = (Lists.DoubleList) ((List) value).get(0);
-    Lists.LocalDateList dates = (Lists.LocalDateList) ((List) value).get(1);
+    Lists.DoubleList prices = (Lists.DoubleList) ((List<?>) value).get(0);
+    Lists.LocalDateList dates = (Lists.LocalDateList) ((List<?>) value).get(1);
     int[] sort = MultipleColumnsSorter.sort(Collections.singletonList(dates), Collections.singletonList(naturalOrder()), new int[0]);
     return Tuples.pair(reorder(prices, sort), reorder(dates, sort));
   }
