@@ -232,7 +232,8 @@ public class TestDuckDBQuery {
             Map.of(
                     // value is missing
                     "date", date,
-                    "quantile", 0.95
+                    "quantile", 0.95,
+                    "return", "value"
             ));
     QueryDto query = Query
             .from(this.storeName)

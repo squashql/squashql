@@ -60,8 +60,9 @@ public final class Repository {
     JavaType doubleJT = SquashQLTypeFactory.of(double.class);
     JavaType listOfFieldsJT = SquashQLTypeFactory.listOf(Field.class);
     JavaType axis = SquashQLTypeFactory.of(Axis.class);
+    JavaType str = SquashQLTypeFactory.of(String.class);
     if (key.equals(VAR)) {
-      return List.of(Tuples.triple("value", fieldJT, true), Tuples.triple("date", fieldJT, true), Tuples.triple("quantile", doubleJT, true));
+      return List.of(Tuples.triple("value", fieldJT, true), Tuples.triple("date", fieldJT, true), Tuples.triple("quantile", doubleJT, true), Tuples.triple("return", str, true));
     } else if (key.equals(INCREMENTAL_VAR)) {
       return List.of(Tuples.triple("value", fieldJT, true), Tuples.triple("date", fieldJT, true), Tuples.triple("quantile", doubleJT, true), Tuples.triple("ancestors", listOfFieldsJT, true), Tuples.triple("axis", axis, false));
     } else {
