@@ -33,7 +33,7 @@ public final class DuckDBUtil {
       // See DuckDBResultSetMetaData#TypeNameToType
       if (columnTypeName.equals("DOUBLE[]") || columnTypeName.equals("FLOAT[]")) {
         return Lists.DoubleList.class;
-      } else if (columnTypeName.equals("LONG[]") || columnTypeName.equals("HUGEINT[]") || columnTypeName.equals("INT[]") || columnTypeName.equals("INTEGER[]")) {
+      } else if (columnTypeName.equals("LONG[]") || columnTypeName.equals("HUGEINT[]") || columnTypeName.equals("BIGINT[]") || columnTypeName.equals("INT[]") || columnTypeName.equals("INTEGER[]")) {
         return Lists.LongList.class;
       } else if (columnTypeName.equals("DATE[]")) {
         return Lists.LocalDateList.class;
