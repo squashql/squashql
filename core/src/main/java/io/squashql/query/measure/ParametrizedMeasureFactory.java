@@ -57,7 +57,7 @@ public final class ParametrizedMeasureFactory {
     Measure vector = new VectorTupleAggMeasure(
             String.format("__vector_%s___", alias),
             List.of(new FieldAndAggFunc(value, SUM),
-                    new FieldAndAggFunc(date, ANY_VALUE)), // FIXME should we need the date?
+                    new FieldAndAggFunc(date, ANY_VALUE)),
             date,
             null);
 
