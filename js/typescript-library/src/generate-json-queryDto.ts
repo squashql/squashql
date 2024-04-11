@@ -119,7 +119,7 @@ export function buildQuery(): Query {
   const queryCondition = or(or(and(eq("a"), eq("b")), lt(5)), like("a%"))
   q.withWhereCriteria(all([
     criterion(new TableField("f1"), queryCondition),
-    criterion(new TableField("f2"), gt(659)),
+    criterion(new AliasedField("f2"), gt(659)),
     criterion(new TableField("f3"), _in([0, 1, 2])),
     criterion(new TableField("f4"), isNull()),
     criterion(new TableField("f5"), isNotNull()),

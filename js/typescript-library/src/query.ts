@@ -1,7 +1,7 @@
 import {ColumnSet, ColumnSetKey, GroupColumnSet} from "./columnset"
 import {Field} from "./field"
 import {Measure} from "./measure"
-import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order"
+import {ExplicitOrder, Order, OrderKeyword, SimpleOrder} from "./order"
 import {Parameter} from "./parameter"
 import {VirtualTable} from "./virtualtable"
 import {serializeMap} from "./util"
@@ -16,7 +16,7 @@ export class Query {
   table: Table
   virtualTables: Array<VirtualTable>
   whereCriteria: Criteria
-  havingCriteriaDto: Criteria
+  havingCriteria: Criteria
   orders: Map<Field, Order>
   limit: number = -1
   minify?: boolean
@@ -27,7 +27,7 @@ export class Query {
     this.virtualTables = []
     this.measures = []
     this.whereCriteria = undefined
-    this.havingCriteriaDto = undefined
+    this.havingCriteria = undefined
     this.orders = new Map<Field, Order>()
     this.columnSets = new Map<string, ColumnSet>()
     this.parameters = new Map<string, Parameter>()
@@ -44,7 +44,7 @@ export class Query {
   }
 
   withHavingCriteria(criterion: Criteria): Query {
-    this.havingCriteriaDto = criterion
+    this.havingCriteria = criterion
     return this
   }
 
@@ -79,7 +79,7 @@ export class Query {
   }
 
   orderByFirstElements(column: Field, firstElements: Array<any>): Query {
-    this.orders.set(column, new ExplicitOrderDto(firstElements))
+    this.orders.set(column, new ExplicitOrder(firstElements))
     return this
   }
 
@@ -93,7 +93,7 @@ export class Query {
       "parameters": Object.fromEntries(this.parameters),
       "measures": this.measures,
       "whereCriteriaDto": this.whereCriteria,
-      "havingCriteriaDto": this.havingCriteriaDto,
+      "havingCriteriaDto": this.havingCriteria,
       "orders": Object.fromEntries(serializeMap(this.orders)),
       "limit": this.limit,
       "minify": this.minify
