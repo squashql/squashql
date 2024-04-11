@@ -11,7 +11,8 @@ import {
   comparisonMeasureWithinSameGroupInOrder,
   comparisonMeasureWithParent,
   comparisonMeasureWithParentOfAxis,
-  comparisonMeasureWithPeriod, comparisonMeasureWithTotalOfAxis,
+  comparisonMeasureWithPeriod,
+  comparisonMeasureWithTotalOfAxis,
   ComparisonMethod,
   decimal,
   ExpressionMeasure,
@@ -43,8 +44,9 @@ import {OrderKeyword} from "./order"
 import {GroupColumnSet} from "./columnset"
 import {AliasedField, ConstantField, countRows, TableField, tableField} from "./field"
 import {Month} from "./period"
+import {Action, QueryCacheParameter} from "./parameter"
 
-export function generateFromQueryDto() {
+export function buildQuery(): Query {
   const table = Table.from("myTable")
   const refTable = Table.from("refTable")
   table.join(refTable, JoinType.INNER, criterion_(new TableField("fromField"), new TableField("toField"), ConditionType.EQ))
@@ -138,6 +140,8 @@ export function generateFromQueryDto() {
   }))
   q.withGroupColumnSet(new GroupColumnSet(tableField("group"), tableField("scenario"), values))
 
+  q.withParameter(new QueryCacheParameter(Action.INVALIDATE))
+
   // SubQuery - Note this is not valid because a table has been set above, but we are just testing
   // the json here.
 
@@ -147,7 +151,10 @@ export function generateFromQueryDto() {
           .withColumn(new AliasedField("bb"))
           .withMeasure(sum("sum_aa", new TableField("f")))
   q.table = Table.fromSubQuery(subQ)
+  return q
+}
 
-  const data = JSON.stringify(q)
-  fs.writeFileSync('json/build-from-querydto.json', data)
+export function generateFromQueryDto() {
+  const q = buildQuery()
+  fs.writeFileSync('json/build-from-querydto.json', JSON.stringify(q))
 }
