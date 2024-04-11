@@ -14,9 +14,9 @@ export class Query {
   parameters: Map<string, Parameter>
   measures: Array<Measure>
   table: Table
-  virtualTables: Array<VirtualTable>
-  whereCriteria: Criteria
-  havingCriteria: Criteria
+  virtualTableDtos: Array<VirtualTable>
+  whereCriteriaDto: Criteria
+  havingCriteriaDto: Criteria
   orders: Map<Field, Order>
   limit: number = -1
   minify?: boolean
@@ -24,10 +24,10 @@ export class Query {
   constructor() {
     this.columns = []
     this.rollupColumns = []
-    this.virtualTables = []
+    this.virtualTableDtos = []
     this.measures = []
-    this.whereCriteria = undefined
-    this.havingCriteria = undefined
+    this.whereCriteriaDto = undefined
+    this.havingCriteriaDto = undefined
     this.orders = new Map<Field, Order>()
     this.columnSets = new Map<string, ColumnSet>()
     this.parameters = new Map<string, Parameter>()
@@ -39,12 +39,12 @@ export class Query {
   }
 
   withWhereCriteria(criterion: Criteria): Query {
-    this.whereCriteria = criterion
+    this.whereCriteriaDto = criterion
     return this
   }
 
   withHavingCriteria(criterion: Criteria): Query {
-    this.havingCriteria = criterion
+    this.havingCriteriaDto = criterion
     return this
   }
 
@@ -86,14 +86,14 @@ export class Query {
   toJSON() {
     return {
       "table": this.table,
-      "virtualTableDtos": this.virtualTables,
+      "virtualTableDtos": this.virtualTableDtos,
       "columns": this.columns,
       "rollupColumns": this.rollupColumns,
       "columnSets": Object.fromEntries(this.columnSets),
       "parameters": Object.fromEntries(this.parameters),
       "measures": this.measures,
-      "whereCriteriaDto": this.whereCriteria,
-      "havingCriteriaDto": this.havingCriteria,
+      "whereCriteriaDto": this.whereCriteriaDto,
+      "havingCriteriaDto": this.havingCriteriaDto,
       "orders": Object.fromEntries(serializeMap(this.orders)),
       "limit": this.limit,
       "minify": this.minify

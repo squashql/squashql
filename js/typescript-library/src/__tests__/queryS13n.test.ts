@@ -13,22 +13,15 @@ function checkQuery(expected: Query, actual: Query) {
     expect(expected.parameters).toBeUndefined()
   }
   expect(actual.measures).toEqual(expected.measures)
-  // expect(actual.table).toEqual(expected.table)
   expect(actual.table.joins).toEqual(expected.table.joins)
   expect(actual.table.name).toEqual(expected.table.name)
   if (expected.table.subQuery !== undefined) {
     checkQuery(actual.table.subQuery, expected.table.subQuery)
   }
 
-  // if (expected.virtualTables && expected.virtualTables.length > 0) {
-  //   expect(actual.virtualTables).toEqual(expected.virtualTables)
-  // } else {
-  //   // expect(actual.virtualTables).toBeUndefined()
-  //   expect(actual.virtualTables.length).toEqual(0)
-  // }
-
-  expect(actual.whereCriteria).toEqual(expected.whereCriteria)
-  expect(actual.havingCriteria).toEqual(expected.havingCriteria)
+  expect(actual.virtualTableDtos).toEqual(expected.virtualTableDtos)
+  expect(actual.whereCriteriaDto).toEqual(expected.whereCriteriaDto)
+  expect(actual.havingCriteriaDto).toEqual(expected.havingCriteriaDto)
   expect(actual.orders).toEqual(expected.orders)
   expect(actual.limit).toEqual(expected.limit)
   expect(actual.minify).toEqual(expected.minify)
