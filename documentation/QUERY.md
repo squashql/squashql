@@ -981,6 +981,46 @@ time by what's on the axes. When not using the pivot table API, only using `Axis
 `comparisonMeasureWithTotalOfAxis`: same as `comparisonMeasureWithGrandTotalAlongAncestors` but the list of ancestors is 
 deduced at query time by what's on the axes. When not using the pivot table API, only using `Axis.COLUMN` makes sense.
 
+Examples with `comparisonMeasureWithParentOfAxis`.  
+
+|         |        | total | 2023  | 2024  |
+|---------|--------|-------|-------|-------|
+| total   | total  | 44    | 23    | 21    |
+| france  | total  | 31    | 15    | 16    |
+| france  | paris  | 22    | 10    | 12    |
+| france  | lyon   | 9     | 5     | 4     |
+| germany | total  | 12    | 7     | 5     |
+| germany | berlin | 7     | 4     | 3     |
+| germany | munich | 5     | 3     | 2     |
+
+`Axis = COLUMN`
+```typescript
+comparisonMeasureWithParentOfAxis("parent", DIVIDE, value, COLUMN)
+```
+|         |        | total | 2023  | 2024  |
+|---------|--------|-------|-------|-------|
+| total   | total  | 44/44 | 23/23 | 21/21 |
+| france  | total  | 31/44 | 15/23 | 16/21 |
+| france  | paris  | 22/31 | 10/15 | 12/16 |
+| france  | lyon   | 9/31  | 5/15  | 4/16  |
+| germany | total  | 12/44 | 7/23  | 5/21  |
+| germany | berlin | 7/12  | 4/7   | 3/5   |
+| germany | munich | 5/12  | 3/7   | 2/5   |
+
+`Axis = ROW`
+```typescript
+comparisonMeasureWithParentOfAxis("parent", DIVIDE, value, ROW)
+```
+|         |        | total | 2023  | 2024  |
+|---------|--------|-------|-------|-------|
+| total   | total  | 44/44 | 23/44 | 21/44 |
+| france  | total  | 31/31 | 15/31 | 16/31 |
+| france  | paris  | 22/22 | 10/22 | 12/22 |
+| france  | lyon   | 9/9   | 5/9   | 4/9   |
+| germany | total  | 12/12 | 7/12  | 5/12  |
+| germany | berlin | 7/7   | 4/7   | 3/7   |
+| germany | munich | 5/5   | 3/5   | 2/5   |
+
 ##### Group comparison - ColumnSet
 
 This type of comparison is mainly used for what-if comparison but not limited to it. It involves the creation of a new
