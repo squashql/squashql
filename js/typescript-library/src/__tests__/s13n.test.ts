@@ -1,7 +1,7 @@
 import {buildQuery} from "../generate-json-queryDto"
-import {deserialize} from "../util"
+import {deserialize, squashQLReviver} from "../util"
 import {Query} from "../query"
-import {AliasedField, TableField} from "../field"
+import {AliasedField, Field, TableField} from "../field"
 import {
   Axis,
   BinaryOperationMeasure,
@@ -19,6 +19,7 @@ import {
 } from "../measure"
 import {any, criterion, eq} from "../condition"
 import {Month} from "../period"
+import PACKAGE from "../package";
 
 function checkQuery(expected: Query, actual: Query) {
   expect(actual.columns).toEqual(expected.columns)
@@ -84,69 +85,123 @@ const compareWithGrandTotalAlongAncestors = new PartialHierarchicalComparisonMea
 
 describe('serialization', () => {
 
-  test('serialize query', () => {
+  test('deserialize query', () => {
     const data = buildQuery()
     const obj = deserialize(JSON.stringify(data)) as Query
     checkQuery(data, obj)
   })
 
-  test('serialize criteria', () => {
+  test('deserialize criteria', () => {
     const obj = deserialize(JSON.stringify(criteria))
     expect(criteria).toEqual(obj)
   })
 
-  test('serialize sumIf simple', () => {
+  test('deserialize sumIf simple', () => {
     const obj = deserialize(JSON.stringify(sumIfB))
     expect(sumIfB).toEqual(obj)
   })
 
-  test('serialize sumIf complex', () => {
+  test('deserialize sumIf complex', () => {
     const obj = deserialize(JSON.stringify(sumIfA))
     expect(sumIfA).toEqual(obj)
   })
 
-  test('serialize comparisonMeasureWithPeriod', () => {
+  test('deserialize comparisonMeasureWithPeriod', () => {
     const obj = deserialize(JSON.stringify(growth))
     expect(growth).toEqual(obj)
   })
 
-  test('serialize comparisonMeasureWithParent', () => {
+  test('deserialize comparisonMeasureWithParent', () => {
     const obj = deserialize(JSON.stringify(parent))
     expect(parent).toEqual(obj)
   })
 
-  test('serialize comparisonMeasureWithGrandTotalAlongAncestors', () => {
+  test('deserialize comparisonMeasureWithGrandTotalAlongAncestors', () => {
     const obj = deserialize(JSON.stringify(grandTotalAlongAncestors))
     expect(grandTotalAlongAncestors).toEqual(obj)
   })
 
-  test('serialize comparisonMeasureWithGrandTotal', () => {
+  test('deserialize comparisonMeasureWithGrandTotal', () => {
     const obj = deserialize(JSON.stringify(grandTotal))
     expect(grandTotal).toEqual(obj)
   })
 
-  test('serialize BinaryOperationMeasure', () => {
+  test('deserialize BinaryOperationMeasure', () => {
     const obj = deserialize(JSON.stringify(bom))
     expect(bom).toEqual(obj)
   })
 
-  test('serialize percentOfParentAlongAncestors', () => {
+  test('deserialize percentOfParentAlongAncestors', () => {
     const obj = deserialize(JSON.stringify(percentOfParentAlongAncestors))
     expect(percentOfParentAlongAncestors).toEqual(obj)
   })
 
-  test('serialize compareWithGrandTotalAlongAncestors', () => {
+  test('deserialize compareWithGrandTotalAlongAncestors', () => {
     const obj = deserialize(JSON.stringify(compareWithGrandTotalAlongAncestors))
     expect(compareWithGrandTotalAlongAncestors).toEqual(obj)
   })
 
-  test('serialize var', () => {
+  test('deserialize var', () => {
     const obj = deserialize(JSON.stringify(var95))
     expect(var95).toEqual(obj)
   })
 
-  test('serialize incr var', () => {
+  test('deserialize incr var', () => {
     const obj = deserialize(JSON.stringify(incrVar95))
     expect(incrVar95).toEqual(obj)
+  })
+
+  test('deserialize with fallback', () => {
+    // Implement a custom type.
+    class UnknownField implements Field {
+      readonly class: string = "custom.UnknownField"
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      divide(other: Field): Field {
+        return undefined
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      minus(other: Field): Field {
+        return undefined
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      multiply(other: Field): Field {
+        return undefined
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      plus(other: Field): Field {
+        return undefined
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      as(alias: string): Field {
+        return undefined
+      }
+
+      toJSON() {
+        return {
+          "@class": this.class,
+          "field": "123"
+        }
+      }
+    }
+
+    const unknownField = new UnknownField()
+    const data = {
+      "a": a,
+      "unknown": unknownField
+    }
+    const str = JSON.stringify(data)
+    const obj = JSON.parse(str, (k, v) => squashQLReviver(k, v, (key, value) => {
+      if (value["@class"] === "custom.UnknownField") {
+        return new UnknownField()
+      } else {
+        return value
+      }
+    }))
+    expect(data).toEqual(obj)
   })
 })

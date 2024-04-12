@@ -102,6 +102,7 @@ export {
 
 export * from "./dependencies"
 export {QueryMerge} from "./queryMerge"
+export {squashQLReviver} from "./util"
 
 export const countRows = new AggregatedMeasure("_contributors_count_", tableField("*"), "count")
 export const totalCount = new ExpressionMeasure("_total_count_", "COUNT(*) OVER ()")
