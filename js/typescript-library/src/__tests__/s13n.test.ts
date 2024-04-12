@@ -19,7 +19,6 @@ import {
 } from "../measure"
 import {any, criterion, eq} from "../condition"
 import {Month} from "../period"
-import PACKAGE from "../package";
 
 function checkQuery(expected: Query, actual: Query) {
   expect(actual.columns).toEqual(expected.columns)
