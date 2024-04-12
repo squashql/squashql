@@ -244,7 +244,6 @@ export function countDistinct(alias: string, field: Field): Measure {
   return new AggregatedMeasure(alias, field, "count", true)
 }
 
-
 // aggIf
 
 export function sumIf(alias: string, field: Field, criterion: Criteria): Measure {

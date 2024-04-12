@@ -3,25 +3,20 @@ import PACKAGE from "./package"
 import {ColumnSet, GroupColumnSet} from "./columnset"
 import {Parameter, QueryCacheParameter} from "./parameter"
 import {
-  Criteria,
-  Month,
-  Order,
-  Quarter,
-  Semester,
-  SimpleOrder,
-  ExplicitOrder,
-  SingleValueCondition,
-  Year,
-  ComparisonMeasureReferencePosition,
   AggregatedMeasure,
-  ParametrizedMeasure,
   BinaryOperationMeasure,
   ComparisonMeasureGrandTotal,
-  PartialHierarchicalComparisonMeasure,
-  ExpressionMeasure
-} from "./index"
-import {DoubleConstantMeasure, LongConstantMeasure} from "./measure"
-import {ConstantCondition, InCondition, LogicalCondition} from "./condition"
+  ComparisonMeasureReferencePosition,
+  DoubleConstantMeasure,
+  ExpressionMeasure,
+  LongConstantMeasure,
+  ParametrizedMeasure,
+  PartialHierarchicalComparisonMeasure
+} from "./measure"
+import {ConstantCondition, InCondition, LogicalCondition, SingleValueCondition} from "./condition"
+import Criteria from "./criteria"
+import {Month, Quarter, Semester, Year} from "./period"
+import {ExplicitOrder, Order, SimpleOrder} from "./order"
 
 export function serializeMap(map: Map<any, any>): Map<string, any> {
   const m = new Map()

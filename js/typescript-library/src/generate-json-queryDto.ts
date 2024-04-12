@@ -44,7 +44,7 @@ import {GroupColumnSet} from "./columnset"
 import {AliasedField, ConstantField, TableField, tableField} from "./field"
 import {Month} from "./period"
 import {Action, QueryCacheParameter} from "./parameter"
-import {countRows, totalCount} from "./measures"
+import {countRows, totalCount} from "./index"
 
 export function buildQuery(): Query {
   const table = Table.from("myTable")

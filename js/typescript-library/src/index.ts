@@ -1,3 +1,6 @@
+import { tableField } from './field'
+import { AggregatedMeasure, ExpressionMeasure } from './measure'
+
 export {
   Query, Table, JoinType,
 } from './query'
@@ -100,6 +103,6 @@ export {
 export * from "./dependencies"
 export {QueryMerge} from "./queryMerge"
 
-export {
-  countRows, totalCount
-} from "./measures"
+export const countRows = new AggregatedMeasure("_contributors_count_", tableField("*"), "count")
+export const totalCount = new ExpressionMeasure("_total_count_", "COUNT(*) OVER ()")
+
