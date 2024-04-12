@@ -1,6 +1,6 @@
 import {TableField} from "../../field"
 import {ColumnSet, GroupColumnSet} from "../../columnset"
-import {computeColumnSetDependencies} from "../../dependencies"
+import * as dependencies from "../../dependencies"
 
 afterEach(() => {
   jest.restoreAllMocks()
@@ -12,7 +12,7 @@ describe('computeColumnSetDependencies', () => {
     const createdField = new TableField('mockTable.createdField')
     const mockField = new TableField('mockTable.mockField')
     const columnSet = new GroupColumnSet(createdField, mockField, new Map())
-    const result = computeColumnSetDependencies(columnSet)
+    const result = dependencies.computeColumnSetDependencies(columnSet)
 
     expect(result).toEqual(expect.arrayContaining([mockField]))
   })
@@ -25,7 +25,7 @@ describe('computeColumnSetDependencies', () => {
 
     const unknownGroupColumnSet = new UnknownGroupColumnSet()
 
-    expect(() => computeColumnSetDependencies(unknownGroupColumnSet)).toThrow(
+    expect(() => dependencies.computeColumnSetDependencies(unknownGroupColumnSet)).toThrow(
             "ColumnSet with unknown type: class UnknownGroupColumnSet"
     )
   })
