@@ -1,15 +1,17 @@
 import {
   AggregatedMeasure,
-  BinaryOperationMeasure, ComparisonMeasureGrandTotal,
+  BinaryOperationMeasure,
+  ComparisonMeasureGrandTotal,
   ComparisonMeasureReferencePosition,
   DoubleConstantMeasure,
   ExpressionMeasure,
-  LongConstantMeasure, Measure
+  LongConstantMeasure,
+  Measure
 } from "./measure"
 import {Condition, ConstantCondition, InCondition, LogicalCondition, SingleValueCondition} from "./condition"
 import Criteria from "./criteria"
 import {AliasedField, BinaryOperationField, ConstantField, Field, TableField} from "./field"
-import {GroupColumnSet, ColumnSet} from "./columnset"
+import {ColumnSet, GroupColumnSet} from "./columnset"
 import {Month, Period, Quarter, Semester, Year} from "./period"
 
 export const computeFieldDependencies = (field: Field, resultArray: Field[] = []): Field[] => {

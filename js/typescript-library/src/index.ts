@@ -1,3 +1,6 @@
+import {tableField} from './field'
+import {AggregatedMeasure, ExpressionMeasure} from './measure'
+
 export {
   Query, Table, JoinType,
 } from './query'
@@ -7,7 +10,7 @@ export {
 } from './queryJoin'
 
 export {
-  Order, OrderKeyword, SimpleOrder,
+  Order, OrderKeyword, SimpleOrder, ExplicitOrder
 } from './order'
 
 export {
@@ -44,7 +47,6 @@ export {
   comparisonMeasureWithGrandTotal,
   comparisonMeasureWithParentOfAxis,
   comparisonMeasureWithTotalOfAxis,
-  totalCount,
   ComparisonMethod,
   BinaryOperator,
   BinaryOperationMeasure,
@@ -89,7 +91,6 @@ export {
 
 export {
   TableField, ConstantField, Field, AliasedField, BinaryOperationField, tableFields, tableField,
-  countRows
 } from './field'
 export {
   default as Criteria
@@ -101,3 +102,8 @@ export {
 
 export * from "./dependencies"
 export {QueryMerge} from "./queryMerge"
+export {squashQLReviver} from "./util"
+
+export const countRows = new AggregatedMeasure("_contributors_count_", tableField("*"), "count")
+export const totalCount = new ExpressionMeasure("_total_count_", "COUNT(*) OVER ()")
+

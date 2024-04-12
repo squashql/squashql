@@ -114,7 +114,7 @@ public class TestJavascriptLibrary {
 
     var queryCondition = or(and(eq("a"), eq("b")), lt(5), like("a%"));
     q.withCondition(tableField("f1"), queryCondition);
-    q.withCondition(tableField("f2"), gt(659));
+    q.withCondition(new AliasedField("f2"), gt(659));
     q.withCondition(tableField("f3"), in(0, 1, 2));
     q.withCondition(tableField("f4"), isNull());
     q.withCondition(tableField("f5"), isNotNull());
@@ -129,6 +129,8 @@ public class TestJavascriptLibrary {
             .withNewGroup("a", List.of("a1", "a2"))
             .withNewGroup("b", List.of("b1", "b2"));
     q.withColumnSet(ColumnSetKey.GROUP, columnSet);
+
+    q.withParameter(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.INVALIDATE));
 
     QueryDto subQuery = new QueryDto()
             .table(table)

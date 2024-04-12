@@ -1,7 +1,7 @@
 import {ColumnSet, ColumnSetKey, GroupColumnSet} from "./columnset"
 import {Field} from "./field"
 import {Measure} from "./measure"
-import {ExplicitOrderDto, Order, OrderKeyword, SimpleOrder} from "./order"
+import {ExplicitOrder, Order, OrderKeyword, SimpleOrder} from "./order"
 import {Parameter} from "./parameter"
 import {VirtualTable} from "./virtualtable"
 import {serializeMap} from "./util"
@@ -14,8 +14,8 @@ export class Query {
   parameters: Map<string, Parameter>
   measures: Array<Measure>
   table: Table
-  virtualTables: Array<VirtualTable>
-  whereCriteria: Criteria
+  virtualTableDtos: Array<VirtualTable>
+  whereCriteriaDto: Criteria
   havingCriteriaDto: Criteria
   orders: Map<Field, Order>
   limit: number = -1
@@ -24,9 +24,9 @@ export class Query {
   constructor() {
     this.columns = []
     this.rollupColumns = []
-    this.virtualTables = []
+    this.virtualTableDtos = []
     this.measures = []
-    this.whereCriteria = undefined
+    this.whereCriteriaDto = undefined
     this.havingCriteriaDto = undefined
     this.orders = new Map<Field, Order>()
     this.columnSets = new Map<string, ColumnSet>()
@@ -39,7 +39,7 @@ export class Query {
   }
 
   withWhereCriteria(criterion: Criteria): Query {
-    this.whereCriteria = criterion
+    this.whereCriteriaDto = criterion
     return this
   }
 
@@ -79,20 +79,20 @@ export class Query {
   }
 
   orderByFirstElements(column: Field, firstElements: Array<any>): Query {
-    this.orders.set(column, new ExplicitOrderDto(firstElements))
+    this.orders.set(column, new ExplicitOrder(firstElements))
     return this
   }
 
   toJSON() {
     return {
       "table": this.table,
-      "virtualTableDtos": this.virtualTables,
+      "virtualTableDtos": this.virtualTableDtos,
       "columns": this.columns,
       "rollupColumns": this.rollupColumns,
       "columnSets": Object.fromEntries(this.columnSets),
       "parameters": Object.fromEntries(this.parameters),
       "measures": this.measures,
-      "whereCriteriaDto": this.whereCriteria,
+      "whereCriteriaDto": this.whereCriteriaDto,
       "havingCriteriaDto": this.havingCriteriaDto,
       "orders": Object.fromEntries(serializeMap(this.orders)),
       "limit": this.limit,

@@ -53,8 +53,6 @@ export class ExpressionMeasure implements BasicMeasure {
   }
 }
 
-export const totalCount = new ExpressionMeasure("_total_count_", "COUNT(*) OVER ()")
-
 export class BinaryOperationMeasure implements Measure {
   readonly class: string = PACKAGE + "BinaryOperationMeasure"
   readonly expression?: string
@@ -245,7 +243,6 @@ export function count(alias: string, field: Field): Measure {
 export function countDistinct(alias: string, field: Field): Measure {
   return new AggregatedMeasure(alias, field, "count", true)
 }
-
 
 // aggIf
 

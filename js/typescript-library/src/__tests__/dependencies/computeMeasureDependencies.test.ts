@@ -8,11 +8,13 @@ import {
   ComparisonMethod,
   DoubleConstantMeasure,
   ExpressionMeasure,
-  LongConstantMeasure
+  LongConstantMeasure,
+  Measure
 } from "../../measure"
-import {Criteria, Measure, Year} from "../../index"
 import * as dependencies from "../../dependencies"
 import {ColumnSetKey} from "../../columnset"
+import Criteria from "../../criteria"
+import {Year} from "../../period"
 
 afterEach(() => {
   jest.restoreAllMocks()

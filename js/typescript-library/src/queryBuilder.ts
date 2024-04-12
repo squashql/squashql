@@ -79,7 +79,7 @@ class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
 
   joinVirtual(virtualTable: VirtualTable, joinType: JoinType): HasStartedBuildingJoin {
     this.addJoinToQueryDto()
-    this.queryDto.virtualTables.push(virtualTable)
+    this.queryDto.virtualTableDtos.push(virtualTable)
     this.currentJoinTableBuilder = new JoinTableBuilder(this, virtualTable.name, joinType)
     return this.currentJoinTableBuilder
   }

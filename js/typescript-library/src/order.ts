@@ -23,7 +23,7 @@ export class SimpleOrder implements Order {
   }
 }
 
-export class ExplicitOrderDto implements Order {
+export class ExplicitOrder implements Order {
   class: string = PACKAGE + "dto.ExplicitOrderDto"
 
   constructor(private explicit: Array<any>) {
