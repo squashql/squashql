@@ -1,6 +1,8 @@
 import {JoinType, Query, Table} from "./query"
-import {Criteria, Field, Order} from "./index"
 import {serializeMap} from "./util"
+import {Field} from "./field"
+import {Order} from "./order"
+import Criteria from "./criteria"
 
 export class QueryJoin {
 

@@ -1,5 +1,5 @@
-import { tableField } from './field'
-import { AggregatedMeasure, ExpressionMeasure } from './measure'
+import {tableField} from './field'
+import {AggregatedMeasure, ExpressionMeasure} from './measure'
 
 export {
   Query, Table, JoinType,
