@@ -19,7 +19,6 @@ import {
   integer,
   ParametrizedMeasure,
   sum,
-  totalCount,
 } from "./measure"
 import {
   _in,
@@ -42,9 +41,10 @@ import {
 import * as fs from "fs"
 import {OrderKeyword} from "./order"
 import {GroupColumnSet} from "./columnset"
-import {AliasedField, ConstantField, countRows, TableField, tableField} from "./field"
+import {AliasedField, ConstantField, TableField, tableField} from "./field"
 import {Month} from "./period"
 import {Action, QueryCacheParameter} from "./parameter"
+import {countRows, totalCount} from "./measures"
 
 export function buildQuery(): Query {
   const table = Table.from("myTable")

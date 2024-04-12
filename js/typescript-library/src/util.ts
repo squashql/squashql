@@ -137,7 +137,6 @@ function isParameter(v: any): v is Parameter {
 }
 
 function reviver(key: string, value: any) {
-  // console.log(`key = ${key}, value = ${value}`)
   if (key === "columnSets") {
     const m: Map<string, ColumnSet> = new Map
     Object.entries(value)?.forEach(([k, v]) => m.set(k, transformToObject(v)))

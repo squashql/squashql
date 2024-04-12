@@ -44,7 +44,6 @@ export {
   comparisonMeasureWithGrandTotal,
   comparisonMeasureWithParentOfAxis,
   comparisonMeasureWithTotalOfAxis,
-  totalCount,
   ComparisonMethod,
   BinaryOperator,
   BinaryOperationMeasure,
@@ -89,7 +88,6 @@ export {
 
 export {
   TableField, ConstantField, Field, AliasedField, BinaryOperationField, tableFields, tableField,
-  countRows
 } from './field'
 export {
   default as Criteria
@@ -101,3 +99,7 @@ export {
 
 export * from "./dependencies"
 export {QueryMerge} from "./queryMerge"
+
+export {
+  countRows, totalCount
+} from "./measures"
