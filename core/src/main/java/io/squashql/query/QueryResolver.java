@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 
 import static io.squashql.query.ColumnSetKey.GROUP;
 import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUNT;
+import static io.squashql.query.dto.SingleValueConditionDto.SUPPORTED_TYPES;
 
 @Data
 public class QueryResolver {
@@ -134,10 +135,10 @@ public class QueryResolver {
   }
 
   private TableTypedField getTableTypedField(String fieldName, String alias) {
-    final String[] split = fieldName.split("\\.");
+    String[] split = fieldName.split("\\.");
     if (split.length > 1) {
-      final String tableName = split[0];
-      final String fieldNameInTable = split[1];
+      String tableName = split[0];
+      String fieldNameInTable = split[1];
       Store store = this.storeByName.get(tableName);
       if (store != null) {
         for (TableTypedField field : store.fields()) {
@@ -166,8 +167,8 @@ public class QueryResolver {
 
   private QueryScope toQueryScope(QueryDto query) {
     checkQuery(query);
-    final List<TypedField> columnSets = query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
-    final List<TypedField> combinedColumns = Stream.concat(this.columns.stream(), columnSets.stream()).toList();
+    List<TypedField> columnSets = query.columnSets.values().stream().flatMap(cs -> cs.getColumnsForPrefetching().stream()).map(this::resolveField).toList();
+    List<TypedField> combinedColumns = Stream.concat(this.columns.stream(), columnSets.stream()).toList();
 
     List<TypedField> rollup = query.rollupColumns.stream().map(this::resolveField).toList();
     Set<Set<TypedField>> groupingSets = query.groupingSets.stream().map(g -> g.stream().map(this::resolveField).collect(Collectors.toSet())).collect(Collectors.toSet());
@@ -183,7 +184,7 @@ public class QueryResolver {
             query.limit);
   }
 
-  protected void checkQuery(final QueryDto query) {
+  protected void checkQuery(QueryDto query) {
     if (query.table.name == null && query.table.subQuery == null) {
       throw new IllegalArgumentException("A table or sub-query was expected in " + query);
     } else if (query.table.name != null && query.table.subQuery != null) {
@@ -256,18 +257,35 @@ public class QueryResolver {
   /**
    * Criteria
    */
-  public CompiledCriteria compileCriteria(final CriteriaDto criteria) {
+  public CompiledCriteria compileCriteria(CriteriaDto criteria) {
     return criteria == null
             ? null
-            : this.cache.computeIfAbsent(criteria, c -> new CompiledCriteria(c.condition, c.conditionType, c.field == null ? null : resolveWithFallback(c.field), c.fieldOther == null ? null : resolveWithFallback(c.fieldOther),
-            c.measure == null ? null : compileMeasure(c.measure, true),
-            c.children.stream().map(this::compileCriteria).collect(Collectors.toList())));
+            : this.cache.computeIfAbsent(criteria, c -> {
+      if (c.field != null && c.condition instanceof SingleValueConditionDto svc && svc.value instanceof Field other) {
+        // transform the condition
+        return compileCriteria(new CriteriaDto(c.field, other, c.condition.type()));
+      } else if (c.field != null && c.fieldOther != null && c.conditionType != null && SUPPORTED_TYPES.contains(c.conditionType)) {
+        // transform the condition
+        if (c.field instanceof ConstantField cf) {
+          return compileCriteria(new CriteriaDto(c.fieldOther, new SingleValueConditionDto(c.conditionType, cf.value)));
+        } else if (c.fieldOther instanceof ConstantField cf) {
+          return compileCriteria(new CriteriaDto(c.field, new SingleValueConditionDto(c.conditionType, cf.value)));
+        }
+      }
+      return new CompiledCriteria(
+              c.condition,
+              c.conditionType,
+              c.field == null ? null : resolveWithFallback(c.field),
+              c.fieldOther == null ? null : resolveWithFallback(c.fieldOther),
+              c.measure == null ? null : compileMeasure(c.measure, true),
+              c.children.stream().map(this::compileCriteria).collect(Collectors.toList()));
+    });
   }
 
   /**
    * Compiles measures
    */
-  private Map<Measure, CompiledMeasure> compileMeasures(final List<Measure> measures, boolean topMeasures) {
+  private Map<Measure, CompiledMeasure> compileMeasures(List<Measure> measures, boolean topMeasures) {
     return measures
             .stream()
             .collect(Collectors.toMap(Function.identity(), m -> compileMeasure(m, topMeasures)));
@@ -275,7 +293,7 @@ public class QueryResolver {
 
   protected CompiledMeasure compileMeasure(Measure measure, boolean topMeasure) {
     return this.cache.computeIfAbsent(measure, m -> {
-      final CompiledMeasure compiledMeasure;
+      CompiledMeasure compiledMeasure;
       if (m instanceof AggregatedMeasure am) {
         compiledMeasure = compileAggregatedMeasure(am);
       } else if (m instanceof ExpressionMeasure em) {
@@ -432,7 +450,7 @@ public class QueryResolver {
       if (this.compiledMeasure.containsKey(measure)) {
         return this.compiledMeasure.get(measure);
       } else {
-        final CompiledMeasure compiledMeasure = mappingFunction.apply(measure);
+        CompiledMeasure compiledMeasure = mappingFunction.apply(measure);
         this.compiledMeasure.put(measure, compiledMeasure);
         return compiledMeasure;
       }
@@ -442,8 +460,8 @@ public class QueryResolver {
       if (this.compiledCriteria.containsKey(criteria)) {
         return this.compiledCriteria.get(criteria);
       } else {
-        final CompiledCriteria compiledCriteria = mappingFunction.apply(criteria);
-        this.compiledCriteria.computeIfAbsent(criteria, mappingFunction);
+        CompiledCriteria compiledCriteria = mappingFunction.apply(criteria);
+        this.compiledCriteria.put(criteria, compiledCriteria);
         return compiledCriteria;
       }
     }
