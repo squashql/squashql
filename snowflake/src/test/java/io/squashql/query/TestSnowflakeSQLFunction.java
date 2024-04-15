@@ -11,7 +11,7 @@ import org.junit.jupiter.api.AfterAll;
 /**
  * Do not edit this class, it has been generated automatically by {@link io.squashql.template.SnowflakeClassTemplateGenerator}.
  */
-public class TestSnowflakeSQLFunctions extends ATestSQLFunctions {
+public class TestSnowflakeSQLFunction extends ATestSQLFunction {
 
   @AfterAll
   void tearDown() {

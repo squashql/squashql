@@ -10,7 +10,7 @@ import io.squashql.transaction.DuckDBDataLoader;
 /**
  * Do not edit this class, it has been generated automatically by {@link io.squashql.template.DuckDBClassTemplateGenerator}.
  */
-public class TestDuckDBSQLFunctions extends ATestSQLFunctions {
+public class TestDuckDBSQLFunction extends ATestSQLFunction {
 
   @Override
   protected QueryEngine createQueryEngine(Datastore datastore) {

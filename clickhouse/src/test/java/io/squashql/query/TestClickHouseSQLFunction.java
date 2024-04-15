@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 /**
  * Do not edit this class, it has been generated automatically by {@link ClickHouseClassTemplateGenerator}.
  */
-public class TestClickHouseSQLFunctions extends ATestSQLFunctions {
+public class TestClickHouseSQLFunction extends ATestSQLFunction {
 
   public org.testcontainers.containers.GenericContainer container = ClickHouseTestUtil.createClickHouseContainer();
 

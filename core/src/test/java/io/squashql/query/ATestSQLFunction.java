@@ -19,9 +19,9 @@ import static io.squashql.query.Functions.*;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestSQLFunctions extends ABaseTestQuery {
+public abstract class ATestSQLFunction extends ABaseTestQuery {
 
-  private final String storeName = "store" + ATestSQLFunctions.class.getSimpleName().toLowerCase();
+  private final String storeName = "store" + ATestSQLFunction.class.getSimpleName().toLowerCase();
   private final TableField ean = new TableField(this.storeName, "ean");
   private final TableField category = new TableField(this.storeName, "category");
   private final TableField price = new TableField(this.storeName, "price");

@@ -615,6 +615,15 @@ const query = from("myTable")
 SELECT lower(myTable.a), upper(myTable.a), current_date() AS id, count(*) FROM myTable
 ```
 
+SQL functions:
+
+| function name | Description                  | Example        | Result     | Alias |
+|---------------|------------------------------|----------------|------------|-------|
+| upper         | Convert string to upper case | upper('Hello') | HELLO      | ucase | 
+| lower         | Convert string to lower case | lower('Hello') | hello      | lcase | 
+| current_date  | Current date                 | current_date() | 2024-10-25 |       | 
+
+
 ## Measures
 
 A Measure represents aggregated values and is usually numeric. Measure can be split into two categories depending on 

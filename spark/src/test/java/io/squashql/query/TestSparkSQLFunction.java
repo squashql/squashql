@@ -11,7 +11,7 @@ import org.junit.jupiter.api.AfterAll;
 /**
  * Do not edit this class, it has been generated automatically by {@link io.squashql.template.SparkClassTemplateGenerator}.
  */
-public class TestSparkSQLFunctions extends ATestSQLFunctions {
+public class TestSparkSQLFunction extends ATestSQLFunction {
 
   @AfterAll
   void tearDown() {
