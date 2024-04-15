@@ -17,7 +17,7 @@ public class BigQueryQueryRewriter implements QueryRewriter {
       // https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#extract
       return String.format("EXTRACT(%s FROM %s)", ftf.function(), ftf.field().sqlExpression(this));
     } else {
-      throw new IllegalArgumentException("Unsupported function " + ftf);
+      return QueryRewriter.super.functionExpression(ftf);
     }
   }
 

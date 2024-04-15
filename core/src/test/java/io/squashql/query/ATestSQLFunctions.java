@@ -51,7 +51,7 @@ public abstract class ATestSQLFunctions extends ABaseTestQuery {
    * Test {@link Functions#lower(Field)}
    */
   @Test
-  void testLCase() {
+  void testLower() {
     // lower in where
     QueryDto query = Query
             .from(this.storeName)
@@ -71,7 +71,7 @@ public abstract class ATestSQLFunctions extends ABaseTestQuery {
             .select(List.of(lower(this.category)), List.of(CountMeasure.INSTANCE))
             .build();
     result = this.executor.executeQuery(query);
-    Assertions.assertThat(result.headers().stream().map(Header::name)).containsExactly("LCase(" + SqlUtils.squashqlExpression(this.category) + ")", CountMeasure.INSTANCE.alias);
+    Assertions.assertThat(result.headers().stream().map(Header::name)).containsExactly("lower(" + SqlUtils.squashqlExpression(this.category) + ")", CountMeasure.INSTANCE.alias);
     Assertions.assertThat(result).containsExactly(List.of("drink", 2L));
 
     // lower in select and where + alias
@@ -90,7 +90,7 @@ public abstract class ATestSQLFunctions extends ABaseTestQuery {
    * Test {@link Functions#upper(Field)}
    */
   @Test
-  void testUCase() {
+  void testUpper() {
     // upper in where
     QueryDto query = Query
             .from(this.storeName)
@@ -110,7 +110,7 @@ public abstract class ATestSQLFunctions extends ABaseTestQuery {
             .select(List.of(upper(this.category)), List.of(CountMeasure.INSTANCE))
             .build();
     result = this.executor.executeQuery(query);
-    Assertions.assertThat(result.headers().stream().map(Header::name)).containsExactly("UCase(" + SqlUtils.squashqlExpression(this.category) + ")", CountMeasure.INSTANCE.alias);
+    Assertions.assertThat(result.headers().stream().map(Header::name)).containsExactly("upper(" + SqlUtils.squashqlExpression(this.category) + ")", CountMeasure.INSTANCE.alias);
     Assertions.assertThat(result).containsExactly(List.of("DRINK", 2L));
 
     // lower in select and where + alias

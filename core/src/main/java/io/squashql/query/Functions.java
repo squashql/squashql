@@ -250,11 +250,11 @@ public class Functions {
   }
 
   public static Field lower(Field field) {
-    return new FunctionField("LCase", field);
+    return new FunctionField("lower", field);
   }
 
   public static Field upper(Field field) {
-    return new FunctionField("UCase", field);
+    return new FunctionField("upper", field);
   }
 
   // COMPARISONS
