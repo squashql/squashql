@@ -59,10 +59,10 @@
     <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
 
     <duckdb.version>0.10.1</duckdb.version>
-    <clickhouse.version>0.6.0-patch1</clickhouse.version>
-    <spark.version>3.5.0</spark.version>
-    <bigquery.version>26.34.0</bigquery.version>
-    <snowflake-jdbc.version>3.15.0</snowflake-jdbc.version>
+    <clickhouse.version>0.6.0-patch3</clickhouse.version>
+    <spark.version>3.5.1</spark.version>
+    <bigquery.version>26.37.0</bigquery.version>
+    <snowflake-jdbc.version>3.15.1</snowflake-jdbc.version>
   </properties>
 
   <modules>
