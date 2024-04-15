@@ -48,7 +48,7 @@ public class SqlUtils {
     if (f instanceof TableTypedField ttf) {
       return getFieldFullName(ttf);
     } else if (f instanceof FunctionTypedField ftf) {
-      return singleOperandFunctionName(ftf.function(), squashqlExpression(ftf.field()));
+      return singleOperandFunctionName(ftf.function(), ftf.field() != null ? squashqlExpression(ftf.field()) : "");
     } else {
       throw new IllegalArgumentException(f.getClass().getName());
     }
@@ -62,7 +62,7 @@ public class SqlUtils {
     if (f instanceof TableField tf) {
       return getFieldFullName(tf.tableName, tf.fieldName);
     } else if (f instanceof FunctionField ftf) {
-      return singleOperandFunctionName(ftf.function, squashqlExpression(ftf.field));
+      return singleOperandFunctionName(ftf.function, ftf.field != null ? squashqlExpression(ftf.field) : "");
     } else {
       throw new IllegalArgumentException(f.getClass().getName());
     }

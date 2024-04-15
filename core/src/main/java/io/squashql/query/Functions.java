@@ -257,6 +257,10 @@ public class Functions {
     return new FunctionField("upper", field);
   }
 
+  public static Field currentDate() {
+    return new FunctionField("current_date");
+  }
+
   // COMPARISONS
 
   public static Measure comparisonMeasureWithParentOfAxis(String alias,

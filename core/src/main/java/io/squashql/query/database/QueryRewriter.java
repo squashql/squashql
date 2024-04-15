@@ -27,7 +27,14 @@ public interface QueryRewriter {
   }
 
   default String functionExpression(FunctionTypedField ftf) {
-    return ftf.function() + "(" + ftf.field().sqlExpression(this) + ")";
+    StringBuilder sb = new StringBuilder(ftf.function());
+    sb.append("(");
+    TypedField field = ftf.field();
+    if (field != null) {
+      sb.append(field.sqlExpression(this));
+    }
+    sb.append(")");
+    return sb.toString();
   }
 
   /**

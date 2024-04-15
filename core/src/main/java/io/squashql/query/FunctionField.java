@@ -15,6 +15,10 @@ public class FunctionField implements Field {
   public Field field;
   public String alias;
 
+  public FunctionField(String function) {
+    this(function, null);
+  }
+
   public FunctionField(String function, Field field) {
     this.function = function;
     this.field = field;
