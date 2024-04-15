@@ -9,7 +9,6 @@ import io.squashql.spring.SquashQLApplication;
 import io.squashql.spring.dataset.DatasetTestConfig;
 import io.squashql.spring.web.rest.QueryControllerTest;
 import io.squashql.util.TestUtil;
-import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,12 +33,6 @@ import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
         properties = "spring.main.allow-bean-definition-overriding=true")
 @Import(DatasetTestConfig.class)
 public class HttpClientQuerierTest {
-
-  static {
-    // FIXME: why do I need to do this? (fails in maven build without it)
-    // Fix found here https://github.com/spring-projects/spring-boot/issues/21535
-    TomcatURLStreamHandlerFactory.disable();
-  }
 
   HttpClientQuerier querier;
 
