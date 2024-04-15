@@ -1,7 +1,6 @@
 package io.squashql.query.database;
 
 import io.squashql.query.BinaryOperator;
-import io.squashql.query.date.DateFunctions;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
@@ -14,7 +13,7 @@ public class BigQueryQueryRewriter implements QueryRewriter {
 
   @Override
   public String functionExpression(FunctionTypedField ftf) {
-    if (DateFunctions.SUPPORTED_DATE_FUNCTIONS.contains(ftf.function())) {
+    if (SQLFunctions.SUPPORTED_DATE_FUNCTIONS.contains(ftf.function())) {
       // https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#extract
       return String.format("EXTRACT(%s FROM %s)", ftf.function(), ftf.field().sqlExpression(this));
     } else {
