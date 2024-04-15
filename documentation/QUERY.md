@@ -544,6 +544,7 @@ The interface `Field` can be used to represent either:
 - A column/field of a table: `TableField` e.g. `const a = new TableField("myTable.a")`
 - A constant value: `ConstantField` e.g. `const one = new ConstantField(1)`
 - An aliased column: `AliasedField` e.g. `const aliased = new AliasedField("myColumn")`
+- An SQL function with a single operand: `FunctionField` e.g. `const func = new FunctionField("lower", new TableField("myTable.a"))`
 
 Fields can be combined to produce other fields to be used in calculations and perform more complex computations.
 
@@ -598,6 +599,20 @@ const subQuery = from("myTable")
 const query = fromSubQuery(subQuery)
         .select([new AliasedField("f1_alias")], [], [avg("result", new TableField("score_sum"))])
         .build()
+```
+
+`FunctionField` is made to apply a transformation to a column. Only functions that take a single argument are supported 
+for the time being. The library provides helpers to create useful functions. For instance with `const a = new TableField("myTable.a")`
+
+```typescript
+const a = new TableField("myTable.a")
+const query = from("myTable")
+        .select([lower(a), upper(a), currentDate()], [], [countRows])
+        .build()
+```
+
+```sql
+SELECT lower(myTable.a), upper(myTable.a), current_date() AS id, count(*) FROM myTable
 ```
 
 ## Measures

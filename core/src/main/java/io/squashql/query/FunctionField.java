@@ -11,22 +11,22 @@ import lombok.ToString;
 @AllArgsConstructor
 public class FunctionField implements Field {
 
-  public String function;
-  public Field field;
+  public String functionName;
+  public Field operand;
   public String alias;
 
-  public FunctionField(String function) {
-    this(function, null);
+  public FunctionField(String functionName) {
+    this(functionName, null);
   }
 
-  public FunctionField(String function, Field field) {
-    this.function = function;
-    this.field = field;
+  public FunctionField(String functionName, Field operand) {
+    this.functionName = functionName;
+    this.operand = operand;
   }
 
   @Override
   public Field as(String alias) {
-    return new FunctionField(this.function, this.field, alias);
+    return new FunctionField(this.functionName, this.operand, alias);
   }
 
   @Override

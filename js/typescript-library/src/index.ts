@@ -90,7 +90,8 @@ export {
 } from './queryBuilder'
 
 export {
-  TableField, ConstantField, Field, AliasedField, BinaryOperationField, tableFields, tableField,
+  TableField, ConstantField, Field, AliasedField, BinaryOperationField, FunctionField,
+  tableFields, tableField, lower, upper, currentDate
 } from './field'
 export {
   default as Criteria

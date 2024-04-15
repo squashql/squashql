@@ -62,7 +62,7 @@ public class SqlUtils {
     if (f instanceof TableField tf) {
       return getFieldFullName(tf.tableName, tf.fieldName);
     } else if (f instanceof FunctionField ftf) {
-      return singleOperandFunctionName(ftf.function, ftf.field != null ? squashqlExpression(ftf.field) : "");
+      return singleOperandFunctionName(ftf.functionName, ftf.operand != null ? squashqlExpression(ftf.operand) : "");
     } else {
       throw new IllegalArgumentException(f.getClass().getName());
     }

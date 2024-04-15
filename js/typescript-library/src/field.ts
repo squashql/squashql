@@ -113,6 +113,27 @@ export class TableField extends AField {
   }
 }
 
+export class FunctionField extends AField {
+  readonly class: string = PACKAGE + "FunctionField"
+
+  constructor(readonly functionName: string, readonly operand?: Field, readonly alias?: string) {
+    super()
+  }
+
+  as(alias: string): Field {
+    return new FunctionField(this.functionName, this.operand, alias)
+  }
+
+  toJSON() {
+    return {
+      "@class": this.class,
+      "functionName": this.functionName,
+      "operand": this.operand,
+      "alias": this.alias,
+    }
+  }
+}
+
 export function tableField(fullName: string) {
   return new TableField(fullName)
 }
@@ -141,4 +162,18 @@ export class BinaryOperationField extends AField {
       "alias": this.alias,
     }
   }
+}
+
+// Helpers
+
+export function currentDate(): Field {
+  return new FunctionField("current_date")
+}
+
+export function lower(field: Field): Field {
+  return new FunctionField("lower", field)
+}
+
+export function upper(field: Field): Field {
+  return new FunctionField("upper", field)
 }

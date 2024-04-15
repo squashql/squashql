@@ -1,4 +1,4 @@
-import {AliasedField, BinaryOperationField, ConstantField, Field, TableField} from "./field"
+import {AliasedField, BinaryOperationField, ConstantField, Field, FunctionField, TableField} from "./field"
 import PACKAGE from "./package"
 import {ColumnSet, GroupColumnSet} from "./columnset"
 import {Parameter, QueryCacheParameter} from "./parameter"
@@ -36,6 +36,8 @@ function transformToObject(key: string, value: any, reviverFallback?: (key: stri
     return new TableField(value["fullName"], value["alias"])
   } else if (clazz === PACKAGE + "AliasedField") {
     return new AliasedField(value["alias"])
+  } else if (clazz === PACKAGE + "FunctionField") {
+    return new FunctionField(value["functionName"], transformToObject("operand", value["operand"]), value["alias"])
   } else if (clazz === PACKAGE + "dto.GroupColumnSetDto") {
     const m: Map<string, Array<string>> = new Map
     value["values"] && Object.entries(value["values"])?.forEach(([k, v]) => m.set(k, transformToObject(k, v)))
