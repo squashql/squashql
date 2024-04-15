@@ -41,7 +41,7 @@ import {
 import * as fs from "fs"
 import {OrderKeyword} from "./order"
 import {GroupColumnSet} from "./columnset"
-import {AliasedField, ConstantField, TableField, tableField} from "./field"
+import {AliasedField, ConstantField, currentDate, lower, TableField, tableField, upper} from "./field"
 import {Month} from "./period"
 import {Action, QueryCacheParameter} from "./parameter"
 import {countRows, totalCount} from "./index"
@@ -123,7 +123,10 @@ export function buildQuery(): Query {
     criterion(new TableField("f3"), _in([0, 1, 2])),
     criterion(new TableField("f4"), isNull()),
     criterion(new TableField("f5"), isNotNull()),
-    criterion(new TableField("f6"), contains(2))
+    criterion(new TableField("f6"), contains(2)),
+    criterion(lower(new TableField("f7")), eq("a")),
+    criterion(upper(new TableField("f8")), eq("A")),
+    criterion_(new TableField("f9"), currentDate(), ConditionType.GT),
   ]))
 
   q.withHavingCriteria(all([

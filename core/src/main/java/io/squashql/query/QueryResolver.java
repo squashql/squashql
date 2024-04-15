@@ -99,7 +99,7 @@ public class QueryResolver {
       if (f instanceof TableField tf) {
         return getTableTypedField(tf.fullName, field.alias());
       } else if (f instanceof FunctionField ff) {
-        return new FunctionTypedField(resolveField(ff.field), ff.function, ff.alias);
+        return new FunctionTypedField(ff.operand != null ? resolveField(ff.operand) : null, ff.functionName, ff.alias);
       } else if (f instanceof BinaryOperationField ff) {
         return new BinaryOperationTypedField(ff.operator, resolveField(ff.leftOperand), resolveField(ff.rightOperand), ff.alias);
       } else if (f instanceof ConstantField ff) {

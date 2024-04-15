@@ -3,7 +3,8 @@ package io.squashql.type;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.store.UnknownType;
 
-import static io.squashql.query.date.DateFunctions.SUPPORTED_DATE_FUNCTIONS;
+import static io.squashql.query.database.SQLFunctions.SUPPORTED_DATE_FUNCTIONS;
+import static io.squashql.query.database.SQLFunctions.SUPPORTED_STRING_FUNCTIONS;
 
 public record FunctionTypedField(TypedField field, String function, String alias) implements TypedField {
 
@@ -16,6 +17,8 @@ public record FunctionTypedField(TypedField field, String function, String alias
   public Class<?> type() {
     if (SUPPORTED_DATE_FUNCTIONS.contains(this.function)) {
       return int.class;
+    } else if (SUPPORTED_STRING_FUNCTIONS.contains(this.function)) {
+      return String.class;
     } else {
       return UnknownType.class;
     }

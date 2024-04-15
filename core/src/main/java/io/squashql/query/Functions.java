@@ -234,6 +234,9 @@ public class Functions {
     return new DoubleConstantMeasure(value);
   }
 
+
+  // FUNCTIONS
+
   public static Field year(String field) {
     return new FunctionField("YEAR", new TableField(field));
   }
@@ -245,6 +248,20 @@ public class Functions {
   public static Field month(String field) {
     return new FunctionField("MONTH", new TableField(field));
   }
+
+  public static Field lower(Field field) {
+    return new FunctionField("lower", field);
+  }
+
+  public static Field upper(Field field) {
+    return new FunctionField("upper", field);
+  }
+
+  public static Field currentDate() {
+    return new FunctionField("current_date");
+  }
+
+  // COMPARISONS
 
   public static Measure comparisonMeasureWithParentOfAxis(String alias,
                                                           ComparisonMethod comparisonMethod,

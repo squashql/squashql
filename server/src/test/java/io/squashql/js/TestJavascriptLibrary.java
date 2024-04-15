@@ -113,14 +113,22 @@ public class TestJavascriptLibrary {
     ));
 
     var queryCondition = or(and(eq("a"), eq("b")), lt(5), like("a%"));
-    q.withCondition(tableField("f1"), queryCondition);
-    q.withCondition(new AliasedField("f2"), gt(659));
-    q.withCondition(tableField("f3"), in(0, 1, 2));
-    q.withCondition(tableField("f4"), isNull());
-    q.withCondition(tableField("f5"), isNotNull());
-    q.withCondition(tableField("f6"), contains(2));
+    q.withWhereCriteria(all(
+            criterion(tableField("f1"), queryCondition),
+            criterion(new AliasedField("f2"), gt(659)),
+            criterion(tableField("f3"), in(0, 1, 2)),
+            criterion(tableField("f4"), isNull()),
+            criterion(tableField("f5"), isNotNull()),
+            criterion(tableField("f6"), contains(2)),
+            criterion(lower(tableField("f7")), eq("a")),
+            criterion(upper(tableField("f8")), eq("A")),
+            criterion(new TableField("f9"), currentDate(), ConditionType.GT)
+    ));
 
-    q.withHavingCriteria(all(criterion(price, ge(10)), criterion(expression, lt(100))));
+    q.withHavingCriteria(all(
+            criterion(price, ge(10)),
+            criterion(expression, lt(100))
+    ));
 
     q.orderBy(a, OrderKeywordDto.ASC);
     q.orderBy(b, List.of("1", "l", "p"));

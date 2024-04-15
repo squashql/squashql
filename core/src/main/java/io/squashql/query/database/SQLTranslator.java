@@ -158,22 +158,23 @@ public class SQLTranslator {
   }
 
   public static Function<Object, String> getQuoteFn(TypedField field, QueryRewriter queryRewriter) {
-    if (Number.class.isAssignableFrom(field.type())
-            || field.type().equals(double.class)
-            || field.type().equals(int.class)
-            || field.type().equals(long.class)
-            || field.type().equals(float.class)
-            || field.type().equals(boolean.class)
-            || field.type().equals(Boolean.class)
-            || field.type().equals(UnknownType.class)
-            || field.type().equals(Lists.LongList.class)) {
+    Class<?> fType = field.type();
+    if (Number.class.isAssignableFrom(fType)
+            || fType.equals(double.class)
+            || fType.equals(int.class)
+            || fType.equals(long.class)
+            || fType.equals(float.class)
+            || fType.equals(boolean.class)
+            || fType.equals(Boolean.class)
+            || fType.equals(UnknownType.class)
+            || fType.equals(Lists.LongList.class)) {
       // no quote
       return String::valueOf;
-    } else if (field.type().equals(String.class) || field.type().equals(Lists.StringList.class)) {
+    } else if (fType.equals(String.class) || fType.equals(Lists.StringList.class)) {
       // quote
       return s -> "'" + queryRewriter.escapeSingleQuote(String.valueOf(s)) + "'";
     } else {
-      throw new RuntimeException("Not supported " + field.type());
+      throw new RuntimeException("Not supported " + fType);
     }
   }
 
