@@ -651,5 +651,4 @@ public class TestSQLTranslator {
               .isEqualTo("select `pnl` from `dataset.baseStore` where `pnl` > 5 group by `pnl`");
     }
   }
-  // TODO test with constant
 }

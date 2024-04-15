@@ -1,6 +1,5 @@
 package io.squashql.query.compiled;
 
-import io.squashql.query.Field;
 import io.squashql.query.database.QueryRewriter;
 import io.squashql.query.database.SQLTranslator;
 import io.squashql.query.dto.*;
@@ -56,13 +55,8 @@ public record CompiledCriteria(ConditionDto condition, ConditionType conditionTy
                         .stream()
                         .map(sqlMapper)
                         .collect(Collectors.joining(", ")) + ")";
-        case EQ, NEQ, LT, LE, GT, GE, LIKE -> {
-          Object value = ((SingleValueConditionDto) dto).value;
-          if (value instanceof Field) {
-
-          }
-          yield expression + " " + dto.type().sqlInfix + " " + sqlMapper.apply(value);
-        }
+        case EQ, NEQ, LT, LE, GT, GE, LIKE ->
+                expression + " " + dto.type().sqlInfix + " " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
         case ARRAY_CONTAINS ->
                 queryRewriter.arrayContains(field, sqlMapper.apply(((SingleValueConditionDto) dto).value));
         default -> throw new IllegalStateException("Unexpected value: " + dto.type());
