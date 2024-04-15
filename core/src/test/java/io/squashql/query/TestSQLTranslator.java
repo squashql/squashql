@@ -75,7 +75,7 @@ public class TestSQLTranslator {
 
     DatabaseQuery toDatabaseQuery() {
       // Keep the order
-      List<CompiledMeasure> measures = getQuery().measures.stream().map(measure -> getMeasures().get(measure)).filter(m -> m != null).toList();
+      List<CompiledMeasure> measures = getQuery().measures.stream().map(measure -> getMeasures().get(measure)).filter(Objects::nonNull).toList();
       return new DatabaseQuery(getScope().copyWithNewLimit(this.limit), measures);
     }
 
@@ -506,9 +506,9 @@ public class TestSQLTranslator {
 
   @Test
   void testGroupingSets() {
-    final Field a = tableField("a");
-    final Field b = tableField("b");
-    final QueryDto query = new QueryDto()
+    Field a = tableField("a");
+    Field b = tableField("b");
+    QueryDto query = new QueryDto()
             .withColumn(a)
             .withColumn(b)
             .withMeasure(new AggregatedMeasure("pnl.sum", "pnl", "sum"))
@@ -577,5 +577,78 @@ public class TestSQLTranslator {
     sql = new CompiledOrderBy(stringField, new ExplicitOrderDto(List.of(2023, 2027))).sqlExpression(qr);
     // When field is a string, values should be escaped
     assertThat(sql).isEqualTo("case when `dataset.store`.`field` is null then 1 when `dataset.store`.`field` = '2023' then 2 when `dataset.store`.`field` = '2027' then 3 else 4 end");
+  }
+
+  @Test
+  void testCriteria() {
+    Field a = tableField("a");
+    Field b = tableField("b");
+    // The following conditions are equivalent
+    CriteriaDto c1 = criterion(a, b, ConditionType.EQ);
+    CriteriaDto c2 = criterion(a, eq(b));
+    QueryDto q1 = Query.from(BASE_STORE_NAME)
+            .where(c1)
+            .select(List.of(a), List.of())
+            .build();
+    QueryDto q2 = Query.from(BASE_STORE_NAME)
+            .where(c2)
+            .select(List.of(a), List.of())
+            .build();
+    assertThat(translate(compileQuery(q1)))
+            .isEqualTo(translate(compileQuery(q2)))
+            .isEqualTo("select `a` from `dataset.baseStore` where `a` = `b` group by `a`");
+  }
+
+  @Test
+  void testCriteriaWithConstant() {
+    Field a = tableField("a"); // it is a String
+    {
+      // The following conditions are equivalent
+      ConstantField cf = new ConstantField("hello");
+      CriteriaDto c1 = criterion(a, cf, ConditionType.EQ);
+      CriteriaDto c1bis = criterion(cf, a, ConditionType.EQ);
+      CriteriaDto c2 = criterion(a, eq(cf));
+      QueryDto q1 = Query.from(BASE_STORE_NAME)
+              .where(c1)
+              .select(List.of(a), List.of())
+              .build();
+      QueryDto q1bis = Query.from(BASE_STORE_NAME)
+              .where(c1bis)
+              .select(List.of(a), List.of())
+              .build();
+      QueryDto q2 = Query.from(BASE_STORE_NAME)
+              .where(c2)
+              .select(List.of(a), List.of())
+              .build();
+      assertThat(translate(compileQuery(q1)))
+              .isEqualTo(translate(compileQuery(q1bis)))
+              .isEqualTo(translate(compileQuery(q2)))
+              .isEqualTo("select `a` from `dataset.baseStore` where `a` = 'hello' group by `a`");
+    }
+
+    {
+      Field pnl = tableField("pnl"); // it is a double
+      // The following conditions are equivalent
+      ConstantField cf = new ConstantField(5);
+      CriteriaDto c1 = criterion(pnl, cf, ConditionType.GT);
+      CriteriaDto c1bis = criterion(cf, pnl, ConditionType.GT);
+      CriteriaDto c2 = criterion(pnl, gt(cf));
+      QueryDto q1 = Query.from(BASE_STORE_NAME)
+              .where(c1)
+              .select(List.of(pnl), List.of())
+              .build();
+      QueryDto q1bis = Query.from(BASE_STORE_NAME)
+              .where(c1bis)
+              .select(List.of(pnl), List.of())
+              .build();
+      QueryDto q2 = Query.from(BASE_STORE_NAME)
+              .where(c2)
+              .select(List.of(pnl), List.of())
+              .build();
+      assertThat(translate(compileQuery(q1)))
+              .isEqualTo(translate(compileQuery(q1bis)))
+              .isEqualTo(translate(compileQuery(q2)))
+              .isEqualTo("select `pnl` from `dataset.baseStore` where `pnl` > 5 group by `pnl`");
+    }
   }
 }
