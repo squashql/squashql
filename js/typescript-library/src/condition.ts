@@ -75,7 +75,7 @@ export class InCondition implements Condition {
 
   toJSON() {
     return {
-      ...toJSON(this),
+      "@class": this.class,
       "values": this.values,
     }
   }
