@@ -47,20 +47,22 @@ public record CompiledCriteria(ConditionDto condition, ConditionType conditionTy
 
   public static String toSql(TypedField field, ConditionDto dto, QueryRewriter queryRewriter) {
     String expression = field.sqlExpression(queryRewriter); // FIXME should be queryRewriter.where(field) because some db supports using the alias, others not.
-    if (dto instanceof SingleValueConditionDto || dto instanceof InConditionDto) {
-      Function<Object, String> sqlMapper = SQLTranslator.getQuoteFn(field, queryRewriter);
+
+    if (dto instanceof SingleValueConditionDto svc) {
+      Object value = svc.value;
+      Function<Object, String> sqlMapper = SQLTranslator.getQuoteFn(field.type(), value.getClass(), queryRewriter);
       return switch (dto.type()) {
-        case IN -> expression + " " + dto.type().sqlInfix + " (" +
-                ((InConditionDto) dto).values
-                        .stream()
-                        .map(sqlMapper)
-                        .collect(Collectors.joining(", ")) + ")";
-        case EQ, NEQ, LT, LE, GT, GE, LIKE ->
-                expression + " " + dto.type().sqlInfix + " " + sqlMapper.apply(((SingleValueConditionDto) dto).value);
-        case ARRAY_CONTAINS ->
-                queryRewriter.arrayContains(field, sqlMapper.apply(((SingleValueConditionDto) dto).value));
+        case EQ, NEQ, LT, LE, GT, GE, LIKE -> expression + " " + dto.type().sqlInfix + " " + sqlMapper.apply(value);
+        case ARRAY_CONTAINS -> queryRewriter.arrayContains(field, sqlMapper.apply(value));
         default -> throw new IllegalStateException("Unexpected value: " + dto.type());
       };
+    } else if (dto instanceof InConditionDto ic) {
+      Function<Object, String> sqlMapper = SQLTranslator.getQuoteFn(field.type(), ic.values.iterator().next().getClass(), queryRewriter);
+      return expression + " " + dto.type().sqlInfix + " (" +
+              ic.values
+                      .stream()
+                      .map(sqlMapper)
+                      .collect(Collectors.joining(", ")) + ")";
     } else if (dto instanceof LogicalConditionDto logical) {
       String first = toSql(field, logical.one, queryRewriter);
       String second = toSql(field, logical.two, queryRewriter);

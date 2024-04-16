@@ -1,11 +1,13 @@
 package io.squashql.query;
 
 import io.squashql.query.builder.Query;
+import io.squashql.query.compiled.CompiledCriteria;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.compiled.CompiledOrderBy;
 import io.squashql.query.database.*;
 import io.squashql.query.dto.*;
 import io.squashql.store.Store;
+import io.squashql.type.AliasedTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
@@ -129,6 +131,10 @@ public class TestSQLTranslator {
 
   private TypedField compileField(Field field) {
     return new TestResolver(new QueryDto().table("fake")).resolveField(field);
+  }
+
+  private CompiledCriteria compileCriteria(CriteriaDto c) {
+    return new TestResolver(new QueryDto().table("fake")).compileCriteria(c);
   }
 
   private DatabaseQuery compileQuery(QueryDto query, Map<String, Store> stores) {
@@ -300,13 +306,13 @@ public class TestSQLTranslator {
             criterion(c.name + ".c_f", a.name + ".a_f", ConditionType.EQ)
     ));
 
-    final Map<String, Store> stores = Map.of(
+    Map<String, Store> stores = Map.of(
             "A", new Store("A", List.of(new TableTypedField("A", "a_id", int.class), new TableTypedField("A", "a_f", int.class), new TableTypedField("A", "y", int.class))),
             "B", new Store("B", List.of(new TableTypedField("B", "b_id", int.class), new TableTypedField("B", "b_other_id", int.class))),
             "C", new Store("C", List.of(new TableTypedField("c", "a_id", int.class), new TableTypedField("C", "c_f", int.class), new TableTypedField("C", "c_other_id", int.class)))
     );
 
-    final QueryDto query = new QueryDto().table(a).withColumn(tableField("A.y"));
+    QueryDto query = new QueryDto().table(a).withColumn(tableField("A.y"));
 
     assertThat(translate(compileQuery(query, stores)))
             .isEqualTo("select `dataset.A`.`y` from `dataset.A` " +
@@ -568,15 +574,27 @@ public class TestSQLTranslator {
     SQLTranslatorQueryRewriter qr = new SQLTranslatorQueryRewriter();
     TableTypedField stringField = new TableTypedField("store", "field", String.class);
     TableTypedField intField = new TableTypedField("store", "field", int.class);
+
     String sql = new CompiledOrderBy(stringField, new SimpleOrderDto(OrderKeywordDto.ASC)).sqlExpression(qr);
     assertThat(sql).isEqualTo("`dataset.store`.`field` asc nulls first");
+
     sql = new CompiledOrderBy(stringField, new SimpleOrderDto(OrderKeywordDto.DESC)).sqlExpression(qr);
     assertThat(sql).isEqualTo("`dataset.store`.`field` desc nulls first");
+
     sql = new CompiledOrderBy(intField, new ExplicitOrderDto(List.of(2023, 2027))).sqlExpression(qr);
     assertThat(sql).isEqualTo("case when `dataset.store`.`field` is null then 1 when `dataset.store`.`field` = 2023 then 2 when `dataset.store`.`field` = 2027 then 3 else 4 end");
+
     sql = new CompiledOrderBy(stringField, new ExplicitOrderDto(List.of(2023, 2027))).sqlExpression(qr);
     // When field is a string, values should be escaped
     assertThat(sql).isEqualTo("case when `dataset.store`.`field` is null then 1 when `dataset.store`.`field` = '2023' then 2 when `dataset.store`.`field` = '2027' then 3 else 4 end");
+
+    AliasedTypedField aliasedTypedField = new AliasedTypedField("alias_field");
+    // Type is unknown. In that case, the type of the field is guessed by what's in the list
+    sql = new CompiledOrderBy(aliasedTypedField, new ExplicitOrderDto(List.of(2023, 2027))).sqlExpression(qr);
+    assertThat(sql).isEqualTo("case when `alias_field` is null then 1 when `alias_field` = 2023 then 2 when `alias_field` = 2027 then 3 else 4 end");
+
+    sql = new CompiledOrderBy(aliasedTypedField, new ExplicitOrderDto(List.of("A", "B"))).sqlExpression(qr);
+    assertThat(sql).isEqualTo("case when `alias_field` is null then 1 when `alias_field` = 'A' then 2 when `alias_field` = 'B' then 3 else 4 end");
   }
 
   @Test
@@ -650,5 +668,20 @@ public class TestSQLTranslator {
               .isEqualTo(translate(compileQuery(q2)))
               .isEqualTo("select `pnl` from `dataset.baseStore` where `pnl` > 5 group by `pnl`");
     }
+  }
+
+  @Test
+  void testCriteriaWithAliasedField() {
+    SQLTranslatorQueryRewriter qr = new SQLTranslatorQueryRewriter();
+    Field a = new AliasedField("a");
+
+    String sql = compileCriteria(criterion(a, eq("aaa"))).sqlExpression(qr);
+    assertThat(sql).isEqualTo("`a` = 'aaa'");
+
+    sql = compileCriteria(criterion(a, eq(123))).sqlExpression(qr);
+    assertThat(sql).isEqualTo("`a` = 123");
+
+    sql = compileCriteria(criterion(a, eq(true))).sqlExpression(qr);
+    assertThat(sql).isEqualTo("`a` = true");
   }
 }

@@ -6,7 +6,6 @@ import io.squashql.query.compiled.CompiledCriteria;
 import io.squashql.query.compiled.CompiledOrderBy;
 import io.squashql.query.compiled.CteRecordTable;
 import io.squashql.store.UnknownType;
-import io.squashql.type.TypedField;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -157,24 +156,28 @@ public class SQLTranslator {
     }
   }
 
-  public static Function<Object, String> getQuoteFn(TypedField field, QueryRewriter queryRewriter) {
-    Class<?> fType = field.type();
-    if (Number.class.isAssignableFrom(fType)
-            || fType.equals(double.class)
-            || fType.equals(int.class)
-            || fType.equals(long.class)
-            || fType.equals(float.class)
-            || fType.equals(boolean.class)
-            || fType.equals(Boolean.class)
-            || fType.equals(UnknownType.class)
-            || fType.equals(Lists.LongList.class)) {
+  /**
+   * Sometimes the type of the field is unknown (cf. {@link io.squashql.type.AliasedTypedField}). In that case, we use the
+   * type of the object to quote to determine its type. It should be correct in most cases.
+   */
+  public static Function<Object, String> getQuoteFn(Class<?> fieldType, Class<?> guessedClass, QueryRewriter queryRewriter) {
+    if (fieldType.equals(UnknownType.class)) {
+      return getQuoteFn(guessedClass, guessedClass, queryRewriter);
+    } else if (Number.class.isAssignableFrom(fieldType)
+            || fieldType.equals(double.class)
+            || fieldType.equals(int.class)
+            || fieldType.equals(long.class)
+            || fieldType.equals(float.class)
+            || fieldType.equals(boolean.class)
+            || fieldType.equals(Boolean.class)
+            || fieldType.equals(Lists.LongList.class)) {
       // no quote
       return String::valueOf;
-    } else if (fType.equals(String.class) || fType.equals(Lists.StringList.class)) {
+    } else if (fieldType.equals(String.class) || fieldType.equals(Lists.StringList.class)) {
       // quote
       return s -> "'" + queryRewriter.escapeSingleQuote(String.valueOf(s)) + "'";
     } else {
-      throw new RuntimeException("Not supported " + fType);
+      throw new RuntimeException("Not supported " + fieldType);
     }
   }
 
