@@ -15,8 +15,6 @@ import static io.squashql.query.dto.ConditionType.IN;
 @NoArgsConstructor // For Jackson
 public final class InConditionDto implements ConditionDto {
 
-  public final ConditionType type = IN;
-
   public Set<Object> values;
 
   public InConditionDto(Object value) {
@@ -36,6 +34,6 @@ public final class InConditionDto implements ConditionDto {
 
   @Override
   public ConditionType type() {
-    return this.type;
+    return IN;
   }
 }
