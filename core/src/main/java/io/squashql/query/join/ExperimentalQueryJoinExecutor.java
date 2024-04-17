@@ -139,7 +139,7 @@ public class ExperimentalQueryJoinExecutor {
 
   public Table execute(QueryJoinDto queryJoin) {
     Triple<String, List<TypedField>, List<CompiledMeasure>> sqlGenerationResult = generateSql(queryJoin);
-    log.info("sql=" + sqlGenerationResult.getOne());
+    log.info("sql={}", sqlGenerationResult.getOne());
     Table result = this.queryEngine.executeRawSql(sqlGenerationResult.getOne());
 
     List<? extends Class<?>> columnTypes = result.headers().stream().map(Header::type).toList();
