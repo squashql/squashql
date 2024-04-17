@@ -2,6 +2,7 @@ package io.squashql.query.join;
 
 import io.squashql.query.*;
 import io.squashql.query.compiled.CompiledMeasure;
+import io.squashql.query.compiled.CompiledOrderBy;
 import io.squashql.query.database.*;
 import io.squashql.query.dto.*;
 import io.squashql.table.ColumnarTable;
@@ -13,7 +14,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.Triple;
-import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.*;
@@ -25,7 +25,7 @@ import static io.squashql.query.database.SQLTranslator.addLimit;
 
 @Slf4j
 @AllArgsConstructor
-public class ExperimentalQueryMergeExecutor {
+public class ExperimentalQueryJoinExecutor {
 
   private final QueryEngine<?> queryEngine;
 
@@ -41,9 +41,9 @@ public class ExperimentalQueryMergeExecutor {
     Holder(String cteTableName, QueryDto query) {
       this.query = query;
       this.cteTableName = cteTableName;
-      this.queryResolver = new QueryResolver(query, ExperimentalQueryMergeExecutor.this.queryEngine.datastore().storeByName());
+      this.queryResolver = new QueryResolver(query, ExperimentalQueryJoinExecutor.this.queryEngine.datastore().storeByName());
       this.dbQuery = new DatabaseQuery(this.queryResolver.getScope().copyWithNewLimit(-1), new ArrayList<>(this.queryResolver.getMeasures().values()));
-      this.queryRewriter = ExperimentalQueryMergeExecutor.this.queryEngine.queryRewriter(this.dbQuery);
+      this.queryRewriter = ExperimentalQueryJoinExecutor.this.queryEngine.queryRewriter(this.dbQuery);
       this.originalTableName = query.table != null ? query.table.name : null;
       this.sql = SQLTranslator.translate(this.dbQuery, this.queryRewriter);
     }
@@ -62,36 +62,106 @@ public class ExperimentalQueryMergeExecutor {
     }
 
     // Start by setting all CTEs
-    StringBuilder sb = new StringBuilder("with ");
-    List<List<Twin<String>>> columnNamesAndNamesOrAliases = new ArrayList<>();
     Map<String, TypedField> typedFieldByFullName = new HashMap<>();
-    for (int i = 0; i < holders.size(); i++) {
-      Holder holder = holders.get(i);
-      sb.append(holder.queryRewriter.cteName(holder.cteTableName)).append(" as (").append(holder.sql);
-      sb.append(i < holders.size() - 1 ? "), " : ") ");
+    // Order is important here (hence LinkedHashMap). The columns from first queries will take precedence over the last queries
+    Map<String, String> fullNameByAliasOrFullName = new LinkedHashMap<>();
+    StringJoiner joiner = new StringJoiner(", ", "with ", "");
+    for (Holder holder : holders) {
+      joiner.add(holder.queryRewriter.cteName(holder.cteTableName) + " as (" + holder.sql + ")");
 
-      columnNamesAndNamesOrAliases.add(
-              holder.queryResolver.getColumns().stream().map(f -> {
-                String fieldFullName = SqlUtils.getFieldFullName(holder.queryRewriter.cteName(holder.cteTableName), holder.queryRewriter.fieldName(getFieldName(f)));
-                typedFieldByFullName.put(fieldFullName, f);
-                return Tuples.twin(fieldFullName, f.alias() != null ? holder.queryRewriter.escapeAlias(f.alias()) : fieldFullName);
-              }).toList());
+      holder.queryResolver.getColumns().forEach(f -> {
+        String fieldFullName = SqlUtils.getFieldFullName(holder.queryRewriter.cteName(holder.cteTableName), holder.queryRewriter.fieldName(getFieldName(f)));
+        typedFieldByFullName.put(fieldFullName, f);
+        fullNameByAliasOrFullName.putIfAbsent(
+                f.alias() != null ? holder.queryRewriter.escapeAlias(f.alias()) : fieldFullName,
+                fieldFullName);
+      });
     }
 
-    // Order is important here (hence LinkedHashMap). The columns from first queries will take precedence over the last queries
-    Map<String, String> fullNameByAlias = new LinkedHashMap<>();
-    for (List<Twin<String>> columnNamesOrAliases : columnNamesAndNamesOrAliases) {
-      for (Twin<String> nameOrAlias : columnNamesOrAliases) {
-        fullNameByAlias.putIfAbsent(nameOrAlias.getTwo(), nameOrAlias.getOne());
+    List<JoinDto> joinDtos = extractJoinDtos(queryJoin, holders);
+
+    QueryRewriter queryRewriter = holders.get(0).queryRewriter;
+    StringBuilder joinSb = new StringBuilder();
+    joinSb.append(" from ").append(queryRewriter.cteName(holders.get(0).cteTableName));
+    Set<String> toRemoveFromSelectSet = new HashSet<>();
+    for (int i = 0; i < joinDtos.size(); i++) {
+      Holder holder = holders.get(i + 1);
+      JoinDto jc = joinDtos.get(i);
+      joinSb
+              .append(" ")
+              .append(jc.type.name().toLowerCase())
+              .append(" join ")
+              .append(queryRewriter.cteName(holder.cteTableName));
+      if (jc.joinCriteria != null) {
+        joinSb
+                .append(" on ")
+                .append(sqlExpression(jc.joinCriteria, queryRewriter, holders, toRemoveFromSelectSet));
       }
     }
 
+    List<TypedField> selectedColumns = new ArrayList<>();
+    List<String> selectSt = new ArrayList<>();
+    for (Map.Entry<String, String> e : fullNameByAliasOrFullName.entrySet()) {
+      String alias = e.getKey();
+      String fullName = e.getValue();
+      if (!toRemoveFromSelectSet.contains(fullName)) {
+        if (alias.equals(fullName)) { // no alias
+          selectSt.add(alias);
+        } else {
+          selectSt.add(fullName + " as " + alias); // with alias
+        }
+        selectedColumns.add(typedFieldByFullName.get(fullName));
+      }
+    }
+
+    // The measures
+    List<CompiledMeasure> measures = new ArrayList<>();
+    Set<String> measureAliases = new HashSet<>();
+    for (Holder holder : holders) {
+      holder.query.measures.forEach(m -> {
+        selectSt.add(holder.queryRewriter.escapeAlias(m.alias()));
+        measures.add(holder.queryResolver.getMeasures().get(m));
+        measureAliases.add(m.alias());
+      });
+    }
+
+    StringBuilder sb = new StringBuilder(joiner.toString());
+    sb
+            .append(" select ")
+            .append(String.join(", ", selectSt))
+            .append(joinSb);
+
+    addOrderBy(sb, queryJoin.orders, queryRewriter, selectedColumns, measureAliases, holders);
+    addLimit(sb, queryLimit);
+
+    return Tuples.triple(sb.toString(), selectedColumns, measures);
+  }
+
+  public Table execute(QueryJoinDto queryJoin) {
+    Triple<String, List<TypedField>, List<CompiledMeasure>> sqlGenerationResult = generateSql(queryJoin);
+    log.info("sql={}", sqlGenerationResult.getOne());
+    Table result = this.queryEngine.executeRawSql(sqlGenerationResult.getOne());
+    List<? extends Class<?>> columnTypes = result.headers().stream().map(Header::type).toList();
+    Pair<List<Header>, List<List<Object>>> transform = transformToColumnFormat(
+            sqlGenerationResult.getTwo(),
+            sqlGenerationResult.getThree(),
+            columnTypes,
+            (columnType, name) -> columnType,
+            result.iterator(),
+            (i, row) -> row.get(i));
+    return new ColumnarTable(
+            transform.getOne(),
+            new HashSet<>(sqlGenerationResult.getThree()),
+            transform.getTwo());
+  }
+
+  private static List<JoinDto> extractJoinDtos(QueryJoinDto queryJoin, List<Holder> holders) {
     List<JoinDto> newJoins = new ArrayList<>();
     // Iterate over the joins to rewrite the condition when necessary (to use aliases)
     Map<Integer, Map<String, Field>> fieldBySquashQLExpression = new TreeMap<>();
     for (Field field : queryJoin.queries.get(0).columns) {
       TypedField typedField = holders.get(0).queryResolver.resolveField(field);
-      fieldBySquashQLExpression.computeIfAbsent(0, k -> new HashMap<>()).put(SqlUtils.squashqlExpression(typedField), field);
+      fieldBySquashQLExpression.computeIfAbsent(0, __ -> new HashMap<>()).put(SqlUtils.squashqlExpression(typedField), field);
     }
 
     int index = 1;
@@ -137,84 +207,7 @@ public class ExperimentalQueryMergeExecutor {
       }
       index++;
     }
-
-    QueryRewriter queryRewriter = holders.get(0).queryRewriter;
-    StringBuilder joinSb = new StringBuilder();
-    joinSb.append(" from ").append(queryRewriter.cteName(holders.get(0).cteTableName));
-    Set<String> toRemoveFromSelectSet = new HashSet<>();
-    for (int i = 0; i < newJoins.size(); i++) {
-      Holder holder = holders.get(i + 1);
-      JoinDto jc = newJoins.get(i);
-      joinSb
-              .append(" ")
-              .append(jc.type.name().toLowerCase())
-              .append(" join ")
-              .append(queryRewriter.cteName(holder.cteTableName));
-      if (jc.joinCriteria != null) {
-        joinSb
-                .append(" on ")
-                .append(sqlExpression(jc.joinCriteria, queryRewriter, holders, toRemoveFromSelectSet));
-      }
-    }
-
-    sb.append("select ");
-
-    List<TypedField> selectedColumns = new ArrayList<>();
-    List<String> selectSt = new ArrayList<>();
-    for (Map.Entry<String, String> e : fullNameByAlias.entrySet()) {
-      String alias = e.getKey();
-      String fullName = e.getValue();
-      if (!toRemoveFromSelectSet.contains(fullName)) {
-        if (alias.equals(fullName)) { // no alias
-          selectSt.add(alias);
-        } else {
-          selectSt.add(fullName + " as " + alias); // with alias
-        }
-        selectedColumns.add(typedFieldByFullName.get(fullName));
-      }
-    }
-
-    // The measures
-    for (Holder holder : holders) {
-      holder.query.measures.forEach(m -> selectSt.add(holder.queryRewriter.escapeAlias(m.alias())));
-    }
-
-    sb.append(String.join(", ", selectSt));
-
-    sb.append(joinSb);
-
-    List<CompiledMeasure> measures = new ArrayList<>();
-    Set<String> measureAliases = new HashSet<>();
-    for (Holder holder : holders) {
-      holder.query.measures.forEach(measure -> {
-        measures.add(holder.queryResolver.getMeasures().get(measure));
-        measureAliases.add(measure.alias());
-      });
-    }
-
-    addOrderBy(queryJoin.orders, sb, queryRewriter, selectedColumns, measureAliases, holders);
-    addLimit(queryLimit, sb);
-
-    return Tuples.triple(sb.toString(), selectedColumns, measures);
-  }
-
-  public Table execute(QueryJoinDto queryJoin) {
-    Triple<String, List<TypedField>, List<CompiledMeasure>> sqlGenerationResult = generateSql(queryJoin);
-    log.info("sql=" + sqlGenerationResult.getOne());
-    Table result = this.queryEngine.executeRawSql(sqlGenerationResult.getOne());
-
-    List<? extends Class<?>> columnTypes = result.headers().stream().map(Header::type).toList();
-    Pair<List<Header>, List<List<Object>>> transform = transformToColumnFormat(
-            sqlGenerationResult.getTwo(),
-            sqlGenerationResult.getThree(),
-            columnTypes,
-            (columnType, name) -> columnType,
-            result.iterator(),
-            (i, row) -> row.get(i));
-    return new ColumnarTable(
-            transform.getOne(),
-            new HashSet<>(sqlGenerationResult.getThree()),
-            transform.getTwo());
+    return newJoins;
   }
 
   /**
@@ -279,15 +272,17 @@ public class ExperimentalQueryMergeExecutor {
     }
   }
 
-  public static void addOrderBy(Map<Field, OrderDto> orders, StringBuilder sb, QueryRewriter queryRewriter,
-                                List<TypedField> selectedColumns, Set<String> measureAliases, List<Holder> holders) {
+  private static void addOrderBy(StringBuilder sb,
+                                 Map<Field, OrderDto> orders,
+                                 QueryRewriter queryRewriter,
+                                 List<TypedField> selectedColumns,
+                                 Set<String> measureAliases,
+                                 List<Holder> holders) {
+    List<CompiledOrderBy> orderBy = new ArrayList<>();
     if (orders != null && !orders.isEmpty()) {
-      sb.append(" order by ");
-      List<String> orderList = new ArrayList<>();
       for (Map.Entry<Field, OrderDto> e : orders.entrySet()) {
         Field key = e.getKey();
         TypedField typedField = null;
-        Holder h = null;
         String alias = key.alias();
         if (alias != null) {
           if (measureAliases.contains(alias)) {
@@ -296,7 +291,15 @@ public class ExperimentalQueryMergeExecutor {
             // Rely on the alias
             for (TypedField selectedColumn : selectedColumns) {
               if (alias.equals(selectedColumn.alias())) {
-                typedField = selectedColumn;
+                typedField = new AliasedTypedField(alias);
+                break;
+              }
+            }
+
+            // If not found, try to find a column with that name in all selectedColumns...
+            for (TypedField selectedColumn : selectedColumns) {
+              if (alias.equals(getFieldName(selectedColumn))) {
+                typedField = new AliasedTypedField(alias);
                 break;
               }
             }
@@ -307,17 +310,17 @@ public class ExperimentalQueryMergeExecutor {
           if (tableName != null) {
             for (Holder holder : holders) {
               if (holder.originalTableName.equals(tableName)) {
-                typedField = holder.queryResolver.resolveField(key);
-                h = holder;
+                TypedField rf = holder.queryResolver.resolveField(key);
+                typedField = new TableTypedField(holder.cteTableName, getFieldName(rf), rf.type(), true);
                 break;
               }
             }
           } else {
             // Take the first one that matches
             for (Holder holder : holders) {
-              if (holder.query.columns.stream().map(ExperimentalQueryMergeExecutor::getFieldName).collect(Collectors.toSet()).contains(getFieldName(key))) {
-                typedField = holder.queryResolver.resolveField(key);
-                h = holder;
+              if (holder.query.columns.stream().map(ExperimentalQueryJoinExecutor::getFieldName).collect(Collectors.toSet()).contains(getFieldName(key))) {
+                TypedField rf = holder.queryResolver.resolveField(key);
+                typedField = new TableTypedField(holder.cteTableName, getFieldName(rf), rf.type(), true);
                 break;
               }
             }
@@ -328,21 +331,13 @@ public class ExperimentalQueryMergeExecutor {
           throw new RuntimeException("Cannot resolve " + e.getKey());
         }
 
-
-        String orderByField = h == null ? queryRewriter.aliasOrFullExpression(typedField)
-                : SqlUtils.getFieldFullName(h.queryRewriter.cteName(h.cteTableName), h.queryRewriter.fieldName(getFieldName(typedField)));
-        OrderDto orderDto = e.getValue();
-        if (orderDto instanceof SimpleOrderDto sod) {
-          orderList.add(orderByField + " " + sod.order.name() + " nulls last");
-        } else {
-          throw new IllegalArgumentException("only ASC or DESC ordering is supporting");
-        }
+        orderBy.add(new CompiledOrderBy(typedField, e.getValue()));
       }
-      sb.append(String.join(", ", orderList));
     }
+    SQLTranslator.addOrderBy(sb, orderBy, queryRewriter);
   }
 
-  static CriteriaDto rewriteJoinCondition(CriteriaDto joinCondition, List<Holder> holders) {
+  private static CriteriaDto rewriteJoinCondition(CriteriaDto joinCondition, List<Holder> holders) {
     Map<String, String> cteByOriginalTableName = new HashMap<>();
     for (Holder holder : holders) {
       cteByOriginalTableName.put(holder.originalTableName, holder.cteTableName);
@@ -392,7 +387,7 @@ public class ExperimentalQueryMergeExecutor {
     return null;
   }
 
-  static String getFieldName(Field field) {
+  private static String getFieldName(Field field) {
     String alias = field.alias();
     if (alias != null) {
       return alias;
@@ -403,7 +398,7 @@ public class ExperimentalQueryMergeExecutor {
     }
   }
 
-  static String getFieldName(TypedField field) {
+  private static String getFieldName(TypedField field) {
     String alias = field.alias();
     if (alias != null) {
       return alias;

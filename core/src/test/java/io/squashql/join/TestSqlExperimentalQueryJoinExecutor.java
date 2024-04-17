@@ -1,5 +1,6 @@
 package io.squashql.join;
 
+import io.squashql.query.ATestExperimentalQueryJoinExecutor;
 import io.squashql.query.TableField;
 import io.squashql.query.builder.Query;
 import io.squashql.query.compiled.CompiledMeasure;
@@ -7,7 +8,7 @@ import io.squashql.query.database.*;
 import io.squashql.query.dto.JoinType;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.dto.QueryJoinDto;
-import io.squashql.query.join.ExperimentalQueryMergeExecutor;
+import io.squashql.query.join.ExperimentalQueryJoinExecutor;
 import io.squashql.store.Datastore;
 import io.squashql.store.Store;
 import io.squashql.table.Table;
@@ -29,9 +30,9 @@ import static io.squashql.query.Functions.criterion;
 import static io.squashql.query.dto.ConditionType.EQ;
 
 /**
- * Test sql generation, not the execution. See {@link io.squashql.query.ATestExperimentalQueryResultMerge}.
+ * Test sql generation, not the execution. See {@link ATestExperimentalQueryJoinExecutor}.
  */
-public class TestExperimentalQueryMergeExecutor {
+public class TestSqlExperimentalQueryJoinExecutor {
 
   static final String storeA = "A";
   static final String storeB = "B";
@@ -51,7 +52,7 @@ public class TestExperimentalQueryMergeExecutor {
   static final TableField C_d = new TableField(storeC, "d");
   static final TableField C_g = new TableField(storeC, "g");
 
-  static final ExperimentalQueryMergeExecutor ex = new ExperimentalQueryMergeExecutor(new FakeQueryEngine());
+  static final ExperimentalQueryJoinExecutor ex = new ExperimentalQueryJoinExecutor(new FakeQueryEngine());
 
   static class FakeQueryEngine implements QueryEngine<Datastore> {
 
@@ -70,7 +71,7 @@ public class TestExperimentalQueryMergeExecutor {
       return () -> {
         Map<String, Store> map = new HashMap<>();
         try {
-          java.lang.reflect.Field[] fields = TestExperimentalQueryMergeExecutor.class.getDeclaredFields();
+          java.lang.reflect.Field[] fields = TestSqlExperimentalQueryJoinExecutor.class.getDeclaredFields();
           for (java.lang.reflect.Field field : fields) {
             Class<?> type = field.getType();
             if (type.equals(TableField.class)) {

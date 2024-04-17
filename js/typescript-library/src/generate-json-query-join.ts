@@ -1,9 +1,9 @@
 import * as fs from "fs"
-import {TableField} from "./field"
+import {Field, TableField} from "./field"
 import {avg, sum} from "./measure"
 import {JoinType} from "./query"
 import {from} from "./queryBuilder"
-import {OrderKeyword, SimpleOrder} from "./order"
+import {ExplicitOrder, Order, OrderKeyword, SimpleOrder} from "./order"
 import {QueryJoin} from "./queryJoin"
 import {all, ConditionType, criterion_} from "./condition"
 
@@ -26,7 +26,10 @@ export function generateFromQueryJoin() {
           .select([c3], [], [avg("max", new TableField("f3"))])
           .build()
 
-  const orders = new Map([[a, new SimpleOrder(OrderKeyword.ASC)], [c3, new SimpleOrder(OrderKeyword.DESC)]])
+  const orders: Map<Field, Order> = new Map()
+  orders.set(a, new SimpleOrder(OrderKeyword.ASC))
+  orders.set(c3, new SimpleOrder(OrderKeyword.DESC))
+  orders.set(b2, new ExplicitOrder(["aa", "bb"]))
   const q = new QueryJoin(query1)
           .join(query2, JoinType.LEFT,
                   all([

@@ -321,7 +321,10 @@ public class TestJavascriptLibrary {
                     all(
                             criterion(b1, b2, ConditionType.EQ),
                             criterion(c1, c2, ConditionType.EQ)))
-            .orderBy(Map.of(a, new SimpleOrderDto(OrderKeywordDto.ASC), c3, new SimpleOrderDto(OrderKeywordDto.DESC)))
+            .orderBy(Map.of(
+                    a, new SimpleOrderDto(OrderKeywordDto.ASC),
+                    c3, new SimpleOrderDto(OrderKeywordDto.DESC),
+                    b2, new ExplicitOrderDto(List.of("aa", "bb"))))
             .join(query3, JoinType.INNER)
             .limit(12);
 
