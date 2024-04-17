@@ -131,10 +131,29 @@ public class ExperimentalQueryJoinExecutor {
             .append(String.join(", ", selectSt))
             .append(joinSb);
 
-    addOrderBy(queryJoin.orders, sb, queryRewriter, selectedColumns, measureAliases, holders);
-    addLimit(queryLimit, sb);
+    addOrderBy(sb, queryJoin.orders, queryRewriter, selectedColumns, measureAliases, holders);
+    addLimit(sb, queryLimit);
 
     return Tuples.triple(sb.toString(), selectedColumns, measures);
+  }
+
+  public Table execute(QueryJoinDto queryJoin) {
+    Triple<String, List<TypedField>, List<CompiledMeasure>> sqlGenerationResult = generateSql(queryJoin);
+    log.info("sql=" + sqlGenerationResult.getOne());
+    Table result = this.queryEngine.executeRawSql(sqlGenerationResult.getOne());
+
+    List<? extends Class<?>> columnTypes = result.headers().stream().map(Header::type).toList();
+    Pair<List<Header>, List<List<Object>>> transform = transformToColumnFormat(
+            sqlGenerationResult.getTwo(),
+            sqlGenerationResult.getThree(),
+            columnTypes,
+            (columnType, name) -> columnType,
+            result.iterator(),
+            (i, row) -> row.get(i));
+    return new ColumnarTable(
+            transform.getOne(),
+            new HashSet<>(sqlGenerationResult.getThree()),
+            transform.getTwo());
   }
 
   private static List<JoinDto> extractJoinDtos(QueryJoinDto queryJoin, List<Holder> holders) {
@@ -190,25 +209,6 @@ public class ExperimentalQueryJoinExecutor {
       index++;
     }
     return newJoins;
-  }
-
-  public Table execute(QueryJoinDto queryJoin) {
-    Triple<String, List<TypedField>, List<CompiledMeasure>> sqlGenerationResult = generateSql(queryJoin);
-    log.info("sql=" + sqlGenerationResult.getOne());
-    Table result = this.queryEngine.executeRawSql(sqlGenerationResult.getOne());
-
-    List<? extends Class<?>> columnTypes = result.headers().stream().map(Header::type).toList();
-    Pair<List<Header>, List<List<Object>>> transform = transformToColumnFormat(
-            sqlGenerationResult.getTwo(),
-            sqlGenerationResult.getThree(),
-            columnTypes,
-            (columnType, name) -> columnType,
-            result.iterator(),
-            (i, row) -> row.get(i));
-    return new ColumnarTable(
-            transform.getOne(),
-            new HashSet<>(sqlGenerationResult.getThree()),
-            transform.getTwo());
   }
 
   /**
@@ -273,15 +273,14 @@ public class ExperimentalQueryJoinExecutor {
     }
   }
 
-  public static void addOrderBy(Map<Field, OrderDto> orders,
-                                StringBuilder sb,
-                                QueryRewriter queryRewriter,
-                                List<TypedField> selectedColumns,
-                                Set<String> measureAliases,
-                                List<Holder> holders) {
+  private static void addOrderBy(StringBuilder sb,
+                                 Map<Field, OrderDto> orders,
+                                 QueryRewriter queryRewriter,
+                                 List<TypedField> selectedColumns,
+                                 Set<String> measureAliases,
+                                 List<Holder> holders) {
+    List<CompiledOrderBy> orderBy = new ArrayList<>();
     if (orders != null && !orders.isEmpty()) {
-      sb.append(" order by ");
-      List<String> orderList = new ArrayList<>();
       for (Map.Entry<Field, OrderDto> e : orders.entrySet()) {
         Field key = e.getKey();
         TypedField typedField = null;
@@ -325,14 +324,13 @@ public class ExperimentalQueryJoinExecutor {
           throw new RuntimeException("Cannot resolve " + e.getKey());
         }
 
-        CompiledOrderBy compiledOrderBy = new CompiledOrderBy(typedField, e.getValue());
-        orderList.add(compiledOrderBy.sqlExpression(queryRewriter));
+        orderBy.add(new CompiledOrderBy(typedField, e.getValue()));
       }
-      sb.append(String.join(", ", orderList));
     }
+    SQLTranslator.addOrderBy(sb, orderBy, queryRewriter);
   }
 
-  static CriteriaDto rewriteJoinCondition(CriteriaDto joinCondition, List<Holder> holders) {
+  private static CriteriaDto rewriteJoinCondition(CriteriaDto joinCondition, List<Holder> holders) {
     Map<String, String> cteByOriginalTableName = new HashMap<>();
     for (Holder holder : holders) {
       cteByOriginalTableName.put(holder.originalTableName, holder.cteTableName);
@@ -382,7 +380,7 @@ public class ExperimentalQueryJoinExecutor {
     return null;
   }
 
-  static String getFieldName(Field field) {
+  private static String getFieldName(Field field) {
     String alias = field.alias();
     if (alias != null) {
       return alias;
@@ -393,7 +391,7 @@ public class ExperimentalQueryJoinExecutor {
     }
   }
 
-  static String getFieldName(TypedField field) {
+  private static String getFieldName(TypedField field) {
     String alias = field.alias();
     if (alias != null) {
       return alias;

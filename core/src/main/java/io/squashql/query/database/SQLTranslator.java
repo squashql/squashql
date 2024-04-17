@@ -50,7 +50,7 @@ public class SQLTranslator {
     }
     addHavingConditions(statement, query.havingCriteria(), queryRewriter);
     addOrderBy(statement, query.orderBy(), queryRewriter);
-    addLimit(query.limit(), statement);
+    addLimit(statement, query.limit());
     return statement.toString();
   }
 
@@ -62,14 +62,14 @@ public class SQLTranslator {
     statement.append(String.join(", ", cteRecordTables.stream().map(t -> t.sqlExpression(qr)).toList())).append(" ");
   }
 
-  private static void addOrderBy(StringBuilder statement, List<CompiledOrderBy> orderBy, QueryRewriter qr) {
+  public static void addOrderBy(StringBuilder statement, List<CompiledOrderBy> orderBy, QueryRewriter qr) {
     if (!orderBy.isEmpty()) {
-      statement.append(" order by ");
-      statement.append(String.join(", ", orderBy.stream().map(t -> t.sqlExpression(qr)).toList())).append(" ");
+      statement.append(" order by ")
+              .append(String.join(", ", orderBy.stream().map(t -> t.sqlExpression(qr)).toList())).append(" ");
     }
   }
 
-  public static void addLimit(int limit, StringBuilder statement) {
+  public static void addLimit(StringBuilder statement, int limit) {
     if (limit > 0) {
       statement.append(" limit ").append(limit);
     }
