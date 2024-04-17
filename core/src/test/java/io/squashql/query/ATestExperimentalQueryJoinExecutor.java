@@ -3,7 +3,6 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.*;
-import io.squashql.query.dto.QueryJoinDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
@@ -20,7 +19,7 @@ import static io.squashql.query.dto.OrderKeywordDto.DESC;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
+public abstract class ATestExperimentalQueryJoinExecutor extends ABaseTestQuery {
 
   String storeA = "StoreA" + getClass().getSimpleName().toLowerCase();
   String storeB = "StoreB" + getClass().getSimpleName().toLowerCase();
@@ -418,6 +417,33 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             Arrays.asList("3", 4d, getDoubleNullJoinValue()),
             List.of("0", 4d, 10d),
             List.of("1", 2d, 20d));
+  }
+
+  @Test
+  void testOrderByAliasedField() {
+    QueryDto queryL = Query
+            .from(this.storeA)
+            .select(List.of(this.idA), List.of(this.priceASum))
+            .build();
+
+    QueryDto queryR = Query
+            .from(this.storeB)
+            .select(List.of(this.idB), List.of(this.priceBSum))
+            .build();
+
+    Map<Field, OrderDto> orders = new LinkedHashMap<>();
+    // This orderBy can work even if we do not really know where the "idA" comes from...
+    orders.put(new AliasedField(((TableField) this.idA).fieldName), new SimpleOrderDto(DESC));
+    QueryJoinDto jq = QueryJoinDto.from(queryL).join(queryR, JoinType.LEFT, criterion(this.idB, this.idA, ConditionType.EQ))
+            .orderBy(orders)
+            .limit(-1);
+    Table result = this.executor.executeExperimentalQueryMerge(jq);
+    Assertions.assertThat(result.headers().stream().map(Header::name).toList())
+            .containsExactly(this.storeA + ".idA", "priceA", "priceB");
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList("3", 4d, getDoubleNullJoinValue()),
+            List.of("1", 2d, 20d),
+            List.of("0", 4d, 10d));
   }
 
   /**

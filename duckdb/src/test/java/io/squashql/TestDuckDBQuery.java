@@ -1,10 +1,12 @@
 package io.squashql;
 
+import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.*;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.DuckDBQueryEngine;
 import io.squashql.query.dto.*;
 import io.squashql.query.exception.LimitExceedException;
+import io.squashql.query.join.ExperimentalQueryJoinExecutor;
 import io.squashql.query.measure.ParametrizedMeasure;
 import io.squashql.table.Table;
 import io.squashql.transaction.DuckDBDataLoader;
@@ -242,5 +244,20 @@ public class TestDuckDBQuery {
     Assertions.assertThatThrownBy(() -> this.executor.executeQuery(query))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Parameter 'value' was expected but not provided");
+  }
+
+  @Test
+  void test() {
+    String json = TestUtil.readAllLines("query.json");
+    QueryJoinDto r = JacksonUtil.deserialize(json, QueryJoinDto.class);
+    TableTypedField productName = new TableTypedField("product", "product_name", String.class);
+    TableTypedField productKey = new TableTypedField("recommendation", "product_key", String.class);
+    TableTypedField storeKey = new TableTypedField("recommendation", "store_key", String.class);
+    TableTypedField simulationId = new TableTypedField("recommendation", "simulation_id", String.class);
+    setup(Map.of("product", List.of(productName), "recommendation", List.of(storeKey, productKey, simulationId)), () -> {
+    });
+    ExperimentalQueryJoinExecutor experimentalQueryJoinExecutor = new ExperimentalQueryJoinExecutor(this.executor.queryEngine);
+    experimentalQueryJoinExecutor.execute(r).show();
+    System.out.println(r);
   }
 }

@@ -1,5 +1,6 @@
 package io.squashql.join;
 
+import io.squashql.query.ATestExperimentalQueryJoinExecutor;
 import io.squashql.query.TableField;
 import io.squashql.query.builder.Query;
 import io.squashql.query.compiled.CompiledMeasure;
@@ -29,7 +30,7 @@ import static io.squashql.query.Functions.criterion;
 import static io.squashql.query.dto.ConditionType.EQ;
 
 /**
- * Test sql generation, not the execution. See {@link io.squashql.query.ATestExperimentalQueryResultMerge}.
+ * Test sql generation, not the execution. See {@link ATestExperimentalQueryJoinExecutor}.
  */
 public class TestSqlExperimentalQueryJoinExecutor {
 

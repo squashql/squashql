@@ -295,6 +295,14 @@ public class ExperimentalQueryJoinExecutor {
                 break;
               }
             }
+
+            // If not found, try to find a column with that name in all selectedColumns...
+            for (TypedField selectedColumn : selectedColumns) {
+              if (alias.equals(getFieldName(selectedColumn))) {
+                typedField = new AliasedTypedField(alias);
+                break;
+              }
+            }
           }
         } else {
           // We assume it is a TableField, otherwise it is not supported
