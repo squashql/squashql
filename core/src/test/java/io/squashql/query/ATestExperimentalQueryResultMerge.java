@@ -394,6 +394,8 @@ public abstract class ATestExperimentalQueryResultMerge extends ABaseTestQuery {
             Arrays.asList("3", 4d, getDoubleNullJoinValue()));
   }
 
+  // TODO order by with first elements
+
   /**
    * Returns the value of a double when the join fails.
    */

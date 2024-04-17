@@ -2,6 +2,7 @@ package io.squashql.query.join;
 
 import io.squashql.query.*;
 import io.squashql.query.compiled.CompiledMeasure;
+import io.squashql.query.compiled.CompiledOrderBy;
 import io.squashql.query.database.*;
 import io.squashql.query.dto.*;
 import io.squashql.table.ColumnarTable;
@@ -284,7 +285,6 @@ public class ExperimentalQueryJoinExecutor {
       for (Map.Entry<Field, OrderDto> e : orders.entrySet()) {
         Field key = e.getKey();
         TypedField typedField = null;
-        Holder h = null;
         String alias = key.alias();
         if (alias != null) {
           if (measureAliases.contains(alias)) {
@@ -293,7 +293,7 @@ public class ExperimentalQueryJoinExecutor {
             // Rely on the alias
             for (TypedField selectedColumn : selectedColumns) {
               if (alias.equals(selectedColumn.alias())) {
-                typedField = selectedColumn;
+                typedField = new AliasedTypedField(alias);
                 break;
               }
             }
@@ -304,8 +304,8 @@ public class ExperimentalQueryJoinExecutor {
           if (tableName != null) {
             for (Holder holder : holders) {
               if (holder.originalTableName.equals(tableName)) {
-                typedField = holder.queryResolver.resolveField(key);
-                h = holder;
+                TypedField rf = holder.queryResolver.resolveField(key);
+                typedField = new TableTypedField(holder.cteTableName, getFieldName(rf), rf.type(), true);
                 break;
               }
             }
@@ -313,8 +313,8 @@ public class ExperimentalQueryJoinExecutor {
             // Take the first one that matches
             for (Holder holder : holders) {
               if (holder.query.columns.stream().map(ExperimentalQueryJoinExecutor::getFieldName).collect(Collectors.toSet()).contains(getFieldName(key))) {
-                typedField = holder.queryResolver.resolveField(key);
-                h = holder;
+                TypedField rf = holder.queryResolver.resolveField(key);
+                typedField = new TableTypedField(holder.cteTableName, getFieldName(rf), rf.type(), true);
                 break;
               }
             }
@@ -325,15 +325,8 @@ public class ExperimentalQueryJoinExecutor {
           throw new RuntimeException("Cannot resolve " + e.getKey());
         }
 
-
-        String orderByField = h == null ? queryRewriter.aliasOrFullExpression(typedField)
-                : SqlUtils.getFieldFullName(h.queryRewriter.cteName(h.cteTableName), h.queryRewriter.fieldName(getFieldName(typedField)));
-        OrderDto orderDto = e.getValue();
-        if (orderDto instanceof SimpleOrderDto sod) {
-          orderList.add(orderByField + " " + sod.order.name() + " nulls last");
-        } else {
-          throw new IllegalArgumentException("only ASC or DESC ordering is supporting");
-        }
+        CompiledOrderBy compiledOrderBy = new CompiledOrderBy(typedField, e.getValue());
+        orderList.add(compiledOrderBy.sqlExpression(queryRewriter));
       }
       sb.append(String.join(", ", orderList));
     }
