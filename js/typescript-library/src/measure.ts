@@ -89,6 +89,7 @@ export class ComparisonMeasureReferencePosition implements Measure {
 
   constructor(readonly alias: string,
               readonly comparisonMethod: ComparisonMethod,
+              public clearFilters: boolean,
               readonly measure: Measure,
               readonly referencePosition?: Map<Field, string>,
               readonly columnSetKey?: ColumnSetKey,
@@ -103,6 +104,7 @@ export class ComparisonMeasureReferencePosition implements Measure {
       "@class": this.class,
       "alias": this.alias,
       "comparisonMethod": this.comparisonMethod,
+      "clearFilters": this.clearFilters,
       "measure": this.measure,
       "columnSetKey": this.columnSetKey,
       "elements": this.elements,
@@ -120,6 +122,7 @@ export class ComparisonMeasureGrandTotal implements Measure {
 
   constructor(readonly alias: string,
               readonly comparisonMethod: ComparisonMethod,
+              public clearFilters: boolean,
               readonly measure: Measure) {
   }
 
@@ -127,6 +130,7 @@ export class ComparisonMeasureGrandTotal implements Measure {
     return {
       "@class": this.class,
       "alias": this.alias,
+      "clearFilters": this.clearFilters,
       "comparisonMethod": this.comparisonMethod,
       "measure": this.measure,
     }
@@ -143,6 +147,7 @@ export class PartialHierarchicalComparisonMeasure implements Measure {
   readonly expression?: string
 
   constructor(readonly alias: string,
+              public clearFilters: boolean,
               readonly comparisonMethod: ComparisonMethod,
               readonly measure: Measure,
               readonly axis: Axis,
@@ -153,6 +158,7 @@ export class PartialHierarchicalComparisonMeasure implements Measure {
     return {
       "@class": this.class,
       "alias": this.alias,
+      "clearFilters": this.clearFilters,
       "comparisonMethod": this.comparisonMethod,
       "measure": this.measure,
       "axis": this.axis,
@@ -309,54 +315,54 @@ export function comparisonMeasureWithPeriod(alias: string,
                                             measure: Measure,
                                             referencePosition: Map<Field, string>,
                                             period: Period): Measure {
-  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, undefined, undefined, period)
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, true, measure, referencePosition, undefined, undefined, period)
 }
 
 export function comparisonMeasureWithinSameGroup(alias: string,
                                                  comparisonMethod: ComparisonMethod,
                                                  measure: Measure,
                                                  referencePosition: Map<Field, string>): Measure {
-  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition)
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, true, measure, referencePosition)
 }
 
 export function comparisonMeasureWithinSameGroupInOrder(alias: string,
                                                         comparisonMethod: ComparisonMethod,
                                                         measure: Measure,
                                                         referencePosition: Map<Field, string>,
-                                                        elements: Array<any>): Measure {
-  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, referencePosition, undefined, elements)
+                                                        elements: Array<any>): ComparisonMeasureReferencePosition {
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, true, measure, referencePosition, undefined, elements)
 }
 
 export function comparisonMeasureWithParent(alias: string,
                                             comparisonMethod: ComparisonMethod,
                                             measure: Measure,
-                                            ancestors: Array<Field>): Measure {
-  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, undefined, undefined, undefined, undefined, ancestors, false)
+                                            ancestors: Array<Field>): ComparisonMeasureReferencePosition {
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, true, measure, undefined, undefined, undefined, undefined, ancestors, false)
 }
 
 export function comparisonMeasureWithGrandTotalAlongAncestors(alias: string,
                                                               comparisonMethod: ComparisonMethod,
                                                               measure: Measure,
-                                                              ancestors: Array<Field>): Measure {
-  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, measure, undefined, undefined, undefined, undefined, ancestors, true)
+                                                              ancestors: Array<Field>): ComparisonMeasureReferencePosition {
+  return new ComparisonMeasureReferencePosition(alias, comparisonMethod, true, measure, undefined, undefined, undefined, undefined, ancestors, true)
 }
 
 export function comparisonMeasureWithGrandTotal(alias: string,
                                                 comparisonMethod: ComparisonMethod,
-                                                measure: Measure): Measure {
-  return new ComparisonMeasureGrandTotal(alias, comparisonMethod, measure)
+                                                measure: Measure): ComparisonMeasureGrandTotal {
+  return new ComparisonMeasureGrandTotal(alias, comparisonMethod, true, measure)
 }
 
 export function comparisonMeasureWithParentOfAxis(alias: string,
                                                   comparisonMethod: ComparisonMethod,
                                                   measure: Measure,
-                                                  axis: Axis) {
-  return new PartialHierarchicalComparisonMeasure(alias, comparisonMethod, measure, axis, false)
+                                                  axis: Axis): PartialHierarchicalComparisonMeasure {
+  return new PartialHierarchicalComparisonMeasure(alias, true, comparisonMethod, measure, axis, false)
 }
 
 export function comparisonMeasureWithTotalOfAxis(alias: string,
                                                  comparisonMethod: ComparisonMethod,
                                                  measure: Measure,
-                                                 axis: Axis) {
-  return new PartialHierarchicalComparisonMeasure(alias, comparisonMethod, measure, axis, true)
+                                                 axis: Axis): PartialHierarchicalComparisonMeasure {
+  return new PartialHierarchicalComparisonMeasure(alias, true, comparisonMethod, measure, axis, true)
 }

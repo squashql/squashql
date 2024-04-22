@@ -52,6 +52,7 @@ function transformToObject(key: string, value: any, reviverFallback?: (key: stri
     return new ComparisonMeasureReferencePosition(
             value["alias"],
             value["comparisonMethod"],
+            value["clearFilters"],
             transformToObject("measure", value["measure"]),
             m.size == 0 ? undefined : m,
             value["columnSetKey"],
@@ -74,9 +75,10 @@ function transformToObject(key: string, value: any, reviverFallback?: (key: stri
     return new ComparisonMeasureGrandTotal(
             value["alias"],
             value["comparisonMethod"],
+            value["clearFilters"],
             transformToObject("measure", value["measure"]))
   } else if (clazz === PACKAGE + "PartialHierarchicalComparisonMeasure") {
-    return new PartialHierarchicalComparisonMeasure(value["alias"], value["comparisonMethod"], transformToObject("measure", value["measure"]), value["axis"], value["grandTotalAlongAncestors"])
+    return new PartialHierarchicalComparisonMeasure(value["alias"], value["clearFilters"], value["comparisonMethod"], transformToObject("measure", value["measure"]), value["axis"], value["grandTotalAlongAncestors"])
   } else if (clazz === PACKAGE + "ExpressionMeasure") {
     return new ExpressionMeasure(value["alias"], value["expression"])
   } else if (clazz === PACKAGE + "LongConstantMeasure") {

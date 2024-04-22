@@ -53,6 +53,7 @@ public record PartialMeasureVisitor(
             measure.alias,
             measure.expression,
             measure.comparisonMethod,
+            measure.clearFilters,
             measure.measure.accept(this));
   }
 
