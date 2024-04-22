@@ -65,7 +65,7 @@ public class ComparisonMeasureReferencePosition implements Measure {
                                             @NonNull ComparisonMethod comparisonMethod,
                                             @NonNull Measure measure,
                                             @NonNull List<Field> ancestors) {
-    this(alias, comparisonMethod, null, false, measure, null, null, null, null, ancestors, false); // FIXME
+    this(alias, comparisonMethod, null, true, measure, null, null, null, null, ancestors, false); // FIXME
   }
 
   public ComparisonMeasureReferencePosition(@NonNull String alias,
@@ -73,7 +73,7 @@ public class ComparisonMeasureReferencePosition implements Measure {
                                             @NonNull Measure measure,
                                             @NonNull List<Field> ancestors,
                                             boolean grandTotalAlongAncestors) {
-    this(alias, comparisonMethod, null, false, measure, null, null, null, null, ancestors, grandTotalAlongAncestors); // FIXME
+    this(alias, comparisonMethod, null, true, measure, null, null, null, null, ancestors, grandTotalAlongAncestors); // FIXME
   }
 
   /**

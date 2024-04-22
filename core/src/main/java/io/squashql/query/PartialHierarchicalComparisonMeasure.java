@@ -14,6 +14,7 @@ public class PartialHierarchicalComparisonMeasure implements Measure {
   public String expression;
   @Getter
   public ComparisonMethod comparisonMethod;
+  public boolean clearFilters;
   @Getter
   public Measure measure;
   public Axis axis;
@@ -21,11 +22,13 @@ public class PartialHierarchicalComparisonMeasure implements Measure {
 
   public PartialHierarchicalComparisonMeasure(String alias,
                                               ComparisonMethod comparisonMethod,
+                                              boolean clearFilters,
                                               Measure measure,
                                               Axis axis,
                                               boolean grandTotalAlongAncestors) {
     this.alias = alias;
     this.comparisonMethod = comparisonMethod;
+    this.clearFilters = clearFilters;
     this.measure = measure;
     this.axis = axis;
     this.grandTotalAlongAncestors = grandTotalAlongAncestors;

@@ -263,17 +263,17 @@ public class Functions {
 
   // COMPARISONS
 
-  public static Measure comparisonMeasureWithParentOfAxis(String alias,
+  public static PartialHierarchicalComparisonMeasure comparisonMeasureWithParentOfAxis(String alias,
                                                           ComparisonMethod comparisonMethod,
                                                           Measure underlyingMeasure,
                                                           Axis axis) {
-    return new PartialHierarchicalComparisonMeasure(alias, comparisonMethod, underlyingMeasure, axis, false);
+    return new PartialHierarchicalComparisonMeasure(alias, comparisonMethod, true, underlyingMeasure, axis, false);
   }
 
-  public static Measure comparisonMeasureWithTotalOfAxis(String alias,
+  public static PartialHierarchicalComparisonMeasure comparisonMeasureWithTotalOfAxis(String alias,
                                                          ComparisonMethod comparisonMethod,
                                                          Measure underlyingMeasure,
                                                          Axis axis) {
-    return new PartialHierarchicalComparisonMeasure(alias, comparisonMethod, underlyingMeasure, axis, true);
+    return new PartialHierarchicalComparisonMeasure(alias, comparisonMethod, true, underlyingMeasure, axis, true);
   }
 }

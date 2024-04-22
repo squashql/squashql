@@ -94,20 +94,21 @@ public record PartialMeasureVisitor(
   @Override
   public Measure visit(PartialHierarchicalComparisonMeasure measure) {
     List<Field> ancestors = getAncestors(measure.axis);
-    return new ComparisonMeasureReferencePosition(
+    ComparisonMeasureReferencePosition cmrp = new ComparisonMeasureReferencePosition(
             measure.alias,
             measure.comparisonMethod,
             measure.measure.accept(this),
             ancestors,
             measure.grandTotalAlongAncestors
     );
+    cmrp.clearFilters = measure.clearFilters;
+    return cmrp;
   }
 
   private List<Field> getAncestors(Axis axis) {
-    List<Field> ancestors = axis != null ? switch (axis) {
+    return axis != null ? switch (axis) {
       case ROW -> this.pivotTableContext.cleansedColumns;
       case COLUMN -> this.pivotTableContext.cleansedRows;
     } : this.pivotTableContext.cleansedColumns;
-    return ancestors;
   }
 }

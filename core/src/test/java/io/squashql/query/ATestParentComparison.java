@@ -136,6 +136,30 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   }
 
   @Test
+  void testFiltersNotCleared() {
+    Measure pop = Functions.sum("population", this.population);
+    List<Field> fields = List.of(this.continent, this.country, this.city);
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, fields);
+    pOp.clearFilters = false;
+
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(criterion(this.country, eq("canada")))
+            .select(List.of(this.country, this.city), List.of(pOp))
+            .rollup(List.of(this.country, this.city))
+            .build(); // query only parent
+
+    Table result = this.executor.executeQuery(query);
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, 1d),
+            Arrays.asList("canada", TOTAL, 1d),
+            Arrays.asList("canada", "montreal", .5833333333333334d),
+            Arrays.asList("canada", "otawa", .16666666666666666d),
+            Arrays.asList("canada", "toronto", 0.25d)
+    );
+  }
+
+  @Test
   void testWithMissingAncestor() {
     Measure pop = Functions.sum("population", this.population);
     ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, tableFields(List.of("country", "continent")));
