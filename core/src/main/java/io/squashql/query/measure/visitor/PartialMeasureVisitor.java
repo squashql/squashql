@@ -37,6 +37,7 @@ public record PartialMeasureVisitor(
             measure.expression,
             measure.comparisonMethod,
             measure.comparisonOperator,
+            measure.clearFilters,
             measure.measure.accept(this),
             measure.columnSetKey,
             measure.elements,

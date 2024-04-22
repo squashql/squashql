@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 @NoArgsConstructor
 public final class MeasureUtils {
@@ -83,7 +84,7 @@ public final class MeasureUtils {
           CompiledComparisonMeasureReferencePosition cm,
           QueryScope queryScope) {
     AtomicReference<CompiledCriteria> copy = new AtomicReference<>(queryScope.whereCriteria() == null ? null : CompiledCriteria.deepCopy(queryScope.whereCriteria()));
-    Consumer<TypedField> criteriaRemover = field -> copy.set(removeCriteriaOnField(field, copy.get()));
+    Consumer<TypedField> criteriaRemover = cm.clearFilters() ? field -> copy.set(removeCriteriaOnField(field, copy.get())) : Function.identity()::apply;
     groupColumns.forEach(criteriaRemover);
     Optional.ofNullable(cm.referencePosition())
             // to handle ComparisonMeasure with no GroupColumn => previous member, first member...
