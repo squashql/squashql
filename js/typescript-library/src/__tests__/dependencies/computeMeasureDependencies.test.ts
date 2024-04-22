@@ -56,7 +56,7 @@ describe('computeMeasureDependencies', () => {
 
   it('should compute dependencies for ComparisonMeasureReferencePosition', () => {
     const array = []
-    const measure = new ComparisonMeasureReferencePosition('alias', ComparisonMethod.ABSOLUTE_DIFFERENCE, mockMeasure1, new Map([[mockField1, 'value1']]))
+    const measure = new ComparisonMeasureReferencePosition('alias', ComparisonMethod.ABSOLUTE_DIFFERENCE, true, mockMeasure1, new Map([[mockField1, 'value1']]))
     const result = dependencies.computeMeasureDependencies(measure, array)
 
     expect(result).toEqual(expect.arrayContaining([mockField1]))
@@ -69,6 +69,7 @@ describe('computeMeasureDependencies', () => {
     const measure = new ComparisonMeasureReferencePosition(
             'alias',
             ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            true,
             mockMeasure1,
             referencePosition,
             ColumnSetKey.GROUP,
@@ -105,7 +106,7 @@ describe('computeMeasureDependencies', () => {
 
   it('should compute dependencies for ComparisonMeasureGrandTotal', () => {
     const underlying = new BinaryOperationMeasure('alias', BinaryOperator.PLUS, mockMeasure1, mockMeasure2)
-    const measure = new ComparisonMeasureGrandTotal('alias', ComparisonMethod.DIVIDE, underlying)
+    const measure = new ComparisonMeasureGrandTotal('alias', ComparisonMethod.DIVIDE, true, underlying)
     const array = []
     const result = dependencies.computeMeasureDependencies(measure, array)
 

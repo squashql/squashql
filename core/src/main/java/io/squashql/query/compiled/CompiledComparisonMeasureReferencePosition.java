@@ -12,6 +12,7 @@ import java.util.function.BiFunction;
 public record CompiledComparisonMeasureReferencePosition(String alias,
                                                          ComparisonMethod comparisonMethod,
                                                          BiFunction<Object, Object, Object> comparisonOperator,
+                                                         boolean clearFilters,
                                                          CompiledMeasure measure,
                                                          Map<TypedField, String> referencePosition,
                                                          CompiledPeriod period,

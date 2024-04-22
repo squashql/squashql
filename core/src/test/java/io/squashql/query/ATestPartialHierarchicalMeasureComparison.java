@@ -110,6 +110,49 @@ public abstract class ATestPartialHierarchicalMeasureComparison extends ABaseTes
   }
 
   @Test
+  void testPercentOfTotalOfAxisClearFilters() {
+    Measure pop = Functions.sum("amount", this.amount);
+    List<Field> fields = List.of(this.continent, this.country, this.city);
+    Measure pOp = comparisonMeasureWithTotalOfAxis("percentOfParent", DIVIDE, pop, COLUMN);
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(criterion(this.country, eq("france")))
+            .select(fields, List.of(pop, pOp))
+            .rollup(fields)
+            .build();
+
+    Table result = this.executor.executeQuery(query);
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, GRAND_TOTAL, 11d, .5238095238095238d),
+            Arrays.asList("eu", TOTAL, TOTAL, 11d, 11d / 21d),
+            Arrays.asList("eu", "france", TOTAL, 11d, 11d / 21d),
+            Arrays.asList("eu", "france", "lyon", 4d, 4d / 21d),
+            Arrays.asList("eu", "france", "paris", 7d, 7d / 21d));
+  }
+
+  @Test
+  void testPercentOfTotalOfAxisFiltersNotCleared() {
+    Measure pop = Functions.sum("amount", this.amount);
+    List<Field> fields = List.of(this.continent, this.country, this.city);
+    PartialHierarchicalComparisonMeasure pOp = comparisonMeasureWithTotalOfAxis("percentOfParent", DIVIDE, pop, COLUMN);
+    pOp.clearFilters = false;
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(criterion(this.country, eq("france")))
+            .select(fields, List.of(pop, pOp))
+            .rollup(fields)
+            .build();
+
+    Table result = this.executor.executeQuery(query);
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, GRAND_TOTAL, 11d, 1d),
+            Arrays.asList("eu", TOTAL, TOTAL, 11d, 11d / 11d),
+            Arrays.asList("eu", "france", TOTAL, 11d, 11d / 11d),
+            Arrays.asList("eu", "france", "lyon", 4d, 4d / 11d),
+            Arrays.asList("eu", "france", "paris", 7d, 7d / 11d));
+  }
+
+  @Test
   void testCompareWithParentOfColumnPivotTable(TestInfo testInfo) {
     Measure pop = Functions.sum("amount", this.amount);
     List<Field> fields = List.of(this.continent, this.country, this.city);

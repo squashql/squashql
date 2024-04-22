@@ -78,9 +78,8 @@ const incrVar95 = new ParametrizedMeasure("incr var measure", "INCREMENTAL_VAR",
   "quantile": 0.95,
   "ancestors": [a, b, c],
 })
-const percentOfParentAlongAncestors = new PartialHierarchicalComparisonMeasure("pop along ancestors", ComparisonMethod.DIVIDE, sumA, Axis.ROW, false)
-const compareWithGrandTotalAlongAncestors = new PartialHierarchicalComparisonMeasure("gt along ancestors", ComparisonMethod.DIVIDE, sumA, Axis.ROW, false)
-
+const percentOfParentAlongAncestors = new PartialHierarchicalComparisonMeasure("pop along ancestors", true, ComparisonMethod.DIVIDE, sumA, Axis.ROW, false)
+const compareWithGrandTotalAlongAncestors = new PartialHierarchicalComparisonMeasure("gt along ancestors", false, ComparisonMethod.DIVIDE, sumA, Axis.ROW, false)
 
 describe('serialization', () => {
 

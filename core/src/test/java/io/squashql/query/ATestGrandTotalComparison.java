@@ -105,7 +105,7 @@ public abstract class ATestGrandTotalComparison extends ABaseTestQuery {
   }
 
   @Test
-  void testCrossjoinWithOtherColumnAnFilters() {
+  void testCrossjoinWithOtherColumnAndFilters() {
     // Filter on other category
     QueryDto query = Query
             .from(this.storeName)
@@ -135,5 +135,25 @@ public abstract class ATestGrandTotalComparison extends ABaseTestQuery {
             Arrays.asList("hobbies", "eu", "france", "paris", 1d, 1d / gt),
             Arrays.asList("home", "eu", "france", "lyon", 2d, 2d / gt),
             Arrays.asList("home", "eu", "france", "paris", 2d, 2d / gt));
+  }
+
+  @Test
+  void testFiltersNotCleared() {
+    ComparisonMeasureGrandTotal percentOfGT = new ComparisonMeasureGrandTotal("percentOfParent", ComparisonMethod.DIVIDE, this.amount);
+    percentOfGT.clearFilters = false;
+    List<Field> fields = tableFields(List.of("country", "city"));
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(Functions.criterion(tableField("country"), Functions.eq("france")))
+            .select(fields, List.of(this.amount, percentOfGT))
+            .rollup(fields)
+            .build();
+
+    Table result = this.executor.executeQuery(query);
+    Assertions.assertThat(result).containsExactly(
+            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, 7.1d, 1d),
+            Arrays.asList("france", TOTAL, 7.1d, 1d),
+            Arrays.asList("france", "lyon", 3.1d, .4366197183098592d),
+            Arrays.asList("france", "paris", 4d, .5633802816901409d));
   }
 }

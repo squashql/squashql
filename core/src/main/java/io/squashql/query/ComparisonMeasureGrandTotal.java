@@ -14,15 +14,14 @@ public class ComparisonMeasureGrandTotal implements Measure {
   public String expression;
   @Getter
   public ComparisonMethod comparisonMethod;
+  public boolean clearFilters;
   @Getter
   public Measure measure;
 
   public ComparisonMeasureGrandTotal(@NonNull String alias,
                                      @NonNull ComparisonMethod comparisonMethod,
                                      @NonNull Measure measure) {
-    this.alias = alias;
-    this.comparisonMethod = comparisonMethod;
-    this.measure = measure;
+    this(alias, null, comparisonMethod, true, measure);
   }
 
   @Override

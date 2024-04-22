@@ -355,6 +355,7 @@ public class QueryResolver {
             m.alias,
             m.comparisonMethod,
             m.comparisonOperator,
+            m.clearFilters,
             compileMeasure(m.measure, topMeasure),
             m.referencePosition == null ? null : m.referencePosition.entrySet().stream().collect(Collectors.toMap(e -> resolveField(e.getKey()), Map.Entry::getValue)),
             compilePeriod(m.period),
