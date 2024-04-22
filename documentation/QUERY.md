@@ -1045,6 +1045,18 @@ comparisonMeasureWithParentOfAxis("parent", DIVIDE, value, ROW)
 | germany | berlin | 7/7   | 4/7   | 3/7   |
 | germany | munich | 5/5   | 3/5   | 2/5   |
 
+Note that query filters on ancestors are ignored when computing a hierarchical measure. Using the following measure
+```typescript
+comparisonMeasureWithParentOfAxis("parent", DIVIDE, value, COLUMN)
+```
+with `where(criterion(city, eq("lyon"))` would lead to:
+
+|         |        | total | 2023  | 2024  |
+|---------|--------|-------|-------|-------|
+| total   | total  | 44/44 | 23/23 | 21/21 |
+| france  | total  | 31/44 | 15/23 | 16/21 |
+| france  | lyon   | 9/31  | 5/15  | 4/16  |
+
 ##### Group comparison - ColumnSet
 
 This type of comparison is mainly used for what-if comparison but not limited to it. It involves the creation of a new
