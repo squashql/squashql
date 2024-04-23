@@ -1,10 +1,10 @@
 import * as fs from "fs"
-import {TableField, tableField, tableFields} from "./field"
-import {avg, sum} from "./measure"
-import {createPivotTableQueryMerge} from "./querier"
-import {from} from "./queryBuilder"
-import {JoinType} from "./query"
-import {QueryMerge} from "./queryMerge"
+import {TableField, tableField, tableFields} from "../field"
+import {avg, sum} from "../measure"
+import {createPivotTableQueryMerge} from "../querier"
+import {from} from "../queryBuilder"
+import {JoinType} from "../query"
+import {QueryMerge} from "../queryMerge"
 
 export function generateFromQueryMergePivot() {
   const fields = tableFields(["a", "b"])
@@ -20,5 +20,5 @@ export function generateFromQueryMergePivot() {
   q.minify = false
   const pivotQuery = createPivotTableQueryMerge(q, {rows: [tableField("a")], columns: [tableField("b")]})
   const data = JSON.stringify(pivotQuery)
-  fs.writeFileSync('json/build-from-query-merge-pivot.json', data)
+  fs.writeFileSync('./json/build-from-query-merge-pivot.json', data)
 }

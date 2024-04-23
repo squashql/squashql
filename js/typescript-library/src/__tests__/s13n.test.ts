@@ -1,4 +1,4 @@
-import {buildQuery} from "../generate-json-queryDto"
+import {buildQuery} from "../__tests__/generate-json-queryDto"
 import {deserialize, squashQLReviver} from "../util"
 import {Query} from "../query"
 import {AliasedField, Field, TableField} from "../field"

@@ -1,13 +1,13 @@
 import * as fs from "fs"
-import {GroupColumnSet} from "./columnset"
-import {all, ConditionType, criterion, criterion_, eq, gt, havingCriterion, lt} from "./condition"
-import {AliasedField, TableField, tableField, tableFields} from "./field"
-import {avg, ExpressionMeasure, sum} from "./measure"
-import {OrderKeyword} from "./order"
-import {Action, QueryCacheParameter} from "./parameter"
-import {JoinType} from "./query"
-import {from, fromSubQuery} from "./queryBuilder"
-import {VirtualTable} from "./virtualtable"
+import {GroupColumnSet} from "../columnset"
+import {all, ConditionType, criterion, criterion_, eq, gt, havingCriterion, lt} from "../condition"
+import {AliasedField, TableField, tableField, tableFields} from "../field"
+import {avg, ExpressionMeasure, sum} from "../measure"
+import {OrderKeyword} from "../order"
+import {Action, QueryCacheParameter} from "../parameter"
+import {JoinType} from "../query"
+import {from, fromSubQuery} from "../queryBuilder"
+import {VirtualTable} from "../virtualtable"
 
 function generateFromQuery() {
   const values = new Map(Object.entries({
@@ -56,7 +56,7 @@ function generateFromQuery() {
   q.withParameter(new QueryCacheParameter(Action.NOT_USE))
 
   const data = JSON.stringify(q)
-  fs.writeFileSync('json/build-from-query.json', data)
+  fs.writeFileSync('./json/build-from-query.json', data)
 }
 
 function generateFromSubQuery() {
@@ -73,7 +73,7 @@ function generateFromSubQuery() {
           .build()
 
   const data = JSON.stringify(q)
-  fs.writeFileSync('json/build-from-subquery.json', data)
+  fs.writeFileSync('./json/build-from-subquery.json', data)
 }
 
 export function generateJsonQuery() {
