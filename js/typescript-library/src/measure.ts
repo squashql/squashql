@@ -250,6 +250,10 @@ export function countDistinct(alias: string, field: Field): Measure {
   return new AggregatedMeasure(alias, field, "count", true)
 }
 
+export function anyValue(alias: string, field: Field): Measure {
+  return new AggregatedMeasure(alias, field, "any_value")
+}
+
 // aggIf
 
 export function sumIf(alias: string, field: Field, criterion: Criteria): Measure {

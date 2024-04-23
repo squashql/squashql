@@ -1,4 +1,4 @@
-import {JoinType, Query, Table} from "./query"
+import {JoinType, Query, Table} from "../query"
 import {
   AggregatedMeasure,
   avgIf,
@@ -19,7 +19,7 @@ import {
   integer,
   ParametrizedMeasure,
   sum,
-} from "./measure"
+} from "../measure"
 import {
   _in,
   all,
@@ -37,14 +37,14 @@ import {
   like,
   lt,
   or
-} from "./condition"
+} from "../condition"
 import * as fs from "fs"
-import {OrderKeyword} from "./order"
-import {GroupColumnSet} from "./columnset"
-import {AliasedField, ConstantField, currentDate, lower, TableField, tableField, upper} from "./field"
-import {Month} from "./period"
-import {Action, QueryCacheParameter} from "./parameter"
-import {countRows, totalCount} from "./index"
+import {OrderKeyword} from "../order"
+import {GroupColumnSet} from "../columnset"
+import {AliasedField, ConstantField, currentDate, lower, TableField, tableField, upper} from "../field"
+import {Month} from "../period"
+import {Action, QueryCacheParameter} from "../parameter"
+import {countRows, totalCount} from "../index"
 
 export function buildQuery(): Query {
   const table = Table.from("myTable")
@@ -58,14 +58,12 @@ export function buildQuery(): Query {
           .withColumn(a)
           .withColumn(b)
 
-  const price = new AggregatedMeasure("price.sum", new TableField("price"), "sum")
+  const price = sum("price.sum", new TableField("price"))
   q.withMeasure(price)
   const priceFood = new AggregatedMeasure("alias", new TableField("price"), "sum", false, criterion(new TableField("category"), eq("food")))
   q.withMeasure(priceFood)
-  const plus = new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood)
-  q.withMeasure(plus)
-  const relDiff = new BinaryOperationMeasure("relDiff", BinaryOperator.RELATIVE_DIFFERENCE, price, priceFood)
-  q.withMeasure(relDiff)
+  q.withMeasure(new BinaryOperationMeasure("plusMeasure", BinaryOperator.PLUS, price, priceFood))
+  q.withMeasure(new BinaryOperationMeasure("relDiff", BinaryOperator.RELATIVE_DIFFERENCE, price, priceFood))
   const expression = new ExpressionMeasure("myExpression", "sum(price*quantity)")
   q.withMeasure(expression)
   q.withMeasure(countRows)
@@ -159,5 +157,5 @@ export function buildQuery(): Query {
 
 export function generateFromQueryDto() {
   const q = buildQuery()
-  fs.writeFileSync('json/build-from-querydto.json', JSON.stringify(q))
+  fs.writeFileSync('./json/build-from-querydto.json', JSON.stringify(q))
 }

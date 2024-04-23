@@ -1,8 +1,8 @@
 import * as fs from "fs"
-import {TableField, tableField, tableFields} from "./field"
-import {avg} from "./measure"
-import {createPivotTableQuery} from "./querier"
-import {from} from "./queryBuilder"
+import {TableField, tableField, tableFields} from "../field"
+import {avg} from "../measure"
+import {createPivotTableQuery} from "../querier"
+import {from} from "../queryBuilder"
 
 export function generateFromQueryPivot() {
   const fields = tableFields(["a", "b"])
@@ -19,5 +19,5 @@ export function generateFromQueryPivot() {
     hiddenTotals: [tableField("b")]
   })
   const data = JSON.stringify(pivotQuery)
-  fs.writeFileSync('json/build-from-query-pivot.json', data)
+  fs.writeFileSync('./json/build-from-query-pivot.json', data)
 }

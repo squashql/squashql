@@ -1,5 +1,5 @@
 import * as fs from "fs"
-import {PivotTableQueryResult, QueryResult} from "./querier"
+import {PivotTableQueryResult, QueryResult} from "../querier"
 
 function generateFromQueryResult() {
   const r: QueryResult = {
@@ -19,7 +19,7 @@ function generateFromQueryResult() {
     }],
     debug: undefined,
   }
-  fs.writeFileSync('json/build-from-query-result.json', JSON.stringify(r))
+  fs.writeFileSync('./json/build-from-query-result.json', JSON.stringify(r))
 }
 
 function generateFromPivotQueryResult() {
@@ -33,7 +33,7 @@ function generateFromPivotQueryResult() {
     values: ["key4"],
     hiddenTotals: ["key2"]
   }
-  fs.writeFileSync('json/build-from-pivot-query-result.json', JSON.stringify(r))
+  fs.writeFileSync('./json/build-from-pivot-query-result.json', JSON.stringify(r))
 }
 
 export function generateQueryResults() {

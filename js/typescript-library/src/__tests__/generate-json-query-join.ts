@@ -1,11 +1,11 @@
 import * as fs from "fs"
-import {Field, TableField} from "./field"
-import {avg, sum} from "./measure"
-import {JoinType} from "./query"
-import {from} from "./queryBuilder"
-import {ExplicitOrder, Order, OrderKeyword, SimpleOrder} from "./order"
-import {QueryJoin} from "./queryJoin"
-import {all, ConditionType, criterion_} from "./condition"
+import {Field, TableField} from "../field"
+import {avg, sum} from "../measure"
+import {JoinType} from "../query"
+import {from} from "../queryBuilder"
+import {ExplicitOrder, Order, OrderKeyword, SimpleOrder} from "../order"
+import {QueryJoin} from "../queryJoin"
+import {all, ConditionType, criterion_} from "../condition"
 
 export function generateFromQueryJoin() {
   const a = new TableField("myTable1.a")
@@ -41,5 +41,5 @@ export function generateFromQueryJoin() {
           .limit(12)
   q.minify = true
   const data = JSON.stringify(q)
-  fs.writeFileSync('json/build-from-query-join.json', data)
+  fs.writeFileSync('./json/build-from-query-join.json', data)
 }
