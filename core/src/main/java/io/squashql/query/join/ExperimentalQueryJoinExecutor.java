@@ -50,15 +50,10 @@ public class ExperimentalQueryJoinExecutor {
   }
 
   public Triple<String, List<TypedField>, List<CompiledMeasure>> generateSql(QueryJoinDto queryJoin) {
-    int queryLimit = queryJoin.limit <= 0 ? LIMIT_DEFAULT_VALUE : queryJoin.limit;
-
     List<Holder> holders = new ArrayList<>(queryJoin.queries.size());
     for (int i = 0; i < queryJoin.queries.size(); i++) {
-      if (i == 0) {
-        holders.add(new Holder(queryJoin.table.name, queryJoin.queries.get(i)));
-      } else {
-        holders.add(new Holder(queryJoin.table.joins.get(i - 1).table.name, queryJoin.queries.get(i)));
-      }
+      String cteTableName = i == 0 ? queryJoin.table.name : queryJoin.table.joins.get(i - 1).table.name;
+      holders.add(new Holder(cteTableName, queryJoin.queries.get(i)));
     }
 
     // Start by setting all CTEs
@@ -102,13 +97,13 @@ public class ExperimentalQueryJoinExecutor {
     List<TypedField> selectedColumns = new ArrayList<>();
     List<String> selectSt = new ArrayList<>();
     for (Map.Entry<String, String> e : fullNameByAliasOrFullName.entrySet()) {
-      String alias = e.getKey();
+      String aliasOrFullName = e.getKey();
       String fullName = e.getValue();
       if (!toRemoveFromSelectSet.contains(fullName)) {
-        if (alias.equals(fullName)) { // no alias
-          selectSt.add(alias);
+        if (aliasOrFullName.equals(fullName)) { // no alias
+          selectSt.add(fullName);
         } else {
-          selectSt.add(fullName + " as " + alias); // with alias
+          selectSt.add(fullName + " as " + aliasOrFullName); // with alias
         }
         selectedColumns.add(typedFieldByFullName.get(fullName));
       }
@@ -132,7 +127,7 @@ public class ExperimentalQueryJoinExecutor {
             .append(joinSb);
 
     addOrderBy(sb, queryJoin.orders, queryRewriter, selectedColumns, measureAliases, holders);
-    addLimit(sb, queryLimit);
+    addLimit(sb, queryJoin.limit <= 0 ? LIMIT_DEFAULT_VALUE : queryJoin.limit);
 
     return Tuples.triple(sb.toString(), selectedColumns, measures);
   }
