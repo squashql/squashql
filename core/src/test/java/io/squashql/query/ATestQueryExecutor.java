@@ -35,6 +35,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
+    TableTypedField scenario = new TableTypedField(this.storeName, "scenario", String.class);
     TableTypedField ean = new TableTypedField(this.storeName, "ean", String.class);
     TableTypedField eanId = new TableTypedField(this.storeName, "eanId", int.class);
     TableTypedField category = new TableTypedField(this.storeName, "category", String.class);
@@ -42,27 +43,27 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     TableTypedField price = new TableTypedField(this.storeName, "price", double.class);
     TableTypedField qty = new TableTypedField(this.storeName, "quantity", int.class);
     TableTypedField isFood = new TableTypedField(this.storeName, "isFood", boolean.class);
-    return Map.of(this.storeName, List.of(eanId, ean, category, subcategory, price, qty, isFood));
+    return Map.of(this.storeName, List.of(scenario, eanId, ean, category, subcategory, price, qty, isFood));
   }
 
   @Override
   protected void loadData() {
-    this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
-            new Object[]{0, "starbuck's coffee", "drink", null, 2d, 10, true}, // use a string with '
-            new Object[]{1, "cookie", "food", "biscuit", 3d, 20, true},
-            new Object[]{2, "shirt", "cloth", null, 10d, 3, false}
+    this.tm.load(this.storeName, List.of(
+            new Object[]{MAIN_SCENARIO_NAME, 0, "starbuck's coffee", "drink", null, 2d, 10, true}, // use a string with '
+            new Object[]{MAIN_SCENARIO_NAME, 1, "cookie", "food", "biscuit", 3d, 20, true},
+            new Object[]{MAIN_SCENARIO_NAME, 2, "shirt", "cloth", null, 10d, 3, false}
     ));
 
-    this.tm.load("s1", this.storeName, List.of(
-            new Object[]{0, "starbuck's coffee", "drink", null, 4d, 10, true},
-            new Object[]{1, "cookie", "food", "biscuit", 3d, 20, true},
-            new Object[]{2, "shirt", "cloth", null, 10d, 3, false}
+    this.tm.load(this.storeName, List.of(
+            new Object[]{"s1", 0, "starbuck's coffee", "drink", null, 4d, 10, true},
+            new Object[]{"s1", 1, "cookie", "food", "biscuit", 3d, 20, true},
+            new Object[]{"s1", 2, "shirt", "cloth", null, 10d, 3, false}
     ));
 
-    this.tm.load("s2", this.storeName, List.of(
-            new Object[]{0, "starbuck's coffee", "drink", null, 1.5d, 10, true},
-            new Object[]{1, "cookie", "food", "biscuit", 3d, 20, true},
-            new Object[]{2, "shirt", "cloth", null, 10d, 3, false}
+    this.tm.load(this.storeName, List.of(
+            new Object[]{"s2", 0, "starbuck's coffee", "drink", null, 1.5d, 10, true},
+            new Object[]{"s2", 1, "cookie", "food", "biscuit", 3d, 20, true},
+            new Object[]{"s2", 2, "shirt", "cloth", null, 10d, 3, false}
     ));
   }
 

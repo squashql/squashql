@@ -41,12 +41,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>io.squashql</groupId>
-      <artifactId>squashql-spark</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>

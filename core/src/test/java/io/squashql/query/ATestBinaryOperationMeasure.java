@@ -13,8 +13,6 @@ import org.junit.jupiter.api.TestInstance;
 import java.util.List;
 import java.util.Map;
 
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
-
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
@@ -32,7 +30,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
 
   @Override
   protected void loadData() {
-    this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
+    this.tm.load(this.storeName, List.of(
             new Object[]{"bottle", "drink", 20d, 10l},
             new Object[]{"cookie", "food", 30d, 10l}
     ));

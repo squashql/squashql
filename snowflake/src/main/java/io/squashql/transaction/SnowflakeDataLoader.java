@@ -94,7 +94,7 @@ public class SnowflakeDataLoader implements DataLoader {
   }
 
   @Override
-  public void loadCsv(String scenario, String table, String path, String delimiter, boolean header) {
-    // Not implemented
+  public void loadCsv(String table, String path, String delimiter, boolean header) {
+    throw new RuntimeException("not implemented");
   }
 }

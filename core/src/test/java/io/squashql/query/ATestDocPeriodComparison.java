@@ -15,7 +15,6 @@ import java.util.Map;
 
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 /**
  * This test class is used to verify and print tables for the documentation. Nothing is asserted in those tests this is
@@ -37,7 +36,7 @@ public abstract class ATestDocPeriodComparison extends ABaseTestQuery {
 
   @Override
   protected void loadData() {
-    this.tm.load(MAIN_SCENARIO_NAME, "student", List.of(
+    this.tm.load("student", List.of(
             // 2022 - s1
             new Object[]{"Paul", "mathematics", 75, 2022, 1},
             new Object[]{"Paul", "english", 73, 2022, 1},

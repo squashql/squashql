@@ -1,9 +1,5 @@
 package io.squashql.query;
 
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.TableField.tableFields;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
-
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.dto.ConditionType;
@@ -12,16 +8,20 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.store.Datastore;
 import io.squashql.table.Table;
 import io.squashql.transaction.DataLoader;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Function;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.TableField.tableFields;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestQueryExecutorWithJoins {
@@ -64,11 +64,11 @@ public abstract class ATestQueryExecutorWithJoins {
     this.datastore = createDatastore();
     this.tm = createDataLoader();
 
-    this.tm.loadCsv(MAIN_SCENARIO_NAME, this.orders, pathFunction.apply("orders.csv").toString(), delimiter, header);
-    this.tm.loadCsv(MAIN_SCENARIO_NAME, this.shippers, pathFunction.apply("shippers.csv").toString(), delimiter, header);
-    this.tm.loadCsv(MAIN_SCENARIO_NAME, this.products, pathFunction.apply("products.csv").toString(), delimiter, header);
-    this.tm.loadCsv(MAIN_SCENARIO_NAME, this.orderDetails, pathFunction.apply("order_details.csv").toString(), delimiter, header);
-    this.tm.loadCsv(MAIN_SCENARIO_NAME, this.categories, pathFunction.apply("categories.csv").toString(), delimiter, header);
+    this.tm.loadCsv(this.orders, pathFunction.apply("orders.csv").toString(), delimiter, header);
+    this.tm.loadCsv(this.shippers, pathFunction.apply("shippers.csv").toString(), delimiter, header);
+    this.tm.loadCsv(this.products, pathFunction.apply("products.csv").toString(), delimiter, header);
+    this.tm.loadCsv(this.orderDetails, pathFunction.apply("order_details.csv").toString(), delimiter, header);
+    this.tm.loadCsv(this.categories, pathFunction.apply("categories.csv").toString(), delimiter, header);
 
     this.queryExecutor = new QueryExecutor(createQueryEngine(this.datastore));
   }

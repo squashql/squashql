@@ -85,12 +85,11 @@ public class SparkDataLoader implements DataLoader {
   }
 
   @Override
-  public void loadCsv(String scenario, String store, String path, String delimiter, boolean header) {
+  public void loadCsv(String store, String path, String delimiter, boolean header) {
     Dataset<Row> dataFrame = this.spark.read()
             .option("delimiter", delimiter)
             .option("header", true)
-            .csv(path)
-            .withColumn(SCENARIO_FIELD_NAME, functions.lit(scenario));
+            .csv(path);
 
     Table table = null;
     try {
