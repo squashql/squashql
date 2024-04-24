@@ -46,6 +46,10 @@ public class AggregatedMeasure implements BasicMeasure {
     this(alias, field, aggregationFunction, null);
   }
 
+  public AggregatedMeasure(@NonNull String alias, @NonNull Field field, @NonNull String aggregationFunction) {
+    this(alias, field, aggregationFunction, null);
+  }
+
   @Override
   public String alias() {
     return this.alias;

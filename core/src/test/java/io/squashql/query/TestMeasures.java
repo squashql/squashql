@@ -17,7 +17,7 @@ public class TestMeasures {
 
   @Test
   void testAggregatedMeasureConstructor() {
-    Assertions.assertThatThrownBy(() -> new AggregatedMeasure("null", null, AggregationFunction.SUM))
+    Assertions.assertThatThrownBy(() -> new AggregatedMeasure("null", (Field) null, AggregationFunction.SUM))
             .isInstanceOf(NullPointerException.class);
     Assertions.assertThatThrownBy(() -> new AggregatedMeasure("null", "field", null))
             .isInstanceOf(NullPointerException.class);
