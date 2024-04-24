@@ -32,7 +32,7 @@ public abstract class ATestDocGroupComparison extends ABaseTestQuery {
     TableTypedField salePrice = new TableTypedField("store", "saleprice", double.class);
     TableTypedField loavesSold = new TableTypedField("store", "loavessold", int.class);
     TableTypedField pos = new TableTypedField("store", "pointofsale", String.class);
-    return Map.of("store", List.of(salePrice, loavesSold, pos));
+    return Map.of("store", List.of(scenario, salePrice, loavesSold, pos));
   }
 
   @Override

@@ -6,7 +6,6 @@ import io.squashql.BigQueryUtil;
 import io.squashql.list.Lists;
 import io.squashql.type.TableTypedField;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,14 +33,9 @@ public class BigQueryDataLoader implements DataLoader {
   }
 
   public void dropAndCreateInMemoryTable(String tableName, List<TableTypedField> fields) {
-    List<TableTypedField> list = ImmutableListFactoryImpl.INSTANCE
-            .ofAll(fields)
-            .newWith(new TableTypedField(tableName, SCENARIO_FIELD_NAME, String.class))
-            .castToList();
-
     TableId tableId = TableId.of(this.datasetName, tableName);
 
-    List<com.google.cloud.bigquery.Field> fieldList = list.stream()
+    List<com.google.cloud.bigquery.Field> fieldList = fields.stream()
             .map(f -> {
               if (f.type().equals(Lists.LongList.class)) {
                 return Field.of(f.name(), StandardSQLTypeName.INT64).toBuilder().setMode(Field.Mode.REPEATED).build();
@@ -70,25 +64,18 @@ public class BigQueryDataLoader implements DataLoader {
   }
 
   @Override
-  public void load(String scenario, String store, List<Object[]> tuples) {
-    // Check the table contains a column scenario.
-    ensureScenarioColumnIsPresent(store);
-
+  public void load(String store, List<Object[]> tuples) {
     List<TableTypedField> fields = BigQueryServiceAccountDatastore.getFieldsOrNull(this.bigquery, this.datasetName, store);
     List<InsertAllRequest.RowToInsert> list = new ArrayList<>();
     for (Object[] tuple : tuples) {
       Map<String, Object> m = new HashMap<>();
       for (int i = 0; i < fields.size(); i++) {
         String name = fields.get(i).name();
-        if (!name.equals(SCENARIO_FIELD_NAME)) {
-          Object o = tuple[i];
-          if (o != null && (o.getClass().equals(LocalDate.class) || o.getClass().equals(LocalDateTime.class))) {
-            o = o.toString();
-          }
-          m.put(name, o);
-        } else {
-          m.put(name, scenario);
+        Object o = tuple[i];
+        if (o != null && (o.getClass().equals(LocalDate.class) || o.getClass().equals(LocalDateTime.class))) {
+          o = o.toString();
         }
+        m.put(name, o);
       }
       list.add(InsertAllRequest.RowToInsert.of(m));
     }
@@ -128,20 +115,12 @@ public class BigQueryDataLoader implements DataLoader {
         if (attempt < MAX_SLEEPS) {
           sleepTime <<= 1;
           attempt++;
-          log.info("table.insert, retry " + attempt);
+          log.info("table.insert, retry {}", attempt);
         } else {
           log.info("table.insert after " + MAX_SLEEPS + " attempts. Abort.");
           throw exception;
         }
       }
-    }
-  }
-
-  private void ensureScenarioColumnIsPresent(String store) {
-    List<TableTypedField> fields = BigQueryServiceAccountDatastore.getFieldsOrNull(this.bigquery, this.datasetName, store);
-    boolean found = fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
-    if (!found) {
-      throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));
     }
   }
 

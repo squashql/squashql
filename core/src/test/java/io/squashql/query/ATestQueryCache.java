@@ -46,6 +46,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
+    TableTypedField scenario = new TableTypedField(this.storeName, "scenario", String.class);
     TableTypedField ean = new TableTypedField(this.storeName, "ean", String.class);
     TableTypedField category = new TableTypedField(this.storeName, "category", String.class);
     TableTypedField price = new TableTypedField(this.storeName, "price", double.class);
@@ -56,7 +57,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     TableTypedField comp_price = new TableTypedField(this.competitorStoreName, "comp_price", double.class);
 
     return Map.of(
-            this.storeName, List.of(ean, category, price, qty),
+            this.storeName, List.of(scenario, ean, category, price, qty),
             this.competitorStoreName, List.of(comp_ean, comp_name, comp_price),
             this.other, List.of(ean, category, price)
     );
@@ -65,9 +66,9 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
   @Override
   protected void loadData() {
     this.tm.load(this.storeName, List.of(
-            new Object[]{"bottle", "drink", 2d, 10},
-            new Object[]{"cookie", "food", 3d, 20},
-            new Object[]{"shirt", "cloth", 10d, 3}
+            new Object[]{"base", "bottle", "drink", 2d, 10},
+            new Object[]{"base", "cookie", "food", 3d, 20},
+            new Object[]{"base", "shirt", "cloth", 10d, 3}
     ));
 
     this.tm.load(this.competitorStoreName, List.of(
@@ -99,13 +100,13 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("ps", "price"), sum("qs", "quantity")))
             .build();
     Table result = this.executor.executeQuery(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
+    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33L));
     assertCacheStats(0, 3);
 
     // Execute the same
     result = this.executor.executeQuery(query);
     assertCacheStats(3, 3);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
+    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33L));
 
     // New query but same columns, same measure
     query = Query
@@ -113,7 +114,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("qs", "quantity")))
             .build();
     result = this.executor.executeQuery(query);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 33l));
+    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 33L));
     assertCacheStats(5, 3);
   }
 
@@ -351,7 +352,7 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("ps", "price"), sum("qs", "quantity")))
             .build();
     Table result = execute(this.executor, query, paul);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
+    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33L));
     assertCacheStats(0, 3, paul);
     assertCacheStats(0, 0, peter);
 
@@ -359,13 +360,13 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
     result = execute(this.executor, query, paul);
     assertCacheStats(3, 3, paul);
     assertCacheStats(0, 0, peter);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
+    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33L));
 
     // Execute the same query, but different user
     result = execute(this.executor, query, peter);
     assertCacheStats(0, 3, peter);
     assertCacheStats(3, 3, paul);
-    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33l));
+    Assertions.assertThat(result).containsExactlyInAnyOrder(List.of("base", 15.0d, 33L));
 
     /// Test invalid cache for a given user
     query.withParameter(QueryCacheParameter.KEY, new QueryCacheParameter(QueryCacheParameter.Action.INVALIDATE));

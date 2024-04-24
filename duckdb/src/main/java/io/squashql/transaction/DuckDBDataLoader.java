@@ -44,7 +44,7 @@ public class DuckDBDataLoader implements DataLoader {
       for (TableTypedField field : fields) {
         sb.add("\"" + field.name() + "\" " + JdbcUtil.classToSqlType(field.type()));
       }
-      stmt.execute("create or replace table \"" + tableName + "\"" + sb + ";"); // REMOVE or replace
+      stmt.execute("create or replace table \"" + tableName + "\"" + sb + ";");
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
