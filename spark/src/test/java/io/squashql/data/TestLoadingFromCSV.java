@@ -16,7 +16,7 @@ import java.util.function.Function;
 
 public class TestLoadingFromCSV {
 
-  private static Function<String, Path> pathFunction = fileName -> {
+  private static final Function<String, Path> pathFunction = fileName -> {
     URL resource = Thread.currentThread().getContextClassLoader().getResource(fileName);
     try {
       if (resource == null) {
@@ -45,8 +45,8 @@ public class TestLoadingFromCSV {
     Dataset<Row> customersDS = datastore.get(customersStore);
     Dataset<Row> ordersDS = datastore.get(ordersStore);
     Assertions.assertThat(customersDS.count()).isEqualTo(91);
-    Assertions.assertThat(customersDS.columns().length).isEqualTo(7 + 1); // +1 because of scenario
+    Assertions.assertThat(customersDS.columns().length).isEqualTo(7);
     Assertions.assertThat(ordersDS.count()).isEqualTo(196);
-    Assertions.assertThat(ordersDS.columns().length).isEqualTo(5 + 1);  // +1 because of scenario
+    Assertions.assertThat(ordersDS.columns().length).isEqualTo(5);
   }
 }

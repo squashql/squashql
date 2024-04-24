@@ -46,7 +46,7 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
     TableTypedField category = new TableTypedField(this.storeName, "category", String.class);
     TableTypedField price = new TableTypedField(this.storeName, "price", double.class);
     TableTypedField qty = new TableTypedField(this.storeName, "quantity", int.class);
-    return Map.of(this.storeName, List.of(ean, category, price, qty));
+    return Map.of(this.storeName, List.of(scenario, ean, category, price, qty));
   }
 
   @Override
