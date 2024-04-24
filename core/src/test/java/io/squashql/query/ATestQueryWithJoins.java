@@ -1,9 +1,5 @@
 package io.squashql.query;
 
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.TableField.tableFields;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
-
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.dto.ConditionType;
@@ -12,12 +8,16 @@ import io.squashql.query.dto.QueryDto;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import io.squashql.util.TestUtil;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.TableField.tableFields;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -55,12 +55,12 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
 
   @Override
   protected void loadData() {
-    this.tm.load(MAIN_SCENARIO_NAME, this.orders, List.of(
+    this.tm.load(this.orders, List.of(
             new Object[]{0, 100},
             new Object[]{1, 101},
             new Object[]{2, 102}
     ));
-    this.tm.load(MAIN_SCENARIO_NAME, this.orderDetails, List.of(
+    this.tm.load(this.orderDetails, List.of(
             new Object[]{10, 0, 1001, 1},
             new Object[]{11, 0, 1002, 4},
             new Object[]{11, 0, 1003, 2},
@@ -68,12 +68,12 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
             new Object[]{13, 1, 1005, 1},
             new Object[]{14, 2, 1006, 8}
     ));
-    this.tm.load(MAIN_SCENARIO_NAME, this.shippers, List.of(
+    this.tm.load(this.shippers, List.of(
             new Object[]{100, "Speedy Express"},
             new Object[]{101, "United Package"},
             new Object[]{102, "Federal Shipping"}
     ));
-    this.tm.load(MAIN_SCENARIO_NAME, this.products, List.of(
+    this.tm.load(this.products, List.of(
             new Object[]{1001, "Chang", 10_001, 18d},
             new Object[]{1002, "Aniseed Syrup", 10_002, 20d},
             new Object[]{1003, "Genen Shouyu", 10_002, 4d},
@@ -81,7 +81,7 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
             new Object[]{1005, "Pavlova", 10_003, 6d},
             new Object[]{1006, "Camembert Pierrot", 10_004, 20d}
     ));
-    this.tm.load(MAIN_SCENARIO_NAME, this.categories, List.of(
+    this.tm.load(this.categories, List.of(
             new Object[]{10_001, "Beverages"},
             new Object[]{10_002, "Condiments"},
             new Object[]{10_003, "Confections"},

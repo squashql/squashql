@@ -17,7 +17,6 @@ import java.util.Map;
 import static io.squashql.query.Functions.*;
 import static io.squashql.query.agg.AggregationFunction.AVG;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -41,7 +40,7 @@ public abstract class ATestSubQuery extends ABaseTestQuery {
 
   @Override
   protected void loadData() {
-    this.tm.load(MAIN_SCENARIO_NAME, this.store, List.of(
+    this.tm.load(this.store, List.of(
             new Object[]{"group a", "Paul", "sql", 50},
             new Object[]{"group a", "Paul", "java", 70},
             new Object[]{"group a", "Peter", "sql", 45},

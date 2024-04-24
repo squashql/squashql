@@ -28,18 +28,19 @@ public abstract class ATestDocGroupComparison extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
+    TableTypedField scenario = new TableTypedField("store", "scenario", String.class);
     TableTypedField salePrice = new TableTypedField("store", "saleprice", double.class);
     TableTypedField loavesSold = new TableTypedField("store", "loavessold", int.class);
     TableTypedField pos = new TableTypedField("store", "pointofsale", String.class);
-    return Map.of("store", List.of(salePrice, loavesSold, pos));
+    return Map.of("store", List.of(scenario, salePrice, loavesSold, pos));
   }
 
   @Override
   protected void loadData() {
-    this.tm.load(MAIN_SCENARIO_NAME, "store", List.of(new Object[]{2d, 100, "A"}, new Object[]{2d, 80, "B"}));
-    this.tm.load("s1", "store", List.of(new Object[]{3d, 74, "A"}, new Object[]{3d, 50, "B"}));
-    this.tm.load("s2", "store", List.of(new Object[]{4d, 55, "A"}, new Object[]{4d, 20, "B"}));
-    this.tm.load("s3", "store", List.of(new Object[]{2d, 100, "A"}, new Object[]{3d, 50, "B"}));
+    this.tm.load("store", List.of(new Object[]{MAIN_SCENARIO_NAME, 2d, 100, "A"}, new Object[]{MAIN_SCENARIO_NAME, 2d, 80, "B"}));
+    this.tm.load("store", List.of(new Object[]{"s1", 3d, 74, "A"}, new Object[]{"s1", 3d, 50, "B"}));
+    this.tm.load("store", List.of(new Object[]{"s2", 4d, 55, "A"}, new Object[]{"s2", 4d, 20, "B"}));
+    this.tm.load("store", List.of(new Object[]{"s3", 2d, 100, "A"}, new Object[]{"s3", 3d, 50, "B"}));
   }
 
   @Test

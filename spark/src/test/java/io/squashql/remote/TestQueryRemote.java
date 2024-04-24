@@ -89,22 +89,23 @@ public class TestQueryRemote {
     QueryExecutor executor = new QueryExecutor(new SparkQueryEngine(datastore));
     SparkDataLoader tm = new SparkDataLoader(datastore.spark);
 
+    TableTypedField scenario = new TableTypedField(storeName, "scenario", String.class);
     TableTypedField ean = new TableTypedField(storeName, "ean", String.class);
     TableTypedField category = new TableTypedField(storeName, "category", String.class);
     TableTypedField price = new TableTypedField(storeName, "price", double.class);
     TableTypedField qty = new TableTypedField(storeName, "quantity", int.class);
     tm.createTemporaryTable(storeName, List.of(ean, category, price, qty));
 
-    tm.load(MAIN_SCENARIO_NAME, storeName, List.of(
-            new Object[]{"bottle", "drink", 2d, 10},
-            new Object[]{"cookie", "food", 3d, 20},
-            new Object[]{"shirt", "cloth", 10d, 3}
+    tm.load(storeName, List.of(
+            new Object[]{MAIN_SCENARIO_NAME, "bottle", "drink", 2d, 10},
+            new Object[]{MAIN_SCENARIO_NAME, "cookie", "food", 3d, 20},
+            new Object[]{MAIN_SCENARIO_NAME, "shirt", "cloth", 10d, 3}
     ));
 
-    tm.load("s1", storeName, List.of(
-            new Object[]{"bottle", "drink", 4d, 10},
-            new Object[]{"cookie", "food", 3d, 20},
-            new Object[]{"shirt", "cloth", 10d, 3}
+    tm.load(storeName, List.of(
+            new Object[]{"s1", "bottle", "drink", 4d, 10},
+            new Object[]{"s1", "cookie", "food", 3d, 20},
+            new Object[]{"s1", "shirt", "cloth", 10d, 3}
     ));
 
     QueryDto query = new QueryDto()

@@ -16,7 +16,6 @@ import java.util.Map;
 import static io.squashql.query.Functions.sum;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestClass(ignore = {TestClass.Type.SPARK, TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE, TestClass.Type.CLICKHOUSE})
@@ -36,13 +35,13 @@ public abstract class ATestDocDrillacross extends ABaseTestQuery {
 
   @Override
   protected void loadData() {
-    this.tm.load(MAIN_SCENARIO_NAME, "shipment", List.of(
+    this.tm.load("shipment", List.of(
             new Object[]{"A", 15},
             new Object[]{"B", 23},
             new Object[]{"C", 16}
     ));
 
-    this.tm.load(MAIN_SCENARIO_NAME, "return", List.of(
+    this.tm.load("return", List.of(
             new Object[]{"A", 1, "defective"},
             new Object[]{"C", 3, "unwanted"},
             new Object[]{"D", 1, "unwanted"}

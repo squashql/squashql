@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 
 import static io.squashql.query.TableField.tableFields;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -34,7 +33,7 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
 
   @Override
   protected void loadData() {
-    this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
+    this.tm.load(this.storeName, List.of(
             new Object[]{"paris", "france", "eu", "car", 1d},
             new Object[]{"paris", "france", "eu", "home", 2d},
             new Object[]{"paris", "france", "eu", "hobbies", 1d},

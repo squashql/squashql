@@ -88,6 +88,7 @@ public class DatasetTestConfig {
   }
 
   public static DuckDBDatastore createTestDatastoreWithData() {
+    TableTypedField scenario = new TableTypedField("our_prices", "scenario", String.class);
     TableTypedField ean = new TableTypedField("our_prices", "ean", String.class);
     TableTypedField pdv = new TableTypedField("our_prices", "pdv", String.class);
     TableTypedField price = new TableTypedField("our_prices", "price", double.class);
@@ -100,7 +101,7 @@ public class DatasetTestConfig {
     TableTypedField compConcurrentEan = new TableTypedField("their_prices", "competitor_concurrent_ean", String.class);
     TableTypedField compPrice = new TableTypedField("their_prices", "competitor_price", double.class);
 
-    Store our_price_store = new Store("our_prices", List.of(ean, pdv, price, qty, capdv));
+    Store our_price_store = new Store("our_prices", List.of(scenario, ean, pdv, price, qty, capdv));
     Store their_prices_store = new Store("their_prices", List.of(compEan, compConcurrentPdv, compBrand,
             compConcurrentEan, compPrice));
     Store our_stores_their_stores_store = new Store("our_stores_their_stores", List.of(
@@ -112,44 +113,39 @@ public class DatasetTestConfig {
     DuckDBDataLoader tm = new DuckDBDataLoader(datastore);
 
     tm.createOrReplaceTable(our_price_store.name(), our_price_store.fields());
-    tm.createOrReplaceTable(their_prices_store.name(), their_prices_store.fields(), false);
-    tm.createOrReplaceTable(our_stores_their_stores_store.name(), our_stores_their_stores_store.fields(), false);
+    tm.createOrReplaceTable(their_prices_store.name(), their_prices_store.fields());
+    tm.createOrReplaceTable(our_stores_their_stores_store.name(), our_stores_their_stores_store.fields());
 
-    tm.load(MAIN_SCENARIO_NAME,
-            "our_prices", List.of(
-                    new Object[]{"Nutella 250g", "ITM Balma", 10d, 1000, 10_000d},
-                    new Object[]{"ITMella 250g", "ITM Balma", 10d, 1000, 10_000d},
-                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 10d, 1000, 10_000d},
-                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 10d, 1000, 10_000d}
-            ));
-    tm.load("MN up",
-            "our_prices", List.of(
-                    new Object[]{"Nutella 250g", "ITM Balma", 11d, 1000, 11_000d},
-                    new Object[]{"ITMella 250g", "ITM Balma", 10d, 1000, 10_000d},
-                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 11d, 1000, 11_000d},
-                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 10d, 1000, 10_000d}
-            ));
-    tm.load("MDD up",
-            "our_prices", List.of(
-                    new Object[]{"Nutella 250g", "ITM Balma", 10d, 1000, 10_000d},
-                    new Object[]{"ITMella 250g", "ITM Balma", 11d, 1000, 11_000d},
-                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 10d, 1000, 10_000d},
-                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 11d, 1000, 11_000d}
-            ));
-    tm.load("MN & MDD up",
-            "our_prices", List.of(
-                    new Object[]{"Nutella 250g", "ITM Balma", 11d, 1000, 11_000d},
-                    new Object[]{"ITMella 250g", "ITM Balma", 11d, 1000, 11_000d},
-                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 11d, 1000, 11_000d},
-                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 11d, 1000, 11_000d}
-            ));
-    tm.load("MN & MDD down",
-            "our_prices", List.of(
-                    new Object[]{"Nutella 250g", "ITM Balma", 9d, 1000, 9_000d},
-                    new Object[]{"ITMella 250g", "ITM Balma", 9d, 1000, 9_000d},
-                    new Object[]{"Nutella 250g", "ITM Toulouse and Drive", 9d, 1000, 9_000d},
-                    new Object[]{"ITMella 250g", "ITM Toulouse and Drive", 9d, 1000, 9_000d}
-            ));
+    tm.load("our_prices", List.of(
+            new Object[]{MAIN_SCENARIO_NAME, "Nutella 250g", "ITM Balma", 10d, 1000, 10_000d},
+            new Object[]{MAIN_SCENARIO_NAME, "ITMella 250g", "ITM Balma", 10d, 1000, 10_000d},
+            new Object[]{MAIN_SCENARIO_NAME, "Nutella 250g", "ITM Toulouse and Drive", 10d, 1000, 10_000d},
+            new Object[]{MAIN_SCENARIO_NAME, "ITMella 250g", "ITM Toulouse and Drive", 10d, 1000, 10_000d}
+    ));
+    tm.load("our_prices", List.of(
+            new Object[]{"MN up", "Nutella 250g", "ITM Balma", 11d, 1000, 11_000d},
+            new Object[]{"MN up", "ITMella 250g", "ITM Balma", 10d, 1000, 10_000d},
+            new Object[]{"MN up", "Nutella 250g", "ITM Toulouse and Drive", 11d, 1000, 11_000d},
+            new Object[]{"MN up", "ITMella 250g", "ITM Toulouse and Drive", 10d, 1000, 10_000d}
+    ));
+    tm.load("our_prices", List.of(
+            new Object[]{"MDD up", "Nutella 250g", "ITM Balma", 10d, 1000, 10_000d},
+            new Object[]{"MDD up", "ITMella 250g", "ITM Balma", 11d, 1000, 11_000d},
+            new Object[]{"MDD up", "Nutella 250g", "ITM Toulouse and Drive", 10d, 1000, 10_000d},
+            new Object[]{"MDD up", "ITMella 250g", "ITM Toulouse and Drive", 11d, 1000, 11_000d}
+    ));
+    tm.load("our_prices", List.of(
+            new Object[]{"MN & MDD up", "Nutella 250g", "ITM Balma", 11d, 1000, 11_000d},
+            new Object[]{"MN & MDD up", "ITMella 250g", "ITM Balma", 11d, 1000, 11_000d},
+            new Object[]{"MN & MDD up", "Nutella 250g", "ITM Toulouse and Drive", 11d, 1000, 11_000d},
+            new Object[]{"MN & MDD up", "ITMella 250g", "ITM Toulouse and Drive", 11d, 1000, 11_000d}
+    ));
+    tm.load("our_prices", List.of(
+            new Object[]{"MN & MDD down", "Nutella 250g", "ITM Balma", 9d, 1000, 9_000d},
+            new Object[]{"MN & MDD down", "ITMella 250g", "ITM Balma", 9d, 1000, 9_000d},
+            new Object[]{"MN & MDD down", "Nutella 250g", "ITM Toulouse and Drive", 9d, 1000, 9_000d},
+            new Object[]{"MN & MDD down", "ITMella 250g", "ITM Toulouse and Drive", 9d, 1000, 9_000d}
+    ));
 
     tm.load("their_prices", List.of(
             new Object[]{"Nutella 250g", "Leclerc Rouffiac", "Leclerc", "Nutella 250g", 9d},

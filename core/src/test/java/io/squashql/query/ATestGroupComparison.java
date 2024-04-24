@@ -41,31 +41,32 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
 
   @Override
   protected Map<String, List<TableTypedField>> getFieldsByStore() {
+    TableTypedField scenario = new TableTypedField(this.storeName, "scenario", String.class);
     TableTypedField ean = new TableTypedField(this.storeName, "ean", String.class);
     TableTypedField category = new TableTypedField(this.storeName, "category", String.class);
     TableTypedField price = new TableTypedField(this.storeName, "price", double.class);
     TableTypedField qty = new TableTypedField(this.storeName, "quantity", int.class);
-    return Map.of(this.storeName, List.of(ean, category, price, qty));
+    return Map.of(this.storeName, List.of(scenario, ean, category, price, qty));
   }
 
   @Override
   protected void loadData() {
-    this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
-            new Object[]{"bottle", "drink", 2d, 11},
-            new Object[]{"cookie", "food", 3d, 20},
-            new Object[]{"shirt", "cloth", 10d, 3}
+    this.tm.load(this.storeName, List.of(
+            new Object[]{MAIN_SCENARIO_NAME, "bottle", "drink", 2d, 11},
+            new Object[]{MAIN_SCENARIO_NAME, "cookie", "food", 3d, 20},
+            new Object[]{MAIN_SCENARIO_NAME, "shirt", "cloth", 10d, 3}
     ));
 
-    this.tm.load("s1", this.storeName, List.of(
-            new Object[]{"bottle", "drink", 4d, 9},
-            new Object[]{"cookie", "food", 4d, 20},
-            new Object[]{"shirt", "cloth", 11d, 3}
+    this.tm.load(this.storeName, List.of(
+            new Object[]{"s1", "bottle", "drink", 4d, 9},
+            new Object[]{"s1", "cookie", "food", 4d, 20},
+            new Object[]{"s1", "shirt", "cloth", 11d, 3}
     ));
 
-    this.tm.load("s2", this.storeName, List.of(
-            new Object[]{"bottle", "drink", 1.5d, 12},
-            new Object[]{"cookie", "food", 2.5d, 20},
-            new Object[]{"shirt", "cloth", 9d, 3}
+    this.tm.load(this.storeName, List.of(
+            new Object[]{"s2", "bottle", "drink", 1.5d, 12},
+            new Object[]{"s2", "cookie", "food", 2.5d, 20},
+            new Object[]{"s2", "shirt", "cloth", 9d, 3}
     ));
   }
 

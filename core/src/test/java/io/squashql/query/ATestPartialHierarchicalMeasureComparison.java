@@ -25,7 +25,6 @@ import static io.squashql.query.ComparisonMethod.DIVIDE;
 import static io.squashql.query.Functions.*;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -50,7 +49,7 @@ public abstract class ATestPartialHierarchicalMeasureComparison extends ABaseTes
 
   @Override
   protected void loadData() {
-    this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
+    this.tm.load(this.storeName, List.of(
             new Object[]{"paris", "france", "eu", "car", 2d},
             new Object[]{"paris", "france", "eu", "home", 4d},
             new Object[]{"paris", "france", "eu", "hobbies", 1d},

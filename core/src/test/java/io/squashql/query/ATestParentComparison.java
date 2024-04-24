@@ -18,7 +18,6 @@ import static io.squashql.query.Functions.*;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
-import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -41,7 +40,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
 
   @Override
   protected void loadData() {
-    this.tm.load(MAIN_SCENARIO_NAME, this.storeName, List.of(
+    this.tm.load(this.storeName, List.of(
             new Object[]{"paris", "france", "eu", 2d},
             new Object[]{"lyon", "france", "eu", 1d},
             new Object[]{"monaco", null, "eu", 1d}, // to have a null value as a parent

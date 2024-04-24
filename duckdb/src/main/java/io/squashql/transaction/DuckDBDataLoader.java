@@ -5,16 +5,15 @@ import io.squashql.jdbc.JdbcUtil;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
-import org.eclipse.collections.impl.list.immutable.ImmutableListFactoryImpl;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
 public class DuckDBDataLoader implements DataLoader {
 
@@ -26,107 +25,60 @@ public class DuckDBDataLoader implements DataLoader {
 
   public void createOrReplaceTable(String tableName, Table table) {
     List<TableTypedField> fields = table.headers().stream().map(h -> new TableTypedField(tableName, h.name(), h.type())).toList();
-    createOrReplaceTable(this.datastore, tableName, fields, false);
-    loadWithOrWithoutScenario(null, tableName, table.iterator());
+    createOrReplaceTable(this.datastore, tableName, fields);
+    List<Object[]> tuples = new ArrayList<>();
+    for (List<Object> row : table) {
+      tuples.add(row.toArray());
+    }
+    load(tableName, tuples);
   }
 
   public void createOrReplaceTable(String tableName, List<TableTypedField> fields) {
-    createOrReplaceTable(tableName, fields, true);
+    createOrReplaceTable(this.datastore, tableName, fields);
   }
 
-  public void createOrReplaceTable(String tableName, List<TableTypedField> fields, boolean cjMode) {
-    createOrReplaceTable(this.datastore, tableName, fields, cjMode);
-  }
-
-  public static void createOrReplaceTable(DuckDBDatastore datastore, String tableName, List<TableTypedField> fields,
-                                          boolean cjMode) {
-    List<TableTypedField> list = cjMode ? ImmutableListFactoryImpl.INSTANCE
-            .ofAll(fields)
-            .newWith(new TableTypedField(tableName, SCENARIO_FIELD_NAME, String.class))
-            .castToList() : fields;
-
+  public static void createOrReplaceTable(DuckDBDatastore datastore, String tableName, List<TableTypedField> fields) {
     try (Connection conn = datastore.getConnection();
          Statement stmt = conn.createStatement()) {
-      StringBuilder sb = new StringBuilder();
-      sb.append("(");
-      int size = list.size();
-      for (int i = 0; i < size; i++) {
-        TableTypedField field = list.get(i);
-        sb.append("\"").append(field.name()).append("\" ").append(JdbcUtil.classToSqlType(field.type()));
-        if (i < size - 1) {
-          sb.append(", ");
-        }
+      StringJoiner sb = new StringJoiner(", ", "(", ")");
+      for (TableTypedField field : fields) {
+        sb.add("\"" + field.name() + "\" " + JdbcUtil.classToSqlType(field.type()));
       }
-      sb.append(")");
-      stmt.execute("create or replace table \"" + tableName + "\"" + sb + ";"); // REMOVE or replace
+      stmt.execute("create or replace table \"" + tableName + "\"" + sb + ";");
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
   }
 
   @Override
-  public void load(String scenario, String table, List<Object[]> tuples) {
-    loadWithOrWithoutScenario(scenario, table, tuples.stream().map(t -> Arrays.asList(t)).toList().iterator());
-  }
-
-  private void loadWithOrWithoutScenario(String scenario, String table, Iterator<List<Object>> tuplesIterator) {
-    // Check the table contains a column scenario.
-    if (scenario != null && !scenario.equals(MAIN_SCENARIO_NAME)) {
-      ensureScenarioColumnIsPresent(table);
-    }
-
-    boolean addScenario = scenarioColumnIsPresent(table);
-    String sql = "insert into \"" + table + "\" values ";
+  public void load(String table, List<Object[]> tuples) {
+    StringJoiner sql = new StringJoiner(",", "insert into \"" + table + "\" values ", "");
     try (Connection conn = this.datastore.getConnection();
          Statement stmt = conn.createStatement()) {
-      while (tuplesIterator.hasNext()) {
-        List<Object> tuple = tuplesIterator.next();
-        StringBuilder sb = new StringBuilder();
-        sb.append('(');
-        for (int i = 0; i < tuple.size(); i++) {
-          Object o = tuple.get(i);
+      for (Object[] tuple : tuples) {
+        StringJoiner sb = new StringJoiner(",", "(", ")");
+        for (Object o : tuple) {
           if (o != null && (o.getClass().equals(LocalDate.class) || o.getClass().equals(LocalDateTime.class))) {
             o = o.toString();
           }
 
           if (o instanceof String) {
-            sb.append('\'').append(SqlUtils.escapeSingleQuote((String) o, "''")).append('\'');
+            sb.add('\'' + SqlUtils.escapeSingleQuote((String) o, "''") + '\'');
           } else {
-            sb.append(o);
+            sb.add(String.valueOf(o));
           }
-          sb.append(",");
         }
-
-        if (addScenario) {
-          sb.append('\'').append(scenario).append('\'').append("),");
-          sql += sb.toString();
-        } else {
-          String s = sb.toString();
-          sql += s.substring(0, s.length() - 1) + "),";
-        }
+        sql.add(sb.toString());
       }
       // addBatch is Not supported.
-      stmt.execute(sql.substring(0, sql.length() - 1));
+      stmt.execute(sql.toString());
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
   }
 
-  private void ensureScenarioColumnIsPresent(String store) {
-    List<TableTypedField> fields = this.datastore.storeByName().get(store).fields();
-    boolean found = fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
-    if (!found) {
-      throw new RuntimeException(String.format("%s field not found", SCENARIO_FIELD_NAME));
-    }
-  }
-
-  private boolean scenarioColumnIsPresent(String store) {
-    List<TableTypedField> fields = this.datastore.storeByName().get(store).fields();
-    return fields.stream().anyMatch(f -> f.name().equals(SCENARIO_FIELD_NAME));
-  }
-
   @Override
-  public void loadCsv(String scenario, String table, String path, String delimiter, boolean header) {
+  public void loadCsv(String table, String path, String delimiter, boolean header) {
     throw new RuntimeException("Not implemented");
   }
 }
