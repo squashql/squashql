@@ -133,7 +133,7 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
         case Types.TINYINT -> tableResult.getByte(1 + index);
         case Types.SMALLINT -> tableResult.getShort(1 + index);
         case Types.INTEGER -> tableResult.getInt(1 + index);
-        case Types.BIGINT -> tableResult.getLong(1 + index);
+        case Types.BIGINT, Types.NUMERIC -> tableResult.getLong(1 + index);
         case Types.REAL, Types.FLOAT -> tableResult.getFloat(1 + index);
         case Types.DECIMAL, Types.DOUBLE -> tableResult.getDouble(1 + index);
         case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> tableResult.getBytes(1 + index);

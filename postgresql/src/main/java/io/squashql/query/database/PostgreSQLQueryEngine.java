@@ -5,6 +5,7 @@ import io.squashql.PostgreSQLUtil;
 import io.squashql.jdbc.JdbcQueryEngine;
 import io.squashql.jdbc.JdbcUtil;
 
+import java.math.BigInteger;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
@@ -44,12 +45,12 @@ public class PostgreSQLQueryEngine extends JdbcQueryEngine<PostgreSQLDatastore> 
   protected BiFunction<ResultSetMetaData, Integer, Class<?>> typeToClassConverter() {
     return (metaData, column) -> {
       try {
-//        String columnTypeName = metaData.getColumnTypeName(column);
-//        if (columnTypeName.equals("ARRAY")) {
-//          return List.class;
-//        } else {
-        return JdbcUtil.sqlTypeToClass(metaData.getColumnType(column));
-//        }
+        String columnTypeName = metaData.getColumnTypeName(column);
+        if (columnTypeName.equals("numeric")) {
+          return BigInteger.class;
+        } else {
+          return JdbcUtil.sqlTypeToClass(metaData.getColumnType(column));
+        }
       } catch (SQLException e) {
         throw new RuntimeException(e);
       }
@@ -65,29 +66,4 @@ public class PostgreSQLQueryEngine extends JdbcQueryEngine<PostgreSQLDatastore> 
   public QueryRewriter queryRewriter(DatabaseQuery query) {
     return new PostgreSQLQueryRewriter();
   }
-//
-//  static class ClickHouseQueryRewriter implements QueryRewriter {
-//
-//    @Override
-//    public String fieldName(String field) {
-//      return SqlUtils.backtickEscape(field);
-//    }
-//
-//    @Override
-//    public String escapeAlias(String alias) {
-//      return SqlUtils.backtickEscape(alias);
-//    }
-//
-//    @Override
-//    public boolean usePartialRollupSyntax() {
-//      // Not supported as of now: https://github.com/ClickHouse/ClickHouse/issues/322#issuecomment-615087004
-//      // Tested with version https://github.com/ClickHouse/ClickHouse/tree/v22.10.2.11-stable
-//      return false;
-//    }
-//
-//    @Override
-//    public String arrayContains(TypedField field, Object value) {
-//      return "has(" + field.sqlExpression(this) + ", " + value + ")";
-//    }
-//  }
 }

@@ -1,5 +1,7 @@
 package io.squashql.query.database;
 
+import io.squashql.type.FunctionTypedField;
+
 class PostgreSQLQueryRewriter implements QueryRewriter {
 
   @Override
@@ -30,5 +32,14 @@ class PostgreSQLQueryRewriter implements QueryRewriter {
   @Override
   public boolean useAliasInHavingClause() {
     return false;
+  }
+
+  @Override
+  public String functionExpression(FunctionTypedField ftf) {
+    if ("current_date".contains(ftf.function())) {
+      return "CURRENT_DATE";
+    } else {
+      return QueryRewriter.super.functionExpression(ftf);
+    }
   }
 }

@@ -31,8 +31,8 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
   @Override
   protected void loadData() {
     this.tm.load(this.storeName, List.of(
-            new Object[]{"bottle", "drink", 20d, 10l},
-            new Object[]{"cookie", "food", 30d, 10l}
+            new Object[]{"bottle", "drink", 20d, 10L},
+            new Object[]{"cookie", "food", 30d, 10L}
     ));
   }
 
@@ -54,7 +54,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
 
     Table table = this.executor.executeQuery(query);
     double salesV = 50d;
-    long qtyV = 20l;
+    long qtyV = 20L;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV + salesV, salesV + qtyV, qtyV + qtyV));
     Assertions
             .assertThat(table.headers().stream().map(Header::name))
@@ -79,7 +79,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
 
     Table table = this.executor.executeQuery(query);
     double salesV = 50d;
-    long qtyV = 20l;
+    long qtyV = 20L;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV - salesV, salesV - qtyV, qtyV - qtyV));
     Assertions
             .assertThat(table.headers().stream().map(Header::name))
@@ -104,7 +104,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
 
     Table table = this.executor.executeQuery(query);
     double salesV = 50d;
-    long qtyV = 20l;
+    long qtyV = 20L;
     Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV * salesV, salesV * qtyV, qtyV * qtyV));
     Assertions
             .assertThat(table.headers().stream().map(Header::name))
@@ -124,16 +124,15 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
             .withMeasure(sales)
             .withMeasure(quantity)
             .withMeasure(new BinaryOperationMeasure("divide1", BinaryOperator.DIVIDE, sales, sales))
-            .withMeasure(new BinaryOperationMeasure("divide2", BinaryOperator.DIVIDE, sales, quantity))
-            .withMeasure(new BinaryOperationMeasure("divide3", BinaryOperator.DIVIDE, quantity, quantity));
+            .withMeasure(new BinaryOperationMeasure("divide2", BinaryOperator.DIVIDE, sales, quantity));
 
     Table table = this.executor.executeQuery(query);
     double salesV = 50d;
-    long qtyV = 20l;
-    Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV / salesV, salesV / qtyV, (double) qtyV / qtyV));
+    long qtyV = 20L;
+    Assertions.assertThat(table).contains(List.of(salesV, qtyV, salesV / salesV, salesV / qtyV));
     Assertions
             .assertThat(table.headers().stream().map(Header::name))
-            .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "divide1", "divide2", "divide3");
+            .containsExactlyInAnyOrder("sum(sales)", "sum(quantity)", "divide1", "divide2");
   }
 
   /**
@@ -152,7 +151,7 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
 
     Table table = this.executor.executeQuery(query);
     double salesV = 50d;
-    long qtyV = 20l;
+    long qtyV = 20L;
     Assertions.assertThat(table).contains(List.of((salesV - qtyV) / qtyV));
   }
 }

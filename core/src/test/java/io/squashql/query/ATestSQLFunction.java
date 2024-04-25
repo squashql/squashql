@@ -151,7 +151,6 @@ public abstract class ATestSQLFunction extends ABaseTestQuery {
     //    Assertions.assertThat(result).containsExactly(List.of(this.now, 1L));
     Assertions.assertThat(result.count()).isEqualTo(1L);
 
-
     // currentDate in select and where + alias. This query does not make any sense...
     Field cr = currentDate().as("CR");
     query = Query
