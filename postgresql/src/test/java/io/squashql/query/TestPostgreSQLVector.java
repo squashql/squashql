@@ -1,23 +1,23 @@
 package io.squashql.query;
 
-import io.squashql.PostgreDatastore;
-import io.squashql.query.database.PostgreQueryEngine;
+import io.squashql.PostgreSQLDatastore;
+import io.squashql.query.database.PostgreSQLQueryEngine;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.store.Datastore;
-import io.squashql.template.PostgreClassTemplateGenerator;
+import io.squashql.template.PostgreSQLClassTemplateGenerator;
 import io.squashql.transaction.DataLoader;
-import io.squashql.transaction.PostgreDataLoader;
+import io.squashql.transaction.PostgreSQLDataLoader;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.PostgreSQLContainer;
 
-import static io.squashql.query.PostgreTestUtil.TEST_PROPERTIES;
-import static io.squashql.query.PostgreTestUtil.createContainer;
+import static io.squashql.query.PostgreSQLTestUtil.TEST_PROPERTIES;
+import static io.squashql.query.PostgreSQLTestUtil.createContainer;
 
 /**
- * Do not edit this class, it has been generated automatically by {@link PostgreClassTemplateGenerator}.
+ * Do not edit this class, it has been generated automatically by {@link PostgreSQLClassTemplateGenerator}.
  */
-public class TestPostgreQueryExecutor extends ATestQueryExecutor {
+public class TestPostgreSQLVector extends ATestVector {
 
   private final PostgreSQLContainer<?> container = createContainer();
 
@@ -31,27 +31,27 @@ public class TestPostgreQueryExecutor extends ATestQueryExecutor {
   @AfterAll
   void tearDown() {
     // we do not stop the container to be able to reuse it between tests.
-    ((PostgreDataLoader) this.tm).dropTables(this.fieldsByStore.keySet());
+    ((PostgreSQLDataLoader) this.tm).dropTables(this.fieldsByStore.keySet());
   }
 
   @Override
   protected void createTables() {
-    PostgreDataLoader dl = (PostgreDataLoader) this.tm;
+    PostgreSQLDataLoader dl = (PostgreSQLDataLoader) this.tm;
     this.fieldsByStore.forEach(dl::dropAndCreateInMemoryTable);
   }
 
   @Override
   protected QueryEngine<?> createQueryEngine(Datastore datastore) {
-    return new PostgreQueryEngine((PostgreDatastore) datastore);
+    return new PostgreSQLQueryEngine((PostgreSQLDatastore) datastore);
   }
 
   @Override
   protected Datastore createDatastore() {
-    return new PostgreDatastore(this.container.getJdbcUrl(), TEST_PROPERTIES);
+    return new PostgreSQLDatastore(this.container.getJdbcUrl(), TEST_PROPERTIES);
   }
 
   @Override
   protected DataLoader createDataLoader() {
-    return new PostgreDataLoader((PostgreDatastore) this.datastore);
-  }
+      return new PostgreSQLDataLoader((PostgreSQLDatastore) this.datastore);
+    }
 }

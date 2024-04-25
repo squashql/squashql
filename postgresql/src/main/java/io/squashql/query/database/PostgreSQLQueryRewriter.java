@@ -1,6 +1,6 @@
 package io.squashql.query.database;
 
-class PostgreQueryRewriter implements QueryRewriter {
+class PostgreSQLQueryRewriter implements QueryRewriter {
 
   @Override
   public String tableName(String table) {

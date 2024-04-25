@@ -4,9 +4,9 @@ import io.squashql.TestClass;
 
 import static io.squashql.template.ClassTemplateGenerator.generateTestClasses;
 
-public class PostgreClassTemplateGenerator {
+public class PostgreSQLClassTemplateGenerator {
 
   public static void main(String[] args) throws Exception {
-    generateTestClasses(TestClass.Type.POSTGRE);
+    generateTestClasses(TestClass.Type.POSTGRESQL);
   }
 }

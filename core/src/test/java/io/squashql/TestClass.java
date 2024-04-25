@@ -21,7 +21,7 @@ public @interface TestClass {
     BIGQUERY("BigQuery"),
     SNOWFLAKE("Snowflake"),
     DUCKDB("DuckDB"),
-    POSTGRE("Postgre");
+    POSTGRESQL("PostgreSQL");
 
     public final String className;
 

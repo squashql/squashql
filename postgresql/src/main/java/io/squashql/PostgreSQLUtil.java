@@ -6,9 +6,9 @@ import io.squashql.util.Types;
 
 import java.math.BigDecimal;
 
-public final class PostgreUtil {
+public final class PostgreSQLUtil {
 
-  private PostgreUtil() {
+  private PostgreSQLUtil() {
   }
 
   public static String classToPostgreType(Class<?> clazz) {

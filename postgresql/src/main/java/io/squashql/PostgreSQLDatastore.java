@@ -12,13 +12,13 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-public class PostgreDatastore implements JdbcDatastore {
+public class PostgreSQLDatastore implements JdbcDatastore {
 
   private final String jdbcUrl;
   private final Properties connectionProperties;
   public final Supplier<Map<String, Store>> stores;
 
-  public PostgreDatastore(String jdbcUrl, Properties properties) {
+  public PostgreSQLDatastore(String jdbcUrl, Properties properties) {
     this.jdbcUrl = jdbcUrl;
     this.connectionProperties = properties;
     String schema = properties.getProperty("currentSchema", "public");

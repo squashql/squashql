@@ -5,7 +5,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.util.Properties;
 
-public class PostgreTestUtil {
+public class PostgreSQLTestUtil {
 
   protected static final boolean printAll = true;
 

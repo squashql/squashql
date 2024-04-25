@@ -1,7 +1,7 @@
 package io.squashql.query.database;
 
-import io.squashql.PostgreDatastore;
-import io.squashql.PostgreUtil;
+import io.squashql.PostgreSQLDatastore;
+import io.squashql.PostgreSQLUtil;
 import io.squashql.jdbc.JdbcQueryEngine;
 import io.squashql.jdbc.JdbcUtil;
 
@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.function.BiFunction;
 
-public class PostgreQueryEngine extends JdbcQueryEngine<PostgreDatastore> {
+public class PostgreSQLQueryEngine extends JdbcQueryEngine<PostgreSQLDatastore> {
 
   /**
    * FIXME
@@ -31,13 +31,13 @@ public class PostgreQueryEngine extends JdbcQueryEngine<PostgreDatastore> {
           "covarPop",
           "covarSamp");
 
-  public PostgreQueryEngine(PostgreDatastore datastore) {
+  public PostgreSQLQueryEngine(PostgreSQLDatastore datastore) {
     super(datastore);
   }
 
   @Override
   protected BiFunction<Integer, Object[], Object> recordToFieldValue() {
-    return (i, values) -> PostgreUtil.getTypeValue(values[i]);
+    return (i, values) -> PostgreSQLUtil.getTypeValue(values[i]);
   }
 
   @Override
@@ -63,7 +63,7 @@ public class PostgreQueryEngine extends JdbcQueryEngine<PostgreDatastore> {
 
   @Override
   public QueryRewriter queryRewriter(DatabaseQuery query) {
-    return new PostgreQueryRewriter();
+    return new PostgreSQLQueryRewriter();
   }
 //
 //  static class ClickHouseQueryRewriter implements QueryRewriter {

@@ -14,7 +14,7 @@ import java.util.Map;
 public abstract class ABaseTestQuery {
 
   protected Datastore datastore;
-  protected QueryEngine queryEngine;
+  protected QueryEngine<?> queryEngine;
   protected DataLoader tm;
   protected QueryExecutor executor;
   protected Map<String, List<TableTypedField>> fieldsByStore;
@@ -37,7 +37,7 @@ public abstract class ABaseTestQuery {
   protected void afterSetup() {
   }
 
-  protected abstract QueryEngine createQueryEngine(Datastore datastore);
+  protected abstract QueryEngine<?> createQueryEngine(Datastore datastore);
 
   protected abstract Datastore createDatastore();
 

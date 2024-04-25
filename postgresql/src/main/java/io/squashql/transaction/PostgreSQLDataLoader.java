@@ -1,7 +1,7 @@
 package io.squashql.transaction;
 
-import io.squashql.PostgreDatastore;
-import io.squashql.PostgreUtil;
+import io.squashql.PostgreSQLDatastore;
+import io.squashql.PostgreSQLUtil;
 import io.squashql.type.TableTypedField;
 import lombok.AllArgsConstructor;
 
@@ -15,15 +15,15 @@ import java.util.StringJoiner;
 import java.util.stream.IntStream;
 
 @AllArgsConstructor
-public class PostgreDataLoader implements DataLoader {
+public class PostgreSQLDataLoader implements DataLoader {
 
-  protected final PostgreDatastore datastore;
+  protected final PostgreSQLDatastore datastore;
 
   public void dropAndCreateInMemoryTable(String table, List<TableTypedField> fields) {
     dropAndCreateInMemoryTable(this.datastore, table, fields);
   }
 
-  public static void dropAndCreateInMemoryTable(PostgreDatastore datastore,
+  public static void dropAndCreateInMemoryTable(PostgreSQLDatastore datastore,
                                                 String table,
                                                 List<TableTypedField> fields) {
     try (Connection conn = datastore.getConnection();
@@ -31,7 +31,7 @@ public class PostgreDataLoader implements DataLoader {
       stmt.execute("drop table if exists " + table);
       StringJoiner joiner = new StringJoiner(",", "(", ")");
       for (TableTypedField field : fields) {
-        joiner.add("\"" + field.name() + "\" " + PostgreUtil.classToPostgreType(field.type()));
+        joiner.add("\"" + field.name() + "\" " + PostgreSQLUtil.classToPostgreType(field.type()));
       }
       stmt.execute("create table " + table + joiner);
     } catch (SQLException e) {
