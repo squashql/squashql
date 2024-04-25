@@ -63,6 +63,7 @@
     <spark.version>3.5.1</spark.version>
     <bigquery.version>26.37.0</bigquery.version>
     <snowflake-jdbc.version>3.15.1</snowflake-jdbc.version>
+    <postgresql.version>42.7.3</postgresql.version>
   </properties>
 
   <modules>
@@ -75,6 +76,7 @@
     <module>java-client</module>
     <module>js/typescript-library</module>
     <module>duckdb</module>
+    <module>postgresql</module>
   </modules>
 
   <distributionManagement>

@@ -20,7 +20,14 @@ public record CompiledCriteria(ConditionDto condition, ConditionType conditionTy
     if (this.field != null && condition() != null) {
       return toSql(this.field, condition(), queryRewriter);
     } else if (this.measure != null && condition() != null) {
-      return toSql(new TableTypedField(null, this.measure.alias(), Number.class), condition(), queryRewriter);
+      if (queryRewriter.useAliasInHavingClause()) {
+        return toSql(new TableTypedField(null, this.measure.alias(), Number.class), condition(), queryRewriter);
+      } else {
+        // Trick to repeat the expression in the having clause
+        String expression = this.measure.sqlExpression(queryRewriter, false);
+        return toSql(new TableTypedField(null, expression, Number.class), condition(), new QueryRewriter() {
+        });
+      }
     } else if (this.field != null && this.fieldOther != null && conditionType() != null) {
       String left = this.field.sqlExpression(queryRewriter);
       String right = this.fieldOther.sqlExpression(queryRewriter);

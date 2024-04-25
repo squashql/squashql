@@ -20,7 +20,8 @@ public @interface TestClass {
     CLICKHOUSE("ClickHouse"),
     BIGQUERY("BigQuery"),
     SNOWFLAKE("Snowflake"),
-    DUCKDB("DuckDB");
+    DUCKDB("DuckDB"),
+    POSTGRE("Postgre");
 
     public final String className;
 

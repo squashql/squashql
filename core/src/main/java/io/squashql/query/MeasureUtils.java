@@ -17,7 +17,8 @@ import java.util.function.Function;
 @NoArgsConstructor
 public final class MeasureUtils {
 
-  public static final QueryRewriter BASIC = () -> false;
+  public static final QueryRewriter BASIC = new QueryRewriter() {
+  };
 
   public static String createExpression(Measure m) {
     if (m instanceof AggregatedMeasure a) {

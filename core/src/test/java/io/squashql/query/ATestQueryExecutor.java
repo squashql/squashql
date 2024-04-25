@@ -665,10 +665,11 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     String tableName = qr.tableName(this.storeName);
     String ean = qr.fieldName("ean");
     String price = qr.fieldName("price");
-    // Use SUMPRICE in upper case to simplify the test. Indeed, Snowflake converts lower case aliases to upper case...
-    Table result = this.executor.executeRaw(String.format("select %s, sum(%s) as SUMPRICE from %s group by %s order by %s", ean, price, tableName, ean, ean));
-    Assertions.assertThat(result.headers().stream().map(header -> header.name()).toList())
-            .containsExactly("ean", "SUMPRICE");
+    Table result = this.executor.executeRaw(String.format("select %s, sum(%s) as sumprice from %s group by %s order by %s", ean, price, tableName, ean, ean));
+    List<String> headerNames = result.headers().stream().map(Header::name).toList();
+    // Snowflake converts lower case aliases to upper case and Postgres converts everything in lowercase...
+    Assertions.assertThat(headerNames.get(0).toLowerCase()).isEqualTo("ean");
+    Assertions.assertThat(headerNames.get(1).toLowerCase()).isEqualTo("sumprice");
     Assertions.assertThat(result).containsExactly(
             List.of("cookie", 9.0d),
             List.of("shirt", 30d),
@@ -845,7 +846,6 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   @Test
   void testHavingConditions() {
     BasicMeasure price_sum = (BasicMeasure) sum("pricesum", "price");
-    BasicMeasure price_sum_expr = new ExpressionMeasure("p_expr", "sum(" + this.queryEngine.queryRewriter(null).fieldName("price") + ")");
     // Single condition
     QueryDto query = Query
             .from(this.storeName)
@@ -857,6 +857,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of("cookie", 9.0d),
             List.of("shirt", 30d));
 
+    BasicMeasure price_sum_expr = new ExpressionMeasure("p_expr", "sum(" + this.queryEngine.queryRewriter(null).fieldName("price") + ")");
     // Multiple conditions
     query = Query
             .from(this.storeName)

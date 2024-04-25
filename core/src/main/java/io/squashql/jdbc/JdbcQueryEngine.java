@@ -35,12 +35,16 @@ public abstract class JdbcQueryEngine<T extends JdbcDatastore> extends AQueryEng
               columnTypes,
               (columnType, name) -> columnType,
               new ResultSetIterator(columnTypes, tableResult, reader),
-              (i, fieldValues) -> fieldValues[i]);
+              recordToFieldValue());
       return new ColumnarTable(
               result.getOne(),
               new HashSet<>(query.measures()),
               result.getTwo());
     });
+  }
+
+  protected BiFunction<Integer, Object[], Object> recordToFieldValue() {
+    return (i, fieldValues) -> fieldValues[i];
   }
 
   @Override

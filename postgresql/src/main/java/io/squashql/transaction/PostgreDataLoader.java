@@ -1,44 +1,39 @@
 package io.squashql.transaction;
 
-import com.clickhouse.jdbc.ClickHouseConnection;
-import com.clickhouse.jdbc.ClickHouseDataSource;
-import com.clickhouse.jdbc.ClickHouseStatement;
-import io.squashql.query.database.SqlUtils;
+import io.squashql.PostgreDatastore;
+import io.squashql.PostgreUtil;
 import io.squashql.type.TableTypedField;
+import lombok.AllArgsConstructor;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Collection;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.IntStream;
 
-import static io.squashql.ClickHouseUtil.classToClickHouseType;
+@AllArgsConstructor
+public class PostgreDataLoader implements DataLoader {
 
-public class ClickHouseDataLoader implements DataLoader {
-
-  protected final ClickHouseDataSource clickHouseDataSource;
-
-  public ClickHouseDataLoader(ClickHouseDataSource clickHouseDataSource) {
-    this.clickHouseDataSource = clickHouseDataSource;
-  }
+  protected final PostgreDatastore datastore;
 
   public void dropAndCreateInMemoryTable(String table, List<TableTypedField> fields) {
-    dropAndCreateInMemoryTable(this.clickHouseDataSource, table, fields);
+    dropAndCreateInMemoryTable(this.datastore, table, fields);
   }
 
-  public static void dropAndCreateInMemoryTable(ClickHouseDataSource clickHouseDataSource,
+  public static void dropAndCreateInMemoryTable(PostgreDatastore datastore,
                                                 String table,
                                                 List<TableTypedField> fields) {
-    try (ClickHouseConnection conn = clickHouseDataSource.getConnection();
-         ClickHouseStatement stmt = conn.createStatement()) {
+    try (Connection conn = datastore.getConnection();
+         Statement stmt = conn.createStatement()) {
       stmt.execute("drop table if exists " + table);
       StringJoiner joiner = new StringJoiner(",", "(", ")");
       for (TableTypedField field : fields) {
-        String format = !List.class.isAssignableFrom(field.type()) ? "Nullable(%s)" : "%s";
-        joiner.add(SqlUtils.backtickEscape(field.name()) + " " + String.format(format, classToClickHouseType(field.type())));
+        joiner.add("\"" + field.name() + "\" " + PostgreUtil.classToPostgreType(field.type()));
       }
-      stmt.execute("create table " + table + joiner + "engine=Memory");
+      stmt.execute("create table " + table + joiner);
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
@@ -48,7 +43,7 @@ public class ClickHouseDataLoader implements DataLoader {
   public void load(String table, List<Object[]> tuples) {
     String join = String.join(",", IntStream.range(0, tuples.get(0).length).mapToObj(i -> "?").toList());
     String pattern = "insert into " + table + " values(" + join + ")";
-    try (ClickHouseConnection conn = this.clickHouseDataSource.getConnection();
+    try (Connection conn = this.datastore.getConnection();
          PreparedStatement stmt = conn.prepareStatement(pattern)) {
 
       for (Object[] tuple : tuples) {
@@ -69,8 +64,8 @@ public class ClickHouseDataLoader implements DataLoader {
   }
 
   public void dropTables(Collection<String> tables) {
-    try (ClickHouseConnection conn = this.clickHouseDataSource.getConnection();
-         ClickHouseStatement stmt = conn.createStatement()) {
+    try (Connection conn = this.datastore.getConnection();
+         Statement stmt = conn.createStatement()) {
       for (String table : tables) {
         stmt.execute("drop table if exists " + table);
       }
