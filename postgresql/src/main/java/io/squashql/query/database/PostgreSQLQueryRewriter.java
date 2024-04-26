@@ -1,5 +1,6 @@
 package io.squashql.query.database;
 
+import io.squashql.query.BinaryOperator;
 import io.squashql.type.FunctionTypedField;
 import io.squashql.type.TypedField;
 
@@ -44,6 +45,21 @@ class PostgreSQLQueryRewriter implements QueryRewriter {
     } else {
       return QueryRewriter.super.functionExpression(ftf);
     }
+  }
+
+  @Override
+  public String binaryOperation(BinaryOperator operator, String leftOperand, String rightOperand) {
+    // NULLIF function takes two expressions and returns NULL if they are equal and if they are not equal it will return the first expression.
+    return switch (operator) {
+      case DIVIDE -> new StringBuilder()
+              .append(leftOperand)
+              .append(" ")
+              .append(operator.infix)
+              .append(" ")
+              .append(String.format("NULLIF(%s,0)", rightOperand))
+              .toString();
+      default -> QueryRewriter.super.binaryOperation(operator, leftOperand, rightOperand);
+    };
   }
 
   @Override
