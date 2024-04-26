@@ -36,20 +36,11 @@ public final class PostgreSQLUtil {
     String columnClassName = metaData.getColumnClassName(columnIndex);
     if (columnTypeName.equals("numeric")) {
       return columnClassName.equals(BigDecimal.class.getName()) ? BigDecimal.class : BigInteger.class;
-    } else if (columnTypeName.equals("_int4") || columnTypeName.equals("_int8") || columnTypeName.equals("_numeric")) {
-      return Lists.LongList.class;
-    } else if (columnTypeName.equals("_float4") || columnTypeName.equals("_float8")) {
-      return Lists.DoubleList.class;
-    } else if (columnTypeName.equals("_varchar")) {
-      return Lists.StringList.class;
-    } else if (columnTypeName.equals("_date")) {
-      return Lists.LocalDateList.class;
     } else {
-      return JdbcUtil.sqlTypeToClass(metaData.getColumnType(columnIndex));
+      return getJavaClass(metaData.getColumnType(columnIndex), columnTypeName);
     }
   }
 
-  // TODO factorized
   public static Class<?> getJavaClass(int dataType, String columnTypeName) {
     if (columnTypeName.equals("numeric")) {
       return BigDecimal.class; // FIXME this might be wrong

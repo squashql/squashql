@@ -45,7 +45,7 @@ public class DuckDBQueryEngine extends JdbcQueryEngine<DuckDBDatastore> {
   }
 
   @Override
-  public QueryRewriter queryRewriter(DatabaseQuery query) {
+  public QueryRewriter queryRewriter() {
     return new DuckDBQueryRewriter();
   }
 }

@@ -94,8 +94,8 @@ public class TestSqlExperimentalQueryJoinExecutor {
     }
 
     @Override
-    public QueryRewriter queryRewriter(DatabaseQuery query) {
-      return new DefaultQueryRewriter(query) {
+    public QueryRewriter queryRewriter() {
+      return new DefaultQueryRewriter() {
 
         static final Pattern p = Pattern.compile("__cte([0-9])__");
 

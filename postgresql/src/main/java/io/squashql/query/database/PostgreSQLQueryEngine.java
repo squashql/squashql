@@ -17,8 +17,7 @@ import java.util.function.BiFunction;
 public class PostgreSQLQueryEngine extends JdbcQueryEngine<PostgreSQLDatastore> {
 
   /**
-   * FIXME
-   * <a href="https://clickhouse.com/docs/en/sql-reference/aggregate-functions/reference/">aggregate functions</a>
+   * <a href="https://www.postgresql.org/docs/16/functions-aggregate.html/">aggregate functions</a>
    * NOTE: there is more but only a subset is proposed here.
    */
   public static final List<String> SUPPORTED_AGGREGATION_FUNCTIONS = List.of(
@@ -27,13 +26,7 @@ public class PostgreSQLQueryEngine extends JdbcQueryEngine<PostgreSQLDatastore> 
           "max",
           "sum",
           "avg",
-          "any",
-          "stddevPop",
-          "stddevSamp",
-          "varPop",
-          "varSamp",
-          "covarPop",
-          "covarSamp");
+          "any");
 
   public PostgreSQLQueryEngine(PostgreSQLDatastore datastore) {
     super(datastore);
@@ -55,28 +48,21 @@ public class PostgreSQLQueryEngine extends JdbcQueryEngine<PostgreSQLDatastore> 
     return new ResultSetReader() {
       @Override
       public Object read(List<Class<?>> columnTypes, ResultSet tableResult, int index) {
-        // Special case for Snowflake due to lack of support of Array
-        if (columnTypes.get(index).equals(BigDecimal.class)) {
-          try {
-            if (tableResult.getObject(index + 1) == null) {
-              return null;
-            }
+        try {
+          if (tableResult.getObject(index + 1) == null) {
+            return null;
+          }
+
+          Class<?> klazz = columnTypes.get(index);
+          if (klazz.equals(BigDecimal.class)) {
             return Types.castToDouble(tableResult.getBigDecimal(index + 1));
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
-          }
-        } else if (columnTypes.get(index).equals(BigInteger.class)) {
-          try {
-            if (tableResult.getObject(index + 1) == null) {
-              return null;
-            }
+          } else if (klazz.equals(BigInteger.class)) {
             return tableResult.getLong(index + 1);
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
           }
-        } else {
-          return ResultSetReader.super.read(columnTypes, tableResult, index);
+        } catch (SQLException e) {
+          throw new RuntimeException(e);
         }
+        return ResultSetReader.super.read(columnTypes, tableResult, index);
       }
     };
   }
@@ -87,7 +73,7 @@ public class PostgreSQLQueryEngine extends JdbcQueryEngine<PostgreSQLDatastore> 
   }
 
   @Override
-  public QueryRewriter queryRewriter(DatabaseQuery query) {
+  public QueryRewriter queryRewriter() {
     return new PostgreSQLQueryRewriter();
   }
 }

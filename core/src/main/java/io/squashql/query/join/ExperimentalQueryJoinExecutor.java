@@ -43,7 +43,7 @@ public class ExperimentalQueryJoinExecutor {
       this.cteTableName = cteTableName;
       this.queryResolver = new QueryResolver(query, ExperimentalQueryJoinExecutor.this.queryEngine.datastore().storeByName());
       this.dbQuery = new DatabaseQuery(this.queryResolver.getScope().copyWithNewLimit(-1), new ArrayList<>(this.queryResolver.getMeasures().values()));
-      this.queryRewriter = ExperimentalQueryJoinExecutor.this.queryEngine.queryRewriter(this.dbQuery);
+      this.queryRewriter = ExperimentalQueryJoinExecutor.this.queryEngine.queryRewriter();
       this.originalTableName = query.table != null ? query.table.name : null;
       this.sql = SQLTranslator.translate(this.dbQuery, this.queryRewriter);
     }

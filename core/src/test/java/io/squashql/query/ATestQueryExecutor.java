@@ -419,7 +419,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
    */
   @Test
   void testSumIf() {
-    QueryRewriter qr = this.queryEngine.queryRewriter(null);
+    QueryRewriter qr = this.queryEngine.queryRewriter();
     String expression = String.format("sum(case when %s = 'food' OR %s = 'drink' then %s end)",
             qr.fieldName("category"),
             qr.fieldName("category"),
@@ -661,7 +661,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
 
   @Test
   void testRawQueryExecution() {
-    QueryRewriter qr = this.executor.queryEngine.queryRewriter(null);
+    QueryRewriter qr = this.executor.queryEngine.queryRewriter();
     String tableName = qr.tableName(this.storeName);
     String ean = qr.fieldName("ean");
     String price = qr.fieldName("price");
@@ -857,7 +857,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             List.of("cookie", 9.0d),
             List.of("shirt", 30d));
 
-    BasicMeasure price_sum_expr = new ExpressionMeasure("p_expr", "sum(" + this.queryEngine.queryRewriter(null).fieldName("price") + ")");
+    BasicMeasure price_sum_expr = new ExpressionMeasure("p_expr", "sum(" + this.queryEngine.queryRewriter().fieldName("price") + ")");
     // Multiple conditions
     query = Query
             .from(this.storeName)

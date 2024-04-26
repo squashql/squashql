@@ -18,10 +18,6 @@ public class SQLTranslator {
 
   public static final String TOTAL_CELL = "___total___";
 
-  public static String translate(DatabaseQuery query) {
-    return translate(query, new DefaultQueryRewriter(query));
-  }
-
   public static String translate(DatabaseQuery dq, QueryRewriter queryRewriter) {
     QueryScope query = dq.scope();
     List<String> selects = new ArrayList<>();

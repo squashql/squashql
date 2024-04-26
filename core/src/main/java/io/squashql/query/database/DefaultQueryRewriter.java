@@ -2,12 +2,6 @@ package io.squashql.query.database;
 
 public class DefaultQueryRewriter implements QueryRewriter {
 
-  private final DatabaseQuery query;
-
-  public DefaultQueryRewriter(DatabaseQuery query) {
-    this.query = query;
-  }
-
   @Override
   public String fieldName(String field) {
     return SqlUtils.backtickEscape(field);
