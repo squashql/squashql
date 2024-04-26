@@ -451,7 +451,7 @@ public abstract class ATestExperimentalQueryJoinExecutor extends ABaseTestQuery 
    */
   private Object getDoubleNullJoinValue() {
     String qesn = this.executor.queryEngine.getClass().getSimpleName();
-    if (qesn.toLowerCase().contains(TestClass.Type.SNOWFLAKE.name().toLowerCase()) || qesn.toLowerCase().contains(TestClass.Type.POSTGRESQL.name().toLowerCase())) {
+    if (qesn.toLowerCase().contains(TestClass.Type.SNOWFLAKE.name().toLowerCase())) {
       return 0d;
     } else if (qesn.toLowerCase().contains(TestClass.Type.DUCKDB.name().toLowerCase())) {
       return Double.NaN;

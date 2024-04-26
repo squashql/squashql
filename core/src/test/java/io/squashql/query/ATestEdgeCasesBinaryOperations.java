@@ -69,7 +69,7 @@ public abstract class ATestEdgeCasesBinaryOperations extends ABaseTestQuery {
     } else if (lc.contains(TestClass.Type.DUCKDB.name().toLowerCase())
             || lc.contains(TestClass.Type.CLICKHOUSE.name().toLowerCase())) {
       return Double.NaN;
-    } else if (lc.contains(TestClass.Type.SNOWFLAKE.name().toLowerCase()) || lc.contains(TestClass.Type.POSTGRESQL.name().toLowerCase())) {
+    } else if (lc.contains(TestClass.Type.SNOWFLAKE.name().toLowerCase())) {
       return 0d;
     } else {
       return null;

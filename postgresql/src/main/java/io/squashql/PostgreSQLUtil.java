@@ -50,6 +50,8 @@ public final class PostgreSQLUtil {
       return Lists.DoubleList.class;
     } else if (columnTypeName.equals("_varchar")) {
       return Lists.StringList.class;
+    } else if (columnTypeName.equals("_date")) {
+      return Lists.LocalDateList.class;
     } else {
       return JdbcUtil.sqlTypeToClass(dataType);
     }
