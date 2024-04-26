@@ -24,15 +24,15 @@ public abstract class ATestBinaryOperationMeasure extends ABaseTestQuery {
     TableTypedField ean = new TableTypedField(this.storeName, "ean", String.class);
     TableTypedField category = new TableTypedField(this.storeName, "category", String.class);
     TableTypedField sales = new TableTypedField(this.storeName, "sales", double.class);
-    TableTypedField qty = new TableTypedField(this.storeName, "quantity", long.class);
+    TableTypedField qty = new TableTypedField(this.storeName, "quantity", int.class);
     return Map.of(this.storeName, List.of(ean, category, sales, qty));
   }
 
   @Override
   protected void loadData() {
     this.tm.load(this.storeName, List.of(
-            new Object[]{"bottle", "drink", 20d, 10L},
-            new Object[]{"cookie", "food", 30d, 10L}
+            new Object[]{"bottle", "drink", 20d, 10},
+            new Object[]{"cookie", "food", 30d, 10}
     ));
   }
 

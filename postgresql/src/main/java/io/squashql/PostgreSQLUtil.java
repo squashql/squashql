@@ -42,6 +42,8 @@ public final class PostgreSQLUtil {
       return Lists.DoubleList.class;
     } else if (columnTypeName.equals("_varchar")) {
       return Lists.StringList.class;
+    } else if (columnTypeName.equals("_date")) {
+      return Lists.LocalDateList.class;
     } else {
       return JdbcUtil.sqlTypeToClass(metaData.getColumnType(columnIndex));
     }
@@ -50,7 +52,7 @@ public final class PostgreSQLUtil {
   // TODO factorized
   public static Class<?> getJavaClass(int dataType, String columnTypeName) {
     if (columnTypeName.equals("numeric")) {
-      return BigInteger.class;
+      return BigDecimal.class; // FIXME this might be wrong
     } else if (columnTypeName.equals("_int4") || columnTypeName.equals("_int8") || columnTypeName.equals("_numeric")) {
       return Lists.LongList.class;
     } else if (columnTypeName.equals("_float4") || columnTypeName.equals("_float8")) {
