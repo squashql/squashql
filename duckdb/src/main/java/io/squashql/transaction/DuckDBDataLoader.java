@@ -72,29 +72,6 @@ public class DuckDBDataLoader implements DataLoader {
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
-//    StringJoiner sql = new StringJoiner(",", "insert into \"" + table + "\" values ", "");
-//    try (Connection conn = this.datastore.getConnection();
-//         Statement stmt = conn.createStatement()) {
-//      for (Object[] tuple : tuples) {
-//        StringJoiner sb = new StringJoiner(",", "(", ")");
-//        for (Object o : tuple) {
-//          if (o != null && (o.getClass().equals(LocalDate.class) || o.getClass().equals(LocalDateTime.class))) {
-//            o = o.toString();
-//          }
-//
-//          if (o instanceof String) {
-//            sb.add('\'' + SqlUtils.escapeSingleQuote((String) o, "''") + '\'');
-//          } else {
-//            sb.add(String.valueOf(o));
-//          }
-//        }
-//        sql.add(sb.toString());
-//      }
-//      // addBatch is Not supported.
-//      stmt.execute(sql.toString());
-//    } catch (SQLException e) {
-//      throw new RuntimeException(e);
-//    }
   }
 
   @Override
