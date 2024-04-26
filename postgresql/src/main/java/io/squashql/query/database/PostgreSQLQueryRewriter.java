@@ -1,6 +1,7 @@
 package io.squashql.query.database;
 
 import io.squashql.type.FunctionTypedField;
+import io.squashql.type.TypedField;
 
 class PostgreSQLQueryRewriter implements QueryRewriter {
 
@@ -41,5 +42,10 @@ class PostgreSQLQueryRewriter implements QueryRewriter {
     } else {
       return QueryRewriter.super.functionExpression(ftf);
     }
+  }
+
+  @Override
+  public String arrayContains(TypedField field, Object value) {
+    return String.format("%s=ANY(%s)", value, field.sqlExpression(this));
   }
 }

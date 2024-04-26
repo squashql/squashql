@@ -3,9 +3,7 @@ package io.squashql.query.database;
 import io.squashql.PostgreSQLDatastore;
 import io.squashql.PostgreSQLUtil;
 import io.squashql.jdbc.JdbcQueryEngine;
-import io.squashql.jdbc.JdbcUtil;
 
-import java.math.BigInteger;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
@@ -46,11 +44,8 @@ public class PostgreSQLQueryEngine extends JdbcQueryEngine<PostgreSQLDatastore> 
     return (metaData, column) -> {
       try {
         String columnTypeName = metaData.getColumnTypeName(column);
-        if (columnTypeName.equals("numeric")) {
-          return BigInteger.class;
-        } else {
-          return JdbcUtil.sqlTypeToClass(metaData.getColumnType(column));
-        }
+        int dataColumnType = metaData.getColumnType(column);
+        return PostgreSQLUtil.sqlTypeToJavaClass(dataColumnType, columnTypeName);
       } catch (SQLException e) {
         throw new RuntimeException(e);
       }
