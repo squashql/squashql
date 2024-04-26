@@ -31,7 +31,7 @@ public class PostgreSQLDataLoader implements DataLoader {
       stmt.execute("drop table if exists " + table);
       StringJoiner joiner = new StringJoiner(",", "(", ")");
       for (TableTypedField field : fields) {
-        joiner.add("\"" + field.name() + "\" " + PostgreSQLUtil.classToPostgreType(field.type()));
+        joiner.add("\"" + field.name() + "\" " + PostgreSQLUtil.classToPostgreSQLType(field.type()));
       }
       stmt.execute("create table " + table + joiner);
     } catch (SQLException e) {

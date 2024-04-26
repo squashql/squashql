@@ -22,7 +22,7 @@ public class PostgreSQLDatastore implements JdbcDatastore {
     this.jdbcUrl = jdbcUrl;
     this.connectionProperties = properties;
     String schema = properties.getProperty("currentSchema", "public");
-    this.stores = Suppliers.memoize(() -> JdbcUtil.getStores(properties.getProperty("database"), schema, getConnection(), PostgreSQLUtil::sqlTypeToJavaClass));
+    this.stores = Suppliers.memoize(() -> JdbcUtil.getStores(properties.getProperty("database"), schema, getConnection(), PostgreSQLUtil::getJavaClass));
   }
 
   @Override

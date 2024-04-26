@@ -22,7 +22,7 @@ import static io.squashql.query.Functions.criterion;
 public abstract class ATestOrderByFromOrderTable extends ABaseTestQuery {
 
   protected final String storeName = "store" + getClass().getSimpleName().toLowerCase();
-  private final String orderTable = "orderTable";
+  private final String orderTable = "ordertable";
   private final TableField portfolio = new TableField(this.storeName, "portfolio");
   private final TableField ticker = new TableField(this.storeName, "ticker");
   private final TableField orderId = new TableField(this.orderTable, "orderId");

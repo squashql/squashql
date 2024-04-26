@@ -3,19 +3,23 @@ package io.squashql;
 
 import io.squashql.jdbc.JdbcUtil;
 import io.squashql.list.Lists;
-import io.squashql.util.Types;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 
 public final class PostgreSQLUtil {
 
   private PostgreSQLUtil() {
   }
 
-  public static String classToPostgreType(Class<?> clazz) {
+  /**
+   * It is used in tests by the PostgreSQL {@link io.squashql.transaction.DataLoader} impl.
+   */
+  public static String classToPostgreSQLType(Class<?> clazz) {
     if (clazz.equals(String.class)) {
-      return "TEXT";
+      return "text";
     } else if (clazz.equals(double.class)) {
       return "double precision";
     } else if (clazz.equals(Lists.LongList.class)) {
@@ -27,7 +31,24 @@ public final class PostgreSQLUtil {
     }
   }
 
-  public static Class<?> sqlTypeToJavaClass(int dataType, String columnTypeName) {
+  public static Class<?> getJavaClass(ResultSetMetaData metaData, int columnIndex) throws SQLException {
+    String columnTypeName = metaData.getColumnTypeName(columnIndex);
+    String columnClassName = metaData.getColumnClassName(columnIndex);
+    if (columnTypeName.equals("numeric")) {
+      return columnClassName.equals(BigDecimal.class.getName()) ? BigDecimal.class : BigInteger.class;
+    } else if (columnTypeName.equals("_int4") || columnTypeName.equals("_int8") || columnTypeName.equals("_numeric")) {
+      return Lists.LongList.class;
+    } else if (columnTypeName.equals("_float4") || columnTypeName.equals("_float8")) {
+      return Lists.DoubleList.class;
+    } else if (columnTypeName.equals("_varchar")) {
+      return Lists.StringList.class;
+    } else {
+      return JdbcUtil.sqlTypeToClass(metaData.getColumnType(columnIndex));
+    }
+  }
+
+  // TODO factorized
+  public static Class<?> getJavaClass(int dataType, String columnTypeName) {
     if (columnTypeName.equals("numeric")) {
       return BigInteger.class;
     } else if (columnTypeName.equals("_int4") || columnTypeName.equals("_int8") || columnTypeName.equals("_numeric")) {
@@ -38,14 +59,6 @@ public final class PostgreSQLUtil {
       return Lists.StringList.class;
     } else {
       return JdbcUtil.sqlTypeToClass(dataType);
-    }
-  }
-
-  public static Object getTypeValue(Object o) {
-    if (o instanceof BigDecimal bd) {
-      return Types.castToDouble(bd);
-    } else {
-      return o;
     }
   }
 }
