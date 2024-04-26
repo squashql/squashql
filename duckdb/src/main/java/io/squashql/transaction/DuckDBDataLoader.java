@@ -2,18 +2,17 @@ package io.squashql.transaction;
 
 import io.squashql.DuckDBDatastore;
 import io.squashql.jdbc.JdbcUtil;
-import io.squashql.query.database.SqlUtils;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.IntStream;
 
 public class DuckDBDataLoader implements DataLoader {
 
@@ -52,29 +51,50 @@ public class DuckDBDataLoader implements DataLoader {
 
   @Override
   public void load(String table, List<Object[]> tuples) {
-    StringJoiner sql = new StringJoiner(",", "insert into \"" + table + "\" values ", "");
+    String join = String.join(",", IntStream.range(0, tuples.get(0).length).mapToObj(i -> "?").toList());
+    String pattern = "insert into " + table + " values(" + join + ")";
     try (Connection conn = this.datastore.getConnection();
-         Statement stmt = conn.createStatement()) {
-      for (Object[] tuple : tuples) {
-        StringJoiner sb = new StringJoiner(",", "(", ")");
-        for (Object o : tuple) {
-          if (o != null && (o.getClass().equals(LocalDate.class) || o.getClass().equals(LocalDateTime.class))) {
-            o = o.toString();
-          }
+         PreparedStatement stmt = conn.prepareStatement(pattern)) {
 
-          if (o instanceof String) {
-            sb.add('\'' + SqlUtils.escapeSingleQuote((String) o, "''") + '\'');
-          } else {
-            sb.add(String.valueOf(o));
+      for (Object[] tuple : tuples) {
+        for (int i = 0; i < tuple.length; i++) {
+          Object o = tuple[i];
+          if (o instanceof LocalDate ld) {
+            o = new Date(ld.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli());
+          } else if (o != null && o.getClass().isArray()) {
+            o = Arrays.toString((Object[]) o);
           }
+          stmt.setObject(i + 1, o);
         }
-        sql.add(sb.toString());
+        stmt.addBatch();
       }
-      // addBatch is Not supported.
-      stmt.execute(sql.toString());
+      stmt.executeBatch();
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
+//    StringJoiner sql = new StringJoiner(",", "insert into \"" + table + "\" values ", "");
+//    try (Connection conn = this.datastore.getConnection();
+//         Statement stmt = conn.createStatement()) {
+//      for (Object[] tuple : tuples) {
+//        StringJoiner sb = new StringJoiner(",", "(", ")");
+//        for (Object o : tuple) {
+//          if (o != null && (o.getClass().equals(LocalDate.class) || o.getClass().equals(LocalDateTime.class))) {
+//            o = o.toString();
+//          }
+//
+//          if (o instanceof String) {
+//            sb.add('\'' + SqlUtils.escapeSingleQuote((String) o, "''") + '\'');
+//          } else {
+//            sb.add(String.valueOf(o));
+//          }
+//        }
+//        sql.add(sb.toString());
+//      }
+//      // addBatch is Not supported.
+//      stmt.execute(sql.toString());
+//    } catch (SQLException e) {
+//      throw new RuntimeException(e);
+//    }
   }
 
   @Override
