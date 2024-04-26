@@ -36,10 +36,10 @@ public abstract class ATestVector extends ABaseTestQuery {
   @Override
   protected void loadData() {
     this.tm.load(this.storeName, List.of(
-            new Object[]{"A", 10d, List.of(1L, 3L, 5L), List.of("1", "3", "5")},
-            new Object[]{"B", 8d, List.of(1L, 2L), List.of("1", "2")},
-            new Object[]{"C", 2d, List.of(2L, 4L, 6L), List.of("2", "4", "6")},
-            new Object[]{"D", 1d, List.of(1L), List.of("1")}
+            new Object[]{"A", 10d, List.of(1L, 3L, 5L).toArray(new Long[0]), List.of("1", "3", "5").toArray(new String[0])},
+            new Object[]{"B", 8d, List.of(1L, 2L).toArray(new Long[0]), List.of("1", "2").toArray(new String[0])},
+            new Object[]{"C", 2d, List.of(2L, 4L, 6L).toArray(new Long[0]), List.of("2", "4", "6").toArray(new String[0])},
+            new Object[]{"D", 1d, List.of(1L).toArray(new Long[0]), List.of("1").toArray(new String[0])}
     ));
   }
 

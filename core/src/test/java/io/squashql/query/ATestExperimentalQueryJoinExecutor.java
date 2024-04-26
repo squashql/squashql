@@ -21,9 +21,9 @@ import static io.squashql.query.dto.OrderKeywordDto.DESC;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestExperimentalQueryJoinExecutor extends ABaseTestQuery {
 
-  String storeA = "StoreA" + getClass().getSimpleName().toLowerCase();
-  String storeB = "StoreB" + getClass().getSimpleName().toLowerCase();
-  String storeC = "StoreC" + getClass().getSimpleName().toLowerCase();
+  String storeA = "store_a" + getClass().getSimpleName().toLowerCase();
+  String storeB = "store_b" + getClass().getSimpleName().toLowerCase();
+  String storeC = "store_c" + getClass().getSimpleName().toLowerCase();
   Field category = new TableField(this.storeA, "category");
   Field idA = new TableField(this.storeA, "idA");
   Field idStoreA = new TableField(this.storeA, "id");

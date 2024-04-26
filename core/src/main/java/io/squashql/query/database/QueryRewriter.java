@@ -127,7 +127,13 @@ public interface QueryRewriter {
    * https://www.sqlservertutorial.net/sql-server-basics/sql-server-rollup/
    * </a>.
    */
-  boolean usePartialRollupSyntax();
+  default boolean usePartialRollupSyntax(){
+    return true;
+  }
+
+  default boolean useAliasInHavingClause() {
+    return true;
+  }
 
   default String escapeSingleQuote(String s) {
     return SqlUtils.escapeSingleQuote(s, "''");

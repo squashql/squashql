@@ -94,8 +94,8 @@ public abstract class ATestQueryExecutionLocality extends ABaseTestQuery {
     }
 
     @Override
-    public QueryRewriter queryRewriter(DatabaseQuery query) {
-      return this.underlying.queryRewriter(query);
+    public QueryRewriter queryRewriter() {
+      return this.underlying.queryRewriter();
     }
   }
 }

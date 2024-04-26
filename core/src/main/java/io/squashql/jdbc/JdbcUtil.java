@@ -81,6 +81,7 @@ public final class JdbcUtil {
       case Types.TIME -> LocalDateTime.class;
       case Types.TIMESTAMP -> Timestamp.class;
       case Types.ARRAY -> List.class;
+      case Types.NUMERIC -> Number.class;
       default -> Object.class;
     };
   }

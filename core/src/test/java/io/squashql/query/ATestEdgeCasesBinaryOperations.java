@@ -52,7 +52,6 @@ public abstract class ATestEdgeCasesBinaryOperations extends ABaseTestQuery {
             .select(List.of(this.ean), List.of(divide("divide", sum, sum), avg))
             .build();
     Table result = this.executor.executeQuery(query);
-    result.show();
     Assertions.assertThat(result).containsExactly(
             List.of("0", 1d, 1d),
             List.of("1", 1d, 1d),
@@ -70,7 +69,7 @@ public abstract class ATestEdgeCasesBinaryOperations extends ABaseTestQuery {
     } else if (lc.contains(TestClass.Type.DUCKDB.name().toLowerCase())
             || lc.contains(TestClass.Type.CLICKHOUSE.name().toLowerCase())) {
       return Double.NaN;
-    }  else if (lc.contains(TestClass.Type.SNOWFLAKE.name().toLowerCase())) {
+    } else if (lc.contains(TestClass.Type.SNOWFLAKE.name().toLowerCase())) {
       return 0d;
     } else {
       return null;

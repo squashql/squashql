@@ -28,7 +28,7 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
   }
 
   protected final String orders = storeName("orders");
-  protected final String orderDetails = storeName("orderDetails");
+  protected final String orderDetails = storeName("orderdetails");
   protected final String shippers = storeName("shippers");
   protected final String products = storeName("products");
   protected final String categories = storeName("categories");
@@ -149,6 +149,8 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
       return "ambiguous column name 'name'";
     } else if (ds.contains(TestClass.Type.DUCKDB.className)) {
       return "Ambiguous reference to column name \"name\"";
+    } else if (ds.contains(TestClass.Type.POSTGRESQL.className)) {
+      return "column reference \"name\" is ambiguous";
     }
     return null;
   }

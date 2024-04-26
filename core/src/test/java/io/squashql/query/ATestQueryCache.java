@@ -30,7 +30,7 @@ import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
-@TestClass(ignore = {TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE, TestClass.Type.CLICKHOUSE, TestClass.Type.SPARK})
+@TestClass(ignore = {TestClass.Type.BIGQUERY, TestClass.Type.SNOWFLAKE, TestClass.Type.CLICKHOUSE, TestClass.Type.SPARK, TestClass.Type.POSTGRESQL})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class ATestQueryCache extends ABaseTestQuery {
 

@@ -46,7 +46,7 @@ public class ClickHouseDataLoader implements DataLoader {
 
   @Override
   public void load(String table, List<Object[]> tuples) {
-    String join = String.join(",", IntStream.range(0, tuples.get(0).length + 1).mapToObj(i -> "?").toList());
+    String join = String.join(",", IntStream.range(0, tuples.get(0).length).mapToObj(i -> "?").toList());
     String pattern = "insert into " + table + " values(" + join + ")";
     try (ClickHouseConnection conn = this.clickHouseDataSource.getConnection();
          PreparedStatement stmt = conn.prepareStatement(pattern)) {

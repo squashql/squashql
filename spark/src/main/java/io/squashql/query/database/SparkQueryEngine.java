@@ -75,7 +75,7 @@ public class SparkQueryEngine extends AQueryEngine<SparkDatastore> {
   }
 
   @Override
-  public QueryRewriter queryRewriter(DatabaseQuery query) {
-    return new SparkQueryRewriter(query);
+  public QueryRewriter queryRewriter() {
+    return new SparkQueryRewriter();
   }
 }

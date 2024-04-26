@@ -442,6 +442,8 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     String qesn = this.queryEngine.getClass().getSimpleName();
     if (qesn.contains(TestClass.Type.CLICKHOUSE.className) || qesn.contains(TestClass.Type.SPARK.className)) {
       return i;
+    } else if (qesn.contains(TestClass.Type.POSTGRESQL.className)) {
+      return (double) i;
     } else {
       return (long) i;
     }
@@ -451,6 +453,8 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     String qesn = this.queryEngine.getClass().getSimpleName();
     if (qesn.contains(TestClass.Type.CLICKHOUSE.className) || qesn.contains(TestClass.Type.SPARK.className)) {
       return i;
+    } else if (qesn.contains(TestClass.Type.POSTGRESQL.className)) {
+      return (double) i;
     } else {
       return (long) i;
     }
@@ -460,6 +464,8 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
     String qesn = this.queryEngine.getClass().getSimpleName();
     if (qesn.contains(TestClass.Type.CLICKHOUSE.className) || qesn.contains(TestClass.Type.SPARK.className)) {
       return i;
+    } else if (qesn.contains(TestClass.Type.POSTGRESQL.className)) {
+      return (double) i;
     } else {
       return (long) i;
     }

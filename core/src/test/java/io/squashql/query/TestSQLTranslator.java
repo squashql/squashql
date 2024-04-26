@@ -539,7 +539,7 @@ public class TestSQLTranslator {
             criterion(recoPrice, gt(0))
     ));
 
-    DefaultQueryRewriter qr = new DefaultQueryRewriter(null);
+    DefaultQueryRewriter qr = new DefaultQueryRewriter();
     String expression = compiledMeasure(measure).sqlExpression(qr, true);
     assertThat(expression)
             .isEqualTo("sum(case when (`recommendation`.`finalprice` > `recommendation`.`recoprice` and `recommendation`.`recoprice` > 0)" +
@@ -556,7 +556,7 @@ public class TestSQLTranslator {
 
   @Test
   void testComplexFieldCalculation() {
-    DefaultQueryRewriter qr = new DefaultQueryRewriter(null);
+    DefaultQueryRewriter qr = new DefaultQueryRewriter();
     Field a = new TableField("a");
     Field b = new TableField("b");
     Field c = new TableField("c");
