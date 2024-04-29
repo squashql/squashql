@@ -10,7 +10,7 @@ import {
 } from "./measure"
 import {Condition, ConstantCondition, InCondition, LogicalCondition, SingleValueCondition} from "./condition"
 import Criteria from "./criteria"
-import {AliasedField, BinaryOperationField, ConstantField, Field, TableField} from "./field"
+import {AliasedField, BinaryOperationField, ConstantField, Field, FunctionField, TableField} from "./field"
 import {ColumnSet, GroupColumnSet} from "./columnset"
 import {Month, Period, Quarter, Semester, Year} from "./period"
 
@@ -24,6 +24,11 @@ export const computeFieldDependencies = (field: Field, resultArray: Field[] = []
     case AliasedField:
       resultArray.push(field)
       break
+    case FunctionField: {
+      const operand = (field as FunctionField).operand
+      operand && resultArray.push(operand)
+      break
+    }
     case BinaryOperationField:
       computeFieldDependencies((field as BinaryOperationField).leftOperand, resultArray)
       computeFieldDependencies((field as BinaryOperationField).rightOperand, resultArray)
