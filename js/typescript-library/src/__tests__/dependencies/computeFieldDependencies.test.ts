@@ -1,4 +1,4 @@
-import {AliasedField, BinaryOperationField, ConstantField, Field, TableField} from "../../field"
+import {AliasedField, BinaryOperationField, ConstantField, currentDate, Field, lower, TableField} from "../../field"
 import * as dependencies from "../../dependencies"
 import {BinaryOperator} from "../../measure"
 
@@ -44,6 +44,17 @@ describe('computeFieldDependencies', () => {
     const field = new AliasedField('myAlias')
     const result = dependencies.computeFieldDependencies(field)
     expect(result).toEqual(expect.arrayContaining([field]))
+  })
+
+  it('should return the correct dependencies for a FunctionField with a single operand', () => {
+    const field = new TableField('tableName.fieldName')
+    const result = dependencies.computeFieldDependencies(lower(field))
+    expect(result).toEqual(expect.arrayContaining([field]))
+  })
+
+  it('should return the correct dependencies for a FunctionField with no operand', () => {
+    const result = dependencies.computeFieldDependencies(currentDate())
+    expect(result.length).toEqual(0)
   })
 
   it('should throw an error for unknown field type', () => {
