@@ -81,7 +81,7 @@ public class CaffeineQueryCache implements QueryCache {
     for (CompiledMeasure measure : measures) {
       if (!cache.measures().contains(measure)) {
         // Not in the previousResult, add it.
-        cache.transferAggregates(result, measure);
+        cache.transferAggregates(result, measure); // FIXME concurrency
         this.measureCounter.recordMisses(1);
       }
     }
@@ -94,7 +94,7 @@ public class CaffeineQueryCache implements QueryCache {
     }
     Table cacheResult = this.results.getIfPresent(scope);
     for (CompiledMeasure measure : measures) {
-      result.transferAggregates(cacheResult, measure);
+      result.transferAggregates(cacheResult, measure); // FIXME concurrency
       this.measureCounter.recordHits(1);
     }
   }
