@@ -63,9 +63,6 @@ public final class JdbcUtil {
     if (clazz.equals(Lists.StringList.class)) {
       return "VARCHAR[]"; // FIXME duckdb only
     }
-    if (clazz.equals(Object.class)) {
-      return "STRUCT";
-    }
     throw new IllegalArgumentException("Unsupported field type " + clazz);
   }
 

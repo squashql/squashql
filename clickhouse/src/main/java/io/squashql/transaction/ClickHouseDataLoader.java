@@ -3,7 +3,6 @@ package io.squashql.transaction;
 import com.clickhouse.jdbc.ClickHouseConnection;
 import com.clickhouse.jdbc.ClickHouseDataSource;
 import com.clickhouse.jdbc.ClickHouseStatement;
-import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.type.TableTypedField;
 
@@ -14,7 +13,6 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.IntStream;
 
-import static io.squashql.ClickHouseDatastore.getFields;
 import static io.squashql.ClickHouseUtil.classToClickHouseType;
 
 public class ClickHouseDataLoader implements DataLoader {
@@ -37,11 +35,10 @@ public class ClickHouseDataLoader implements DataLoader {
       stmt.execute("drop table if exists " + table);
       StringJoiner joiner = new StringJoiner(",", "(", ")");
       for (TableTypedField field : fields) {
-        String format = !List.class.isAssignableFrom(field.type()) && Object.class != field.type() ? "Nullable(%s)" : "%s";
+        String format = !List.class.isAssignableFrom(field.type()) ? "Nullable(%s)" : "%s";
         joiner.add(SqlUtils.backtickEscape(field.name()) + " " + String.format(format, classToClickHouseType(field.type())));
       }
-      stmt.execute("SET allow_experimental_object_type = 1");
-      stmt.execute("SET allow_experimental_object_type = 1; create table " + table + joiner + "engine=Memory;");
+      stmt.execute("create table " + table + joiner + "engine=Memory");
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
@@ -51,19 +48,12 @@ public class ClickHouseDataLoader implements DataLoader {
   public void load(String table, List<Object[]> tuples) {
     String join = String.join(",", IntStream.range(0, tuples.get(0).length).mapToObj(i -> "?").toList());
     String pattern = "insert into " + table + " values(" + join + ")";
-    List<TableTypedField> fields = getFields(clickHouseDataSource, table);
     try (ClickHouseConnection conn = this.clickHouseDataSource.getConnection();
          PreparedStatement stmt = conn.prepareStatement(pattern)) {
 
       for (Object[] tuple : tuples) {
         for (int i = 0; i < tuple.length; i++) {
-          Object o = tuple[i];
-          TableTypedField field = fields.get(i);
-          if (field.type() == Object.class) {
-            o = JacksonUtil.serialize(o);
-          }
-
-          stmt.setObject(i + 1, o);
+          stmt.setObject(i + 1, tuple[i]);
         }
         stmt.addBatch();
       }

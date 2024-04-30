@@ -73,13 +73,13 @@ public class BigQueryDataLoader implements DataLoader {
       for (int i = 0; i < fields.size(); i++) {
         TableTypedField field = fields.get(i);
         Object o = tuple[i];
-        if (o != null && (o.getClass().equals(LocalDate.class) || o.getClass().equals(LocalDateTime.class))) {
-          o = o.toString();
+        if (o != null) {
+          if (o.getClass().equals(LocalDate.class) || o.getClass().equals(LocalDateTime.class)) {
+            o = o.toString();
+          } else if (field.type().equals(Object.class)) {
+            o = JacksonUtil.serialize(o);
+          }
         }
-        if (o != null && field.type().equals(Object.class)) {
-          o = JacksonUtil.serialize(o);
-        }
-
         m.put(field.name(), o);
       }
       list.add(InsertAllRequest.RowToInsert.of(m));
