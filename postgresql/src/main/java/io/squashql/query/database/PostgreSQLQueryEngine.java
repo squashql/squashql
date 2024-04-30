@@ -5,6 +5,7 @@ import io.squashql.PostgreSQLUtil;
 import io.squashql.jdbc.JdbcQueryEngine;
 import io.squashql.jdbc.ResultSetReader;
 import io.squashql.util.Types;
+import org.postgresql.util.PGobject;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -49,8 +50,13 @@ public class PostgreSQLQueryEngine extends JdbcQueryEngine<PostgreSQLDatastore> 
       @Override
       public Object read(List<Class<?>> columnTypes, ResultSet tableResult, int index) {
         try {
-          if (tableResult.getObject(index + 1) == null) {
+          Object object = tableResult.getObject(index + 1);
+          if (object == null) {
             return null;
+          }
+
+          if (object instanceof PGobject pgo) {
+            return pgo.getValue(); // send a string
           }
 
           Class<?> klazz = columnTypes.get(index);

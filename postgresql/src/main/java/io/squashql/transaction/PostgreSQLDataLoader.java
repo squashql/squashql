@@ -2,8 +2,10 @@ package io.squashql.transaction;
 
 import io.squashql.PostgreSQLDatastore;
 import io.squashql.PostgreSQLUtil;
+import io.squashql.jackson.JacksonUtil;
 import io.squashql.type.TableTypedField;
 import lombok.AllArgsConstructor;
+import org.postgresql.util.PGobject;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -45,10 +47,16 @@ public class PostgreSQLDataLoader implements DataLoader {
     String pattern = "insert into " + table + " values(" + join + ")";
     try (Connection conn = this.datastore.getConnection();
          PreparedStatement stmt = conn.prepareStatement(pattern)) {
-
       for (Object[] tuple : tuples) {
         for (int i = 0; i < tuple.length; i++) {
-          stmt.setObject(i + 1, tuple[i]);
+          Object o = tuple[i];
+          TableTypedField field = this.datastore.storeByName().get(table).fields().get(i);
+          if (PostgreSQLUtil.classToPostgreSQLType(field.type()).equals("json")) {
+            PGobject pGobject = (PGobject) (o = new PGobject());
+            pGobject.setType("json");
+            pGobject.setValue(JacksonUtil.serialize(o));
+          }
+          stmt.setObject(i + 1, o);
         }
         stmt.addBatch();
       }
