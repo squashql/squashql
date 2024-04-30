@@ -59,7 +59,7 @@ jobs:
           cache: 'maven'
       - name: Build with Maven
         run: mvn -pl :squashql-postgresql -am clean install --no-transfer-progress -DskipTests
-      - name: Run clickhouse tests
+      - name: Run postgresql tests
         run: mvn -pl :squashql-postgresql --no-transfer-progress test
         env:
           TESTCONTAINERS_REUSE_ENABLE: true
