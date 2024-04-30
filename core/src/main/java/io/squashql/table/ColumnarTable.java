@@ -66,22 +66,18 @@ public class ColumnarTable implements Table {
                       + " but does not match the headers of the destination table " + toHeaderNames);
     }
 
-    if (from instanceof ColumnarTable ct) {
-      List<Object> values = ListUtils.createListWithNulls((int) count());
-      List<Object> aggregateValues = from.getAggregateValues(measure);
-      this.pointDictionary.get().forEach((point, index) -> {
-        int position = ct.pointDictionary.get().getPosition(point);
-        if (position >= 0) {
-          values.set(index, aggregateValues.get(position));
-        }
-      });
-      Header header = from.getHeader(measure);
-      this.headers.add(new Header(header.name(), header.type(), true));
-      this.measures.add(measure);
-      this.values.add(values);
-    } else {
-      throw new IllegalArgumentException();
-    }
+    List<Object> values = ListUtils.createListWithNulls(count());
+    List<Object> aggregateValues = from.getAggregateValues(measure);
+    this.pointDictionary.get().forEach((point, index) -> {
+      int position = from.pointDictionary().getPosition(point);
+      if (position >= 0) {
+        values.set(index, aggregateValues.get(position));
+      }
+    });
+    Header header = from.getHeader(measure);
+    this.headers.add(new Header(header.name(), header.type(), true));
+    this.measures.add(measure);
+    this.values.add(values);
   }
 
   @Override
@@ -94,7 +90,7 @@ public class ColumnarTable implements Table {
   }
 
   @Override
-  public long count() {
+  public int count() {
     return this.values.get(0).size();
   }
 
@@ -123,10 +119,18 @@ public class ColumnarTable implements Table {
     return new ColumnarTableIterator();
   }
 
+  public ColumnarTable copy() {
+    List<List<Object>> newValues = new ArrayList<>();
+    for (int i = 0; i < this.headers.size(); i++) {
+      newValues.add(new ArrayList<>(getColumn(i)));
+    }
+    return new ColumnarTable(this.headers, this.measures, newValues);
+  }
+
   private class ColumnarTableIterator implements Iterator<List<Object>> {
 
     int current = 0;
-    long size = count();
+    int size = count();
 
     @Override
     public boolean hasNext() {

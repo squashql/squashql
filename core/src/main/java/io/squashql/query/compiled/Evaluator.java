@@ -126,7 +126,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
       throw new IllegalArgumentException("Unexpected type " + cm.getClass() + ". Only double and long are supported");
     }
     Header header = new Header(cm.alias(), type, true);
-    List<Object> r = Collections.nCopies((int) intermediateResult.count(), v);
+    List<Object> r = Collections.nCopies(intermediateResult.count(), v);
     intermediateResult.addAggregates(header, cm, r);
   }
 
@@ -175,7 +175,7 @@ public class Evaluator implements BiConsumer<QueryPlanNodeKey, ExecutionContext>
       columnValues.add(readTable.getColumnValues(alias));
     }
 
-    List<Object> vectorValues = ListUtils.createListWithNulls((int) writeToTable.count());
+    List<Object> vectorValues = ListUtils.createListWithNulls(writeToTable.count());
     writeToTable.pointDictionary().forEach((point, index) -> {
       int position = readTable.pointDictionary().getPosition(point);
       if (position >= 0) {

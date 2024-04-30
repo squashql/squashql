@@ -6,16 +6,23 @@ import com.github.benmanes.caffeine.cache.RemovalListener;
 import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import com.github.benmanes.caffeine.cache.stats.ConcurrentStatsCounter;
 import com.github.benmanes.caffeine.cache.stats.StatsCounter;
-import io.squashql.query.compiled.CompiledAggregatedMeasure;
+import com.google.common.util.concurrent.Striped;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.SqlUtils;
+import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;
+import lombok.AllArgsConstructor;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+
+import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUNT;
 
 public class CaffeineQueryCache implements QueryCache {
 
@@ -23,11 +30,12 @@ public class CaffeineQueryCache implements QueryCache {
 
   private volatile StatsCounter scopeCounter = new ConcurrentStatsCounter();
   private volatile StatsCounter measureCounter = new ConcurrentStatsCounter();
+  private final Striped<ReadWriteLock> lock;
 
   /**
    * The cached results.
    */
-  private final Cache<QueryCacheKey, Table> results;
+  private final Cache<QueryCacheKey, DelegateTable> results;
 
   public CaffeineQueryCache() {
     this(MAX_SIZE, (a, b, c) -> {
@@ -42,6 +50,7 @@ public class CaffeineQueryCache implements QueryCache {
             // Use removalListener and not evictionListener because evictionListener is called before updating the stats
             .removalListener(evictionListener)
             .build();
+    this.lock = Striped.readWriteLock(Runtime.getRuntime().availableProcessors() * 4);
   }
 
   @Override
@@ -52,21 +61,20 @@ public class CaffeineQueryCache implements QueryCache {
 
     List<List<Object>> values = new ArrayList<>();
     Table table = this.results.getIfPresent(key);
-    for (TypedField f : columns) {
-      values.add(table.getColumnValues(SqlUtils.squashqlExpression(f)));
-    }
-    values.add(table.getAggregateValues(CompiledAggregatedMeasure.COMPILED_COUNT));
-    return new ColumnarTable(
-            headers,
-            Collections.singleton(CompiledAggregatedMeasure.COMPILED_COUNT),
-            values);
+    return executeRead(table, () -> {
+      for (TypedField f : columns) {
+        values.add(table.getColumnValues(SqlUtils.squashqlExpression(f)));
+      }
+      values.add(table.getColumnValues(COMPILED_COUNT.alias()));
+      return new ColumnarTable(headers, Collections.singleton(COMPILED_COUNT), values);
+    });
   }
 
   @Override
   public boolean contains(CompiledMeasure measure, QueryCacheKey scope) {
     Table table = this.results.getIfPresent(scope);
     if (table != null) {
-      return table.measures().contains(measure);
+      return executeRead(table, () -> table.measures().contains(measure));
     }
     return false;
   }
@@ -75,16 +83,18 @@ public class CaffeineQueryCache implements QueryCache {
   public void contributeToCache(Table result, Set<CompiledMeasure> measures, QueryCacheKey scope) {
     Table cache = this.results.get(scope, s -> {
       this.measureCounter.recordMisses(measures.size());
-      return result;
+      return new DelegateTable(((ColumnarTable) result).copy());
     });
 
-    for (CompiledMeasure measure : measures) {
-      if (!cache.measures().contains(measure)) {
-        // Not in the previousResult, add it.
-        cache.transferAggregates(result, measure);
-        this.measureCounter.recordMisses(1);
+    executeWrite(cache, () -> {
+      for (CompiledMeasure measure : measures) {
+        if (!cache.measures().contains(measure)) {
+          // Not in the previousResult, add it.
+          cache.transferAggregates(result, measure);
+          this.measureCounter.recordMisses(1);
+        }
       }
-    }
+    });
   }
 
   @Override
@@ -92,10 +102,15 @@ public class CaffeineQueryCache implements QueryCache {
     if (measures.isEmpty()) {
       return;
     }
-    Table cacheResult = this.results.getIfPresent(scope);
-    for (CompiledMeasure measure : measures) {
-      result.transferAggregates(cacheResult, measure);
-      this.measureCounter.recordHits(1);
+    Table cache = this.results.getIfPresent(scope);
+    if (cache != null) {
+      executeRead(cache, () -> {
+        for (CompiledMeasure measure : measures) {
+          result.transferAggregates(cache, measure);
+          this.measureCounter.recordHits(1);
+        }
+        return null;
+      });
     }
   }
 
@@ -129,5 +144,82 @@ public class CaffeineQueryCache implements QueryCache {
     this.results.invalidateAll();
     this.measureCounter = new ConcurrentStatsCounter();
     this.scopeCounter = new ConcurrentStatsCounter();
+  }
+
+  private <V> V executeRead(Table t, Callable<V> callable) {
+    Lock l = this.lock.get(t).readLock();
+    try {
+      l.lock();
+      return callable.call();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    } finally {
+      l.unlock();
+    }
+  }
+
+  private void executeWrite(Table t, Runnable runnable) {
+    Lock l = this.lock.get(t).writeLock();
+    try {
+      l.lock();
+      runnable.run();
+    } finally {
+      l.unlock();
+    }
+  }
+
+  /**
+   * A wrapper around another {@link Table} to make sure this implementation does not override {@link Object#hashCode()}
+   * and {@link Object#equals(Object)} to work with the {@link Striped striped lock}.
+   */
+  @AllArgsConstructor
+  private final class DelegateTable implements Table {
+
+    private final Table underlying;
+
+    @Override
+    public boolean equals(Object o) {
+      return super.equals(o); // DO NOT CHANGE IT
+    }
+
+    @Override
+    public int hashCode() {
+      return super.hashCode(); // DO NOT CHANGE IT
+    }
+
+    @Override
+    public List<Header> headers() {
+      return this.underlying.headers();
+    }
+
+    @Override
+    public Set<CompiledMeasure> measures() {
+      return this.underlying.measures();
+    }
+
+    @Override
+    public void transferAggregates(Table from, CompiledMeasure measure) {
+      this.underlying.transferAggregates(from, measure);
+    }
+
+    @Override
+    public ObjectArrayDictionary pointDictionary() {
+      return this.underlying.pointDictionary();
+    }
+
+    @Override
+    public Iterator<List<Object>> iterator() {
+      return this.underlying.iterator();
+    }
+
+    @Override
+    public void addAggregates(Header header, CompiledMeasure measure, List<Object> values) {
+      this.underlying.addAggregates(header, measure, values);
+    }
+
+    @Override
+    public int count() {
+      return this.underlying.count();
+    }
   }
 }

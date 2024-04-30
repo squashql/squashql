@@ -37,7 +37,7 @@ public class RowTable implements Table {
   }
 
   @Override
-  public long count() {
+  public int count() {
     return this.rows.size();
   }
 
