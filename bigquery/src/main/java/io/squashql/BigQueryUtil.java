@@ -64,6 +64,8 @@ public final class BigQueryUtil {
       type = StandardSQLTypeName.ARRAY;
     } else if (clazz.equals(Lists.StringList.class)) {
       type = StandardSQLTypeName.ARRAY;
+    } else if (clazz.equals(Object.class)) {
+      type = StandardSQLTypeName.JSON;
     } else {
       throw new IllegalArgumentException("Unsupported field type " + clazz);
     }

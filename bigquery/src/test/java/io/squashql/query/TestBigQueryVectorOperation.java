@@ -24,13 +24,13 @@ public class TestBigQueryVectorOperation extends ATestVectorOperation {
 
   @Override
   protected void createTables() {
-    BigQueryDataLoader tm = (BigQueryDataLoader) this.tm;
-    BigQueryTestUtil.createDatasetIfDoesNotExist(tm.getBigQuery(), DATASET_NAME);
-    this.fieldsByStore.forEach((store, fields) -> tm.dropAndCreateInMemoryTable(store, fields));
+    BigQueryDataLoader dl = (BigQueryDataLoader) this.tm;
+    BigQueryTestUtil.createDatasetIfDoesNotExist(dl.getBigQuery(), DATASET_NAME);
+    this.fieldsByStore.forEach(dl::dropAndCreateInMemoryTable);
   }
 
   @Override
-  protected QueryEngine createQueryEngine(Datastore datastore) {
+  protected QueryEngine<?> createQueryEngine(Datastore datastore) {
     return new BigQueryEngine((BigQueryDatastore) datastore);
   }
 

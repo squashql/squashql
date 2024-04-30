@@ -22,7 +22,6 @@ public class SparkDataLoader implements DataLoader {
     createTemporaryTable(this.spark, table, fields);
   }
 
-
   public static void createTemporaryTable(SparkSession spark, String table, List<TableTypedField> fields) {
     StructType schema = SparkUtil.createSchema(fields);
     spark.conf().set("spark.sql.caseSensitive", String.valueOf(true)); // without it, table names are lowercase.

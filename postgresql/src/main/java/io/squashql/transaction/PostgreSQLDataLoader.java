@@ -52,9 +52,10 @@ public class PostgreSQLDataLoader implements DataLoader {
           Object o = tuple[i];
           TableTypedField field = this.datastore.storeByName().get(table).fields().get(i);
           if (PostgreSQLUtil.classToPostgreSQLType(field.type()).equals("json")) {
-            PGobject pGobject = (PGobject) (o = new PGobject());
+            PGobject pGobject = new PGobject();
             pGobject.setType("json");
             pGobject.setValue(JacksonUtil.serialize(o));
+            o = pGobject;
           }
           stmt.setObject(i + 1, o);
         }
