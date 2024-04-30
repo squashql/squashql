@@ -156,7 +156,6 @@ public class QueryExecutor {
         result = queryCache.createRawResult(queryCacheKey);
       }
 
-      // FIXME this two operations could be merged? contributeToResult & contributeToCache
       queryCache.contributeToResult(result, cached, queryCacheKey);
       Set<CompiledMeasure> measuresToCache = notCached.stream().filter(m -> !measuresToExcludeFromCache.contains(m)).collect(Collectors.toSet());
       queryCache.contributeToCache(result, measuresToCache, queryCacheKey);

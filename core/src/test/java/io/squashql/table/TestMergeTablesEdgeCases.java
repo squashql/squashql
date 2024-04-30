@@ -36,7 +36,7 @@ class TestMergeTablesEdgeCases {
                     new ArrayList<>(Arrays.asList(20, 25, 12, 5))));
 
     Table emptyTable = Mockito.mock(Table.class);
-    Mockito.when(emptyTable.count()).thenReturn(0L);
+    Mockito.when(emptyTable.count()).thenReturn(0);
     Table mergedTable = MergeTables.mergeTables(emptyTable, table, JoinType.LEFT);
     Assertions.assertThat(mergedTable).isEqualTo(table);
 

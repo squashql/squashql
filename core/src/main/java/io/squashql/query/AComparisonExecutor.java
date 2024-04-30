@@ -42,7 +42,7 @@ public abstract class AComparisonExecutor<T extends CompiledComparisonMeasure> {
     int readFromTableColumnsCount = (int) readFromTable.headers().stream().filter(header -> !header.isMeasure()).count();
     Object[] buffer = new Object[readFromTableColumnsCount];
     Header[] headers = new Header[readFromTableColumnsCount];
-    List<Object> result = new ArrayList<>((int) writeToTable.count());
+    List<Object> result = new ArrayList<>(writeToTable.count());
     List<Object> readAggregateValues = readFromTable.getAggregateValues(cm.measure());
     List<Object> writeAggregateValues = writeToTable.getAggregateValues(cm.measure());
     BiFunction<Object, Object, Object> comparisonBiFunction = cm.comparisonMethod() != null

@@ -66,7 +66,7 @@ public class ColumnarTable implements Table {
                       + " but does not match the headers of the destination table " + toHeaderNames);
     }
 
-    List<Object> values = ListUtils.createListWithNulls((int) count());
+    List<Object> values = ListUtils.createListWithNulls(count());
     List<Object> aggregateValues = from.getAggregateValues(measure);
     this.pointDictionary.get().forEach((point, index) -> {
       int position = from.pointDictionary().getPosition(point);
@@ -90,7 +90,7 @@ public class ColumnarTable implements Table {
   }
 
   @Override
-  public long count() {
+  public int count() {
     return this.values.get(0).size();
   }
 
@@ -130,7 +130,7 @@ public class ColumnarTable implements Table {
   private class ColumnarTableIterator implements Iterator<List<Object>> {
 
     int current = 0;
-    long size = count();
+    int size = count();
 
     @Override
     public boolean hasNext() {

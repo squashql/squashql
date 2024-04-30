@@ -357,7 +357,7 @@ public class TestPivotTable {
     List<Field> columns = List.of(new AliasedField("category"));
     PivotTable pivotTable = this.executor.executePivotQuery(new PivotTableQueryDto(query, rows, columns));
     // We check it does not throw and it returns a result
-    Assertions.assertThat(pivotTable.table.count()).isEqualTo(18L);
+    Assertions.assertThat(pivotTable.table.count()).isEqualTo(18);
   }
 
   @Test

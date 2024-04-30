@@ -210,7 +210,7 @@ public final class PivotTableUtils {
             ? PivotTableUtils.findNullValuesOnEntireColumn(pivotTable)
             : empty;
 
-    List<Map<String, Object>> cells = new ArrayList<>((int) pivotTable.table.count());
+    List<Map<String, Object>> cells = new ArrayList<>(pivotTable.table.count());
     List<String> headerNames = pivotTable.table.headers().stream().map(Header::name).toList();
     int[] line = new int[1];
     pivotTable.table.forEach(row -> {

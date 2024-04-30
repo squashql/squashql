@@ -218,7 +218,7 @@ public class CaffeineQueryCache implements QueryCache {
     }
 
     @Override
-    public long count() {
+    public int count() {
       return this.underlying.count();
     }
   }
