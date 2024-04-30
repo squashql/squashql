@@ -243,12 +243,8 @@ public class TableUtils {
     // To lazily copy the table when needed.
     boolean[] lazilyCreated = new boolean[1];
     Supplier<Table> finalTable = Suppliers.memoize(() -> {
-      List<List<Object>> newValues = new ArrayList<>();
-      for (int i = 0; i < table.headers().size(); i++) {
-        newValues.add(new ArrayList<>(table.getColumn(i)));
-      }
       lazilyCreated[0] = true;
-      return new ColumnarTable(table.headers(), table.measures(), newValues);
+      return table.copy();
     });
 
     for (int rowIndex = 0; rowIndex < table.count(); rowIndex++) {

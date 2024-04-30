@@ -108,12 +108,12 @@ public interface Table extends Iterable<List<Object>> {
   default String toString(int numRows) {
     return TableUtils.toString(headers(), () -> new Iterator<>() {
 
-      Iterator<List<Object>> underlying = iterator();
-      int[] c = new int[1];
+      final Iterator<List<Object>> underlying = iterator();
+      final int[] c = new int[1];
 
       @Override
       public boolean hasNext() {
-        return this.c[0] < numRows ? this.underlying.hasNext() : false;
+        return this.c[0] < numRows && this.underlying.hasNext();
       }
 
       @Override

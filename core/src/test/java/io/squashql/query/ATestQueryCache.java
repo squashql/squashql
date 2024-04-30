@@ -14,11 +14,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -596,6 +596,38 @@ public abstract class ATestQueryCache extends ABaseTestQuery {
             List.of("cloth", 10d),
             List.of("drink", 2d),
             List.of("food", 3d));
+  }
+
+  @Test
+  void testQueryCacheConcurrency() throws Exception {
+    int nThreads = Runtime.getRuntime().availableProcessors();
+    ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+
+    for (int j = 0; j < 1000; j++) {
+      this.executor.queryCache.clear();
+      List<Future<Table>> futures = new ArrayList<>();
+      for (int i = 0; i < nThreads; i++) {
+        String alias = Integer.toString(i); // use a different alias read/write different measures from the cache
+        Future<Table> result = executor.submit(() -> {
+          QueryDto query = Query
+                  .from(this.storeName)
+                  .select(tableFields(List.of("category")), List.of(sum(alias, "price")))
+                  .build();
+          return this.executor.executeQuery(query);
+        });
+        futures.add(result);
+      }
+
+      for (Future<Table> future : futures) {
+        Table table = future.get();
+        Assertions.assertThat(table).containsExactly(
+                List.of("cloth", 10d),
+                List.of("drink", 2d),
+                List.of("food", 3d));
+      }
+    }
+
+    executor.shutdownNow();
   }
 
   private void assertCacheStats(int hitCount, int missCount) {
