@@ -13,7 +13,7 @@ public class BigQueryQueryRewriter implements QueryRewriter {
 
   @Override
   public String functionExpression(FunctionTypedField ftf) {
-    if (SQLFunctions.SUPPORTED_DATE_FUNCTIONS.contains(ftf.function())) {
+    if (SqlFunctions.SUPPORTED_DATE_FUNCTIONS.contains(ftf.function())) {
       // https://cloud.google.com/bigquery/docs/reference/standard-sql/date_functions#extract
       return String.format("EXTRACT(%s FROM %s)", ftf.function(), ftf.field().sqlExpression(this));
     } else {

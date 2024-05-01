@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 import static io.squashql.query.QueryExecutor.LIMIT_DEFAULT_VALUE;
 import static io.squashql.query.database.AQueryEngine.transformToColumnFormat;
-import static io.squashql.query.database.SQLTranslator.addLimit;
+import static io.squashql.query.database.SqlTranslator.addLimit;
 
 @Slf4j
 @AllArgsConstructor
@@ -45,7 +45,7 @@ public class ExperimentalQueryJoinExecutor {
       this.dbQuery = new DatabaseQuery(this.queryResolver.getScope().copyWithNewLimit(-1), new ArrayList<>(this.queryResolver.getMeasures().values()));
       this.queryRewriter = ExperimentalQueryJoinExecutor.this.queryEngine.queryRewriter();
       this.originalTableName = query.table != null ? query.table.name : null;
-      this.sql = SQLTranslator.translate(this.dbQuery, this.queryRewriter);
+      this.sql = SqlTranslator.translate(this.dbQuery, this.queryRewriter);
     }
   }
 
@@ -329,7 +329,7 @@ public class ExperimentalQueryJoinExecutor {
         orderBy.add(new CompiledOrderBy(typedField, e.getValue()));
       }
     }
-    SQLTranslator.addOrderBy(sb, orderBy, queryRewriter);
+    SqlTranslator.addOrderBy(sb, orderBy, queryRewriter);
   }
 
   private static CriteriaDto rewriteJoinCondition(CriteriaDto joinCondition, List<Holder> holders) {

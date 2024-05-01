@@ -8,7 +8,7 @@ import io.squashql.query.QueryExecutor;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.QueryEngine;
 import io.squashql.query.database.QueryScope;
-import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.database.SqlTranslator;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.GroupColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
@@ -228,7 +228,7 @@ public class TableUtils {
   }
 
   /**
-   * Replaces cell values containing {@link SQLTranslator#TOTAL_CELL} with {@link QueryEngine#GRAND_TOTAL} or
+   * Replaces cell values containing {@link SqlTranslator#TOTAL_CELL} with {@link QueryEngine#GRAND_TOTAL} or
    * {@link QueryEngine#TOTAL}.
    */
   public static Table replaceTotalCellValues(ColumnarTable table, boolean hasTotal) {
@@ -253,7 +253,7 @@ public class TableUtils {
       for (int i = 0; i < table.headers().size(); i++) {
         Header header = table.headers().get(i);
         if (!header.isMeasure()) {
-          boolean isTotalCell = SQLTranslator.TOTAL_CELL.equals(table.getColumn(i).get(rowIndex));
+          boolean isTotalCell = SqlTranslator.TOTAL_CELL.equals(table.getColumn(i).get(rowIndex));
           if (isTotalCell) {
             finalTable.get().getColumn(i).set(rowIndex, total);
           }
@@ -288,7 +288,7 @@ public class TableUtils {
 
   /**
    * Changes the content of the input table to remove columns corresponding to grouping() (columns that help to identify
-   * rows containing totals) and write {@link SQLTranslator#TOTAL_CELL} in the corresponding cells. The input table is
+   * rows containing totals) and write {@link SqlTranslator#TOTAL_CELL} in the corresponding cells. The input table is
    * <b>NOT</b> modified, a copy is created instead.
    * <pre>
    *   Input:
@@ -334,7 +334,7 @@ public class TableUtils {
             if (o != null && ((Number) o).longValue() == 1) {
               // It is a total if == 1. It is cast as Number because the type is Byte with Spark, Long with
               // ClickHouse...
-              baseColumnValues.set(rowIndex, SQLTranslator.TOTAL_CELL);
+              baseColumnValues.set(rowIndex, SqlTranslator.TOTAL_CELL);
             }
           }
         }

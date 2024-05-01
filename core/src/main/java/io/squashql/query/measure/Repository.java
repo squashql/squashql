@@ -1,7 +1,7 @@
 package io.squashql.query.measure;
 
 import com.fasterxml.jackson.databind.JavaType;
-import io.squashql.jackson.SquashQLTypeFactory;
+import io.squashql.jackson.JacksonUtil;
 import io.squashql.query.Axis;
 import io.squashql.query.Field;
 import io.squashql.query.Measure;
@@ -56,11 +56,11 @@ public final class Repository {
    * Boolean -> is mandatory?
    */
   public static List<Triple<String, JavaType, Boolean>> getParameterTypes(String key) {
-    JavaType fieldJT = SquashQLTypeFactory.of(Field.class);
-    JavaType doubleJT = SquashQLTypeFactory.of(double.class);
-    JavaType listOfFieldsJT = SquashQLTypeFactory.listOf(Field.class);
-    JavaType axis = SquashQLTypeFactory.of(Axis.class);
-    JavaType str = SquashQLTypeFactory.of(String.class);
+    JavaType fieldJT = JacksonUtil.getJavaType(Field.class);
+    JavaType doubleJT = JacksonUtil.getJavaType(double.class);
+    JavaType listOfFieldsJT = JacksonUtil.getListJavaType(Field.class);
+    JavaType axis = JacksonUtil.getJavaType(Axis.class);
+    JavaType str = JacksonUtil.getJavaType(String.class);
     if (key.equals(VAR)) {
       return List.of(Tuples.triple("value", fieldJT, true), Tuples.triple("date", fieldJT, true), Tuples.triple("quantile", doubleJT, true), Tuples.triple("return", str, true));
     } else if (key.equals(INCREMENTAL_VAR)) {

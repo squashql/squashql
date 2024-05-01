@@ -40,7 +40,7 @@ class PostgreSQLQueryRewriter implements QueryRewriter {
   public String functionExpression(FunctionTypedField ftf) {
     if ("current_date".contains(ftf.function())) {
       return "CURRENT_DATE";
-    } else if (SQLFunctions.SUPPORTED_DATE_FUNCTIONS.contains(ftf.function())) {
+    } else if (SqlFunctions.SUPPORTED_DATE_FUNCTIONS.contains(ftf.function())) {
       return String.format("extract(%s from %s)", ftf.function(), ftf.field().sqlExpression(this));
     } else {
       return QueryRewriter.super.functionExpression(ftf);

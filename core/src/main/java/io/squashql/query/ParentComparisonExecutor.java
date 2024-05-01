@@ -1,7 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.compiled.CompiledComparisonMeasureReferencePosition;
-import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.database.SqlTranslator;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;
@@ -40,8 +40,8 @@ public class ParentComparisonExecutor extends AComparisonExecutor<CompiledCompar
         String name = SqlUtils.squashqlExpression(ancestor);
         if (this.indexByColumn.containsKey(name)) {
           int index = this.indexByColumn.get(name);
-          if (!SQLTranslator.TOTAL_CELL.equals(row[index])) {
-            row[index] = SQLTranslator.TOTAL_CELL;
+          if (!SqlTranslator.TOTAL_CELL.equals(row[index])) {
+            row[index] = SqlTranslator.TOTAL_CELL;
             if (!this.grandTotalAlongAncestors) {
               break;
             }

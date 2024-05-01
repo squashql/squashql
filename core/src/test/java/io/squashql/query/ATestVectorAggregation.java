@@ -2,6 +2,7 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.cache.GlobalCache;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.PivotTableQueryDto;

@@ -39,7 +39,7 @@ public abstract class AQueryEngine<T extends Datastore> implements QueryEngine<T
   }
 
   protected String createSqlStatement(DatabaseQuery query) {
-    return SQLTranslator.translate(query, queryRewriter());
+    return SqlTranslator.translate(query, queryRewriter());
   }
 
   protected abstract Table retrieveAggregates(DatabaseQuery query, String sql);

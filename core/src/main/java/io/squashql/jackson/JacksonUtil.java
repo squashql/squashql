@@ -1,13 +1,16 @@
 package io.squashql.jackson;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import io.squashql.query.Field;
 import io.squashql.query.dto.QueryDto;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class JacksonUtil {
@@ -39,5 +42,13 @@ public class JacksonUtil {
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public static JavaType getListJavaType(Class<?> clazz) {
+    return TypeFactory.defaultInstance().constructCollectionType(List.class, clazz);
+  }
+
+  public static JavaType getJavaType(Class<?> clazz) {
+    return TypeFactory.defaultInstance().constructType(clazz);
   }
 }

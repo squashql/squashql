@@ -23,7 +23,7 @@ import static io.squashql.query.dto.JoinType.LEFT;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TestSQLTranslator {
+public class TestSqlTranslator {
 
   private static final String BASE_STORE_NAME = "baseStore";
 
@@ -118,7 +118,7 @@ public class TestSQLTranslator {
   }
 
   public static String translate(DatabaseQuery query) {
-    return SQLTranslator.translate(query, new SQLTranslatorQueryRewriter());
+    return SqlTranslator.translate(query, new SQLTranslatorQueryRewriter());
   }
 
   private DatabaseQuery compileQuery(QueryDto query) {

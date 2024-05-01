@@ -1,7 +1,7 @@
 package io.squashql.query.compiled;
 
 import io.squashql.query.database.QueryRewriter;
-import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.database.SqlTranslator;
 import io.squashql.query.dto.*;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
@@ -57,14 +57,14 @@ public record CompiledCriteria(ConditionDto condition, ConditionType conditionTy
 
     if (dto instanceof SingleValueConditionDto svc) {
       Object value = svc.value;
-      Function<Object, String> sqlMapper = SQLTranslator.getQuoteFn(field.type(), value.getClass(), queryRewriter);
+      Function<Object, String> sqlMapper = SqlTranslator.getQuoteFn(field.type(), value.getClass(), queryRewriter);
       return switch (dto.type()) {
         case EQ, NEQ, LT, LE, GT, GE, LIKE -> expression + " " + dto.type().sqlInfix + " " + sqlMapper.apply(value);
         case ARRAY_CONTAINS -> queryRewriter.arrayContains(field, sqlMapper.apply(value));
         default -> throw new IllegalStateException("Unexpected value: " + dto.type());
       };
     } else if (dto instanceof InConditionDto ic) {
-      Function<Object, String> sqlMapper = SQLTranslator.getQuoteFn(field.type(), ic.values.iterator().next().getClass(), queryRewriter);
+      Function<Object, String> sqlMapper = SqlTranslator.getQuoteFn(field.type(), ic.values.iterator().next().getClass(), queryRewriter);
       return expression + " " + dto.type().sqlInfix + " (" +
               ic.values
                       .stream()

@@ -1,4 +1,4 @@
-package io.squashql.query;
+package io.squashql.query.cache;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -7,6 +7,9 @@ import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import com.github.benmanes.caffeine.cache.stats.ConcurrentStatsCounter;
 import com.github.benmanes.caffeine.cache.stats.StatsCounter;
 import com.google.common.util.concurrent.Striped;
+import io.squashql.query.CountMeasure;
+import io.squashql.query.Header;
+import io.squashql.query.SquashQLUser;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
