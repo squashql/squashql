@@ -58,10 +58,10 @@ public final class JdbcUtil {
       return "TIMESTAMP";
     }
     if (clazz.equals(Lists.LongList.class)) {
-      return "INT[]"; // FIXME duckdb only
+      return "INT[]";
     }
     if (clazz.equals(Lists.StringList.class)) {
-      return "VARCHAR[]"; // FIXME duckdb only
+      return "VARCHAR[]";
     }
     throw new IllegalArgumentException("Unsupported field type " + clazz);
   }
@@ -122,7 +122,6 @@ public final class JdbcUtil {
       throw new RuntimeException(e);
     }
   }
-
 
   public static void show(ResultSet set) {
     StringBuilder sb = new StringBuilder();
