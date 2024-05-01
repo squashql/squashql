@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class SQLTranslator {
+public class SqlTranslator {
 
   public static final String TOTAL_CELL = "___total___";
 

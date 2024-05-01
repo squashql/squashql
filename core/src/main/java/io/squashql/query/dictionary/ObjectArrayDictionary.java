@@ -9,7 +9,7 @@ import java.util.Arrays;
 public class ObjectArrayDictionary {
 
   /**
-   * The value to indicate no value
+   * The value to indicate that no value is present.
    */
   private static final int FREE = -1;
 
@@ -44,10 +44,6 @@ public class ObjectArrayDictionary {
     return this.underlyingDic.getIfAbsent(key, FREE);
   }
 
-  public int getPointLength() {
-    return this.pointLength;
-  }
-
   public int size() {
     return this.underlyingDic.size();
   }
@@ -57,9 +53,8 @@ public class ObjectArrayDictionary {
   }
 
   private static final class ObjectArrayHashingStrategy implements HashingStrategy<Object[]> {
-    private static final long serialVersionUID = 1L;
 
-    private static HashingStrategy<Object[]> INSTANCE = new ObjectArrayHashingStrategy();
+    private static final HashingStrategy<Object[]> INSTANCE = new ObjectArrayHashingStrategy();
 
     @Override
     public int computeHashCode(Object[] object) {

@@ -1,4 +1,4 @@
-package io.squashql.query.comp;
+package io.squashql.query.util;
 
 import io.squashql.query.BinaryOperator;
 import io.squashql.query.ComparisonMethod;

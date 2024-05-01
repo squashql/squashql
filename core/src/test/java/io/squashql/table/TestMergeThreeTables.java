@@ -14,7 +14,7 @@ import java.util.Set;
 
 import static io.squashql.query.agg.AggregationFunction.AVG;
 import static io.squashql.query.agg.AggregationFunction.SUM;
-import static io.squashql.query.database.SQLTranslator.TOTAL_CELL;
+import static io.squashql.query.database.SqlTranslator.TOTAL_CELL;
 import static io.squashql.table.ATestMergeTables.orderRows;
 
 class TestMergeThreeTables {

@@ -1,7 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.compiled.CompiledGrandTotalComparisonMeasure;
-import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.database.SqlTranslator;
 import io.squashql.table.Table;
 import org.eclipse.collections.api.map.primitive.ObjectIntMap;
 
@@ -14,7 +14,7 @@ public class GrandTotalComparisonExecutor extends AComparisonExecutor<CompiledGr
                                                                  ObjectIntMap<String> indexByColumn,
                                                                  Table readFromTable) {
     return (row, __) -> {
-      indexByColumn.forEachKeyValue((value, index) -> row[index] = SQLTranslator.TOTAL_CELL);
+      indexByColumn.forEachKeyValue((value, index) -> row[index] = SqlTranslator.TOTAL_CELL);
       return true;
     };
   }

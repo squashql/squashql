@@ -2,7 +2,7 @@ package io.squashql.query;
 
 import io.squashql.query.compiled.CompiledComparisonMeasureReferencePosition;
 import io.squashql.query.compiled.CompiledPeriod;
-import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.database.SqlTranslator;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;
@@ -170,7 +170,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor<CompiledCompar
     }
 
     private static int readAsLong(Object o) {
-      if (SQLTranslator.TOTAL_CELL.equals(o)) {
+      if (SqlTranslator.TOTAL_CELL.equals(o)) {
         return -1;
       }
       return (int) ((Number) o).longValue(); // with some database, year could be Long object.

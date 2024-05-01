@@ -4,7 +4,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import io.squashql.query.Header;
 import io.squashql.query.compiled.CompiledMeasure;
-import io.squashql.query.database.SQLTranslator;
+import io.squashql.query.database.SqlTranslator;
 import io.squashql.query.dictionary.ObjectArrayDictionary;
 import io.squashql.query.dto.JoinType;
 import org.eclipse.collections.api.list.primitive.IntList;
@@ -121,7 +121,7 @@ public class MergeTables {
     final int[] position = {-1};
 
     leftTable.pointDictionary().forEach((point, row) -> {
-      Arrays.fill(mergedBuffer, SQLTranslator.TOTAL_CELL);
+      Arrays.fill(mergedBuffer, SqlTranslator.TOTAL_CELL);
       for (int i = 0; i < point.length; i++) {
         mergedBuffer[leftMapping[i]] = point[i];
       }
@@ -145,7 +145,7 @@ public class MergeTables {
       int[] complement = complement(holder.leftMapping, holder.rightMapping);
       boolean missingColumnsAreTotal = true;
       for (int c : complement) {
-        missingColumnsAreTotal &= SQLTranslator.TOTAL_CELL.equals(mergedBuffer[c]);
+        missingColumnsAreTotal &= SqlTranslator.TOTAL_CELL.equals(mergedBuffer[c]);
       }
 
       boolean pointExistInRightTable = (position[0] = rightTable.pointDictionary().getPosition(rightBuffer)) >= 0;
@@ -167,7 +167,7 @@ public class MergeTables {
       if (alreadyVisited.get(row)) {
         return;
       }
-      Arrays.fill(mergedBuffer, SQLTranslator.TOTAL_CELL);
+      Arrays.fill(mergedBuffer, SqlTranslator.TOTAL_CELL);
       for (int i = 0; i < point.length; i++) {
         mergedBuffer[rightMapping[i]] = point[i];
       }

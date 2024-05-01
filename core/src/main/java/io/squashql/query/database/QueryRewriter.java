@@ -39,7 +39,7 @@ public interface QueryRewriter {
 
   /**
    * Customizes what's written in the SELECT statement AND GROUP BY for the given selected column.
-   * See {@link SQLTranslator}.
+   * See {@link SqlTranslator}.
    *
    * @param f field to use in select
    * @return the customized argument
@@ -50,7 +50,7 @@ public interface QueryRewriter {
 
   /**
    * Customizes what's written in the SELECT statement AND GROUP BY for the given selected column.
-   * See {@link SQLTranslator}.
+   * See {@link SqlTranslator}.
    *
    * @param f field to use in select
    * @return the customized argument
@@ -60,7 +60,7 @@ public interface QueryRewriter {
   }
 
   /**
-   * Customizes what's written in the grouping function. See {@link SQLTranslator}.
+   * Customizes what's written in the grouping function. See {@link SqlTranslator}.
    *
    * @param f field to use in select
    * @return the customized argument
@@ -88,7 +88,7 @@ public interface QueryRewriter {
   }
 
   /**
-   * Customizes what's written within the ROLLUP function as argument for the given column. See {@link SQLTranslator}.
+   * Customizes what's written within the ROLLUP function as argument for the given column. See {@link SqlTranslator}.
    *
    * @param f field to use in rollup
    * @return the customized argument
