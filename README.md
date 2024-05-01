@@ -33,7 +33,7 @@ front-end developers with an intuitive API for configuring metrics in the UI.
 
 It follows a "write once, run everywhere" philosophy, making it an excellent solution for scenarios where data needs to 
 be efficiently queried from multiple databases. Currently, SquashQL supports compatibility with databases such as Apache Spark,
-ClickHouse, BigQuery, Snowflake, and DuckDB.
+ClickHouse, BigQuery, Snowflake, PostgreSQL and DuckDB.
 
 ## 💡 Key features
 
