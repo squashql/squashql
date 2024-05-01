@@ -26,7 +26,11 @@ import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUN
 
 public class CaffeineQueryCache implements QueryCache {
 
-  public static final int MAX_SIZE = 32;
+  public static final int MAX_SIZE;
+  static {
+    String size = System.getProperty("io.squashql.cache.size", Integer.toString(32));
+    MAX_SIZE = Integer.parseInt(size);
+  }
 
   private volatile StatsCounter scopeCounter = new ConcurrentStatsCounter();
   private volatile StatsCounter measureCounter = new ConcurrentStatsCounter();
