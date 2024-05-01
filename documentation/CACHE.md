@@ -8,7 +8,7 @@ SquashQL provides an in-memory query cache to not re-execute queries already exe
 
 By default, an implementation with the following characteristic is provided
 - Cache is user based if a bean of type `Supplier<SquashQLUser>` is provided. Otherwise, it is shared with all users
-- 32 results are stored per user
+- 32 results are stored per user by default. This can be configured using the system property: `-Dio.squashql.cache.size=64`
 - Results older than 5 minutes are discarded
 
 ### Cache invalidation

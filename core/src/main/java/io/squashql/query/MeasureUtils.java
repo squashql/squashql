@@ -104,7 +104,7 @@ public final class MeasureUtils {
             copy.get(),
             queryScope.havingCriteria(),
             new ArrayList<>(rollupColumns),
-            new HashSet<>(queryScope.groupingSets()), // FIXME should handle groupingSets
+            new HashSet<>(queryScope.groupingSets()),
             queryScope.cteRecordTables(),
             Collections.emptyList(),
             queryScope.limit());
