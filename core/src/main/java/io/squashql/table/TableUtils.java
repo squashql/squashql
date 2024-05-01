@@ -138,7 +138,6 @@ public class TableUtils {
     return metadata;
   }
 
-
   /**
    * Selects and reorder the columns to match the selection and order in the query.
    */
