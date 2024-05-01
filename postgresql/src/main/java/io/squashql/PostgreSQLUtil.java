@@ -26,6 +26,8 @@ public final class PostgreSQLUtil {
       return "integer[]";
     } else if (clazz.equals(Lists.StringList.class)) {
       return "varchar[]";
+    } else if (clazz.equals(Object.class)) {
+      return "json";
     } else {
       return JdbcUtil.classToSqlType(clazz);
     }

@@ -3,6 +3,7 @@ package io.squashql.transaction;
 import com.google.cloud.bigquery.*;
 import io.squashql.BigQueryServiceAccountDatastore;
 import io.squashql.BigQueryUtil;
+import io.squashql.jackson.JacksonUtil;
 import io.squashql.list.Lists;
 import io.squashql.type.TableTypedField;
 import lombok.extern.slf4j.Slf4j;
@@ -70,12 +71,16 @@ public class BigQueryDataLoader implements DataLoader {
     for (Object[] tuple : tuples) {
       Map<String, Object> m = new HashMap<>();
       for (int i = 0; i < fields.size(); i++) {
-        String name = fields.get(i).name();
+        TableTypedField field = fields.get(i);
         Object o = tuple[i];
-        if (o != null && (o.getClass().equals(LocalDate.class) || o.getClass().equals(LocalDateTime.class))) {
-          o = o.toString();
+        if (o != null) {
+          if (o.getClass().equals(LocalDate.class) || o.getClass().equals(LocalDateTime.class)) {
+            o = o.toString();
+          } else if (field.type().equals(Object.class)) {
+            o = JacksonUtil.serialize(o);
+          }
         }
-        m.put(name, o);
+        m.put(field.name(), o);
       }
       list.add(InsertAllRequest.RowToInsert.of(m));
     }

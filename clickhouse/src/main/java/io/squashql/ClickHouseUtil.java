@@ -33,6 +33,8 @@ public final class ClickHouseUtil {
       type = "Array(Int64)";
     } else if (clazz.equals(Lists.StringList.class)) {
       type = "Array(String)";
+    } else if (clazz.equals(Object.class)) {
+      type = "json";
     } else {
       throw new IllegalArgumentException("Unsupported field type " + clazz);
     }
