@@ -60,11 +60,6 @@ public abstract class ATestJson extends ABaseTestQuery {
             ))
             .build();
     Table table = this.executor.executeQuery(query);
-    table.show();
-    // '{"a": {"b":"foo"}}'::json->'a'
-    // '[1,2,3]'::json->>2
-//    this.executor.executeRaw("SELECT JSON_VALUE(JSON '{\"name\": \"Jakob\", \"age\": \"6\" }', '$.age') from " + this.executor.queryEngine.queryRewriter().tableName(this.storeName));
-//    this.executor.executeRaw("select price_construction::json->>'a' from " + this.executor.queryEngine.queryRewriter().tableName(this.storeName)).show();
     Assertions.assertThat(table).containsExactly(
             List.of("A", "{\"a\":true,\"b\":\"idA\",\"c\":0}", "[{\"a\":true,\"b\":\"idA\",\"c\":10},{\"a\":true,\"b\":\"idA\",\"c\":11}]"),
             List.of("B", "{\"a\":true,\"b\":\"idB\",\"c\":1}", "[{\"a\":false,\"b\":\"idB\",\"c\":10},{\"a\":false,\"b\":\"idB\",\"c\":11}]"));
