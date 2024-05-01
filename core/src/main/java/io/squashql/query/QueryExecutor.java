@@ -1,5 +1,9 @@
 package io.squashql.query;
 
+import io.squashql.query.cache.CaffeineQueryCache;
+import io.squashql.query.cache.EmptyQueryCache;
+import io.squashql.query.cache.GlobalCache;
+import io.squashql.query.cache.QueryCache;
 import io.squashql.query.compiled.*;
 import io.squashql.query.database.DatabaseQuery;
 import io.squashql.query.database.QueryEngine;
@@ -7,11 +11,10 @@ import io.squashql.query.database.QueryScope;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.query.join.ExperimentalQueryJoinExecutor;
+import io.squashql.query.measure.visitor.PartialMeasureVisitor;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.table.*;
-import io.squashql.table.PivotTableContext;
 import io.squashql.type.TypedField;
-import io.squashql.query.measure.visitor.PartialMeasureVisitor;
 import io.squashql.util.Queries;
 import lombok.extern.slf4j.Slf4j;
 

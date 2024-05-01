@@ -2,9 +2,9 @@ package io.squashql.util;
 
 import com.google.common.collect.ImmutableList;
 import io.squashql.jackson.JacksonUtil;
-import io.squashql.query.GlobalCache;
 import io.squashql.query.Header;
 import io.squashql.query.SquashQLUser;
+import io.squashql.query.cache.GlobalCache;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.query.dto.SimpleTableDto;

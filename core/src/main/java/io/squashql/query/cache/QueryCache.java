@@ -1,5 +1,6 @@
-package io.squashql.query;
+package io.squashql.query.cache;
 
+import io.squashql.query.SquashQLUser;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.database.QueryScope;
 import io.squashql.query.dto.CacheStatsDto;

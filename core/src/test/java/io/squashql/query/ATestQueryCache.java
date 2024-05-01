@@ -3,6 +3,8 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.agg.AggregationFunction;
 import io.squashql.query.builder.Query;
+import io.squashql.query.cache.CaffeineQueryCache;
+import io.squashql.query.cache.GlobalCache;
 import io.squashql.query.dto.*;
 import io.squashql.query.parameter.QueryCacheParameter;
 import io.squashql.table.Table;
