@@ -5,7 +5,7 @@ import io.squashql.type.TypedField;
 
 import java.util.Set;
 
-public interface CompiledPeriod {
+public sealed interface CompiledPeriod permits CompiledPeriod.Month, CompiledPeriod.Quarter, CompiledPeriod.Semester, CompiledPeriod.Year {
 
   Set<TypedField> getTypedFields();
 

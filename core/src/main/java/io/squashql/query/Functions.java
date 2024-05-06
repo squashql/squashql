@@ -261,6 +261,14 @@ public class Functions {
     return new FunctionField("current_date");
   }
 
+  public static Field trim(Field field) {
+    return new FunctionField("trim", field);
+  }
+
+  public static Field abs(Field field) {
+    return new FunctionField("abs", field);
+  }
+
   // COMPARISONS
 
   public static PartialHierarchicalComparisonMeasure comparisonMeasureWithParentOfAxis(String alias,

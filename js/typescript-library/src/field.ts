@@ -177,3 +177,11 @@ export function lower(field: Field): Field {
 export function upper(field: Field): Field {
   return new FunctionField("upper", field)
 }
+
+export function trim(field: Field): Field {
+  return new FunctionField("trim", field)
+}
+
+export function abs(field: Field): Field {
+  return new FunctionField("abs", field)
+}

@@ -617,11 +617,13 @@ SELECT lower(myTable.a), upper(myTable.a), current_date() AS id, count(*) FROM m
 
 SQL functions:
 
-| function name | Description                  | Example        | Result     | Alias |
-|---------------|------------------------------|----------------|------------|-------|
-| upper         | Convert string to upper case | upper('Hello') | HELLO      | ucase | 
-| lower         | Convert string to lower case | lower('Hello') | hello      | lcase | 
-| current_date  | Current date                 | current_date() | 2024-10-25 |       | 
+| function name | Description                                       | Example          | Result     | Alias |
+|---------------|---------------------------------------------------|------------------|------------|-------|
+| upper         | Convert string to upper case                      | upper('Hello')   | HELLO      | ucase | 
+| lower         | Convert string to lower case                      | lower('Hello')   | hello      | lcase | 
+| trim          | Remove the space character from the start and end | trim(' Hello  ') | Hello      |       | 
+| abs           | Return the absolute value of a number             | abs(-1)          | 1          |       | 
+| current_date  | Current date                                      | current_date()   | 2024-10-25 |       | 
 
 
 ## Measures

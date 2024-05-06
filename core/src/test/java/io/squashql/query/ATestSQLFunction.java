@@ -44,8 +44,8 @@ public abstract class ATestSQLFunction extends ABaseTestQuery {
     this.tm.load(this.storeName, List.of(
             new Object[]{"0", "drink", 2d, this.now.minusMonths(1)},
             new Object[]{"1", "DrinK", 1d, this.now.plusMonths(1)},
-            new Object[]{"2", "food", 3d, this.now.plusMonths(2)},
-            new Object[]{"3", "cloth", 10d, this.now.plusMonths(3)}
+            new Object[]{"2", "food", -3d, this.now.plusMonths(2)}, // price here is negative to test abs function
+            new Object[]{"3", "     cloth  ", 10d, this.now.plusMonths(3)}
     ));
   }
 
@@ -163,5 +163,48 @@ public abstract class ATestSQLFunction extends ABaseTestQuery {
     // We cannot assert the date sent back because the test and the db are not guarantee to run in the same timezone
     //    Assertions.assertThat(result).containsExactly(List.of(this.now, 1L));
     Assertions.assertThat(result.count()).isEqualTo(1);
+  }
+
+  /**
+   * Test {@link Functions#trim(Field)}
+   */
+  @Test
+  void testTrim() {
+    // trim in where
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(criterion(trim(this.category), eq("cloth")))
+            .select(List.of(this.category), List.of(CountMeasure.INSTANCE))
+            .build();
+    Table result = this.executor.executeQuery(query);
+    Assertions.assertThat(result.headers().stream().map(Header::name)).containsExactly(SqlUtils.squashqlExpression(this.category), CountMeasure.INSTANCE.alias);
+    Assertions.assertThat(result).containsExactly(List.of("     cloth  ", 1L));
+
+    // trim in select and where
+    query = Query
+            .from(this.storeName)
+            .where(criterion(trim(this.category), eq("cloth")))
+            .select(List.of(trim(this.category)), List.of(CountMeasure.INSTANCE))
+            .build();
+    result = this.executor.executeQuery(query);
+    Assertions.assertThat(result.headers().stream().map(Header::name)).containsExactly("trim(" + SqlUtils.squashqlExpression(this.category) + ")", CountMeasure.INSTANCE.alias);
+    Assertions.assertThat(result).containsExactly(List.of("cloth", 1L));
+  }
+
+  /**
+   * Test {@link Functions#abs(Field)}
+   */
+  @Test
+  void testAbs() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(abs(this.price)), List.of(CountMeasure.INSTANCE))
+            .build();
+    Table result = this.executor.executeQuery(query);
+    Assertions.assertThat(result).containsExactly(
+            List.of(1d, 1L),
+            List.of(2d, 1L),
+            List.of(3d, 1L),
+            List.of(10d, 1L));
   }
 }
