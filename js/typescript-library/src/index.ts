@@ -91,7 +91,8 @@ export {
 
 export {
   TableField, ConstantField, Field, AliasedField, BinaryOperationField, FunctionField,
-  tableFields, tableField, lower, upper, currentDate
+  tableFields, tableField,
+  lower, upper, currentDate, trim, abs
 } from './field'
 export {
   default as Criteria

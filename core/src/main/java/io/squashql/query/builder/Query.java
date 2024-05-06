@@ -41,6 +41,18 @@ public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
     return this.currentJoinTableBuilder;
   }
 
+  @Override
+  public HasJoin join(GroupColumnSetDto cs) {
+    this.queryDto.withColumnSet(cs.getColumnSetKey(), cs);
+    return this;
+  }
+
+  @Override
+  public CanBeBuildQuery addGroupingSet(GroupColumnSetDto cs) {
+    this.queryDto.withColumnSet(cs.getColumnSetKey(), cs);
+    return this;
+  }
+
   void addJoinToQueryDto() {
     JoinTableBuilder jtb = this.currentJoinTableBuilder;
     if (jtb != null) {

@@ -89,24 +89,24 @@ public class PeriodComparisonExecutor extends AComparisonExecutor<CompiledCompar
     @Override
     public boolean test(Object[] row, Header[] headers) {
       int unknown = -1;
-      int yearIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.YEAR, unknown);
-      int semesterIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.SEMESTER, unknown);
-      int quarterIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.QUARTER, unknown);
-      int monthIndex = this.indexByPeriodUnit.getIfAbsent(PeriodUnit.MONTH, unknown);
-      Object yearTransformation = this.transformationByPeriodUnit.get(PeriodUnit.YEAR);
-      Object semesterTransformation = this.transformationByPeriodUnit.get(PeriodUnit.SEMESTER);
-      Object quarterTransformation = this.transformationByPeriodUnit.get(PeriodUnit.QUARTER);
-      Object monthTransformation = this.transformationByPeriodUnit.get(PeriodUnit.MONTH);
+      int yearIndex = this.indexByPeriodUnit.getIfAbsent(YEAR, unknown);
+      int semesterIndex = this.indexByPeriodUnit.getIfAbsent(SEMESTER, unknown);
+      int quarterIndex = this.indexByPeriodUnit.getIfAbsent(QUARTER, unknown);
+      int monthIndex = this.indexByPeriodUnit.getIfAbsent(MONTH, unknown);
+      Object yearTransformation = this.transformationByPeriodUnit.get(YEAR);
+      Object semesterTransformation = this.transformationByPeriodUnit.get(SEMESTER);
+      Object quarterTransformation = this.transformationByPeriodUnit.get(QUARTER);
+      Object monthTransformation = this.transformationByPeriodUnit.get(MONTH);
       if (this.period instanceof CompiledPeriod.Quarter) {
         // YEAR, QUARTER
-        if (this.referencePosition.containsKey(PeriodUnit.YEAR) && yearTransformation != null) {
+        if (this.referencePosition.containsKey(YEAR) && yearTransformation != null) {
           int year = readAsLong(row[yearIndex]);
           if (year < 0) {
             return false;
           }
           write(row, yearIndex, headers[yearIndex], year + (int) yearTransformation);
         }
-        if (this.referencePosition.containsKey(PeriodUnit.QUARTER) && quarterTransformation != null) {
+        if (this.referencePosition.containsKey(QUARTER) && quarterTransformation != null) {
           int quarter = readAsLong(row[quarterIndex]);
           if (quarter < 0) {
             return false;
@@ -118,7 +118,7 @@ public class PeriodComparisonExecutor extends AComparisonExecutor<CompiledCompar
         }
       } else if (this.period instanceof CompiledPeriod.Year) {
         // YEAR
-        if (this.referencePosition.containsKey(PeriodUnit.YEAR) && yearTransformation != null) {
+        if (this.referencePosition.containsKey(YEAR) && yearTransformation != null) {
           int year = readAsLong(row[yearIndex]);
           if (year < 0) {
             return false;
@@ -127,14 +127,14 @@ public class PeriodComparisonExecutor extends AComparisonExecutor<CompiledCompar
         }
       } else if (this.period instanceof CompiledPeriod.Month) {
         // YEAR, MONTH
-        if (this.referencePosition.containsKey(PeriodUnit.YEAR) && yearTransformation != null) {
+        if (this.referencePosition.containsKey(YEAR) && yearTransformation != null) {
           int year = readAsLong(row[yearIndex]);
           if (year < 0) {
             return false;
           }
           write(row, yearIndex, headers[yearIndex], year + (int) yearTransformation);
         }
-        if (this.referencePosition.containsKey(PeriodUnit.MONTH) && monthTransformation != null) {
+        if (this.referencePosition.containsKey(MONTH) && monthTransformation != null) {
           int month = readAsLong(row[monthIndex]);
           if (month < 0) {
             return false;
@@ -146,14 +146,14 @@ public class PeriodComparisonExecutor extends AComparisonExecutor<CompiledCompar
         }
       } else if (this.period instanceof CompiledPeriod.Semester) {
         // YEAR, SEMESTER
-        if (this.referencePosition.containsKey(PeriodUnit.YEAR) && yearTransformation != null) {
+        if (this.referencePosition.containsKey(YEAR) && yearTransformation != null) {
           int year = readAsLong(row[yearIndex]);
           if (year < 0) {
             return false;
           }
           write(row, yearIndex, headers[yearIndex], year + (int) yearTransformation);
         }
-        if (this.referencePosition.containsKey(PeriodUnit.SEMESTER) && semesterTransformation != null) {
+        if (this.referencePosition.containsKey(SEMESTER) && semesterTransformation != null) {
           int semester = readAsLong(row[semesterIndex]);
           if (semester < 0) {
             return false;
@@ -188,13 +188,13 @@ public class PeriodComparisonExecutor extends AComparisonExecutor<CompiledCompar
 
     private static PeriodUnit[] getPeriodUnits(CompiledPeriod period) {
       if (period instanceof CompiledPeriod.Quarter) {
-        return new PeriodUnit[]{PeriodUnit.YEAR, PeriodUnit.QUARTER};
+        return new PeriodUnit[]{YEAR, QUARTER};
       } else if (period instanceof CompiledPeriod.Year) {
-        return new PeriodUnit[]{PeriodUnit.YEAR};
+        return new PeriodUnit[]{YEAR};
       } else if (period instanceof CompiledPeriod.Month) {
-        return new PeriodUnit[]{PeriodUnit.YEAR, PeriodUnit.MONTH};
+        return new PeriodUnit[]{YEAR, MONTH};
       } else if (period instanceof CompiledPeriod.Semester) {
-        return new PeriodUnit[]{PeriodUnit.YEAR, PeriodUnit.SEMESTER};
+        return new PeriodUnit[]{YEAR, SEMESTER};
       } else {
         throw new RuntimeException(period + " not supported yet");
       }

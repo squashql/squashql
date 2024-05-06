@@ -3,8 +3,7 @@ package io.squashql.query;
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
 import io.squashql.query.database.SqlUtils;
-import io.squashql.query.dto.GroupColumnSetDto;
-import io.squashql.query.dto.QueryDto;
+import io.squashql.query.dto.*;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
@@ -15,8 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.squashql.query.ComparisonMethod.RELATIVE_DIFFERENCE;
-import static io.squashql.query.Functions.eq;
-import static io.squashql.query.Functions.sum;
+import static io.squashql.query.Functions.*;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
@@ -283,11 +281,13 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
 
     var query = Query
             .from(this.storeName)
-            .select_(List.of(groupCS), List.of(CountMeasure.INSTANCE))
+            .select(List.of(tableField(groupOfScenario), tableField(SCENARIO_FIELD_NAME)), List.of(CountMeasure.INSTANCE))
             .rollup(tableFields(List.of(SCENARIO_FIELD_NAME))) // should not affect the comparison engine
+            .addGroupingSet(groupCS)
             .build();
 
     Table dataset = this.executor.executeQuery(query);
+    dataset.show();
     Assertions.assertThat(dataset.headers().stream().map(Header::name))
             .containsExactly(groupOfScenario, SCENARIO_FIELD_NAME, CountMeasure.ALIAS);
     Assertions.assertThat(dataset).containsExactly(
