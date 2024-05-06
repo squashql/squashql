@@ -40,8 +40,8 @@
     <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
     <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
     <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
-    <junit.version>5.10.1</junit.version>
-    <junit-platform.version>1.10.1</junit-platform.version>
+    <junit.version>5.10.2</junit.version>
+    <junit-platform.version>1.10.2</junit-platform.version>
     <assertj.version>3.25.0</assertj.version>
     <jackson.version>2.15.3</jackson.version>
     <spring-boot.version>3.0.11</spring-boot.version>
@@ -49,20 +49,20 @@
     <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
     <eclipse.version>11.1.0</eclipse.version>
     <feign.version>12.1</feign.version>
-    <testcontainers.version>1.19.3</testcontainers.version>
-    <guava.version>33.0.0-jre</guava.version>
+    <testcontainers.version>1.19.7</testcontainers.version>
+    <guava.version>33.2.0-jre</guava.version>
     <caffeine.version>3.1.8</caffeine.version>
-    <mockito.version>5.8.0</mockito.version>
-    <lombok.version>1.18.30</lombok.version>
+    <mockito.version>5.11.0</mockito.version>
+    <lombok.version>1.18.32</lombok.version>
     <slf4j.version>1.7.36</slf4j.version>
     <logback.version>1.2.13</logback.version>
     <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
 
     <duckdb.version>0.10.2</duckdb.version>
-    <clickhouse.version>0.6.0-patch3</clickhouse.version>
+    <clickhouse.version>0.6.0-patch4</clickhouse.version>
     <spark.version>3.5.1</spark.version>
-    <bigquery.version>26.37.0</bigquery.version>
-    <snowflake-jdbc.version>3.15.1</snowflake-jdbc.version>
+    <bigquery.version>26.38.0</bigquery.version>
+    <snowflake-jdbc.version>3.16.0</snowflake-jdbc.version>
     <postgresql.version>42.7.3</postgresql.version>
   </properties>
 
