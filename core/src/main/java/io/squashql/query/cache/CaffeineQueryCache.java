@@ -30,9 +30,13 @@ import static io.squashql.query.compiled.CompiledAggregatedMeasure.COMPILED_COUN
 public class CaffeineQueryCache implements QueryCache {
 
   public static final int MAX_SIZE;
+  public static final int EXPIRATION_DURATION; // in minutes
+
   static {
     String size = System.getProperty("io.squashql.cache.size", Integer.toString(32));
     MAX_SIZE = Integer.parseInt(size);
+    String duration = System.getProperty("io.squashql.cache.duration", Integer.toString(5));
+    EXPIRATION_DURATION = Integer.parseInt(duration);
   }
 
   private volatile StatsCounter scopeCounter = new ConcurrentStatsCounter();
@@ -52,7 +56,7 @@ public class CaffeineQueryCache implements QueryCache {
   public CaffeineQueryCache(int maxSize, RemovalListener<QueryCacheKey, Table> evictionListener) {
     this.results = Caffeine.newBuilder()
             .maximumSize(maxSize)
-            .expireAfterWrite(Duration.ofMinutes(5))
+            .expireAfterWrite(Duration.ofMinutes(EXPIRATION_DURATION))
             .recordStats(() -> this.scopeCounter)
             // Use removalListener and not evictionListener because evictionListener is called before updating the stats
             .removalListener(evictionListener)
