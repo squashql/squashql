@@ -473,6 +473,9 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
             List.of("shirt", "s1", 11d, 1d, 2d));
   }
 
+  /**
+   * See comment of {@link ATestPeriodComparison#testCompareYearCurrentWithPreviousWithFilterAndCalculatedMeasure()}
+   */
   @Test
   void testCombineGroupComparisonAndPercentOfParent() {
     List<String> elements = List.of(MAIN_SCENARIO_NAME, "s1", "s2");
