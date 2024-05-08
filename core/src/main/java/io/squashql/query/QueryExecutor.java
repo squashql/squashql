@@ -115,7 +115,6 @@ public class QueryExecutor {
     QueryResolver queryResolver = new QueryResolver(preparedQuery, this.queryEngine.datastore().storeByName());
     DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
             queryResolver.getColumns(), queryResolver.getGroupColumns(), queryResolver.getMeasures().values(), queryResolver.getScope());
-    GraphPrinter.print(dependencyGraph); // FIXME
     // Compute what needs to be prefetched
     Map<QueryScope, QueryScope> prefetchQueryScopeByQueryScope = new HashMap<>();
     Map<QueryScope, Set<CompiledMeasure>> measuresByQueryScope = new HashMap<>();
