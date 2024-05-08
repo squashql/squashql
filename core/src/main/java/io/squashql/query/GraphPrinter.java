@@ -68,22 +68,7 @@ public class GraphPrinter {
 
   private static String printQueryPlanNodeKey(QueryScope scope) {
     StringBuilder sb = new StringBuilder();
-//    appendIfNotNullOrNotEmpty(sb, null, scope.table());
-//    appendIfNotNullOrNotEmpty(sb, "columns=", scope.columns().stream().map(TypedField::toString).toList());
-//    appendIfNotNullOrNotEmpty(sb, null, scope.whereCriteria());
-//    appendIfNotNullOrNotEmpty(sb, "rollup=", scope.rollup().stream().map(TypedField::toString).toList());
     sb.append(scope);
     return sb.toString();
-  }
-
-  private static void appendIfNotNullOrNotEmpty(StringBuilder sb, String prefix, Object o) {
-    if (o instanceof Collection<?> collection) {
-      if (collection.isEmpty()) {
-        return;
-      }
-      sb.append(prefix == null ? "" : prefix).append(o).append(", ");
-    } else if (o != null) {
-      sb.append(prefix == null ? "" : prefix).append(o).append(", ");
-    }
   }
 }

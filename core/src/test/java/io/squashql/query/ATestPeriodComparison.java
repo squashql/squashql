@@ -437,25 +437,6 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             List.of(GRAND_TOTAL, 24L));
   }
 
-  @Test
-  void testZob() {
-    Period.Month period = new Period.Month(this.month, this.year);
-    Measure amount = sum("amount", this.sales);
-    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
-            "compprevyear",
-            ABSOLUTE_DIFFERENCE,
-            amount,
-            Map.of(period.month(), "m-1"),
-            period);
-
-    var query = Query.from(this.storeName)
-            .select(List.of(this.year, this.month), List.of(amount, m))
-            .rollup(List.of(this.year, this.month))
-            .build();
-    Table finalTable = this.executor.executeQuery(query);
-    finalTable.show();
-  }
-
   protected Object yearType(int i) {
     String qesn = this.queryEngine.getClass().getSimpleName();
     if (qesn.contains(TestClass.Type.CLICKHOUSE.className) || qesn.contains(TestClass.Type.SPARK.className)) {
