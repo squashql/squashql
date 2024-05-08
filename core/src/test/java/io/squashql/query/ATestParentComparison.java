@@ -17,7 +17,6 @@ import java.util.Map;
 
 import static io.squashql.query.ComparisonMethod.DIVIDE;
 import static io.squashql.query.Functions.*;
-import static io.squashql.query.TableField.tableFields;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
 
@@ -189,7 +188,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
   @Test
   void testWithMissingAncestor() {
     Measure pop = Functions.sum("population", this.population);
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, tableFields(List.of("country", "continent")));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, List.of(this.country, this.continent));
     QueryDto query = Query
             .from(this.storeName)
             .select(List.of(this.continent, this.country, this.city), List.of(pop, pOp))
