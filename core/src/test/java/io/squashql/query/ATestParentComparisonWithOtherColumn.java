@@ -2,7 +2,9 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.dto.PivotTableQueryDto;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.table.PivotTable;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
@@ -13,7 +15,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static io.squashql.query.ComparisonMethod.DIVIDE;
+import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 
 @TestClass
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -50,7 +55,7 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
   void testSimple() {
     Measure amount = Functions.sum("amount", "amount");
     final List<Field> fields = tableFields(List.of("continent", "country", "city"));
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, fields);
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, amount, fields);
     QueryDto query = Query
             .from(this.storeName)
             .select(fields, List.of(amount, pOp))
@@ -66,7 +71,7 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
   @Test
   void testSkipMiddleAncestors() {
     Measure amount = Functions.sum("amount", "amount");
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, tableFields(List.of("continent", "country", "city")));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, amount, tableFields(List.of("continent", "country", "city")));
     QueryDto query = Query
             .from(this.storeName)
             .select(tableFields(List.of("continent", "country", "city")), List.of(amount, pOp))
@@ -84,7 +89,7 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
   @Test
   void testCrossjoinWithOtherColumn() {
     Measure amount = Functions.sum("amount", "amount");
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, tableFields(List.of("continent", "country", "city")));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, amount, tableFields(List.of("continent", "country", "city")));
     QueryDto query = Query
             .from(this.storeName)
             .select(tableFields(List.of("spending_category", "continent", "country", "city")), List.of(amount, pOp))
@@ -106,7 +111,7 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
   @Test
   void testCrossjoinWithOtherColumnAndMissingAncestorsInQuery() {
     Measure amount = Functions.sum("amount", "amount");
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", ComparisonMethod.DIVIDE, amount, tableFields(List.of("city", "country", "continent")));
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, amount, tableFields(List.of("city", "country", "continent")));
     QueryDto query = Query
             .from(this.storeName)
             .select(tableFields(List.of("spending_category", "city")), List.of(amount, pOp))
@@ -123,5 +128,29 @@ public abstract class ATestParentComparisonWithOtherColumn extends ABaseTestQuer
             Arrays.asList("home", "london", 2d, 2d / (2 + 2 + 2)),
             Arrays.asList("home", "lyon", 2d, 2d / (2 + 2 + 2)),
             Arrays.asList("home", "paris", 2d, 2d / (2 + 2 + 2)));
+  }
+
+  /**
+   * See {@link ATestParentComparison#testSimplePivotTable()}.
+   */
+  @Test
+  void testSimplePivotTable() {
+    Measure amount = Functions.sum("amount", "amount");
+    PartialHierarchicalComparisonMeasure pOp = new PartialHierarchicalComparisonMeasure("percentOfParent2", DIVIDE, false, amount, Axis.COLUMN, false);
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(Functions.criterion(tableField("city"), Functions.in("paris"))) // to reduce the size of the table
+            .select(tableFields(List.of("spending_category", "city")), List.of(amount, pOp))
+            .build();
+
+    PivotTableQueryDto ptQuery = new PivotTableQueryDto(query, tableFields(List.of("spending_category")), tableFields(List.of("city")), tableFields(List.of("spending_category")));
+    PivotTable pivotTable = this.executor.executePivotQuery(ptQuery);
+    Assertions.assertThat(pivotTable.table).containsExactly(
+            Arrays.asList("car", GRAND_TOTAL, 1d, 0.25d),
+            Arrays.asList("car", "paris", 1d, 0.25d),
+            Arrays.asList("hobbies", GRAND_TOTAL, 1d, 0.25d),
+            Arrays.asList("hobbies", "paris", 1d, 0.25d),
+            Arrays.asList("home", GRAND_TOTAL, 2d, 0.5d),
+            Arrays.asList("home", "paris", 2d, 0.5d));
   }
 }

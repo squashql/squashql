@@ -32,8 +32,8 @@ public class TestClickHouseBinaryOperationMeasure extends ATestBinaryOperationMe
 
   @Override
   protected void createTables() {
-    ClickHouseDataLoader tm = (ClickHouseDataLoader) this.tm;
-    this.fieldsByStore.forEach((store, fields) -> tm.dropAndCreateInMemoryTable(store, fields));
+    ClickHouseDataLoader dl = (ClickHouseDataLoader) this.tm;
+    this.fieldsByStore.forEach(dl::dropAndCreateInMemoryTable);
   }
 
   @Override
