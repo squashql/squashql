@@ -188,39 +188,6 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
   }
 
   @Test
-  void testPartialIncrementalVar222() {
-    List<Field> fields = List.of(this.competitor, this.ean);
-
-    Measure incrementalVar = new ParametrizedMeasure("partial inc var",
-            Repository.INCREMENTAL_VAR, Map.of(
-            "value", this.price,
-            "date", this.date,
-            "quantile", 0.95,
-            "axis", Axis.COLUMN
-    ));
-    QueryDto query = Query
-            .from(this.storeName)
-            .select(fields, List.of(incrementalVar))
-//            .rollup(fields)
-            .build();
-    Table result = this.executor.executeQuery(query);
-    result.show();
-    this.executor.executePivotQuery(new PivotTableQueryDto(query, fields, List.of(), fields)).show();
-    // Result: same as above.
-//    Assertions.assertThat(result).containsExactly(
-//            List.of(GRAND_TOTAL, GRAND_TOTAL, -6d),
-//            List.of(competitorX, TOTAL, -2d),
-//            List.of(competitorX, productA, -1d),
-//            List.of(competitorX, productB, -1d),
-//            List.of(competitorY, TOTAL, -2d),
-//            List.of(competitorY, productA, -1d),
-//            List.of(competitorY, productB, -1d),
-//            List.of(competitorZ, TOTAL, -2d),
-//            List.of(competitorZ, productA, -1d),
-//            List.of(competitorZ, productB, -1d));
-  }
-
-  @Test
   void testTotals() {
     Measure vector = new VectorTupleAggMeasure("vector", List.of(new FieldAndAggFunc(this.price, SUM), new FieldAndAggFunc(this.date, ANY_VALUE)), this.date, null);
     QueryDto query = Query
