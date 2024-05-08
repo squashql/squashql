@@ -117,6 +117,8 @@ public final class MeasureUtils {
               for (Set<TypedField> additionalGroupingSet : additionalGroupingSets) {
                 additionalGroupingSet.addAll(copyColumns);
               }
+              additionalGroupingSets.add(new HashSet<>()); // add empty set for GT that might not exist anymore after the
+              // addition of the additionalGroupingSets
 
               groupingSets.addAll(additionalGroupingSets);
             });

@@ -118,7 +118,7 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
             Arrays.asList("eu", "france", "paris", 2d, .6666666666666666),
             Arrays.asList("eu", "uk", "london", 8d, 1d),
             Arrays.asList("eu", null, "monaco", 1d, 1d));
-    }
+  }
 
   @Test
   void testClearFilter() {
