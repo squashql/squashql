@@ -88,23 +88,48 @@ public final class MeasureUtils {
     Consumer<TypedField> criteriaRemover = cm.clearFilters() ? field -> copy.set(removeCriteriaOnField(field, copy.get())) : Function.identity()::apply;
     groupColumns.forEach(criteriaRemover);
     Optional.ofNullable(cm.referencePosition())
-            // to handle ComparisonMeasure with no GroupColumn => previous member, first member...
+            // To handle ComparisonMeasure with no GroupColumn => previous member, first member...
             .ifPresent(ref -> ref.keySet().forEach(criteriaRemover));
     Optional.ofNullable(cm.period())
             .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover));
     Set<TypedField> rollupColumns = new LinkedHashSet<>(queryScope.rollup()); // order does matter
+    Set<Set<TypedField>> groupingSets = new HashSet<>(queryScope.groupingSets());
     Optional.ofNullable(cm.ancestors())
             .ifPresent(ancestors -> {
               ancestors.forEach(criteriaRemover);
               List<TypedField> ancestorFields = ancestors.stream().filter(columns::contains).toList();
+              List<TypedField> copyColumns = new ArrayList<>(columns);
+              copyColumns.removeAll(ancestors);
               rollupColumns.addAll(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage reverse order".
+
+              Set<Set<TypedField>> additionalGroupingSets = new HashSet<>();
+              Set<TypedField> current = new HashSet<>(ancestorFields);
+              additionalGroupingSets.add(current);
+              ListIterator<TypedField> it = ancestorFields.listIterator(ancestorFields.size());
+              while (it.hasPrevious()) {
+                current = new HashSet<>(current); // copy
+                current.remove(it.previous());
+                additionalGroupingSets.add(current);
+              }
+
+              // column from select must be in the grouping sets to avoid error such as:
+              // column "city" must appear in the GROUP BY clause or must be part of an aggregate function.
+              for (Set<TypedField> additionalGroupingSet : additionalGroupingSets) {
+                additionalGroupingSet.addAll(copyColumns);
+              }
+              additionalGroupingSets.add(new HashSet<>()); // add empty set for GT that might not exist anymore after the
+              // addition of the additionalGroupingSets
+
+              groupingSets.addAll(additionalGroupingSets);
             });
+    // We might have grouping sets from pivot table. In that, rollups are ignored by SqlTranslator so that we need to fallback
+    // to use grouping sets. So for all ancestorFields, we need to create the appropriate grouping sets equivalent to rollup(ancestorFields)
     return new QueryScope(queryScope.table(),
             queryScope.columns(),
             copy.get(),
             queryScope.havingCriteria(),
             new ArrayList<>(rollupColumns),
-            new HashSet<>(queryScope.groupingSets()),
+            groupingSets,
             queryScope.cteRecordTables(),
             Collections.emptyList(),
             queryScope.limit());
