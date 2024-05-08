@@ -93,18 +93,32 @@ public final class MeasureUtils {
     Optional.ofNullable(cm.period())
             .ifPresent(p -> getColumnsForPrefetching(p).forEach(criteriaRemover));
     Set<TypedField> rollupColumns = new LinkedHashSet<>(queryScope.rollup()); // order does matter
+    Set<Set<TypedField>> groupingSets = new HashSet<>(queryScope.groupingSets());
     Optional.ofNullable(cm.ancestors())
             .ifPresent(ancestors -> {
               ancestors.forEach(criteriaRemover);
               List<TypedField> ancestorFields = ancestors.stream().filter(columns::contains).toList();
               rollupColumns.addAll(ancestorFields); // Order does matter. By design, ancestors is a list of column names in "lineage reverse order".
+
+              Set<Set<TypedField>> additionalGroupingSets = new HashSet<>();
+              Set<TypedField> current = new HashSet<>(ancestors);
+              additionalGroupingSets.add(current);
+              ListIterator<TypedField> it = ancestors.listIterator(ancestors.size());
+              while (it.hasPrevious()) {
+                current = new HashSet<>(current); // copy
+                current.remove(it.previous());
+                additionalGroupingSets.add(current);
+              }
+              groupingSets.addAll(additionalGroupingSets);
             });
+    // We might have grouping sets from pivot table. In that, rollups are ignored by SqlTranslator so that we need to fallback
+    // to use grouping sets. So for all ancestorFields, we need to create the appropriate grouping sets equivalent to rollup(ancestorFields)
     return new QueryScope(queryScope.table(),
             queryScope.columns(),
             copy.get(),
             queryScope.havingCriteria(),
             new ArrayList<>(rollupColumns),
-            new HashSet<>(queryScope.groupingSets()),
+            groupingSets,
             queryScope.cteRecordTables(),
             Collections.emptyList(),
             queryScope.limit());

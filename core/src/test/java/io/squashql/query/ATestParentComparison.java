@@ -2,7 +2,9 @@ package io.squashql.query;
 
 import io.squashql.TestClass;
 import io.squashql.query.builder.Query;
+import io.squashql.query.dto.PivotTableQueryDto;
 import io.squashql.query.dto.QueryDto;
+import io.squashql.table.PivotTable;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
 import org.assertj.core.api.Assertions;
@@ -92,6 +94,32 @@ public abstract class ATestParentComparison extends ABaseTestQuery {
             Arrays.asList("eu", "uk", "london", 1d),
             Arrays.asList("eu", null, "monaco", 1d));
   }
+
+  /**
+   * This test looks like {@link #testSimple()} but uses the PT API that uses grouping sets instead of rollup.
+   */
+  @Test
+  void testSimplePivotTable() {
+    Measure pop = Functions.sum("population", this.population);
+    final List<Field> fields = List.of(this.continent, this.country, this.city);
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", DIVIDE, pop, fields);
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(fields, List.of(pop, pOp))
+            .build();
+
+    PivotTable pivotTable = this.executor.executePivotQuery(new PivotTableQueryDto(query, fields, List.of(), fields));
+    Assertions.assertThat(pivotTable.table).containsExactly(
+            Arrays.asList("am", "canada", "montreal", 7d, .5833333333333334),
+            Arrays.asList("am", "canada", "otawa", 2d, .16666666666666666),
+            Arrays.asList("am", "canada", "toronto", 3d, 0.25),
+            Arrays.asList("am", "usa", "chicago", 4d, .3333333333333333),
+            Arrays.asList("am", "usa", "nyc", 8d, .6666666666666666),
+            Arrays.asList("eu", "france", "lyon", 1d, .3333333333333333),
+            Arrays.asList("eu", "france", "paris", 2d, .6666666666666666),
+            Arrays.asList("eu", "uk", "london", 8d, 1d),
+            Arrays.asList("eu", null, "monaco", 1d, 1d));
+    }
 
   @Test
   void testClearFilter() {
