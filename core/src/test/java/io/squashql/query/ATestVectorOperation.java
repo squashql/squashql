@@ -6,7 +6,6 @@ import io.squashql.list.Lists.LocalDateList;
 import io.squashql.query.builder.Query;
 import io.squashql.query.compiled.CompiledExpressionMeasure;
 import io.squashql.query.database.SqlUtils;
-import io.squashql.query.dto.PivotTableQueryDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.measure.ParametrizedMeasure;
 import io.squashql.query.measure.Repository;
