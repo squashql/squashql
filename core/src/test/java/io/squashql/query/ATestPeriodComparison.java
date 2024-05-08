@@ -17,7 +17,8 @@ import java.util.List;
 import java.util.Map;
 
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
-import static io.squashql.query.Functions.*;
+import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.eq;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 
 @TestClass
