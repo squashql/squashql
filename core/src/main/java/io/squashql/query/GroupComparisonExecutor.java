@@ -62,16 +62,20 @@ public class GroupComparisonExecutor extends AComparisonExecutor<CompiledCompari
       return true;
     }
 
-    static void shift(int fieldIndex, Object fieldTransformation, List<Object> values, Object[] row) {
+    static boolean shift(int fieldIndex, Object fieldTransformation, List<Object> values, Object[] row) {
       if (fieldTransformation instanceof Integer) {
         String fieldValue = (String) row[fieldIndex];
         int index = values.indexOf(fieldValue);
+        if (index < 0) {
+          return false; // not found. It is possible when fieldValue eq __total__ for instance
+        }
         row[fieldIndex] = values.get(Math.max(index + (int) fieldTransformation, 0));
       } else if (fieldTransformation.equals(REF_POS_FIRST)) {
         row[fieldIndex] = values.get(0);
       } else {
         throw new RuntimeException("not supported");
       }
+      return true;
     }
   }
 }

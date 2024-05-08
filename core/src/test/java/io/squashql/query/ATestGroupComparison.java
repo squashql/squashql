@@ -14,9 +14,9 @@ import org.junit.jupiter.api.TestInstance;
 import java.util.List;
 import java.util.Map;
 
+import static io.squashql.query.ComparisonMethod.DIVIDE;
 import static io.squashql.query.ComparisonMethod.RELATIVE_DIFFERENCE;
-import static io.squashql.query.Functions.eq;
-import static io.squashql.query.Functions.sum;
+import static io.squashql.query.Functions.*;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
@@ -468,5 +468,30 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
             List.of("bottle", "s1", 4d, 2d, 2.5d),
             List.of("cookie", "s1", 4d, 1d, 1.5d),
             List.of("shirt", "s1", 11d, 1d, 2d));
+  }
+
+  @Test
+  void testZob() {
+    List<String> elements = List.of(MAIN_SCENARIO_NAME, "s1", "s2");
+    Measure price = sum("p", this.price);
+    var priceCompPrev = new ComparisonMeasureReferencePosition(
+            "priceCompPrev",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            price,
+            Map.of(this.scenario, "s-1"),
+            elements);
+
+    var pop = new ComparisonMeasureReferencePosition("parent", DIVIDE, priceCompPrev, List.of(this.ean, this.scenario));
+
+    var query = Query
+            .from(this.storeName)
+            .where(criterion(this.scenario, Functions.in(MAIN_SCENARIO_NAME, "s1")))
+            .select(List.of(this.scenario, this.ean), List.of(price, priceCompPrev, pop))
+            .rollup(List.of(this.scenario, this.ean))
+//            .orderBy(this.scenario, elements)
+            .build();
+
+    Table dataset = this.executor.executeQuery(query);
+    dataset.show();
   }
 }

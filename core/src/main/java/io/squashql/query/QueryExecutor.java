@@ -115,6 +115,7 @@ public class QueryExecutor {
     QueryResolver queryResolver = new QueryResolver(preparedQuery, this.queryEngine.datastore().storeByName());
     DependencyGraph<QueryPlanNodeKey> dependencyGraph = computeDependencyGraph(
             queryResolver.getColumns(), queryResolver.getGroupColumns(), queryResolver.getMeasures().values(), queryResolver.getScope());
+    GraphPrinter.print(dependencyGraph); // FIXME
     // Compute what needs to be prefetched
     Map<QueryScope, QueryScope> prefetchQueryScopeByQueryScope = new HashMap<>();
     Map<QueryScope, Set<CompiledMeasure>> measuresByQueryScope = new HashMap<>();
@@ -176,11 +177,11 @@ public class QueryExecutor {
 
     // Here we take the global plan and execute the plans for a given scope one by one, in dependency order. The order
     // is given by the graph itself.
-    final Set<QueryPlanNodeKey> visited = new HashSet<>();
-    final Evaluator evaluator = new Evaluator();
+    Set<QueryPlanNodeKey> visited = new HashSet<>();
+    Evaluator evaluator = new Evaluator();
     ExecutionPlan<QueryPlanNodeKey> globalPlan = new ExecutionPlan<>(dependencyGraph, (queryNode) -> {
       if (visited.add(queryNode)) {
-        final ExecutionContext executionContext = new ExecutionContext(queryNode.queryScope,
+        ExecutionContext executionContext = new ExecutionContext(queryNode.queryScope,
                 tableByScope,
                 queryResolver.getColumns(),
                 queryResolver.getGroupColumns(),

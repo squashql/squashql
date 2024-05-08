@@ -17,8 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
-import static io.squashql.query.Functions.criterion;
-import static io.squashql.query.Functions.eq;
+import static io.squashql.query.Functions.*;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 
 @TestClass
@@ -436,6 +435,25 @@ public abstract class ATestPeriodComparison extends ABaseTestQuery {
             List.of(yearType(2022), 12L),
             List.of(yearType(2023), 12L),
             List.of(GRAND_TOTAL, 24L));
+  }
+
+  @Test
+  void testZob() {
+    Period.Month period = new Period.Month(this.month, this.year);
+    Measure amount = sum("amount", this.sales);
+    ComparisonMeasureReferencePosition m = new ComparisonMeasureReferencePosition(
+            "compprevyear",
+            ABSOLUTE_DIFFERENCE,
+            amount,
+            Map.of(period.month(), "m-1"),
+            period);
+
+    var query = Query.from(this.storeName)
+            .select(List.of(this.year, this.month), List.of(amount, m))
+            .rollup(List.of(this.year, this.month))
+            .build();
+    Table finalTable = this.executor.executeQuery(query);
+    finalTable.show();
   }
 
   protected Object yearType(int i) {
