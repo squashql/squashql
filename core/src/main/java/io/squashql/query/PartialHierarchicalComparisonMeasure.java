@@ -3,6 +3,8 @@ package io.squashql.query;
 import io.squashql.query.measure.visitor.MeasureVisitor;
 import lombok.*;
 
+import java.util.function.BiFunction;
+
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor // For Jackson
@@ -14,6 +16,7 @@ public class PartialHierarchicalComparisonMeasure implements Measure {
   public String expression;
   @Getter
   public ComparisonMethod comparisonMethod;
+  public BiFunction<Object, Object, Object> comparisonOperator;
   public boolean clearFilters;
   @Getter
   public Measure measure;

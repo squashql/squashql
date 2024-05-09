@@ -4,11 +4,12 @@ import io.squashql.TestClass;
 import io.squashql.list.Lists.DoubleList;
 import io.squashql.list.Lists.LocalDateList;
 import io.squashql.query.builder.Query;
+import io.squashql.query.compiled.CompiledComparisonMeasureReferencePosition;
 import io.squashql.query.compiled.CompiledExpressionMeasure;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.query.measure.ParametrizedMeasure;
-import io.squashql.query.measure.Repository;
+import io.squashql.query.measure.visitor.PartialMeasureVisitor;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -26,7 +28,7 @@ import static io.squashql.query.agg.AggregationFunction.ANY_VALUE;
 import static io.squashql.query.agg.AggregationFunction.SUM;
 import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
 import static io.squashql.query.database.QueryEngine.TOTAL;
-import static io.squashql.query.measure.Repository.VAR;
+import static io.squashql.query.measure.Repository.*;
 import static io.squashql.util.ListUtils.reorder;
 import static java.util.Comparator.naturalOrder;
 
@@ -129,7 +131,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
     List<Field> fields = List.of(this.competitor, this.ean);
 
     Measure incrementalVar = new ParametrizedMeasure("inc var",
-            Repository.INCREMENTAL_VAR, Map.of(
+            INCREMENTAL_VAR, Map.of(
             "value", this.price,
             "date", this.date,
             "quantile", 0.95,
@@ -154,13 +156,12 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
             List.of(competitorZ, productB, -1d));
   }
 
-
   @Test
   void testPartialIncrementalVar() {
     List<Field> fields = List.of(this.competitor, this.ean);
 
     Measure incrementalVar = new ParametrizedMeasure("partial inc var",
-            Repository.INCREMENTAL_VAR, Map.of(
+            INCREMENTAL_VAR, Map.of(
             "value", this.price,
             "date", this.date,
             "quantile", 0.95,
@@ -297,7 +298,7 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
       }
       return ratio;
     };
-    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", operator, vector, fields);
+    ComparisonMeasureReferencePosition pOp = new ComparisonMeasureReferencePosition("percentOfParent", operator, vector, fields, false);
 
     QueryDto query = Query
             .from(this.storeName)
@@ -316,6 +317,79 @@ public abstract class ATestVectorOperation extends ABaseTestQuery {
             List.of(competitorZ, TOTAL, List.of(-4., -8., -12., -16., -8., -16., -24., -32., -12., -24., -36., -48.)),
             List.of(competitorZ, productA, List.of(-1.0, -2.0, -3.0, -4.0, -2.0, -4.0, -6.0, -8.0, -3.0, -6.0, -9.0, -12.0)),
             List.of(competitorZ, productB, List.of(-1.0, -2.0, -3.0, -4.0, -2.0, -4.0, -6.0, -8.0, -3.0, -6.0, -9.0, -12.0)));
+  }
+
+  @Test
+  void testOverallIncrVar() {
+    Measure overallIncVar = new ParametrizedMeasure("overall inc var",
+            OVERALL_INCREMENTAL_VAR, Map.of(
+            "value", this.price,
+            "date", this.date,
+            "quantile", 0.95,
+            "axis", Axis.COLUMN
+    ));
+
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(List.of(this.competitor, this.ean), List.of(overallIncVar))
+            .rollup(List.of(this.competitor, this.ean))
+            .build();
+    Table result = this.executor.executeQuery(query);
+    // The result is not different from VaR because of the data. Another test is verifying that the overall parent
+    // is received in the comparison operator.
+    Assertions.assertThat(result).containsExactly(
+            List.of(GRAND_TOTAL, GRAND_TOTAL, -6d),
+            List.of(competitorX, TOTAL, -2d),
+            List.of(competitorX, productA, -1d),
+            List.of(competitorX, productB, -1d),
+            List.of(competitorY, TOTAL, -2d),
+            List.of(competitorY, productA, -1d),
+            List.of(competitorY, productB, -1d),
+            List.of(competitorZ, TOTAL, -2d),
+            List.of(competitorZ, productA, -1d),
+            List.of(competitorZ, productB, -1d));
+  }
+
+  @Test
+  void testOverall() {
+    Measure vector = new VectorTupleAggMeasure("__vector_overall___", List.of(new FieldAndAggFunc(this.price, SUM), new FieldAndAggFunc(this.date, ANY_VALUE)), this.date, null);
+    AtomicInteger c = new AtomicInteger();
+    BiFunction<Object, Object, Object> operator = (a, b) -> {
+      c.getAndIncrement();
+      DoubleList l = (DoubleList) ((List<?>) b).get(0);
+      Collections.sort(l);
+      // This is the parent vector for all operations
+      Assertions.assertThat(l).containsExactly(6.0, 12.0, 12.0, 18.0, 18.0, 24.0, 24.0, 36.0, 36.0, 48.0, 54.0, 72.0);
+      return null;
+    };
+    List<Field> fields = List.of(this.competitor, this.ean);
+    String alias = "overall";
+    var overall = new ComparisonMeasureReferencePosition(alias, operator, vector, fields, true);
+
+    QueryDto query = Query
+            .from(this.storeName)
+            .select(fields, List.of(overall))
+            .rollup(fields)
+            .build();
+    this.executor.executeQuery(query);
+    Assertions.assertThat(c.get()).isEqualTo(10); // 10 lines in the results
+
+    QueryResolver queryResolver = new QueryResolver(query, this.datastore.storeByName());
+    var overallIncVar = new ParametrizedMeasure(alias,
+            OVERALL_INCREMENTAL_VAR, Map.of(
+            "value", this.price,
+            "date", this.date,
+            "quantile", 0.95,
+            "axis", Axis.COLUMN
+    ));
+    Measure visit = new PartialMeasureVisitor(QueryExecutor.createPivotTableContext(query)).visit(overallIncVar);
+    var overallCompiled = (CompiledComparisonMeasureReferencePosition) queryResolver.getMeasures().get(overall);
+    var overallIncVarCompiled = (CompiledComparisonMeasureReferencePosition) queryResolver.compileMeasure(visit, true);
+    // Manually compare the attributes because the operator is different.
+    Assertions.assertThat(overallCompiled.clearFilters()).isEqualTo(overallIncVarCompiled.clearFilters());
+    Assertions.assertThat(overallCompiled.grandTotalAlongAncestors()).isEqualTo(overallIncVarCompiled.grandTotalAlongAncestors());
+    Assertions.assertThat(overallCompiled.ancestors()).isEqualTo(overallIncVarCompiled.ancestors());
+    Assertions.assertThat(overallCompiled.measure()).isEqualTo(overallIncVarCompiled.measure());
   }
 
   private void assertVectorTuples(Table result, Measure vector) {

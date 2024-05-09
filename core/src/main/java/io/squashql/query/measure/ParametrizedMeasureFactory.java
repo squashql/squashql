@@ -53,7 +53,7 @@ public final class ParametrizedMeasureFactory {
   /**
    * Called by reflection. See {@link Repository#create(ParametrizedMeasure)}
    */
-  public static Measure incrementalVar(String alias, Field value, Field date, double quantile, List<Field> ancestors) {
+  public static Measure incrementalVar(String alias, Field value, Field date, double quantile, List<Field> ancestors, boolean overall) {
     Measure vector = new VectorTupleAggMeasure(
             String.format("__vector_%s___", alias),
             List.of(new FieldAndAggFunc(value, SUM),
@@ -69,7 +69,7 @@ public final class ParametrizedMeasureFactory {
       List<Double> parent = orderTupleOfList(parentValue).getOne();
 
       int size = parent.size();
-      var index = (int) Math.floor(size * (1 - quantile));
+      var index = quantile == 0 ? size - 1 : (int) Math.floor(size * (1 - quantile));
       List<Double> minus = new ArrayList<>(size);
       for (int i = 0; i < size; i++) {
         minus.add(parent.get(i) - current.get(i));
@@ -83,7 +83,7 @@ public final class ParametrizedMeasureFactory {
 
       return -1 * (varParentWithCurrent - varParentWithoutCurrent);
     };
-    return new ComparisonMeasureReferencePosition(alias, comparisonOperator, vector, ancestors);
+    return new ComparisonMeasureReferencePosition(alias, comparisonOperator, vector, ancestors, overall);
   }
 
   private static Pair<List<Double>, List<LocalDate>> orderTupleOfList(Object value) {
