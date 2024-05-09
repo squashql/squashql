@@ -79,15 +79,17 @@ public record PartialMeasureVisitor(
 
   @Override
   public Measure visit(ParametrizedMeasure measure) {
-    if (measure.key.equals(Repository.INCREMENTAL_VAR)) {
+    if (measure.key.equals(Repository.INCREMENTAL_VAR) || measure.key.equals(Repository.OVERALL_INCREMENTAL_VAR)) {
+      Map<String, Object> copy = new HashMap<>(measure.parameters);
       Object axis = measure.parameters.get("axis");
       if (axis != null || !measure.parameters.containsKey("ancestors")) {
         List<Field> ancestors = getAncestors((Axis) axis);
-        Map<String, Object> copy = new HashMap<>(measure.parameters);
         copy.remove("axis");
         copy.put("ancestors", ancestors);
-        return new ParametrizedMeasure(measure.alias, Repository.INCREMENTAL_VAR, copy);
       }
+      boolean overall = measure.key.equals(Repository.OVERALL_INCREMENTAL_VAR);
+      copy.put("overall", overall);
+      return new ParametrizedMeasure(measure.alias, measure.key, copy);
     }
     return measure;
   }

@@ -18,6 +18,7 @@ public final class Repository {
 
   public static final String VAR = "VAR";
   public static final String INCREMENTAL_VAR = "INCREMENTAL_VAR";
+  public static final String OVERALL_INCREMENTAL_VAR = "OVERALL_INCREMENTAL_VAR";
 
   private Repository() {
   }
@@ -25,7 +26,7 @@ public final class Repository {
   public static Measure create(ParametrizedMeasure pm) {
     String methodName = switch (pm.key) {
       case VAR -> "var";
-      case INCREMENTAL_VAR -> "incrementalVar";
+      case INCREMENTAL_VAR, OVERALL_INCREMENTAL_VAR -> "incrementalVar";
       default -> throw new IllegalArgumentException("unknown " + ParametrizedMeasure.class + ": " + pm);
     };
 
@@ -61,10 +62,21 @@ public final class Repository {
     JavaType listOfFieldsJT = JacksonUtil.getListJavaType(Field.class);
     JavaType axis = JacksonUtil.getJavaType(Axis.class);
     JavaType str = JacksonUtil.getJavaType(String.class);
+    JavaType booleanJT = JacksonUtil.getJavaType(boolean.class);
     if (key.equals(VAR)) {
-      return List.of(Tuples.triple("value", fieldJT, true), Tuples.triple("date", fieldJT, true), Tuples.triple("quantile", doubleJT, true), Tuples.triple("return", str, true));
-    } else if (key.equals(INCREMENTAL_VAR)) {
-      return List.of(Tuples.triple("value", fieldJT, true), Tuples.triple("date", fieldJT, true), Tuples.triple("quantile", doubleJT, true), Tuples.triple("ancestors", listOfFieldsJT, true), Tuples.triple("axis", axis, false));
+      return List.of(
+              Tuples.triple("value", fieldJT, true),
+              Tuples.triple("date", fieldJT, true),
+              Tuples.triple("quantile", doubleJT, true),
+              Tuples.triple("return", str, true));
+    } else if (key.equals(INCREMENTAL_VAR) || key.equals(OVERALL_INCREMENTAL_VAR)) {
+      return List.of(
+              Tuples.triple("value", fieldJT, true),
+              Tuples.triple("date", fieldJT, true),
+              Tuples.triple("quantile", doubleJT, true),
+              Tuples.triple("ancestors", listOfFieldsJT, true),
+              Tuples.triple("axis", axis, false),
+              Tuples.triple("overall", str, true));
     } else {
       throw new IllegalArgumentException("unknown key: " + key);
     }

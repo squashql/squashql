@@ -82,8 +82,9 @@ public class ComparisonMeasureReferencePosition implements Measure {
   public ComparisonMeasureReferencePosition(@NonNull String alias,
                                             @NonNull BiFunction<Object, Object, Object> comparisonOperator,
                                             @NonNull Measure measure,
-                                            @NonNull List<Field> ancestors) {
-    this(alias, null, comparisonOperator, false, measure, null, null, null, null, ancestors, false);
+                                            @NonNull List<Field> ancestors,
+                                            boolean grandTotalAlongAncestors) {
+    this(alias, null, comparisonOperator, false, measure, null, null, null, null, ancestors, grandTotalAlongAncestors);
   }
 
   private ComparisonMeasureReferencePosition(String alias,
