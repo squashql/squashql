@@ -58,8 +58,7 @@ public class GroupComparisonExecutor extends AComparisonExecutor<CompiledCompari
       String column = this.columnAndTransformations.get(1).getOne();
       Object fieldTransformation = this.columnAndTransformations.get(1).getTwo();
       int fieldIndex = this.indexByColumn.getIfAbsent(column, -1);
-      shift(fieldIndex, fieldTransformation, values, row);
-      return true;
+      return shift(fieldIndex, fieldTransformation, values, row);
     }
 
     static boolean shift(int fieldIndex, Object fieldTransformation, List<Object> values, Object[] row) {
