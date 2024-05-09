@@ -11,14 +11,17 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static io.squashql.query.ComparisonMethod.DIVIDE;
 import static io.squashql.query.ComparisonMethod.RELATIVE_DIFFERENCE;
-import static io.squashql.query.Functions.eq;
-import static io.squashql.query.Functions.sum;
+import static io.squashql.query.Functions.*;
 import static io.squashql.query.TableField.tableField;
 import static io.squashql.query.TableField.tableFields;
+import static io.squashql.query.database.QueryEngine.GRAND_TOTAL;
+import static io.squashql.query.database.QueryEngine.TOTAL;
 import static io.squashql.transaction.DataLoader.MAIN_SCENARIO_NAME;
 import static io.squashql.transaction.DataLoader.SCENARIO_FIELD_NAME;
 
@@ -468,5 +471,43 @@ public abstract class ATestGroupComparison extends ABaseTestQuery {
             List.of("bottle", "s1", 4d, 2d, 2.5d),
             List.of("cookie", "s1", 4d, 1d, 1.5d),
             List.of("shirt", "s1", 11d, 1d, 2d));
+  }
+
+  /**
+   * See comment of {@link ATestPeriodComparison#testCompareYearCurrentWithPreviousWithFilterAndCalculatedMeasure()}
+   */
+  @Test
+  void testCombineGroupComparisonAndPercentOfParent() {
+    List<String> elements = List.of(MAIN_SCENARIO_NAME, "s1", "s2");
+    Measure price = sum("p", this.price);
+    var priceCompPrev = new ComparisonMeasureReferencePosition(
+            "priceCompPrev",
+            ComparisonMethod.ABSOLUTE_DIFFERENCE,
+            price,
+            Map.of(this.scenario, "s-1"),
+            elements);
+
+    List<Field> fields = List.of(this.scenario, this.ean);
+    var pop = new ComparisonMeasureReferencePosition("parent", DIVIDE, priceCompPrev, fields);
+
+    // use a filter to have three different scopes. One for priceCompPrev, the second for pop and the last one for price
+    var query = Query
+            .from(this.storeName)
+            .where(criterion(this.scenario, Functions.in(MAIN_SCENARIO_NAME, "s1")))
+            .select(fields, List.of(price, priceCompPrev, pop))
+            .rollup(fields)
+            .build();
+
+    Table dataset = this.executor.executeQuery(query);
+    Assertions.assertThat(dataset).containsExactly(
+            Arrays.asList(GRAND_TOTAL, GRAND_TOTAL, 34d, null, null),
+            Arrays.asList("base", TOTAL, 15d, 0d, null),
+            Arrays.asList("base", "bottle", 2d, 0d, Double.NaN),
+            Arrays.asList("base", "cookie", 3d, 0d, Double.NaN),
+            Arrays.asList("base", "shirt", 10d, 0d, Double.NaN),
+            Arrays.asList("s1", TOTAL, 19d, 4d, null),
+            Arrays.asList("s1", "bottle", 4d, 2d, 0.5d),
+            Arrays.asList("s1", "cookie", 4d, 1d, 0.25d),
+            Arrays.asList("s1", "shirt", 11d, 1d, 0.25d));
   }
 }

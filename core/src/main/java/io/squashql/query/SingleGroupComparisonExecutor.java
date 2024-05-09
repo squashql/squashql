@@ -1,6 +1,7 @@
 package io.squashql.query;
 
 import io.squashql.query.compiled.CompiledComparisonMeasureReferencePosition;
+import io.squashql.query.database.SqlTranslator;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;
@@ -38,7 +39,7 @@ public class SingleGroupComparisonExecutor extends AComparisonExecutor<CompiledC
       // Order does matter here
       String column = SqlUtils.squashqlExpression(field);
       this.columnAndTransformation = Tuples.pair(column, parse(referencePosition.get(field)));
-      Object[] array = readFromTable.getColumnValues(column).toArray(new Object[0]);
+      Object[] array = readFromTable.getColumnValues(column).stream().filter(o -> !SqlTranslator.TOTAL_CELL.equals(o)).toArray();
       Arrays.sort(array, elements == null ? null : new CustomExplicitOrdering(elements));
       this.values = Arrays.asList(array);
     }
@@ -47,8 +48,7 @@ public class SingleGroupComparisonExecutor extends AComparisonExecutor<CompiledC
     public boolean test(Object[] row, Header[] headers) {
       Object fieldTransformation = this.columnAndTransformation.getTwo();
       int fieldIndex = this.indexByColumn.getIfAbsent(this.columnAndTransformation.getOne(), -1);
-      GroupComparisonExecutor.GroupComparisonShiftProcedure.shift(fieldIndex, fieldTransformation, this.values, row);
-      return true;
+      return GroupComparisonExecutor.GroupComparisonShiftProcedure.shift(fieldIndex, fieldTransformation, this.values, row);
     }
   }
 }

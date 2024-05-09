@@ -1,7 +1,6 @@
 package io.squashql.query;
 
 import io.squashql.query.database.QueryScope;
-import io.squashql.type.TypedField;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,12 +38,10 @@ public class GraphPrinter {
     System.out.println(sb);
   }
 
-  private static <N> void executeRecursively(StringBuilder sb, DependencyGraph graph, DependencyGraph.NodeWithId<N> node, Set<N> alreadyPrinted, Function<QueryScope, Integer> idProvider, int level) {
+  private static <N> void executeRecursively(StringBuilder sb, DependencyGraph<N> graph, DependencyGraph.NodeWithId<N> node, Set<N> alreadyPrinted, Function<QueryScope, Integer> idProvider, int level) {
     Set<DependencyGraph.NodeWithId<N>> successors = graph.successors(node);
     for (DependencyGraph.NodeWithId<N> successor : successors) {
-      for (int i = 0; i < level; i++) {
-        sb.append("\t");
-      }
+      sb.append("\t".repeat(Math.max(0, level)));
       appendNode(sb, successor, alreadyPrinted, idProvider);
       sb.append(System.lineSeparator());
       executeRecursively(sb, graph, successor, alreadyPrinted, idProvider, level + 1);
@@ -71,21 +68,7 @@ public class GraphPrinter {
 
   private static String printQueryPlanNodeKey(QueryScope scope) {
     StringBuilder sb = new StringBuilder();
-    appendIfNotNullOrNotEmpty(sb, null, scope.table());
-    appendIfNotNullOrNotEmpty(sb, "columns=", scope.columns().stream().map(TypedField::toString).toList());
-    appendIfNotNullOrNotEmpty(sb, null, scope.whereCriteria());
-    appendIfNotNullOrNotEmpty(sb, "rollup=", scope.rollup().stream().map(TypedField::toString).toList());
+    sb.append(scope);
     return sb.toString();
-  }
-
-  private static void appendIfNotNullOrNotEmpty(StringBuilder sb, String prefix, Object o) {
-    if (o instanceof Collection<?> collection) {
-      if (collection.isEmpty()) {
-        return;
-      }
-      sb.append(prefix == null ? "" : prefix).append(o).append(", ");
-    } else if (o != null) {
-      sb.append(prefix == null ? "" : prefix).append(o).append(", ");
-    }
   }
 }

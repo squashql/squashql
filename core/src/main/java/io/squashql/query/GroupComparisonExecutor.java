@@ -58,20 +58,23 @@ public class GroupComparisonExecutor extends AComparisonExecutor<CompiledCompari
       String column = this.columnAndTransformations.get(1).getOne();
       Object fieldTransformation = this.columnAndTransformations.get(1).getTwo();
       int fieldIndex = this.indexByColumn.getIfAbsent(column, -1);
-      shift(fieldIndex, fieldTransformation, values, row);
-      return true;
+      return shift(fieldIndex, fieldTransformation, values, row);
     }
 
-    static void shift(int fieldIndex, Object fieldTransformation, List<Object> values, Object[] row) {
+    static boolean shift(int fieldIndex, Object fieldTransformation, List<Object> values, Object[] row) {
       if (fieldTransformation instanceof Integer) {
         String fieldValue = (String) row[fieldIndex];
         int index = values.indexOf(fieldValue);
+        if (index < 0) {
+          return false; // not found. It is possible when fieldValue eq __total__ for instance
+        }
         row[fieldIndex] = values.get(Math.max(index + (int) fieldTransformation, 0));
       } else if (fieldTransformation.equals(REF_POS_FIRST)) {
         row[fieldIndex] = values.get(0);
       } else {
         throw new RuntimeException("not supported");
       }
+      return true;
     }
   }
 }
