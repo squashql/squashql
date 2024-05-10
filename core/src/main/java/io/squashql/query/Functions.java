@@ -91,7 +91,11 @@ public class Functions {
   }
 
   public static ConditionDto in(Object... values) {
-    return new InConditionDto(values);
+    return new InConditionDto(values, false);
+  }
+
+  public static ConditionDto notIn(Object... values) {
+    return new InConditionDto(values, true);
   }
 
   public static ConditionDto lt(Object value) {
@@ -272,16 +276,16 @@ public class Functions {
   // COMPARISONS
 
   public static PartialHierarchicalComparisonMeasure comparisonMeasureWithParentOfAxis(String alias,
-                                                          ComparisonMethod comparisonMethod,
-                                                          Measure underlyingMeasure,
-                                                          Axis axis) {
+                                                                                       ComparisonMethod comparisonMethod,
+                                                                                       Measure underlyingMeasure,
+                                                                                       Axis axis) {
     return new PartialHierarchicalComparisonMeasure(alias, comparisonMethod, true, underlyingMeasure, axis, false);
   }
 
   public static PartialHierarchicalComparisonMeasure comparisonMeasureWithTotalOfAxis(String alias,
-                                                         ComparisonMethod comparisonMethod,
-                                                         Measure underlyingMeasure,
-                                                         Axis axis) {
+                                                                                      ComparisonMethod comparisonMethod,
+                                                                                      Measure underlyingMeasure,
+                                                                                      Axis axis) {
     return new PartialHierarchicalComparisonMeasure(alias, comparisonMethod, true, underlyingMeasure, axis, true);
   }
 }

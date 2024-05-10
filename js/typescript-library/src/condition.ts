@@ -70,13 +70,14 @@ export class InCondition implements Condition {
   readonly class: string = PACKAGE + "dto.InConditionDto"
   readonly type: ConditionType = ConditionType.IN
 
-  constructor(private values: Array<Primitive>) {
+  constructor(private values: Array<Primitive>, private invert: boolean) {
   }
 
   toJSON() {
     return {
       "@class": this.class,
       "values": this.values,
+      "invert": this.invert,
     }
   }
 }
@@ -142,7 +143,14 @@ export function isNotNull(): Condition {
  * In condition on a list of string, number or boolean constants.
  */
 export function _in(value: Array<Primitive>): Condition {
-  return new InCondition(value)
+  return new InCondition(value, false)
+}
+
+/**
+ * NOT In condition on a list of string, number or boolean constants.
+ */
+export function notIn(value: Array<Primitive>): Condition {
+  return new InCondition(value, true)
 }
 
 /**

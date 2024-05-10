@@ -122,7 +122,8 @@ public class TestJavascriptLibrary {
             criterion(tableField("f6"), contains(2)),
             criterion(lower(tableField("f7")), eq("a")),
             criterion(upper(tableField("f8")), eq("A")),
-            criterion(new TableField("f9"), currentDate(), ConditionType.GT)
+            criterion(new TableField("f9"), currentDate(), ConditionType.GT),
+            criterion(new TableField("f10"), notIn(1, 2))
     ));
 
     q.withHavingCriteria(all(

@@ -65,7 +65,8 @@ public record CompiledCriteria(ConditionDto condition, ConditionType conditionTy
       };
     } else if (dto instanceof InConditionDto ic) {
       Function<Object, String> sqlMapper = SqlTranslator.getQuoteFn(field.type(), ic.values.iterator().next().getClass(), queryRewriter);
-      return expression + " " + dto.type().sqlInfix + " (" +
+      String sep = ic.invert ? " not " : " ";
+      return expression + sep + dto.type().sqlInfix + " (" +
               ic.values
                       .stream()
                       .map(sqlMapper)

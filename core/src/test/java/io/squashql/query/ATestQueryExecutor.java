@@ -292,7 +292,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   }
 
   @Test
-  void testQuerySeveralCoordinates() {
+  void testInCondition() {
     QueryDto query = Query
             .from(this.storeName)
             .where(tableField(SCENARIO_FIELD_NAME), in("s1", "s2"))
@@ -302,6 +302,17 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     Assertions.assertThat(table).containsExactly(
             List.of("s1", 17.0d, 33L),
             List.of("s2", 14.5d, 33L));
+  }
+
+  @Test
+  void testNotInCondition() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(tableField(SCENARIO_FIELD_NAME), notIn("s1", "s2"))
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of(sum("p", "price"), sum("q", "quantity")))
+            .build();
+    Table table = this.executor.executeQuery(query);
+    Assertions.assertThat(table).containsExactly(List.of(MAIN_SCENARIO_NAME, 15.0d, 33L));
   }
 
   @Test
