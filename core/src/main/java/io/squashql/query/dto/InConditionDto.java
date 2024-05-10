@@ -16,8 +16,9 @@ import static io.squashql.query.dto.ConditionType.IN;
 public final class InConditionDto implements ConditionDto {
 
   public Set<Object> values;
+  public boolean invert;
 
-  public InConditionDto(Object value) {
+  public InConditionDto(Object value, boolean invert) {
     Set<Object> set = new HashSet<>();
     if (value.getClass().isArray()) {
       Object[] array = (Object[]) value;
@@ -30,6 +31,7 @@ public final class InConditionDto implements ConditionDto {
       throw new IllegalArgumentException("Unexpected value for in condition " + value);
     }
     this.values = set;
+    this.invert = invert;
   }
 
   @Override
