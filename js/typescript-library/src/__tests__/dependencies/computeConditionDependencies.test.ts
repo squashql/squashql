@@ -1,9 +1,9 @@
 import * as dependencies from "../../dependencies"
 import {
+  _in,
   Condition,
   ConditionType,
   ConstantCondition,
-  InCondition,
   LogicalCondition,
   SingleValueCondition
 } from "../../condition"
@@ -22,7 +22,7 @@ describe('computeConditionDependencies', () => {
   })
 
   it('should compute no dependencies for InCondition', () => {
-    const condition = new InCondition([88])
+    const condition = _in([88])
     const result = dependencies.computeConditionDependencies(condition)
 
     expect(result.length).toEqual(0)

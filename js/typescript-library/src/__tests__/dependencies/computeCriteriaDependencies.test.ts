@@ -2,7 +2,7 @@ import {TableField} from "../../field"
 import Criteria from "../../criteria"
 import * as dependencies from "../../dependencies"
 import {AggregatedMeasure} from "../../measure"
-import {ConditionType, InCondition} from "../../condition"
+import {_in, ConditionType} from "../../condition"
 
 afterEach(() => {
   jest.restoreAllMocks()
@@ -15,8 +15,8 @@ describe('computeCriteriaDependencies', () => {
   const mockField3 = new TableField('mockField3')
   const mockField4 = new TableField('mockField4')
   const mockField5 = new TableField('mockField5')
-  const mockCondition2 = new InCondition([33, 44])
-  const mockCondition4 = new InCondition([22])
+  const mockCondition2 = _in([33, 44])
+  const mockCondition4 = _in([22])
 
   it('should compute dependencies for Criteria with fields', () => {
     const criteria = new Criteria(mockField1, mockField2, undefined, undefined, undefined, [])

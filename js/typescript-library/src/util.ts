@@ -104,7 +104,7 @@ function transformToObject(key: string, value: any, reviverFallback?: (key: stri
   } else if (clazz === PACKAGE + "dto.LogicalConditionDto") {
     return new LogicalCondition(value["type"], transformToObject("one", value["one"]), transformToObject("two", value["two"]))
   } else if (clazz === PACKAGE + "dto.InConditionDto") {
-    return new InCondition(value["values"])
+    return new InCondition(value["values"], value["invert"])
   } else if (clazz === PACKAGE + "dto.ConstantConditionDto") {
     return new ConstantCondition(value["type"])
   } else if (clazz === PACKAGE + "dto.SingleValueConditionDto") {
