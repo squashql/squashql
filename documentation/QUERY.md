@@ -160,7 +160,7 @@ WHERE (col1 IN ('a', 'b') AND col2 = 'c')
 GROUP BY col1, col2
 ```
 
-Condition operators available: `eq, neq, lt, le, gt, ge, _in, isNull, isNotNull, like, and, or`.
+Condition operators available: `eq, neq, lt, le, gt, ge, _in, notIn, isNull, isNotNull, like, and, or`.
 
 If the field is an array, the condition `contains` can be used:
 
