@@ -18,10 +18,13 @@ import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 import io.squashql.type.TypedField;
 import lombok.AllArgsConstructor;
+import org.eclipse.collections.api.list.primitive.MutableIntList;
+import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
 
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 
@@ -94,7 +97,11 @@ public class CaffeineQueryCache implements QueryCache {
   public void contributeToCache(Table result, Set<CompiledMeasure> measures, QueryCacheKey scope) {
     Table cache = this.results.get(scope, s -> {
       this.measureCounter.recordMisses(measures.size());
-      return new DelegateTable(((ColumnarTable) result).copy());
+      if (result instanceof ColumnarTable ct) {
+        return new DelegateTable(ct.copy());
+      } else {
+        return new DelegateTable(result);
+      }
     });
 
     executeWrite(cache, () -> {
@@ -232,5 +239,50 @@ public class CaffeineQueryCache implements QueryCache {
     public int count() {
       return this.underlying.count();
     }
+  }
+
+  public String getHistogram() {
+    int[] histogram = new int[]{100, 1000, 10_000, 50_000, 100_000, 200_000, 500_000, 1_000_000};
+    ConcurrentMap<QueryCacheKey, DelegateTable> map = this.results.asMap();
+    MutableIntList l = new IntArrayList();
+    for (DelegateTable value : map.values()) {
+      int nbCells = executeRead(value, () -> value.count() * value.headers().size());
+      l.add(nbCells);
+    }
+
+    int[] counts = getCountByHist(l, histogram);
+
+    StringBuilder sb = new StringBuilder();
+    sb
+            .append("distribution (cardinality: number of cells)")
+            .append(System.lineSeparator());
+    for (int i = 0; i < histogram.length; i++) {
+      sb
+              .append("[")
+              .append(histogram[i])
+              .append(":")
+              .append(counts[i])
+              .append("]");
+      if (i < histogram.length - 1) {
+        sb.append(",");
+      }
+    }
+    return sb.toString();
+  }
+
+  public static int[] getCountByHist(MutableIntList l, int[] hist) {
+    int[] counts = new int[hist.length];
+    l.forEach(value -> {
+      int i = 0;
+      for (int j = 0; j < hist.length; j++) {
+        if (value > hist[j]) {
+          i = j;
+        } else {
+          break;
+        }
+      }
+      counts[i]++;
+    });
+    return counts;
   }
 }
