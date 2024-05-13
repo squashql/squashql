@@ -84,9 +84,7 @@ public record CompiledCriteria(ConditionDto condition, ConditionType conditionTy
         default -> throw new IllegalStateException("Unexpected value: " + dto.type());
       };
     } else if (dto instanceof NotConditionDto nc) {
-      String not = nc.type().sqlInfix;
-      String sql = toSql(field, nc.c, queryRewriter);
-      return not + " " + sql;
+      return nc.type().sqlInfix + " " + toSql(field, nc.c, queryRewriter);
     } else {
       throw new RuntimeException("Not supported condition " + dto);
     }
