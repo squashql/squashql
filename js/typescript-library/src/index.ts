@@ -57,7 +57,7 @@ export {
 export {
   Condition, ConditionType,
   eq, neq, lt, le, gt, ge, _in, like, isNull, isNotNull,
-  and, or,
+  and, or, not,
   all, any, criterion, criterion_, havingCriterion,
   SingleValueCondition
 } from './condition'

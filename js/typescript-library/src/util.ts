@@ -13,7 +13,7 @@ import {
   ParametrizedMeasure,
   PartialHierarchicalComparisonMeasure
 } from "./measure"
-import {ConstantCondition, InCondition, LogicalCondition, SingleValueCondition} from "./condition"
+import {ConstantCondition, InCondition, LogicalCondition, NotCondition, SingleValueCondition} from "./condition"
 import Criteria from "./criteria"
 import {Month, Quarter, Semester, Year} from "./period"
 import {ExplicitOrder, Order, SimpleOrder} from "./order"
@@ -104,11 +104,13 @@ function transformToObject(key: string, value: any, reviverFallback?: (key: stri
   } else if (clazz === PACKAGE + "dto.LogicalConditionDto") {
     return new LogicalCondition(value["type"], transformToObject("one", value["one"]), transformToObject("two", value["two"]))
   } else if (clazz === PACKAGE + "dto.InConditionDto") {
-    return new InCondition(value["values"], value["invert"])
+    return new InCondition(value["values"])
   } else if (clazz === PACKAGE + "dto.ConstantConditionDto") {
     return new ConstantCondition(value["type"])
   } else if (clazz === PACKAGE + "dto.SingleValueConditionDto") {
     return new SingleValueCondition(value["type"], value["value"])
+  } else if (clazz === PACKAGE + "dto.NotConditionDto") {
+    return new NotCondition(value["c"])
   } else if (clazz === PACKAGE + "BinaryOperationField") {
     return new BinaryOperationField(value["operator"], transformToObject("leftOperand", value["leftOperand"]), transformToObject("rightOperand", value["rightOperand"]), value["alias"])
   } else if (clazz === PACKAGE + "ConstantField") {

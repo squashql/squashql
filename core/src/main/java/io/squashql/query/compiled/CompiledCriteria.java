@@ -65,8 +65,7 @@ public record CompiledCriteria(ConditionDto condition, ConditionType conditionTy
       };
     } else if (dto instanceof InConditionDto ic) {
       Function<Object, String> sqlMapper = SqlTranslator.getQuoteFn(field.type(), ic.values.iterator().next().getClass(), queryRewriter);
-      String sep = ic.invert ? " not " : " ";
-      return expression + sep + dto.type().sqlInfix + " (" +
+      return expression + " " + dto.type().sqlInfix + " (" +
               ic.values
                       .stream()
                       .map(sqlMapper)
@@ -84,6 +83,8 @@ public record CompiledCriteria(ConditionDto condition, ConditionType conditionTy
         case NULL, NOT_NULL -> expression + " " + cc.type.sqlInfix;
         default -> throw new IllegalStateException("Unexpected value: " + dto.type());
       };
+    } else if (dto instanceof NotConditionDto nc) {
+      return nc.type().sqlInfix + " " + toSql(field, nc.c, queryRewriter);
     } else {
       throw new RuntimeException("Not supported condition " + dto);
     }

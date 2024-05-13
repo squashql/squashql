@@ -35,7 +35,7 @@ import {
   isNotNull,
   isNull,
   like,
-  lt, notIn,
+  lt, not, notIn,
   or
 } from "../condition"
 import * as fs from "fs"
@@ -126,6 +126,7 @@ export function buildQuery(): Query {
     criterion(upper(new TableField("f8")), eq("A")),
     criterion_(new TableField("f9"), currentDate(), ConditionType.GT),
     criterion(new TableField("f10"), notIn([1, 2])),
+    criterion(new TableField("f11"), not(like("s%"))),
   ]))
 
   q.withHavingCriteria(all([

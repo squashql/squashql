@@ -376,11 +376,19 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testLikeCondition() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(tableField(SCENARIO_FIELD_NAME), Functions.like("s%")) // start with s
+            .where(tableField(SCENARIO_FIELD_NAME), like("s%")) // start with s
             .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of())
             .build();
     Table table = this.executor.executeQuery(query);
     Assertions.assertThat(table).containsExactly(List.of("s1"), List.of("s2"));
+
+    query = Query
+            .from(this.storeName)
+            .where(tableField(SCENARIO_FIELD_NAME), not(like("s%"))) // NOT start with s
+            .select(tableFields(List.of(SCENARIO_FIELD_NAME)), List.of())
+            .build();
+    table = this.executor.executeQuery(query);
+    Assertions.assertThat(table).containsExactly(List.of(MAIN_SCENARIO_NAME));
   }
 
   @Test
