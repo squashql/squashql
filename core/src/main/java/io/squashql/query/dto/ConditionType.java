@@ -55,6 +55,10 @@ public enum ConditionType {
    */
   FALSE("false"),
   /**
+   * NOT
+   */
+  NOT("not"),
+  /**
    * Is Null
    */
   NULL("is null"),

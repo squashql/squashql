@@ -8,7 +8,7 @@ import static io.squashql.query.dto.ConditionType.*;
  * Marker interface to represent a (logical, value) condition.
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
-public sealed interface ConditionDto permits ConstantConditionDto, InConditionDto, LogicalConditionDto, SingleValueConditionDto {
+public sealed interface ConditionDto permits ConstantConditionDto, InConditionDto, LogicalConditionDto, SingleValueConditionDto, NotConditionDto {
 
   ConditionDto NULL_CONDITION = new ConstantConditionDto(NULL);
   ConditionDto NOT_NULL_CONDITION = new ConstantConditionDto(NOT_NULL);

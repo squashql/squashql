@@ -91,11 +91,15 @@ public class Functions {
   }
 
   public static ConditionDto in(Object... values) {
-    return new InConditionDto(values, false);
+    return new InConditionDto(values);
   }
 
   public static ConditionDto notIn(Object... values) {
-    return new InConditionDto(values, true);
+    return new NotConditionDto(new InConditionDto(values));
+  }
+
+  public static ConditionDto not(ConditionDto c) {
+    return new NotConditionDto(c);
   }
 
   public static ConditionDto lt(Object value) {

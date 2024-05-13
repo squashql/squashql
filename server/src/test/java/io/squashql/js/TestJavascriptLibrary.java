@@ -123,7 +123,8 @@ public class TestJavascriptLibrary {
             criterion(lower(tableField("f7")), eq("a")),
             criterion(upper(tableField("f8")), eq("A")),
             criterion(new TableField("f9"), currentDate(), ConditionType.GT),
-            criterion(new TableField("f10"), notIn(1, 2))
+            criterion(new TableField("f10"), notIn(1, 2)),
+            criterion(new TableField("f11"), not(like("s%")))
     ));
 
     q.withHavingCriteria(all(

@@ -24,6 +24,7 @@ export enum ConditionType {
   NULL = "NULL",
   NOT_NULL = "NOT_NULL",
   ARRAY_CONTAINS = "ARRAY_CONTAINS",
+  NOT = "NOT",
 }
 
 function toJSON(c: Condition) {
@@ -70,14 +71,31 @@ export class InCondition implements Condition {
   readonly class: string = PACKAGE + "dto.InConditionDto"
   readonly type: ConditionType = ConditionType.IN
 
-  constructor(private values: Array<Primitive>, private invert: boolean) {
+  constructor(private values: Array<Primitive>) {
   }
 
   toJSON() {
     return {
       "@class": this.class,
       "values": this.values,
-      "invert": this.invert,
+    }
+  }
+}
+
+/**
+ * Not condition
+ */
+export class NotCondition implements Condition {
+  readonly class: string = PACKAGE + "dto.NotConditionDto"
+  readonly type: ConditionType = ConditionType.NOT
+
+  constructor(readonly c: Condition) {
+  }
+
+  toJSON() {
+    return {
+      "@class": this.class,
+      "c": this.c,
     }
   }
 }
@@ -143,14 +161,21 @@ export function isNotNull(): Condition {
  * In condition on a list of string, number or boolean constants.
  */
 export function _in(value: Array<Primitive>): Condition {
-  return new InCondition(value, false)
+  return new InCondition(value)
 }
 
 /**
  * NOT In condition on a list of string, number or boolean constants.
  */
 export function notIn(value: Array<Primitive>): Condition {
-  return new InCondition(value, true)
+  return new NotCondition(new InCondition(value))
+}
+
+/**
+ * NOT condition.
+ */
+export function not(c: Condition): Condition {
+  return new NotCondition(c)
 }
 
 /**
