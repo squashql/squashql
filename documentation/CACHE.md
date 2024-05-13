@@ -43,13 +43,10 @@ returns a histogram of number of tables per table size ranges. Size of table = n
 For instance:
 
 ```
-[0-100:2],[100-1000:1],[1000-10000:3],[10000-50000:1],[50000-100000:0],[100000-200000:0],[200000-500000:0],[500000-1000000:0],[1000000<:1]
+[1-100:2],[101-1000:1],[1001-10000:3],[10001-50000:1],[50001-100000:0],[100001-200000:0],[200001-500000:0],[500001-1000000:0],[1000000<:1]
 ```
 
-2 table have a size between 0 and 100
-1 table has a size between 100 and 1000
-3 tables have a size between 1000 and 10,000
-...
+2 table have a size between 1 and 100, 1 table has a size between 101 and 1000, 3 tables have a size between 1001 and 10000...
 
 ### More details
 

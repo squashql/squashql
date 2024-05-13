@@ -35,7 +35,7 @@ public class TestCaffeineCache {
     cache.contributeToCache(new FakeTable(1000, 2000), Set.of(), newKey());
 
     String histogram = cache.getHistogram();
-    Assertions.assertThat(histogram).isEqualTo("[0-100:2],[100-1000:1],[1000-10000:3],[10000-50000:1],[50000-100000:0],[100000-200000:0],[200000-500000:0],[500000-1000000:0],[1000000<:1]");
+    Assertions.assertThat(histogram).isEqualTo("[1-100:2],[101-1000:1],[1001-10000:3],[10001-50000:1],[50001-100000:0],[100001-200000:0],[200001-500000:0],[500001-1000000:0],[1000000<:1]");
   }
 
   @Test
@@ -51,7 +51,7 @@ public class TestCaffeineCache {
     cache.contributeToCache(new FakeTable(100, 20), Set.of(), newKey(peter)); // 2000
 
     String histogram = cache.getHistogram();
-    Assertions.assertThat(histogram).isEqualTo("[0-100:2],[100-1000:1],[1000-10000:2],[10000-50000:0],[50000-100000:0],[100000-200000:0],[200000-500000:0],[500000-1000000:0],[1000000<:0]");
+    Assertions.assertThat(histogram).isEqualTo("[1-100:2],[101-1000:1],[1001-10000:2],[10001-50000:0],[50001-100000:0],[100001-200000:0],[200001-500000:0],[500001-1000000:0],[1000000<:0]");
   }
 
   private static QueryCache.QueryCacheKey newKey() {

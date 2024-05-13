@@ -262,7 +262,7 @@ public class CaffeineQueryCache implements QueryCache {
     for (int i = 0; i < histogram.length; i++) {
       sb
               .append("[")
-              .append(histogram[i]);
+              .append(histogram[i] + (i + 1 < histogram.length ? 1 : 0));
       if (i + 1 < histogram.length) {
         sb
                 .append("-")
