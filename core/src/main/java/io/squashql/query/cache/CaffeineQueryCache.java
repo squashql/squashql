@@ -34,6 +34,7 @@ public class CaffeineQueryCache implements QueryCache {
 
   public static final int MAX_SIZE;
   public static final int EXPIRATION_DURATION; // in minutes
+  protected static final int[] histogram = new int[]{0, 100, 1000, 10_000, 50_000, 100_000, 200_000, 500_000, 1_000_000};
 
   static {
     String size = System.getProperty("io.squashql.cache.size", Integer.toString(32));
@@ -241,25 +242,35 @@ public class CaffeineQueryCache implements QueryCache {
     }
   }
 
-  public String getHistogram() {
-    int[] histogram = new int[]{100, 1000, 10_000, 50_000, 100_000, 200_000, 500_000, 1_000_000};
+  protected int[] getHistogramInteger() {
     ConcurrentMap<QueryCacheKey, DelegateTable> map = this.results.asMap();
     MutableIntList l = new IntArrayList();
     for (DelegateTable value : map.values()) {
       int nbCells = executeRead(value, () -> value.count() * value.headers().size());
       l.add(nbCells);
     }
+    return getCountByHist(l, histogram);
+  }
 
-    int[] counts = getCountByHist(l, histogram);
+  @Override
+  public String getHistogram() {
+    return getHistogramHumanRepresentation(getHistogramInteger());
+  }
 
+  protected static String getHistogramHumanRepresentation(int[] counts) {
     StringBuilder sb = new StringBuilder();
-    sb
-            .append("distribution (cardinality: number of cells)")
-            .append(System.lineSeparator());
     for (int i = 0; i < histogram.length; i++) {
       sb
               .append("[")
-              .append(histogram[i])
+              .append(histogram[i]);
+      if (i + 1 < histogram.length) {
+        sb
+                .append("-")
+                .append(histogram[i + 1]);
+      } else {
+        sb.append("<");
+      }
+      sb
               .append(":")
               .append(counts[i])
               .append("]");

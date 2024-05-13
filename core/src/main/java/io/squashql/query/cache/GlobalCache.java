@@ -6,6 +6,8 @@ import io.squashql.query.dto.CacheStatsDto;
 import io.squashql.table.ColumnarTable;
 import io.squashql.table.Table;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,7 +26,7 @@ public class GlobalCache implements QueryCache {
     this.cacheSupplier = cacheSupplier;
   }
 
-  private static SquashQLUser user(SquashQLUser user) {
+  protected static SquashQLUser user(SquashQLUser user) {
     return user == null ? ANONYMOUS : user;
   }
 
@@ -65,5 +67,18 @@ public class GlobalCache implements QueryCache {
   @Override
   public CacheStatsDto stats(SquashQLUser user) {
     return this.cacheByUser.computeIfAbsent(user(user), u -> this.cacheSupplier.get()).stats();
+  }
+
+  @Override
+  public String getHistogram() {
+    List<int[]> histograms = new ArrayList<>();
+    this.cacheByUser.forEach((user, cache) -> histograms.add(cache.getHistogramInteger()));
+
+    int[] counts = new int[CaffeineQueryCache.histogram.length];
+    for (int i = 0; i < CaffeineQueryCache.histogram.length; i++) {
+      int j = i;
+      histograms.forEach(h -> counts[j] += h[j]);
+    }
+    return CaffeineQueryCache.getHistogramHumanRepresentation(counts);
   }
 }

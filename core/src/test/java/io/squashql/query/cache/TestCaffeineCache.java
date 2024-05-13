@@ -1,8 +1,8 @@
-package io.squashql.util;
+package io.squashql.query.cache;
 
+import io.squashql.query.BasicUser;
 import io.squashql.query.Header;
-import io.squashql.query.cache.CaffeineQueryCache;
-import io.squashql.query.cache.QueryCache;
+import io.squashql.query.SquashQLUser;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.compiled.MaterializedTable;
 import io.squashql.query.database.QueryScope;
@@ -23,24 +23,45 @@ public class TestCaffeineCache {
   private static final IntSupplier s = new AtomicInteger()::getAndIncrement;
 
   @Test
-  void testHistogram() {
+  void testHistogramCaffeineQueryCache() {
     CaffeineQueryCache cache = new CaffeineQueryCache();
     cache.contributeToCache(new FakeTable(1, 2), Set.of(), newKey());
+    cache.contributeToCache(new FakeTable(10, 2), Set.of(), newKey());
     cache.contributeToCache(new FakeTable(100, 20), Set.of(), newKey());
+    cache.contributeToCache(new FakeTable(200, 1), Set.of(), newKey());
     cache.contributeToCache(new FakeTable(100, 20), Set.of(), newKey());
     cache.contributeToCache(new FakeTable(100, 20), Set.of(), newKey());
     cache.contributeToCache(new FakeTable(100, 200), Set.of(), newKey());
     cache.contributeToCache(new FakeTable(1000, 2000), Set.of(), newKey());
 
     String histogram = cache.getHistogram();
-    String[] lines = histogram.split(System.lineSeparator());
-    Assertions.assertThat(lines[1]).isEqualTo("[100:1],[1000:3],[10000:1],[50000:0],[100000:0],[200000:0],[500000:0],[1000000:1]");
+    Assertions.assertThat(histogram).isEqualTo("[0-100:2],[100-1000:1],[1000-10000:3],[10000-50000:1],[50000-100000:0],[100000-200000:0],[200000-500000:0],[500000-1000000:0],[1000000<:1]");
+  }
+
+  @Test
+  void testHistogramGlobalCache() {
+    GlobalCache cache = new GlobalCache(CaffeineQueryCache::new);
+
+    BasicUser paul = new BasicUser("paul");
+    BasicUser peter = new BasicUser("peter");
+    cache.contributeToCache(new FakeTable(1, 2), Set.of(), newKey(paul)); // size 2
+    cache.contributeToCache(new FakeTable(10, 2), Set.of(), newKey(peter)); // 20
+    cache.contributeToCache(new FakeTable(100, 20), Set.of(), newKey(paul)); // 2000
+    cache.contributeToCache(new FakeTable(200, 1), Set.of(), newKey(paul)); // 200
+    cache.contributeToCache(new FakeTable(100, 20), Set.of(), newKey(peter)); // 2000
+
+    String histogram = cache.getHistogram();
+    Assertions.assertThat(histogram).isEqualTo("[0-100:2],[100-1000:1],[1000-10000:2],[10000-50000:0],[50000-100000:0],[100000-200000:0],[200000-500000:0],[500000-1000000:0],[1000000<:0]");
   }
 
   private static QueryCache.QueryCacheKey newKey() {
+    return newKey(GlobalCache.user(null));
+  }
+
+  private static QueryCache.QueryCacheKey newKey(SquashQLUser user) {
     return new QueryCache.QueryCacheKey(
             new QueryScope(new MaterializedTable("table-" + s.getAsInt(), List.of()), List.of(), null, null, List.of(), Set.of(), List.of(), List.of(), 10),
-            null);
+            user);
   }
 
   private static class FakeTable implements Table {

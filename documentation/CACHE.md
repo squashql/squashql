@@ -31,6 +31,26 @@ public class MyComponent {
 
 The method `void clear()` or `void clear(SquashQLUser user)` are to be called to invalidate the cache.
 
+### Statistics
+
+The current implementation provides basic statistics to monitor cache usage. 
+
+```
+cache.getHistogram()
+```
+
+returns a histogram of number of tables per table size ranges. Size of table = number of rows * number of columns. 
+For instance:
+
+```
+[0-100:2],[100-1000:1],[1000-10000:3],[10000-50000:1],[50000-100000:0],[100000-200000:0],[200000-500000:0],[500000-1000000:0],[1000000<:1]
+```
+
+2 table have a size between 0 and 100
+1 table has a size between 100 and 1000
+3 tables have a size between 1000 and 10,000
+...
+
 ### More details
 
 The code can be found in the classes `GlobalCache` and `CaffeineQueryCache`. See usage in `QueryExecutor`.
