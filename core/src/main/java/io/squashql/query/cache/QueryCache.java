@@ -33,6 +33,8 @@ public interface QueryCache {
 
   CacheStatsDto stats(SquashQLUser user);
 
+  String getHistogram();
+
   record QueryCacheKey(QueryScope scope, SquashQLUser user) {
   }
 }

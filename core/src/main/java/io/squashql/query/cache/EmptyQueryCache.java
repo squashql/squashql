@@ -47,4 +47,9 @@ public class EmptyQueryCache implements QueryCache {
   public CacheStatsDto stats(SquashQLUser user) {
     return new CacheStatsDto(-1, -1, -1);
   }
+
+  @Override
+  public String getHistogram() {
+    return "";
+  }
 }
