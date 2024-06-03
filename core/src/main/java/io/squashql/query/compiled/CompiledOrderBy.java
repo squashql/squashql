@@ -11,16 +11,13 @@ import java.util.Collections;
 import java.util.StringJoiner;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * NULLS FIRST always.
- */
 public record CompiledOrderBy(TypedField field, OrderDto orderDto) {
 
   public String sqlExpression(QueryRewriter queryRewriter) {
     StringJoiner joiner = new StringJoiner(" ");
     if (this.orderDto instanceof SimpleOrderDto simpleOrder) {
       String expression = this.field.sqlExpression(queryRewriter); // TODO todo-mde should be queryRewriter.orderBy(field) because some db supports using the alias, others not.
-      joiner.add(expression).add(simpleOrder.order.name().toLowerCase()).add("nulls first");
+      joiner.add(expression).add(simpleOrder.order.name().toLowerCase());
       return joiner.toString();
     } else if (this.orderDto instanceof ExplicitOrderDto explicitOrder) {
       AtomicInteger i = new AtomicInteger(0);
