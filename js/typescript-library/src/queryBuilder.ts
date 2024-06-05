@@ -2,7 +2,7 @@ import {Measure} from "./measure"
 import {ColumnSet} from "./columnset"
 import {JoinType, Query, Table} from "./query"
 import Criteria from "./criteria"
-import {OrderKeyword} from "./order"
+import {NullsOrderKeyword, OrderKeyword} from "./order"
 import {VirtualTable} from "./virtualtable"
 import {Field} from "./field"
 
@@ -131,8 +131,8 @@ class QueryBuilder implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
     return this
   }
 
-  orderBy(column: Field, order: OrderKeyword): HasHaving {
-    this.queryDto.orderBy(column, order)
+  orderBy(column: Field, order: OrderKeyword, nullsOrder: NullsOrderKeyword = null): HasHaving {
+    this.queryDto.orderBy(column, order, nullsOrder)
     return this
   }
 

@@ -18,6 +18,9 @@ public record CompiledOrderBy(TypedField field, OrderDto orderDto) {
     if (this.orderDto instanceof SimpleOrderDto simpleOrder) {
       String expression = this.field.sqlExpression(queryRewriter); // TODO todo-mde should be queryRewriter.orderBy(field) because some db supports using the alias, others not.
       joiner.add(expression).add(simpleOrder.order.name().toLowerCase());
+      if (((SimpleOrderDto) orderDto).nullsOrder != null) {
+        joiner.add("nulls").add(((SimpleOrderDto) orderDto).nullsOrder.name().toLowerCase());
+      }
       return joiner.toString();
     } else if (this.orderDto instanceof ExplicitOrderDto explicitOrder) {
       AtomicInteger i = new AtomicInteger(0);

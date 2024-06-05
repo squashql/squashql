@@ -111,6 +111,11 @@ public class QueryDto implements Cloneable {
     return this;
   }
 
+  public QueryDto orderBy(Field column, OrderKeywordDto orderKeywordDto, NullsOrderDto nullsOrderDto) {
+    this.orders.put(column, new SimpleOrderDto(orderKeywordDto, nullsOrderDto));
+    return this;
+  }
+
   public QueryDto orderBy(Field column, OrderKeywordDto orderKeywordDto) {
     this.orders.put(column, new SimpleOrderDto(orderKeywordDto));
     return this;

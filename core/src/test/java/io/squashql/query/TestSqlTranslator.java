@@ -581,6 +581,12 @@ public class TestSqlTranslator {
     sql = new CompiledOrderBy(stringField, new SimpleOrderDto(OrderKeywordDto.DESC)).sqlExpression(qr);
     assertThat(sql).isEqualTo("`dataset.store`.`field` desc");
 
+    sql = new CompiledOrderBy(stringField, new SimpleOrderDto(OrderKeywordDto.ASC, NullsOrderDto.FIRST)).sqlExpression(qr);
+    assertThat(sql).isEqualTo("`dataset.store`.`field` asc nulls first");
+
+    sql = new CompiledOrderBy(stringField, new SimpleOrderDto(OrderKeywordDto.DESC, NullsOrderDto.LAST)).sqlExpression(qr);
+    assertThat(sql).isEqualTo("`dataset.store`.`field` desc nulls last");
+
     sql = new CompiledOrderBy(intField, new ExplicitOrderDto(List.of(2023, 2027))).sqlExpression(qr);
     assertThat(sql).isEqualTo("case when `dataset.store`.`field` is null then 1 when `dataset.store`.`field` = 2023 then 2 when `dataset.store`.`field` = 2027 then 3 else 4 end");
 

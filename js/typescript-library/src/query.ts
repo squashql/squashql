@@ -1,7 +1,7 @@
 import {ColumnSet, ColumnSetKey, GroupColumnSet} from "./columnset"
 import {Field} from "./field"
 import {Measure} from "./measure"
-import {ExplicitOrder, Order, OrderKeyword, SimpleOrder} from "./order"
+import {ExplicitOrder, NullsOrderKeyword, Order, OrderKeyword, SimpleOrder} from "./order"
 import {Parameter} from "./parameter"
 import {VirtualTable} from "./virtualtable"
 import {serializeMap} from "./util"
@@ -73,8 +73,8 @@ export class Query {
     return this
   }
 
-  orderBy(column: Field, order: OrderKeyword): Query {
-    this.orders.set(column, new SimpleOrder(order))
+  orderBy(column: Field, order: OrderKeyword, nullsOrder: NullsOrderKeyword = null): Query {
+    this.orders.set(column, new SimpleOrder(order, nullsOrder))
     return this
   }
 
