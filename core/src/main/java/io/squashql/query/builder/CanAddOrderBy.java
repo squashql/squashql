@@ -7,9 +7,10 @@ import java.util.List;
 
 public interface CanAddOrderBy {
 
-  HasHaving orderBy(Field column, OrderKeywordDto orderKeywordDto, NullsOrderDto nullsOrderDto);
-
   HasHaving orderBy(Field column, OrderKeywordDto orderKeywordDto);
 
+  HasHaving orderBy(Field column, OrderKeywordDto orderKeywordDto, NullsOrderDto nullsOrderDto);
+
   HasHaving orderBy(Field column, List<?> firstElements);
+
 }

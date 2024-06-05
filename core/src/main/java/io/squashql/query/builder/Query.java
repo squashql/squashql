@@ -79,14 +79,14 @@ public class Query implements HasCondition, HasHaving, HasJoin, HasStartedBuildi
   }
 
   @Override
-  public HasHaving orderBy(Field column, OrderKeywordDto orderKeywordDto, NullsOrderDto nullsOrderDto) {
-    this.queryDto.orderBy(column, orderKeywordDto, nullsOrderDto);
+  public HasHaving orderBy(Field column, OrderKeywordDto orderKeywordDto) {
+    this.queryDto.orderBy(column, orderKeywordDto);
     return this;
   }
 
   @Override
-  public HasHaving orderBy(Field column, OrderKeywordDto orderKeywordDto) {
-    this.queryDto.orderBy(column, orderKeywordDto, null);
+  public HasHaving orderBy(Field column, OrderKeywordDto orderKeywordDto, NullsOrderDto nullsOrderDto) {
+    this.queryDto.orderBy(column, orderKeywordDto, nullsOrderDto);
     return this;
   }
 
