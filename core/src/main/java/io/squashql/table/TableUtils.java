@@ -12,7 +12,6 @@ import io.squashql.query.database.SqlTranslator;
 import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.GroupColumnSetDto;
 import io.squashql.query.dto.MetadataItem;
-import io.squashql.query.dto.NullsOrderDto;
 import io.squashql.query.dto.QueryDto;
 import io.squashql.util.MultipleColumnsSorter;
 import io.squashql.util.NullAndTotalComparator;
