@@ -16,7 +16,7 @@ public final class SimpleOrderDto implements OrderDto {
 
   public SimpleOrderDto(OrderKeywordDto order) {
     this.order = order;
-    nullsOrder = null;
+    this.nullsOrder = NullsOrderDto.FIRST;
   }
 
 }

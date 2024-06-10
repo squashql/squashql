@@ -17,7 +17,7 @@ export enum NullsOrderKeyword {
 export class SimpleOrder implements Order {
   class: string = PACKAGE + "dto.SimpleOrderDto"
 
-  constructor(private order: OrderKeyword, private nullsOrder: NullsOrderKeyword = null) {
+  constructor(private order: OrderKeyword, private nullsOrder: NullsOrderKeyword = NullsOrderKeyword.FIRST) {
   }
 
   toJSON() {

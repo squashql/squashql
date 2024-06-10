@@ -576,10 +576,10 @@ public class TestSqlTranslator {
     TableTypedField intField = new TableTypedField("store", "field", int.class);
 
     String sql = new CompiledOrderBy(stringField, new SimpleOrderDto(OrderKeywordDto.ASC)).sqlExpression(qr);
-    assertThat(sql).isEqualTo("`dataset.store`.`field` asc");
+    assertThat(sql).isEqualTo("`dataset.store`.`field` asc nulls first");
 
     sql = new CompiledOrderBy(stringField, new SimpleOrderDto(OrderKeywordDto.DESC)).sqlExpression(qr);
-    assertThat(sql).isEqualTo("`dataset.store`.`field` desc");
+    assertThat(sql).isEqualTo("`dataset.store`.`field` desc nulls first");
 
     sql = new CompiledOrderBy(stringField, new SimpleOrderDto(OrderKeywordDto.ASC, NullsOrderDto.FIRST)).sqlExpression(qr);
     assertThat(sql).isEqualTo("`dataset.store`.`field` asc nulls first");

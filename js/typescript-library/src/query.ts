@@ -73,7 +73,7 @@ export class Query {
     return this
   }
 
-  orderBy(column: Field, order: OrderKeyword, nullsOrder: NullsOrderKeyword = null): Query {
+  orderBy(column: Field, order: OrderKeyword, nullsOrder: NullsOrderKeyword = NullsOrderKeyword.FIRST): Query {
     this.orders.set(column, new SimpleOrder(order, nullsOrder))
     return this
   }

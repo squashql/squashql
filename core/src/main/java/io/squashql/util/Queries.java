@@ -21,7 +21,7 @@ public final class Queries {
     Map<String, Comparator<?>> res = new LinkedHashMap<>(); // order is important !
     orders.forEach((c, order) -> {
       if (order instanceof SimpleOrderDto so) {
-        res.put(SqlUtils.squashqlExpression(c), NullAndTotalComparator.nullsLastAndTotalsFirst(so.order == DESC ? Comparator.naturalOrder().reversed() : Comparator.naturalOrder()));
+        res.put(SqlUtils.squashqlExpression(c), NullAndTotalComparator.totalsFirst(so.order == DESC ? Comparator.naturalOrder().reversed() : Comparator.naturalOrder(), ((SimpleOrderDto) order).nullsOrder));
       } else if (order instanceof ExplicitOrderDto eo) {
         res.put(SqlUtils.squashqlExpression(c), NullAndTotalComparator.nullsLastAndTotalsFirst(new CustomExplicitOrdering(eo.explicit)));
       } else {

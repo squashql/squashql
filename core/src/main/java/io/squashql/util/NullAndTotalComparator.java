@@ -1,5 +1,6 @@
 package io.squashql.util;
 
+import io.squashql.query.dto.NullsOrderDto;
 import java.io.Serializable;
 import java.util.Comparator;
 
@@ -9,14 +10,14 @@ import static io.squashql.query.database.SqlTranslator.TOTAL_CELL;
 
 public class NullAndTotalComparator<T> implements Comparator<T>, Serializable {
 
-  private final boolean nullFirst;
+  private final boolean nullsFirst;
   private final boolean totalFirst;
   // if null, non-null Ts are considered equal
   @SuppressWarnings("serial") // Not statically typed as Serializable
   private final Comparator<T> real;
 
-  NullAndTotalComparator(boolean nullFirst, boolean totalFirst, Comparator<? super T> real) {
-    this.nullFirst = nullFirst;
+  NullAndTotalComparator(NullsOrderDto nullsOrder, boolean totalFirst, Comparator<? super T> real) {
+    this.nullsFirst = nullsOrder == NullsOrderDto.FIRST;
     this.totalFirst = totalFirst;
     this.real = (Comparator<T>) real;
   }
@@ -24,9 +25,9 @@ public class NullAndTotalComparator<T> implements Comparator<T>, Serializable {
   @Override
   public int compare(T a, T b) {
     if (a == null) {
-      return (b == null) ? 0 : (this.nullFirst ? -1 : 1);
+      return (b == null) ? 0 : (this.nullsFirst ? -1 : 1);
     } else if (b == null) {
-      return this.nullFirst ? 1 : -1;
+      return this.nullsFirst ? 1 : -1;
     } else {
       if (isTotal(a)) {
         if (isTotal(b)) {
@@ -62,6 +63,11 @@ public class NullAndTotalComparator<T> implements Comparator<T>, Serializable {
   }
 
   public static <T> NullAndTotalComparator<T> nullsLastAndTotalsFirst(Comparator<? super T> comparator) {
-    return new NullAndTotalComparator<>(false, true, comparator);
+    return new NullAndTotalComparator<>(NullsOrderDto.LAST, true, comparator);
   }
+
+  public static <T> NullAndTotalComparator<T> totalsFirst(Comparator<? super T> comparator, NullsOrderDto nullsOrderDto) {
+    return new NullAndTotalComparator<>(nullsOrderDto, true, comparator);
+  }
+
 }
