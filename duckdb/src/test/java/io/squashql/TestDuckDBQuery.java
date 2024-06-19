@@ -127,17 +127,17 @@ public class TestDuckDBQuery {
             .build();
     Table result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
+            Arrays.asList(2020, null),  // null first by default
             List.of(2022, 7d),
-            List.of(2021, 1d),
-            Arrays.asList(2020, null));
+            List.of(2021, 1d));
 
     query.orders.clear();
     query.orderBy(new AliasedField("yoy"), OrderKeywordDto.ASC);
     result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
+            Arrays.asList(2020, null), // null first by default
             List.of(2021, 1d),
-            List.of(2022, 7d),
-            Arrays.asList(2020, null)); // null always last
+            List.of(2022, 7d));
   }
 
   @Test
