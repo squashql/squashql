@@ -626,8 +626,8 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
             .build();
     result = this.executor.executeQuery(query);
     Assertions.assertThat(result).containsExactly(
-            Arrays.asList("biscuit", 3L),
-            Arrays.asList(null, 6L));
+            Arrays.asList(null, 6L),
+            Arrays.asList("biscuit", 3L));
   }
 
   @Test
