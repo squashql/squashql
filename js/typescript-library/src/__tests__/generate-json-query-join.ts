@@ -28,8 +28,8 @@ export function generateFromQueryJoin() {
 
   const orders: Map<Field, Order> = new Map()
   orders.set(a, new SimpleOrder(OrderKeyword.ASC, NullsOrderKeyword.FIRST))
-  //orders.set(c2, new SimpleOrder(OrderKeyword.ASC))
-  orders.set(c3, new SimpleOrder(OrderKeyword.DESC, NullsOrderKeyword.FIRST))
+  orders.set(c2, new SimpleOrder(OrderKeyword.ASC))
+  orders.set(c3, new SimpleOrder(OrderKeyword.DESC, NullsOrderKeyword.LAST))
   orders.set(b2, new ExplicitOrder(["aa", "bb"]))
   const q = new QueryJoin(query1)
           .join(query2, JoinType.LEFT,

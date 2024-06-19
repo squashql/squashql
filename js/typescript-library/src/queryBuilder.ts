@@ -7,6 +7,8 @@ import {VirtualTable} from "./virtualtable"
 import {Field} from "./field"
 
 export interface CanAddOrderBy {
+  orderBy(column: Field, order: OrderKeyword): HasHaving
+
   orderBy(column: Field, order: OrderKeyword, nullsOrder: NullsOrderKeyword): HasHaving
 
   orderByFirstElements(column: Field, firstElements: Array<any>): HasHaving
