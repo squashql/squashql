@@ -124,7 +124,7 @@ function transformToObject(key: string, value: any, reviverFallback?: (key: stri
   } else if (clazz === PACKAGE + "dto.Period$Year") {
     return new Year(transformToObject("year", value["year"]))
   } else if (clazz === PACKAGE + "dto.SimpleOrderDto") {
-    return new SimpleOrder(value["order"])
+    return new SimpleOrder(value["order"], value["nullsOrder"])
   } else if (clazz === PACKAGE + "dto.ExplicitOrderDto") {
     return new ExplicitOrder(value["explicit"])
   }

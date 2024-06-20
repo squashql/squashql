@@ -10,7 +10,7 @@ export {
 } from './queryJoin'
 
 export {
-  Order, OrderKeyword, SimpleOrder, ExplicitOrder
+  NullsOrderKeyword, Order, OrderKeyword, SimpleOrder, ExplicitOrder
 } from './order'
 
 export {

@@ -3,7 +3,7 @@ import {Field, TableField} from "../field"
 import {avg, sum} from "../measure"
 import {JoinType} from "../query"
 import {from} from "../queryBuilder"
-import {ExplicitOrder, Order, OrderKeyword, SimpleOrder} from "../order"
+import {ExplicitOrder, NullsOrderKeyword, Order, OrderKeyword, SimpleOrder} from "../order"
 import {QueryJoin} from "../queryJoin"
 import {all, ConditionType, criterion_} from "../condition"
 
@@ -27,8 +27,9 @@ export function generateFromQueryJoin() {
           .build()
 
   const orders: Map<Field, Order> = new Map()
-  orders.set(a, new SimpleOrder(OrderKeyword.ASC))
-  orders.set(c3, new SimpleOrder(OrderKeyword.DESC))
+  orders.set(a, new SimpleOrder(OrderKeyword.ASC, NullsOrderKeyword.FIRST))
+  orders.set(c2, new SimpleOrder(OrderKeyword.ASC))
+  orders.set(c3, new SimpleOrder(OrderKeyword.DESC, NullsOrderKeyword.LAST))
   orders.set(b2, new ExplicitOrder(["aa", "bb"]))
   const q = new QueryJoin(query1)
           .join(query2, JoinType.LEFT,
