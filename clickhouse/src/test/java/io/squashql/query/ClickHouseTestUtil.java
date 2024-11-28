@@ -20,7 +20,7 @@ public class ClickHouseTestUtil {
           c.getMappedPort(ClickHouseProtocol.HTTP.getDefaultPort()));
 
   protected static GenericContainer createClickHouseContainer() {
-    return new GenericContainer(DockerImageName.parse("clickhouse/clickhouse-server:23.8.2.7-alpine"))
+    return new GenericContainer(DockerImageName.parse("clickhouse/clickhouse-server:24.11.1.2557-alpine"))
             .withExposedPorts(ClickHouseProtocol.HTTP.getDefaultPort(), ClickHouseProtocol.GRPC.getDefaultPort())
             .waitingFor(Wait.forHttp("/ping")
                     .forPort(ClickHouseProtocol.HTTP.getDefaultPort())
