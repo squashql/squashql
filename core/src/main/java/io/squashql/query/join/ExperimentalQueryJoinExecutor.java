@@ -267,8 +267,7 @@ public class ExperimentalQueryJoinExecutor {
       Iterator<CriteriaDto> iterator = jc.children.iterator();
       List<String> conditions = new ArrayList<>();
       while (iterator.hasNext()) {
-        CriteriaDto next = iterator.next();
-        String c = sqlExpression(next, queryRewriter, holders, toRemoveFromSelectSet);
+        String c = sqlExpression(iterator.next(), queryRewriter, holders, toRemoveFromSelectSet);
         if (c != null) {
           conditions.add(c);
         }
