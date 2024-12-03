@@ -19,6 +19,7 @@ import org.eclipse.collections.impl.tuple.Tuples;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.squashql.query.Functions.isNull;
 import static io.squashql.query.QueryExecutor.LIMIT_DEFAULT_VALUE;
 import static io.squashql.query.database.AQueryEngine.transformToColumnFormat;
 import static io.squashql.query.database.SqlTranslator.addLimit;
@@ -187,7 +188,10 @@ public class ExperimentalQueryJoinExecutor {
           for (Pair<Pair<Field, Integer>, Pair<Field, Integer>> c : common) {
             Field l = new TableField(holders.get(c.getOne().getTwo()).cteTableName, getFieldName(c.getOne().getOne()));
             Field r = new TableField(holders.get(c.getTwo().getTwo()).cteTableName, getFieldName(c.getTwo().getOne()));
-            children.add(new CriteriaDto(l, r, null, null, ConditionType.EQ, Collections.emptyList()));
+            List<CriteriaDto> nullChecks = List.of(new CriteriaDto(l, isNull()), new CriteriaDto(r, isNull()));
+            CriteriaDto nullChecksCriteriaDto = new CriteriaDto(null, null, null, null, ConditionType.AND, nullChecks);
+            CriteriaDto equalityCriteriaDto = new CriteriaDto(l, r, null, null, ConditionType.EQ, Collections.emptyList());
+            children.add(new CriteriaDto(null, null, null, null, ConditionType.OR, List.of(nullChecksCriteriaDto, equalityCriteriaDto)));
           }
           CriteriaDto criteriaDto = children.size() > 1
                   ? new CriteriaDto(null, null, null, null, ConditionType.AND, children)
@@ -211,9 +215,8 @@ public class ExperimentalQueryJoinExecutor {
    * B.id (or __cte1__.id) assuming A comes before B in the {@link Holder} list.
    */
   public String sqlExpression(CriteriaDto jc, QueryRewriter queryRewriter, List<Holder> holders, Set<String> toRemoveFromSelectSet) {
-    if (jc.field != null && jc.fieldOther != null && jc.conditionType != null) {
+    if (jc.field != null) {
       Holder leftHolder = getHolderOrigin(holders, jc.field);
-      Holder rightHolder = getHolderOrigin(holders, jc.fieldOther);
 
       String left;
       String leftFieldName = getFieldName(jc.field);
@@ -224,33 +227,41 @@ public class ExperimentalQueryJoinExecutor {
         left = SqlUtils.getFieldFullName(leftHolder == null ? null : queryRewriter.cteName(leftHolder.cteTableName), queryRewriter.fieldName(leftFieldName));
       }
 
-      String right;
-      String rightFieldName = getFieldName(jc.fieldOther);
-      if (jc.fieldOther instanceof TableField tf) {
-        right = SqlUtils.getFieldFullName(queryRewriter.cteName(tf.tableName), queryRewriter.fieldName(rightFieldName));
-      } else {
-        // could be an aliased field? Need find where it comes from
-        right = SqlUtils.getFieldFullName(rightHolder == null ? null : queryRewriter.cteName(rightHolder.cteTableName), queryRewriter.fieldName(rightFieldName));
-      }
+      if (jc.fieldOther != null && jc.conditionType != null) {
+        Holder rightHolder = getHolderOrigin(holders, jc.fieldOther);
 
-      String toRemoveFromSelect = null;
-      for (Holder holder : holders) {
-        if (holder.equals(leftHolder)) {
-          toRemoveFromSelect = left; // Same logic than the select i.e __cte0__.fieldName
+        String right;
+        String rightFieldName = getFieldName(jc.fieldOther);
+        if (jc.fieldOther instanceof TableField tf) {
+          right = SqlUtils.getFieldFullName(queryRewriter.cteName(tf.tableName), queryRewriter.fieldName(rightFieldName));
+        } else {
+          // could be an aliased field? Need find where it comes from
+          right = SqlUtils.getFieldFullName(rightHolder == null ? null : queryRewriter.cteName(rightHolder.cteTableName), queryRewriter.fieldName(rightFieldName));
         }
-        if (holder.equals(rightHolder)) {
-          toRemoveFromSelect = right; // Same logic than the select i.e __cte0__.fieldName
+
+        String toRemoveFromSelect = null;
+        for (Holder holder : holders) {
+          if (holder.equals(leftHolder)) {
+            toRemoveFromSelect = left; // Same logic than the select i.e __cte0__.fieldName
+          }
+          if (holder.equals(rightHolder)) {
+            toRemoveFromSelect = right; // Same logic than the select i.e __cte0__.fieldName
+          }
         }
-      }
 
-      if (toRemoveFromSelect != null) {
-        toRemoveFromSelectSet.add(toRemoveFromSelect);
-      }
+        if (toRemoveFromSelect != null) {
+          toRemoveFromSelectSet.add(toRemoveFromSelect);
+        }
 
-      return String.join(" ", left, jc.conditionType.sqlInfix, right);
+        return String.join(" ", left, jc.conditionType.sqlInfix, right);
+      } else if (jc.fieldOther == null && jc.condition != null) {
+        return String.join(" ", left, jc.condition.type().sqlInfix);
+      }
+      return null;
     } else if (!jc.children.isEmpty()) {
       String sep = switch (jc.conditionType) {
         case AND -> " and ";
+        case OR -> " or ";
         default -> throw new IllegalStateException("Unexpected value: " + jc.conditionType);
       };
       Iterator<CriteriaDto> iterator = jc.children.iterator();

@@ -206,7 +206,7 @@ public class TestSqlExperimentalQueryJoinExecutor {
             "`CTE1` as (" +
             "select `B`.`b` as `alias_b`, `B`.`d`, `B`.`e`, `B`.`f` from `B` group by `alias_b`, `B`.`d`, `B`.`e`, `B`.`f`) " +
             "select `CTE0`.`a`, `CTE0`.`alias_b` as `alias_b`, `CTE0`.`c`, `CTE1`.`d`, `CTE1`.`e`, `CTE1`.`f` " +
-            "from `CTE0` left join `CTE1` on `CTE0`.`alias_b` = `CTE1`.`alias_b` " +
+            "from `CTE0` left join `CTE1` on ((`CTE0`.`alias_b` is null and `CTE1`.`alias_b` is null) or `CTE0`.`alias_b` = `CTE1`.`alias_b`) " +
             "limit 12";
     Assertions.assertThat(result.getOne()).isEqualTo(expectedSql);
     List<String> selectElements = result.getTwo().stream().map(SqlUtils::squashqlExpression).toList();
@@ -236,7 +236,9 @@ public class TestSqlExperimentalQueryJoinExecutor {
             "`CTE1` as (" +
             "select `A`.`b`, `A`.`c` from `A` group by `A`.`b`, `A`.`c`) " +
             "select `CTE0`.`a`, `CTE0`.`b`, `CTE0`.`c` " +
-            "from `CTE0` left join `CTE1` on (`CTE0`.`b` = `CTE1`.`b` and `CTE0`.`c` = `CTE1`.`c`) " +
+            "from `CTE0` left join `CTE1` " +
+            "on (((`CTE0`.`b` is null and `CTE1`.`b` is null) or `CTE0`.`b` = `CTE1`.`b`) " +
+            "and ((`CTE0`.`c` is null and `CTE1`.`c` is null) or `CTE0`.`c` = `CTE1`.`c`)) " +
             "limit 12";
     Assertions.assertThat(result.getOne()).isEqualTo(expectedSql);
     List<String> selectElements = result.getTwo().stream().map(SqlUtils::squashqlExpression).toList();
@@ -278,7 +280,7 @@ public class TestSqlExperimentalQueryJoinExecutor {
             "select `C`.`b`, `C`.`c`, `C`.`d`, `C`.`g` from `C` group by `C`.`b`, `C`.`c`, `C`.`d`, `C`.`g`) " +
             "select `CTE0`.`a`, `CTE0`.`alias_b` as `alias_b`, `CTE0`.`c`, `CTE1`.`d`, `CTE1`.`e`, `CTE1`.`f`, `CTE2`.`g` " +
             "from `CTE0` " +
-            "left join `CTE1` on `CTE0`.`alias_b` = `CTE1`.`alias_b` " +
+            "left join `CTE1` on ((`CTE0`.`alias_b` is null and `CTE1`.`alias_b` is null) or `CTE0`.`alias_b` = `CTE1`.`alias_b`) " +
             "left join `CTE2` on (`CTE0`.`b` = `CTE2`.`b` and `CTE0`.`c` = `CTE2`.`c` and `CTE1`.`d` = `CTE2`.`d`) " +
             "limit 12";
     Assertions.assertThat(result.getOne()).isEqualTo(expectedSql);

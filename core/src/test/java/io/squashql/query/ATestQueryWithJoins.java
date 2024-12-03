@@ -144,7 +144,7 @@ public abstract class ATestQueryWithJoins extends ABaseTestQuery {
     } else if (ds.contains(TestClass.Type.BIGQUERY.className)) {
       return "Column name name is ambiguous";
     } else if (ds.contains(TestClass.Type.CLICKHOUSE.className)) {
-      return "Ambiguous column 'name'";
+      return "ambiguous identifier 'name'";
     } else if (ds.contains(TestClass.Type.SNOWFLAKE.className)) {
       return "ambiguous column name 'name'";
     } else if (ds.contains(TestClass.Type.DUCKDB.className)) {
