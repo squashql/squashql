@@ -10,6 +10,7 @@ import io.squashql.store.Store;
 import io.squashql.type.AliasedTypedField;
 import io.squashql.type.TableTypedField;
 import io.squashql.type.TypedField;
+import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import org.junit.jupiter.api.Test;
 
@@ -43,7 +44,8 @@ public class TestSqlTranslator {
               new TableTypedField(BASE_STORE_NAME, "c1", String.class),
               new TableTypedField(BASE_STORE_NAME, "c2", String.class),
               new TableTypedField(BASE_STORE_NAME, "c3", String.class),
-              new TableTypedField(BASE_STORE_NAME, "scenario", String.class))));
+              new TableTypedField(BASE_STORE_NAME, "scenario", String.class),
+              new TableTypedField(BASE_STORE_NAME, "date", LocalDate.class))));
 
       String recommendation = "recommendation";
       stores.put(recommendation, new Store(recommendation, List.of(
@@ -689,5 +691,18 @@ public class TestSqlTranslator {
 
     sql = compileCriteria(criterion(a, eq(true))).sqlExpression(qr);
     assertThat(sql).isEqualTo("`a` = true");
+  }
+
+  @Test
+  void testCriteriaWithDate() {
+    Field a = new AliasedField(BASE_STORE_NAME + ".date");
+    ConstantField cf = new ConstantField(LocalDate.of(2025, 1, 10));
+    CriteriaDto c1 = criterion(a, cf, ConditionType.EQ);
+    QueryDto q1 = Query.from(BASE_STORE_NAME)
+            .where(c1)
+            .select(List.of(a), List.of())
+            .build();
+    assertThat(translate(compileQuery(q1)))
+            .isEqualTo("select `baseStore.date` from `dataset.baseStore` where `baseStore.date` = '2025-01-10' group by `baseStore.date`");
   }
 }
