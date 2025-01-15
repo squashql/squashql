@@ -8,6 +8,7 @@ import io.squashql.query.database.SqlUtils;
 import io.squashql.query.dto.*;
 import io.squashql.table.Table;
 import io.squashql.type.TableTypedField;
+import java.time.LocalDate;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -43,27 +44,28 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     TableTypedField price = new TableTypedField(this.storeName, "price", double.class);
     TableTypedField qty = new TableTypedField(this.storeName, "quantity", int.class);
     TableTypedField isFood = new TableTypedField(this.storeName, "isFood", boolean.class);
-    return Map.of(this.storeName, List.of(scenario, eanId, ean, category, subcategory, price, qty, isFood));
+    TableTypedField creationDate = new TableTypedField(this.storeName, "creationDate", LocalDate.class);
+    return Map.of(this.storeName, List.of(scenario, eanId, ean, category, subcategory, price, qty, isFood, creationDate));
   }
 
   @Override
   protected void loadData() {
     this.tm.load(this.storeName, List.of(
-            new Object[]{MAIN_SCENARIO_NAME, 0, "starbuck's coffee", "drink", null, 2d, 10, true}, // use a string with '
-            new Object[]{MAIN_SCENARIO_NAME, 1, "cookie", "food", "biscuit", 3d, 20, true},
-            new Object[]{MAIN_SCENARIO_NAME, 2, "shirt", "cloth", null, 10d, 3, false}
+            new Object[]{MAIN_SCENARIO_NAME, 0, "starbuck's coffee", "drink", null, 2d, 10, true, LocalDate.of(2025, 1, 14)}, // use a string with '
+            new Object[]{MAIN_SCENARIO_NAME, 1, "cookie", "food", "biscuit", 3d, 20, true, LocalDate.of(2024, 1, 14)},
+            new Object[]{MAIN_SCENARIO_NAME, 2, "shirt", "cloth", null, 10d, 3, false, LocalDate.of(2023, 1, 14)}
     ));
 
     this.tm.load(this.storeName, List.of(
-            new Object[]{"s1", 0, "starbuck's coffee", "drink", null, 4d, 10, true},
-            new Object[]{"s1", 1, "cookie", "food", "biscuit", 3d, 20, true},
-            new Object[]{"s1", 2, "shirt", "cloth", null, 10d, 3, false}
+            new Object[]{"s1", 0, "starbuck's coffee", "drink", null, 4d, 10, true, LocalDate.of(2025, 1, 14)},
+            new Object[]{"s1", 1, "cookie", "food", "biscuit", 3d, 20, true, LocalDate.of(2024, 1, 14)},
+            new Object[]{"s1", 2, "shirt", "cloth", null, 10d, 3, false, LocalDate.of(2023, 1, 14)}
     ));
 
     this.tm.load(this.storeName, List.of(
-            new Object[]{"s2", 0, "starbuck's coffee", "drink", null, 1.5d, 10, true},
-            new Object[]{"s2", 1, "cookie", "food", "biscuit", 3d, 20, true},
-            new Object[]{"s2", 2, "shirt", "cloth", null, 10d, 3, false}
+            new Object[]{"s2", 0, "starbuck's coffee", "drink", null, 1.5d, 10, true, LocalDate.of(2025, 1, 14)},
+            new Object[]{"s2", 1, "cookie", "food", "biscuit", 3d, 20, true, LocalDate.of(2024, 1, 14)},
+            new Object[]{"s2", 2, "shirt", "cloth", null, 10d, 3, false, LocalDate.of(2023, 1, 14)}
     ));
   }
 
@@ -396,6 +398,17 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
     QueryDto query = Query
             .from(this.storeName)
             .where(criterion("isFood", eq(true)))
+            .select(tableFields(List.of("ean")), List.of())
+            .build();
+    Table table = this.executor.executeQuery(query);
+    Assertions.assertThat(table).containsExactly(List.of("cookie"), List.of("starbuck's coffee"));
+  }
+
+  @Test
+  void testDateCondition() {
+    QueryDto query = Query
+            .from(this.storeName)
+            .where(criterion("creationDate", ge(LocalDate.of(2024, 1, 1))))
             .select(tableFields(List.of("ean")), List.of())
             .build();
     Table table = this.executor.executeQuery(query);
