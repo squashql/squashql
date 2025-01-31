@@ -408,7 +408,7 @@ public abstract class ATestQueryExecutor extends ABaseTestQuery {
   void testDateCondition() {
     QueryDto query = Query
             .from(this.storeName)
-            .where(criterion("creationDate", ge(LocalDate.of(2024, 1, 1))))
+            .where(criterion("creationDate", ge("2024-01-01")))
             .select(tableFields(List.of("ean")), List.of())
             .build();
     Table table = this.executor.executeQuery(query);
