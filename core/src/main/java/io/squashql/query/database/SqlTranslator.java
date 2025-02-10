@@ -173,7 +173,7 @@ public class SqlTranslator {
     } else if (fieldType.equals(String.class) || fieldType.equals(Lists.StringList.class)) {
       // quote
       return s -> "'" + queryRewriter.escapeSingleQuote(String.valueOf(s)) + "'";
-    } else if (guessedClass.equals(LocalDate.class)) {
+    } else if (fieldType.equals(LocalDate.class)) {
       return date -> "'" + date.toString() + "'";
     } else {
       throw new RuntimeException("Not supported " + fieldType);
