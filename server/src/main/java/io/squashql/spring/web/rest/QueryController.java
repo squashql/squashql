@@ -8,6 +8,8 @@ import io.squashql.table.PivotTable;
 import io.squashql.table.PivotTableUtils;
 import io.squashql.table.Table;
 import io.squashql.table.TableUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,6 +38,7 @@ public class QueryController {
   public static final String MAPPING_QUERY_MERGE_PIVOT_STRINGIFY = "/query-merge-pivot-stringify";
   public static final String MAPPING_METADATA = "/metadata";
   public static final String MAPPING_EXPRESSION = "/expression";
+  private static final Logger log = LoggerFactory.getLogger(QueryController.class);
   protected final QueryEngine<?> queryEngine;
   public final QueryExecutor queryExecutor;
   protected final Supplier<SquashQLUser> squashQLUserSupplier;

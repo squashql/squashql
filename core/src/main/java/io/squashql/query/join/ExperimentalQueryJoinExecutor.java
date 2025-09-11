@@ -1,6 +1,7 @@
 package io.squashql.query.join;
 
 import io.squashql.query.*;
+import io.squashql.query.compiled.CompiledCriteria;
 import io.squashql.query.compiled.CompiledMeasure;
 import io.squashql.query.compiled.CompiledOrderBy;
 import io.squashql.query.database.*;
@@ -77,6 +78,7 @@ public class ExperimentalQueryJoinExecutor {
     List<JoinDto> joinDtos = extractJoinDtos(queryJoin, holders);
 
     QueryRewriter queryRewriter = holders.get(0).queryRewriter;
+    QueryResolver queryResolver = holders.get(0).queryResolver;
     StringBuilder joinSb = new StringBuilder();
     joinSb.append(" from ").append(queryRewriter.cteName(holders.get(0).cteTableName));
     Set<String> toRemoveFromSelectSet = new HashSet<>();
@@ -128,6 +130,7 @@ public class ExperimentalQueryJoinExecutor {
             .append(joinSb);
 
     addOrderBy(sb, queryJoin.orders, queryRewriter, selectedColumns, measureAliases, holders);
+    addWhere(sb, queryJoin.where, queryRewriter, queryResolver);
     addLimit(sb, queryJoin.limit <= 0 ? LIMIT_DEFAULT_VALUE : queryJoin.limit);
 
     return Tuples.triple(sb.toString(), selectedColumns, measures);
@@ -341,6 +344,19 @@ public class ExperimentalQueryJoinExecutor {
       }
     }
     SqlTranslator.addOrderBy(sb, orderBy, queryRewriter);
+  }
+
+  private static void addWhere(StringBuilder sb,
+                               CriteriaDto where,
+                               QueryRewriter queryRewriter,
+                               QueryResolver queryResolver) {
+    if (where != null) {
+      CompiledCriteria compiledWhere = queryResolver.compileCriteria(where);
+      String whereSql = compiledWhere.sqlExpression(queryRewriter);
+      if (whereSql != null && !whereSql.isEmpty()) {
+        sb.append(" where ").append(whereSql);
+      }
+    }
   }
 
   private static CriteriaDto rewriteJoinCondition(CriteriaDto joinCondition, List<Holder> holders) {

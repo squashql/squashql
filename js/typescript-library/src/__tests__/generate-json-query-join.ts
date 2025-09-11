@@ -5,7 +5,7 @@ import {JoinType} from "../query"
 import {from} from "../queryBuilder"
 import {ExplicitOrder, NullsOrderKeyword, Order, OrderKeyword, SimpleOrder} from "../order"
 import {QueryJoin} from "../queryJoin"
-import {all, ConditionType, criterion_} from "../condition"
+import {all, ConditionType, criterion, criterion_, ge} from "../condition"
 
 export function generateFromQueryJoin() {
   const a = new TableField("myTable1.a")
@@ -38,6 +38,7 @@ export function generateFromQueryJoin() {
                     criterion_(c1, c2, ConditionType.EQ)
                   ]))
           .join(query3, JoinType.INNER)
+          .where(criterion(c2, ge(10)))
           .orderBy(orders)
           .limit(12)
   q.minify = true
