@@ -168,7 +168,6 @@ public class TestSqlExperimentalQueryJoinExecutor {
             .from(storeA)
             .select(List.of(A_a, A_b, A_c), List.of())
             .build();
-
     QueryDto queryB = Query
             .from(storeB)
             .select(List.of(B_b, B_d, B_e, B_f), List.of())
