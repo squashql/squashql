@@ -1,6 +1,7 @@
 package io.squashql.join;
 
 import io.squashql.query.ATestExperimentalQueryJoinExecutor;
+import io.squashql.query.AliasedField;
 import io.squashql.query.TableField;
 import io.squashql.query.builder.Query;
 import io.squashql.query.compiled.CompiledMeasure;
@@ -27,6 +28,8 @@ import java.util.regex.Pattern;
 
 import static io.squashql.query.Functions.all;
 import static io.squashql.query.Functions.criterion;
+import static io.squashql.query.Functions.ge;
+import static io.squashql.query.Functions.isNotNull;
 import static io.squashql.query.dto.ConditionType.EQ;
 
 /**
@@ -136,6 +139,10 @@ public class TestSqlExperimentalQueryJoinExecutor {
                     criterion(A_c, C_c, EQ),
                     criterion(B_d, C_d, EQ)
             ))
+            .where(all(
+                    criterion(new AliasedField(A_a.fieldName), ge(5)),
+                    criterion(new AliasedField(B_b.fieldName), isNotNull()
+                    )))
             .limit(12);
 
     Triple<String, List<TypedField>, List<CompiledMeasure>> result = ex.generateSql(queryJoin);
@@ -148,6 +155,7 @@ public class TestSqlExperimentalQueryJoinExecutor {
             "select `CTE0`.`a`, `CTE0`.`b`, `CTE0`.`c`, `CTE1`.`d`, `CTE1`.`e`, `CTE1`.`f`, `CTE2`.`g` " +
             "from `CTE0` left join `CTE1` on `CTE0`.`b` = `CTE1`.`b` " +
             "left join `CTE2` on (`CTE0`.`b` = `CTE2`.`b` and `CTE0`.`c` = `CTE2`.`c` and `CTE1`.`d` = `CTE2`.`d`) " +
+            "where (`a` >= 5 and `b` is not null) " +
             "limit 12";
     Assertions.assertThat(result.getOne()).isEqualTo(expectedSql);
     List<String> selectElements = result.getTwo().stream().map(SqlUtils::squashqlExpression).toList();
@@ -160,14 +168,16 @@ public class TestSqlExperimentalQueryJoinExecutor {
             .from(storeA)
             .select(List.of(A_a, A_b, A_c), List.of())
             .build();
-
     QueryDto queryB = Query
             .from(storeB)
             .select(List.of(B_b, B_d, B_e, B_f), List.of())
             .build();
-
     QueryJoinDto queryJoin = QueryJoinDto.from(queryA)
             .join(queryB, JoinType.CROSS)
+            .where(all(
+                    criterion(new AliasedField(A_a.fieldName), ge(5)),
+                    criterion(new AliasedField(B_b.fieldName), isNotNull()
+                    )))
             .limit(12);
 
     Triple<String, List<TypedField>, List<CompiledMeasure>> result = ex.generateSql(queryJoin);
@@ -177,6 +187,7 @@ public class TestSqlExperimentalQueryJoinExecutor {
             "select `B`.`b`, `B`.`d`, `B`.`e`, `B`.`f` from `B` group by `B`.`b`, `B`.`d`, `B`.`e`, `B`.`f`) " +
             "select `CTE0`.`a`, `CTE0`.`b`, `CTE0`.`c`, `CTE1`.`b`, `CTE1`.`d`, `CTE1`.`e`, `CTE1`.`f` " +
             "from `CTE0` cross join `CTE1` " +
+            "where (`a` >= 5 and `b` is not null) " +
             "limit 12";
     Assertions.assertThat(result.getOne()).isEqualTo(expectedSql);
     List<String> selectElements = result.getTwo().stream().map(SqlUtils::squashqlExpression).toList();
@@ -198,6 +209,10 @@ public class TestSqlExperimentalQueryJoinExecutor {
     // Should be a condition on "alias_b"
     QueryJoinDto queryJoin = QueryJoinDto.from(queryA)
             .join(queryB, JoinType.LEFT)
+            .where(all(
+                    criterion(new AliasedField(A_a.fieldName), ge(5)),
+                    criterion(new AliasedField(B_b.as("alias_b").alias()), isNotNull()
+                    )))
             .limit(12);
 
     Triple<String, List<TypedField>, List<CompiledMeasure>> result = ex.generateSql(queryJoin);
@@ -207,6 +222,7 @@ public class TestSqlExperimentalQueryJoinExecutor {
             "select `B`.`b` as `alias_b`, `B`.`d`, `B`.`e`, `B`.`f` from `B` group by `alias_b`, `B`.`d`, `B`.`e`, `B`.`f`) " +
             "select `CTE0`.`a`, `CTE0`.`alias_b` as `alias_b`, `CTE0`.`c`, `CTE1`.`d`, `CTE1`.`e`, `CTE1`.`f` " +
             "from `CTE0` left join `CTE1` on ((`CTE0`.`alias_b` is null and `CTE1`.`alias_b` is null) or `CTE0`.`alias_b` = `CTE1`.`alias_b`) " +
+            "where (`a` >= 5 and `alias_b` is not null) " +
             "limit 12";
     Assertions.assertThat(result.getOne()).isEqualTo(expectedSql);
     List<String> selectElements = result.getTwo().stream().map(SqlUtils::squashqlExpression).toList();
@@ -228,6 +244,10 @@ public class TestSqlExperimentalQueryJoinExecutor {
     // Should be a condition on "alias_b"
     QueryJoinDto queryJoin = QueryJoinDto.from(queryA)
             .join(queryB, JoinType.LEFT)
+            .where(all(
+                    criterion(new AliasedField(A_a.fieldName), ge(5)),
+                    criterion(new AliasedField(B_b.fieldName), isNotNull()
+                    )))
             .limit(12);
 
     Triple<String, List<TypedField>, List<CompiledMeasure>> result = ex.generateSql(queryJoin);
@@ -239,6 +259,7 @@ public class TestSqlExperimentalQueryJoinExecutor {
             "from `CTE0` left join `CTE1` " +
             "on (((`CTE0`.`b` is null and `CTE1`.`b` is null) or `CTE0`.`b` = `CTE1`.`b`) " +
             "and ((`CTE0`.`c` is null and `CTE1`.`c` is null) or `CTE0`.`c` = `CTE1`.`c`)) " +
+            "where (`a` >= 5 and `b` is not null) " +
             "limit 12";
     Assertions.assertThat(result.getOne()).isEqualTo(expectedSql);
     List<String> selectElements = result.getTwo().stream().map(SqlUtils::squashqlExpression).toList();
@@ -269,6 +290,10 @@ public class TestSqlExperimentalQueryJoinExecutor {
                     criterion(A_c, C_c, EQ),
                     criterion(B_d, C_d, EQ)
             ))
+            .where(all(
+                    criterion(new AliasedField(A_a.fieldName), ge(5)),
+                    criterion(B_b.as("alias_b").alias(), isNotNull()
+                    )))
             .limit(12);
 
     Triple<String, List<TypedField>, List<CompiledMeasure>> result = ex.generateSql(queryJoin);
@@ -282,6 +307,7 @@ public class TestSqlExperimentalQueryJoinExecutor {
             "from `CTE0` " +
             "left join `CTE1` on ((`CTE0`.`alias_b` is null and `CTE1`.`alias_b` is null) or `CTE0`.`alias_b` = `CTE1`.`alias_b`) " +
             "left join `CTE2` on (`CTE0`.`b` = `CTE2`.`b` and `CTE0`.`c` = `CTE2`.`c` and `CTE1`.`d` = `CTE2`.`d`) " +
+            "where (`a` >= 5 and `alias_b` is not null) " +
             "limit 12";
     Assertions.assertThat(result.getOne()).isEqualTo(expectedSql);
     List<String> selectElements = result.getTwo().stream().map(SqlUtils::squashqlExpression).toList();

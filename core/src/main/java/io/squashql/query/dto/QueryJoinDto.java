@@ -21,6 +21,7 @@ public class QueryJoinDto {
   public int current = 0;
   public Map<Field, OrderDto> orders;
   public int limit = -1;
+  public CriteriaDto where;
   public Boolean minify;
 
   private QueryJoinDto(QueryDto q1) {
@@ -49,6 +50,11 @@ public class QueryJoinDto {
 
   public QueryJoinDto limit(int limit) {
     this.limit = limit;
+    return this;
+  }
+
+  public QueryJoinDto where(CriteriaDto where) {
+    this.where = where;
     return this;
   }
 }
