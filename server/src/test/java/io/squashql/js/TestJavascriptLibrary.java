@@ -323,12 +323,13 @@ public class TestJavascriptLibrary {
                     all(
                             criterion(b1, b2, ConditionType.EQ),
                             criterion(c1, c2, ConditionType.EQ)))
+            .join(query3, JoinType.INNER)
+            .where(criterion(c2, ge(10)))
             .orderBy(Map.of(
                     a, new SimpleOrderDto(OrderKeywordDto.ASC, NullsOrderDto.FIRST),
                     c2, new SimpleOrderDto(OrderKeywordDto.ASC),
                     c3, new SimpleOrderDto(OrderKeywordDto.DESC, NullsOrderDto.LAST),
                     b2, new ExplicitOrderDto(List.of("aa", "bb"))))
-            .join(query3, JoinType.INNER)
             .limit(12);
 
     q.current = 0;
