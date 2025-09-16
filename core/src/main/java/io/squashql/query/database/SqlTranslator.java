@@ -5,7 +5,6 @@ import io.squashql.list.Lists;
 import io.squashql.query.compiled.CompiledCriteria;
 import io.squashql.query.compiled.CompiledOrderBy;
 import io.squashql.query.compiled.CteRecordTable;
-import io.squashql.query.dto.CriteriaDto;
 import io.squashql.store.UnknownType;
 
 import java.time.LocalDate;
