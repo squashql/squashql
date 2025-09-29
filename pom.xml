@@ -219,14 +219,13 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>org.sonatype.plugins</groupId>
-            <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>1.6.13</version>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>0.9.0</version>
             <extensions>true</extensions>
             <configuration>
-              <serverId>ossrh</serverId>
-              <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-              <autoReleaseAfterClose>true</autoReleaseAfterClose>
+              <publishingServerId>central</publishingServerId>
+              <autoPublish>true</autoPublish>
             </configuration>
           </plugin>
           <plugin>
@@ -283,7 +282,8 @@
         <configuration>
           <!-- See here https://www.jacoco.org/jacoco/trunk/doc/prepare-agent-mojo.html to understand why `@{argLine}` is needed-->
           <!-- https://stackoverflow.com/questions/73465937/apache-spark-3-3-0-breaks-on-java-17-with-cannot-access-class-sun-nio-ch-direct-->
-          <argLine>--add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/sun.util.calendar=ALL-UNNAMED</argLine>
+          <argLine>--add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/sun.util.calendar=ALL-UNNAMED
+          </argLine>
         </configuration>
       </plugin>
       <plugin>
