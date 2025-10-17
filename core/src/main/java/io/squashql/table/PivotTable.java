@@ -2,7 +2,7 @@ package io.squashql.table;
 
 import java.util.List;
 
-public class PivotTable {
+public class PivotTable implements Renderable {
 
   public final Table table;
   public final List<List<Object>> pivotTableCells;
@@ -27,5 +27,9 @@ public class PivotTable {
   @Override
   public String toString() {
     return TableUtils.toString(this.pivotTableCells, String::valueOf, line -> line.equals(this.columns.size()));
+  }
+
+  public String toCSV() {
+    return TableUtils.toCSV(null, this.pivotTableCells);
   }
 }

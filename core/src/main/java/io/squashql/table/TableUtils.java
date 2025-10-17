@@ -121,6 +121,51 @@ public class TableUtils {
     return sb.toString();
   }
 
+  public static String toCSV(List<String> columns, Iterable<List<Object>> rows) {
+    return toCSV(columns, rows, false);
+  }
+
+  public static String toCSV(List<String> columns, Iterable<List<Object>> rows, boolean transpose) {
+    final StringBuilder sb = new StringBuilder();
+
+    if (columns != null) {
+      for (int i = 0; i < columns.size(); i++) {
+        if (i != 0) {
+          sb.append(",");
+        }
+        sb.append(columns.get(i));
+      }
+      sb.append("\n");
+    }
+
+    // Transpose rows and columns
+    List<List<Object>> matrix = new ArrayList();
+    if (transpose) {
+      int i = 0;
+      for (List<Object> row : rows) {
+        for (int j = 0; j < row.size(); j++) {
+          if (i == 0) {
+            matrix.add(new ArrayList<>());
+          }
+          matrix.get(j).add(row.get(j));
+        }
+        i++;
+      }
+    }
+
+    (transpose ? matrix : rows).forEach(row -> {
+      for (int i = 0; i < row.size(); i++) {
+        if (i != 0) {
+          sb.append(",");
+        }
+        sb.append(row.get(i));
+      }
+      sb.append("\n");
+    });
+
+    return sb.toString();
+  }
+
   public static List<MetadataItem> buildTableMetadata(Table t) {
     List<MetadataItem> metadata = new ArrayList<>();
     for (Header header : t.headers()) {

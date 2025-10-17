@@ -12,7 +12,7 @@ import java.util.Set;
 
 import static io.squashql.query.compiled.CompiledExpressionMeasure.COMPILED_TOTAL_COUNT;
 
-public interface Table extends Iterable<List<Object>> {
+public interface Table extends Iterable<List<Object>>, Renderable {
 
   ObjectArrayDictionary pointDictionary();
 
@@ -28,6 +28,8 @@ public interface Table extends Iterable<List<Object>> {
   void addAggregates(Header header, CompiledMeasure measure, List<Object> values);
 
   void transferAggregates(Table from, CompiledMeasure measure);
+
+  String toCSV();
 
   default List<Object> getColumn(int columnIndex) {
     List<Object> elements = new ArrayList<>();

@@ -204,6 +204,25 @@ Caching can be customized or deactivated.
 
 [More](documentation/CACHE.md)
 
+### Output format
+
+SquashQL supports several output format :
+
+* `text/plain`
+* `text/csv` (with `Content-Disposition` header allowing file download)
+* `application/json`
+
+The default format for SquashQL is `application/json`.
+To override this behavior and choose the selected output format, simply pass an `Accept` header when instantiating the querier :
+
+```javascript
+const csvQuerier = new Querier(url, {
+    headers: {
+        'Accept': 'text/plain',
+    }
+});
+```
+
 ## 🎓 Try SquashQL
 
 You can try SquashQL directly from your web browser with [our showcase project](https://github.com/squashql/squashql-showcase/blob/main/TUTORIAL.md). No need to install anything!
