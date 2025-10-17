@@ -97,7 +97,7 @@ public class QueryController {
       case "application/json": return ResponseEntity.ok(toJson.get());
       case "text/csv": {
         return ResponseEntity.ok()
-          .header("Accept", contentType)
+          .header("Content-Type", contentType)
           .header("Content-Disposition", "attachment; filename=\"result.csv\"")
           .body(table.toCSV());
       }

@@ -14,7 +14,11 @@ export class Querier {
     this.axiosInstance = axios.create({
       baseURL: url,
       timeout: 30_000,
-      ...config
+      ...config,
+      headers: {
+        'Accept': 'application/json',
+        ...config?.headers
+      }
     })
   }
 
