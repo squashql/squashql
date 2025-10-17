@@ -129,7 +129,12 @@ public class TableUtils {
     final StringBuilder sb = new StringBuilder();
 
     if (columns != null) {
-      columns.forEach(column -> sb.append(column.toString()).append(','));
+      for (int i = 0; i < columns.size(); i++) {
+        if (i != 0) {
+          sb.append(",");
+        }
+        sb.append(columns.get(i));
+      }
       sb.append("\n");
     }
 
@@ -149,7 +154,12 @@ public class TableUtils {
     }
 
     (transpose ? matrix : rows).forEach(row -> {
-      row.forEach(cell -> sb.append(cell).append(','));
+      for (int i = 0; i < row.size(); i++) {
+        if (i != 0) {
+          sb.append(",");
+        }
+        sb.append(row.get(i));
+      }
       sb.append("\n");
     });
 
