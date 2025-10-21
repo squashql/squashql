@@ -129,8 +129,8 @@ public class ExperimentalQueryJoinExecutor {
             .append(String.join(", ", selectSt))
             .append(joinSb);
 
-    addOrderBy(sb, queryJoin.orders, queryRewriter, selectedColumns, measureAliases, holders);
     addWhere(sb, queryJoin.where, queryRewriter, queryResolver);
+    addOrderBy(sb, queryJoin.orders, queryRewriter, selectedColumns, measureAliases, holders);
     addLimit(sb, queryJoin.limit <= 0 ? LIMIT_DEFAULT_VALUE : queryJoin.limit);
 
     return Tuples.triple(sb.toString(), selectedColumns, measures);
