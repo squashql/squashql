@@ -64,7 +64,10 @@ public class RowTable implements Table {
 
   @Override
   public String toCSV() {
-    return TableUtils.toCSV(this.headers.stream().map(header -> header.name()).toList(), this.rows, true);
+    return TableUtils.toCSV(
+      this.headers.stream().map(header -> header.name()).toList(),
+      TableUtils.transpose(this.rows, count(), this.headers.size())
+    );
   }
 
   @Override

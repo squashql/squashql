@@ -53,7 +53,7 @@ public class QueryController {
             true,
             null,
             createPivotTableContext(query));
-    return formatResponseEntity(table, contentType, () -> createQueryResultDto(table, csBuilder, query.minify));
+    return createResponseEntity(table, contentType, () -> createQueryResultDto(table, csBuilder, query.minify));
   }
 
   @PostMapping(MAPPING_QUERY_PIVOT)
@@ -65,7 +65,7 @@ public class QueryController {
             true,
             null);
     List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, pivotTableQueryDto.query.minify);
-    return formatResponseEntity(pt, contentType, () -> new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values, pt.hiddenTotals));
+    return createResponseEntity(pt, contentType, () -> new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values, pt.hiddenTotals));
   }
 
   @PostMapping(MAPPING_QUERY_MERGE)
@@ -73,7 +73,7 @@ public class QueryController {
     Table table = this.queryExecutor.executeQueryMerge(
             queryMergeDto,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get());
-    return formatResponseEntity(table, contentType, () -> createQueryResultDto(table, CacheStatsDto.builder(), queryMergeDto.minify));
+    return createResponseEntity(table, contentType, () -> createQueryResultDto(table, CacheStatsDto.builder(), queryMergeDto.minify));
   }
 
   @PostMapping(MAPPING_QUERY_MERGE_PIVOT)
@@ -83,16 +83,16 @@ public class QueryController {
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get()
     );
     List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, pivotTableQueryMergeDto.query.minify);
-    return formatResponseEntity(pt, contentType, () -> new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values, pt.hiddenTotals));
+    return createResponseEntity(pt, contentType, () -> new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values, pt.hiddenTotals));
   }
 
   @PostMapping(MAPPING_QUERY_JOIN_EXPERIMENTAL)
   public ResponseEntity<?> executeQueryJoin(@RequestBody QueryJoinDto queryJoinDto, @RequestHeader("Accept") String contentType) {
     Table table = this.queryExecutor.executeExperimentalQueryMerge(queryJoinDto);
-    return formatResponseEntity(table, contentType, () -> createQueryResultDto(table, CacheStatsDto.builder(), queryJoinDto.minify));
+    return createResponseEntity(table, contentType, () -> createQueryResultDto(table, CacheStatsDto.builder(), queryJoinDto.minify));
   }
 
-  public ResponseEntity<?> formatResponseEntity(Renderable table, String contentType, Supplier<?> toJson) {
+  private static ResponseEntity<?> createResponseEntity(Renderable table, String contentType, Supplier<?> toJson) {
     switch (contentType) {
       case "application/json": return ResponseEntity.ok(toJson.get());
       case "text/csv": {

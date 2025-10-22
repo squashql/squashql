@@ -121,11 +121,48 @@ public class TableUtils {
     return sb.toString();
   }
 
-  public static String toCSV(List<String> columns, Iterable<List<Object>> rows) {
-    return toCSV(columns, rows, false);
-  }
+  public static Iterable<List<Object>> transpose(List<List<Object>> values, int rows, int columns) {
+    return () -> new Iterator<List<Object>>() {
+      // Transpose rows and columns
+      private final Iterator<List<Object>> it = new Iterator<>() {
+        private int current = 0;
 
-  public static String toCSV(List<String> columns, Iterable<List<Object>> rows, boolean transpose) {
+        @Override
+        public boolean hasNext() {
+          return this.current < rows;
+        }
+
+        @Override
+        public List<Object> next() {
+          final int rowIndex = this.current++;
+
+          return new AbstractList<Object>() {
+            @Override
+            public Object get(int columnIndex) {
+              return values.get(columnIndex).get(rowIndex);
+            }
+
+            @Override
+            public int size() {
+              return columns;
+            }
+          };
+        }
+      };
+
+      @Override
+      public boolean hasNext() {
+        return this.it.hasNext();
+      }
+
+      @Override
+      public List<Object> next() {
+        return this.it.next();
+      }
+    };
+  };
+
+  public static String toCSV(List<String> columns, Iterable<List<Object>> rows) {
     final StringBuilder sb = new StringBuilder();
 
     if (columns != null) {
@@ -138,22 +175,7 @@ public class TableUtils {
       sb.append("\n");
     }
 
-    // Transpose rows and columns
-    List<List<Object>> matrix = new ArrayList();
-    if (transpose) {
-      int i = 0;
-      for (List<Object> row : rows) {
-        for (int j = 0; j < row.size(); j++) {
-          if (i == 0) {
-            matrix.add(new ArrayList<>());
-          }
-          matrix.get(j).add(row.get(j));
-        }
-        i++;
-      }
-    }
-
-    (transpose ? matrix : rows).forEach(row -> {
+    rows.forEach(row -> {
       for (int i = 0; i < row.size(); i++) {
         if (i != 0) {
           sb.append(",");
