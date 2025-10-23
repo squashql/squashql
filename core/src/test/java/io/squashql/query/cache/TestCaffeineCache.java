@@ -85,6 +85,11 @@ public class TestCaffeineCache {
     }
 
     @Override
+    public String toCSV() {
+      return "";
+    }
+
+    @Override
     public Set<CompiledMeasure> measures() {
       return Set.of();
     }

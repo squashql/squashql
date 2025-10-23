@@ -115,6 +115,14 @@ public class ColumnarTable implements Table {
   }
 
   @Override
+  public String toCSV() {
+    return TableUtils.toCSV(
+      this.headers.stream().map(header -> header.name()).toList(),
+      TableUtils.transpose(this.values, count(), this.headers.size())
+    );
+  }
+
+  @Override
   public Iterator<List<Object>> iterator() {
     return new ColumnarTableIterator();
   }

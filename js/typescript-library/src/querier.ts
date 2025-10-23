@@ -14,7 +14,11 @@ export class Querier {
     this.axiosInstance = axios.create({
       baseURL: url,
       timeout: 30_000,
-      ...config
+      ...config,
+      headers: {
+        'Accept': 'application/json',
+        ...config?.headers
+      }
     })
   }
 
@@ -30,15 +34,14 @@ export class Querier {
             .then(r => r.data)
   }
 
-  async executeQuery(query: Query | QueryMerge, stringify = false): Promise<QueryResult | string> {
+  async executeQuery(query: Query | QueryMerge): Promise<QueryResult | string> {
     let promise
-    const urlSuffix = stringify ? "-stringify" : ""
     switch (query.constructor) {
       case Query:
-        promise = this.axiosInstance.post(`/query${urlSuffix}`, query)
+        promise = this.axiosInstance.post(`/query`, query)
         break
       case QueryMerge:
-        promise = this.axiosInstance.post(`/query-merge${urlSuffix}`, query)
+        promise = this.axiosInstance.post(`/query-merge`, query)
         break
       default:
         throw new Error("Unexpected query type " + query)
@@ -46,15 +49,14 @@ export class Querier {
     return promise.then(r => r.data)
   }
 
-  async executePivotQuery(query: Query | QueryMerge, pivotConfig: PivotConfig, stringify = false): Promise<PivotTableQueryResult | string> {
+  async executePivotQuery(query: Query | QueryMerge, pivotConfig: PivotConfig): Promise<PivotTableQueryResult | string> {
     let promise
-    const urlSuffix = stringify ? "-stringify" : ""
     switch (query.constructor) {
       case Query:
-        promise = this.axiosInstance.post(`/query-pivot${urlSuffix}`, createPivotTableQuery(<Query>query, pivotConfig))
+        promise = this.axiosInstance.post(`/query-pivot`, createPivotTableQuery(<Query>query, pivotConfig))
         break
       case QueryMerge:
-        promise = this.axiosInstance.post(`/query-merge-pivot${urlSuffix}`, createPivotTableQueryMerge(<QueryMerge>query, pivotConfig))
+        promise = this.axiosInstance.post(`/query-merge-pivot`, createPivotTableQueryMerge(<QueryMerge>query, pivotConfig))
         break
       default:
         throw new Error("Unexpected query type " + query)

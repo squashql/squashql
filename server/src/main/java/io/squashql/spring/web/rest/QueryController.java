@@ -6,6 +6,7 @@ import io.squashql.query.dto.*;
 import io.squashql.store.Store;
 import io.squashql.table.PivotTable;
 import io.squashql.table.PivotTableUtils;
+import io.squashql.table.Renderable;
 import io.squashql.table.Table;
 import io.squashql.table.TableUtils;
 import org.springframework.context.annotation.Import;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
@@ -26,14 +28,10 @@ import static io.squashql.query.QueryExecutor.createPivotTableContext;
 public class QueryController {
 
   public static final String MAPPING_QUERY = "/query";
-  public static final String MAPPING_QUERY_STRINGIFY = "/query-stringify";
   public static final String MAPPING_QUERY_MERGE = "/query-merge";
-  public static final String MAPPING_QUERY_MERGE_STRINGIFY = "/query-merge-stringify";
   public static final String MAPPING_QUERY_JOIN_EXPERIMENTAL = "/experimental/query-join";
   public static final String MAPPING_QUERY_PIVOT = "/query-pivot";
-  public static final String MAPPING_QUERY_PIVOT_STRINGIFY = "/query-pivot-stringify";
   public static final String MAPPING_QUERY_MERGE_PIVOT = "/query-merge-pivot";
-  public static final String MAPPING_QUERY_MERGE_PIVOT_STRINGIFY = "/query-merge-pivot-stringify";
   public static final String MAPPING_METADATA = "/metadata";
   public static final String MAPPING_EXPRESSION = "/expression";
   protected final QueryEngine<?> queryEngine;
@@ -47,7 +45,7 @@ public class QueryController {
   }
 
   @PostMapping(MAPPING_QUERY)
-  public ResponseEntity<QueryResultDto> execute(@RequestBody QueryDto query) {
+  public ResponseEntity<?> execute(@RequestBody QueryDto query, @RequestHeader("Accept") String contentType) {
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
     Table table = this.queryExecutor.executeQuery(query,
             csBuilder,
@@ -55,11 +53,11 @@ public class QueryController {
             true,
             null,
             createPivotTableContext(query));
-    return ResponseEntity.ok(createQueryResultDto(table, csBuilder, query.minify));
+    return createResponseEntity(table, contentType, () -> createQueryResultDto(table, csBuilder, query.minify));
   }
 
   @PostMapping(MAPPING_QUERY_PIVOT)
-  public ResponseEntity<PivotTableQueryResultDto> execute(@RequestBody PivotTableQueryDto pivotTableQueryDto) {
+  public ResponseEntity<?> execute(@RequestBody PivotTableQueryDto pivotTableQueryDto, @RequestHeader("Accept") String contentType) {
     CacheStatsDto.CacheStatsDtoBuilder csBuilder = CacheStatsDto.builder();
     PivotTable pt = this.queryExecutor.executePivotQuery(pivotTableQueryDto,
             csBuilder,
@@ -67,31 +65,44 @@ public class QueryController {
             true,
             null);
     List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, pivotTableQueryDto.query.minify);
-    return ResponseEntity.ok(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values, pt.hiddenTotals));
+    return createResponseEntity(pt, contentType, () -> new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values, pt.hiddenTotals));
   }
 
   @PostMapping(MAPPING_QUERY_MERGE)
-  public ResponseEntity<QueryResultDto> executeAndMerge(@RequestBody QueryMergeDto queryMergeDto) {
+  public ResponseEntity<?> executeAndMerge(@RequestBody QueryMergeDto queryMergeDto, @RequestHeader("Accept") String contentType) {
     Table table = this.queryExecutor.executeQueryMerge(
             queryMergeDto,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get());
-    return ResponseEntity.ok(createQueryResultDto(table, CacheStatsDto.builder(), queryMergeDto.minify));
+    return createResponseEntity(table, contentType, () -> createQueryResultDto(table, CacheStatsDto.builder(), queryMergeDto.minify));
   }
 
   @PostMapping(MAPPING_QUERY_MERGE_PIVOT)
-  public ResponseEntity<PivotTableQueryResultDto> executeQueryMergePivot(@RequestBody PivotTableQueryMergeDto pivotTableQueryMergeDto) {
+  public ResponseEntity<?> executeQueryMergePivot(@RequestBody PivotTableQueryMergeDto pivotTableQueryMergeDto, @RequestHeader("Accept") String contentType) {
     PivotTable pt = this.queryExecutor.executePivotQueryMerge(
             pivotTableQueryMergeDto,
             this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get()
     );
     List<Map<String, Object>> cells = PivotTableUtils.generateCells(pt, pivotTableQueryMergeDto.query.minify);
-    return ResponseEntity.ok(new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values, pt.hiddenTotals));
+    return createResponseEntity(pt, contentType, () -> new PivotTableQueryResultDto(cells, pt.rows, pt.columns, pt.values, pt.hiddenTotals));
   }
 
   @PostMapping(MAPPING_QUERY_JOIN_EXPERIMENTAL)
-  public ResponseEntity<QueryResultDto> executeQueryJoin(@RequestBody QueryJoinDto queryJoinDto) {
+  public ResponseEntity<?> executeQueryJoin(@RequestBody QueryJoinDto queryJoinDto, @RequestHeader("Accept") String contentType) {
     Table table = this.queryExecutor.executeExperimentalQueryMerge(queryJoinDto);
-    return ResponseEntity.ok(createQueryResultDto(table, CacheStatsDto.builder(), queryJoinDto.minify));
+    return createResponseEntity(table, contentType, () -> createQueryResultDto(table, CacheStatsDto.builder(), queryJoinDto.minify));
+  }
+
+  private static ResponseEntity<?> createResponseEntity(Renderable table, String contentType, Supplier<?> toJson) {
+    switch (contentType) {
+      case "application/json": return ResponseEntity.ok(toJson.get());
+      case "text/csv": {
+        return ResponseEntity.ok()
+          .header("Content-Type", contentType)
+          .header("Content-Disposition", "attachment; filename=\"result.csv\"")
+          .body(table.toCSV());
+      }
+      default: return ResponseEntity.ok(table.toString());
+    }
   }
 
   private static QueryResultDto createQueryResultDto(Table table, CacheStatsDto.CacheStatsDtoBuilder csBuilder, Boolean minify) {
@@ -103,35 +114,6 @@ public class QueryController {
             .debug(DebugInfoDto.builder().cache(csBuilder.build()).build())
             .build();
     return result;
-  }
-
-  @PostMapping(MAPPING_QUERY_STRINGIFY)
-  public ResponseEntity<String> executeStringify(@RequestBody QueryDto query) {
-    Table table = this.queryExecutor.executeQuery(query);
-    return ResponseEntity.ok(table.toString());
-  }
-
-  @PostMapping(MAPPING_QUERY_MERGE_STRINGIFY)
-  public ResponseEntity<String> executeAndMergeStringify(@RequestBody QueryMergeDto queryMergeDto) {
-    Table table = this.queryExecutor.executeQueryMerge(
-            queryMergeDto,
-            this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get());
-    return ResponseEntity.ok(table.toString());
-  }
-
-  @PostMapping(MAPPING_QUERY_PIVOT_STRINGIFY)
-  public ResponseEntity<String> executePivotStringify(@RequestBody PivotTableQueryDto query) {
-    PivotTable table = this.queryExecutor.executePivotQuery(query);
-    return ResponseEntity.ok(table.toString());
-  }
-
-  @PostMapping(MAPPING_QUERY_MERGE_PIVOT_STRINGIFY)
-  public ResponseEntity<String> executeAndMergePivotStringify(@RequestBody PivotTableQueryMergeDto pivotTableQueryMergeDto) {
-    PivotTable pt = this.queryExecutor.executePivotQueryMerge(
-            pivotTableQueryMergeDto,
-            this.squashQLUserSupplier == null ? null : this.squashQLUserSupplier.get()
-    );
-    return ResponseEntity.ok(pt.toString());
   }
 
   @GetMapping(MAPPING_METADATA)

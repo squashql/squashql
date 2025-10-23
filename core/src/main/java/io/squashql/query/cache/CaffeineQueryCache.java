@@ -212,6 +212,11 @@ public class CaffeineQueryCache implements QueryCache {
     }
 
     @Override
+    public String toCSV() {
+      return this.underlying.toCSV();
+    }
+
+    @Override
     public Set<CompiledMeasure> measures() {
       return this.underlying.measures();
     }

@@ -121,6 +121,73 @@ public class TableUtils {
     return sb.toString();
   }
 
+  public static Iterable<List<Object>> transpose(List<List<Object>> values, int rows, int columns) {
+    return () -> new Iterator<List<Object>>() {
+      // Transpose rows and columns
+      private final Iterator<List<Object>> it = new Iterator<>() {
+        private int current = 0;
+
+        @Override
+        public boolean hasNext() {
+          return this.current < rows;
+        }
+
+        @Override
+        public List<Object> next() {
+          final int rowIndex = this.current++;
+
+          return new AbstractList<Object>() {
+            @Override
+            public Object get(int columnIndex) {
+              return values.get(columnIndex).get(rowIndex);
+            }
+
+            @Override
+            public int size() {
+              return columns;
+            }
+          };
+        }
+      };
+
+      @Override
+      public boolean hasNext() {
+        return this.it.hasNext();
+      }
+
+      @Override
+      public List<Object> next() {
+        return this.it.next();
+      }
+    };
+  };
+
+  public static String toCSV(List<String> columns, Iterable<List<Object>> rows) {
+    final StringBuilder sb = new StringBuilder();
+
+    if (columns != null) {
+      for (int i = 0; i < columns.size(); i++) {
+        if (i != 0) {
+          sb.append(",");
+        }
+        sb.append(columns.get(i));
+      }
+      sb.append("\n");
+    }
+
+    rows.forEach(row -> {
+      for (int i = 0; i < row.size(); i++) {
+        if (i != 0) {
+          sb.append(",");
+        }
+        sb.append(row.get(i));
+      }
+      sb.append("\n");
+    });
+
+    return sb.toString();
+  }
+
   public static List<MetadataItem> buildTableMetadata(Table t) {
     List<MetadataItem> metadata = new ArrayList<>();
     for (Header header : t.headers()) {
