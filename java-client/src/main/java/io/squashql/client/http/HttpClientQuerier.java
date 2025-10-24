@@ -52,15 +52,24 @@ public class HttpClientQuerier {
 
   interface QueryApi {
     @RequestLine("POST /query")
-    @Headers("Content-Type: application/json")
+    @Headers({
+      "Content-Type: application/json",
+      "Accept: application/json"
+    })
     QueryResultDto run(QueryDto query);
 
     @RequestLine("POST /query-pivot")
-    @Headers("Content-Type: application/json")
+    @Headers({
+      "Content-Type: application/json",
+      "Accept: application/json"
+    })
     PivotTableQueryResultDto run(PivotTableQueryDto query);
 
     @RequestLine("POST /query-merge")
-    @Headers("Content-Type: application/json")
+    @Headers({
+      "Content-Type: application/json",
+      "Accept: application/json"
+    })
     QueryResultDto queryMerge(QueryMergeDto query);
 
     @RequestLine("GET /metadata")
