@@ -58,7 +58,8 @@ public class QueryControllerTest {
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY)
                     .content(JacksonUtil.serialize(query))
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
@@ -171,7 +172,8 @@ public class QueryControllerTest {
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY)
                     .content(JacksonUtil.serialize(query))
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
@@ -210,7 +212,8 @@ public class QueryControllerTest {
       try {
         this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY)
                         .content(JacksonUtil.serialize(query))
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(result -> {
                   String contentAsString = result.getResponse().getContentAsString();
@@ -246,7 +249,8 @@ public class QueryControllerTest {
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_MERGE)
                     .content(JacksonUtil.serialize(QueryMergeDto.from(query1).join(query2, JoinType.FULL)))
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
@@ -270,7 +274,8 @@ public class QueryControllerTest {
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_MERGE_PIVOT)
                     .content(JacksonUtil.serialize(new PivotTableQueryMergeDto(QueryMergeDto.from(query1).join(query2, JoinType.FULL), tableFields(List.of("ean")), List.of())))
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               PivotTableQueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, PivotTableQueryResultDto.class);
@@ -297,7 +302,8 @@ public class QueryControllerTest {
 
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_MERGE)
                     .content(JacksonUtil.serialize(QueryMergeDto.from(query1).join(query2, JoinType.FULL)))
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isInternalServerError())
             .andExpect(result -> Assertions.assertThat(result.getResolvedException()).isInstanceOf(LimitExceedException.class))
             .andExpect(result -> Assertions.assertThat(result.getResponse().getContentAsString()).contains("query limit exceeded"));
@@ -321,7 +327,8 @@ public class QueryControllerTest {
             .orderBy(Map.of(ean, new SimpleOrderDto(OrderKeywordDto.ASC)));
     this.mvc.perform(MockMvcRequestBuilders.post(QueryController.MAPPING_QUERY_JOIN_EXPERIMENTAL)
                     .content(JacksonUtil.serialize(queryJoinDto))
-                    .contentType(MediaType.APPLICATION_JSON))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
             .andExpect(result -> {
               String contentAsString = result.getResponse().getContentAsString();
               QueryResultDto queryResult = JacksonUtil.deserialize(contentAsString, QueryResultDto.class);
