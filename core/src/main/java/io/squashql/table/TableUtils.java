@@ -163,8 +163,8 @@ public class TableUtils {
   };
 
   private static String escapeCsvCell(String value) {
-    if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
-      value = value.replace("\"", "\"\"");
+    value = value.replace("\"", "\"\"");
+    if (value.contains(",") || value.contains("\n")) {
       return "\"" + value + "\"";
     }
     return value;
