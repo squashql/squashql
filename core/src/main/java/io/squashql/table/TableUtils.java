@@ -162,6 +162,14 @@ public class TableUtils {
     };
   };
 
+  private static String escapeCsvCell(String value) {
+    value = value.replace("\"", "\"\"");
+    if (value.contains(",") || value.contains("\n")) {
+      return "\"" + value + "\"";
+    }
+    return value;
+  }
+
   public static String toCSV(List<String> columns, Iterable<List<Object>> rows) {
     final StringBuilder sb = new StringBuilder();
 
@@ -170,7 +178,7 @@ public class TableUtils {
         if (i != 0) {
           sb.append(",");
         }
-        sb.append(columns.get(i));
+        sb.append(escapeCsvCell(columns.get(i)));
       }
       sb.append("\n");
     }
@@ -180,7 +188,7 @@ public class TableUtils {
         if (i != 0) {
           sb.append(",");
         }
-        sb.append(row.get(i));
+        sb.append(escapeCsvCell(row.get(i).toString()));
       }
       sb.append("\n");
     });
