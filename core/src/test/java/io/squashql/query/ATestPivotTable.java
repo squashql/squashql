@@ -14,10 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestInstance;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static io.squashql.query.ComparisonMethod.ABSOLUTE_DIFFERENCE;
@@ -865,6 +862,40 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
             List.of(this.spendingCategory, this.country, this.city)
     ));
     verifyResults(testInfo, result);
+  }
+
+  @Test
+  void testQueryMergeWithEmptyResult(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", this.amount);
+    Measure pop = Functions.sum("population", this.population);
+    List<String> rows = List.of("continent", "country");
+
+    List<Measure> measuresSpending = List.of(amount);
+    QueryDto query1 = Query
+            .from(this.storeSpending)
+            .select(tableFields(rows), measuresSpending)
+            .build();
+
+    List<Measure> measuresPop = List.of(pop);
+    QueryDto query2 = Query
+            .from(this.storePopulation)
+            .where(new CriteriaDto(continentPop, new SingleValueConditionDto(ConditionType.EQ, "unknown")))
+            .select(tableFields(rows), measuresPop)
+            .build();
+
+    List<Field> list = new ArrayList<>(rows.stream().map(TableField::new).toList());
+
+//    PivotTable result1 = this.executor.executePivotQuery(new PivotTableQueryDto(query1, list, List.of()));
+//    System.out.println(result1);
+    PivotTable result2 = this.executor.executePivotQuery(new PivotTableQueryDto(query2, list, List.of()));
+    System.out.println(result2);
+
+//    QueryMergeDto join = QueryMergeDto.from(query1)
+//            .join(query2, JoinType.LEFT);
+//    PivotTableQueryMergeDto pivotTableQueryMergeDto = new PivotTableQueryMergeDto(join, list, List.of());
+//    PivotTable lists = this.executor.executePivotQueryMerge(pivotTableQueryMergeDto, null);
+//    System.out.println(lists);
+//    verifyResults(testInfo, query1, query2, JoinType.LEFT, tableFields(rows), Collections.emptyList());
   }
 
   private void verifyResults(TestInfo testInfo, QueryDto query, List<String> rows, List<String> columns) {
