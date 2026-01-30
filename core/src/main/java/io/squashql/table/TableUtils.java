@@ -188,7 +188,8 @@ public class TableUtils {
         if (i != 0) {
           sb.append(",");
         }
-        sb.append(escapeCsvCell(row.get(i).toString()));
+        Object value = row.get(i);
+        sb.append(value != null ? escapeCsvCell(value.toString()) : null);
       }
       sb.append("\n");
     });
