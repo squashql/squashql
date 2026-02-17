@@ -376,6 +376,28 @@ public abstract class ATestPivotTable extends ABaseTestQuery {
   }
 
   @Test
+  void testQueryMergeWithEmptyResult(TestInfo testInfo) {
+    Measure amount = Functions.sum("amount", this.amount);
+    Measure pop = Functions.sum("population", this.population);
+    List<String> rows = List.of("continent", "country");
+
+    List<Measure> measuresSpending = List.of(amount);
+    QueryDto query1 = Query
+            .from(this.storeSpending)
+            .select(tableFields(rows), measuresSpending)
+            .build();
+
+    List<Measure> measuresPop = List.of(pop);
+    QueryDto query2 = Query
+            .from(this.storePopulation)
+            .where(new CriteriaDto(continentPop, new SingleValueConditionDto(ConditionType.EQ, "unknown")))
+            .select(tableFields(rows), measuresPop)
+            .build();
+
+    verifyResults(testInfo, query1, query2, JoinType.LEFT, tableFields(rows), Collections.emptyList());
+  }
+
+  @Test
   void testDrillingAcross(TestInfo testInfo) {
     Measure amount = Functions.sum("amount", this.amount);
     Measure pop = Functions.sum("population", this.population);
