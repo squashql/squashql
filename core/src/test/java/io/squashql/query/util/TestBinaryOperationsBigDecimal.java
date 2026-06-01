@@ -38,17 +38,17 @@ public class TestBinaryOperationsBigDecimal {
   @Test
   void testDivideAsBigDecimalExact() {
     BiFunction<Number, Number, Number> divide = BinaryOperations.createBiFunction(BinaryOperator.DIVIDE, BigDecimal.class, BigDecimal.class);
-    Number r = divide.apply(new BigDecimal("10"), new BigDecimal("4"));
+    Number r = divide.apply(BigDecimal.valueOf(10), BigDecimal.valueOf(4));
     Assertions.assertThat(r).isInstanceOf(BigDecimal.class);
-    Assertions.assertThat(((BigDecimal) r).compareTo(new BigDecimal("2.5"))).isZero();
+    Assertions.assertThat(((BigDecimal) r).compareTo(BigDecimal.valueOf(2.5))).isZero();
   }
 
   @Test
   void testDivideAsBigDecimalNonTerminating() {
     BiFunction<Number, Number, Number> divide = BinaryOperations.createBiFunction(BinaryOperator.DIVIDE, BigDecimal.class, BigDecimal.class);
-    Number r = divide.apply(new BigDecimal("1"), new BigDecimal("3"));
+    Number r = divide.apply(BigDecimal.valueOf(1), BigDecimal.valueOf(3));
     Assertions.assertThat(r).isInstanceOf(BigDecimal.class);
-    Assertions.assertThat(((BigDecimal) r).compareTo(new BigDecimal("1").divide(new BigDecimal("3"), MathContext.DECIMAL128))).isZero();
+    Assertions.assertThat(((BigDecimal) r).compareTo(BigDecimal.valueOf(1).divide(BigDecimal.valueOf(3), MathContext.DECIMAL128))).isZero();
   }
 
   @Test
@@ -57,17 +57,17 @@ public class TestBinaryOperationsBigDecimal {
     BiFunction<Number, Number, Number> minus = BinaryOperations.createBiFunction(BinaryOperator.MINUS, BigDecimal.class, BigDecimal.class);
     BiFunction<Number, Number, Number> multiply = BinaryOperations.createBiFunction(BinaryOperator.MULTIPLY, BigDecimal.class, BigDecimal.class);
 
-    Assertions.assertThat(((BigDecimal) plus.apply(new BigDecimal("1.5"), new BigDecimal("2.25"))).compareTo(new BigDecimal("3.75"))).isZero();
-    Assertions.assertThat(((BigDecimal) minus.apply(new BigDecimal("10"), new BigDecimal("3"))).compareTo(new BigDecimal("7"))).isZero();
-    Assertions.assertThat(((BigDecimal) multiply.apply(new BigDecimal("2.5"), new BigDecimal("4"))).compareTo(new BigDecimal("10"))).isZero();
+    Assertions.assertThat(((BigDecimal) plus.apply(BigDecimal.valueOf(1.5), BigDecimal.valueOf(2.25))).compareTo(BigDecimal.valueOf(3.75))).isZero();
+    Assertions.assertThat(((BigDecimal) minus.apply(BigDecimal.valueOf(10), BigDecimal.valueOf(3))).compareTo(BigDecimal.valueOf(7))).isZero();
+    Assertions.assertThat(((BigDecimal) multiply.apply(BigDecimal.valueOf(2.5), BigDecimal.valueOf(4))).compareTo(BigDecimal.valueOf(10))).isZero();
   }
 
   @Test
   void testMixedBigDecimalAndDoublePreservesBigDecimal() {
     BiFunction<Number, Number, Number> divide = BinaryOperations.createBiFunction(BinaryOperator.DIVIDE, BigDecimal.class, double.class);
-    Number r = divide.apply(new BigDecimal("10"), 4d);
+    Number r = divide.apply(BigDecimal.valueOf(10), 4d);
     Assertions.assertThat(r).isInstanceOf(BigDecimal.class);
-    Assertions.assertThat(((BigDecimal) r).compareTo(new BigDecimal("2.5"))).isZero();
+    Assertions.assertThat(((BigDecimal) r).compareTo(BigDecimal.valueOf(2.5))).isZero();
   }
 
   @Test
@@ -77,42 +77,42 @@ public class TestBinaryOperationsBigDecimal {
     BiFunction<Number, Number, Number> multiply = BinaryOperations.createBiFunction(BinaryOperator.MULTIPLY, BigDecimal.class, BigDecimal.class);
     BiFunction<Number, Number, Number> divide = BinaryOperations.createBiFunction(BinaryOperator.DIVIDE, BigDecimal.class, BigDecimal.class);
 
-    Assertions.assertThat(((BigDecimal) plus.apply(null, new BigDecimal("2"))).compareTo(new BigDecimal("2"))).isZero();
-    Assertions.assertThat(((BigDecimal) plus.apply(new BigDecimal("3"), null)).compareTo(new BigDecimal("3"))).isZero();
+    Assertions.assertThat(((BigDecimal) plus.apply(null, BigDecimal.valueOf(2))).compareTo(BigDecimal.valueOf(2))).isZero();
+    Assertions.assertThat(((BigDecimal) plus.apply(BigDecimal.valueOf(3), null)).compareTo(BigDecimal.valueOf(3))).isZero();
     Assertions.assertThat(plus.apply(null, null)).isNull();
 
-    Assertions.assertThat(((BigDecimal) minus.apply(null, new BigDecimal("2"))).compareTo(new BigDecimal("2"))).isZero();
-    Assertions.assertThat(((BigDecimal) minus.apply(new BigDecimal("3"), null)).compareTo(new BigDecimal("3"))).isZero();
+    Assertions.assertThat(((BigDecimal) minus.apply(null, BigDecimal.valueOf(2))).compareTo(BigDecimal.valueOf(2))).isZero();
+    Assertions.assertThat(((BigDecimal) minus.apply(BigDecimal.valueOf(3), null)).compareTo(BigDecimal.valueOf(3))).isZero();
 
-    Assertions.assertThat(multiply.apply(null, new BigDecimal("2"))).isNull();
-    Assertions.assertThat(multiply.apply(new BigDecimal("3"), null)).isNull();
-    Assertions.assertThat(divide.apply(null, new BigDecimal("2"))).isNull();
-    Assertions.assertThat(divide.apply(new BigDecimal("3"), null)).isNull();
+    Assertions.assertThat(multiply.apply(null, BigDecimal.valueOf(2))).isNull();
+    Assertions.assertThat(multiply.apply(BigDecimal.valueOf(3), null)).isNull();
+    Assertions.assertThat(divide.apply(null, BigDecimal.valueOf(2))).isNull();
+    Assertions.assertThat(divide.apply(BigDecimal.valueOf(3), null)).isNull();
   }
 
   @Test
   void testComparisonDivideAsBigDecimal() {
     BiFunction<Number, Number, Number> f = BinaryOperations.createComparisonBiFunction(ComparisonMethod.DIVIDE, BigDecimal.class);
-    Number r = f.apply(new BigDecimal("7"), new BigDecimal("12"));
+    Number r = f.apply(BigDecimal.valueOf(7), BigDecimal.valueOf(12));
     Assertions.assertThat(r).isInstanceOf(BigDecimal.class);
-    Assertions.assertThat(((BigDecimal) r).compareTo(new BigDecimal("7").divide(new BigDecimal("12"), MathContext.DECIMAL128))).isZero();
+    Assertions.assertThat(((BigDecimal) r).compareTo(BigDecimal.valueOf(7).divide(BigDecimal.valueOf(12), MathContext.DECIMAL128))).isZero();
   }
 
   @Test
   void testComparisonAbsoluteDifferenceAsBigDecimal() {
     BiFunction<Number, Number, Number> f = BinaryOperations.createComparisonBiFunction(ComparisonMethod.ABSOLUTE_DIFFERENCE, BigDecimal.class);
-    Number r = f.apply(new BigDecimal("5"), new BigDecimal("3"));
+    Number r = f.apply(BigDecimal.valueOf(5), BigDecimal.valueOf(3));
     Assertions.assertThat(r).isInstanceOf(BigDecimal.class);
-    Assertions.assertThat(((BigDecimal) r).compareTo(new BigDecimal("2"))).isZero();
+    Assertions.assertThat(((BigDecimal) r).compareTo(BigDecimal.valueOf(2))).isZero();
   }
 
   @Test
   void testComparisonRelativeDifferenceAsBigDecimal() {
     BiFunction<Number, Number, Number> f = BinaryOperations.createComparisonBiFunction(ComparisonMethod.RELATIVE_DIFFERENCE, BigDecimal.class);
-    Number r = f.apply(new BigDecimal("6"), new BigDecimal("4"));
+    Number r = f.apply(BigDecimal.valueOf(6), BigDecimal.valueOf(4));
     Assertions.assertThat(r).isInstanceOf(BigDecimal.class);
-    Assertions.assertThat(((BigDecimal) r).compareTo(new BigDecimal("0.5"))).isZero();
-    Assertions.assertThat(f.apply(new BigDecimal("6"), null)).isNull();
-    Assertions.assertThat(f.apply(null, new BigDecimal("4"))).isNull();
+    Assertions.assertThat(((BigDecimal) r).compareTo(BigDecimal.valueOf(0.5))).isZero();
+    Assertions.assertThat(f.apply(BigDecimal.valueOf(6), null)).isNull();
+    Assertions.assertThat(f.apply(null, BigDecimal.valueOf(4))).isNull();
   }
 }

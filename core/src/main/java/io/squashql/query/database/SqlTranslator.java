@@ -5,7 +5,6 @@ import io.squashql.list.Lists;
 import io.squashql.query.compiled.CompiledCriteria;
 import io.squashql.query.compiled.CompiledOrderBy;
 import io.squashql.query.compiled.CteRecordTable;
-import io.squashql.query.dto.CriteriaDto;
 import io.squashql.store.UnknownType;
 
 import java.time.LocalDate;
@@ -159,7 +158,7 @@ public class SqlTranslator {
    * type of the object to quote to determine its type. It should be correct in most cases.
    */
   public static Function<Object, String> getQuoteFn(Class<?> fieldType, Class<?> guessedClass, QueryRewriter queryRewriter) {
-    if (fieldType.equals(UnknownType.class)) {
+    if (fieldType.equals(UnknownType.class) || fieldType.equals(Object.class)) {
       return getQuoteFn(guessedClass, guessedClass, queryRewriter);
     } else if (Number.class.isAssignableFrom(fieldType)
             || fieldType.equals(double.class)
