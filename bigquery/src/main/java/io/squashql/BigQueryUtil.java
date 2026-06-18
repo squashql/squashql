@@ -32,7 +32,7 @@ public final class BigQueryUtil {
       return switch (dataType.getStandardType()) {
         case BOOL -> boolean.class;
         case INT64 -> long.class;
-        case FLOAT64 -> double.class;
+        case FLOAT64, NUMERIC, BIGNUMERIC -> double.class;
         case STRING -> String.class;
         case BYTES -> byte.class;
         case DATE -> LocalDate.class;

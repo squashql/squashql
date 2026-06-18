@@ -111,6 +111,7 @@ public class BigQueryEngine extends AQueryEngine<BigQueryDatastore> {
         case BOOL -> fieldValue.getBooleanValue();
         case INT64 -> fieldValue.getLongValue();
         case FLOAT64 -> fieldValue.getDoubleValue();
+        case NUMERIC, BIGNUMERIC -> fieldValue.getNumericValue().doubleValue();
         case BYTES -> fieldValue.getBytesValue();
         case DATE -> LocalDate.parse(fieldValue.getStringValue());
         default -> fieldValue.getValue();
