@@ -158,7 +158,7 @@ public class SqlTranslator {
    * type of the object to quote to determine its type. It should be correct in most cases.
    */
   public static Function<Object, String> getQuoteFn(Class<?> fieldType, Class<?> guessedClass, QueryRewriter queryRewriter) {
-    if (fieldType.equals(UnknownType.class) || fieldType.equals(Object.class)) {
+    if (fieldType.equals(UnknownType.class)) {
       return getQuoteFn(guessedClass, guessedClass, queryRewriter);
     } else if (Number.class.isAssignableFrom(fieldType)
             || fieldType.equals(double.class)

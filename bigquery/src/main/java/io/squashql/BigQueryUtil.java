@@ -11,6 +11,7 @@ import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -33,6 +34,7 @@ public final class BigQueryUtil {
         case BOOL -> boolean.class;
         case INT64 -> long.class;
         case FLOAT64 -> double.class;
+        case NUMERIC, BIGNUMERIC -> BigDecimal.class;
         case STRING -> String.class;
         case BYTES -> byte.class;
         case DATE -> LocalDate.class;
@@ -54,6 +56,8 @@ public final class BigQueryUtil {
       type = StandardSQLTypeName.INT64; // there is no INT32 in bigquery
     } else if (clazz.equals(Long.class) || clazz.equals(long.class)) {
       type = StandardSQLTypeName.INT64;
+    } else if (clazz.equals(BigDecimal.class)) {
+      type = StandardSQLTypeName.NUMERIC;
     } else if (clazz.equals(Boolean.class) || clazz.equals(boolean.class)) {
       type = StandardSQLTypeName.BOOL;
     } else if (clazz.equals(LocalDate.class)) {
