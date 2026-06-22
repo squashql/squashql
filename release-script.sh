@@ -40,6 +40,7 @@ fi
 ## NPM
 
 # for npm, execute:
+# npm login
 # npm publish --access public
 
 # To unpublish version '1.0.4-SNAPSHOT':
