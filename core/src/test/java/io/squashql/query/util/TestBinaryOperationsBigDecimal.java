@@ -115,4 +115,54 @@ public class TestBinaryOperationsBigDecimal {
     Assertions.assertThat(f.apply(BigDecimal.valueOf(6), null)).isNull();
     Assertions.assertThat(f.apply(null, BigDecimal.valueOf(4))).isNull();
   }
+
+  @Test
+  void testDivideByZeroAsDoubleReturnsNull() {
+    BiFunction<Number, Number, Number> divide = BinaryOperations.createBiFunction(BinaryOperator.DIVIDE, double.class, double.class);
+    Assertions.assertThat(divide.apply(10d, 0d)).isNull();
+    Assertions.assertThat(divide.apply(0d, 0d)).isNull();
+    Assertions.assertThat(divide.apply(-5d, 0d)).isNull();
+    Assertions.assertThat(divide.apply(5d, -0.0)).isNull();
+    // Control case: a non-zero denominator still divides normally.
+    Assertions.assertThat(divide.apply(10d, 4d)).isEqualTo(2.5d);
+  }
+
+  @Test
+  void testDivideByZeroAsBigDecimalReturnsNull() {
+    BiFunction<Number, Number, Number> divide = BinaryOperations.createBiFunction(BinaryOperator.DIVIDE, BigDecimal.class, BigDecimal.class);
+    Assertions.assertThat(divide.apply(BigDecimal.valueOf(10), BigDecimal.ZERO)).isNull();
+    // signum() ignores scale, so "0.00" is detected as zero (unlike BigDecimal.equals).
+    Assertions.assertThat(divide.apply(BigDecimal.valueOf(10), new BigDecimal("0.00"))).isNull();
+
+    BiFunction<Number, Number, Number> mixed = BinaryOperations.createBiFunction(BinaryOperator.DIVIDE, BigDecimal.class, long.class);
+    Assertions.assertThat(mixed.apply(BigDecimal.valueOf(10), 0L)).isNull();
+
+    // A null denominator must be guarded before toBigDecimal(b) is evaluated (no NPE).
+    Assertions.assertThat(divide.apply(BigDecimal.valueOf(10), null)).isNull();
+    Assertions.assertThat(divide.apply(null, BigDecimal.valueOf(10))).isNull();
+
+    // Control case: a non-zero denominator still divides normally.
+    Number r = divide.apply(BigDecimal.valueOf(10), BigDecimal.valueOf(4));
+    Assertions.assertThat(r).isInstanceOf(BigDecimal.class);
+    Assertions.assertThat(((BigDecimal) r).compareTo(BigDecimal.valueOf(2.5))).isZero();
+  }
+
+  @Test
+  void testRelativeDifferenceByZeroAsDoubleReturnsNull() {
+    BiFunction<Number, Number, Number> f = BinaryOperations.createComparisonBiFunction(ComparisonMethod.RELATIVE_DIFFERENCE, double.class);
+    Assertions.assertThat(f.apply(6d, 0d)).isNull();
+    Assertions.assertThat(f.apply(0d, 0d)).isNull();
+    // Control case: a non-zero denominator still yields the relative difference.
+    Assertions.assertThat(f.apply(6d, 4d)).isEqualTo(0.5d);
+  }
+
+  @Test
+  void testRelativeDifferenceByZeroAsBigDecimalReturnsNull() {
+    BiFunction<Number, Number, Number> f = BinaryOperations.createComparisonBiFunction(ComparisonMethod.RELATIVE_DIFFERENCE, BigDecimal.class);
+    Assertions.assertThat(f.apply(BigDecimal.valueOf(6), BigDecimal.ZERO)).isNull();
+    Assertions.assertThat(f.apply(BigDecimal.valueOf(6), new BigDecimal("0.00"))).isNull();
+    // A null denominator must be guarded before toBigDecimal(b) is evaluated (no NPE).
+    Assertions.assertThat(f.apply(BigDecimal.valueOf(6), null)).isNull();
+    Assertions.assertThat(f.apply(null, BigDecimal.valueOf(4))).isNull();
+  }
 }

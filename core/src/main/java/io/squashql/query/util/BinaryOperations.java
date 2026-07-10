@@ -26,11 +26,10 @@ public class BinaryOperations {
   private static BiFunction<Number, Number, Number> relativeDifference() {
     return (a, b) -> {
       Double diff = BinaryOperations.minusAsDouble(a, b);
-      if (diff == null || b == null) {
+      if (diff == null || b == null || b.doubleValue() == 0.0) {
         return null;
-      } else {
-        return (a.doubleValue() - b.doubleValue()) / b.doubleValue();
       }
+      return (a.doubleValue() - b.doubleValue()) / b.doubleValue();
     };
   }
 
@@ -39,9 +38,11 @@ public class BinaryOperations {
       if (a == null || b == null) {
         return null;
       }
-      BigDecimal ba = toBigDecimal(a);
-      BigDecimal bb = toBigDecimal(b);
-      return ba.subtract(bb).divide(bb, MathContext.DECIMAL128);
+      BigDecimal denominator = toBigDecimal(b);
+      if (denominator.signum() == 0) {
+        return null;
+      }
+      return toBigDecimal(a).subtract(denominator).divide(denominator, MathContext.DECIMAL128);
     };
   }
 
@@ -150,7 +151,7 @@ public class BinaryOperations {
   }
 
   public static Double divideAsDouble(Number a, Number b) {
-    if (a == null || b == null) {
+    if (a == null || b == null || b.doubleValue() == 0.0) {
       return null;
     }
     return a.doubleValue() / b.doubleValue();
@@ -189,7 +190,11 @@ public class BinaryOperations {
     if (a == null || b == null) {
       return null;
     }
-    return toBigDecimal(a).divide(toBigDecimal(b), MathContext.DECIMAL128);
+    BigDecimal denominator = toBigDecimal(b);
+    if (denominator.signum() == 0) {
+      return null;
+    }
+    return toBigDecimal(a).divide(denominator, MathContext.DECIMAL128);
   }
 
   private static BigDecimal toBigDecimal(Number n) {
