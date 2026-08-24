@@ -43,13 +43,6 @@ public class MergeTables {
     Objects.requireNonNull(leftTable);
     Objects.requireNonNull(rightTable);
 
-    if (leftTable.count() == 0) { // empty
-      return rightTable;
-    }
-    if (rightTable.count() == 0) { // empty
-      return leftTable;
-    }
-
     final Holder mergedTableHeaders = mergeHeaders(leftTable, rightTable);
     final Set<CompiledMeasure> mergedTableMeasures = mergeMeasures(leftTable.measures(), rightTable.measures());
     final List<List<Object>> mergedValues = mergeValues(mergedTableHeaders, leftTable, rightTable, joinType);
