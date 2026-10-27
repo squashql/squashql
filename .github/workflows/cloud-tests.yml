@@ -12,6 +12,8 @@ on:
 jobs:
 
   bigquery:
+    # This prevents the job from running on any forked repository
+    if: github.event.repository.fork != true
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -32,6 +34,8 @@ jobs:
           DATASET_NAME: ${{ secrets.DATASET_NAME }}
 
   snowflake:
+    # This prevents the job from running on any forked repository
+    if: github.event.repository.fork != true
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
