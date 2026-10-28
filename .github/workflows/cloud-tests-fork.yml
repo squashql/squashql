@@ -8,6 +8,7 @@ on:
 jobs:
 
   bigquery:
+    if: github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # 1. This forces the job to wait for your manual approval before running
