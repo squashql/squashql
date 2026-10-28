@@ -60,7 +60,7 @@
 
     <duckdb.version>0.10.2</duckdb.version>
     <clickhouse.version>0.6.0-patch4</clickhouse.version>
-    <spark.version>3.5.1</spark.version>
+    <spark.version>3.5.8</spark.version>
     <bigquery.version>26.38.0</bigquery.version>
     <snowflake-jdbc.version>3.16.0</snowflake-jdbc.version>
     <postgresql.version>42.7.3</postgresql.version>
