@@ -48,7 +48,7 @@
     <maven-jar-plugin.version>3.2.2</maven-jar-plugin.version>
     <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
     <eclipse.version>11.1.0</eclipse.version>
-    <feign.version>12.1</feign.version>
+    <feign.version>13.17</feign.version>
     <testcontainers.version>2.0.5</testcontainers.version>
     <guava.version>33.2.0-jre</guava.version>
     <caffeine.version>3.1.8</caffeine.version>
