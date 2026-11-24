@@ -1,6 +1,5 @@
 package io.squashql;
 
-import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.*;
 import com.google.common.base.Suppliers;
@@ -72,9 +71,9 @@ public class BigQueryServiceAccountDatastore implements BigQueryDatastore {
   }
 
   public static Collection<String> getTableNames(BigQuery query, String projectId, String datasetName) {
-    Page<Table> tablePage = query.listTables(datasetName);
     Set<String> tableNames = new HashSet<>();
-    for (Table table : tablePage.getValues()) {
+    // iterateAll() follows the next pages: getValues() returns only the first one (50 tables by default).
+    for (Table table : query.listTables(datasetName).iterateAll()) {
       tableNames.add(table.getTableId().getTable());
     }
     return tableNames;
